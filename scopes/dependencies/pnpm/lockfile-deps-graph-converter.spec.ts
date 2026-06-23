@@ -837,6 +837,83 @@ describe('convertGraphToLockfile on invalid graph', () => {
     expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
   });
 
+  // A workspace-component snap reaches lockfile validation with no resolution
+  // even though resolve() never threw NO_MATCHING_VERSION, because
+  // getPkgsToResolve skips any pkgId whose name+version matches a manifest in
+  // the sign/capsule set. The snap is a seeder being signed, so it is in the
+  // manifests, never sent to the resolver, and would surface as
+  // `packages['...button-base@0.0.0-<snap>'] entry doesn't have a "resolution"
+  // field`. It must be scrubbed so pnpm links it from the manifest instead.
+  it('should drop workspace-component snaps skipped by the resolver (seeder in manifests)', async () => {
+    const snapPkgId = '@my-org/my-scope.components.button-base@0.0.0-e1613079b55eabc19ad484478b769d929986c124';
+    const packages: PackagesMap = new Map([
+      [snapPkgId, { component: { scope: 'my-org.my-scope', name: 'components/button-base' } } as any],
+      ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      {
+        id: 'foo@1.0.0',
+        neighbours: [{ id: snapPkgId, optional: false }],
+      },
+      { id: snapPkgId, neighbours: [] },
+    ];
+    let resolverCalled = false;
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph(new DependenciesGraph({ packages, edges })), {
+      manifests: {
+        // button-base is a seeder being signed, so it appears in the manifests
+        // with its snap version — getPkgsToResolve skips it for that reason.
+        [path.resolve('comps/button-base')]: {
+          name: '@my-org/my-scope.components.button-base',
+          version: '0.0.0-e1613079b55eabc19ad484478b769d929986c124',
+        },
+        [path.resolve('comps/comp1')]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => {
+        resolverCalled = true;
+        return { resolution: { integrity: '0000' } } as any;
+      },
+    });
+    expect(resolverCalled).to.equal(false);
+    expect(Object.keys(lockfile.packages!).sort()).to.eql(['foo@1.0.0']);
+    expect(Object.keys(lockfile.snapshots!).sort()).to.eql(['foo@1.0.0']);
+    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
+  });
+
+  // Sibling of the above: even when the resolver IS called for a
+  // workspace-component snap, it may succeed yet return a resolution with no
+  // integrity (e.g. a directory/git resolution). The pkg then stays
+  // resolution-less and must be scrubbed rather than failing validation.
+  it('should drop workspace-component pkgs whose resolution has no integrity', async () => {
+    const snapPkgId = '@my-org/my-scope.components.button-base@0.0.0-e1613079';
+    const packages: PackagesMap = new Map([
+      [snapPkgId, { component: { scope: 'my-org.my-scope', name: 'components/button-base' } } as any],
+      ['foo@1.0.0', { resolution: { integrity: 'sha512-aaa' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      { id: 'foo@1.0.0', neighbours: [{ id: snapPkgId, optional: false }] },
+      { id: snapPkgId, neighbours: [] },
+    ];
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph(new DependenciesGraph({ packages, edges })), {
+      manifests: {
+        [path.resolve('comps/comp1')]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      // Resolver succeeds but returns no integrity for the unpublished snap.
+      resolve: () => ({ resolution: {} }) as any,
+    });
+    expect(Object.keys(lockfile.packages!).sort()).to.eql(['foo@1.0.0']);
+    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
+  });
+
   // When the resolve failure is for a regular registry package (no component
   // attribute), we still want to surface the error rather than silently drop
   // it — that path means the graph itself is genuinely broken, not just

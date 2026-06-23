@@ -4,7 +4,9 @@ import { ComponentID } from '@teambit/component-id';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import path from 'path';
 import moment from 'moment';
+import semver from 'semver';
 import pMap from 'p-map';
+import { Extensions } from '@teambit/legacy.constants';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import { compact } from 'lodash';
@@ -89,7 +91,26 @@ export class ComponentLogMain {
       log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;
       log.message = shortMessage ? log.message.split('\n')[0] : log.message;
     });
+    this.applyStagedDeprecation(componentId, logs);
     return options.showHidden ? logs : logs.filter((l) => !l.hidden);
+  }
+
+  /**
+   * reflect the not-yet-snapped (staged) deprecation in the log.
+   * `bit deprecate` only writes the deprecation config to the workspace `.bitmap`; it's baked into a
+   * Version object on the next tag/snap. `collectLogs()` (which produces the `deprecated` field) reads
+   * that config from the committed head Version, so without this overlay `bit log` wouldn't show a
+   * range-deprecation until the next tag/snap. We mirror collectLogs' range logic here so the staged
+   * state (including a staged `bit undeprecate` that clears the range) matches the post-snap output.
+   */
+  private applyStagedDeprecation(componentId: ComponentID, logs: ComponentLog[]) {
+    const bitmapEntry = this.workspace?.bitMap.getBitmapEntryIfExist(componentId, { ignoreVersion: true });
+    const stagedConfig = bitmapEntry?.config?.[Extensions.deprecation];
+    if (!stagedConfig || stagedConfig === '-') return;
+    const range = (stagedConfig as { range?: string }).range;
+    logs.forEach((log) => {
+      log.deprecated = Boolean(range && log.tag && semver.satisfies(log.tag, range));
+    });
   }
 
   async getLogsWithParents(id: string, options: LogOpts) {
