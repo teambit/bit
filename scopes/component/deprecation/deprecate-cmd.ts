@@ -1,7 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatSuccessSummary, formatHint, formatSection, formatItem, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { DeprecationMain } from './deprecation.main.runtime';
+import { formatPatternResult } from './format-pattern-result';
 
 export class DeprecateCmd implements Command {
   name = 'deprecate <component-pattern>';
@@ -40,30 +40,10 @@ deprecated components remain available but display warnings when installed or im
 
   async report([pattern]: [string], { newId, range }: { newId?: string; range?: string }): Promise<string> {
     const { deprecated, alreadyDeprecated } = await this.deprecation.deprecateByPattern(pattern, newId, range);
-
-    // preserve the familiar single-line message when only one component is affected
-    if (deprecated.length === 1 && !alreadyDeprecated.length) {
-      return formatSuccessSummary(`the component "${deprecated[0].toString()}" has been deprecated successfully`);
-    }
-    if (!deprecated.length) {
-      return formatHint(
-        `all ${alreadyDeprecated.length} component(s) matching "${pattern}" are already deprecated. no changes have been made`
-      );
-    }
-
-    const sections = [
-      formatSuccessSummary(`${deprecated.length} component(s) have been deprecated successfully`),
-      formatSection(
-        'deprecated',
-        '',
-        deprecated.map((id) => formatItem(id.toString()))
-      ),
-      formatSection(
-        'already deprecated',
-        'no changes were made to these',
-        alreadyDeprecated.map((id) => formatItem(id.toString()))
-      ),
-    ];
-    return joinSections(sections);
+    return formatPatternResult(pattern, deprecated, alreadyDeprecated, {
+      verb: 'deprecated',
+      unchangedTitle: 'already deprecated',
+      unchangedState: 'already deprecated',
+    });
   }
 }

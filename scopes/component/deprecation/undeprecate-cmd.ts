@@ -1,7 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatSuccessSummary, formatHint, formatSection, formatItem, joinSections } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { DeprecationMain } from './deprecation.main.runtime';
+import { formatPatternResult } from './format-pattern-result';
 
 export class UndeprecateCmd implements Command {
   name = 'undeprecate <component-pattern>';
@@ -27,30 +27,10 @@ the pattern can match multiple components, so several can be undeprecated at onc
 
   async report([pattern]: [string]): Promise<string> {
     const { undeprecated, notDeprecated } = await this.deprecation.unDeprecateByPattern(pattern);
-
-    // preserve the familiar single-line message when only one component is affected
-    if (undeprecated.length === 1 && !notDeprecated.length) {
-      return formatSuccessSummary(`the component "${undeprecated[0].toString()}" has been undeprecated successfully`);
-    }
-    if (!undeprecated.length) {
-      return formatHint(
-        `none of the ${notDeprecated.length} component(s) matching "${pattern}" are currently deprecated. no changes have been made`
-      );
-    }
-
-    const sections = [
-      formatSuccessSummary(`${undeprecated.length} component(s) have been undeprecated successfully`),
-      formatSection(
-        'undeprecated',
-        '',
-        undeprecated.map((id) => formatItem(id.toString()))
-      ),
-      formatSection(
-        'not deprecated',
-        'no changes were made to these',
-        notDeprecated.map((id) => formatItem(id.toString()))
-      ),
-    ];
-    return joinSections(sections);
+    return formatPatternResult(pattern, undeprecated, notDeprecated, {
+      verb: 'undeprecated',
+      unchangedTitle: 'not deprecated',
+      unchangedState: 'not currently deprecated',
+    });
   }
 }
