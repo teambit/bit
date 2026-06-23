@@ -751,6 +751,18 @@ jobs:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run:
+          # EXPERIMENT (not for merge): the default registry is normally node-registry.bit.cloud, so
+          # EVERY dep (incl. thousands of third-party packages) is fetched through bit.cloud's proxy.
+          # Flip the default to npmjs and keep only the bit component scopes on bit.cloud (auth is
+          # auto-applied to scoped bit.cloud registries from the user.token). If the capsule install
+          # drops from ~21m, third-party-through-bit.cloud is the bottleneck.
+          name: 'EXPERIMENT: third-party via npmjs, @teambit/@bitdev/@bit via bit.cloud'
+          command: |
+            bit config set registry https://registry.npmjs.org
+            npm config set @teambit:registry https://node-registry.bit.cloud
+            npm config set @bitdev:registry https://node-registry.bit.cloud
+            npm config set @bit:registry https://node-registry.bit.cloud
+      - run:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
           # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
