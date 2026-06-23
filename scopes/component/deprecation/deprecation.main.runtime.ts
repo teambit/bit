@@ -217,14 +217,19 @@ run the command per-component to use --new-id, or remove it to deprecate them al
 
   /**
    * whether the component has any deprecation that an undeprecate should clear. unlike isDeprecated(),
-   * this also treats a range-deprecation (stored locally with deprecate:false) as clearable, so
-   * "bit undeprecate" can revert a prior "bit deprecate --range".
+   * this also treats a range-deprecation as clearable (whether it lives in the local .bitmap or is
+   * already baked into the model), so "bit undeprecate" can revert a prior "bit deprecate --range" even
+   * when the head version is outside the range and thus not "currently" deprecated.
    */
   private async hasDeprecationToClear(componentId: ComponentID): Promise<boolean> {
     const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(componentId, { ignoreVersion: true });
     if (bitmapEntry?.isDeprecated() || bitmapEntry?.isDeprecatedByRange()) return true;
     if (bitmapEntry?.isUndeprecated()) return false;
-    return this.isDeprecatedByIdWithoutLoadingComponent(componentId);
+    // no decisive local config — consult the model. use getDeprecationInfo (which reports the configured
+    // range regardless of the head version) rather than the version-specific isDeprecated() check.
+    const component = await this.workspace.get(componentId);
+    const { isDeprecate, range } = await this.getDeprecationInfo(component);
+    return isDeprecate || Boolean(range);
   }
 
   private setDeprecateConfig(componentId: ComponentID, newId?: ComponentID, range?: string): boolean {
