@@ -210,6 +210,9 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
   /**
    * out of the given deleted ids, return the package names of those that still have at least one dependent
    * in the workspace (excluding other components being deleted in the same operation).
+   * envs are excluded on purpose: a deleted env surfaces as a "RemovedEnv" issue so the user can replace it
+   * explicitly (bit env replace), and we don't want to silently pin it to its main version and suppress that
+   * signal. only regular dependencies (e.g. a dependency of an env) need pinning so they install from main.
    */
   private async getDeletedPackagesWithWorkspaceDependents(deletedIds: ComponentID[]): Promise<string[]> {
     const graph = await this.workspace.getGraphIds(undefined, false);
@@ -221,7 +224,10 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
       return dependents.length > 0;
     });
     if (!idsWithDependents.length) return [];
-    const comps = await this.workspace.getMany(idsWithDependents);
+    const isEnvFlags = await Promise.all(idsWithDependents.map((id) => this.isEnvByIdWithoutLoadingComponent(id)));
+    const nonEnvIds = idsWithDependents.filter((_id, index) => !isEnvFlags[index]);
+    if (!nonEnvIds.length) return [];
+    const comps = await this.workspace.getMany(nonEnvIds);
     return comps.map((comp) => this.depResolver.getPackageName(comp));
   }
 
