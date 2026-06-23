@@ -12,7 +12,7 @@ import { ImporterAspect } from '@teambit/importer';
 import { compact } from 'lodash';
 import { hasWildcard } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
-import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain, WorkspacePolicyEntry } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { IssuesMain } from '@teambit/issues';
@@ -180,7 +180,93 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
         );
       }
     }
-    return this.markRemoveComps(componentIds, opts);
+
+    // when soft-deleting from a lane, components that still have dependents in the workspace will keep
+    // referencing the now-deleted lane snap version (0.0.0-<hash>), which was never published to the registry.
+    // to avoid a "No matching version found" error on the next "bit install", pin those components to their
+    // main (published) version in the workspace policy - mirroring what running "bit install <pkg>" does manually.
+    // this must be computed before the removal so the dependency graph is still intact.
+    const isLaneSoftDelete = Boolean(currentLane) && !updateMain && !opts.range && !opts.snaps;
+    // best-effort: never let this convenience break the actual deletion. on failure the user can still
+    // recover via the manual "bit install <pkg>" workaround.
+    const depsToPinToMain = isLaneSoftDelete
+      ? await this.getDeletedDepsWithWorkspaceDependents(componentIds).catch((err) => {
+          this.logger.warn(`getDeletedDepsWithWorkspaceDependents failed: ${err.message}`);
+          return [];
+        })
+      : [];
+
+    const removedComps = await this.markRemoveComps(componentIds, opts);
+
+    if (depsToPinToMain.length) {
+      await this.pinDeletedDepsToMainInWorkspacePolicy(depsToPinToMain).catch((err) => {
+        this.logger.warn(`pinDeletedDepsToMainInWorkspacePolicy failed: ${err.message}`);
+      });
+    }
+
+    return removedComps;
+  }
+
+  /**
+   * out of the given deleted ids, return those that still have at least one dependent in the workspace
+   * (excluding other components being deleted in the same operation), along with their package names.
+   */
+  private async getDeletedDepsWithWorkspaceDependents(
+    deletedIds: ComponentID[]
+  ): Promise<Array<{ id: ComponentID; packageName: string }>> {
+    const graph = await this.workspace.getGraphIds(undefined, false);
+    const deletedIdList = ComponentIdList.fromArray(deletedIds);
+    const idsWithDependents = deletedIds.filter((id) => {
+      const dependents = graph.predecessors(id.toString(), {
+        nodeFilter: (node) => this.workspace.hasId(node.attr) && !deletedIdList.hasWithoutVersion(node.attr),
+      });
+      return dependents.length > 0;
+    });
+    if (!idsWithDependents.length) return [];
+    const comps = await this.workspace.getMany(idsWithDependents);
+    return comps.map((comp) => ({ id: comp.id, packageName: this.depResolver.getPackageName(comp) }));
+  }
+
+  /**
+   * pin the given (deleted-on-lane) components to their main/published version in the workspace policy, so their
+   * dependents install them from the registry instead of the non-published lane snap version. components that were
+   * never published to the registry (e.g. they only ever existed on the lane) are skipped.
+   */
+  private async pinDeletedDepsToMainInWorkspacePolicy(
+    deps: Array<{ id: ComponentID; packageName: string }>
+  ): Promise<void> {
+    const resolver = await this.depResolver.getVersionResolver();
+    const entries: WorkspacePolicyEntry[] = [];
+    await Promise.all(
+      deps.map(async ({ packageName }) => {
+        const resolved = await resolver
+          .resolveRemoteVersion(packageName, { rootDir: this.workspace.path })
+          .catch(() => undefined);
+        if (!resolved?.version) {
+          this.logger.warn(
+            `pinDeletedDepsToMainInWorkspacePolicy: unable to resolve a published version for ${packageName}, skipping`
+          );
+          return;
+        }
+        const versionWithPrefix = this.depResolver.getVersionWithSavePrefix({
+          version: resolved.version,
+          wantedRange: resolved.wantedRange,
+        });
+        entries.push({
+          dependencyId: packageName,
+          value: { version: versionWithPrefix },
+          lifecycleType: 'runtime',
+        });
+      })
+    );
+    if (!entries.length) return;
+    // skipIfExisting so we never override a version the user already set explicitly in the workspace policy.
+    this.depResolver.addToRootPolicy(entries, { skipIfExisting: true });
+    await this.depResolver.persistConfig('delete (pin deleted-on-lane deps to main)');
+    this.logger.console(
+      `the following deleted component(s) still have dependents in the workspace and were pinned to their main version in the workspace policy:
+${entries.map((entry) => `${entry.dependencyId}@${entry.value.version}`).join('\n')}`
+    );
   }
 
   /**
