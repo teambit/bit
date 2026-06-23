@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatHint } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { DeprecationMain } from './deprecation.main.runtime';
 import { formatPatternResult } from './format-pattern-result';
@@ -40,6 +41,19 @@ deprecated components remain available but display warnings when installed or im
 
   async report([pattern]: [string], { newId, range }: { newId?: string; range?: string }): Promise<string> {
     const { deprecated, alreadyDeprecated } = await this.deprecation.deprecateByPattern(pattern, newId, range);
+    // a range-deprecation only affects specific versions, so reflect that in the single-component messages
+    if (range) {
+      if (deprecated.length === 1 && !alreadyDeprecated.length) {
+        return formatSuccessSummary(
+          `versions of "${deprecated[0].toString()}" matching the range "${range}" have been deprecated successfully`
+        );
+      }
+      if (!deprecated.length && alreadyDeprecated.length === 1) {
+        return formatHint(
+          `the range "${range}" of "${alreadyDeprecated[0].toString()}" is already deprecated. no changes have been made`
+        );
+      }
+    }
     return formatPatternResult(pattern, deprecated, alreadyDeprecated, {
       verb: 'deprecated',
       unchangedTitle: 'already deprecated',
