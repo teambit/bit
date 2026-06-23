@@ -1,7 +1,7 @@
 # Component Loading Redesign
 
 **Status:** Phase 1 shipped; Phase 2 in progress
-**Last updated:** 2026-06-15 (code references are against `master` @ `59855b104`; line numbers will drift)
+**Last updated:** 2026-06-23 (code references are against `master`; line numbers will drift)
 
 This document is the source of truth for a multi-phase effort to simplify Bit's component-loading
 mechanism: fewer caches, a staged (lazy) loading pipeline, a single env/aspect load planner, and a
@@ -204,11 +204,15 @@ earlier ones teach us).
 ### Phase 2 — Quick perf wins on existing seams
 
 - [x] Benchmark harness committed + baseline recorded (see §4) — **gate for the rest of the phase**
-- [ ] Lazy file contents in `ModelComponent.toConsumerComponent`
+- [x] Batch the deps-cache invalidation scan: one `node_modules`-ignoring workspace scan shared via a
+      command-scoped mtime index, replacing the per-component recursive `globby`. Cuts warm `bit
+    status` fs syscalls ~40% (74.3k→44.8k); warm-wall-neutral (I/O-wait), helps cold/CI (see §4.1).
+- [ ] `on-load` slot-laziness (`loadDocs: false, loadCompositions: false` for non-UI flows) — the
+      largest CPU-bound stage (9.2s) and the next **warm-wall** target
+- [ ] Lazy file contents in `ModelComponent.toConsumerComponent` (helps `graph`, not `status`)
 - [ ] `bit deps usage`: ids + stored deps instead of full load
 - [ ] IDE metadata endpoint (`api-for-ide.ts`): S0-S2-level data only
 - [ ] `bit remove` / forking: drop full-component loads where only ids/paths are used
-- [ ] Default `loadDocs: false, loadCompositions: false` for non-UI flows
 
 ### Phase 3 — Cache consolidation
 
@@ -270,13 +274,13 @@ Numbers below are aggregate self-time across ~313 components at ~6× concurrency
 
 **`bit status` (warm, ~13s wall):**
 
-| stage                                                       | aggregate self-time | ~wall | note                                          |
-| ----------------------------------------------------------- | ------------------- | ----- | --------------------------------------------- |
-| `legacy-load-deps`                                          | 43s                 | ~7s   | dependency-object materialization (see below) |
-| `on-load` (slot handlers: docs, compositions, schema, pkg…) | 10s                 | ~1.7s | trimmable for non-UI flows                    |
-| `dependency-resolution` (Harmony resolver)                  | 7.7s                | ~1.3s |                                               |
-| `execute-load-slot` (own)                                   | 5.8s                | ~1s   |                                               |
-| `consumer-fs-load` (file content reads)                     | negligible          | —     | not a `status` cost                           |
+| stage                                                       | aggregate self-time | ~wall | note                                                        |
+| ----------------------------------------------------------- | ------------------- | ----- | ----------------------------------------------------------- |
+| `legacy-load-deps`                                          | 43s                 | ~7s   | filesystem traversal in deps-cache invalidation (see below) |
+| `on-load` (slot handlers: docs, compositions, schema, pkg…) | 10s                 | ~1.7s | trimmable for non-UI flows                                  |
+| `dependency-resolution` (Harmony resolver)                  | 7.7s                | ~1.3s |                                                             |
+| `execute-load-slot` (own)                                   | 5.8s                | ~1s   |                                                             |
+| `consumer-fs-load` (file content reads)                     | negligible          | —     | not a `status` cost                                         |
 
 **`bit graph --json` (warm, ~20s wall; ~7.5s of it is loading):**
 
@@ -285,23 +289,35 @@ Numbers below are aggregate self-time across ~313 components at ~6× concurrency
 | `consumer-fs-load` (file content reads) | 5.8s                | dominant load cost for graph   |
 | `legacy-load-deps`                      | 1.2s                | graph uses a lighter load path |
 
-**Key conclusions (validated, not hypothesized):**
+**Key conclusions (validated by measurement; these _supersede_ the earlier "object materialization"
+hypothesis, which deeper sub-step instrumentation disproved):**
 
 - **The dependency FS cache works.** On a warm `bit status`, dep loading is **635 cache hits, 0
   misses/recomputes**. `legacy-load-deps` is _not_ re-resolving dependencies.
-- **`status`'s dominant cost (~7s wall) is dependency-object _materialization on cache hit_** —
-  `DependenciesData.deserialize` + reconstructing full `Dependency`/`DependencyList` objects +
-  `applyOverrides`, for every component, even though `status` reads little of it. This is the
-  "all-or-nothing, always fully materialize" problem of §1.1 — **structural, not a cache bug.**
-  Reducing it needs the staged/lazy-loading work (defer dependency-object construction), **not a
-  Phase-2 quick fix.** Earlier framing of this as "39s" was aggregate-concurrent self-time, not
-  wall; wall is ~13s.
-- **`graph`'s dominant load cost is file-content reads (`consumer-fs-load`, 5.8s)** → this is what
-  **lazy file contents** (§2.1) targets; validated as a real win for `graph`/scope-side loads, but
-  it does **not** help `status` (whose file reads are negligible).
-- Implication for Phase-2 ordering: lazy file contents helps `graph`; per-command partial loads help
-  `deps usage`/IDE/`remove`/forking; `loadDocs/loadCompositions: false` trims `status`'s slot work
-  (~1.7s). The big `status` number is deferred to the staged-loading phase.
+- **`legacy-load-deps` is filesystem I/O, not object materialization.** Sub-step timing of the warm
+  cache-hit path (313 components, aggregate self-time): `statFiles` **22.3s** + `cacheRead` **10.9s**,
+  versus `deserialize` **9ms**, `applyOverrides` 0.4s, `updateVersions` 0.1s. The cost is the
+  deps-cache _read + invalidation_ layer paid per component — **not** `DependenciesData.deserialize` /
+  `Dependency` reconstruction (negligible). `statFiles` was a recursive `globby` per component that
+  **followed the component's `node_modules` symlink into the shared workspace `node_modules`** (226k
+  of 230k scanned entries), run 313× per command.
+- **Aggregate self-time ≠ wall — sharply.** Batching that into one `node_modules`-ignoring workspace
+  scan cut `statFiles` 22.3s→0.15s aggregate and **fs syscalls 74.3k→44.8k per warm `bit status`
+  (~40%)** — yet a same-state wall A/B moved warm wall by **~0.3s**. The removed work is I/O-_wait_
+  that overlaps with CPU on the single JS thread; on a warm SSD it was never on the critical path
+  (real win on cold/CI/networked filesystems, where it is). `cacheRead` (10.9s) is likewise I/O-wait,
+  so consolidating it would also be warm-wall-neutral.
+- **The warm-wall bottleneck is CPU-bound, single-threaded JS** — the stages whose self-time ≈ their
+  wall contribution: **`on-load` slot handlers (9.2s)**, **`dependency-resolution` (7.2s)**,
+  **`workspace.get` (5s)**. These — not the deps-cache I/O — are what move warm `status` wall.
+- **`graph`'s dominant load cost is file-content reads (`consumer-fs-load`, 5.8s)** → the target for
+  **lazy file contents** (§2.1); a real win for `graph`/scope-side loads, but it does **not** help
+  `status` (whose file reads are negligible).
+- Implication for Phase-2 ordering: the deps-cache invalidation batch ships as a standalone fs/CPU
+  efficiency win (helps cold/CI, warm-wall-neutral). The next **warm-wall** target is `on-load`
+  slot-laziness (`loadDocs`/`loadCompositions: false` for non-UI flows) — the largest CPU-bound stage.
+  Earlier framing of the deps cost as "39s"/"materialization" was both an aggregate-vs-wall and a
+  cause misread; corrected here.
 
 ---
 
@@ -340,3 +356,17 @@ Numbers below are aggregate self-time across ~313 components at ~6× concurrency
   file-content reads (`consumer-fs-load`, 5.8s) → the target for lazy file contents. (Correction: an
   earlier "39s" figure was aggregate-concurrent self-time, not wall; warm wall is ~13s.) Direction
   for the next Phase-2 PR intentionally left open.
+- 2026-06-23 — Deeper sub-step instrumentation **disproved the "object materialization" conclusion**
+  (see §4.1). The warm `legacy-load-deps` cost is filesystem I/O in the deps-cache invalidation:
+  `statFiles` 22.3s + `cacheRead` 10.9s aggregate, while `deserialize` is 9ms. `statFiles` was a
+  per-component recursive `globby` that followed each component's `node_modules` symlink into the
+  shared `node_modules` (226k/230k scanned entries), run 313× per command. Shipped the first Phase-2
+  perf change: a command-scoped, `node_modules`-ignoring **batched mtime index**
+  (`buildDirsLastModifiedIndex` in `@teambit/toolbox.fs.last-modified`, memoized on `FsCache`,
+  invalidated via `workspace.clearAllComponentsCache`/`clearComponentCache`). Result: `statFiles`
+  22.3s→0.15s aggregate, **warm `bit status` fs syscalls 74.3k→44.8k (~40%)**, `readFile` traffic
+  unchanged (no regression, checked against the bootstrap fs-read e2e metric). Key lesson reaffirmed:
+  aggregate self-time ≠ wall — a same-state A/B moved warm wall only ~0.3s because the cut work was
+  I/O-wait overlapping CPU on the single JS thread (real win on cold/CI/networked FS). The warm-wall
+  bottleneck is CPU-bound: `on-load` (9.2s), `dependency-resolution` (7.2s), `workspace.get` (5s) —
+  next warm-wall target is `on-load` slot-laziness.

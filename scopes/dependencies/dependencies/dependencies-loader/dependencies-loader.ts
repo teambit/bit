@@ -4,6 +4,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import {
   getLastModifiedComponentTimestampMs,
   getLastModifiedPathsTimestampMs,
+  buildDirsLastModifiedIndex,
 } from '@teambit/toolbox.fs.last-modified';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { DependencyLoaderOpts, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
@@ -119,10 +120,7 @@ export class DependenciesLoader {
       // to invalidate the cache in such a case.
       return null;
     }
-    const filesPaths = this.component.files.map((f) => f.path);
-    const componentConfigPath = path.join(workspace.path, rootDir, COMPONENT_CONFIG_FILE_NAME);
-    filesPaths.push(componentConfigPath);
-    const lastModifiedComponent = await getLastModifiedComponentTimestampMs(rootDir, filesPaths);
+    const lastModifiedComponent = await this.getComponentLastModified(workspace, rootDir);
     const wasModifiedAfterCache = lastModifiedComponent > cacheData.timestamp;
 
     if (wasModifiedAfterCache) {
@@ -144,6 +142,29 @@ export class DependenciesLoader {
     }
     this.logger.trace(`dependencies-loader, getting the dependencies data for ${this.idStr} from the cache`);
     return DependenciesData.deserialize(cacheData.data);
+  }
+
+  /**
+   * last-modified time of this component's files, used to decide whether the cached deps are stale.
+   * reads from a workspace-wide index built with a single filesystem scan and shared across all
+   * components in the command (instead of a recursive per-component scan — the hot path on large
+   * workspaces). falls back to a per-component scan when the entry isn't in the index, e.g. after a
+   * single-component cache clear (watch) or for a component added since the scan.
+   */
+  private async getComponentLastModified(workspace: Workspace, rootDir: string): Promise<number> {
+    const index = await workspace.consumer.componentFsCache.getOrBuildComponentsMtimeIndex(() =>
+      buildDirsLastModifiedIndex(
+        workspace.path,
+        workspace.consumer.bitMap.getAllComponents().map((componentMap) => componentMap.getComponentDir())
+      )
+    );
+    const fromIndex = index.get(rootDir);
+    if (fromIndex !== undefined) return fromIndex;
+    const filesPaths = this.component.files.map((file) => file.path);
+    filesPaths.push(path.join(workspace.path, rootDir, COMPONENT_CONFIG_FILE_NAME));
+    const lastModified = await getLastModifiedComponentTimestampMs(rootDir, filesPaths);
+    index.set(rootDir, lastModified);
+    return lastModified;
   }
 
   private shouldSaveInCache(dependenciesData: DependenciesData, storeInFsCache = true) {
