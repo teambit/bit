@@ -218,11 +218,11 @@ show components that depend on the specified component
 displays components from both workspace and scope that depend on the specified component. useful for understanding impact before making changes to a component or when planning refactoring. shows both direct and transitive dependents organized by their origin (workspace vs scope).
 Flags: --json
 
-## bit deprecate <component-name>
+## bit deprecate <component-pattern>
 
-mark a component as deprecated to discourage its use
+mark components as deprecated to discourage their use
 
-marks a component as deprecated locally, then after snap/tag and export it becomes deprecated in the remote scope. optionally specify a replacement component or deprecate only specific version ranges. deprecated components remain available but display warnings when installed or imported.
+marks components as deprecated locally, then after snap/tag and export they become deprecated in the remote scope. the pattern can match multiple components, so several can be deprecated at once. optionally specify a replacement component (single component only) or deprecate only specific version ranges. deprecated components remain available but display warnings when installed or imported.
 Flags: --new-id <string>, --range <string>
 
 ## bit deps <sub-command>
@@ -955,11 +955,11 @@ run component tests
 executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.). by default only runs tests for new and modified components. use --unmodified to test all components. to run specific test files only, pass their paths instead of a component pattern, e.g. "bit test path/to/comp/my-comp.spec.ts". supports watch mode, coverage reporting, and debug mode for development workflows.
 Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json, --verbose, --summary
 
-## bit undeprecate <id>
+## bit undeprecate <component-pattern>
 
-remove the deprecation status from a component
+remove the deprecation status from components
 
-reverses the deprecation of a component, removing warnings and allowing normal use again.
+reverses the deprecation of components, removing warnings and allowing normal use again. the pattern can match multiple components, so several can be undeprecated at once.
 
 ## bit uninstall [packages...]
 

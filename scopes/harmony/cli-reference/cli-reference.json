@@ -1682,13 +1682,13 @@
     ]
   },
   {
-    "name": "deprecate <component-name>",
+    "name": "deprecate <component-pattern>",
     "alias": "d",
     "options": [
       [
         "",
         "new-id <string>",
-        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically"
+        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically. only valid when the pattern matches a single component"
       ],
       [
         "",
@@ -1696,29 +1696,47 @@
         "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
       ]
     ],
-    "description": "mark a component as deprecated to discourage its use",
-    "extendedDescription": "marks a component as deprecated locally, then after snap/tag and export it becomes deprecated in the remote scope.\noptionally specify a replacement component or deprecate only specific version ranges.\ndeprecated components remain available but display warnings when installed or imported.",
+    "description": "mark components as deprecated to discourage their use",
+    "extendedDescription": "marks components as deprecated locally, then after snap/tag and export they become deprecated in the remote scope.\nthe pattern can match multiple components, so several can be deprecated at once.\noptionally specify a replacement component (single component only) or deprecate only specific version ranges.\ndeprecated components remain available but display warnings when installed or imported.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
     "skipWorkspace": true,
     "arguments": [
       {
-        "name": "component-name",
-        "description": "component name or component id"
+        "name": "component-pattern",
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ],
+    "examples": [
+      {
+        "cmd": "deprecate \"ui/**\"",
+        "description": "deprecate all components whose id starts with \"ui/\""
       }
     ]
   },
   {
-    "name": "undeprecate <id>",
+    "name": "undeprecate <component-pattern>",
     "alias": "",
     "options": [],
-    "description": "remove the deprecation status from a component",
-    "extendedDescription": "reverses the deprecation of a component, removing warnings and allowing normal use again.",
+    "description": "remove the deprecation status from components",
+    "extendedDescription": "reverses the deprecation of components, removing warnings and allowing normal use again.\nthe pattern can match multiple components, so several can be undeprecated at once.",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
-    "skipWorkspace": true
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ],
+    "examples": [
+      {
+        "cmd": "undeprecate '$deprecated'",
+        "description": "undeprecate all currently-deprecated components"
+      }
+    ]
   },
   {
     "name": "git <sub-command>",

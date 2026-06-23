@@ -382,6 +382,28 @@ export async function convertGraphToLockfile(
       }
     })
   );
+  // A workspace-component snap can still be missing a resolution here even
+  // when resolve() never threw ERR_PNPM_NO_MATCHING_VERSION. Its directory
+  // resolution was stripped at graph-build time (see buildPackages), and the
+  // resolve pass above leaves it null in two cases the throw-handler doesn't
+  // see: getPkgsToResolve skips any pkgId whose name+version matches a
+  // manifest in the sign/capsule set (so the resolver is never called for a
+  // component that is itself a seeder being signed), and a resolver can also
+  // return a resolution that carries no integrity. Either way the snap-version
+  // was never published, so it can't carry a valid lockfile entry. Sweep every
+  // still-resolution-less workspace-component pkg into the scrub set so pnpm
+  // re-resolves the dep from the installing manifest's specifier (linking the
+  // workspace component) instead of failing validation and aborting the whole
+  // install. Non-component registry pkgs with no resolution are left to fail
+  // validation below — that path means the graph itself is genuinely broken.
+  for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
+    if (
+      (pkg.resolution == null || Object.keys(pkg.resolution).length === 0) &&
+      graph.packages.get(pkgId)?.component != null
+    ) {
+      failedWorkspaceComponentPkgs.add(pkgId);
+    }
+  }
   if (failedWorkspaceComponentPkgs.size > 0) {
     scrubPkgsFromLockfile(lockfile, failedWorkspaceComponentPkgs);
   }

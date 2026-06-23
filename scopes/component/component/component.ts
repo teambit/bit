@@ -128,7 +128,7 @@ export class Component implements IComponent {
     head?: string;
     sort?: string;
   }): Promise<ComponentLog[]> {
-    const allLogs = await this.factory.getLogs(this.id, false, filter?.head);
+    const allLogs = (await this.factory.getLogs(this.id, false, filter?.head)).filter((log) => !log.deprecated);
 
     if (!filter) return allLogs;
 

@@ -1,13 +1,16 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatSuccessSummary, formatHint } from '@teambit/cli';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { DeprecationMain } from './deprecation.main.runtime';
+import { formatPatternResult } from './format-pattern-result';
 
 export class DeprecateCmd implements Command {
-  name = 'deprecate <component-name>';
-  arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  description = 'mark a component as deprecated to discourage its use';
-  extendedDescription = `marks a component as deprecated locally, then after snap/tag and export it becomes deprecated in the remote scope.
-optionally specify a replacement component or deprecate only specific version ranges.
+  name = 'deprecate <component-pattern>';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
+  description = 'mark components as deprecated to discourage their use';
+  extendedDescription = `marks components as deprecated locally, then after snap/tag and export they become deprecated in the remote scope.
+the pattern can match multiple components, so several can be deprecated at once.
+optionally specify a replacement component (single component only) or deprecate only specific version ranges.
 deprecated components remain available but display warnings when installed or imported.`;
   group = 'collaborate';
   skipWorkspace = true;
@@ -16,7 +19,7 @@ deprecated components remain available but display warnings when installed or im
     [
       '',
       'new-id <string>',
-      'if replaced by another component, enter the new component id. alternatively use "bit rename --deprecate" to do this automatically',
+      'if replaced by another component, enter the new component id. alternatively use "bit rename --deprecate" to do this automatically. only valid when the pattern matches a single component',
     ],
     [
       '',
@@ -27,18 +30,34 @@ deprecated components remain available but display warnings when installed or im
   loader = true;
   remoteOp = true;
   helpUrl = 'reference/components/removing-components';
+  examples = [
+    {
+      cmd: 'deprecate "ui/**"',
+      description: 'deprecate all components whose id starts with "ui/"',
+    },
+  ];
 
   constructor(private deprecation: DeprecationMain) {}
 
-  async report([id]: [string], { newId, range }: { newId?: string; range?: string }): Promise<string> {
-    const result = await this.deprecate(id, newId, range);
-    if (result) {
-      return formatSuccessSummary(`the component "${id}" has been deprecated successfully`);
+  async report([pattern]: [string], { newId, range }: { newId?: string; range?: string }): Promise<string> {
+    const { deprecated, alreadyDeprecated } = await this.deprecation.deprecateByPattern(pattern, newId, range);
+    // a range-deprecation only affects specific versions, so reflect that in the single-component messages
+    if (range) {
+      if (deprecated.length === 1 && !alreadyDeprecated.length) {
+        return formatSuccessSummary(
+          `versions of "${deprecated[0].toString()}" matching the range "${range}" have been deprecated successfully`
+        );
+      }
+      if (!deprecated.length && alreadyDeprecated.length === 1) {
+        return formatHint(
+          `the range "${range}" of "${alreadyDeprecated[0].toString()}" is already deprecated. no changes have been made`
+        );
+      }
     }
-    return formatHint(`the component "${id}" is already deprecated. no changes have been made`);
-  }
-
-  private async deprecate(id: string, newId?: string, range?: string): Promise<boolean> {
-    return this.deprecation.deprecateByCLIValues(id, newId, range);
+    return formatPatternResult(pattern, deprecated, alreadyDeprecated, {
+      verb: 'deprecated',
+      unchangedTitle: 'already deprecated',
+      unchangedState: 'already deprecated',
+    });
   }
 }
