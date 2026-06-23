@@ -1,6 +1,7 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
+import { BitError } from '@teambit/bit-error';
 import type { ComponentMain, Component } from '@teambit/component';
 import { ComponentAspect, ComponentID } from '@teambit/component';
 import type { ScopeMain } from '@teambit/scope';
@@ -22,7 +23,6 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
-import { BitError } from '@teambit/bit-error';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;
@@ -228,6 +228,11 @@ run the command per-component to use --new-id, or remove it to deprecate them al
   }
 
   private setDeprecateConfig(componentId: ComponentID, newId?: ComponentID, range?: string): boolean {
+    if (range && !semver.validRange(range)) {
+      throw new BitError(
+        `the range "${range}" is invalid. see https://www.npmjs.com/package/semver#ranges for the range syntax`
+      );
+    }
     return this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
       deprecate: !range,
       newId: newId?.toObject(),
