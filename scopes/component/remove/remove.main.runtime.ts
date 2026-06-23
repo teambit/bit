@@ -10,7 +10,6 @@ import { ConsumerNotFound } from '@teambit/legacy.consumer';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
 import { compact } from 'lodash';
-import { snapToSemver } from '@teambit/component-package-version';
 import { hasWildcard } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain, WorkspacePolicyEntry } from '@teambit/dependency-resolver';
@@ -209,10 +208,13 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
   }
 
   /**
-   * out of the given deleted ids, build workspace-policy entries pinning to the main (published) version, for
-   * those that still have at least one dependent in the workspace (excluding other components being deleted in
-   * the same operation). the version is resolved locally from the scope (no network), so "bit delete" stays a
-   * fast, offline-capable, local operation.
+   * out of the given deleted ids, build workspace-policy entries pinning to the latest tagged version on main,
+   * for those that still have at least one dependent in the workspace (excluding other components being deleted
+   * in the same operation). the version is resolved locally from the scope (no network), so "bit delete" stays
+   * a fast, offline-capable, local operation.
+   * only a tagged (published) main version is used. a component with no tag on main (only snaps, or it only ever
+   * existed on the lane) is skipped - pinning a snap version would re-introduce the "No matching version" failure
+   * this feature is meant to prevent, since snaps aren't fetchable as a regular registry package.
    * envs are excluded on purpose: a deleted env surfaces as a "RemovedEnv" issue so the user can replace it
    * explicitly (bit env replace), and we don't want to silently pin it to its main version and suppress that
    * signal. only regular dependencies (e.g. a dependency of an env) need pinning so they install from main.
@@ -234,11 +236,10 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     const entries = await Promise.all(
       comps.map(async (comp): Promise<WorkspacePolicyEntry | undefined> => {
         const modelComponent = await this.workspace.scope.getBitObjectModelComponent(comp.id.changeVersion(undefined));
-        // the main head as a tag (or hash, for an exported snap). undefined means the component only ever
-        // existed on the lane and was never on main - there's nothing to pin to, so skip it.
-        const mainVersion = modelComponent?.getHeadAsTagIfExist();
+        // the latest tagged version on main. undefined means there's no published release on main to pin to.
+        const mainVersion = modelComponent?.latestVersionIfExist();
         if (!mainVersion) return undefined;
-        const versionWithPrefix = this.depResolver.getVersionWithSavePrefix({ version: snapToSemver(mainVersion) });
+        const versionWithPrefix = this.depResolver.getVersionWithSavePrefix({ version: mainVersion });
         return {
           dependencyId: this.depResolver.getPackageName(comp),
           value: { version: versionWithPrefix },
