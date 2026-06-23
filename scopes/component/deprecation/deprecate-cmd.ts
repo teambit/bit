@@ -33,9 +33,15 @@ deprecated components remain available but display warnings when installed or im
   async report([id]: [string], { newId, range }: { newId?: string; range?: string }): Promise<string> {
     const result = await this.deprecate(id, newId, range);
     if (result) {
-      return formatSuccessSummary(`the component "${id}" has been deprecated successfully`);
+      const successMessage = range
+        ? `versions of "${id}" matching the range "${range}" have been deprecated successfully`
+        : `the component "${id}" has been deprecated successfully`;
+      return formatSuccessSummary(successMessage);
     }
-    return formatHint(`the component "${id}" is already deprecated. no changes have been made`);
+    const hintMessage = range
+      ? `the range "${range}" of "${id}" is already deprecated. no changes have been made`
+      : `the component "${id}" is already deprecated. no changes have been made`;
+    return formatHint(hintMessage);
   }
 
   private async deprecate(id: string, newId?: string, range?: string): Promise<boolean> {
