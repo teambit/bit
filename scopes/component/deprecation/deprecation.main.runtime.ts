@@ -1,6 +1,7 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
+import { BitError } from '@teambit/bit-error';
 import type { ComponentMain, Component } from '@teambit/component';
 import { ComponentAspect, ComponentID } from '@teambit/component';
 import type { ScopeMain } from '@teambit/scope';
@@ -94,6 +95,11 @@ export class DeprecationMain {
    * @returns boolean whether or not the component has been deprecated
    */
   async deprecate(componentId: ComponentID, newId?: ComponentID, range?: string): Promise<boolean> {
+    if (range && !semver.validRange(range)) {
+      throw new BitError(
+        `the range "${range}" is invalid. see https://www.npmjs.com/package/semver#ranges for the range syntax`
+      );
+    }
     const results = this.workspace.bitMap.addComponentConfig(componentId, DeprecationAspect.id, {
       deprecate: !range,
       newId: newId?.toObject(),
