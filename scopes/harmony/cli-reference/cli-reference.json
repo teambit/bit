@@ -1733,7 +1733,7 @@
     ],
     "examples": [
       {
-        "cmd": "undeprecate \"$deprecated\"",
+        "cmd": "undeprecate '$deprecated'",
         "description": "undeprecate all currently-deprecated components"
       }
     ]

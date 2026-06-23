@@ -17,7 +17,8 @@ the pattern can match multiple components, so several can be undeprecated at onc
   remoteOp = true;
   examples = [
     {
-      cmd: 'undeprecate "$deprecated"',
+      // single-quote "$deprecated" so the shell doesn't expand it as an env var
+      cmd: "undeprecate '$deprecated'",
       description: 'undeprecate all currently-deprecated components',
     },
   ];
