@@ -189,18 +189,18 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     const isLaneSoftDelete = Boolean(currentLane) && !updateMain && !opts.range && !opts.snaps;
     // best-effort: never let this convenience break the actual deletion. on failure the user can still
     // recover via the manual "bit install <pkg>" workaround.
-    const packagesToPinToMain = isLaneSoftDelete
-      ? await this.getDeletedPackagesWithWorkspaceDependents(componentIds).catch((err) => {
-          this.logger.warn(`getDeletedPackagesWithWorkspaceDependents failed: ${err.message}`);
+    const depsToPinToMain = isLaneSoftDelete
+      ? await this.getDeletedDepsToPinToMain(componentIds).catch((err) => {
+          this.logger.warn(`getDeletedDepsToPinToMain failed: ${err.message}`);
           return [];
         })
       : [];
 
     const removedComps = await this.markRemoveComps(componentIds, opts);
 
-    if (packagesToPinToMain.length) {
-      await this.pinDeletedDepsToMainInWorkspacePolicy(packagesToPinToMain).catch((err) => {
-        this.logger.warn(`pinDeletedDepsToMainInWorkspacePolicy failed: ${err.message}`);
+    if (depsToPinToMain.length) {
+      await this.pinDepsToMainInWorkspacePolicy(depsToPinToMain).catch((err) => {
+        this.logger.warn(`pinDepsToMainInWorkspacePolicy failed: ${err.message}`);
       });
     }
 
@@ -208,13 +208,18 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
   }
 
   /**
-   * out of the given deleted ids, return the package names of those that still have at least one dependent
-   * in the workspace (excluding other components being deleted in the same operation).
+   * out of the given deleted ids, build workspace-policy entries pinning to the latest tagged version on main,
+   * for those that still have at least one dependent in the workspace (excluding other components being deleted
+   * in the same operation). the version is resolved locally from the scope (no network), so "bit delete" stays
+   * a fast, offline-capable, local operation.
+   * only a tagged (published) main version is used. a component with no tag on main (only snaps, or it only ever
+   * existed on the lane) is skipped - pinning a snap version would re-introduce the "No matching version" failure
+   * this feature is meant to prevent, since snaps aren't fetchable as a regular registry package.
    * envs are excluded on purpose: a deleted env surfaces as a "RemovedEnv" issue so the user can replace it
    * explicitly (bit env replace), and we don't want to silently pin it to its main version and suppress that
    * signal. only regular dependencies (e.g. a dependency of an env) need pinning so they install from main.
    */
-  private async getDeletedPackagesWithWorkspaceDependents(deletedIds: ComponentID[]): Promise<string[]> {
+  private async getDeletedDepsToPinToMain(deletedIds: ComponentID[]): Promise<WorkspacePolicyEntry[]> {
     const graph = await this.workspace.getGraphIds(undefined, false);
     const deletedIdList = ComponentIdList.fromArray(deletedIds);
     const idsWithDependents = deletedIds.filter((id) => {
@@ -228,40 +233,28 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
     const nonEnvIds = idsWithDependents.filter((_id, index) => !isEnvFlags[index]);
     if (!nonEnvIds.length) return [];
     const comps = await this.workspace.getMany(nonEnvIds);
-    return comps.map((comp) => this.depResolver.getPackageName(comp));
+    const entries = await Promise.all(
+      comps.map(async (comp): Promise<WorkspacePolicyEntry | undefined> => {
+        const modelComponent = await this.workspace.scope.getBitObjectModelComponent(comp.id.changeVersion(undefined));
+        // the latest tagged version on main. undefined means there's no published release on main to pin to.
+        const mainVersion = modelComponent?.latestVersionIfExist();
+        if (!mainVersion) return undefined;
+        const versionWithPrefix = this.depResolver.getVersionWithSavePrefix({ version: mainVersion });
+        return {
+          dependencyId: this.depResolver.getPackageName(comp),
+          value: { version: versionWithPrefix },
+          lifecycleType: 'runtime',
+        };
+      })
+    );
+    return compact(entries);
   }
 
   /**
-   * pin the given (deleted-on-lane) packages to their main/published version in the workspace policy, so their
-   * dependents install them from the registry instead of the non-published lane snap version. packages that were
-   * never published to the registry (e.g. they only ever existed on the lane) are skipped.
+   * add the given (deleted-on-lane) policy entries to the workspace policy, so their dependents install them
+   * from the registry (their main version) instead of the non-published lane snap version.
    */
-  private async pinDeletedDepsToMainInWorkspacePolicy(packageNames: string[]): Promise<void> {
-    const resolver = await this.depResolver.getVersionResolver();
-    const entries: WorkspacePolicyEntry[] = [];
-    await Promise.all(
-      packageNames.map(async (packageName) => {
-        const resolved = await resolver
-          .resolveRemoteVersion(packageName, { rootDir: this.workspace.path })
-          .catch(() => undefined);
-        if (!resolved?.version) {
-          this.logger.warn(
-            `pinDeletedDepsToMainInWorkspacePolicy: unable to resolve a published version for ${packageName}, skipping`
-          );
-          return;
-        }
-        const versionWithPrefix = this.depResolver.getVersionWithSavePrefix({
-          version: resolved.version,
-          wantedRange: resolved.wantedRange,
-        });
-        entries.push({
-          dependencyId: packageName,
-          value: { version: versionWithPrefix },
-          lifecycleType: 'runtime',
-        });
-      })
-    );
-    if (!entries.length) return;
+  private async pinDepsToMainInWorkspacePolicy(entries: WorkspacePolicyEntry[]): Promise<void> {
     // skipIfExisting so we never override a version the user already set explicitly in the workspace policy.
     this.depResolver.addToRootPolicy(entries, { skipIfExisting: true });
     await this.depResolver.persistConfig('delete (pin deleted-on-lane deps to main)');
