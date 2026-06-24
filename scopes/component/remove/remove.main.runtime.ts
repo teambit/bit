@@ -1,5 +1,5 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime, formatSection, formatItem } from '@teambit/cli';
 import semver from 'semver';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -12,7 +12,7 @@ import { ImporterAspect } from '@teambit/importer';
 import { compact } from 'lodash';
 import { hasWildcard } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
-import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain, WorkspacePolicyEntry } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { IssuesMain } from '@teambit/issues';
@@ -180,7 +180,92 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
         );
       }
     }
-    return this.markRemoveComps(componentIds, opts);
+
+    // when soft-deleting from a lane, components that still have dependents in the workspace will keep
+    // referencing the now-deleted lane snap version (0.0.0-<hash>), which was never published to the registry.
+    // to avoid a "No matching version found" error on the next "bit install", pin those components to their
+    // main (published) version in the workspace policy - mirroring what running "bit install <pkg>" does manually.
+    // this must be computed before the removal so the dependency graph is still intact.
+    const isLaneSoftDelete = Boolean(currentLane) && !updateMain && !opts.range && !opts.snaps;
+    // best-effort: never let this convenience break the actual deletion. on failure the user can still
+    // recover via the manual "bit install <pkg>" workaround.
+    const depsToPinToMain = isLaneSoftDelete
+      ? await this.getDeletedDepsToPinToMain(componentIds).catch((err) => {
+          this.logger.warn(`getDeletedDepsToPinToMain failed: ${err.message}`);
+          return [];
+        })
+      : [];
+
+    const removedComps = await this.markRemoveComps(componentIds, opts);
+
+    if (depsToPinToMain.length) {
+      await this.pinDepsToMainInWorkspacePolicy(depsToPinToMain).catch((err) => {
+        this.logger.warn(`pinDepsToMainInWorkspacePolicy failed: ${err.message}`);
+      });
+    }
+
+    return removedComps;
+  }
+
+  /**
+   * out of the given deleted ids, build workspace-policy entries pinning to the latest tagged version on main,
+   * for those that still have at least one dependent in the workspace (excluding other components being deleted
+   * in the same operation). the version is resolved locally from the scope (no network), so "bit delete" stays
+   * a fast, offline-capable, local operation.
+   * only a tagged (published) main version is used. a component with no tag on main (only snaps, or it only ever
+   * existed on the lane) is skipped - pinning a snap version would re-introduce the "No matching version" failure
+   * this feature is meant to prevent, since snaps aren't fetchable as a regular registry package.
+   * envs are excluded on purpose: a deleted env surfaces as a "RemovedEnv" issue so the user can replace it
+   * explicitly (bit env replace), and we don't want to silently pin it to its main version and suppress that
+   * signal. only regular dependencies (e.g. a dependency of an env) need pinning so they install from main.
+   */
+  private async getDeletedDepsToPinToMain(deletedIds: ComponentID[]): Promise<WorkspacePolicyEntry[]> {
+    const graph = await this.workspace.getGraphIds(undefined, false);
+    const deletedIdList = ComponentIdList.fromArray(deletedIds);
+    const idsWithDependents = deletedIds.filter((id) => {
+      const dependents = graph.predecessors(id.toString(), {
+        nodeFilter: (node) => this.workspace.hasId(node.attr) && !deletedIdList.hasWithoutVersion(node.attr),
+      });
+      return dependents.length > 0;
+    });
+    if (!idsWithDependents.length) return [];
+    const isEnvFlags = await Promise.all(idsWithDependents.map((id) => this.isEnvByIdWithoutLoadingComponent(id)));
+    const nonEnvIds = idsWithDependents.filter((_id, index) => !isEnvFlags[index]);
+    if (!nonEnvIds.length) return [];
+    const comps = await this.workspace.getMany(nonEnvIds);
+    const entries = await Promise.all(
+      comps.map(async (comp): Promise<WorkspacePolicyEntry | undefined> => {
+        const modelComponent = await this.workspace.scope.getBitObjectModelComponent(comp.id.changeVersion(undefined));
+        // the latest tagged version on main. undefined means there's no published release on main to pin to.
+        const mainVersion = modelComponent?.latestVersionIfExist();
+        if (!mainVersion) return undefined;
+        const versionWithPrefix = this.depResolver.getVersionWithSavePrefix({ version: mainVersion });
+        return {
+          dependencyId: this.depResolver.getPackageName(comp),
+          value: { version: versionWithPrefix },
+          lifecycleType: 'runtime',
+        };
+      })
+    );
+    return compact(entries);
+  }
+
+  /**
+   * add the given (deleted-on-lane) policy entries to the workspace policy, so their dependents install them
+   * from the registry (their main version) instead of the non-published lane snap version.
+   */
+  private async pinDepsToMainInWorkspacePolicy(entries: WorkspacePolicyEntry[]): Promise<void> {
+    // skipIfExisting so we never override a version the user already set explicitly in the workspace policy.
+    this.depResolver.addToRootPolicy(entries, { skipIfExisting: true });
+    await this.depResolver.persistConfig('delete (pin deleted-on-lane deps to main)');
+    const items = entries.map((entry) => formatItem(`${entry.dependencyId}@${entry.value.version}`));
+    this.logger.console(
+      formatSection(
+        'pinned deleted components to their main version',
+        'these components were deleted from the lane but still have dependents in the workspace, so they were added to the workspace policy to be installed from main',
+        items
+      )
+    );
   }
 
   /**

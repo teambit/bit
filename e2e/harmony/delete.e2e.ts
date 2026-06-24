@@ -60,6 +60,77 @@ describe('bit delete command', function () {
       });
     }
   );
+  /**
+   * the previous test needed a manual "bit install <comp2-pkg>" so the next install wouldn't fail with
+   * "No matching version found for <comp2>@0.0.0-<snap>" (the lane snap was never published). deleting on a
+   * lane now auto-pins such components (that still have dependents in the workspace) to their main version
+   * in the workspace policy, so a plain "bit install" resolves them from main with no manual step.
+   */
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'deleting a component on a lane that still has dependents in the workspace',
+    () => {
+      let comp2PkgName: string;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(2); // comp1 -> comp2
+        comp2PkgName = helper.general.getPackageNameByCompName('comp2');
+        npmCiRegistry = new NpmCiRegistry(helper);
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        await npmCiRegistry.init();
+        helper.command.tagAllComponents(); // main: comp1@0.0.1, comp2@0.0.1
+        helper.command.export();
+        helper.command.createLane();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified'); // lane snaps
+        helper.command.export();
+        helper.command.softRemoveOnLane('comp2'); // comp2 still has a dependent in the ws: comp1
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      it('should pin the deleted component to its main version in the workspace policy', () => {
+        const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+        expect(policy.dependencies).to.have.property(comp2PkgName);
+        // it should be the published main version (0.0.1), not the non-published lane snap (0.0.0-<hash>)
+        expect(policy.dependencies[comp2PkgName]).to.have.string('0.0.1');
+        expect(policy.dependencies[comp2PkgName]).to.not.have.string('0.0.0-');
+      });
+      it('a plain "bit install" should succeed without the manual "bit install <pkg>" workaround', () => {
+        expect(() => helper.command.install()).to.not.throw();
+      });
+      it('bit status should not show RemovedDependencies issues', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedDependencies.name);
+      });
+    }
+  );
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'deleting a component on a lane that has no dependents in the workspace',
+    () => {
+      let comp1PkgName: string;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(2); // comp1 -> comp2, nothing depends on comp1
+        comp1PkgName = helper.general.getPackageNameByCompName('comp1');
+        npmCiRegistry = new NpmCiRegistry(helper);
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        await npmCiRegistry.init();
+        helper.command.tagAllComponents();
+        helper.command.export();
+        helper.command.createLane();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+        helper.command.softRemoveOnLane('comp1');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      it('should not add the deleted component to the workspace policy (no dependents to fix)', () => {
+        const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+        expect(policy?.dependencies || {}).to.not.have.property(comp1PkgName);
+      });
+    }
+  );
   describe('import a scope with deleted components', () => {
     before(() => {
       helper = new Helper();
