@@ -612,6 +612,8 @@ export default class Component extends BitObject {
     const removeSnaps = removeAspect?.config.snaps || [];
     const deprecationAspect = headVersion?.extensions.findCoreExtension(Extensions.deprecation);
     const deprecationRange = deprecationAspect?.config.range;
+    // when a component is fully deprecated (no range), every version is considered deprecated.
+    const deprecatedFully = Boolean(deprecationAspect?.config.deprecate);
 
     const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     const results = versionsInfo.map((versionInfo) => {
@@ -628,7 +630,9 @@ export default class Component extends BitObject {
         deleted:
           (versionInfo.tag && removeRange && semver.satisfies(versionInfo.tag, removeRange)) ||
           (!versionInfo.tag && removeSnaps.includes(versionInfo.ref.toString())),
-        deprecated: versionInfo.tag && deprecationRange && semver.satisfies(versionInfo.tag, deprecationRange),
+        deprecated:
+          deprecatedFully ||
+          Boolean(versionInfo.tag && deprecationRange && semver.satisfies(versionInfo.tag, deprecationRange)),
         hidden: versionInfo.version?.hidden,
       };
     });
