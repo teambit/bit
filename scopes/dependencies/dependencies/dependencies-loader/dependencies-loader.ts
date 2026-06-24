@@ -4,7 +4,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import {
   getLastModifiedComponentTimestampMs,
   getLastModifiedPathsTimestampMs,
-  buildDirsLastModifiedIndex,
+  buildComponentDirsLastModifiedIndex,
 } from '@teambit/toolbox.fs.last-modified';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { DependencyLoaderOpts, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
@@ -155,7 +155,7 @@ export class DependenciesLoader {
     let index: Map<string, number> | undefined;
     try {
       index = await workspace.consumer.componentFsCache.getOrBuildComponentsMtimeIndex(() =>
-        buildDirsLastModifiedIndex(
+        buildComponentDirsLastModifiedIndex(
           workspace.path,
           workspace.consumer.bitMap.getAllComponents().map((componentMap) => componentMap.getComponentDir())
         )

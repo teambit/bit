@@ -2,5 +2,5 @@ export {
   getLastModifiedPathsTimestampMs,
   getPathStatIfExist,
   getLastModifiedComponentTimestampMs,
-  buildDirsLastModifiedIndex,
+  buildComponentDirsLastModifiedIndex,
 } from './last-modified';
