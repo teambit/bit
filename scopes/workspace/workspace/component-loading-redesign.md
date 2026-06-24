@@ -204,11 +204,12 @@ earlier ones teach us).
 ### Phase 2 — Quick perf wins on existing seams
 
 - [x] Benchmark harness committed + baseline recorded (see §4) — **gate for the rest of the phase**
-- [x] Batch the deps-cache invalidation scan: a command-scoped mtime index built from a few batched
-      `globby` scans, replacing the per-component recursive `globby`. Restricts the node_modules
-      traversal to the footprint the cache depends on (source + each component's `node_modules`/`@scope`
-      dir mtimes, no deep tree — auto-detect never traverses _into_ a package). Cuts warm `bit status`
-      fs syscalls ~37% (74.3k→46.9k); warm-wall-neutral (I/O-wait), helps cold/CI (see §4.1).
+- [x] Restrict the deps-cache invalidation scan to the node*modules footprint the cache depends on:
+      the per-component freshness scan stops at the `node_modules` boundary (auto-detect never traverses
+      \_into* a package) and only takes each component's `node_modules`/`@scope` dir mtimes — a direct
+      dep added/removed/relinked bumps them. Cuts warm `bit status` fs syscalls ~37% (74.3k→46.4k);
+      warm-wall-neutral (I/O-wait), helps cold/CI (see §4.1). Kept per-component (no shared index — it
+      added complexity for zero syscall benefit and over-scanned single-component commands).
 - [ ] `on-load` slot-laziness (`loadDocs: false, loadCompositions: false` for non-UI flows) — the
       largest CPU-bound stage (9.2s) and the next **warm-wall** target
 - [ ] Lazy file contents in `ModelComponent.toConsumerComponent` (helps `graph`, not `status`)
@@ -303,12 +304,11 @@ hypothesis, which deeper sub-step instrumentation disproved):**
   `Dependency` reconstruction (negligible). `statFiles` was a recursive `globby` per component that
   **followed the component's `node_modules` symlink into the shared workspace `node_modules`** (226k
   of 230k scanned entries), run 313× per command.
-- **Aggregate self-time ≠ wall — sharply.** Batching that scan and restricting the node*modules
-  traversal to the footprint the cache depends on (the dependency auto-detect never traverses *into* a
-  package, so only the component's `node_modules`/`@scope` dir mtimes matter — a dep add/remove/relink
-  bumps them; the deep tree and transitive store are irrelevant) cut `statFiles` 22.3s→~0.5s aggregate
-  and **fs syscalls 74.3k→46.9k per warm `bit status` (~37%)** — yet a same-state wall A/B moved warm
-  wall by **~0.3s**. The removed work is I/O-\_wait* that overlaps with CPU on the single JS thread; on
+- **Aggregate self-time ≠ wall — sharply.** Restricting the node*modules traversal to the footprint
+  the cache depends on (the dependency auto-detect never traverses \_into* a package, so only the
+  component's `node_modules`/`@scope` dir mtimes matter — a dep add/remove/relink bumps them; the deep
+  tree and transitive store are irrelevant) cut **fs syscalls 74.3k→46.4k per warm `bit status`
+  (~37%)** — yet a same-state wall A/B moved warm wall by **~0.3s**. The removed work is I/O-\_wait\* that overlaps with CPU on the single JS thread; on
   a warm SSD it was never on the critical path (real win on cold/CI/networked filesystems, where it
   is). `cacheRead` (10.9s) is likewise I/O-wait, so consolidating it would also be warm-wall-neutral.
   (An earlier iteration _ignored_ node_modules entirely — faster still, but a correctness regression:
@@ -367,16 +367,18 @@ hypothesis, which deeper sub-step instrumentation disproved):**
   `statFiles` 22.3s + `cacheRead` 10.9s aggregate, while `deserialize` is 9ms. `statFiles` was a
   per-component recursive `globby` that followed each component's `node_modules` symlink into the
   shared `node_modules` (226k/230k scanned entries), run 313× per command. Shipped the first Phase-2
-  perf change: a command-scoped **batched mtime index** (`buildComponentDirsLastModifiedIndex` in
-  `@teambit/toolbox.fs.last-modified`, memoized on `FsCache`, invalidated via
-  `workspace.clearAllComponentsCache`/`clearComponentCache`). Result: **warm `bit status` fs syscalls
-  74.3k→46.9k (~37%)**, `readFile` traffic unchanged (no regression, checked against the bootstrap
-  fs-read e2e metric). **Important correctness lesson:** a first cut simply _ignored_ node_modules
-  (74.3k→44.8k) — but the deps auto-detect resolves imports _through_ node_modules and reads each
-  direct dep's `package.json` (`name`/`componentId`), so the cache depends on node_modules content;
-  ignoring it is a regression. The tree builder stops at the package boundary
+  perf change: restrict that per-component scan to the node*modules footprint the cache depends on —
+  it stops at the `node_modules` boundary and only takes the `node_modules`/`@scope` dir mtimes
+  (`getLastModifiedDirTimestampMs` in `@teambit/toolbox.fs.last-modified`). Result: **warm `bit status`
+  fs syscalls 74.3k→46.4k (~37%)**, `readFile` traffic unchanged (no regression, checked against the
+  bootstrap fs-read e2e metric). **Important correctness lesson:** a first cut simply \_ignored*
+  node*modules (74.3k→44.8k) — but the deps auto-detect resolves imports \_through* node_modules and
+  reads each direct dep's `package.json` (`name`/`componentId`), so the cache depends on node_modules
+  content; ignoring it is a regression. The tree builder stops at the package boundary
   (`generate-tree-madge.ts` filter), so only the component's `node_modules`/`@scope` dir mtimes are
   needed (a dep add/remove/relink bumps them) — not the deep tree. See [[deps-cache-node-modules-invalidation]].
+  (A shared command-scoped index was tried and dropped: it added memoization/invalidation complexity
+  for zero syscall benefit — batching saves no syscalls here — and over-scanned single-component commands.)
   Key perf lesson reaffirmed: aggregate self-time ≠ wall — a same-state A/B moved warm wall only ~0.3s
   because the cut work was I/O-wait overlapping CPU on the single JS thread (real win on cold/CI/
   networked FS). The warm-wall bottleneck is CPU-bound: `on-load` (9.2s), `dependency-resolution`

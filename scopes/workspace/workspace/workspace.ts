@@ -833,7 +833,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
     this.aggregatedLoadFailures.clear();
-    this.consumer.componentFsCache.clearComponentsMtimeIndex();
     this._componentList = new ComponentsList(this);
   }
 
@@ -841,8 +840,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearComponentCache(id);
     this.componentStatusLoader.clearOneComponentCache(id);
     this.consumer.clearOneComponentCache(id);
-    const componentDir = this.consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true })?.getComponentDir();
-    if (componentDir) this.consumer.componentFsCache.deleteComponentMtimeIndexEntry(componentDir);
     this._componentList = new ComponentsList(this);
   }
 

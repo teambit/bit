@@ -14,55 +14,9 @@ const DEPS = 'deps';
 export class FsCache {
   readonly basePath: PathOsBasedAbsolute;
   protected isNoFsCacheFeatureEnabled: boolean;
-  // command-scoped index of component rootDir -> last-modified mtimeMs, used to invalidate the
-  // dependencies fs-cache with a single workspace scan instead of a per-component one. invalidated
-  // by the workspace's clearAllComponentsCache / clearComponentCache (e.g. on watch file changes).
-  private componentsMtimeIndex?: Map<string, number>;
-  private componentsMtimeIndexBuilding?: Promise<Map<string, number>>;
-  private componentsMtimeIndexGen = 0;
   constructor(private scopePath: string) {
     this.basePath = path.join(this.scopePath, WORKSPACE_CACHE, COMPONENTS_CACHE);
     this.isNoFsCacheFeatureEnabled = isFeatureEnabled(NO_FS_CACHE_FEATURE);
-  }
-
-  /**
-   * return the shared components last-modified index, building it once via `build` and memoizing it
-   * for the lifetime of this cache (a command, or until invalidated). concurrent first-callers share
-   * a single build.
-   */
-  async getOrBuildComponentsMtimeIndex(build: () => Promise<Map<string, number>>): Promise<Map<string, number>> {
-    if (this.componentsMtimeIndex) return this.componentsMtimeIndex;
-    if (!this.componentsMtimeIndexBuilding) {
-      const gen = this.componentsMtimeIndexGen;
-      const building = build()
-        .then((index) => {
-          // if the index was cleared/invalidated while building, don't cache this stale result as canonical.
-          if (gen === this.componentsMtimeIndexGen) this.componentsMtimeIndex = index;
-          return index;
-        })
-        .finally(() => {
-          // clear on both success and failure so a transient build error doesn't poison future reads;
-          // guard against clobbering a newer build started after an invalidation.
-          if (this.componentsMtimeIndexBuilding === building) this.componentsMtimeIndexBuilding = undefined;
-        });
-      this.componentsMtimeIndexBuilding = building;
-    }
-    return this.componentsMtimeIndexBuilding;
-  }
-
-  /** drop the whole index (e.g. on a full workspace cache clear). */
-  clearComponentsMtimeIndex() {
-    this.componentsMtimeIndex = undefined;
-    this.componentsMtimeIndexBuilding = undefined;
-    this.componentsMtimeIndexGen += 1;
-  }
-
-  /** drop a single component's entry so its next load recomputes it (e.g. on a watch file change). */
-  deleteComponentMtimeIndexEntry(rootDir: string) {
-    this.componentsMtimeIndex?.delete(rootDir);
-    // if a build is in flight it may already contain this now-stale entry; bump the generation so its
-    // result won't be cached as canonical, forcing the next read to rebuild (and re-stat this component).
-    if (this.componentsMtimeIndexBuilding) this.componentsMtimeIndexGen += 1;
   }
 
   async getDocsFromCache(filePath: string): Promise<{ timestamp: number; data: string } | null> {
