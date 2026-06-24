@@ -368,10 +368,12 @@ export class IsolatorMain {
     let componentsToIsolate = opts.seedersOnly
       ? await host.getMany(seeders)
       : await this.createGraph(seeders, createGraphOpts);
-    if (opts.seedersOnly) {
-      // seedersOnly skips the dependency graph and installs deps as packages from the registry.
-      // Dependencies that are in a cycle with a seeder can't be installed that way (their
-      // snap-version isn't published yet), so pull them into the isolation as capsules.
+    // seedersOnly skips the dependency graph and installs deps as packages from the registry.
+    // A dependency in a cycle with a seeder can't be installed that way (its snap-version isn't
+    // published yet), so pull it into the isolation as a capsule. Skip this for aspect isolation:
+    // aspects are loaded from already-published packages and pulling cyclic aspect deps in only
+    // forces loading envs that aren't installed in that context.
+    if (opts.seedersOnly && !opts.context?.aspects) {
       const cyclicDeps = await this.getCyclicDependenciesOfSeeders(seeders, componentsToIsolate, createGraphOpts);
       if (cyclicDeps.length) {
         this.logger.debug(`isolateComponents, adding ${cyclicDeps.length} cyclic dependencies of the seeders`);
@@ -434,16 +436,7 @@ export class IsolatorMain {
 
     // Optimization: exclude unmodified exported dependencies from capsule creation
     if (!isFeatureEnabled(DISABLE_CAPSULE_OPTIMIZATION)) {
-      // Components participating in a dependency cycle must never be excluded (installed as a
-      // package) even when they're built and exported: a cyclic dep references back into the
-      // seeders, whose snap-version package isn't published yet, so the capsule install would
-      // try to fetch an unpublished snap from the registry and fail (the Ripple circular-deps
-      // build failure). Keep every component that is part of a cycle as a real capsule. The graph
-      // here only spans the seeders and their dependencies, so any cycle in it is relevant. Pass
-      // includeDeps=true so cycle detection doesn't depend on matching the (possibly versionless)
-      // seeder ids against the graph's versioned node ids.
-      const idsInCycle = new Set(graph.findCycles(undefined, true).flat());
-      filteredComps = await this.filterUnmodifiedExportedDependencies(filteredComps, seeders, host, idsInCycle);
+      filteredComps = await this.filterUnmodifiedExportedDependencies(filteredComps, seeders, host);
       this.logger.debug(
         `[OPTIMIZATION] Before filtering: ${componentsToInclude.length}. After filtering: ${filteredComps.length} components remaining`
       );
@@ -1545,8 +1538,7 @@ export class IsolatorMain {
   private async filterUnmodifiedExportedDependencies(
     components: Component[],
     seederIds: ComponentID[],
-    host: ComponentFactory,
-    idsInCycle: Set<string> = new Set()
+    host: ComponentFactory
   ): Promise<Component[]> {
     this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${components.length} components`);
 
@@ -1562,15 +1554,6 @@ export class IsolatorMain {
 
       if (isSeeder) {
         // Always include seeders (modified components and their dependents)
-        filtered.push(component);
-        continue;
-      }
-
-      // A dependency that is part of a dependency cycle must keep its capsule. Excluding it
-      // (to install as a package) would make the capsule install resolve the cyclic
-      // back-reference to a seeder's snap-version from the registry, where it isn't published
-      // yet — the Ripple circular-dependency build failure.
-      if (idsInCycle.has(component.id.toString())) {
         filtered.push(component);
         continue;
       }
