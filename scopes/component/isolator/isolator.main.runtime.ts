@@ -438,9 +438,11 @@ export class IsolatorMain {
       // package) even when they're built and exported: a cyclic dep references back into the
       // seeders, whose snap-version package isn't published yet, so the capsule install would
       // try to fetch an unpublished snap from the registry and fail (the Ripple circular-deps
-      // build failure). Keep every component in a seeder cycle as a real capsule. (the graph is
-      // seeded with the seeders, so findCycles() already scopes to cycles that involve them.)
-      const idsInCycle = new Set(graph.findCycles().flat());
+      // build failure). Keep every component that is part of a cycle as a real capsule. The graph
+      // here only spans the seeders and their dependencies, so any cycle in it is relevant. Pass
+      // includeDeps=true so cycle detection doesn't depend on matching the (possibly versionless)
+      // seeder ids against the graph's versioned node ids.
+      const idsInCycle = new Set(graph.findCycles(undefined, true).flat());
       filteredComps = await this.filterUnmodifiedExportedDependencies(filteredComps, seeders, host, idsInCycle);
       this.logger.debug(
         `[OPTIMIZATION] Before filtering: ${componentsToInclude.length}. After filtering: ${filteredComps.length} components remaining`
@@ -467,8 +469,11 @@ export class IsolatorMain {
     const host = opts.host || this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
     const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
-    // the graph is seeded with the seeders, so findCycles() returns only cycles that involve them.
-    const cyclicIds = new Set<string>(graph.findCycles().flat());
+    // the graph only spans the seeders and their dependencies, so any cycle in it is a cycle a
+    // seeder participates in. Pass includeDeps=true so detection doesn't rely on matching the
+    // (possibly versionless) seeder ids against the graph's versioned node ids — otherwise a
+    // seeder-involving cycle can be missed and its members get installed from the registry again.
+    const cyclicIds = new Set<string>(graph.findCycles(undefined, true).flat());
     if (cyclicIds.size === 0) return [];
     const alreadyIsolatedIds = new Set(alreadyIsolated.map((comp) => comp.id.toString()));
     const idsToAdd = [...cyclicIds]
