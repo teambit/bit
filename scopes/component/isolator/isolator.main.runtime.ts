@@ -35,7 +35,12 @@ import { ComponentIdList } from '@teambit/component-id';
 import type { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
 import type { GlobalConfigMain } from '@teambit/global-config';
 import { GlobalConfigAspect } from '@teambit/global-config';
-import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
+import {
+  DEPENDENCIES_FIELDS,
+  PACKAGE_JSON,
+  CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
+  Extensions,
+} from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { AbstractVinyl, ArtifactVinyl } from '@teambit/component.sources';
 import {
@@ -1528,7 +1533,13 @@ export class IsolatorMain {
       const canBeInstalled =
         host.isExported(component.id) &&
         (remotes.isHub(component.id.scope) || isPublished) &&
-        component.buildStatus === 'succeed';
+        component.buildStatus === 'succeed' &&
+        // `buildStatus === 'succeed'` is not enough: a snap can build successfully but never publish its
+        // package — e.g. `bit ci pr` snapping with the publish task skipped (build succeeds, so buildStatus
+        // is set to 'succeed', but no package reaches the registry). reusing such a lane on a later run, this
+        // unmodified dependency would be excluded here and then fail to install with "No matching version
+        // found". only exclude (i.e. install from the registry) when the package was actually published.
+        this.wasPackagePublished(component);
 
       if (canBeInstalled) {
         this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
@@ -1541,6 +1552,19 @@ export class IsolatorMain {
       `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${components.length} components`
     );
     return filtered;
+  }
+
+  /**
+   * whether this exact version had its package published to the registry. the publish (pkg) build task
+   * records `publishedPackage` in the version's builder data only on a real (non-dry-run) successful
+   * publish (see publisher.ts) — so its absence means the package was never published (the task was
+   * skipped or it ran dry), even when `buildStatus` is 'succeed'. it's inline metadata on the version,
+   * loaded eagerly with the component (like `buildStatus`), so this is a local check with no network call.
+   */
+  private wasPackagePublished(component: Component): boolean {
+    const builderData = component.state._consumer.extensions.findCoreExtension(Extensions.builder)?.data;
+    const pkgData = builderData?.aspectsData?.find((aspectData) => aspectData.aspectId === Extensions.pkg);
+    return pkgData?.data?.publishedPackage != null;
   }
 }
 
