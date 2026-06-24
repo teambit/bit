@@ -6,6 +6,12 @@
     overflow: hidden;
   }
 
+  .buildFailed {
+    display: flex;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
   .componentOverviewBlock {
     padding: 50px 40px 10px 40px;
     max-width: 1440px;
