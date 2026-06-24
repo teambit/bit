@@ -51,18 +51,12 @@ chai.use(chaiFs);
 
     // re-snapping only comp1 makes comp2 an unmodified, non-seeder dependency. before the fix its
     // buildStatus 'succeed' got it excluded from the capsules and installed from the registry → 404.
+    // snapComponent throws if `bit snap` exits non-zero, so a successful return is itself the assertion
+    // that the capsule build did NOT fail fetching the unpublished dependency. we deliberately do NOT
+    // swallow the error — a failure must fail the test rather than silently pass.
     it('builds the unpublished dependency from source instead of failing to install it', () => {
-      let output = '';
-      try {
-        output = helper.command.snapComponent('comp1', 'snap-message', '--unmodified');
-      } catch (err: any) {
-        output = `${err.message || ''}${err.stdout?.toString() || ''}${err.stderr?.toString() || ''}`;
-      }
-      expect(
-        output,
-        'snap should not fail trying to fetch the unpublished dependency from the registry'
-      ).to.not.have.string('No matching version found');
-      expect(output, 'comp1 should have been snapped').to.have.string('comp1');
+      const output = helper.command.snapComponent('comp1', 'snap-message', '--unmodified');
+      expect(output, 'comp1 should have been snapped').to.have.string('component(s) snapped');
     });
   }
 );

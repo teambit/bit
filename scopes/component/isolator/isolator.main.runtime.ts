@@ -41,6 +41,7 @@ import {
   CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
   Extensions,
 } from '@teambit/legacy.constants';
+import { isSnap } from '@teambit/component-version';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { AbstractVinyl, ArtifactVinyl } from '@teambit/component.sources';
 import {
@@ -1530,16 +1531,21 @@ export class IsolatorMain {
       }
 
       const isPublished = component.get('teambit.pkg/pkg')?.config?.packageJson?.publishConfig;
+      // `buildStatus === 'succeed'` is not enough to know the package is on the registry: a SNAP can build
+      // successfully yet never publish — e.g. `bit ci pr` snapping with the publish task skipped (build
+      // succeeds so buildStatus becomes 'succeed', but no package is published). reusing such a lane on a
+      // later run, this unmodified dependency would be excluded here and then fail to install with "No
+      // matching version found". For snaps we therefore also require evidence the package was actually
+      // published (`publishedPackage` builder metadata). We DON'T demand it for tagged (semver) releases:
+      // those are published by the release pipeline, and the metadata is not reliable as a published-marker
+      // anyway — older published versions simply don't carry it, so requiring it would wrongly rebuild
+      // installable deps from source and create duplicate package instances in the capsules.
+      const wasPublished = !isSnap(component.id.version) || this.wasPackagePublished(component);
       const canBeInstalled =
         host.isExported(component.id) &&
         (remotes.isHub(component.id.scope) || isPublished) &&
         component.buildStatus === 'succeed' &&
-        // `buildStatus === 'succeed'` is not enough: a snap can build successfully but never publish its
-        // package — e.g. `bit ci pr` snapping with the publish task skipped (build succeeds, so buildStatus
-        // is set to 'succeed', but no package reaches the registry). reusing such a lane on a later run, this
-        // unmodified dependency would be excluded here and then fail to install with "No matching version
-        // found". only exclude (i.e. install from the registry) when the package was actually published.
-        this.wasPackagePublished(component);
+        wasPublished;
 
       if (canBeInstalled) {
         this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
@@ -1555,14 +1561,15 @@ export class IsolatorMain {
   }
 
   /**
-   * whether this exact version had its package published to the registry. the publish (pkg) build task
-   * records `publishedPackage` in the version's builder data only on a real (non-dry-run) successful
-   * publish (see publisher.ts) — so its absence means the package was never published (the task was
-   * skipped or it ran dry), even when `buildStatus` is 'succeed'. it's inline metadata on the version,
-   * loaded eagerly with the component (like `buildStatus`), so this is a local check with no network call.
+   * whether this exact (snap) version recorded a successful publish. the publish (pkg) build task writes
+   * `publishedPackage` into the version's builder data only on a real (non-dry-run) successful publish
+   * (see publisher.ts). it's inline metadata on the version, read here via the public component aspect
+   * API (no network). NOTE: presence proves the package was published, but ABSENCE does not prove it
+   * wasn't — older published versions don't carry this field — so callers only use it to gate snaps,
+   * where the skip-publish gap actually occurs, not tagged releases.
    */
   private wasPackagePublished(component: Component): boolean {
-    const builderData = component.state._consumer.extensions.findCoreExtension(Extensions.builder)?.data;
+    const builderData = component.get(Extensions.builder)?.data;
     const pkgData = builderData?.aspectsData?.find((aspectData) => aspectData.aspectId === Extensions.pkg);
     return pkgData?.data?.publishedPackage != null;
   }
