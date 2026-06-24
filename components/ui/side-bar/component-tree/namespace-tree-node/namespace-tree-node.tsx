@@ -1,6 +1,6 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import AnimateHeight from 'react-animate-height';
 import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import type { TreeNodeProps } from '@teambit/design.ui.tree';
@@ -13,26 +13,12 @@ export type NamespaceTreeNodeProps = {} & TreeNodeProps<PayloadType>;
 
 export function NamespaceTreeNode({ node, depth }: NamespaceTreeNodeProps) {
   const { isCollapsed, activePath } = useTree();
-  const isActive = activePath?.startsWith(node.id);
+  const isActive = activePath?.startsWith(node.id) ?? false;
 
-  const initialOpen = isActive || !isCollapsed;
-  const [open, toggle] = useState<boolean | void>(initialOpen);
-
-  const firstRun = useRef(true);
-  useEffect(() => {
-    const { current } = firstRun;
-    if (current) return;
-    if (isActive === true) toggle(true);
-  }, [isActive]);
-
-  useEffect(() => {
-    if (firstRun.current) return;
-    toggle(!isCollapsed);
-  }, [isCollapsed]);
-
-  useEffect(() => {
-    firstRun.current = false;
-  }, []);
+  const [override, setOverride] = useState<{ isActive: boolean; isCollapsed?: boolean; open: boolean } | null>(null);
+  const overrideApplies = override?.isActive === isActive && override?.isCollapsed === isCollapsed;
+  const open = overrideApplies ? override!.open : isActive || !isCollapsed;
+  const toggleOpen = () => setOverride({ isActive, isCollapsed, open: !open });
 
   const displayName = getName(node.id.replace(/\/$/, ''));
   const highlighted = !open && isActive;
@@ -41,11 +27,11 @@ export function NamespaceTreeNode({ node, depth }: NamespaceTreeNodeProps) {
       {node.id && (
         <div
           className={classNames(indentClass, styles.namespace, highlighted && styles.highlighted)}
-          onClick={() => toggle(!open)}
+          onClick={toggleOpen}
           tabIndex={0}
           role="button"
           onKeyDown={(e) => {
-            if (e.key === 'Enter') toggle(!open);
+            if (e.key === 'Enter') toggleOpen();
           }}
         >
           <div className={styles.left}>
