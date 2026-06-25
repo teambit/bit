@@ -15,7 +15,8 @@ export class DiagnosticGraphql implements Schema {
   resolvers = {
     Query: {
       _diagnostic: () => {
-        return this.diagnosticMain.getDiagnosticData();
+        // return this.diagnosticMain.getDiagnosticData();
+        return {};
       },
     },
   };
