@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import ssri from 'ssri';
 import _ from 'lodash';
-import { pack } from '@pnpm/plugin-commands-publishing';
 import type { ComponentFactory } from '@teambit/component';
 import type { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import type { Capsule, IsolatorMain } from '@teambit/isolator';
@@ -133,11 +132,12 @@ export class Packer {
         warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
         return { warnings, startTime, endTime: Date.now() };
       }
+      const { loadPack } = require('./load-pnpm-pack.cjs') as { loadPack: () => Promise<any> };
+      const pack = await loadPack();
       const { tarballPath: tgzName } = await pack.api({
         argv: { original: [] },
         dir: cwd,
-        rawConfig: {},
-      });
+      } as any);
       this.logger.debug(`successfully packed tarball at ${cwd}`);
       const tgzOriginPath = path.join(cwd, tgzName);
       let tarPath = path.join(outputPath, tgzName);

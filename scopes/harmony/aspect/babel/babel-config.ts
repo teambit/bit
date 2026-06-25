@@ -9,6 +9,7 @@ const presets = [
       },
       // useBuiltIns: 'usage',
       // corejs: 3,
+      exclude: ['@babel/plugin-transform-dynamic-import'],
     },
   ],
 ];
