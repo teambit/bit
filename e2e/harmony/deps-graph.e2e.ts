@@ -33,7 +33,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
 
       helper.env.setCustomNewEnv(
         undefined,
@@ -99,7 +99,6 @@ chai.use(chaiFs);
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
     it('should save dependencies graph to the model of comp1', () => {
@@ -149,6 +148,7 @@ chai.use(chaiFs);
       before(async () => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setRegistry();
         await addDistTag({ package: '@pnpm.e2e/foo', version: '100.1.0', distTag: 'latest' });
         await addDistTag({ package: '@pnpm.e2e/bar', version: '100.1.0', distTag: 'latest' });
         helper.command.import(`${helper.scopes.remote}/comp2@latest`);
@@ -175,7 +175,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -207,6 +207,7 @@ chai.use(chaiFs);
       await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.0', distTag: 'latest' });
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
       helper.fs.createFile('foo', 'foo.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('foo');
       helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env@0.0.1`, {});
@@ -216,6 +217,7 @@ chai.use(chaiFs);
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
       helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
     });
     let lockfile: any;
@@ -234,7 +236,6 @@ chai.use(chaiFs);
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
   });
@@ -254,7 +255,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -278,6 +279,7 @@ chai.use(chaiFs);
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.import(`${helper.scopes.remote}/comp1@latest`);
       initialLockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
@@ -291,7 +293,6 @@ chai.use(chaiFs);
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
     it('first import should restore the lockfile from comp1 graph', () => {

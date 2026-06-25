@@ -40,6 +40,17 @@
   min-width: fit-content;
 }
 
+.deprecatedIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  margin: 0 4px;
+  color: var(--bit-accent-color-warning, #f6a609);
+  font-size: 14px;
+  line-height: 1;
+}
+
 .commitMessage {
   flex-grow: 1;
   padding: 0px 8px;
