@@ -285,7 +285,7 @@
         "@teambit/git.modules.git-ignore": "^1.0.2",
         "@teambit/gitconfig": "2.0.10",
         "@teambit/graph.cleargraph": "0.0.11",
-        "@teambit/harmony": "0.4.7",
+        "@teambit/harmony": "0.4.11",
         "@teambit/html.modules.inject-html-element": "0.0.6",
         "@teambit/lane-id": "~0.0.312",
         "@teambit/lanes.ui.compare.lane-compare": "^0.0.206",
@@ -695,7 +695,7 @@
       "@teambit/base-react.navigation.link@2": "2.0.33",
       "lodash@4": "4.17.21",
       "trim@0": "0.0.3",
-      "@teambit/harmony": "0.4.7",
+      "@teambit/harmony": "0.4.11",
       "@types/fs-capacitor": "2.0.0",
       // @types/node is used as a peer dependency, so to reduce duplication,
       // we force the version installed in the root.

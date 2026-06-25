@@ -74,6 +74,17 @@
     > :last-child() {
       margin-right: 0px;
     }
+
+    .deprecatedIcon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--bit-accent-color-warning, #f6a609);
+      // match the row's status label / canonical deprecation icon (both inherit 12px) so the
+      // glyph lines up with the adjacent "S" status rather than sitting taller next to it.
+      font-size: inherit;
+      line-height: 1;
+    }
   }
 }
 
