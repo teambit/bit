@@ -35,7 +35,13 @@ import { ComponentIdList } from '@teambit/component-id';
 import type { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
 import type { GlobalConfigMain } from '@teambit/global-config';
 import { GlobalConfigAspect } from '@teambit/global-config';
-import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
+import {
+  DEPENDENCIES_FIELDS,
+  PACKAGE_JSON,
+  CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
+  Extensions,
+} from '@teambit/legacy.constants';
+import { isSnap } from '@teambit/component-version';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { AbstractVinyl, ArtifactVinyl } from '@teambit/component.sources';
 import {
@@ -1571,10 +1577,21 @@ export class IsolatorMain {
       }
 
       const isPublished = component.get('teambit.pkg/pkg')?.config?.packageJson?.publishConfig;
+      // `buildStatus === 'succeed'` is not enough to know the package is on the registry: a SNAP can build
+      // successfully yet never publish — e.g. `bit ci pr` snapping with the publish task skipped (build
+      // succeeds so buildStatus becomes 'succeed', but no package is published). reusing such a lane on a
+      // later run, this unmodified dependency would be excluded here and then fail to install with "No
+      // matching version found". For snaps we therefore also require evidence the package was actually
+      // published (`publishedPackage` builder metadata). We DON'T demand it for tagged (semver) releases:
+      // those are published by the release pipeline, and the metadata is not reliable as a published-marker
+      // anyway — older published versions simply don't carry it, so requiring it would wrongly rebuild
+      // installable deps from source and create duplicate package instances in the capsules.
+      const wasPublished = !isSnap(component.id.version) || this.wasPackagePublished(component);
       const canBeInstalled =
         host.isExported(component.id) &&
         (remotes.isHub(component.id.scope) || isPublished) &&
-        component.buildStatus === 'succeed';
+        component.buildStatus === 'succeed' &&
+        wasPublished;
 
       if (canBeInstalled) {
         this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
@@ -1587,6 +1604,20 @@ export class IsolatorMain {
       `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${components.length} components`
     );
     return filtered;
+  }
+
+  /**
+   * whether this exact (snap) version recorded a successful publish. the publish (pkg) build task writes
+   * `publishedPackage` into the version's builder data only on a real (non-dry-run) successful publish
+   * (see publisher.ts). it's inline metadata on the version, read here via the public component aspect
+   * API (no network). NOTE: presence proves the package was published, but ABSENCE does not prove it
+   * wasn't — older published versions don't carry this field — so callers only use it to gate snaps,
+   * where the skip-publish gap actually occurs, not tagged releases.
+   */
+  private wasPackagePublished(component: Component): boolean {
+    const builderData = component.get(Extensions.builder)?.data;
+    const pkgData = builderData?.aspectsData?.find((aspectData) => aspectData.aspectId === Extensions.pkg);
+    return pkgData?.data?.publishedPackage != null;
   }
 }
 
