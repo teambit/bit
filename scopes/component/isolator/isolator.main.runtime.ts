@@ -365,9 +365,21 @@ export class IsolatorMain {
       )}`
     );
     const createGraphOpts = pick(opts, ['includeFromNestedHosts', 'host']);
-    const componentsToIsolate = opts.seedersOnly
+    let componentsToIsolate = opts.seedersOnly
       ? await host.getMany(seeders)
       : await this.createGraph(seeders, createGraphOpts);
+    // seedersOnly skips the dependency graph and installs deps as packages from the registry.
+    // A dependency in a cycle with a seeder can't be installed that way (its snap-version isn't
+    // published yet), so pull it into the isolation as a capsule. Skip this for aspect isolation:
+    // aspects are loaded from already-published packages and pulling cyclic aspect deps in only
+    // forces loading envs that aren't installed in that context.
+    if (opts.seedersOnly && !opts.context?.aspects) {
+      const cyclicDeps = await this.getCyclicDependenciesOfSeeders(seeders, componentsToIsolate, createGraphOpts);
+      if (cyclicDeps.length) {
+        this.logger.debug(`isolateComponents, adding ${cyclicDeps.length} cyclic dependencies of the seeders`);
+        componentsToIsolate = [...componentsToIsolate, ...cyclicDeps];
+      }
+    }
     this.logger.debug(`isolateComponents, total componentsToIsolate: ${componentsToIsolate.length}`);
     const seedersWithVersions = seeders.map((seeder) => {
       if (seeder._legacy.hasVersion()) return seeder;
@@ -431,6 +443,40 @@ export class IsolatorMain {
     }
 
     return filteredComps;
+  }
+
+  /**
+   * When isolating seeders-only (e.g. `bit sign`), dependencies are normally installed as packages
+   * from the registry rather than getting a capsule. That breaks for a dependency that is part of a
+   * dependency cycle with a seeder: the cyclic component references back into a seeder whose
+   * snap-version package was never published, so the capsule install tries to fetch an unpublished
+   * snap from the registry and fails (the Ripple circular-dependency build failure). Return the
+   * dependency components that participate in a cycle with any seeder so they can be added to the
+   * isolation as real capsules and linked locally instead of installed from the registry.
+   */
+  private async getCyclicDependenciesOfSeeders(
+    seeders: ComponentID[],
+    alreadyIsolated: Component[],
+    opts: CreateGraphOptions = {}
+  ): Promise<Component[]> {
+    const host = opts.host || this.componentAspect.getHost();
+    const getGraphOpts = pick(opts, ['host']);
+    const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
+    // the graph only spans the seeders and their dependencies, so any cycle in it is a cycle a
+    // seeder participates in. Pass includeDeps=true so detection doesn't rely on matching the
+    // (possibly versionless) seeder ids against the graph's versioned node ids — otherwise a
+    // seeder-involving cycle can be missed and its members get installed from the registry again.
+    const cyclicIds = new Set<string>(graph.findCycles(undefined, true).flat());
+    if (cyclicIds.size === 0) return [];
+    const alreadyIsolatedIds = new Set(alreadyIsolated.map((comp) => comp.id.toString()));
+    const idsToAdd = [...cyclicIds]
+      .filter((idStr) => !alreadyIsolatedIds.has(idStr))
+      .map((idStr) => graph.node(idStr)?.attr)
+      .filter((id): id is ComponentID => id != null);
+    if (idsToAdd.length === 0) return [];
+    // The ids come straight from the graph we just built, so their objects are already present in
+    // the host — getMany loads them without hitting the network.
+    return host.getMany(idsToAdd);
   }
 
   private registerMoveCapsuleOnProcessExit(
