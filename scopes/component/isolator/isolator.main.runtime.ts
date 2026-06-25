@@ -376,11 +376,20 @@ export class IsolatorMain {
       : await this.createGraph(seeders, createGraphOpts);
     // seedersOnly skips the dependency graph and installs deps as packages from the registry.
     // A dependency in a cycle with a seeder can't be installed that way (its snap-version isn't
-    // published yet), so pull it into the isolation as a capsule. Skip this for aspect isolation:
-    // aspects are loaded from already-published packages and pulling cyclic aspect deps in only
-    // forces loading envs that aren't installed in that context.
-    if (opts.seedersOnly && !opts.context?.aspects) {
-      const cyclicDeps = await this.getCyclicDependenciesOfSeeders(seeders, componentsToIsolate, createGraphOpts);
+    // published yet), so pull it into the isolation as a capsule.
+    // For aspect isolation, restrict this to snap-versioned cyclic deps: an unpublished snap (e.g.
+    // a lane-built env whose preview component is co-snapped and never published) genuinely can't
+    // be fetched, whereas a published-tag cyclic aspect dep must stay a registry install — pulling
+    // it in forces loading an env that isn't available in that context (broke `bit ci pr` / `bit
+    // new react`, both of which hit published-tag cyclic aspect deps).
+    if (opts.seedersOnly) {
+      const onlySnaps = Boolean(opts.context?.aspects);
+      const cyclicDeps = await this.getCyclicDependenciesOfSeeders(
+        seeders,
+        componentsToIsolate,
+        createGraphOpts,
+        onlySnaps
+      );
       if (cyclicDeps.length) {
         this.logger.debug(`isolateComponents, adding ${cyclicDeps.length} cyclic dependencies of the seeders`);
         componentsToIsolate = [...componentsToIsolate, ...cyclicDeps];
@@ -459,11 +468,16 @@ export class IsolatorMain {
    * snap from the registry and fails (the Ripple circular-dependency build failure). Return the
    * dependency components that participate in a cycle with any seeder so they can be added to the
    * isolation as real capsules and linked locally instead of installed from the registry.
+   *
+   * When `onlySnaps` is set (aspect isolation), only cyclic deps on a snap version are returned.
+   * A published-tag cyclic aspect dep resolves fine from the registry, and isolating it as a
+   * capsule would force loading its (possibly unavailable) env — see the caller for context.
    */
   private async getCyclicDependenciesOfSeeders(
     seeders: ComponentID[],
     alreadyIsolated: Component[],
-    opts: CreateGraphOptions = {}
+    opts: CreateGraphOptions = {},
+    onlySnaps = false
   ): Promise<Component[]> {
     const host = opts.host || this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
@@ -475,10 +489,13 @@ export class IsolatorMain {
     const cyclicIds = new Set<string>(graph.findCycles(undefined, true).flat());
     if (cyclicIds.size === 0) return [];
     const alreadyIsolatedIds = new Set(alreadyIsolated.map((comp) => comp.id.toString()));
-    const idsToAdd = [...cyclicIds]
+    let idsToAdd = [...cyclicIds]
       .filter((idStr) => !alreadyIsolatedIds.has(idStr))
       .map((idStr) => graph.node(idStr)?.attr)
       .filter((id): id is ComponentID => id != null);
+    if (onlySnaps) {
+      idsToAdd = idsToAdd.filter((id) => id.version != null && isSnap(id.version));
+    }
     if (idsToAdd.length === 0) return [];
     // The ids come straight from the graph we just built, so their objects are already present in
     // the host — getMany loads them without hitting the network.
