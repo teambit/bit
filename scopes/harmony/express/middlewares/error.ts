@@ -19,8 +19,14 @@ export function errorHandle(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: express.NextFunction
 ) {
-  logger.error(`express.errorHandle, url ${req.url}, error:`, err);
   err.status = err.status || 500;
+  // 4xx are client errors (e.g. validation failures). log them as warnings with a minimal payload
+  // so they don't add noise to the error logs or drown out genuine 5xx server failures.
+  if (err.status >= 400 && err.status < 500) {
+    logger.warn(`express.errorHandle, url ${req.url}, status ${err.status}, error: ${err.message}`);
+  } else {
+    logger.error(`express.errorHandle, url ${req.url}, error:`, err);
+  }
   res.status(err.status);
   return res.jsonp({
     message: err.message,
