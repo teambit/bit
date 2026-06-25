@@ -388,16 +388,22 @@ export class IsolatorMain {
     let cyclicMemberIds: Set<string> | undefined;
     if (opts.seedersOnly) {
       const onlySnaps = Boolean(opts.context?.aspects);
-      const { components: cyclicDeps, cyclicMemberIds: memberIds } = await this.getCyclicDependenciesOfSeeders(
-        seeders,
-        componentsToIsolate,
-        createGraphOpts,
-        onlySnaps
-      );
-      if (cyclicDeps.length) {
-        this.logger.debug(`isolateComponents, adding ${cyclicDeps.length} cyclic dependencies of the seeders`);
-        componentsToIsolate = [...componentsToIsolate, ...cyclicDeps];
-        cyclicMemberIds = memberIds;
+      // For aspect isolation only snap-versioned cyclic deps are ever pulled in. Building the seeder
+      // graph can trigger `scope.import` on scope hosts, so skip it entirely for the common case
+      // where no seeder even has a snap-versioned component dependency (a co-snapped cyclic member
+      // surfaces as a direct snap dep on the seeder, so a direct-deps check is sufficient here).
+      if (!onlySnaps || this.hasSnapComponentDependency(componentsToIsolate)) {
+        const { components: cyclicDeps, cyclicMemberIds: memberIds } = await this.getCyclicDependenciesOfSeeders(
+          seeders,
+          componentsToIsolate,
+          createGraphOpts,
+          onlySnaps
+        );
+        if (cyclicDeps.length) {
+          this.logger.debug(`isolateComponents, adding ${cyclicDeps.length} cyclic dependencies of the seeders`);
+          componentsToIsolate = [...componentsToIsolate, ...cyclicDeps];
+          cyclicMemberIds = memberIds;
+        }
       }
     }
     this.logger.debug(`isolateComponents, total componentsToIsolate: ${componentsToIsolate.length}`);
@@ -463,6 +469,19 @@ export class IsolatorMain {
     }
 
     return filteredComps;
+  }
+
+  /**
+   * Cheap pre-check for the aspect-isolation cyclic-dep path: do any of the given components have a
+   * direct snap-versioned component dependency? Used to avoid building the seeder graph (which can
+   * trigger network imports on scope hosts) when there can be no snap cyclic dep to pull in.
+   */
+  private hasSnapComponentDependency(components: Component[]): boolean {
+    return components.some((component) =>
+      this.dependencyResolver
+        .getComponentDependencies(component)
+        .some((dep) => dep.componentId.version != null && isSnap(dep.componentId.version))
+    );
   }
 
   /**
@@ -793,7 +812,21 @@ export class IsolatorMain {
           return existingCapsules;
         }
       } else {
-        capsules = capsules.filter((capsule) => !capsule.fs.existsSync('package.json'));
+        // Keep cached members of an activated cycle whenever any member of that cycle still needs an
+        // install, so the grouped install below receives the whole cycle and the package manager
+        // links them as siblings — otherwise a cached member would resolve its (unpublished snap)
+        // sibling from the registry and fail again. When every cyclic member is already installed
+        // they were grouped together on a previous run, so they drop out like any other cached capsule.
+        const cyclicNeedsInstall =
+          cyclicMemberIds != null &&
+          capsules.some(
+            (capsule) =>
+              cyclicMemberIds.has(capsule.component.id.toString()) && !capsule.fs.existsSync('package.json')
+          );
+        capsules = capsules.filter((capsule) => {
+          if (!capsule.fs.existsSync('package.json')) return true;
+          return cyclicNeedsInstall && (cyclicMemberIds?.has(capsule.component.id.toString()) ?? false);
+        });
         capsuleList = CapsuleList.fromArray(capsules);
       }
     }
