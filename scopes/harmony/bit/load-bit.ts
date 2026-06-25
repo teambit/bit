@@ -25,9 +25,8 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import type { RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
 import { Harmony } from '@teambit/harmony';
-// TODO: expose this types from harmony (once we have a way to expose it only for node)
-import { Config } from '@teambit/harmony/dist/harmony-config';
-import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader';
+import { Config } from '@teambit/harmony/harmony-config';
+import { readConfigFile } from '@teambit/harmony/harmony-config/config-reader';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import type { WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
