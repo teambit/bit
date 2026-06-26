@@ -767,7 +767,15 @@ export class IsolatorMain {
         );
       }
       const rootLinks = await this.linkInCapsulesRoot(capsulesDir, capsuleList, linkingOptions);
-      if (installOptions.useNesting) {
+      // Nesting installs each capsule with its own separate package-manager install. This is fine (and desired)
+      // for the incremental case where a single missing capsule is added, but it is very expensive when many
+      // capsules need to be installed at once (e.g. a cold rebuild of all envs/aspects capsules): every install
+      // re-resolves a heavily-overlapping dependency tree and they serialize on the pnpm store lock, so the
+      // total time grows roughly linearly with the number of capsules (observed ~6m for 5 env capsules).
+      // When there is more than one capsule to install, fall back to a single batched install instead. Capsule
+      // isolation is preserved regardless, since `installInCapsules` sets `rootComponentsForCapsules` and pnpm
+      // installs each capsule as an isolated injected project (observed ~1m for the same 5 env capsules).
+      if (installOptions.useNesting && capsuleList.length === 1) {
         await Promise.all(
           capsuleList.map(async (capsule, index) => {
             const newCapsuleList = CapsuleList.fromArray([capsule]);
@@ -814,6 +822,7 @@ export class IsolatorMain {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
+          nodeLinker: opts.nodeLinker,
           dependenciesGraph,
         });
         if (capsulesWithoutDependenciesGraph.length) {
