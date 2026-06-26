@@ -14,6 +14,7 @@ import { ComponentsList } from '@teambit/legacy.component-list';
 import type { RemoveMain } from '@teambit/remove';
 import { RemoveAspect } from '@teambit/remove';
 import { hasWildcard } from '@teambit/legacy.utils';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -678,7 +679,14 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
 
   async pushToRemotesCarefully(manyObjectsPerRemote: ObjectsPerRemote[], resumeExportId?: string) {
     const remotes = manyObjectsPerRemote.map((o) => o.remote);
-    const clientId = resumeExportId || Date.now().toString();
+    // The clientId is both the pending-dir name AND the cross-client export lock: `export-validate`'s
+    // waitIfNeeded queue sorts pending-dir names and lets only the first proceed to validate+persist.
+    // A pure `Date.now()` is not collision-safe — two exports to the same remote within the same
+    // millisecond (e.g. concurrent CI runners pushing the same lane) get the same clientId, share one
+    // pending-dir, collapse the queue to a single entry, and both validate against the pre-persist
+    // state, silently losing one runner's update. A random suffix keeps the timestamp prefix (so the
+    // sorted queue still roughly preserves arrival order) while guaranteeing uniqueness.
+    const clientId = resumeExportId || `${Date.now()}-${generateRandomStr()}`;
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
     // Intentionally no cleanup on `persistRemotes` failure: pending dirs are the substrate for
