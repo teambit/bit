@@ -4,16 +4,31 @@ import fs from 'fs-extra';
 import { compact } from 'lodash';
 
 /**
- * check recursively all the sub-directories as well
+ * last-modified mtime of a component's directory structure (recursively), used as the dependency
+ * fs-cache freshness signal.
+ *
+ * the source tree is scanned recursively, but the scan stops at the `node_modules` boundary: the
+ * dependency auto-detect (whose cached result this guards) never traverses *into* a package, so the
+ * package internals and the transitive store are irrelevant — recursing `node_modules` followed the
+ * symlinked store and made this scan ~60x larger. Instead only the `node_modules` dir and its
+ * `@scope` dirs' mtimes are taken: a direct dep added / removed / version-relinked / componentId-
+ * changed all go through a relink that rewrites the symlink entry, bumping the containing dir.
  */
 async function getLastModifiedDirTimestampMs(rootDir: string): Promise<number> {
-  const allDirs = await globby(rootDir, {
+  // source subdirectories, excluding the deep node_modules subtree.
+  const sourceDirs = await globby(rootDir, {
     onlyDirectories: true,
-    // ignore: ['**/node_modules/**'], // need to think about it more. sometimes we do want to invalidate cache upon node_modules changes inside component dir
-    // stats: true // todo: consider retrieving the stats from here.
+    ignore: ['**/node_modules/**'],
   });
-  allDirs.push(rootDir);
-  return getLastModifiedPathsTimestampMs(allDirs);
+  sourceDirs.push(rootDir);
+  // node_modules/@scope dirs (catch a scoped dep changing within an already-existing scope). a *bare*
+  // `node_modules` glob would recurse the whole symlinked tree, so its own dir mtime is taken via the
+  // direct stat in getLastModifiedPathsTimestampMs below, not globbed.
+  const scopeDirs = await globby(`${rootDir}/node_modules/@*`, {
+    onlyDirectories: true,
+    followSymbolicLinks: false,
+  });
+  return getLastModifiedPathsTimestampMs([...sourceDirs, ...scopeDirs, `${rootDir}/node_modules`]);
 }
 
 export async function getLastModifiedPathsTimestampMs(paths: string[]): Promise<number> {
