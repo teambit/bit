@@ -853,27 +853,15 @@ export class IsolatorMain {
         const cyclicCapsules = capsuleList.filter(
           (capsule) => cyclicMemberIds?.has(capsule.component.id.toString()) ?? false
         );
-        // Perf: nesting installs each capsule in its own root (a separate package-manager install). That is
-        // fine for the incremental single-capsule case, but a cold rebuild of many capsules then runs one
-        // install per capsule, each re-resolving a heavily-overlapping dependency tree and serializing on the
-        // pnpm store lock (~6m for 5 env capsules). When no cyclic member forces a nested layout and there is
-        // more than one capsule, install them all together at the shared root in a single batched install
-        // instead — isolation is preserved via rootComponentsForCapsules, which installs each capsule as an
-        // isolated injected project (~1m for the same 5 capsules).
-        const batchAllAtRoot = !cyclicCapsules.length && capsuleList.length > 1;
         const cyclicCapsuleSet = new Set(cyclicCapsules.map((capsule) => capsule.component.id.toString()));
-        const nestedCapsules = batchAllAtRoot
-          ? []
-          : capsuleList.filter((capsule) => !cyclicCapsuleSet.has(capsule.component.id.toString()));
+        const nestedCapsules = capsuleList.filter((capsule) => !cyclicCapsuleSet.has(capsule.component.id.toString()));
         const installTasks: Array<Promise<void>> = [];
-        if (batchAllAtRoot || cyclicCapsules.length) {
-          // The shared-root install owns the whole capsule list when batching, or just the cyclic group
-          // when there are activated cycles; the package manager links its members as siblings.
-          const rootCapsuleList = batchAllAtRoot ? capsuleList : CapsuleList.fromArray(cyclicCapsules);
-          const linkedDependencies = await this.linkInCapsules(rootCapsuleList, capsulesWithPackagesData);
+        if (cyclicCapsules.length) {
+          const cyclicCapsuleList = CapsuleList.fromArray(cyclicCapsules);
+          const linkedDependencies = await this.linkInCapsules(cyclicCapsuleList, capsulesWithPackagesData);
           linkedDependencies[capsulesDir] = rootLinks;
           installTasks.push(
-            this.installInCapsules(capsulesDir, rootCapsuleList, installOptions, {
+            this.installInCapsules(capsulesDir, cyclicCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
