@@ -1,7 +1,14 @@
 import type { Route, Request, Response } from '@teambit/express';
-import { Verb } from '@teambit/express';
+import { Verb, validateBody } from '@teambit/express';
 import type { Logger } from '@teambit/logger';
+import { z } from 'zod';
 import type { LanesMain } from './lanes.main.runtime';
+
+const createLaneBodySchema = z
+  .object({
+    name: z.string().min(1),
+  })
+  .passthrough();
 
 export class LanesCreateRoute implements Route {
   constructor(
@@ -14,12 +21,10 @@ export class LanesCreateRoute implements Route {
   verb = Verb.WRITE;
 
   middlewares = [
+    validateBody(createLaneBodySchema),
     async (req: Request, res: Response) => {
       const { body } = req;
       const laneName = body.name;
-      if (!laneName) {
-        return res.status(400).send('Missing laneName in body');
-      }
       try {
         const result = await this.lanes.createLane(laneName);
         return res.json(result);
