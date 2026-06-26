@@ -376,14 +376,34 @@ export class IsolatorMain {
       : await this.createGraph(seeders, createGraphOpts);
     // seedersOnly skips the dependency graph and installs deps as packages from the registry.
     // A dependency in a cycle with a seeder can't be installed that way (its snap-version isn't
-    // published yet), so pull it into the isolation as a capsule. Skip this for aspect isolation:
-    // aspects are loaded from already-published packages and pulling cyclic aspect deps in only
-    // forces loading envs that aren't installed in that context.
-    if (opts.seedersOnly && !opts.context?.aspects) {
-      const cyclicDeps = await this.getCyclicDependenciesOfSeeders(seeders, componentsToIsolate, createGraphOpts);
-      if (cyclicDeps.length) {
-        this.logger.debug(`isolateComponents, adding ${cyclicDeps.length} cyclic dependencies of the seeders`);
-        componentsToIsolate = [...componentsToIsolate, ...cyclicDeps];
+    // published yet), so pull it into the isolation as a capsule.
+    // For aspect isolation, restrict this to snap-versioned cyclic deps: an unpublished snap (e.g.
+    // a lane-built env whose preview component is co-snapped and never published) genuinely can't
+    // be fetched, whereas a published-tag cyclic aspect dep must stay a registry install — pulling
+    // it in forces loading an env that isn't available in that context (broke `bit ci pr` / `bit
+    // new react`, both of which hit published-tag cyclic aspect deps).
+    // members of dependency cycles that were pulled into the isolation. A cycle is an indivisible
+    // install unit, so these capsules must be installed together (see createCapsules) — otherwise
+    // the nesting install path resolves a cyclic member's unpublished snap dep from the registry.
+    let cyclicMemberIds: Set<string> | undefined;
+    if (opts.seedersOnly) {
+      const onlySnaps = Boolean(opts.context?.aspects);
+      // For aspect isolation only snap-versioned cyclic deps are ever pulled in. Building the seeder
+      // graph can trigger `scope.import` on scope hosts, so skip it entirely for the common case
+      // where no seeder even has a snap-versioned component dependency (a co-snapped cyclic member
+      // surfaces as a direct snap dep on the seeder, so a direct-deps check is sufficient here).
+      if (!onlySnaps || this.hasSnapComponentDependency(componentsToIsolate)) {
+        const { components: cyclicDeps, cyclicMemberIds: memberIds } = await this.getCyclicDependenciesOfSeeders(
+          seeders,
+          componentsToIsolate,
+          createGraphOpts,
+          onlySnaps
+        );
+        if (cyclicDeps.length) {
+          this.logger.debug(`isolateComponents, adding ${cyclicDeps.length} cyclic dependencies of the seeders`);
+          componentsToIsolate = [...componentsToIsolate, ...cyclicDeps];
+          cyclicMemberIds = memberIds;
+        }
       }
     }
     this.logger.debug(`isolateComponents, total componentsToIsolate: ${componentsToIsolate.length}`);
@@ -402,7 +422,7 @@ export class IsolatorMain {
     });
     const cacheCapsulesDir = this.getCapsulesRootDir({ ...opts, useDatedDirs: false, baseDir: opts.baseDir || '' });
     opts.cacheCapsulesDir = cacheCapsulesDir;
-    const capsuleList = await this.createCapsules(componentsToIsolate, capsuleDir, opts, legacyScope);
+    const capsuleList = await this.createCapsules(componentsToIsolate, capsuleDir, opts, legacyScope, cyclicMemberIds);
     this.logger.debug(
       `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
@@ -452,6 +472,19 @@ export class IsolatorMain {
   }
 
   /**
+   * Cheap pre-check for the aspect-isolation cyclic-dep path: do any of the given components have a
+   * direct snap-versioned component dependency? Used to avoid building the seeder graph (which can
+   * trigger network imports on scope hosts) when there can be no snap cyclic dep to pull in.
+   */
+  private hasSnapComponentDependency(components: Component[]): boolean {
+    return components.some((component) =>
+      this.dependencyResolver
+        .getComponentDependencies(component)
+        .some((dep) => dep.componentId.version != null && isSnap(dep.componentId.version))
+    );
+  }
+
+  /**
    * When isolating seeders-only (e.g. `bit sign`), dependencies are normally installed as packages
    * from the registry rather than getting a capsule. That breaks for a dependency that is part of a
    * dependency cycle with a seeder: the cyclic component references back into a seeder whose
@@ -459,12 +492,23 @@ export class IsolatorMain {
    * snap from the registry and fails (the Ripple circular-dependency build failure). Return the
    * dependency components that participate in a cycle with any seeder so they can be added to the
    * isolation as real capsules and linked locally instead of installed from the registry.
+   *
+   * When `onlySnaps` is set (aspect isolation), only cyclic deps on a snap version are pulled in.
+   * A published-tag cyclic aspect dep resolves fine from the registry, and isolating it as a
+   * capsule would force loading its (possibly unavailable) env — see the caller for context.
+   *
+   * Returns the dependency `components` to add, and `cyclicMemberIds` — the ids of every member of
+   * an "activated" cycle (a cycle from which a dep was pulled in), including the seeders. The caller
+   * installs those members together (see createCapsules); a cycle has no valid nesting order, so
+   * its members must share an install root for the package manager to link them as siblings.
    */
   private async getCyclicDependenciesOfSeeders(
     seeders: ComponentID[],
     alreadyIsolated: Component[],
-    opts: CreateGraphOptions = {}
-  ): Promise<Component[]> {
+    opts: CreateGraphOptions = {},
+    onlySnaps = false
+  ): Promise<{ components: Component[]; cyclicMemberIds: Set<string> }> {
+    const empty = { components: [], cyclicMemberIds: new Set<string>() };
     const host = opts.host || this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
     const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
@@ -472,17 +516,36 @@ export class IsolatorMain {
     // seeder participates in. Pass includeDeps=true so detection doesn't rely on matching the
     // (possibly versionless) seeder ids against the graph's versioned node ids — otherwise a
     // seeder-involving cycle can be missed and its members get installed from the registry again.
-    const cyclicIds = new Set<string>(graph.findCycles(undefined, true).flat());
-    if (cyclicIds.size === 0) return [];
+    const cycles = graph.findCycles(undefined, true);
+    if (cycles.length === 0) return empty;
     const alreadyIsolatedIds = new Set(alreadyIsolated.map((comp) => comp.id.toString()));
-    const idsToAdd = [...cyclicIds]
-      .filter((idStr) => !alreadyIsolatedIds.has(idStr))
+    const isSnapId = (idStr: string): boolean => {
+      const id = graph.node(idStr)?.attr;
+      return id?.version != null && isSnap(id.version);
+    };
+    const idsToAddStr = new Set<string>();
+    const cyclicMemberIds = new Set<string>();
+    for (const cycle of cycles) {
+      // the members this cycle would contribute as new capsules. In onlySnaps mode a published-tag
+      // member stays a registry install, so it neither gets pulled in nor groups the cycle.
+      const newMembers = cycle.filter((idStr) => !alreadyIsolatedIds.has(idStr));
+      const membersToAdd = onlySnaps ? newMembers.filter(isSnapId) : newMembers;
+      if (membersToAdd.length === 0) continue;
+      membersToAdd.forEach((idStr) => idsToAddStr.add(idStr));
+      // group the whole cycle (the just-added members plus the already-isolated seeders in it) so
+      // they install together. A published-tag member that wasn't pulled in stays out of the group.
+      cycle.forEach((idStr) => {
+        if (alreadyIsolatedIds.has(idStr) || idsToAddStr.has(idStr)) cyclicMemberIds.add(idStr);
+      });
+    }
+    const idsToAdd = [...idsToAddStr]
       .map((idStr) => graph.node(idStr)?.attr)
       .filter((id): id is ComponentID => id != null);
-    if (idsToAdd.length === 0) return [];
+    if (idsToAdd.length === 0) return empty;
     // The ids come straight from the graph we just built, so their objects are already present in
     // the host — getMany loads them without hitting the network.
-    return host.getMany(idsToAdd);
+    const components = await host.getMany(idsToAdd);
+    return { components, cyclicMemberIds };
   }
 
   private registerMoveCapsuleOnProcessExit(
@@ -684,7 +747,8 @@ export class IsolatorMain {
     components: Component[],
     capsulesDir: string,
     opts: IsolateComponentsOptions,
-    legacyScope?: Scope
+    legacyScope?: Scope,
+    cyclicMemberIds?: Set<string>
   ): Promise<CapsuleList> {
     this.logger.debug(`createCapsules, ${components.length} components`);
 
@@ -748,7 +812,21 @@ export class IsolatorMain {
           return existingCapsules;
         }
       } else {
-        capsules = capsules.filter((capsule) => !capsule.fs.existsSync('package.json'));
+        // Keep cached members of an activated cycle whenever any member of that cycle still needs an
+        // install, so the grouped install below receives the whole cycle and the package manager
+        // links them as siblings — otherwise a cached member would resolve its (unpublished snap)
+        // sibling from the registry and fail again. When every cyclic member is already installed
+        // they were grouped together on a previous run, so they drop out like any other cached capsule.
+        const cyclicNeedsInstall =
+          cyclicMemberIds != null &&
+          capsules.some(
+            (capsule) =>
+              cyclicMemberIds.has(capsule.component.id.toString()) && !capsule.fs.existsSync('package.json')
+          );
+        capsules = capsules.filter((capsule) => {
+          if (!capsule.fs.existsSync('package.json')) return true;
+          return cyclicNeedsInstall && (cyclicMemberIds?.has(capsule.component.id.toString()) ?? false);
+        });
         capsuleList = CapsuleList.fromArray(capsules);
       }
     }
@@ -768,39 +846,70 @@ export class IsolatorMain {
       }
       const rootLinks = await this.linkInCapsulesRoot(capsulesDir, capsuleList, linkingOptions);
       if (installOptions.useNesting) {
-        await Promise.all(
-          capsuleList.map(async (capsule, index) => {
-            const newCapsuleList = CapsuleList.fromArray([capsule]);
-            if (opts.cacheCapsulesDir && capsulesDir !== opts.cacheCapsulesDir && opts.cacheLockFileOnly) {
-              const cacheCapsuleDir = path.join(opts.cacheCapsulesDir, basename(capsule.path));
-              const lockFilePath = path.join(cacheCapsuleDir, 'pnpm-lock.yaml');
-              const lockExists = await fs.pathExists(lockFilePath);
-              if (lockExists) {
-                try {
-                  // this.logger.console(`moving lock file from ${lockFilePath} to ${capsule.path}`);
-                  await copyFile(lockFilePath, path.join(capsule.path, 'pnpm-lock.yaml'));
-                } catch (err) {
-                  // We can ignore the error, we don't want to break the flow. the file will be anyway re-generated
-                  // in the target capsule. it will only be a bit slower.
-                  this.logger.error(
-                    `failed moving lock file from cache folder path: ${lockFilePath} to local capsule at ${capsule.path} (even though the lock file seems to exist)`,
-                    err
-                  );
-                }
-              }
-            }
-            const linkedDependencies = await this.linkInCapsules(newCapsuleList, capsulesWithPackagesData);
-            if (index === 0) {
-              linkedDependencies[capsulesDir] = rootLinks;
-            }
-            await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
+        // A dependency cycle is an indivisible install unit. Nesting installs each capsule in its
+        // own root, which makes a cyclic member resolve its in-network cyclic dependency from the
+        // registry (and an unpublished snap 404s). Install all members of the activated cycles
+        // together at the shared root so the package manager links them as siblings — the same way
+        // the non-nested path below does — while every other capsule keeps its isolated nested root.
+        const cyclicCapsules = capsuleList.filter(
+          (capsule) => cyclicMemberIds?.has(capsule.component.id.toString()) ?? false
+        );
+        const cyclicCapsuleSet = new Set(cyclicCapsules.map((capsule) => capsule.component.id.toString()));
+        const nestedCapsules = capsuleList.filter(
+          (capsule) => !cyclicCapsuleSet.has(capsule.component.id.toString())
+        );
+        const installTasks: Array<Promise<void>> = [];
+        if (cyclicCapsules.length) {
+          const cyclicCapsuleList = CapsuleList.fromArray(cyclicCapsules);
+          const linkedDependencies = await this.linkInCapsules(cyclicCapsuleList, capsulesWithPackagesData);
+          linkedDependencies[capsulesDir] = rootLinks;
+          installTasks.push(
+            this.installInCapsules(capsulesDir, cyclicCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
               nodeLinker: opts.nodeLinker,
-            });
-          })
-        );
+            })
+          );
+        }
+        nestedCapsules.forEach((capsule, index) => {
+          installTasks.push(
+            (async () => {
+              const newCapsuleList = CapsuleList.fromArray([capsule]);
+              if (opts.cacheCapsulesDir && capsulesDir !== opts.cacheCapsulesDir && opts.cacheLockFileOnly) {
+                const cacheCapsuleDir = path.join(opts.cacheCapsulesDir, basename(capsule.path));
+                const lockFilePath = path.join(cacheCapsuleDir, 'pnpm-lock.yaml');
+                const lockExists = await fs.pathExists(lockFilePath);
+                if (lockExists) {
+                  try {
+                    // this.logger.console(`moving lock file from ${lockFilePath} to ${capsule.path}`);
+                    await copyFile(lockFilePath, path.join(capsule.path, 'pnpm-lock.yaml'));
+                  } catch (err) {
+                    // We can ignore the error, we don't want to break the flow. the file will be anyway re-generated
+                    // in the target capsule. it will only be a bit slower.
+                    this.logger.error(
+                      `failed moving lock file from cache folder path: ${lockFilePath} to local capsule at ${capsule.path} (even though the lock file seems to exist)`,
+                      err
+                    );
+                  }
+                }
+              }
+              const linkedDependencies = await this.linkInCapsules(newCapsuleList, capsulesWithPackagesData);
+              // attach the root links to a single install. When a cyclic group install exists it owns
+              // them (its root is capsulesDir); otherwise the first nested capsule does, as before.
+              if (index === 0 && !cyclicCapsules.length) {
+                linkedDependencies[capsulesDir] = rootLinks;
+              }
+              await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
+                cachePackagesOnCapsulesRoot,
+                linkedDependencies,
+                packageManager: opts.packageManager,
+                nodeLinker: opts.nodeLinker,
+              });
+            })()
+          );
+        });
+        await Promise.all(installTasks);
       } else {
         const dependenciesGraph = opts.useDependenciesGraph
           ? await legacyScope?.getDependenciesGraphByComponentIds(capsuleList.getAllComponentIDs())
