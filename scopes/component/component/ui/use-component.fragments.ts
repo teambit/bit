@@ -24,6 +24,7 @@ export const componentOverviewFields = gql`
     deprecation {
       isDeprecate
       newId
+      range
     }
     labels
     displayName
@@ -98,6 +99,7 @@ export const componentFieldsWithLogs = gql`
       hash
       tag
       displayName
+      deprecated
     }
   }
   ${componentIdFields}
