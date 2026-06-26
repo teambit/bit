@@ -33,6 +33,7 @@ import type { LaneId } from '@teambit/lane-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { SourceBranchDetector } from './source-branch-detector';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
+import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
 // LANE_HASH_MISMATCH fires when both runners called `Lane.create` (the lane didn't exist on
@@ -565,6 +566,25 @@ export class CiMain {
     // auto-detected from `process.env.CI`: other CI contexts *reuse* the workspace after `bit ci pr`
     // (e.g. the e2e suite, which then tags/asserts on main), and must keep restoring it.
     const resolvedSkipCleanup = Boolean(skipCleanup);
+
+    // Skipping build/publish tasks is OPT-IN per PR: the build runs the full pipeline by default, and
+    // a developer adds a `[skip-tasks: <names>]` token to the commit message to trade specific tasks
+    // for speed on that PR (e.g. `[skip-tasks: GeneratePreview,ExtractSchema]`) without touching CI
+    // config. The token merges with any explicit `--skip-tasks` flag, and is stripped from the message
+    // so it doesn't leak into the snap message.
+    const { skipTasks: messageSkipTasks, message: resolvedMessage } = extractSkipTasksFromMessage(message);
+    const cliSkipTasks = skipTasks
+      ? skipTasks
+          .split(',')
+          .map((task) => task.trim())
+          .filter(Boolean)
+      : [];
+    const mergedSkipTasks = [...new Set([...cliSkipTasks, ...messageSkipTasks])];
+    const resolvedSkipTasks = mergedSkipTasks.length ? mergedSkipTasks.join(',') : undefined;
+    if (messageSkipTasks.length) {
+      this.logger.console(chalk.blue(`Skipping tasks from commit message: ${messageSkipTasks.join(', ')}`));
+    }
+
     this.logger.console(chalk.blue(`Lane name: ${laneIdStr}`));
 
     const originalLane = await this.lanes.getCurrentLane();
@@ -593,21 +613,21 @@ export class CiMain {
       return this.snapAndExportReusingLane({
         laneId,
         originalLane,
-        message,
+        message: resolvedMessage,
         build,
         dryRun,
         skipCleanup: resolvedSkipCleanup,
-        skipTasks,
+        skipTasks: resolvedSkipTasks,
       });
     }
     return this.snapAndExportWithTempLane({
       laneId,
       originalLane,
-      message,
+      message: resolvedMessage,
       build,
       dryRun,
       skipCleanup: resolvedSkipCleanup,
-      skipTasks,
+      skipTasks: resolvedSkipTasks,
     });
   }
 
