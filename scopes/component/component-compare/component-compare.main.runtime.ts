@@ -182,6 +182,26 @@ export class ComponentCompareMain {
     });
   }
 
+  /**
+   * api-diff a paginated slice of component pairs in one call — the bulk counterpart of the single
+   * `getAPIDiff`, mirroring `compareComponents`. reuses `getAPIDiff` per pair (so its disk memo +
+   * single-flight dedupe still apply), turning a pair whose diff throws into `null` rather than
+   * failing the whole batch. the returned array is aligned to the requested slice.
+   */
+  async apiDiffs(
+    pairs: ComponentComparePair[],
+    options?: { offset?: number; limit?: number }
+  ): Promise<Array<Record<string, any> | null>> {
+    return compareComponentPairs(pairs, (baseId, compareId) => this.getAPIDiff(baseId, compareId), {
+      offset: options?.offset,
+      limit: options?.limit,
+      concurrency: concurrentComponentsLimit(),
+      onError: (pair, err) => {
+        this.logger.warn(`apiDiffs: failed to compute api diff ${pair.baseId} <> ${pair.compareId}`, err);
+      },
+    });
+  }
+
   private static isApiDiffCacheable(result: Record<string, any>): boolean {
     if (result.status === 'COMPUTED') return true;
     return result.base?.reason !== 'FAILED' && result.compare?.reason !== 'FAILED';

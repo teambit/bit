@@ -12,7 +12,13 @@ import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError, WorkspaceAspect } from '@teambit/workspace';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
-import { LaneDiffCmd, LaneDiffGenerator, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
+import {
+  LaneDiffCmd,
+  LaneDiffGenerator,
+  LaneHistoryDiffCmd,
+  getHeadOnMain,
+  importMainHeads,
+} from '@teambit/lanes.modules.diff';
 import type { Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
 import { NoCommonSnap } from '@teambit/legacy.scope';
 import { CACHE_ROOT } from '@teambit/legacy.constants';
@@ -119,10 +125,15 @@ export type SwitchLaneOptions = {
   branch?: boolean;
 };
 
+/** where the base was resolved from: `workspace` (already local) or `scope` (fetched from remote). */
+export type DiffBaseSource = 'workspace' | 'scope';
+
 export type LaneComponentDiffStatus = {
   componentId: ComponentID;
   sourceHead: string;
   targetHead?: string;
+  /** where the base was resolved from (workspace vs remote scope). @see DiffBaseSource */
+  baseSource?: DiffBaseSource;
   /**
    * @deprecated
    * use changes to get list of all the changes
@@ -173,6 +184,7 @@ type SerializedComponentStatus = {
   componentIdStr: string;
   sourceHead: string;
   targetHead?: string;
+  baseSource?: DiffBaseSource;
   changes?: ChangeType[];
   changeType?: ChangeType;
   upToDate?: boolean;
@@ -240,13 +252,13 @@ export class LanesMain {
   private apiDiffMemo = new Map<string, boolean>();
   private apiDiffInflight = new Map<string, Promise<boolean>>();
   /**
-   * Bound the parallelism of `deriveChangeTypes` across all in-flight requests. With graphql-js
-   * resolving list fields in parallel via `Promise.all`, an uncapped deferred derivation can fire
-   * dozens of `componentCompare.compare` + `getAPIDiff` calls at once, all hitting the same single
-   * TypeScript service worker — which serializes them anyway and degrades sharply under load. A
-   * small cap matches the service's effective concurrency and prevents thundering-herd.
+   * Bound the parallelism of `deriveChangeTypes` across all in-flight requests. graphql-js resolves
+   * list fields in parallel via `Promise.all`, so an uncapped derivation fires one `compare()` per
+   * component at once. The old cap of 4 existed because derivation also ran `getAPIDiff` (serial
+   * tsserver schema extraction) — that's now deferred to the API view, so derivation only does the
+   * I/O+CPU-bound `compare()`, which parallelizes well. Cap to the component concurrency limit.
    */
-  private deriveChangesLimit = pLimit(4);
+  private deriveChangesLimit = pLimit(concurrentComponentsLimit());
 
   /**
    * Disk-persisted memo for the final `ChangeType[]` array per `(componentId, sourceHead, commonSnapHash)`.
@@ -346,6 +358,7 @@ export class LanesMain {
         componentIdStr: s.componentId.toString(),
         sourceHead: s.sourceHead,
         targetHead: s.targetHead,
+        baseSource: s.baseSource,
         changes: s.changes,
         changeType: s.changeType,
         upToDate: s.upToDate,
@@ -361,6 +374,7 @@ export class LanesMain {
       componentId: ComponentID.fromString(s.componentIdStr),
       sourceHead: s.sourceHead,
       targetHead: s.targetHead,
+      baseSource: s.baseSource,
       changes: s.changes,
       changeType: s.changeType,
       upToDate: s.upToDate,
@@ -370,9 +384,8 @@ export class LanesMain {
   }
 
   /**
-   * Build the top-level result memo key. Key on the lane head hashes — they move with every snap,
-   * so this implicitly invalidates whenever the lane composition changes. Returns empty string if
-   * the source lane has no head hash to key on (avoid caching incomplete state).
+   * Build the top-level result memo key. Key on the lane head hashes — they move with every snap, so
+   * it invalidates when the lane composition changes. Empty string ⇒ don't cache (incomplete state).
    */
   private diffStatusResultMemoKey(
     sourceLaneId: LaneId,
@@ -382,14 +395,15 @@ export class LanesMain {
     options?: LaneDiffStatusOptions,
     targetMainHeads?: Array<{ toString(): string }>
   ): string {
-    const sourceHeadHash = sourceLane?.hash?.toString?.() ?? sourceLane?.hash ?? '';
+    // `Lane.hash` is a METHOD — `.hash.toString()` returns its source (constant) and freezes the key,
+    // serving stale results forever. Use the raw `_hash` for Lane objects.
+    const laneHash = (l: any) => (typeof l?.hash === 'function' ? l._hash : (l?.hash?.toString?.() ?? l?.hash)) ?? '';
+    const sourceHeadHash = laneHash(sourceLane);
     if (!sourceHeadHash) return '';
-    // A lane target has a single head hash to key on. The main target has none, so fingerprint the
-    // resolved per-component main heads instead — otherwise the key never changes when main advances
-    // and a stale "up to date" result is served. No resolvable main heads ⇒ skip the result memo.
+    // main target has no single lane hash → fingerprint the resolved per-component main heads instead.
     let targetHeadHash: string;
     if (targetLane) {
-      targetHeadHash = targetLane.hash?.toString?.() ?? targetLane.hash ?? '';
+      targetHeadHash = laneHash(targetLane);
     } else {
       const heads = (targetMainHeads || []).map((id) => id.toString()).sort();
       if (!heads.length) return '';
@@ -997,12 +1011,9 @@ please create a new lane instead, which will include all components of this lane
     return deletedComps.map((c) => c.id);
   }
 
-  /**
-   * get the head hash (snap) of main. return undefined if the component exists only on a lane and was never merged to main
-   */
+  /** head hash of main, with remote-scope fallback. undefined only for a genuinely-new component. */
   async getHeadOnMain(componentId: ComponentID): Promise<string | undefined> {
-    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId);
-    return modelComponent.head?.toString();
+    return getHeadOnMain(this.scope, componentId);
   }
 
   /**
@@ -1284,18 +1295,34 @@ please create a new lane instead, which will include all components of this lane
     // when main advances) and the diff computation below. The target=main case has no single lane
     // hash, so without this the key was constant ('default') and stale results were served when main
     // moved ahead (lanes.spec "not up to date when main is ahead").
-    const targetMainHeads =
-      !targetLaneId || targetLaneId?.isDefault()
-        ? compact(
-            await Promise.all(
-              (sourceLaneComponents || []).map(async ({ id }) => {
-                const componentId = await host.resolveComponentId(id);
-                const headOnMain = await this.getHeadOnMain(componentId);
-                return headOnMain ? id.changeVersion(headOnMain) : undefined;
-              })
-            )
+    const targetIsMain = !targetLaneId || Boolean(targetLaneId?.isDefault());
+    // whether each base on main was already local (snapshot *before* the remote fetch) - drives the
+    // UI "workspace vs remote scope" source indicator.
+    const baseWasLocalByComp = new Map<string, boolean>();
+    if (targetIsMain) {
+      const sourceComponentIds = await Promise.all(
+        (sourceLaneComponents || []).map(({ id }) => host.resolveComponentId(id))
+      );
+      await Promise.all(
+        sourceComponentIds.map(async (cid) => {
+          const modelComp = await this.scope.legacyScope.getModelComponentIfExist(cid);
+          baseWasLocalByComp.set(cid.toString(), Boolean(modelComp?.head));
+        })
+      );
+      // the base on main may live only on the remote scope; pull it so the diff is real, not a spurious NEW.
+      await importMainHeads(this.scope, sourceComponentIds);
+    }
+    const targetMainHeads = targetIsMain
+      ? compact(
+          await Promise.all(
+            (sourceLaneComponents || []).map(async ({ id }) => {
+              const componentId = await host.resolveComponentId(id);
+              const headOnMain = await this.getHeadOnMain(componentId);
+              return headOnMain ? id.changeVersion(headOnMain) : undefined;
+            })
           )
-        : [];
+        )
+      : [];
 
     const resultMemoKey = this.diffStatusResultMemoKey(
       sourceLaneId,
@@ -1394,13 +1421,15 @@ please create a new lane instead, which will include all components of this lane
       `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components (memo hits: ${memoHits}/${diffProps.length})`
     );
 
-    // when `skipUpToDate` is set, drop components whose snaps say the source already includes everything on
-    // the target. they contribute nothing to a target→source review surface but each carries a full
-    // `importWithoutDeps` round trip and a schema-extraction `apiDiff` call.
+    // when `skipUpToDate` is set, drop only components with NO difference vs the target. keep any
+    // divergence — crucially `isSourceAhead()` (the lane's own changes): a lane forked from main has no
+    // target-only snaps, so `isUpToDate()` (=!isTargetAhead) alone would wrongly hide the whole diff.
     const visibleDiffProps = options?.skipUpToDate
       ? diffProps.filter(({ componentId }) => {
-          const entry = snapDistancesByComponentId.get(componentId.toString());
-          return !entry || !entry.snapsDistance.isUpToDate();
+          // `d` may be a memo reconstruction exposing only data + `isUpToDate()`; test source-ahead via
+          // `snapsOnSourceOnly.length`, not the `isSourceAhead()` method (absent on the reconstruction).
+          const d = snapDistancesByComponentId.get(componentId.toString())?.snapsDistance;
+          return !d || (d.snapsOnSourceOnly?.length ?? 0) > 0 || !d.isUpToDate();
         })
       : diffProps;
 
@@ -1433,14 +1462,23 @@ please create a new lane instead, which will include all components of this lane
     // serialized 30 schema extractions and dominated the cold call (minutes).
     const results = await pMap(
       visibleDiffProps,
-      async ({ componentId, sourceHead, targetHead }) =>
-        this.componentDiffStatus(
+      async ({ componentId, sourceHead, targetHead }) => {
+        // report whether an existing main base was already local (`workspace`) or pulled from remote (`scope`).
+        const baseSource: DiffBaseSource | undefined =
+          targetIsMain && targetHead
+            ? baseWasLocalByComp.get(componentId.toString())
+              ? 'workspace'
+              : 'scope'
+            : undefined;
+        return this.componentDiffStatus(
           componentId,
           sourceHead,
           targetHead,
           snapDistancesByComponentId.get(componentId.toString())?.snapsDistance,
-          options
-        ),
+          options,
+          baseSource
+        );
+      },
       { concurrency: concurrentComponentsLimit() }
     );
     this.logger.profile(`componentDiffStatus pMap (${visibleDiffProps.length} components)`);
@@ -1473,7 +1511,8 @@ please create a new lane instead, which will include all components of this lane
     sourceHead: string,
     targetHead?: string,
     snapsDistance?: SnapsDistance,
-    options?: LaneDiffStatusOptions
+    options?: LaneDiffStatusOptions,
+    baseSource?: DiffBaseSource
   ): Promise<LaneComponentDiffStatus> {
     if (snapsDistance?.err) {
       const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
@@ -1482,6 +1521,7 @@ please create a new lane instead, which will include all components of this lane
         componentId,
         sourceHead,
         targetHead,
+        baseSource,
         upToDate: snapsDistance?.isUpToDate(),
         unrelated: noCommonSnap || undefined,
         changes: [],
@@ -1506,6 +1546,7 @@ please create a new lane instead, which will include all components of this lane
       changes,
       sourceHead,
       targetHead: commonSnap?.hash,
+      baseSource,
       upToDate: snapsDistance?.isUpToDate(),
       snapsDistance: {
         onSource: snapsDistance?.snapsOnSourceOnly.map((s) => s.hash) ?? [],
@@ -1603,72 +1644,46 @@ please create a new lane instead, which will include all components of this lane
   ): Promise<ChangeType[]> {
     if (!commonSnap) return [ChangeType.NEW];
 
-    const baseIdStr = componentId.changeVersion(commonSnap.hash).toString();
-    const compareIdStr = componentId.changeVersion(sourceHead).toString();
-    // Run `compare()` first. The public API can only change when source code changes — if no code
-    // diff, skip the (expensive) schema extraction entirely. Cuts cold derivation by an order of
-    // magnitude for components whose changes are config/deps only.
-    const compare = await this.componentCompare.compare(baseIdStr, compareIdStr);
-    const hasCodeChanges = compare.code.some((c) => c.status !== 'UNCHANGED');
+    // Classify changes by comparing the two raw `Version` objects directly (files-by-hash, deps,
+    // extensions) instead of `componentCompare.compare()`. compare() loads full consumer components
+    // (aspect calculation, capsules) for both sides just to extract two booleans — dominating the cold
+    // derivation for a large lane. Loading the raw Version objects is a cheap object read.
+    // The API change type is intentionally not computed here: it needs serial tsserver schema
+    // extraction and is resolved lazily by the API view, gated on the SOURCE_CODE/DEPENDENCY evidence.
+    const repo = this.scope.legacyScope.objects;
+    const [baseVersion, compareVersion] = (await Promise.all([
+      repo.load(Ref.from(commonSnap.hash), false),
+      repo.load(Ref.from(sourceHead), false),
+    ])) as [Version | undefined, Version | undefined];
+    if (!baseVersion || !compareVersion) return [];
 
-    let hasApiChanges = false;
-    if (hasCodeChanges) {
-      const apiDiffKey = `${baseIdStr}|${compareIdStr}`;
-      const cached = this.apiDiffMemo.get(apiDiffKey);
-      if (cached !== undefined) {
-        hasApiChanges = cached;
-      } else {
-        // single-flight in-flight requests so concurrent resolvers share one schema-extraction call.
-        let pending = this.apiDiffInflight.get(apiDiffKey);
-        if (!pending) {
-          pending = this.componentCompare
-            .getAPIDiff(baseIdStr, compareIdStr)
-            .then((apiDiff) => {
-              const result = apiDiff?.hasChanges ?? false;
-              // only memoize verdicts from an actually-computed diff. a transiently
-              // unavailable schema (FAILED) or a load failure (null) must not lock this
-              // immutable pair to `false` forever — recompute on the next call instead.
-              // stable unavailability (NOT_BUILT/NO_EXTRACTOR/DISABLED) is safe to keep.
-              const failed =
-                !apiDiff ||
-                (apiDiff.status !== 'COMPUTED' &&
-                  (apiDiff.base?.reason === 'FAILED' || apiDiff.compare?.reason === 'FAILED'));
-              if (!failed) this.memoStoreApiDiff(apiDiffKey, result);
-              return result;
-            })
-            .finally(() => {
-              this.apiDiffInflight.delete(apiDiffKey);
-            });
-          this.apiDiffInflight.set(apiDiffKey, pending);
-        }
-        hasApiChanges = await pending;
-      }
-    }
+    const baseObj = baseVersion.toObject();
+    const compareObj = compareVersion.toObject();
+    const differs = (a: unknown, b: unknown) => JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
 
-    const hasFieldChanges = compare.fields.length > 0;
+    const hasCodeChanges = differs(baseObj.files, compareObj.files) || differs(baseObj.mainFile, compareObj.mainFile);
+    // DEPENDENCY mirrors compare()'s deps fields: dependencies, devDependencies, extensionDependencies
+    // (the last carries aspect/env-provided deps — present as model deps, not in the plain toObject()).
+    const hasDepChanges =
+      differs(baseObj.dependencies, compareObj.dependencies) ||
+      differs(baseObj.devDependencies, compareObj.devDependencies) ||
+      differs(baseVersion.extensionDependencies.cloneAsString(), compareVersion.extensionDependencies.cloneAsString());
+    const hasFieldChanges =
+      hasDepChanges ||
+      differs(baseObj.extensions, compareObj.extensions) ||
+      differs(baseObj.overrides, compareObj.overrides) ||
+      differs(baseObj.packageDependencies, compareObj.packageDependencies) ||
+      differs(baseObj.devPackageDependencies, compareObj.devPackageDependencies) ||
+      differs(baseObj.peerPackageDependencies, compareObj.peerPackageDependencies);
 
-    if (!hasFieldChanges && !hasCodeChanges && !hasApiChanges) {
+    if (!hasFieldChanges && !hasCodeChanges) {
       return [ChangeType.NONE];
     }
 
     const changed: ChangeType[] = [];
-
-    if (hasCodeChanges) {
-      changed.push(ChangeType.SOURCE_CODE);
-    }
-
-    if (hasFieldChanges) {
-      changed.push(ChangeType.ASPECTS);
-    }
-
-    const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-    if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
-      changed.push(ChangeType.DEPENDENCY);
-    }
-
-    if (hasApiChanges) {
-      changed.push(ChangeType.API);
-    }
+    if (hasCodeChanges) changed.push(ChangeType.SOURCE_CODE);
+    if (hasFieldChanges) changed.push(ChangeType.ASPECTS);
+    if (hasDepChanges) changed.push(ChangeType.DEPENDENCY);
 
     return changed;
   }

@@ -6,6 +6,16 @@ import { useApiDiffInsights } from './api-diff-insights';
 import type { ApiDiffInsightContext } from './api-diff-insights';
 import styles from './api-diff-view.module.scss';
 
+/**
+ * public changes are grouped + ordered by impact so the most consequential ones are read first and
+ * the list is scannable by category (breaking → minor → patch) rather than an arbitrary mix.
+ */
+const CHANGE_GROUPS: { key: string; label: string; match: (c: APIDiffChange) => boolean }[] = [
+  { key: 'BREAKING', label: 'Breaking', match: (c) => c.impact === 'BREAKING' },
+  { key: 'NON_BREAKING', label: 'Minor', match: (c) => c.impact === 'NON_BREAKING' },
+  { key: 'PATCH', label: 'Patch', match: (c) => c.impact !== 'BREAKING' && c.impact !== 'NON_BREAKING' },
+];
+
 export function ImpactBadge({ impact, small }: { impact: ImpactLevel | string; small?: boolean }) {
   const colors: Record<string, { bg: string; fg: string }> = {
     BREAKING: { bg: 'rgba(207, 34, 46, 0.1)', fg: 'var(--on-surface-negative-bold, #cf222e)' },
@@ -45,6 +55,101 @@ function ImpactDot({ impact }: { impact: string }) {
   return <span className={styles.impactDot} style={{ background: colors[impact] || colors.PATCH }} />;
 }
 
+type Tok = { text: string; changed: boolean };
+
+/** split into identifier / whitespace / punctuation tokens so the diff aligns on real boundaries. */
+function tokenize(s: string): string[] {
+  return s.match(/[A-Za-z0-9_$]+|\s+|[^A-Za-z0-9_$\s]/g) || [];
+}
+
+/**
+ * token-level (word) diff of two signature strings via an LCS walk — marks exactly which tokens
+ * were removed on the `from` side and added on the `to` side, so a one-character type change is
+ * visible instead of two identical-looking lines.
+ */
+function tokenDiff(from: string, to: string): { fromParts: Tok[]; toParts: Tok[] } {
+  const a = tokenize(from);
+  const b = tokenize(to);
+  const m = a.length;
+  const n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array.from({ length: n + 1 }, () => 0));
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  const fromParts: Tok[] = [];
+  const toParts: Tok[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < m && j < n) {
+    if (a[i] === b[j]) {
+      fromParts.push({ text: a[i], changed: false });
+      toParts.push({ text: b[j], changed: false });
+      i++;
+      j++;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+      fromParts.push({ text: a[i], changed: true });
+      i++;
+    } else {
+      toParts.push({ text: b[j], changed: true });
+      j++;
+    }
+  }
+  while (i < m) fromParts.push({ text: a[i++], changed: true });
+  while (j < n) toParts.push({ text: b[j++], changed: true });
+  return { fromParts, toParts };
+}
+
+function DiffCode({ parts }: { parts: Tok[] }) {
+  return (
+    <span className={styles.diffCode}>
+      {parts.map((p, i) =>
+        // only emphasize meaningful (non-whitespace) changed tokens — highlighting spaces is noise.
+        p.changed && p.text.trim() ? (
+          <mark key={i} className={styles.diffTok}>
+            {p.text}
+          </mark>
+        ) : (
+          <span key={i}>{p.text}</span>
+        )
+      )}
+    </span>
+  );
+}
+
+/**
+ * a before/after signature shown as a git-style stacked diff with token-level highlighting: the
+ * removed line over the added line, full-width monospace, aligned gutter, and only the tokens that
+ * actually differ emphasized. Renders nothing when both sides are present and identical (the change
+ * is internal — the visible signature didn't move, so two identical lines would be pure noise).
+ */
+function DiffPair({ from, to }: { from?: string; to?: string }) {
+  if (from && to && from === to) return null;
+  const diff = from && to ? tokenDiff(from, to) : undefined;
+
+  return (
+    <div className={styles.diffBlock}>
+      {from && (
+        <code className={`${styles.diffLine} ${styles.diffLineRemoved}`}>
+          <span className={styles.diffGutter} aria-hidden="true">
+            −
+          </span>
+          {diff ? <DiffCode parts={diff.fromParts} /> : <span className={styles.diffCode}>{from}</span>}
+        </code>
+      )}
+      {to && (
+        <code className={`${styles.diffLine} ${styles.diffLineAdded}`}>
+          <span className={styles.diffGutter} aria-hidden="true">
+            +
+          </span>
+          {diff ? <DiffCode parts={diff.toParts} /> : <span className={styles.diffCode}>{to}</span>}
+        </code>
+      )}
+    </div>
+  );
+}
+
 export type ApiChangeBlockProps = {
   change: APIDiffChange;
   /** anchor id used by the compare sidebar scroll-sync (`data-file-id="<componentId>:<exportName>"`) */
@@ -80,12 +185,7 @@ export function ApiChangeBlock({ change, anchorId, focused, dimmed, insightCtx }
 
       {(change.baseSignature || change.compareSignature) && (
         <div className={styles.signatures}>
-          {change.baseSignature && (
-            <code className={`${styles.signatureLine} ${styles.signatureRemoved}`}>− {change.baseSignature}</code>
-          )}
-          {change.compareSignature && (
-            <code className={`${styles.signatureLine} ${styles.signatureAdded}`}>+ {change.compareSignature}</code>
-          )}
+          <DiffPair from={change.baseSignature} to={change.compareSignature} />
         </div>
       )}
 
@@ -93,16 +193,12 @@ export function ApiChangeBlock({ change, anchorId, focused, dimmed, insightCtx }
         <div className={styles.causeList}>
           {change.changes.map((detail, i) => (
             <div key={`${detail.changeKind}-${i}`} className={styles.causeRow}>
-              <ImpactDot impact={detail.impact} />
-              <span className={styles.causeDescription}>{detail.description}</span>
-              {detail.from && detail.to && (
-                <span className={styles.detailDiff}>
-                  <code className={styles.detailFrom}>{detail.from}</code>
-                  <span className={styles.detailArrow}>→</span>
-                  <code className={styles.detailTo}>{detail.to}</code>
-                </span>
-              )}
-              <ImpactBadge impact={detail.impact} small />
+              <div className={styles.causeHead}>
+                <ImpactDot impact={detail.impact} />
+                <span className={styles.causeDescription}>{detail.description}</span>
+                <ImpactBadge impact={detail.impact} small />
+              </div>
+              {detail.from && detail.to && <DiffPair from={detail.from} to={detail.to} />}
             </div>
           ))}
         </div>
@@ -319,15 +415,28 @@ export function ComponentApiDiffSection({
         </span>
       </div>
 
-      {publicChanges.map((change, i) => (
-        <ApiChangeBlock
-          key={`${change.exportName}-${i}`}
-          change={change}
-          anchorId={`${componentIdStr}:${change.exportName}`}
-          focused={selectedExport === change.exportName}
-          insightCtx={insightCtx}
-        />
-      ))}
+      {CHANGE_GROUPS.map((group) => {
+        const groupChanges = publicChanges.filter(group.match);
+        if (groupChanges.length === 0) return null;
+        return (
+          <div key={group.key} className={styles.changeGroup}>
+            <div className={styles.changeGroupHeader}>
+              <span className={styles.changeGroupDot} data-impact={group.key} />
+              <span className={styles.changeGroupLabel}>{group.label}</span>
+              <span className={styles.changeGroupCount}>{groupChanges.length}</span>
+            </div>
+            {groupChanges.map((change, i) => (
+              <ApiChangeBlock
+                key={`${change.exportName}-${i}`}
+                change={change}
+                anchorId={`${componentIdStr}:${change.exportName}`}
+                focused={selectedExport === change.exportName}
+                insightCtx={insightCtx}
+              />
+            ))}
+          </div>
+        );
+      })}
 
       {internalChanges.length > 0 && (
         <div className={styles.internalSection}>

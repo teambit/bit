@@ -15,6 +15,7 @@ export type LaneDiffStatusQueryResponse = {
         upToDate: boolean;
         sourceHead: string;
         targetHead?: string;
+        baseSource?: 'workspace' | 'scope';
       }>;
     };
   };
@@ -43,6 +44,7 @@ export const QUERY_LANE_DIFF_STATUS = gql`
           }
           sourceHead
           targetHead
+          baseSource
           changes
           upToDate
           unrelated

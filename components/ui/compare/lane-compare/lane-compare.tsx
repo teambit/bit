@@ -32,6 +32,7 @@ import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import type { LaneCompareContextModel } from './lane-compare.context';
 import { useLaneCompareContext } from './lane-compare.context';
 import { LaneCompareProvider } from './lane-compare.provider';
+import { BaseSourceIndicator } from './base-source-indicator';
 import { ChangeTypeGroupOrder } from './lane-compare.models';
 import { displayChangeType } from './lane-compare.utils';
 
@@ -248,11 +249,13 @@ function LaneCompareInline({
         const diff = laneComponentDiffByCompId.get(idStr);
         const changes: ChangeType[] = (diff as any)?.changes || [];
         const changeType: ChangeType = (diff as any)?.changeType;
+        const baseSource: 'workspace' | 'scope' | undefined = (diff as any)?.baseSource;
         return {
           idStr,
           name: compareId?.fullName || baseId?.fullName || idStr,
           baseId: baseId?.toString(),
           compareId: compareId?.toString() || '',
+          baseSource,
           baseVersion: baseId?.version?.slice(0, 7),
           compareVersion: compareId?.version?.slice(0, 7),
           baseUrl: baseId ? ComponentUrl.toUrl(baseId, { includeVersion: true, useLocationOrigin: true }) : undefined,
@@ -434,6 +437,8 @@ function LaneCompareInline({
         envIcon: envIconsMap.get(c.idStr),
         status: c.changeType,
         files: filesFor(c.idStr),
+        // only surface a source indicator when the base had to be pulled from the remote scope.
+        sourceIndicator: c.baseSource === 'scope' ? <BaseSourceIndicator compareId={c.compareId} /> : undefined,
       })),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -550,6 +555,7 @@ function LaneCompareInline({
               selectedExport={selectedFile}
               insights={apiDiffInsights}
               onApiEntries={registerApiEntries}
+              active={isFullPaneView}
             />
           </div>
 

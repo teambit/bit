@@ -10,6 +10,8 @@ export type CompareSidebarItem = {
   envIcon?: string;
   status?: 'NEW' | 'SOURCE_CODE' | 'DEPENDENCY' | 'ASPECTS' | 'NONE' | string;
   files?: FileInfo[];
+  /** optional indicator (e.g. where the base came from) rendered next to the component name */
+  sourceIndicator?: React.ReactNode;
 };
 
 export type CompareSidebarGroup = {
@@ -173,6 +175,7 @@ function SidebarComponentItem({ item, isSelected, selectedFile, onSelect, defaul
           <span className={styles.envIconPlaceholder} />
         )}
         <span className={styles.componentName}>{item.name}</span>
+        {item.sourceIndicator && <span className={styles.sourceIndicator}>{item.sourceIndicator}</span>}
         {item.status && (
           <span className={`${styles.componentStatus} ${styles[`componentStatus${item.status}`] || ''}`}>
             {formatStatus(item.status)}

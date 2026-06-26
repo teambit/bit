@@ -1781,6 +1781,13 @@
             }
         }
     },
+    "ui/compare/lane-compare-hooks/use-lane-diff-status": {
+        "name": "ui/compare/lane-compare-hooks/use-lane-diff-status",
+        "scope": "teambit.lanes",
+        "version": "0.0.144",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/compare/lane-compare-hooks/use-lane-diff-status"
+    },
     "ui/compare/lane-compare-page": {
         "name": "ui/compare/lane-compare-page",
         "scope": "teambit.lanes",

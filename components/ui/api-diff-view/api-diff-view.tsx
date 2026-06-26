@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import type { ComponentID } from '@teambit/component-id';
 import type { APIDiffResult } from './api-diff-model';
-import { useApiDiff } from './api-diff-model';
+import { ApiDiffDataProvider, useApiDiffData } from './api-diff-data-context';
+import type { ApiDiffPair } from './api-diff-data-context';
 import { ApiDiffInsightProvider } from './api-diff-insights';
 import type { ApiDiffInsight } from './api-diff-insights';
 import { ComponentApiDiffSection, ApiDiffSlimRow } from './component-api-diff-section';
@@ -36,6 +37,13 @@ export type ApiDiffLaneViewProps = {
    * registry-agnostic and avoids a dependency cycle with component-compare).
    */
   onApiEntries?: (componentId: string, entries: ApiEntry[]) => void;
+  /**
+   * whether the API view is the active view. The pane is kept mounted (for scroll anchors + query
+   * cache) even when hidden, so without this every component would fire its API-diff query on initial
+   * load — N expensive schema-extraction round trips that clog the network before the user ever opens
+   * the API tab. Queries fire only once this is true; results stay cached afterwards.
+   */
+  active?: boolean;
 };
 
 /** change types that can affect a component's API surface. config/docs-only changes can't. */
@@ -67,26 +75,35 @@ const REGISTRY_STATUS: Record<string, string> = { ADDED: 'NEW', REMOVED: 'DELETE
 
 function ComponentApiDiffContainer({
   entry,
-  host,
   selectedExport,
   onLoaded,
   onApiEntries,
+  active,
 }: {
   entry: ComponentDiffEntry;
-  host?: string;
   selectedExport?: string;
   onLoaded: (id: string, result: APIDiffResult | null) => void;
   onApiEntries?: (componentId: string, entries: ApiEntry[]) => void;
+  active?: boolean;
 }) {
   const baseId = entry.targetHead ? entry.componentId.changeVersion(entry.targetHead)?.toString() : undefined;
   const compareId = entry.sourceHead ? entry.componentId.changeVersion(entry.sourceHead)?.toString() : undefined;
   const componentIdStr = entry.componentId.toStringWithoutVersion();
 
-  const { result, loading, error } = useApiDiff(baseId, compareId, { host });
+  // read this pair's diff from the batched bulk query rather than firing a per-component query.
+  // `undefined` = still loading (its page hasn't returned); `null` = couldn't be computed.
+  const apiData = useApiDiffData();
+  const providerLoading = apiData?.loading ?? true;
+  const result = compareId ? apiData?.getApiDiff(compareId) : undefined;
+  const loading = result === undefined && providerLoading;
+  const error = undefined;
 
   React.useEffect(() => {
-    if (!loading) onLoaded(componentIdStr, result ?? null);
-  }, [loading, result, componentIdStr, onLoaded]);
+    // don't mark a pair "loaded" while its page is still in flight, or the totals/progress would
+    // count it as failed before the bulk query reaches it. the `active` guard keeps a hidden pane
+    // (whose bulk query is skipped) from reporting everything as loaded/failed prematurely.
+    if (active && !loading) onLoaded(componentIdStr, result ?? null);
+  }, [active, loading, result, componentIdStr, onLoaded]);
 
   // feed changed public exports to the host's sidebar tree (nested under the component,
   // exactly like files in code mode). the sidebar's scroll-sync then targets the
@@ -120,9 +137,30 @@ function ComponentApiDiffContainer({
  * always renders every component (sections for changed ones, slim rows for the rest);
  * selection from the sidebar scrolls — it never filters.
  */
-export function ApiDiffLaneView({ diffs, host, selectedId, selectedExport, insights, onApiEntries }: ApiDiffLaneViewProps) {
+export function ApiDiffLaneView({
+  diffs,
+  host,
+  selectedId,
+  selectedExport,
+  insights,
+  onApiEntries,
+  active,
+}: ApiDiffLaneViewProps) {
   const entries = useMemo(() => diffs.map((d) => ({ entry: d, kind: classifyEntry(d) })), [diffs]);
   const queried = useMemo(() => entries.filter((e) => e.kind === 'query'), [entries]);
+
+  // one bulk-query pair per component that needs a real diff (base = target head, compare = source head).
+  // 'query' kind guarantees both heads exist, so these ids are always defined.
+  const queryPairs = useMemo<ApiDiffPair[]>(
+    () =>
+      queried
+        .map(({ entry }) => ({
+          baseId: entry.componentId.changeVersion(entry.targetHead)?.toString() ?? '',
+          compareId: entry.componentId.changeVersion(entry.sourceHead)?.toString() ?? '',
+        }))
+        .filter((p) => p.baseId && p.compareId),
+    [queried]
+  );
 
   const [results, setResults] = useState<Map<string, APIDiffResult | null>>(new Map());
   const onDiffLoaded = useCallback((componentId: string, result: APIDiffResult | null) => {
@@ -170,7 +208,18 @@ export function ApiDiffLaneView({ diffs, host, selectedId, selectedExport, insig
       if (pub.length > 0) withPublicChanges += 1;
       if (r.hasChanges) withAnyChanges += 1;
     });
-    return { added, removed, modified, breaking, internal, withPublicChanges, withAnyChanges, unavailable, failed, loaded };
+    return {
+      added,
+      removed,
+      modified,
+      breaking,
+      internal,
+      withPublicChanges,
+      withAnyChanges,
+      unavailable,
+      failed,
+      loaded,
+    };
   }, [results, queried]);
 
   const loadedCount = totals.loaded;
@@ -211,103 +260,108 @@ export function ApiDiffLaneView({ diffs, host, selectedId, selectedExport, insig
 
   return (
     <ApiDiffInsightProvider insights={insights}>
-      <div className={styles.fullView}>
-        <div className={styles.summaryBar}>
-          <div className={styles.summaryTitle}>
-            <span className={styles.summaryHeading}>API Surface Changes</span>
-            {!allLoaded && (
-              <span className={styles.summaryLoading}>
-                Analyzing {loadedCount} of {queried.length}…
-              </span>
-            )}
-          </div>
-          {!allLoaded && queried.length > 0 && (
-            <div className={styles.summaryProgress}>
-              <div
-                className={styles.summaryProgressFill}
-                style={{ width: `${Math.round((loadedCount / queried.length) * 100)}%` }}
-              />
+      <ApiDiffDataProvider pairs={queryPairs} active={active} host={host}>
+        <div className={styles.fullView}>
+          <div className={styles.summaryBar}>
+            <div className={styles.summaryTitle}>
+              <span className={styles.summaryHeading}>API Surface Changes</span>
+              {!allLoaded && (
+                <span className={styles.summaryLoading}>
+                  Analyzing {loadedCount} of {queried.length}…
+                </span>
+              )}
             </div>
-          )}
-          {allLoaded && totals.withAnyChanges > 0 && (
-            <div className={styles.summaryStats}>
-              {totals.breaking > 0 && (
+            {!allLoaded && queried.length > 0 && (
+              <div className={styles.summaryProgress}>
+                <div
+                  className={styles.summaryProgressFill}
+                  style={{ width: `${Math.round((loadedCount / queried.length) * 100)}%` }}
+                />
+              </div>
+            )}
+            {allLoaded && totals.withAnyChanges > 0 && (
+              <div className={styles.summaryStats}>
+                {totals.breaking > 0 && (
+                  <span className={styles.summaryStat}>
+                    <span
+                      className={styles.summaryDot}
+                      style={{ background: 'var(--on-surface-negative-bold, #cf222e)' }}
+                    />
+                    {totals.breaking} breaking
+                  </span>
+                )}
+                <span className={styles.summaryStat}>
+                  <span className={styles.summaryDot} style={{ background: 'var(--success-color, #1a7f37)' }} />
+                  {totals.added} added
+                </span>
                 <span className={styles.summaryStat}>
                   <span
                     className={styles.summaryDot}
                     style={{ background: 'var(--on-surface-negative-bold, #cf222e)' }}
                   />
-                  {totals.breaking} breaking
+                  {totals.removed} removed
                 </span>
-              )}
-              <span className={styles.summaryStat}>
-                <span className={styles.summaryDot} style={{ background: 'var(--success-color, #1a7f37)' }} />
-                {totals.added} added
-              </span>
-              <span className={styles.summaryStat}>
-                <span className={styles.summaryDot} style={{ background: 'var(--on-surface-negative-bold, #cf222e)' }} />
-                {totals.removed} removed
-              </span>
-              <span className={styles.summaryStat}>
-                <span className={styles.summaryDot} style={{ background: 'var(--warning-color, #d6a022)' }} />
-                {totals.modified} modified
-              </span>
-              {totals.internal > 0 && <span className={styles.summaryStatMuted}>{totals.internal} internal</span>}
-            </div>
-          )}
-        </div>
+                <span className={styles.summaryStat}>
+                  <span className={styles.summaryDot} style={{ background: 'var(--warning-color, #d6a022)' }} />
+                  {totals.modified} modified
+                </span>
+                {totals.internal > 0 && <span className={styles.summaryStatMuted}>{totals.internal} internal</span>}
+              </div>
+            )}
+          </div>
 
-        {stable && (
-          <EmptyState
-            icon="✓"
-            tone="success"
-            title="API surface is stable"
-            subtitle={`${analyzedCount} component${analyzedCount !== 1 ? 's' : ''} analyzed — no API changes between these versions.`}
-          />
-        )}
-
-        {/* every component always renders (sections or slim rows) — even in the stable
-            state — so the sidebar's data-component-id scroll anchors always exist. */}
-        {entries.map(({ entry, kind }) => {
-          const idStr = entry.componentId.toStringWithoutVersion();
-          if (kind === 'incomparable') {
-            const copy = incomparableCopy(entry);
-            return (
-              <ApiDiffSlimRow
-                key={idStr}
-                componentIdStr={idStr}
-                displayName={entry.componentId.fullName}
-                chip={copy.chip}
-                detail={copy.detail}
-                tone="ok"
-              />
-            );
-          }
-          if (kind === 'gated') {
-            const sameVersion = entry.sourceHead === entry.targetHead;
-            return (
-              <ApiDiffSlimRow
-                key={idStr}
-                componentIdStr={idStr}
-                displayName={entry.componentId.fullName}
-                chip="✓ no API changes"
-                detail={sameVersion ? 'same version on both sides' : 'no source or dependency changes'}
-                tone="ok"
-              />
-            );
-          }
-          return (
-            <ComponentApiDiffContainer
-              key={idStr}
-              entry={entry}
-              host={host}
-              selectedExport={selectedId === idStr ? selectedExport : undefined}
-              onLoaded={onDiffLoaded}
-              onApiEntries={onApiEntries}
+          {stable && (
+            <EmptyState
+              icon="✓"
+              tone="success"
+              title="API surface is stable"
+              subtitle={`${analyzedCount} component${analyzedCount !== 1 ? 's' : ''} analyzed — no API changes between these versions.`}
             />
-          );
-        })}
-      </div>
+          )}
+
+          {/* every component always renders (sections or slim rows) — even in the stable
+            state — so the sidebar's data-component-id scroll anchors always exist. */}
+          {entries.map(({ entry, kind }) => {
+            const idStr = entry.componentId.toStringWithoutVersion();
+            if (kind === 'incomparable') {
+              const copy = incomparableCopy(entry);
+              return (
+                <ApiDiffSlimRow
+                  key={idStr}
+                  componentIdStr={idStr}
+                  displayName={entry.componentId.fullName}
+                  chip={copy.chip}
+                  detail={copy.detail}
+                  tone="ok"
+                />
+              );
+            }
+            if (kind === 'gated') {
+              const sameVersion = entry.sourceHead === entry.targetHead;
+              return (
+                <ApiDiffSlimRow
+                  key={idStr}
+                  componentIdStr={idStr}
+                  displayName={entry.componentId.fullName}
+                  chip="✓ no API changes"
+                  detail={sameVersion ? 'same version on both sides' : 'no source or dependency changes'}
+                  tone="ok"
+                />
+              );
+            }
+            return (
+              <ComponentApiDiffContainer
+                key={idStr}
+                entry={entry}
+                selectedExport={selectedId === idStr ? selectedExport : undefined}
+                onLoaded={onDiffLoaded}
+                onApiEntries={onApiEntries}
+                active={active}
+              />
+            );
+          })}
+        </div>
+      </ApiDiffDataProvider>
     </ApiDiffInsightProvider>
   );
 }

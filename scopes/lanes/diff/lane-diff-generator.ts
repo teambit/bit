@@ -12,6 +12,7 @@ import type { ComponentCompareMain } from '@teambit/component-compare';
 import chalk from 'chalk';
 import pMap from 'p-map';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { getHeadOnMain, importMainHeads } from './resolve-main-head';
 
 type LaneData = {
   name: string;
@@ -377,13 +378,20 @@ export class LaneDiffGenerator {
       components: [],
     };
 
+    // The base on main may live only on the remote scope (e.g. a component on the lane whose main
+    // version was never fetched locally). Resolve those heads from the remote on demand so the diff
+    // is real; components that genuinely have no main version resolve to no head and are reported as
+    // "new" by `componentDiff`, not as a spurious empty diff.
+    await importMainHeads(this.scope, ids);
+
     await Promise.all(
       ids.map(async (id) => {
-        const modelComponent = await this.scope.legacyScope.getModelComponent(id);
+        const headOnMain = await getHeadOnMain(this.scope, id);
         const laneComponent = {
           id,
-          head: modelComponent.head as Ref, // @todo: this is not true. it can be undefined
-          version: modelComponent.latestVersion(), // should this be latestVersion() or bitId.version.toString()
+          // undefined when the component has no version on main at all - handled as "new" downstream.
+          head: headOnMain ? Ref.from(headOnMain) : (undefined as unknown as Ref),
+          version: headOnMain,
         };
         laneData.components.push(laneComponent);
       })

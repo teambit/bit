@@ -1,10 +1,18 @@
 import { ComponentID } from '@teambit/component-id';
 import { ChangeType } from './change-type';
 
+/**
+ * where the compared base was resolved from:
+ * - `workspace`: the base was already present in the local scope.
+ * - `scope`: the base only existed on the remote scope and was fetched on demand for this diff.
+ */
+export type DiffBaseSource = 'workspace' | 'scope';
+
 export type PlainLaneComponentDiff = {
   componentId: string;
   sourceHead: string;
   targetHead?: string;
+  baseSource?: DiffBaseSource;
   changes: ChangeType[];
   upToDate: boolean;
 };
@@ -15,7 +23,8 @@ export class LaneComponentDiff {
     readonly changes: ChangeType[],
     readonly upToDate: boolean,
     readonly sourceHead: string,
-    readonly targetHead?: string
+    readonly targetHead?: string,
+    readonly baseSource?: DiffBaseSource
   ) {}
 
   get new() {
@@ -50,6 +59,7 @@ export class LaneComponentDiff {
       upToDate: this.upToDate,
       sourceHead: this.sourceHead,
       targetHead: this.targetHead,
+      baseSource: this.baseSource,
     };
   }
 
@@ -60,7 +70,8 @@ export class LaneComponentDiff {
       plainComponentDiff.changes,
       plainComponentDiff.upToDate,
       plainComponentDiff.sourceHead,
-      plainComponentDiff.targetHead
+      plainComponentDiff.targetHead,
+      plainComponentDiff.baseSource
     );
   }
 }

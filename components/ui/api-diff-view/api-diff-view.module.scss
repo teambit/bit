@@ -3,9 +3,14 @@ $border-color: var(--border-medium-color, #e8ecf0);
 $surface-color: var(--surface-color, #fff);
 $accent-color: var(--bit-accent-color, #6c5ce7);
 $text-primary: var(--on-surface-color, #1a1a2e);
-$text-secondary: var(--on-surface-medium-color, #707279);
-$text-muted: var(--on-background-medium-color, #a0aec0);
+// note: deliberately darker than the theme's "muted" token — API diff text is content to be read,
+// not decoration, so it must clear WCAG AA (~4.5:1) on the surface, which #a0aec0-style mutes don't.
+$text-secondary: var(--on-surface-medium-color, #5a626c);
+$text-muted: var(--on-background-medium-color, #79808a);
 $focus-color: var(--focus-color, #0969da);
+$danger: var(--on-surface-negative-bold, #cf222e);
+$warning: var(--warning-color, #bb8009);
+$success: var(--success-color, #1a7f37);
 
 @keyframes pulse {
   0%,
@@ -27,8 +32,8 @@ $focus-color: var(--focus-color, #0969da);
 }
 
 .fullView {
-  padding: 20px;
-  max-width: 980px;
+  padding: 24px;
+  max-width: 1080px;
 }
 
 // ── summary bar ──────────────────────────────────────────────────────────────
@@ -38,8 +43,8 @@ $focus-color: var(--focus-color, #0969da);
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
-  padding: 14px 20px;
+  margin-bottom: 24px;
+  padding: 16px 22px;
   border-radius: 12px;
   background: $surface-color;
   border: 1px solid $border-color;
@@ -48,25 +53,26 @@ $focus-color: var(--focus-color, #0969da);
 .summaryTitle {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .summaryHeading {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: $text-primary;
 }
 
 .summaryLoading {
-  font-size: 12px;
+  font-size: 13px;
   color: $accent-color;
   animation: pulse 1.5s ease-in-out infinite;
 }
 
 .summaryProgress {
-  width: 140px;
-  height: 6px;
-  border-radius: 3px;
+  width: 160px;
+  height: 8px;
+  border-radius: 4px;
   background: var(--surface-neutral-color, #eaeef2);
   overflow: hidden;
   flex-shrink: 0;
@@ -74,7 +80,7 @@ $focus-color: var(--focus-color, #0969da);
 
 .summaryProgressFill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 4px;
   background: $focus-color;
   transition: width 0.3s ease;
 }
@@ -82,33 +88,33 @@ $focus-color: var(--focus-color, #0969da);
 .summaryStats {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 
 .summaryStat {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
   color: $text-secondary;
 }
 
 .summaryStatMuted {
-  font-size: 12px;
+  font-size: 13px;
   color: $text-muted;
 }
 
 .summaryDot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
 }
 
 // ── per-component section ────────────────────────────────────────────────────
 
 .section {
-  margin-bottom: 14px;
+  margin-bottom: 18px;
   border-radius: 12px;
   border: 1px solid $border-color;
   background: $surface-color;
@@ -118,47 +124,47 @@ $focus-color: var(--focus-color, #0969da);
 .sectionHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 14px 18px;
   background: var(--surface-neutral-color, #f6f8fa);
   border-bottom: 1px solid $border-color;
 }
 
 .sectionName {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: $text-primary;
   font-family: $code-font;
 }
 
 .sectionVersions {
-  font-size: 11px;
-  color: $text-muted;
+  font-size: 13px;
+  color: $text-secondary;
   font-family: $code-font;
 }
 
 .sectionStats {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   margin-left: auto;
 }
 
 .sectionLoading {
-  font-size: 12px;
-  color: $text-muted;
+  font-size: 13px;
+  color: $text-secondary;
   animation: pulse 1.5s ease-in-out infinite;
 }
 
 .sectionSkeleton {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 18px;
 }
 
 .skeletonBar {
-  height: 10px;
-  border-radius: 5px;
+  height: 12px;
+  border-radius: 6px;
   background: linear-gradient(
     90deg,
     var(--surface-neutral-color, #eaeef2) 25%,
@@ -170,187 +176,274 @@ $focus-color: var(--focus-color, #0969da);
 }
 
 .statAdded {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: var(--success-color, #1a7f37);
+  color: $success;
 }
 
 .statRemoved {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: var(--on-surface-negative-bold, #cf222e);
+  color: $danger;
 }
 
 .statModified {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: var(--warning-color, #d6a022);
+  color: $warning;
 }
 
 .statBreaking {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: var(--on-surface-negative-bold, #cf222e);
-  background: rgba(207, 34, 46, 0.08);
-  padding: 1px 6px;
-  border-radius: 4px;
+  color: $danger;
+  background: color-mix(in srgb, $danger 10%, transparent);
+  padding: 2px 8px;
+  border-radius: 5px;
 }
 
 // ── change block ─────────────────────────────────────────────────────────────
 
 .changeBlock {
-  margin: 10px 14px;
+  margin: 12px 16px;
   border: 1px solid $border-color;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
-  scroll-margin-top: 8px;
+  scroll-margin-top: 12px;
 }
 
 .changeBlockFocused {
-  box-shadow: 0 0 0 2px color-mix(in srgb, $focus-color 40%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, $focus-color 45%, transparent);
 }
 
 .changeBlockDimmed {
-  opacity: 0.72;
+  opacity: 0.78;
 }
 
 .changeBlockHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 14px;
 }
 
 .changeBlockNote {
   margin-left: auto;
-  font-size: 11px;
-  color: $text-muted;
+  font-size: 12.5px;
+  color: $text-secondary;
 }
 
 .statusIndicator {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
   border: 1.5px solid;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
   font-family: $code-font;
 }
 
 .exportName {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: $text-primary;
   font-family: $code-font;
 }
 
 .schemaType {
-  font-size: 11px;
-  color: $text-muted;
-  background: rgba(0, 0, 0, 0.03);
-  padding: 1px 6px;
-  border-radius: 4px;
+  font-size: 12.5px;
+  color: $text-secondary;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 8px;
+  border-radius: 5px;
 }
+
+// ── signatures + cause diffs (shared git-style diff block) ────────────────────
 
 .signatures {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 2px 12px 8px;
-}
-
-.signatureLine {
-  display: block;
-  font-size: 12px;
-  font-family: $code-font;
-  line-height: 1.6;
-  word-break: break-all;
-  padding: 4px 8px;
-  border-radius: 6px;
-  color: $text-primary;
-}
-
-// derived from semantic vars the themes define, so the tint tracks light/dark themes
-// (hardcoded light pinks/greens would render unreadable on a dark surface)
-.signatureRemoved {
-  background: color-mix(in srgb, var(--on-surface-negative-bold, #cf222e) 12%, transparent);
-}
-
-.signatureAdded {
-  background: color-mix(in srgb, var(--success-color, #1a7f37) 12%, transparent);
+  padding: 0 14px 12px;
 }
 
 .causeList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 0 14px 10px;
+  gap: 14px;
+  padding: 4px 14px 14px;
 }
 
 .causeRow {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.causeHead {
+  display: flex;
   align-items: baseline;
-  gap: 8px;
-  font-size: 12px;
-  line-height: 1.5;
+  gap: 10px;
 }
 
 .causeDescription {
-  color: $text-secondary;
+  font-size: 14px;
+  line-height: 1.55;
+  color: $text-primary;
+  flex: 1;
 }
 
 .impactDot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
   position: relative;
   top: -1px;
 }
 
-.detailDiff {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+// the reviewable surface: a removed line over an added line, full width, monospaced, with an
+// aligned gutter marker. dark text on a tint reads far better than colored-text-on-white, and
+// `pre-wrap` + `break-word` keep long type strings legible instead of truncating mid-token.
+.diffBlock {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.diffLine {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: start;
   font-family: $code-font;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: $text-primary;
+  padding: 7px 14px 7px 0;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 60%, transparent);
+  }
+}
+
+.diffGutter {
+  text-align: center;
+  font-weight: 700;
+  user-select: none;
+  opacity: 0.95;
+}
+
+.diffCode {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+// token-level highlight: the exact tokens that differ get a stronger tint + weight, so a one-char
+// type change reads instantly. `<mark>`'s default yellow is overridden here.
+.diffTok {
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.diffLineRemoved {
+  background: color-mix(in srgb, $danger 8%, transparent);
+
+  .diffGutter {
+    color: $danger;
+  }
+
+  .diffTok {
+    background: color-mix(in srgb, $danger 24%, transparent);
+    color: $danger;
+  }
+}
+
+.diffLineAdded {
+  background: color-mix(in srgb, $success 9%, transparent);
+
+  .diffGutter {
+    color: $success;
+  }
+
+  .diffTok {
+    background: color-mix(in srgb, $success 22%, transparent);
+    color: var(--success-color, #136a2e);
+  }
+}
+
+// ── change category groups (breaking → minor → patch) ─────────────────────────
+
+.changeGroup {
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 55%, transparent);
+  }
+}
+
+.changeGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px 2px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $text-secondary;
+}
+
+.changeGroupDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: $text-muted;
+
+  &[data-impact='BREAKING'] {
+    background: $danger;
+  }
+
+  &[data-impact='NON_BREAKING'] {
+    background: $warning;
+  }
+
+  &[data-impact='PATCH'] {
+    background: $success;
+  }
+}
+
+.changeGroupCount {
   font-size: 11px;
-}
-
-.detailFrom {
-  color: var(--on-surface-negative-bold, #cf222e);
-  text-decoration: line-through;
-  opacity: 0.7;
-}
-
-.detailArrow {
-  color: $text-muted;
-  font-size: 10px;
-}
-
-.detailTo {
-  color: var(--success-color, #1a7f37);
-  font-weight: 500;
+  font-weight: 600;
+  color: $text-secondary;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 8px;
+  border-radius: 9px;
 }
 
 // ── insights (slot-contributed) ──────────────────────────────────────────────
 
 .insights {
-  margin: 0 12px 12px;
+  margin: 0 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .insight {
-  padding: 8px 12px;
+  padding: 10px 14px;
   border: 1px dashed $border-color;
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--surface-neutral-color, #fafbfc);
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.5;
   color: $text-secondary;
 }
 
@@ -358,36 +451,36 @@ $focus-color: var(--focus-color, #0969da);
 
 .internalSection {
   border-top: 1px solid $border-color;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
 }
 
 .internalToggle {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding: 8px 16px;
+  padding: 12px 18px;
   background: transparent;
   border: none;
   cursor: pointer;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 600;
   color: $text-secondary;
   text-align: left;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.015);
+    background: rgba(0, 0, 0, 0.02);
   }
 }
 
 .internalCount {
-  font-size: 11px;
-  font-weight: 500;
-  color: $text-muted;
-  background: rgba(0, 0, 0, 0.04);
-  padding: 0 6px;
-  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-secondary;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 8px;
+  border-radius: 9px;
 }
 
 // ── slim component-level rows ────────────────────────────────────────────────
@@ -396,19 +489,19 @@ $focus-color: var(--focus-color, #0969da);
   border-radius: 10px;
   border: 1px solid $border-color;
   background: $surface-color;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   overflow: hidden;
-  scroll-margin-top: 8px;
+  scroll-margin-top: 12px;
 }
 
 .slimRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 9px 16px;
-  color: $text-muted;
-  font-size: 12px;
+  padding: 12px 18px;
+  color: $text-secondary;
+  font-size: 13.5px;
 }
 
 .slimRowButton {
@@ -419,43 +512,45 @@ $focus-color: var(--focus-color, #0969da);
   text-align: left;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.015);
+    background: rgba(0, 0, 0, 0.02);
   }
 }
 
 .slimName {
   font-family: $code-font;
-  font-size: 12px;
-  color: $text-secondary;
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-primary;
 }
 
 .slimChip {
-  font-size: 10px;
-  padding: 1px 7px;
-  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 11px;
   border: 1px solid $border-color;
   white-space: nowrap;
 }
 
 .slimChipOk {
-  color: $text-muted;
+  color: $text-secondary;
 }
 
 .slimChipWarn {
-  color: var(--warning-color, #9a6700);
-  border-color: color-mix(in srgb, var(--warning-color, #9a6700) 35%, transparent);
-  background: rgba(154, 103, 0, 0.06);
+  color: $warning;
+  border-color: color-mix(in srgb, $warning 35%, transparent);
+  background: color-mix(in srgb, $warning 8%, transparent);
 }
 
 .slimChipError {
-  color: var(--on-surface-negative-bold, #cf222e);
-  border-color: color-mix(in srgb, var(--on-surface-negative-bold, #cf222e) 35%, transparent);
-  background: rgba(207, 34, 46, 0.06);
+  color: $danger;
+  border-color: color-mix(in srgb, $danger 35%, transparent);
+  background: color-mix(in srgb, $danger 7%, transparent);
 }
 
 .slimDetail {
-  font-size: 11.5px;
-  color: $text-muted;
+  font-size: 13px;
+  color: $text-secondary;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -463,7 +558,7 @@ $focus-color: var(--focus-color, #0969da);
 
 .slimExpand {
   margin-left: auto;
-  font-size: 14px;
+  font-size: 16px;
   color: $text-muted;
   transition: transform 0.15s ease;
   flex-shrink: 0;
@@ -475,46 +570,49 @@ $focus-color: var(--focus-color, #0969da);
 
 .slimExpanded {
   border-top: 1px solid $border-color;
-  padding: 4px 0;
+  padding: 6px 0;
 }
 
 // ── impact badges ────────────────────────────────────────────────────────────
 
 .impactBadge {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 6px;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .impactBadgeSmall {
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 2px 7px;
+  border-radius: 5px;
   letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 // ── whole-pane states ────────────────────────────────────────────────────────
 
 .emptyState {
   text-align: center;
-  padding: 48px 20px;
+  padding: 56px 20px;
 }
 
 .emptyIcon {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: rgba(26, 127, 55, 0.08);
-  color: var(--success-color, #1a7f37);
-  font-size: 22px;
+  background: color-mix(in srgb, $success 8%, transparent);
+  color: $success;
+  font-size: 26px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .emptyIconNeutral {
@@ -524,15 +622,16 @@ $focus-color: var(--focus-color, #0969da);
 }
 
 .emptyTitle {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: $text-primary;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .emptySubtitle {
-  font-size: 13px;
-  color: $text-muted;
-  max-width: 480px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: $text-secondary;
+  max-width: 520px;
   margin: 0 auto;
 }

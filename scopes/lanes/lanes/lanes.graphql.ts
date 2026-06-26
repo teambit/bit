@@ -61,6 +61,11 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         id: String!
         sourceHead: String!
         targetHead: String
+        """
+        where the compared base was resolved from: "workspace" (already local) or "scope" (fetched
+        on demand from the remote scope). null for a new component (no base) or a lane-vs-lane diff.
+        """
+        baseSource: String
         componentId: ComponentID!
         changeType: String @deprecated(reason: "Use changes")
         """

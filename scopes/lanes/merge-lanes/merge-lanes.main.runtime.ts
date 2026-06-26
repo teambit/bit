@@ -353,13 +353,17 @@ export class MergeLanesMain {
     const getBitIds = async () => {
       if (isDefaultLane) {
         const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps, shouldIncludeUpdateDependents);
-        const modelComponents = await Promise.all(ids.map((id) => this.scope.legacyScope.getModelComponent(id)));
-        return compact(
-          modelComponents.map((c) => {
-            if (!c.head) return null; // probably the component was never merged to main
-            return c.toComponentId().changeVersion(c.head.toString());
+        // resolve each component's head on main, falling back to the remote scope. the main objects
+        // were already fetched above (importObjectsFromMainIfExist), so a base that lives on the remote
+        // but wasn't in the local scope is still included in the merge instead of being skipped as
+        // "never merged to main". a component with no head on main at all is genuinely new and dropped.
+        const idsWithHead = await Promise.all(
+          ids.map(async (id) => {
+            const head = await this.lanes.getHeadOnMain(id);
+            return head ? id.changeVersion(head) : null;
           })
         );
+        return compact(idsWithHead);
       }
       if (!otherLane) throw new Error(`lane must be defined for non-default`);
       return shouldIncludeUpdateDependents

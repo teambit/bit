@@ -73,35 +73,43 @@ const API_DIFF_CHANGE_FIELDS = `
   }
 `;
 
+/**
+ * GraphQL selection set for a single `APIDiffResult`. Shared by the per-component `apiDiff`
+ * query (below) and the bulk `apiDiffs` query (`api-diff-data-context`) so the two never drift.
+ */
+export const API_DIFF_RESULT_FIELDS = `
+  status
+  base {
+    available
+    reason
+  }
+  compare {
+    available
+    reason
+  }
+  hasChanges
+  impact
+  internalImpact
+  added
+  removed
+  modified
+  breaking
+  nonBreaking
+  patch
+  publicChanges {
+    ${API_DIFF_CHANGE_FIELDS}
+  }
+  internalChanges {
+    ${API_DIFF_CHANGE_FIELDS}
+  }
+`;
+
 export const API_DIFF_QUERY = gql`
   query ApiDiff($baseId: String!, $compareId: String!, $host: String) {
     getHost(id: $host) {
       id
       apiDiff(baseId: $baseId, compareId: $compareId) {
-        status
-        base {
-          available
-          reason
-        }
-        compare {
-          available
-          reason
-        }
-        hasChanges
-        impact
-        internalImpact
-        added
-        removed
-        modified
-        breaking
-        nonBreaking
-        patch
-        publicChanges {
-          ${API_DIFF_CHANGE_FIELDS}
-        }
-        internalChanges {
-          ${API_DIFF_CHANGE_FIELDS}
-        }
+        ${API_DIFF_RESULT_FIELDS}
       }
     }
   }
@@ -156,7 +164,11 @@ const REASON_TEXT: Record<SchemaUnavailableReason, string> = {
  * human-readable explanation of why the diff could not be computed.
  * returns undefined when the diff was computed.
  */
-export function unavailableText(result: APIDiffResult, baseVersion?: string, compareVersion?: string): string | undefined {
+export function unavailableText(
+  result: APIDiffResult,
+  baseVersion?: string,
+  compareVersion?: string
+): string | undefined {
   const ver = (v?: string) => (v ? ` ${v.slice(0, 7)}` : '');
   switch (result.status) {
     case 'BASE_UNAVAILABLE':

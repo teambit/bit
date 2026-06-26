@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 
 export type FileInfo = { name: string; status?: string };
@@ -77,17 +77,34 @@ class ComponentRegistry {
 
   private version = 0;
 
+  /** the version value subscribers last observed — guards against flushing a no-op change */
+  private flushedVersion = 0;
+
   private pendingNotify = false;
 
+  /**
+   * coalesce a burst of registrations into a single asynchronous flush, then notify subscribers
+   * exactly once. crucial properties that keep this provably convergent and free of the
+   * "Maximum update depth exceeded" loop:
+   *  - `version` only advances when a `register*` method detected a *real* content change (each
+   *    one bails on an equal signature), so a re-render that registers nothing cannot bump it.
+   *  - the flush is deferred to a microtask and guarded by `pendingNotify`, so N synchronous
+   *    registrations collapse into one subscriber notification (one re-render), never N.
+   *  - the flush bails when `version === flushedVersion`, so a scheduled flush whose change was
+   *    already observed (e.g. via `useSyncExternalStore`'s snapshot) does no extra work.
+   *  - listeners are snapshotted before iterating, so a subscriber that (un)subscribes while being
+   *    notified cannot mutate the set mid-iteration.
+   */
   private notify() {
     this.version += 1;
-    if (!this.pendingNotify) {
-      this.pendingNotify = true;
-      queueMicrotask(() => {
-        this.pendingNotify = false;
-        this.listeners.forEach((l) => l());
-      });
-    }
+    if (this.pendingNotify) return;
+    this.pendingNotify = true;
+    queueMicrotask(() => {
+      this.pendingNotify = false;
+      if (this.version === this.flushedVersion) return;
+      this.flushedVersion = this.version;
+      [...this.listeners].forEach((l) => l());
+    });
   }
 }
 
@@ -101,12 +118,14 @@ export function FileRegistryProvider({ children }: { children: ReactNode }) {
 
 export function useFileRegistry() {
   const store = useContext(FileRegistryContext);
-  const [, forceRender] = useState(0);
 
-  useEffect(() => {
-    if (!store) return undefined;
-    return store.subscribe(() => forceRender((v) => v + 1));
-  }, [store]);
+  // Subscribe via `useSyncExternalStore` rather than a manual `useState` + `forceRender`. The
+  // snapshot is the store's monotonic `version`, which only advances on a real registration change.
+  // React re-renders this consumer solely when that number changes and bails when it is unchanged —
+  // so a re-render that triggers no genuine registration produces no new snapshot and cannot loop.
+  const subscribe = useCallback((onStoreChange: () => void) => store?.subscribe(onStoreChange) ?? (() => {}), [store]);
+  const getSnapshot = useCallback(() => store?.getVersion() ?? 0, [store]);
+  useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   return store;
 }
