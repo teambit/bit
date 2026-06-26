@@ -130,6 +130,33 @@ export class TypescriptMain {
     const configMutator = new TypescriptConfigMutator(options);
     const transformerContext: TsConfigTransformContext = {};
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    // TS 6 flipped several defaults and turned legacy options into hard errors.
+    // Shipped env tsconfigs must stay valid for TS 5.x consumers, so patch the raw tsconfig
+    // at runtime when the loaded compiler is actually TS 6+ — preserving TS 5 behavior.
+    const tsMajor = parseInt(tsModule.version?.split('.')[0] || '0', 10);
+    const tsconfig = afterMutation.raw.tsconfig;
+    const compilerOptions = tsconfig?.compilerOptions;
+    if (tsMajor >= 6 && compilerOptions) {
+      // TODO(ts7): `ignoreDeprecations: "6.0"` is a temporary bridge that silences the
+      // deprecation diagnostics TS 6 emits to prepare users for TS 7 (e.g., `moduleResolution: "node"`).
+      // It can't be hardcoded in the env tsconfig JSON files because TS 5.x consumers would
+      // reject the "6.0" value (TS5103), so we inject it conditionally here. Migrate env tsconfigs
+      // off the deprecated options (moduleResolution → node16/bundler) before adopting TS 7.
+      if (!compilerOptions.ignoreDeprecations) compilerOptions.ignoreDeprecations = '6.0';
+      if (compilerOptions.noUncheckedSideEffectImports === undefined)
+        compilerOptions.noUncheckedSideEffectImports = false;
+      // strict and types: don't inject when the tsconfig extends a base — the base may
+      // already set these, and an explicit value here would silently override the inherited one.
+      if (!tsconfig.extends) {
+        if (compilerOptions.strict === undefined) compilerOptions.strict = false;
+        // TS 6 stopped auto-discovering @types/* packages (types defaults to []).
+        // Seed the types every Bit env installs — @types/node universally and @types/jest
+        // (provides describe/it/expect globals). Don't seed 'mocha': the React env
+        // removes @types/mocha via the `-` convention (see react.env.ts), so seeding it
+        // would make tsc fail to resolve a type package that isn't installed.
+        if (compilerOptions.types === undefined) compilerOptions.types = ['node', 'jest'];
+      }
+    }
     const afterMutationWithoutTsconfig = { ...afterMutation.raw, tsconfig: '' };
 
     return new TypescriptCompiler(

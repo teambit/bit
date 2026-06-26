@@ -66,14 +66,17 @@ export class TsserverClient {
         onEvent: this.onTsserverEvent.bind(this),
       });
 
-      this.tsServer
-        .start()
-        .then(() => {
-          this.serverRunning = true;
-        })
-        .catch((err) => {
-          this.logger.error('TsserverClient.init failed', err);
-        });
+      // Await the server to be ready before issuing any requests, so a start() failure
+      // (e.g., tsserver writing to stderr) surfaces here rather than producing a write to a
+      // broken stdin, and so the inferred-project options below are applied to a live server.
+      await this.tsServer.start();
+      this.serverRunning = true;
+
+      // TS 6 flipped the `strict` default from false to true for inferred projects.
+      // Files outside any tsconfig (e.g., components whose env's tsconfig isn't included
+      // by the workspace config writer) would otherwise get strict-mode errors that didn't
+      // surface in TS 5. Pin inferred-project options to the TS 5 default to preserve behavior.
+      await this.setCompilerOptionsForInferredProjects({ strict: false });
 
       const shouldOpenFiles = this.options.openFilesOnInit !== false;
       if (this.files.length && shouldOpenFiles) {
@@ -89,7 +92,13 @@ export class TsserverClient {
       }
       this.logger.debug('TsserverClient.init completed');
     } catch (err) {
+      // Rethrow so callers know the server didn't come up. Swallowing here would leave
+      // `this.tsServer` set but unusable, and subsequent `request()` calls would silently
+      // return undefined via optional chaining — producing false-clean check-types runs.
       this.logger.error('TsserverClient.init failed', err);
+      this.tsServer = null;
+      this.serverRunning = false;
+      throw err;
     }
   }
 
@@ -294,6 +303,12 @@ export class TsserverClient {
     configureArgs: ts.server.protocol.ConfigureRequestArguments = {}
   ): Promise<ts.server.protocol.ConfigureResponse | undefined> {
     return this.tsServer?.request(CommandTypes.Configure, configureArgs);
+  }
+
+  private async setCompilerOptionsForInferredProjects(
+    options: ts.server.protocol.ExternalProjectCompilerOptions
+  ): Promise<void> {
+    await this.tsServer?.request(CommandTypes.CompilerOptionsForInferredProjects, { options });
   }
 
   /**
