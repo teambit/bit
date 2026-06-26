@@ -78,6 +78,11 @@ async function linkFile(srcFile: string, destFile: string) {
       await linkFileIfNotExists(srcFile, destFile);
       return;
     }
+    if (err.code === 'EXDEV') {
+      // hard links can't cross devices (e.g. bind mounts or overlayfs on CI), fall back to copying
+      await fs.copyFile(srcFile, destFile);
+      return;
+    }
     if (err.code !== 'EEXIST') {
       throw err;
     }
@@ -88,6 +93,10 @@ async function linkFileIfNotExists(srcFile: string, destFile: string) {
   try {
     await fs.link(srcFile, destFile);
   } catch (err: any) {
+    if (err.code === 'EXDEV') {
+      await fs.copyFile(srcFile, destFile);
+      return;
+    }
     if (err.code !== 'EEXIST') {
       throw err;
     }
