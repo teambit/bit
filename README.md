@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/teambit-bit-badge.png)](https://mseep.ai/app/teambit-bit)
+
 <p align="center">
   <img src="http://static.bit.dev/bit-docs/readme-bit-logo.png"/>
 </p>
