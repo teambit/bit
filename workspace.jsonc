@@ -708,6 +708,12 @@
       // react-animate-height < 2.1.2 reads this.state.animating after unmount,
       // which throws under React 19 because React 19 nullifies state on unmount.
       "react-animate-height@2": "^3.2.3",
+      // Collapse react/react-dom to a single version in capsules. Some older published
+      // components still pull react@17.0.2; without this, @teambit/logger resolves into two
+      // pnpm variants (_react@17.0.2 and _react@19.1.0) whose Logger types are incompatible
+      // (TS2345 "separate declarations of a private property 'extensionName'") and the build fails.
+      "react@17": "19.1.0",
+      "react-dom@17": "19.1.0",
       "minio@7.0": "7.1.3",
       // See more info here -
       // https://github.com/garycourt/uri-js/pull/95
