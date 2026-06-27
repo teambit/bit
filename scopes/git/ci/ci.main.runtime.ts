@@ -26,7 +26,7 @@ import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentID } from '@teambit/component-id';
-import { isEqual } from 'lodash';
+import { compact, isEqual } from 'lodash';
 import type { Version, LaneComponent, Lane } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
 import type { LaneId } from '@teambit/lane-id';
@@ -383,6 +383,39 @@ export class CiMain {
     const workspaceIds = this.workspace.listIds();
 
     this.logger.console(chalk.blue(`Syncing config changes from ${mainLaneId.toString()} into ${laneId.toString()}`));
+
+    // The lane import (switchToLane) brought each component's lane history plus the lightweight
+    // version-history (the parent graph) — that's enough for the diverge check below to see that
+    // main is ahead — but NOT the full Version object for main's head wherever main advanced past
+    // the lane's fork point. Those objects live only on main and were never fetched. Without them
+    // `loadVersion(mainHead)` throws VersionNotFoundOnFS, the per-component catch swallows it as
+    // "skipping config sync from main", and the sync silently degrades to a no-op for every
+    // diverged component. Pre-fetch main's head objects in one batched remote call (mirroring the
+    // lane-merge flows — see merge-status-provider / merge-lanes). Pass the *specific* main-head
+    // version so `cache: true` still fetches it: the component already exists locally at its lane
+    // version, so a version-less id would look satisfied and skip the remote.
+    const mainHeadIds = compact(
+      await Promise.all(
+        currentLane.components.map(async (laneComp) => {
+          const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
+          const mainHead = modelComponent?.head;
+          return mainHead && !mainHead.isEqual(laneComp.head)
+            ? laneComp.id.changeVersion(mainHead.toString())
+            : undefined;
+        })
+      )
+    );
+    if (mainHeadIds.length) {
+      try {
+        await this.importer.importObjectsFromMainIfExist(mainHeadIds, { cache: true });
+      } catch (e: any) {
+        // Best-effort: a fetch hiccup shouldn't abort `bit ci pr`. The per-component loop below
+        // still runs; any component whose main head is still missing just logs the existing skip.
+        this.logger.console(
+          chalk.yellow(`Could not pre-fetch main's objects for config sync (continuing): ${e?.message || e}`)
+        );
+      }
+    }
 
     const syncedIds: ComponentID[] = [];
     for (const laneComp of currentLane.components) {
