@@ -21,6 +21,25 @@ describe('linking to a target', function () {
   });
 });
 
+describe('linking a subset of components to a target', function () {
+  this.timeout(0);
+  let helper: Helper;
+  let targetDir: string;
+  before(() => {
+    helper = new Helper();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.fixtures.populateComponents(2);
+    targetDir = globalBitTempDir();
+    helper.command.link(`comp1 --target=${targetDir}`);
+  });
+  it('should link the scecified component to the target directory', () => {
+    expect(path.join(targetDir, `node_modules/@${helper.scopes.remote}/comp1`)).to.be.a.path();
+  });
+  it('should not link the not specified component to the target directory', () => {
+    expect(path.join(targetDir, `node_modules/@${helper.scopes.remote}/comp2`)).not.to.be.a.path();
+  });
+});
+
 describe('linking to a target including peers', function () {
   this.timeout(0);
   let helper: Helper;
