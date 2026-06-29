@@ -7,7 +7,12 @@
     "defaultDirectory": "components",
     // Setting this to false since the external core aspect env uses the core aspects
     // so we need it to be installed in a capsule
-    "resolveEnvsFromRoots": false
+    "resolveEnvsFromRoots": false,
+    // CI merges with `bit ci merge --no-bitmap-commit`, so .bitmap version pointers are
+    // never committed to the default branch. Every command on the main lane reconciles
+    // .bitmap against the latest exported scope HEAD instead (the scope is the source of
+    // truth for versions); see reconcileBitmapWithScopeIfNeeded in workspace.ts.
+    "bitmapAutoSync": true
   },
   "teambit.dependencies/dependency-resolver": {
     "allowScripts": {
