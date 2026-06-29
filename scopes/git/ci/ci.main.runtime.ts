@@ -26,7 +26,7 @@ import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentID } from '@teambit/component-id';
-import { isEqual } from 'lodash';
+import { compact, isEqual } from 'lodash';
 import type { Version, LaneComponent, Lane } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
 import type { LaneId } from '@teambit/lane-id';
@@ -384,15 +384,60 @@ export class CiMain {
 
     this.logger.console(chalk.blue(`Syncing config changes from ${mainLaneId.toString()} into ${laneId.toString()}`));
 
-    const syncedIds: ComponentID[] = [];
-    for (const laneComp of currentLane.components) {
-      try {
-        const modelComponent = await legacyScope.getModelComponent(laneComp.id);
-        const mainHead = modelComponent.head; // the component's head on main
-        if (!mainHead) continue; // component isn't on main — nothing to sync from there
-        const laneHead = laneComp.head;
-        if (mainHead.isEqual(laneHead)) continue; // lane already points at main's head
+    // Resolve each lane component's head on main once, keeping only those that are on main and whose
+    // lane head differs from it (the rest have nothing to sync). This single pass feeds both the
+    // pre-fetch below and the merge loop, so we never load the same ModelComponent twice.
+    const componentsToSync = compact(
+      await Promise.all(
+        currentLane.components.map(async (laneComp) => {
+          try {
+            const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
+            const mainHead = modelComponent?.head; // the component's head on main
+            if (!modelComponent || !mainHead || mainHead.isEqual(laneComp.head)) return undefined;
+            return { laneComp, modelComponent, mainHead };
+          } catch (e: any) {
+            // Best-effort per component (same contract as the merge loop below): one component's
+            // load failure shouldn't reject Promise.all and abort the whole config sync.
+            this.logger.console(
+              chalk.yellow(
+                `  ${laneComp.id.toStringWithoutVersion()}: skipping config sync from main (${e?.message || e})`
+              )
+            );
+            return undefined;
+          }
+        })
+      )
+    );
 
+    // The lane import (switchToLane) brought each component's lane history plus the lightweight
+    // version-history (the parent graph) — that's enough for the diverge check below to see that
+    // main is ahead — but NOT the full Version object for main's head wherever main advanced past
+    // the lane's fork point. Those objects live only on main and were never fetched. Without them
+    // `loadVersion(mainHead)` throws VersionNotFoundOnFS, the per-component catch swallows it as
+    // "skipping config sync from main", and the sync silently degrades to a no-op for every
+    // diverged component. Pre-fetch main's head objects in one batched remote call (mirroring the
+    // lane-merge flows — see merge-status-provider / merge-lanes). Pass the *specific* main-head
+    // version so `cache: true` still fetches it: the component already exists locally at its lane
+    // version, so a version-less id would look satisfied and skip the remote.
+    if (componentsToSync.length) {
+      const mainHeadIds = componentsToSync.map(({ laneComp, mainHead }) =>
+        laneComp.id.changeVersion(mainHead.toString())
+      );
+      try {
+        await this.importer.importObjectsFromMainIfExist(mainHeadIds, { cache: true });
+      } catch (e: any) {
+        // Best-effort: a fetch hiccup shouldn't abort `bit ci pr`. The merge loop below still runs;
+        // any component whose main head is still missing just logs the existing skip.
+        this.logger.console(
+          chalk.yellow(`Could not pre-fetch main's objects for config sync (continuing): ${e?.message || e}`)
+        );
+      }
+    }
+
+    const syncedIds: ComponentID[] = [];
+    for (const { laneComp, modelComponent, mainHead } of componentsToSync) {
+      try {
+        const laneHead = laneComp.head;
         const divergeData = await getDivergeData({
           repo,
           modelComponent,
