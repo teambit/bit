@@ -24,7 +24,7 @@ import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { UseLaneMenu } from '@teambit/lanes.ui.menus.use-lanes-menu';
 import type { LanesHost } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import type { IgnoreDerivingFromUrl } from '@teambit/lanes.hooks.use-lanes';
+import type { IgnoreDerivingFromUrl, UseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
@@ -303,7 +303,7 @@ export class LanesUI {
     return LanesProvider;
   }
 
-  getUseLanes() {
+  getUseLanes(): UseLanes {
     return useLanes;
   }
 
