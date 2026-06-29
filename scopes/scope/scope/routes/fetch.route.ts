@@ -9,14 +9,15 @@ import { z } from 'zod';
 import type { ScopeMain } from '../scope.main.runtime';
 import { omit } from 'lodash';
 
-// `fetchOptions` carries many version-specific/deprecated fields, so only `type` is enforced.
+// `fetchOptions` carries many version-specific/deprecated fields, so keep it permissive.
+// `type` is optional - legacy fetch() defaults a missing type to 'component' for backward compatibility.
 const fetchBodySchema = () =>
   z
     .object({
       ids: z.array(z.string()),
       fetchOptions: z
         .object({
-          type: z.string(),
+          type: z.string().optional(),
         })
         .passthrough(),
     })
