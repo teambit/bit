@@ -182,6 +182,94 @@ describe('ci commands', function () {
   });
 
   /**
+   * Skipping build/publish tasks is opt-in: a PR build runs the full pipeline by default, and a dev
+   * trades specific tasks for speed either via the `--skip-tasks` flag (this describe) or a
+   * `[skip-tasks: ...]` commit-message token (next describe). A control run (no skip) proves these
+   * tasks DO run for these components, so the "skipped" assertions aren't vacuous, and a non-skipped
+   * sibling task (PackComponents — only PublishComponents is skipped from pkg) proves the pipeline
+   * still ran rather than being short-circuited.
+   */
+  describe('bit ci pr --skip-tasks omits the named tasks from the snap pipeline', () => {
+    let controlOutput: string;
+    let skipOutput: string;
+    before(() => {
+      // Control: a normal --build PR run establishes that ExtractSchema and PublishComponents run.
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+      helper.command.runCmd('git checkout -b feature/skip-tasks-control');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("control");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: control"');
+      controlOutput = helper.command.runCmd('bit ci pr --build --keep-lane --message "control pr"');
+
+      // Skip: a fresh workspace runs the same flow but skips schema extraction and publishing.
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+      helper.command.runCmd('git checkout -b feature/skip-tasks-skip');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("skipped");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: skip"');
+      skipOutput = helper.command.runCmd(
+        'bit ci pr --build --keep-lane --skip-tasks ExtractSchema,PublishComponents --message "skip tasks pr"'
+      );
+    });
+    it('runs ExtractSchema and PublishComponents by default (control)', () => {
+      expect(controlOutput).to.include('ExtractSchema');
+      expect(controlOutput).to.include('PublishComponents');
+    });
+    it('completes successfully with --skip-tasks', () => {
+      expect(skipOutput).to.include('PR command executed successfully');
+    });
+    it('does not run the skipped tasks', () => {
+      expect(skipOutput).to.not.include('ExtractSchema');
+      expect(skipOutput).to.not.include('PublishComponents');
+    });
+    it('still runs the non-skipped pipeline tasks (e.g. PackComponents)', () => {
+      expect(skipOutput).to.include('PackComponents');
+    });
+  });
+
+  /**
+   * The opt-in path used in CI: instead of a flag, the developer puts a `[skip-tasks: ...]` token in
+   * the commit message. `bit ci pr` (no --message here, so it reads the git commit message) parses
+   * the token, skips those tasks, and strips the token from the snap message. Asserts on the build's
+   * bracketed run-markers (`[Schema: ExtractSchema]`) rather than bare task names, because the
+   * "Skipping tasks from commit message: ..." log line itself names the tasks.
+   */
+  describe('bit ci pr skips tasks named by a [skip-tasks: ...] commit-message token', () => {
+    let prOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+      helper.command.runCmd('git checkout -b feature/skip-tasks-token');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("token");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      // No --message, so bit ci pr reads this commit message and parses the token out of it.
+      helper.command.runCmd('git commit -m "feat: ui change [skip-tasks: ExtractSchema,PublishComponents]"');
+      prOutput = helper.command.runCmd('bit ci pr --build --keep-lane');
+    });
+    it('reports it is skipping tasks from the commit message', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.include('Skipping tasks from commit message');
+    });
+    it('does not run the tasks named by the token', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.not.include('[Schema: ExtractSchema]');
+      expect(cleanOutput).to.not.include('[Pkg: PublishComponents]');
+    });
+    it('still runs the non-skipped pipeline tasks (e.g. PackComponents)', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.include('[Pkg: PackComponents]');
+    });
+    it('completes successfully', () => {
+      expect(prOutput).to.include('PR command executed successfully');
+    });
+  });
+
+  /**
    * Subsequent commits to the same PR branch should re-use the existing remote lane rather than
    * deleting and recreating it. This preserves the lane's history (cloud UI shows the snap
    * progression), keeps user-made edits on the lane, and prevents a pile of archived lanes from

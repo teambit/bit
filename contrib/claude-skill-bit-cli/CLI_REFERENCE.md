@@ -146,8 +146,8 @@ Runs lint, build, and status checks to catch dependency drift or broken builds e
 
 Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.
 
-Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. By default it then restores the workspace by switching back to main; pass --skip-cleanup to skip that restore when the workspace is about to be discarded (e.g. an ephemeral CI container). Use in pull-request CI pipelines after tests and before deploy.
-Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-lane, --skip-cleanup
+Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. By default it then restores the workspace by switching back to main; pass --skip-cleanup to skip that restore when the workspace is about to be discarded (e.g. an ephemeral CI container). PR builds run the full pipeline by default; to trade specific tasks for speed on a given PR, add a [skip-tasks: ...] token to the commit message (e.g. [skip-tasks: GeneratePreview,ExtractSchema]), which merges with any --skip-tasks flag. Use in pull-request CI pipelines after tests and before deploy.
+Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-lane, --skip-cleanup, --skip-tasks <tasks>
 
 ## bit ci merge
 
