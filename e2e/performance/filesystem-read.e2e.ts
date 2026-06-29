@@ -40,19 +40,16 @@ describe('Filesystem read count', function () {
         const output = helper.command.runCmd('bit --help', undefined, undefined, undefined, undefined, {
           BIT_DEBUG_READ_FILE: 'true',
         });
-        const numberOfReads = getNumberOfReads(output);
-        if (numberOfReads) {
-          console.log(`Total reads found: ${numberOfReads}`);
-          if (numberOfReads > MAX_FILES_READ) {
-            printDiffFromLastSnapshot(output);
-          }
-        } else {
-          console.log(`No read lines (#...) found`);
-        }
-        expect(output).to.have.string('0');
+        // sanity check that the BIT_DEBUG_READ_FILE mechanism produced the expected output
         expect(output).to.have.string('package.json');
         expect(output).to.have.string('node_modules');
-        expect(output).to.not.have.string(`#${MAX_FILES_READ}`);
+        const numberOfReads = getNumberOfReads(output);
+        expect(numberOfReads, 'no "#<num>" read lines found in the output').to.be.greaterThan(0);
+        if (numberOfReads >= MAX_FILES_READ) {
+          throw new Error(
+            buildExceededError('bit-bootstrap', numberOfReads, MAX_FILES_READ, getNewlyLoadedFiles(output))
+          );
+        }
       });
       it('should take reasonable time to run bit --help', () => {
         const start = process.hrtime();
@@ -74,7 +71,10 @@ describe('Filesystem read count', function () {
         const output = helper.command.runCmd('bit status', undefined, undefined, undefined, undefined, {
           BIT_DEBUG_READ_FILE: 'true',
         });
-        expect(output).to.not.have.string(`#${MAX_FILES_READ_STATUS}`);
+        const numberOfReads = getNumberOfReads(output);
+        if (numberOfReads >= MAX_FILES_READ_STATUS) {
+          throw new Error(buildExceededError('bit status', numberOfReads, MAX_FILES_READ_STATUS));
+        }
       });
       it('should take less than 2 seconds', () => {
         const start = process.hrtime();
@@ -115,21 +115,37 @@ function getNumberOfReads(cmdOutput: string): number {
   return 0;
 }
 
-function printDiffFromLastSnapshot(cmdOutput: string) {
+/**
+ * builds a concise, readable failure message for when the file-count threshold is exceeded.
+ * instead of dumping the entire command output (thousands of lines), it shows only the diff:
+ * the files that are loaded now but were not present in the last snapshot.
+ * `newFiles` is omitted for commands without a snapshot (e.g. "bit status").
+ */
+function buildExceededError(label: string, numberOfReads: number, max: number, newFiles?: string[]): string {
+  const lines = [`${label} loaded ${numberOfReads} files, exceeding the allowed maximum of ${max}.`];
+  if (newFiles) {
+    if (newFiles.length) {
+      lines.push(`The following ${newFiles.length} file(s) are loaded now but were not in the last snapshot:`);
+      lines.push(...newFiles.map((file) => `  + ${file}`));
+    } else {
+      lines.push('No new files compared to the last snapshot (the increase comes from files read more than once).');
+    }
+  }
+  lines.push(
+    'If this increase is intentional, bump the threshold in filesystem-read.e2e.ts and regenerate ' +
+      'e2e/performance/files-snapshot.txt (see makeSnapshot()).'
+  );
+  return `\n${lines.join('\n')}`;
+}
+
+/**
+ * returns the bit-installation files that are loaded now but were not present in the last snapshot.
+ */
+function getNewlyLoadedFiles(cmdOutput: string): string[] {
   const fromLastSnapshot = fs.readFileSync(path.join(__dirname, 'files-snapshot.txt')).toString();
   const fromLastSnapshotLines = fromLastSnapshot.split('\n');
-  const { linesFromBitInstallation, otherLines } = getLinesFromBitInstallation(cmdOutput);
-  console.log('********** the following files are new ***************************');
-  _.difference(linesFromBitInstallation, fromLastSnapshotLines).forEach((line) => console.log(line));
-  console.log('******************************************************************');
-
-  console.log('********** the following files are old ***************************');
-  _.difference(fromLastSnapshotLines, linesFromBitInstallation).forEach((line) => console.log(line));
-  console.log('******************************************************************');
-
-  console.log('********** the following files are not from bit-installation *****');
-  otherLines.forEach((line) => console.log(line));
-  console.log('*******************************************************************');
+  const { linesFromBitInstallation } = getLinesFromBitInstallation(cmdOutput);
+  return _.difference(linesFromBitInstallation, fromLastSnapshotLines);
 }
 
 function getLinesFromBitInstallation(cmdOutput: string) {
