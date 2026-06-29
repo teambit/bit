@@ -4,11 +4,12 @@ import type { Logger } from '@teambit/logger';
 import { z } from 'zod';
 import type { LanesMain } from './lanes.main.runtime';
 
-const createLaneBodySchema = z
-  .object({
-    name: z.string().min(1),
-  })
-  .passthrough();
+const createLaneBodySchema = () =>
+  z
+    .object({
+      name: z.string().min(1),
+    })
+    .passthrough();
 
 export class LanesCreateRoute implements Route {
   constructor(

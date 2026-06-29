@@ -4,12 +4,13 @@ import type { Logger } from '@teambit/logger';
 import { z } from 'zod';
 import type { MergeLanesMain } from './merge-lanes.main.runtime';
 
-const checkConflictsBodySchema = z
-  .object({
-    sourceLane: z.string().min(1),
-    targetLane: z.string().min(1),
-  })
-  .passthrough();
+const checkConflictsBodySchema = () =>
+  z
+    .object({
+      sourceLane: z.string().min(1),
+      targetLane: z.string().min(1),
+    })
+    .passthrough();
 
 export class LanesCheckConflictsRoute implements Route {
   constructor(

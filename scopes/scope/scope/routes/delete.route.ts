@@ -3,13 +3,14 @@ import { Verb, validateBody } from '@teambit/express';
 import { z } from 'zod';
 import type { ScopeMain } from '../scope.main.runtime';
 
-const deleteBodySchema = z
-  .object({
-    ids: z.array(z.string()),
-    force: z.boolean().optional(),
-    lanes: z.boolean().optional(),
-  })
-  .passthrough();
+const deleteBodySchema = () =>
+  z
+    .object({
+      ids: z.array(z.string()),
+      force: z.boolean().optional(),
+      lanes: z.boolean().optional(),
+    })
+    .passthrough();
 
 export class DeleteRoute implements Route {
   constructor(private scope: ScopeMain) {}

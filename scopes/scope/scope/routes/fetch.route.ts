@@ -10,16 +10,17 @@ import type { ScopeMain } from '../scope.main.runtime';
 import { omit } from 'lodash';
 
 // `fetchOptions` carries many version-specific/deprecated fields, so only `type` is enforced.
-const fetchBodySchema = z
-  .object({
-    ids: z.array(z.string()),
-    fetchOptions: z
-      .object({
-        type: z.string(),
-      })
-      .passthrough(),
-  })
-  .passthrough();
+const fetchBodySchema = () =>
+  z
+    .object({
+      ids: z.array(z.string()),
+      fetchOptions: z
+        .object({
+          type: z.string(),
+        })
+        .passthrough(),
+    })
+    .passthrough();
 
 export class FetchRoute implements Route {
   constructor(

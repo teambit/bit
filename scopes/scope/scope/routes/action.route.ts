@@ -6,12 +6,13 @@ import { z } from 'zod';
 import type { ScopeMain } from '../scope.main.runtime';
 
 // `options` shape varies per action, so it's left unconstrained on purpose.
-const actionBodySchema = z
-  .object({
-    name: z.string().min(1),
-    options: z.unknown().optional(),
-  })
-  .passthrough();
+const actionBodySchema = () =>
+  z
+    .object({
+      name: z.string().min(1),
+      options: z.unknown().optional(),
+    })
+    .passthrough();
 
 export class ActionRoute implements Route {
   constructor(private scope: ScopeMain) {}

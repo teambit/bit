@@ -6,12 +6,14 @@ import { z } from 'zod';
 import type { OnPostPutSlot, ScopeMain } from '../scope.main.runtime';
 
 // permissive on purpose - validate the fields we read, tolerate anything else for cross-version compatibility.
-const pushOptionsSchema = z
-  .object({
-    clientId: z.string().optional(),
-    persist: z.boolean().optional(),
-  })
-  .passthrough();
+// built lazily (thunk) so `zod` stays out of the cli bootstrap - see validateBody() in @teambit/express.
+const pushOptionsSchema = () =>
+  z
+    .object({
+      clientId: z.string().optional(),
+      persist: z.boolean().optional(),
+    })
+    .passthrough();
 
 export class PutRoute implements Route {
   constructor(
@@ -34,7 +36,7 @@ export class PutRoute implements Route {
       } catch {
         throw new HttpError('the push-options header is not a valid JSON', 400);
       }
-      const pushOptions = validateData(pushOptionsSchema, parsedPushOptions, 'push-options header');
+      const pushOptions = validateData(pushOptionsSchema(), parsedPushOptions, 'push-options header');
       const objectList = await ObjectList.fromTar(req);
       const ids = await put(
         {

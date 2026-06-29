@@ -4,11 +4,12 @@ import type { Logger } from '@teambit/logger';
 import { z } from 'zod';
 import type { LanesMain } from './lanes.main.runtime';
 
-const deleteLanesBodySchema = z
-  .object({
-    names: z.array(z.string()),
-  })
-  .passthrough();
+const deleteLanesBodySchema = () =>
+  z
+    .object({
+      names: z.array(z.string()),
+    })
+    .passthrough();
 
 export class LanesDeleteRoute implements Route {
   constructor(

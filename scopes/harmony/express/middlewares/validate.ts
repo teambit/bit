@@ -44,10 +44,17 @@ export function validateData<T>(schema: ZodType<T>, data: unknown, label = 'requ
 /**
  * express middleware that validates `req.body` against the given zod `schema`. on success the
  * parsed result is assigned back to `req.body`; on failure it responds with status 400.
+ *
+ * the schema can be passed as a thunk (`() => ZodType`), which is the preferred form: route
+ * modules are evaluated during the cli bootstrap (to register routes), so building a schema at
+ * module top-level would eagerly pull `zod` into the bootstrap and defeat the babel lazy-import.
+ * passing a thunk keeps `zod` lazy - it's constructed (and memoized) only on the first request.
  */
-export function validateBody(schema: ZodType): Middleware {
+export function validateBody(schema: ZodType | (() => ZodType)): Middleware {
+  let resolved: ZodType | undefined;
   return async (req, _res, next) => {
-    req.body = validateData(schema, req.body, 'request body');
+    resolved ??= typeof schema === 'function' ? schema() : schema;
+    req.body = validateData(resolved, req.body, 'request body');
     next();
   };
 }
