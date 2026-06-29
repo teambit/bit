@@ -390,10 +390,21 @@ export class CiMain {
     const componentsToSync = compact(
       await Promise.all(
         currentLane.components.map(async (laneComp) => {
-          const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
-          const mainHead = modelComponent?.head; // the component's head on main
-          if (!modelComponent || !mainHead || mainHead.isEqual(laneComp.head)) return undefined;
-          return { laneComp, modelComponent, mainHead };
+          try {
+            const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
+            const mainHead = modelComponent?.head; // the component's head on main
+            if (!modelComponent || !mainHead || mainHead.isEqual(laneComp.head)) return undefined;
+            return { laneComp, modelComponent, mainHead };
+          } catch (e: any) {
+            // Best-effort per component (same contract as the merge loop below): one component's
+            // load failure shouldn't reject Promise.all and abort the whole config sync.
+            this.logger.console(
+              chalk.yellow(
+                `  ${laneComp.id.toStringWithoutVersion()}: skipping config sync from main (${e?.message || e})`
+              )
+            );
+            return undefined;
+          }
         })
       )
     );
