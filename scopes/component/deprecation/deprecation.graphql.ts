@@ -14,6 +14,9 @@ export function deprecationSchema(deprecation: DeprecationMain): Schema {
       type DeprecationInfo {
         isDeprecate: Boolean
         newId: String
+
+        # semver range of the deprecated versions (when only a range of versions is deprecated)
+        range: String
       }
 
       type DeprecationResult {

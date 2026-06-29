@@ -57,6 +57,9 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
         tag: String
         id: String!
         profileImage: String
+
+        # whether this specific version is deprecated (full component deprecation or matched by a deprecation range)
+        deprecated: Boolean
       }
 
       type Author {

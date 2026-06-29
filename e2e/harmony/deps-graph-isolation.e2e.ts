@@ -45,7 +45,7 @@ chai.use(chaiFs);
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
         await npmCiRegistry.init();
-        helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+        npmCiRegistry.setRegistry();
         helper.env.setCustomNewEnv(
           undefined,
           undefined,
@@ -80,13 +80,13 @@ chai.use(chaiFs);
 
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setRegistry();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
         helper.command.import(`${helper.scopes.remote}/comp1@latest`);
         lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
       });
       after(() => {
         npmCiRegistry.destroy();
-        helper.command.delConfig('registry');
         helper.scopeHelper.destroy();
       });
       it('should record the dev-only dependency in the graph with lifecycle=dev', () => {
@@ -207,7 +207,7 @@ chai.use(chaiFs);
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
         await npmCiRegistry.init();
-        helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+        npmCiRegistry.setRegistry();
         helper.fixtures.populateComponents(1);
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
         helper.command.install();
@@ -222,7 +222,6 @@ chai.use(chaiFs);
       });
       after(() => {
         npmCiRegistry.destroy();
-        helper.command.delConfig('registry');
         helper.scopeHelper.destroy();
       });
       it('should attach the dependencies graph to the snap by default', () => {

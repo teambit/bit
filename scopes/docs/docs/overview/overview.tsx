@@ -13,7 +13,7 @@ import {
   PreviewPropsAggregator,
   SandboxPermissionsAggregator,
 } from '@teambit/preview.ui.component-preview';
-// import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
+import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
@@ -192,7 +192,27 @@ export function Overview({
           )}
         </div>
       )}
-      {buildFailed && EmptyState && <EmptyState />}
+      {buildFailed &&
+        (EmptyState ? (
+          <EmptyState />
+        ) : (
+          <div className={styles.buildFailed}>
+            <BuildStatusMessage buildStatus={component.buildStatus} />
+          </div>
+        ))}
     </div>
   );
+}
+
+// default overview content when the preview can't be shown (e.g. the build failed or is still
+// pending). a registered empty state takes precedence over this.
+function BuildStatusMessage({ buildStatus }: { buildStatus?: string }) {
+  if (buildStatus?.toLowerCase() === 'pending') {
+    return (
+      <StatusMessageCard status="PROCESSING" title="component preview pending">
+        this might take some time
+      </StatusMessageCard>
+    );
+  }
+  return <StatusMessageCard status="FAILURE" title="failed to get component preview" />;
 }
