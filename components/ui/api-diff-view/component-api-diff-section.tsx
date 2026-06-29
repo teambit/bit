@@ -16,6 +16,13 @@ const CHANGE_GROUPS: { key: string; label: string; match: (c: APIDiffChange) => 
   { key: 'PATCH', label: 'Patch', match: (c) => c.impact !== 'BREAKING' && c.impact !== 'NON_BREAKING' },
 ];
 
+/** sort weight so breaking changes/causes come first, then minor, then patch. */
+function impactRank(impact: string): number {
+  if (impact === 'BREAKING') return 0;
+  if (impact === 'NON_BREAKING') return 1;
+  return 2;
+}
+
 export function ImpactBadge({ impact, small }: { impact: ImpactLevel | string; small?: boolean }) {
   const colors: Record<string, { bg: string; fg: string }> = {
     BREAKING: { bg: 'rgba(207, 34, 46, 0.1)', fg: 'var(--on-surface-negative-bold, #cf222e)' },
@@ -121,11 +128,27 @@ function DiffCode({ parts }: { parts: Tok[] }) {
 /**
  * a before/after signature shown as a git-style stacked diff with token-level highlighting: the
  * removed line over the added line, full-width monospace, aligned gutter, and only the tokens that
- * actually differ emphasized. Renders nothing when both sides are present and identical (the change
- * is internal — the visible signature didn't move, so two identical lines would be pure noise).
+ * actually differ emphasized.
+ *
+ * When both sides are present and identical, the public signature didn't move (the change is
+ * internal/transitive). Rather than render a confusing two-line "diff" of identical text — or nothing
+ * at all, which is impossible to understand — show the signature ONCE as a neutral context line so
+ * the reader still sees the member's type and can tell it's unchanged at the surface.
  */
 function DiffPair({ from, to }: { from?: string; to?: string }) {
-  if (from && to && from === to) return null;
+  if (from && to && from === to) {
+    return (
+      <div className={styles.diffBlock}>
+        <code className={`${styles.diffLine} ${styles.diffLineContext}`}>
+          <span className={styles.diffGutter} aria-hidden="true">
+            ·
+          </span>
+          <span className={styles.diffCode}>{from}</span>
+          <span className={styles.diffContextNote}>public signature unchanged</span>
+        </code>
+      </div>
+    );
+  }
   const diff = from && to ? tokenDiff(from, to) : undefined;
 
   return (
@@ -191,16 +214,18 @@ export function ApiChangeBlock({ change, anchorId, focused, dimmed, insightCtx }
 
       {change.changes && change.changes.length > 0 && (
         <div className={styles.causeList}>
-          {change.changes.map((detail, i) => (
-            <div key={`${detail.changeKind}-${i}`} className={styles.causeRow}>
-              <div className={styles.causeHead}>
-                <ImpactDot impact={detail.impact} />
-                <span className={styles.causeDescription}>{detail.description}</span>
-                <ImpactBadge impact={detail.impact} small />
+          {[...change.changes]
+            .sort((a, b) => impactRank(a.impact) - impactRank(b.impact))
+            .map((detail, i) => (
+              <div key={`${detail.changeKind}-${i}`} className={styles.causeRow}>
+                <div className={styles.causeHead}>
+                  <ImpactDot impact={detail.impact} />
+                  <span className={styles.causeDescription}>{detail.description}</span>
+                  <ImpactBadge impact={detail.impact} small />
+                </div>
+                {detail.from && detail.to && <DiffPair from={detail.from} to={detail.to} />}
               </div>
-              {detail.from && detail.to && <DiffPair from={detail.from} to={detail.to} />}
-            </div>
-          ))}
+            ))}
         </div>
       )}
 

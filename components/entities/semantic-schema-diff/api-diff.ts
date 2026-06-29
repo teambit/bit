@@ -57,12 +57,21 @@ function diffExports(
       const compareComparable = toComparableObject(compareEntry.unwrapped);
 
       if (!deepEqual(baseComparable, compareComparable)) {
-        const facts = baseEntry.unwrapped.diff?.(compareEntry.unwrapped) ?? [];
+        // Drop facts whose rendered `from`/`to` are identical. The deep compare catches non-semantic
+        // differences (resolved-type internals, member ordering, build artifacts) that don't change
+        // the visible API — they'd otherwise surface as "X changed" rows with no actual diff, the bulk
+        // of the noise after an env/build change. A real change always renders a different from/to.
+        const facts = (baseEntry.unwrapped.diff?.(compareEntry.unwrapped) ?? []).filter(
+          (f) => !(f.from != null && f.to != null && f.from === f.to)
+        );
         const assessed: AssessedChange[] = assessor.assess(facts);
 
         const baseSig = baseEntry.unwrapped.signature;
         const compareSig = compareEntry.unwrapped.signature;
-        const sigsDiffer = baseSig !== compareSig;
+        // require both signatures: a null on one side is missing extraction data, not a real change.
+        // without this guard a real signature vs. `undefined` reads as "differ", so an export with no
+        // actual change is emitted as MODIFIED (empty block) instead of being skipped below.
+        const sigsDiffer = Boolean(baseSig && compareSig && baseSig !== compareSig);
 
         // Skip if no semantic changes detected — the structural difference is
         // just metadata (locations, ordering) that doesn't affect the API.

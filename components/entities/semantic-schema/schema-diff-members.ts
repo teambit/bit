@@ -22,7 +22,9 @@ function classifyMemberChange(base: Record<string, any>, compare: Record<string,
   const baseStripped = { ...base, location: undefined, doc: undefined };
   const compareStripped = { ...compare, location: undefined, doc: undefined };
   if (deepEqualNoLocation(baseStripped, compareStripped)) return 'member-documentation-changed';
-  if (base.signature !== compare.signature) return 'member-signature-changed';
+  // require both signatures present: a null on one side is missing extraction data, not a real
+  // signature change — fall through to the internal (patch) classification rather than flag breaking.
+  if (base.signature && compare.signature && base.signature !== compare.signature) return 'member-signature-changed';
   return 'member-definition-changed';
 }
 
@@ -103,28 +105,38 @@ function diffModifiedMembers(
 function diffStructural(baseObj: Record<string, any>, compareObj: Record<string, any>): SchemaChangeFact[] {
   const facts: SchemaChangeFact[] = [];
 
+  // NOTE on the `from !== to` guards below: `deepEqualNoLocation` compares the raw nodes, which can
+  // carry non-semantic differences between two builds (resolved-type internals, doc, ordering of
+  // equivalent representations). Those make the deep compare report a change even when the rendered
+  // type the consumer actually sees is identical — e.g. `extends React.Component<P, S>` on both
+  // sides getting flagged MAJOR. So a structural change is only real once its human-comparable
+  // string representation differs; otherwise it's a false positive and we drop it.
   if (!deepEqualNoLocation(baseObj.typeParams, compareObj.typeParams)) {
     const from = (baseObj.typeParams || []).join(', ');
     const to = (compareObj.typeParams || []).join(', ');
-    facts.push({
-      changeKind: 'type-parameters-changed',
-      description: `type parameters changed: <${from || 'none'}> → <${to || 'none'}>`,
-      context: { from, to },
-      from,
-      to,
-    });
+    if (from !== to) {
+      facts.push({
+        changeKind: 'type-parameters-changed',
+        description: `type parameters changed: <${from || 'none'}> → <${to || 'none'}>`,
+        context: { from, to },
+        from,
+        to,
+      });
+    }
   }
 
   if (!deepEqualNoLocation(baseObj.extendsNodes, compareObj.extendsNodes)) {
     const from = (baseObj.extendsNodes || []).map((n: any) => n.name || typeStr(n)).join(', ') || 'none';
     const to = (compareObj.extendsNodes || []).map((n: any) => n.name || typeStr(n)).join(', ') || 'none';
-    facts.push({
-      changeKind: 'extends-changed',
-      description: `extends changed: ${from} → ${to}`,
-      context: { from, to },
-      from,
-      to,
-    });
+    if (from !== to) {
+      facts.push({
+        changeKind: 'extends-changed',
+        description: `extends changed: ${from} → ${to}`,
+        context: { from, to },
+        from,
+        to,
+      });
+    }
   }
 
   if (
@@ -133,13 +145,15 @@ function diffStructural(baseObj: Record<string, any>, compareObj: Record<string,
   ) {
     const from = (baseObj.implementNodes || []).map((n: any) => n.name || typeStr(n)).join(', ') || 'none';
     const to = (compareObj.implementNodes || []).map((n: any) => n.name || typeStr(n)).join(', ') || 'none';
-    facts.push({
-      changeKind: 'implements-changed',
-      description: `implements changed: ${from} → ${to}`,
-      context: { from, to },
-      from,
-      to,
-    });
+    if (from !== to) {
+      facts.push({
+        changeKind: 'implements-changed',
+        description: `implements changed: ${from} → ${to}`,
+        context: { from, to },
+        from,
+        to,
+      });
+    }
   }
 
   return facts;

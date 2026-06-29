@@ -379,6 +379,28 @@ $success: var(--success-color, #1a7f37);
   }
 }
 
+// a no-op signature shown for context (internal/transitive change, public signature unchanged):
+// neutral surface, a "·" gutter, and a plain-language note so it reads as context, not a diff.
+.diffLineContext {
+  grid-template-columns: 26px 1fr auto;
+  background: var(--surface-neutral-color, #f6f8fa);
+  color: $text-secondary;
+
+  .diffGutter {
+    color: $text-muted;
+  }
+}
+
+.diffContextNote {
+  align-self: center;
+  padding-left: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 11.5px;
+  font-style: italic;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
 // ── change category groups (breaking → minor → patch) ─────────────────────────
 
 .changeGroup {
