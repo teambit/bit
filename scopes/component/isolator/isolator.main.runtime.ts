@@ -106,6 +106,12 @@ export type IsolationContext = {
  */
 const CAPSULE_DIR_LENGTH = 9;
 
+/**
+ * How many per-capsule nested installs to run at once. These installs are heavy and serialize on the
+ * pnpm store lock, so unbounded concurrency (Promise.all) mostly thrashes. A small cap performs better.
+ */
+const NESTED_CAPSULE_INSTALL_CONCURRENCY = 1;
+
 export type IsolateComponentsInstallOptions = {
   installPackages?: boolean; // default: true
   // TODO: add back when depResolver.getInstaller support it
@@ -820,8 +826,7 @@ export class IsolatorMain {
         const cyclicNeedsInstall =
           cyclicMemberIds != null &&
           capsules.some(
-            (capsule) =>
-              cyclicMemberIds.has(capsule.component.id.toString()) && !capsule.fs.existsSync('package.json')
+            (capsule) => cyclicMemberIds.has(capsule.component.id.toString()) && !capsule.fs.existsSync('package.json')
           );
         capsules = capsules.filter((capsule) => {
           if (!capsule.fs.existsSync('package.json')) return true;
@@ -855,61 +860,60 @@ export class IsolatorMain {
           (capsule) => cyclicMemberIds?.has(capsule.component.id.toString()) ?? false
         );
         const cyclicCapsuleSet = new Set(cyclicCapsules.map((capsule) => capsule.component.id.toString()));
-        const nestedCapsules = capsuleList.filter(
-          (capsule) => !cyclicCapsuleSet.has(capsule.component.id.toString())
-        );
-        const installTasks: Array<Promise<void>> = [];
+        const nestedCapsules = capsuleList.filter((capsule) => !cyclicCapsuleSet.has(capsule.component.id.toString()));
+        // Per-capsule nested installs are CPU/IO heavy and serialize on the pnpm store lock, so running all
+        // of them at once (Promise.all) mostly thrashes rather than parallelizing. Cap the concurrency so the
+        // store lock isn't oversubscribed.
+        const installThunks: Array<() => Promise<void>> = [];
         if (cyclicCapsules.length) {
-          const cyclicCapsuleList = CapsuleList.fromArray(cyclicCapsules);
-          const linkedDependencies = await this.linkInCapsules(cyclicCapsuleList, capsulesWithPackagesData);
-          linkedDependencies[capsulesDir] = rootLinks;
-          installTasks.push(
-            this.installInCapsules(capsulesDir, cyclicCapsuleList, installOptions, {
+          installThunks.push(async () => {
+            const cyclicCapsuleList = CapsuleList.fromArray(cyclicCapsules);
+            const linkedDependencies = await this.linkInCapsules(cyclicCapsuleList, capsulesWithPackagesData);
+            linkedDependencies[capsulesDir] = rootLinks;
+            await this.installInCapsules(capsulesDir, cyclicCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
               nodeLinker: opts.nodeLinker,
-            })
-          );
+            });
+          });
         }
         nestedCapsules.forEach((capsule, index) => {
-          installTasks.push(
-            (async () => {
-              const newCapsuleList = CapsuleList.fromArray([capsule]);
-              if (opts.cacheCapsulesDir && capsulesDir !== opts.cacheCapsulesDir && opts.cacheLockFileOnly) {
-                const cacheCapsuleDir = path.join(opts.cacheCapsulesDir, basename(capsule.path));
-                const lockFilePath = path.join(cacheCapsuleDir, 'pnpm-lock.yaml');
-                const lockExists = await fs.pathExists(lockFilePath);
-                if (lockExists) {
-                  try {
-                    // this.logger.console(`moving lock file from ${lockFilePath} to ${capsule.path}`);
-                    await copyFile(lockFilePath, path.join(capsule.path, 'pnpm-lock.yaml'));
-                  } catch (err) {
-                    // We can ignore the error, we don't want to break the flow. the file will be anyway re-generated
-                    // in the target capsule. it will only be a bit slower.
-                    this.logger.error(
-                      `failed moving lock file from cache folder path: ${lockFilePath} to local capsule at ${capsule.path} (even though the lock file seems to exist)`,
-                      err
-                    );
-                  }
+          installThunks.push(async () => {
+            const newCapsuleList = CapsuleList.fromArray([capsule]);
+            if (opts.cacheCapsulesDir && capsulesDir !== opts.cacheCapsulesDir && opts.cacheLockFileOnly) {
+              const cacheCapsuleDir = path.join(opts.cacheCapsulesDir, basename(capsule.path));
+              const lockFilePath = path.join(cacheCapsuleDir, 'pnpm-lock.yaml');
+              const lockExists = await fs.pathExists(lockFilePath);
+              if (lockExists) {
+                try {
+                  // this.logger.console(`moving lock file from ${lockFilePath} to ${capsule.path}`);
+                  await copyFile(lockFilePath, path.join(capsule.path, 'pnpm-lock.yaml'));
+                } catch (err) {
+                  // We can ignore the error, we don't want to break the flow. the file will be anyway re-generated
+                  // in the target capsule. it will only be a bit slower.
+                  this.logger.error(
+                    `failed moving lock file from cache folder path: ${lockFilePath} to local capsule at ${capsule.path} (even though the lock file seems to exist)`,
+                    err
+                  );
                 }
               }
-              const linkedDependencies = await this.linkInCapsules(newCapsuleList, capsulesWithPackagesData);
-              // attach the root links to a single install. When a cyclic group install exists it owns
-              // them (its root is capsulesDir); otherwise the first nested capsule does, as before.
-              if (index === 0 && !cyclicCapsules.length) {
-                linkedDependencies[capsulesDir] = rootLinks;
-              }
-              await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
-                cachePackagesOnCapsulesRoot,
-                linkedDependencies,
-                packageManager: opts.packageManager,
-                nodeLinker: opts.nodeLinker,
-              });
-            })()
-          );
+            }
+            const linkedDependencies = await this.linkInCapsules(newCapsuleList, capsulesWithPackagesData);
+            // attach the root links to a single install. When a cyclic group install exists it owns
+            // them (its root is capsulesDir); otherwise the first nested capsule does, as before.
+            if (index === 0 && !cyclicCapsules.length) {
+              linkedDependencies[capsulesDir] = rootLinks;
+            }
+            await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
+              cachePackagesOnCapsulesRoot,
+              linkedDependencies,
+              packageManager: opts.packageManager,
+              nodeLinker: opts.nodeLinker,
+            });
+          });
         });
-        await Promise.all(installTasks);
+        await pMap(installThunks, (thunk) => thunk(), { concurrency: NESTED_CAPSULE_INSTALL_CONCURRENCY });
       } else {
         const dependenciesGraph = opts.useDependenciesGraph
           ? await legacyScope?.getDependenciesGraphByComponentIds(capsuleList.getAllComponentIDs())
