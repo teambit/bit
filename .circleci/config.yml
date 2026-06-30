@@ -754,6 +754,9 @@ jobs:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
           # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
+          # NOTE: PR builds run the FULL pipeline by default. To trade specific tasks for speed on a
+          # given PR (no YAML change needed), add a `[skip-tasks: <names>]` token to the commit
+          # message, e.g. `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents]`.
           command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup'
           no_output_timeout: '50m'
           environment:
