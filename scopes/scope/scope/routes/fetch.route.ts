@@ -1,27 +1,12 @@
 import type { Route, Request, Response } from '@teambit/express';
-import { Verb, validateBody } from '@teambit/express';
+import { Verb } from '@teambit/express';
 import { fetch } from '@teambit/legacy.scope-api';
 import { ObjectList } from '@teambit/objects';
 import type { Logger } from '@teambit/logger';
 // @ts-ignore
 import { pipeline } from 'stream/promises';
-import { z } from 'zod';
 import type { ScopeMain } from '../scope.main.runtime';
 import { omit } from 'lodash';
-
-// `fetchOptions` carries many version-specific/deprecated fields, so keep it permissive.
-// `type` is optional - legacy fetch() defaults a missing type to 'component' for backward compatibility.
-const fetchBodySchema = () =>
-  z
-    .object({
-      ids: z.array(z.string()),
-      fetchOptions: z
-        .object({
-          type: z.string().optional(),
-        })
-        .passthrough(),
-    })
-    .passthrough();
 
 export class FetchRoute implements Route {
   constructor(
@@ -33,7 +18,6 @@ export class FetchRoute implements Route {
   method = 'post';
   verb = Verb.READ;
   middlewares = [
-    validateBody(fetchBodySchema),
     async (req: Request, res: Response) => {
       req.setTimeout(this.scope.config.httpTimeOut);
       const preFetchHookP = this.scope.preFetchObjects

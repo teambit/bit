@@ -19,8 +19,6 @@ export function errorHandle(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: express.NextFunction
 ) {
-  // the scope/lanes routes are an internal protocol (the caller is bit's own CLI), so a 4xx
-  // validation failure typically signals a bug on our side - log it at error level like any other.
   logger.error(`express.errorHandle, url ${req.url}, error:`, err);
   err.status = err.status || 500;
   res.status(err.status);

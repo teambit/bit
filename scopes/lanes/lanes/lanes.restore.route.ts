@@ -1,15 +1,7 @@
 import type { Route, Request, Response } from '@teambit/express';
-import { Verb, validateBody } from '@teambit/express';
+import { Verb } from '@teambit/express';
 import type { Logger } from '@teambit/logger';
-import { z } from 'zod';
 import type { LanesMain } from './lanes.main.runtime';
-
-const restoreLaneBodySchema = () =>
-  z
-    .object({
-      hash: z.string().min(1),
-    })
-    .passthrough();
 
 export class LanesRestoreRoute implements Route {
   constructor(
@@ -22,10 +14,12 @@ export class LanesRestoreRoute implements Route {
   verb = Verb.WRITE;
 
   middlewares = [
-    validateBody(restoreLaneBodySchema),
     async (req: Request, res: Response) => {
       const { body } = req;
       const laneHash = body.hash;
+      if (!laneHash) {
+        return res.status(400).send('Missing hash in body');
+      }
       try {
         const result = await this.lanes.restoreLane(laneHash);
         return res.json(result);

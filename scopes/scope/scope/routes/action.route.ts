@@ -1,18 +1,8 @@
 import type { Route, Request, Response } from '@teambit/express';
-import { Verb, validateBody } from '@teambit/express';
+import { Verb } from '@teambit/express';
 import { action } from '@teambit/legacy.scope-api';
 import { getAuthDataFromHeader } from '@teambit/scope.network';
-import { z } from 'zod';
 import type { ScopeMain } from '../scope.main.runtime';
-
-// `options` shape varies per action, so it's left unconstrained on purpose.
-const actionBodySchema = () =>
-  z
-    .object({
-      name: z.string().min(1),
-      options: z.unknown().optional(),
-    })
-    .passthrough();
 
 export class ActionRoute implements Route {
   constructor(private scope: ScopeMain) {}
@@ -22,7 +12,6 @@ export class ActionRoute implements Route {
   verb = Verb.WRITE;
 
   middlewares = [
-    validateBody(actionBodySchema),
     async (req: Request, res: Response) => {
       req.setTimeout(this.scope.config.httpTimeOut);
       const authData = getAuthDataFromHeader(req.headers.authorization);

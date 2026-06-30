@@ -1,16 +1,7 @@
 import type { Route, Request, Response } from '@teambit/express';
-import { Verb, validateBody } from '@teambit/express';
+import { Verb } from '@teambit/express';
 import type { Logger } from '@teambit/logger';
-import { z } from 'zod';
 import type { MergeLanesMain } from './merge-lanes.main.runtime';
-
-const checkConflictsBodySchema = () =>
-  z
-    .object({
-      sourceLane: z.string().min(1),
-      targetLane: z.string().min(1),
-    })
-    .passthrough();
 
 export class LanesCheckConflictsRoute implements Route {
   constructor(
@@ -23,11 +14,16 @@ export class LanesCheckConflictsRoute implements Route {
   verb = Verb.READ;
 
   middlewares = [
-    validateBody(checkConflictsBodySchema),
     async (req: Request, res: Response) => {
       const { body } = req;
       const sourceLane = body.sourceLane;
       const targetLane = body.targetLane;
+      if (!sourceLane) {
+        return res.status(400).send('Missing sourceLane in body');
+      }
+      if (!targetLane) {
+        return res.status(400).send('Missing targetLane in body');
+      }
       try {
         const { conflicts } = await this.mergeLanes.checkLaneForConflicts(sourceLane, targetLane, {});
         const conflictsOutput = conflicts.map((conflict) => {

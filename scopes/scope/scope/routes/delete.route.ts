@@ -1,16 +1,6 @@
 import type { Route, Request, Response } from '@teambit/express';
-import { Verb, validateBody } from '@teambit/express';
-import { z } from 'zod';
+import { Verb } from '@teambit/express';
 import type { ScopeMain } from '../scope.main.runtime';
-
-const deleteBodySchema = () =>
-  z
-    .object({
-      ids: z.array(z.string()),
-      force: z.boolean().optional(),
-      lanes: z.boolean().optional(),
-    })
-    .passthrough();
 
 export class DeleteRoute implements Route {
   constructor(private scope: ScopeMain) {}
@@ -20,7 +10,6 @@ export class DeleteRoute implements Route {
   verb = Verb.WRITE;
 
   middlewares = [
-    validateBody(deleteBodySchema),
     async (req: Request, res: Response) => {
       const { headers } = req;
       req.setTimeout(this.scope.config.httpTimeOut);
