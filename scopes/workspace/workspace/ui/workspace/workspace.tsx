@@ -24,6 +24,7 @@ import { useNavigationMessageListener } from '@teambit/workspace.hooks.use-navig
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
+import { WorkspaceSkeleton } from './workspace-skeleton';
 import styles from './workspace.module.scss';
 import type { WorkspaceUI } from '../../workspace.ui.runtime';
 import { ThemeFromUrlSync } from './theme-from-url';
@@ -85,7 +86,9 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   const isOverview = location.pathname === '/' || location.pathname === '';
   const showTopBar = !isMinimal || (isMinimal && !isOverview);
   if (!workspace) {
-    return <div className={styles.emptyContainer}></div>;
+    // While the light workspace query resolves, show a full-shell skeleton instead of a blank
+    // screen. The heavy per-component data (status, issues) streams in after first paint.
+    return <WorkspaceSkeleton />;
   }
   workspaceUI.setComponents(workspace.components);
 

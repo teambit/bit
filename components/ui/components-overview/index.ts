@@ -1,5 +1,7 @@
 export { ComponentsOverview } from './components-overview';
 export type { ComponentsOverviewProps } from './components-overview';
+export { ComponentsOverviewSkeleton } from './components-overview-skeleton';
+export type { ComponentsOverviewSkeletonProps } from './components-overview-skeleton';
 export { HopeComponentCard } from './hope-component-card';
 export type { HopeComponentCardProps } from './hope-component-card';
 export { NamespaceHeader } from './namespace-header';
