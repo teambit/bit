@@ -685,7 +685,8 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     // millisecond (e.g. concurrent CI runners pushing the same lane) get the same clientId, share one
     // pending-dir, collapse the queue to a single entry, and both validate against the pre-persist
     // state, silently losing one runner's update. A random suffix keeps the timestamp prefix (so the
-    // sorted queue still roughly preserves arrival order) while guaranteeing uniqueness. Use node's
+    // sorted queue still roughly preserves arrival order) while making a same-millisecond collision
+    // vanishingly unlikely (64 bits of randomness). Use node's
     // built-in `crypto` rather than a component helper so this core aspect doesn't gain a new
     // component dependency (which perturbs the dogfooding capsule dependency graph of its dependents).
     const clientId = resumeExportId || `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
