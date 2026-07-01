@@ -408,7 +408,9 @@ describe('ci commands', function () {
       helper.command.runCmd(`git push origin ${defaultBranch}`);
 
       // Simulate the fresh CI runner: it never fetched the fork-point Version object (only the lane
-      // heads + parent graph). Drop it from the local scope so the merge base is missing on disk.
+      // heads + parent graph). Assert it's actually present first — so a wrong hash or setup change
+      // can't turn this into a no-op — then drop it so the merge base is missing on disk.
+      helper.fs.expectFileToExist(helper.general.getHashPathOfObject(forkPointHash, true));
       helper.fs.deleteObject(helper.general.getHashPathOfObject(forkPointHash));
 
       // Second PR commit + ci pr — must re-fetch the fork point and sync main's deps change.
@@ -421,8 +423,9 @@ describe('ci commands', function () {
     });
 
     it('should not skip config sync with a "was not found on the filesystem" error', () => {
+      // The exact production symptom (VersionNotFoundOnFS on the missing fork point). The functional
+      // outcome is covered by the config assertion below; this just guards the specific regression.
       expect(secondPrOutput).to.not.include('was not found on the filesystem');
-      expect(secondPrOutput).to.not.include('skipping config sync from main');
     });
 
     it("should still propagate main's deps-set config change to comp1 on the lane", () => {

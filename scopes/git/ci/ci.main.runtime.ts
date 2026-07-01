@@ -33,6 +33,8 @@ import type { LaneId } from '@teambit/lane-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { SourceBranchDetector } from './source-branch-detector';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
@@ -429,10 +431,13 @@ export class CiMain {
     // pre-fetch the common-ancestor objects below. getDivergeData only walks the parent graph,
     // which is already local (switchToLane brings the version-history, and the head pre-fetch above
     // reinforced it), so no full Version object is needed yet. Keep only components where main is
-    // actually ahead or diverged; the rest have nothing to bring in from main.
+    // actually ahead or diverged; the rest have nothing to bring in from main. Bound the fan-out
+    // (getDivergeData traverses each component's version graph) so a lane with many components
+    // doesn't spawn one unbounded burst of concurrent graph walks.
     const componentsToMerge = compact(
-      await Promise.all(
-        componentsToSync.map(async (item) => {
+      await pMapPool(
+        componentsToSync,
+        async (item) => {
           try {
             const divergeData = await getDivergeData({
               repo,
@@ -452,7 +457,8 @@ export class CiMain {
             );
             return undefined;
           }
-        })
+        },
+        { concurrency: concurrentComponentsLimit() }
       )
     );
 
