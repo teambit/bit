@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { parse } from 'comment-json';
+import semver from 'semver';
 import mapSeries from 'p-map-series';
 import pMap from 'p-map';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -54,7 +55,12 @@ import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import type { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy, uniq } from 'lodash';
-import { MergeConfigFilename, BIT_ROOTS_DIR, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy.constants';
+import {
+  MergeConfigFilename,
+  BIT_ROOTS_DIR,
+  CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
+  Extensions,
+} from '@teambit/legacy.constants';
 import path from 'path';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
@@ -593,8 +599,34 @@ export class Workspace implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
-    return this.scope.getLogs(id, shortHash, startsFrom);
+  async getLogs(
+    id: ComponentID,
+    shortHash = false,
+    startsFrom?: string,
+    throwIfMissing = false
+  ): Promise<ComponentLog[]> {
+    const logs = await this.scope.getLogs(id, shortHash, startsFrom, throwIfMissing);
+    this.applyStagedDeprecation(id, logs);
+    return logs;
+  }
+
+  /**
+   * reflect the not-yet-snapped (staged) deprecation in the component logs.
+   * `bit deprecate` only writes the deprecation config to the workspace `.bitmap`; it's baked into a
+   * Version object on the next tag/snap. The `deprecated` field is otherwise computed from the committed
+   * head Version, so without this overlay a staged range-deprecation wouldn't be reflected in the logs
+   * (CLI `bit log` or the workspace UI version-history) until the next tag/snap. We mirror the model's
+   * range logic here so the staged state (including a staged `bit undeprecate` that clears the range)
+   * matches the post-snap output.
+   */
+  private applyStagedDeprecation(id: ComponentID, logs: ComponentLog[]): void {
+    const bitmapEntry = this.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true });
+    const stagedConfig = bitmapEntry?.config?.[Extensions.deprecation];
+    if (!stagedConfig || stagedConfig === '-') return;
+    const range = (stagedConfig as { range?: string }).range;
+    logs.forEach((log) => {
+      log.deprecated = Boolean(range && log.tag && semver.satisfies(log.tag, range));
+    });
   }
 
   async getGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<Graph<Component, string>> {
