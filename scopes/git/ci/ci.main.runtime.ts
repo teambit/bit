@@ -435,21 +435,67 @@ export class CiMain {
       }
     }
 
+    // Resolve each component's diverge state up front — before the merge loop — so we can also
+    // pre-fetch the common-ancestor objects below. getDivergeData only walks the parent graph,
+    // which is already local (switchToLane brings the version-history, and the head pre-fetch above
+    // reinforced it), so no full Version object is needed yet. Keep only components where main is
+    // actually ahead or diverged; the rest have nothing to bring in from main.
+    const componentsToMerge = compact(
+      await Promise.all(
+        componentsToSync.map(async (item) => {
+          try {
+            const divergeData = await getDivergeData({
+              repo,
+              modelComponent: item.modelComponent,
+              sourceHead: item.laneComp.head,
+              targetHead: item.mainHead,
+              throws: false,
+            });
+            if (!divergeData.isTargetAhead() && !divergeData.isDiverged()) return undefined;
+            return { ...item, divergeData };
+          } catch (e: any) {
+            // Best-effort per component (same contract as the merge loop below).
+            this.logger.console(
+              chalk.yellow(
+                `  ${item.laneComp.id.toStringWithoutVersion()}: skipping config sync from main (${e?.message || e})`
+              )
+            );
+            return undefined;
+          }
+        })
+      )
+    );
+
+    // The head pre-fetch above brought main's head Version plus the version-history (parent graph),
+    // but NOT the full Version object of the common ancestor (the lane's fork point) for components
+    // where the lane and main have BOTH snapped since the fork. The 3-way config merge below loads
+    // that base Version (`baseVersion.extensions`); without it, `loadVersion(baseSnap)` throws
+    // VersionNotFoundOnFS, the per-component catch swallows it as "skipping config sync from main",
+    // and the sync silently no-ops for every diverged component. The fork point lives on main and,
+    // like the head, was never fetched (includeVersionHistory carries the graph, not each ancestor's
+    // Version). Batch-fetch the bases in one call — same best-effort contract as the head pre-fetch.
+    const baseIds = compact(
+      componentsToMerge.map(({ laneComp, divergeData }) => {
+        const baseSnap = divergeData.commonSnapBeforeDiverge;
+        return baseSnap ? laneComp.id.changeVersion(baseSnap.toString()) : undefined;
+      })
+    );
+    if (baseIds.length) {
+      try {
+        await this.importer.importObjectsFromMainIfExist(baseIds, { cache: true });
+      } catch (e: any) {
+        this.logger.console(
+          chalk.yellow(
+            `Could not pre-fetch main's common-ancestor objects for config sync (continuing): ${e?.message || e}`
+          )
+        );
+      }
+    }
+
     const syncedIds: ComponentID[] = [];
-    for (const { laneComp, modelComponent, mainHead } of componentsToSync) {
+    for (const { laneComp, modelComponent, mainHead, divergeData } of componentsToMerge) {
       try {
         const laneHead = laneComp.head;
-        const divergeData = await getDivergeData({
-          repo,
-          modelComponent,
-          sourceHead: laneHead,
-          targetHead: mainHead,
-          throws: false,
-        });
-        // Only sync when main has snaps the lane doesn't (target ahead, or diverged). If the lane
-        // is ahead-only / equal there's nothing on main to bring in.
-        if (!divergeData.isTargetAhead() && !divergeData.isDiverged()) continue;
-
         const currentVersion = await modelComponent.loadVersion(laneHead.toString(), repo);
         const otherVersion = await modelComponent.loadVersion(mainHead.toString(), repo);
         // base = common ancestor. When the lane is strictly behind main (no divergence) the common
