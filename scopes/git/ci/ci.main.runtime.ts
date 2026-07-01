@@ -33,6 +33,8 @@ import type { LaneId } from '@teambit/lane-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { SourceBranchDetector } from './source-branch-detector';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
@@ -420,36 +422,66 @@ export class CiMain {
     // lane-merge flows — see merge-status-provider / merge-lanes). Pass the *specific* main-head
     // version so `cache: true` still fetches it: the component already exists locally at its lane
     // version, so a version-less id would look satisfied and skip the remote.
-    if (componentsToSync.length) {
-      const mainHeadIds = componentsToSync.map(({ laneComp, mainHead }) =>
-        laneComp.id.changeVersion(mainHead.toString())
-      );
-      try {
-        await this.importer.importObjectsFromMainIfExist(mainHeadIds, { cache: true });
-      } catch (e: any) {
-        // Best-effort: a fetch hiccup shouldn't abort `bit ci pr`. The merge loop below still runs;
-        // any component whose main head is still missing just logs the existing skip.
-        this.logger.console(
-          chalk.yellow(`Could not pre-fetch main's objects for config sync (continuing): ${e?.message || e}`)
-        );
-      }
-    }
+    const mainHeadIds = componentsToSync.map(({ laneComp, mainHead }) =>
+      laneComp.id.changeVersion(mainHead.toString())
+    );
+    await this.prefetchFromMainForConfigSync(mainHeadIds, 'head objects');
+
+    // Resolve each component's diverge state up front — before the merge loop — so we can also
+    // pre-fetch the common-ancestor objects below. getDivergeData only walks the parent graph,
+    // which is already local (switchToLane brings the version-history, and the head pre-fetch above
+    // reinforced it), so no full Version object is needed yet. Keep only components where main is
+    // actually ahead or diverged; the rest have nothing to bring in from main. Bound the fan-out
+    // (getDivergeData traverses each component's version graph) so a lane with many components
+    // doesn't spawn one unbounded burst of concurrent graph walks.
+    const componentsToMerge = compact(
+      await pMapPool(
+        componentsToSync,
+        async (item) => {
+          try {
+            const divergeData = await getDivergeData({
+              repo,
+              modelComponent: item.modelComponent,
+              sourceHead: item.laneComp.head,
+              targetHead: item.mainHead,
+              throws: false,
+            });
+            if (!divergeData.isTargetAhead() && !divergeData.isDiverged()) return undefined;
+            return { ...item, divergeData };
+          } catch (e: any) {
+            // Best-effort per component (same contract as the merge loop below).
+            this.logger.console(
+              chalk.yellow(
+                `  ${item.laneComp.id.toStringWithoutVersion()}: skipping config sync from main (${e?.message || e})`
+              )
+            );
+            return undefined;
+          }
+        },
+        { concurrency: concurrentComponentsLimit() }
+      )
+    );
+
+    // The head pre-fetch above brought main's head Version plus the version-history (parent graph),
+    // but NOT the full Version object of the common ancestor (the lane's fork point) for components
+    // where the lane and main have BOTH snapped since the fork. The 3-way config merge below loads
+    // that base Version (`baseVersion.extensions`); without it, `loadVersion(baseSnap)` throws
+    // VersionNotFoundOnFS, the per-component catch swallows it as "skipping config sync from main",
+    // and the sync silently no-ops for every diverged component. The fork point lives on main and,
+    // like the head, was never fetched (includeVersionHistory carries the graph, not each ancestor's
+    // Version). Batch-fetch the bases in one call — same best-effort contract as the head pre-fetch.
+    const baseIds = compact(
+      componentsToMerge.map(({ laneComp, divergeData }) => {
+        const baseSnap = divergeData.commonSnapBeforeDiverge;
+        return baseSnap ? laneComp.id.changeVersion(baseSnap.toString()) : undefined;
+      })
+    );
+    await this.prefetchFromMainForConfigSync(baseIds, 'common-ancestor objects');
 
     const syncedIds: ComponentID[] = [];
-    for (const { laneComp, modelComponent, mainHead } of componentsToSync) {
+    for (const { laneComp, modelComponent, mainHead, divergeData } of componentsToMerge) {
       try {
         const laneHead = laneComp.head;
-        const divergeData = await getDivergeData({
-          repo,
-          modelComponent,
-          sourceHead: laneHead,
-          targetHead: mainHead,
-          throws: false,
-        });
-        // Only sync when main has snaps the lane doesn't (target ahead, or diverged). If the lane
-        // is ahead-only / equal there's nothing on main to bring in.
-        if (!divergeData.isTargetAhead() && !divergeData.isDiverged()) continue;
-
         const currentVersion = await modelComponent.loadVersion(laneHead.toString(), repo);
         const otherVersion = await modelComponent.loadVersion(mainHead.toString(), repo);
         // base = common ancestor. When the lane is strictly behind main (no divergence) the common
@@ -513,6 +545,23 @@ export class CiMain {
     // the aspects-merger folds in the synced `mergedConfig`.
     this.workspace.clearAllComponentsCache();
     this.logger.console(chalk.green(`Synced config from main for ${syncedIds.length} component(s)`));
+  }
+
+  /**
+   * Batch-fetch main-side Version objects the config merge needs (heads, then common ancestors),
+   * mirroring the lane-merge flows (merge-status-provider / merge-lanes). Best-effort: a fetch
+   * hiccup shouldn't abort `bit ci pr` — the merge loop still runs and any component whose object is
+   * still missing just logs the existing per-component skip. `label` names which objects for the log.
+   */
+  private async prefetchFromMainForConfigSync(ids: ComponentID[], label: string) {
+    if (!ids.length) return;
+    try {
+      await this.importer.importObjectsFromMainIfExist(ids, { cache: true });
+    } catch (e: any) {
+      this.logger.console(
+        chalk.yellow(`Could not pre-fetch main's ${label} for config sync (continuing): ${e?.message || e}`)
+      );
+    }
   }
 
   /**
