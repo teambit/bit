@@ -409,7 +409,7 @@ describe('ci commands', function () {
 
       // Simulate the fresh CI runner: it never fetched the fork-point Version object (only the lane
       // heads + parent graph). Drop it from the local scope so the merge base is missing on disk.
-      helper.fs.deleteObject(`${forkPointHash.slice(0, 2)}/${forkPointHash.slice(2)}`);
+      helper.fs.deleteObject(helper.general.getHashPathOfObject(forkPointHash));
 
       // Second PR commit + ci pr — must re-fetch the fork point and sync main's deps change.
       helper.command.runCmd('git checkout feature/fork-point-test');

@@ -420,20 +420,10 @@ export class CiMain {
     // lane-merge flows — see merge-status-provider / merge-lanes). Pass the *specific* main-head
     // version so `cache: true` still fetches it: the component already exists locally at its lane
     // version, so a version-less id would look satisfied and skip the remote.
-    if (componentsToSync.length) {
-      const mainHeadIds = componentsToSync.map(({ laneComp, mainHead }) =>
-        laneComp.id.changeVersion(mainHead.toString())
-      );
-      try {
-        await this.importer.importObjectsFromMainIfExist(mainHeadIds, { cache: true });
-      } catch (e: any) {
-        // Best-effort: a fetch hiccup shouldn't abort `bit ci pr`. The merge loop below still runs;
-        // any component whose main head is still missing just logs the existing skip.
-        this.logger.console(
-          chalk.yellow(`Could not pre-fetch main's objects for config sync (continuing): ${e?.message || e}`)
-        );
-      }
-    }
+    const mainHeadIds = componentsToSync.map(({ laneComp, mainHead }) =>
+      laneComp.id.changeVersion(mainHead.toString())
+    );
+    await this.prefetchFromMainForConfigSync(mainHeadIds, 'head objects');
 
     // Resolve each component's diverge state up front — before the merge loop — so we can also
     // pre-fetch the common-ancestor objects below. getDivergeData only walks the parent graph,
@@ -480,17 +470,7 @@ export class CiMain {
         return baseSnap ? laneComp.id.changeVersion(baseSnap.toString()) : undefined;
       })
     );
-    if (baseIds.length) {
-      try {
-        await this.importer.importObjectsFromMainIfExist(baseIds, { cache: true });
-      } catch (e: any) {
-        this.logger.console(
-          chalk.yellow(
-            `Could not pre-fetch main's common-ancestor objects for config sync (continuing): ${e?.message || e}`
-          )
-        );
-      }
-    }
+    await this.prefetchFromMainForConfigSync(baseIds, 'common-ancestor objects');
 
     const syncedIds: ComponentID[] = [];
     for (const { laneComp, modelComponent, mainHead, divergeData } of componentsToMerge) {
@@ -559,6 +539,23 @@ export class CiMain {
     // the aspects-merger folds in the synced `mergedConfig`.
     this.workspace.clearAllComponentsCache();
     this.logger.console(chalk.green(`Synced config from main for ${syncedIds.length} component(s)`));
+  }
+
+  /**
+   * Batch-fetch main-side Version objects the config merge needs (heads, then common ancestors),
+   * mirroring the lane-merge flows (merge-status-provider / merge-lanes). Best-effort: a fetch
+   * hiccup shouldn't abort `bit ci pr` — the merge loop still runs and any component whose object is
+   * still missing just logs the existing per-component skip. `label` names which objects for the log.
+   */
+  private async prefetchFromMainForConfigSync(ids: ComponentID[], label: string) {
+    if (!ids.length) return;
+    try {
+      await this.importer.importObjectsFromMainIfExist(ids, { cache: true });
+    } catch (e: any) {
+      this.logger.console(
+        chalk.yellow(`Could not pre-fetch main's ${label} for config sync (continuing): ${e?.message || e}`)
+      );
+    }
   }
 
   /**
