@@ -13,7 +13,7 @@ import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import type { Workspace } from './workspace';
 
-export type ShouldLoadFunc = (id: ComponentID) => Promise<boolean>;
+export type ShouldLoadFunc = (component: Component, deps: ComponentID[]) => Promise<ComponentID[]>;
 
 export class GraphFromFsBuilder {
   private graph = new Graph<Component, string>();
@@ -85,23 +85,24 @@ export class GraphFromFsBuilder {
     return this.graph;
   }
 
-  private async getAllDepsUnfiltered(component: Component): Promise<ComponentID[]> {
-    const deps = await this.dependencyResolver.getComponentDependencies(component);
+  private getAllDepsUnfiltered(component: Component): ComponentID[] {
+    const deps = this.dependencyResolver.getComponentDependencies(component);
     const depsIds = deps.map((dep) => dep.componentId);
 
     return depsIds.filter((depId) => !this.ignoreIds.includes(depId.toString()));
   }
 
   private async getAllDepsFiltered(component: Component): Promise<ComponentID[]> {
-    const depsWithoutIgnore = await this.getAllDepsUnfiltered(component);
+    const depsWithoutIgnore = this.getAllDepsUnfiltered(component);
     const shouldLoadFunc = this.shouldLoadItsDeps;
     if (!shouldLoadFunc) return depsWithoutIgnore;
-    const deps = await mapSeries(depsWithoutIgnore, async (depId) => {
-      const shouldLoad = await shouldLoadFunc(depId);
-      if (!shouldLoad) this.ignoreIds.push(depId.toString());
-      return shouldLoad ? depId : null;
+    const depsToLoad = await shouldLoadFunc(component, depsWithoutIgnore);
+    const depsToLoadStr = depsToLoad.map((d) => d.toString());
+    depsWithoutIgnore.forEach((dep) => {
+      const depStr = dep.toString();
+      if (!depsToLoadStr.includes(depStr)) this.ignoreIds.push(depStr);
     });
-    return compact(deps);
+    return compact(depsToLoad);
   }
 
   private async processManyComponents(components: Component[]) {
@@ -161,7 +162,7 @@ export class GraphFromFsBuilder {
     const allIds = await this.getAllDepsFiltered(component);
 
     const allDependenciesComps = await this.loadManyComponents(allIds, idStr);
-    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    const deps = this.dependencyResolver.getComponentDependencies(component);
     deps.forEach((dep) => {
       const depId = dep.componentId;
       if (this.ignoreIds.includes(depId.toString())) return;
