@@ -1500,12 +1500,6 @@ export class IsolatorMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
     }
-    // In dogfooding capsule builds, `@teambit/component.sources` can be resolved twice — built from
-    // source for this capsule vs. the published package that `node-modules-linker` pulls in — so its
-    // `PackageJsonFile` becomes two nominally-distinct-but-structurally-identical classes, and the
-    // declaration build (tsc --declaration) rejects passing our instance where the linker's type is
-    // expected (TS2345). They're the same shape (same component.sources version); bridge the seam.
-    // @ts-ignore
     await PackageJsonTransformer.applyTransformers(component, packageJson);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);

@@ -9,7 +9,7 @@ export type ComponentObjectsInput = {
 };
 
 export type PushOptions = {
-  clientId?: string; // opaque export identifier (timestamp-prefixed unique string), used as the pending-dir name and queue/lock key.
+  clientId?: string; // timestamp in ms when the client started the request.
   persist?: boolean; // persist the objects immediately with no validation. (for legacy and bit-sign).
 };
 
