@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
@@ -14,7 +15,6 @@ import { ComponentsList } from '@teambit/legacy.component-list';
 import type { RemoveMain } from '@teambit/remove';
 import { RemoveAspect } from '@teambit/remove';
 import { hasWildcard } from '@teambit/legacy.utils';
-import { generateRandomStr } from '@teambit/toolbox.string.random';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -685,8 +685,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     // millisecond (e.g. concurrent CI runners pushing the same lane) get the same clientId, share one
     // pending-dir, collapse the queue to a single entry, and both validate against the pre-persist
     // state, silently losing one runner's update. A random suffix keeps the timestamp prefix (so the
-    // sorted queue still roughly preserves arrival order) while guaranteeing uniqueness.
-    const clientId = resumeExportId || `${Date.now()}-${generateRandomStr()}`;
+    // sorted queue still roughly preserves arrival order) while guaranteeing uniqueness. Use node's
+    // built-in `crypto` rather than a component helper so this core aspect doesn't gain a new
+    // component dependency (which perturbs the dogfooding capsule dependency graph of its dependents).
+    const clientId = resumeExportId || `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
     // Intentionally no cleanup on `persistRemotes` failure: pending dirs are the substrate for
