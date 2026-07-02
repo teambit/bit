@@ -17,7 +17,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { Logger } from '@teambit/logger';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, DEFAULT_ENV } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
@@ -252,6 +252,10 @@ export class WorkspaceComponentLoader {
     const nonCoreEnvs = groupedByIsCoreEnvs.false || [];
     await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap);
     const allExtIds: Map<string, ComponentID> = new Map();
+    // extensions that used to be core aspects (legacy core envs) are saved in old components by
+    // name only, without a component-id. collect them so they'll be part of the load groups and
+    // get loaded before the components that use them.
+    const nameOnlyLegacyEnvExtensions = new Set<string>();
     nonCoreEnvs.forEach((id) => {
       const idStr = id.toString();
       const fromCache = this.componentsExtensionsCache.get(idStr);
@@ -262,8 +266,27 @@ export class WorkspaceComponentLoader {
         if (!allExtIds.has(ext.stringId) && ext.newExtensionId) {
           allExtIds.set(ext.stringId, ext.newExtensionId);
         }
+        if (!ext.extensionId && ext.stringId && this.envs.isLegacyCoreEnv(ext.stringId)) {
+          nameOnlyLegacyEnvExtensions.add(ext.stringId);
+        }
       });
     });
+    // components with no env configured use the default env. as the default env is not a core
+    // aspect anymore, add it to the load groups so it gets loaded like any other env.
+    const hasComponentsWithoutEnv = allIds.some((id) => {
+      const fromCache = this.componentsExtensionsCache.get(id.toString());
+      return fromCache && !fromCache.envId;
+    });
+    if (hasComponentsWithoutEnv) {
+      nameOnlyLegacyEnvExtensions.add(DEFAULT_ENV);
+    }
+    await Promise.all(
+      Array.from(nameOnlyLegacyEnvExtensions).map(async (envIdStr) => {
+        if (allExtIds.has(envIdStr)) return;
+        const resolved = await this.workspace.resolveComponentId(envIdStr);
+        allExtIds.set(envIdStr, resolved);
+      })
+    );
     const allExtCompIds = Array.from(allExtIds.values());
     await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
 
@@ -273,7 +296,12 @@ export class WorkspaceComponentLoader {
     wsIds.forEach((id) => {
       const idStr = id.toString();
       const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.envId) {
+      if (!fromCache) {
+        return;
+      }
+      if (!fromCache.envId) {
+        // components with no env configured use the default env
+        envsIdsOfWsComps.add(DEFAULT_ENV);
         return;
       }
       const envId = fromCache.envId;
@@ -503,7 +531,14 @@ export class WorkspaceComponentLoader {
         this.componentLoadedSelfAsAspects.set(idStr, true);
       }
       const envsData = component.state.aspects.get(EnvsAspect.id);
-      if (opts.loadEnvs && (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env')) {
+      // envs that used to be core aspects are always envs. this can't be determined by the
+      // env-data, as when their own env was not loaded yet, the env-data is calculated with a
+      // fallback env.
+      const isLegacyCoreEnv = this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion());
+      if (
+        opts.loadEnvs &&
+        (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env' || isLegacyCoreEnv)
+      ) {
         aspectIds.push(idStr);
         this.componentLoadedSelfAsAspects.set(idStr, true);
       }

@@ -207,6 +207,11 @@ export class Workspace implements ComponentFactory {
   private componentPathsRegExps: RegExp[] = [];
   private _componentList: ComponentsList;
   localAspects: Record<string, string> = {};
+  /**
+   * aspect-ids (without version) that are currently in the process of loading. used by
+   * WorkspaceAspectsLoader (which is instantiated per call) to break circular env chains.
+   */
+  readonly inFlightAspectsLoads = new Set<string>();
   filter: Filter;
   constructor(
     private config: WorkspaceExtConfig,
@@ -727,14 +732,26 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    */
   async getDependentsIds(ids: ComponentID[], filterOutNowWorkspaceIds = true): Promise<ComponentID[]> {
     const graph = await this.getGraphIds();
-    const dependents = ids
-      .map((id) =>
-        graph.predecessors(id.toString(), {
-          nodeFilter: (node) => (filterOutNowWorkspaceIds ? this.hasId(node.attr) : true),
-        })
-      )
-      .flat()
-      .map((node) => node.attr);
+    // traverse the graph iteratively (and not via graph.predecessors which is recursive) to
+    // avoid "Maximum call stack size exceeded" on large/deep graphs
+    const visited = new Set<string>();
+    const queue = ids.map((id) => id.toString());
+    const dependents: ComponentID[] = [];
+    while (queue.length) {
+      const current = queue.shift() as string;
+      graph.inEdges(current).forEach((edge) => {
+        const predecessorId = edge.sourceId;
+        if (visited.has(predecessorId)) return;
+        visited.add(predecessorId);
+        const node = graph.node(predecessorId);
+        if (!node) return;
+        // when the node is filtered out, don't traverse through it (same semantics as
+        // graph.predecessors with a nodeFilter)
+        if (filterOutNowWorkspaceIds && !this.hasId(node.attr)) return;
+        dependents.push(node.attr);
+        queue.push(predecessorId);
+      });
+    }
     return ComponentIdList.uniqFromArray(dependents);
   }
 
@@ -1701,6 +1718,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   async warnAboutMisconfiguredEnv(envId: string) {
     if (!envId) return;
     if (this.envs.getCoreEnvsIds().includes(envId)) return;
+    // envs that used to be core aspects are old-style envs, they are not of type env by design
+    if (this.envs.isLegacyCoreEnv(envId.split('@')[0])) return;
     if (this.warnedAboutMisconfiguredEnvs.includes(envId)) return;
     let env: Component;
     try {

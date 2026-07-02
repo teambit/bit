@@ -415,6 +415,13 @@ export class AspectLoaderMain {
     const idStr = requireableExtension.component.id.toString();
     const aspect = await requireableExtension.require();
     const manifest = aspect.default || aspect;
+    if (manifest.id && this.isCoreAspect(manifest.id)) {
+      // the require() resolved to a core-aspect module. this can happen when a core aspect is a
+      // dependency of the loaded aspect. don't override its id with the component id - the
+      // manifest object is shared with the core, and mutating its id breaks core-aspects
+      // resolution (e.g. it will be searched with a version, such as "aspect-loader@1.0.0").
+      return manifest;
+    }
     manifest.id = idStr;
     // It's important to clone deep the manifest here to prevent mutate dependencies of other manifests as they point to the same location in memory
     const cloned = this.cloneManifest(manifest);

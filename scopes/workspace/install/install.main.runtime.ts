@@ -33,7 +33,7 @@ import { type DependenciesGraph } from '@teambit/objects';
 import type { CodemodResult, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { linkToNodeModulesWithCodemod } from '@teambit/workspace.modules.node-modules-linker';
 import type { EnvJsonc, EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, getPinnedLegacyCoreEnvVersion, getLegacyCoreEnvPackageName } from '@teambit/envs';
 import type { IpcEventsMain } from '@teambit/ipc-events';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -236,6 +236,7 @@ export class InstallMain {
     const installer = this.dependencyResolver.getInstaller({});
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
     await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
+    await this.addUsedLegacyCoreEnvsToWorkspacePolicy(mergedRootPolicy);
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
       dedupe: true,
       includeAllEnvPeers: false,
@@ -771,6 +772,7 @@ export class InstallMain {
   ): Promise<{ componentsAndManifests: ComponentsAndManifests; mergedRootPolicy: WorkspacePolicy }> {
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
     await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
+    await this.addUsedLegacyCoreEnvsToWorkspacePolicy(mergedRootPolicy);
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, options);
     if (!options?.addMissingDeps) {
       return { componentsAndManifests, mergedRootPolicy };
@@ -795,6 +797,7 @@ export class InstallMain {
     }
     const mergedRootPolicyWithMissingDeps = await this.addConfiguredAspectsToWorkspacePolicy();
     await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicyWithMissingDeps);
+    await this.addUsedLegacyCoreEnvsToWorkspacePolicy(mergedRootPolicyWithMissingDeps);
     return {
       mergedRootPolicy: mergedRootPolicyWithMissingDeps,
       componentsAndManifests: await this._getComponentsManifests(installer, mergedRootPolicyWithMissingDeps, options),
@@ -845,6 +848,37 @@ export class InstallMain {
       );
     });
     return rootPolicy;
+  }
+
+  /**
+   * envs that used to be core aspects (bundled with bit) are configured on old components
+   * without a version. they are now regular envs, so they have to be installed like any other
+   * env. add them to the workspace policy with their pinned version.
+   */
+  private async addUsedLegacyCoreEnvsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<void> {
+    const usedEnvIds = await this._getAllUsedEnvIds();
+    await Promise.all(
+      usedEnvIds.map(async (envId) => {
+        if (envId.hasVersion()) return;
+        const envIdStr = envId.toString();
+        if (!this.envs.isLegacyCoreEnv(envIdStr)) return;
+        const version = getPinnedLegacyCoreEnvVersion(envIdStr);
+        if (!version) return;
+        // if the env exists in the workspace, it is loaded from the workspace, no need to install it
+        if (this.workspace.hasId(envId, { ignoreVersion: true })) return;
+        rootPolicy.add(
+          {
+            dependencyId: getLegacyCoreEnvPackageName(envIdStr),
+            value: {
+              version,
+            },
+            lifecycleType: 'runtime',
+          },
+          // If it's already exist from the root, take the version from the root policy
+          { skipIfExisting: true }
+        );
+      })
+    );
   }
 
   private async addConfiguredGeneratorEnvsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<void> {
@@ -1058,6 +1092,13 @@ export class InstallMain {
     if (this.envs.isCoreEnv(envId.toStringWithoutVersion())) return undefined;
     const inWs = await this.workspace.hasId(envId);
     if (inWs) return undefined;
+    // envs that used to be core aspects are used by old components without a version.
+    // install them using their pinned version.
+    if (!envId.hasVersion() && this.envs.isLegacyCoreEnv(envId.toString())) {
+      const pinnedVersion = getPinnedLegacyCoreEnvVersion(envId.toString());
+      if (!pinnedVersion) return undefined;
+      return { [getLegacyCoreEnvPackageName(envId.toString())]: pinnedVersion };
+    }
     const envComponent = await this.envs.getEnvComponentByEnvId(envId.toString(), envId.toString());
     if (!envComponent) return undefined;
     const packageName = this.dependencyResolver.getPackageName(envComponent);

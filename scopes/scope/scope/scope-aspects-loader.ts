@@ -19,6 +19,7 @@ import type { ExtensionManifest, Aspect } from '@teambit/harmony';
 import type { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
 import type { EnvsMain } from '@teambit/envs';
+import { resolveLegacyCoreEnvId } from '@teambit/envs';
 import type { NodeLinker } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import type { ScopeMain } from './scope.main.runtime';
@@ -173,10 +174,18 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async getNonLoadedAspects(ids: string[], lane?: Lane): Promise<Component[]> {
+    // envs that used to be core aspects may be requested without a version (old components have
+    // them saved in the model without a version). resolve them to their pinned version so they
+    // can be imported and loaded as regular external envs.
+    ids = ids.map((id) => resolveLegacyCoreEnvId(id));
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    // filter out core aspects also when they are requested with a version (e.g. when they are
+    // dependencies of a loaded aspect, the version is the component version)
+    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds).filter(
+      (id) => !coreAspectsStringIds.includes(id.split('@')[0])
+    );
     const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
     // TODO: use diff instead of filter twice
     const localAspects = ids.filter((id) => id.startsWith('file://'));

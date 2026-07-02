@@ -569,8 +569,14 @@ export class DependencyResolverMain {
       // in that case we return the dir from the root node_modules
       return this.getModulePath(component);
     }
-    const dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
-    if (fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
+    let dirInEnvRoot: string | undefined;
+    try {
+      dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
+    } catch {
+      // the component env couldn't be determined (e.g. a component loaded from the scope before
+      // its extensions were calculated). fall back to the root node_modules.
+    }
+    if (dirInEnvRoot && fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
     return this.getModulePath(component);
   }
 
@@ -1171,7 +1177,10 @@ export class DependencyResolverMain {
     const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
       policy,
       {
-        includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
+        includeLegacyPeersInSelfPolicy:
+          envComponent &&
+          (this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()) ||
+            this.envs.isLegacyCoreEnv(envComponent.id.toStringWithoutVersion())),
       },
       envId
     );
@@ -1212,6 +1221,9 @@ export class DependencyResolverMain {
   ): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
+    // envs that used to be core aspects are old-style envs (no env.jsonc). avoid fetching the
+    // env component just to find out it has no env.jsonc file.
+    if (this.envs.isLegacyCoreEnv(envId.split('@')[0])) return undefined;
     if (legacyFiles) {
       const envJsonc = legacyFiles.find((file) => file.basename === 'env.jsonc');
       if (envJsonc) {
@@ -1230,7 +1242,10 @@ export class DependencyResolverMain {
         const idWithoutVersion = options.envId.split('@')[0];
         const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
           policiesFromEnvConfig,
-          { includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion) },
+          {
+            includeLegacyPeersInSelfPolicy:
+              this.envs.isCoreEnv(idWithoutVersion) || this.envs.isLegacyCoreEnv(idWithoutVersion),
+          },
           idWithoutVersion
         );
         return allPoliciesFromEnv;
