@@ -1792,6 +1792,14 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     }
     if (includeNonBlocking) {
       this.aggregatedLoadFailures.forEach((failure) => {
+        // envs that used to be core aspects fail with module-not-found until "bit install"
+        // installs them. this is an expected state, already reported as a per-component
+        // NonLoadedEnv issue with a "bit install" remediation - don't repeat it as a scary
+        // workspace issue.
+        const failedIdWithoutVersion = failure.failedId.split('@')[0];
+        if (this.envs.isLegacyCoreEnv(failedIdWithoutVersion) && String(failure.error).includes('Cannot find module')) {
+          return;
+        }
         const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;
         errors.push(
           new Error(

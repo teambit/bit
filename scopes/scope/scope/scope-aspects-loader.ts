@@ -174,16 +174,18 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async getNonLoadedAspects(ids: string[], lane?: Lane): Promise<Component[]> {
-    // envs that used to be core aspects may be requested without a version (old components have
-    // them saved in the model without a version). if some version of such an env is already loaded
-    // (e.g. the workspace version), reuse it - mimicking the old core-aspects behavior of a single
-    // instance. otherwise, resolve them to their pinned version so they can be imported and loaded
-    // as regular external envs.
+    // envs that used to be core aspects keep the old single-instance behavior: if some version of
+    // them is already loaded (e.g. the workspace version), reuse it and don't load another copy
+    // (a copy may be requested with a different version, e.g. when it's a dependency of another
+    // loaded aspect, and loading it would re-register slots and build tasks). old components have
+    // them saved in the model without a version - resolve those to their pinned version so they
+    // can be imported and loaded as regular external envs.
     ids = compact(
       ids.map((id) => {
-        if (id.includes('@') || !this.envs.isLegacyCoreEnv(id)) return id;
-        if (this.aspectLoader.isAspectLoadedIgnoringVersion(id)) return undefined;
-        return resolveLegacyCoreEnvId(id);
+        const idWithoutVersion = id.split('@')[0];
+        if (!this.envs.isLegacyCoreEnv(idWithoutVersion)) return id;
+        if (this.aspectLoader.isAspectLoadedIgnoringVersion(idWithoutVersion)) return undefined;
+        return id.includes('@') ? id : resolveLegacyCoreEnvId(id);
       })
     );
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));

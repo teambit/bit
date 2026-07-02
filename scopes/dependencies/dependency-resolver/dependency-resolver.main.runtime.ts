@@ -1406,6 +1406,17 @@ export class DependencyResolverMain {
         if (!dep.id) return;
         // In case of core aspect, do not update the version, as it's loaded to harmony without version
         if (this.aspectLoader.isCoreAspect(dep.id)) return;
+        // envs that used to be core aspects keep the old single-instance behavior: bind the
+        // dependency to the already-loaded instance (or the workspace component) instead of
+        // loading another copy of it from the dependency closure.
+        const depIdWithoutVersion = dep.id.split('@')[0];
+        if (this.envs.isLegacyCoreEnv(depIdWithoutVersion)) {
+          const canonicalId = this.getCanonicalLegacyCoreEnvId(depIdWithoutVersion);
+          if (canonicalId) {
+            dep.id = canonicalId;
+            return;
+          }
+        }
         // Lazily get the parent component
         if (typeof parentComponent === 'string') {
           const parentComponentId = await this.componentAspect.getHost().resolveComponentId(parentComponent);
@@ -1443,6 +1454,20 @@ export class DependencyResolverMain {
     }
 
     return manifest;
+  }
+
+  /**
+   * for envs that used to be core aspects: the id of the single instance that should be used -
+   * the already-loaded one (any version) or the workspace component. undefined when neither exists.
+   */
+  private getCanonicalLegacyCoreEnvId(idWithoutVersion: string): string | undefined {
+    const loadedId = this.aspectLoader.getLoadedAspectIdIgnoringVersion(idWithoutVersion);
+    if (loadedId) return loadedId;
+    const host = this.componentAspect.getHost();
+    const hostWithGetIdIfExist = host as { getIdIfExist?: (id: ComponentID) => ComponentID | undefined };
+    if (!hostWithGetIdIfExist?.getIdIfExist) return undefined;
+    const workspaceId = hostWithGetIdIfExist.getIdIfExist(ComponentID.fromString(idWithoutVersion));
+    return workspaceId?.toString();
   }
 
   validateAspectData(data: DependencyResolverComponentData) {

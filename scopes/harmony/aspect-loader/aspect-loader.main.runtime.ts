@@ -237,7 +237,15 @@ export class AspectLoaderMain {
    * whether any version of this aspect is already loaded into harmony.
    */
   isAspectLoadedIgnoringVersion(idWithoutVersion: string): boolean {
-    return this.harmony.extensionsIds.some(
+    return Boolean(this.getLoadedAspectIdIgnoringVersion(idWithoutVersion));
+  }
+
+  /**
+   * get the full id (including version) of a loaded aspect by its id without version, if any
+   * version of it is loaded into harmony.
+   */
+  getLoadedAspectIdIgnoringVersion(idWithoutVersion: string): string | undefined {
+    return this.harmony.extensionsIds.find(
       (extId) => extId.split('@')[0] === idWithoutVersion && Boolean(this.harmony.extensions.get(extId)?.loaded)
     );
   }
