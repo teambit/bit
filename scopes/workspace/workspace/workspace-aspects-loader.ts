@@ -384,18 +384,72 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const groupedByIsPlugin = groupBy(components, (component) => {
       return this.aspectLoader.hasPluginFiles(component);
     });
-    const graph = await this.getAspectsGraphWithoutCore(groupedByIsPlugin.false, this.isAspect.bind(this));
-    const aspectsComponentsInclCore = graph.nodes.map((node) => node.attr).concat(groupedByIsPlugin.true || []);
+    // envs that used to be core aspects are expected to be installed into the workspace rather than
+    // isolated into scope capsules (which is very slow). when installed, keep them in the graph so
+    // their aspect dependencies (e.g. react for the node env) get resolved as well, but from their
+    // installed packages. when not installed yet, don't walk their dependencies graph at all - they
+    // are resolved directly, fail to load gracefully and the user gets a NonLoadedEnv issue
+    // suggesting to run "bit install".
+    let graphSeeders = groupedByIsPlugin.false || [];
+    const installedLegacyEnvs: Component[] = [];
+    const nonInstalledLegacyEnvs: Component[] = [];
+    if (mergedOpts.resolveEnvsFromRoots) {
+      const rest: Component[] = [];
+      await Promise.all(
+        graphSeeders.map(async (component) => {
+          const isNonWsLegacyEnv =
+            this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion()) &&
+            !(await this.workspace.hasId(component.id));
+          if (!isNonWsLegacyEnv) {
+            rest.push(component);
+            return;
+          }
+          const packagePath = await this.workspace.getComponentPackagePath(component);
+          if (await fs.pathExists(packagePath)) {
+            installedLegacyEnvs.push(component);
+            rest.push(component);
+          } else {
+            nonInstalledLegacyEnvs.push(component);
+          }
+        })
+      );
+      graphSeeders = rest;
+    }
+    const graph = await this.getAspectsGraphWithoutCore(graphSeeders, this.isAspect.bind(this));
+    const aspectsComponentsInclCore = graph.nodes
+      .map((node) => node.attr)
+      .concat(groupedByIsPlugin.true || [])
+      .concat(nonInstalledLegacyEnvs);
     // remove core aspects from the list. the graph may include them (with a version) when they
     // are dependencies of the given components
     const aspectsComponents = aspectsComponentsInclCore.filter(
       (component) => !coreAspectsIds.includes(component.id.toStringWithoutVersion())
     );
     this.logger.debug(`${loggerPrefix} found ${aspectsComponents.length} aspects in the aspects-graph`);
-    const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(
+    let { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(
       aspectsComponents,
       mergedOpts.resolveEnvsFromRoots
     );
+    // legacy-core envs that got here only as dependencies of other (installed) legacy-core envs
+    // are not installed at the workspace root themselves. resolve them from the installed packages
+    // (below) rather than from the workspace root path, which doesn't exist for them.
+    if (installedLegacyEnvs.length) {
+      const seederLegacyIds = new Set([...installedLegacyEnvs, ...nonInstalledLegacyEnvs].map((c) => c.id.toString()));
+      const depLegacyEnvs: Component[] = [];
+      const properWorkspaceComps: Component[] = [];
+      await Promise.all(
+        workspaceComps.map(async (component) => {
+          const isDepLegacyEnv =
+            this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion()) &&
+            !seederLegacyIds.has(component.id.toString()) &&
+            !(await this.workspace.hasId(component.id));
+          if (isDepLegacyEnv) depLegacyEnvs.push(component);
+          else properWorkspaceComps.push(component);
+        })
+      );
+      workspaceComps = properWorkspaceComps;
+      nonWorkspaceComps = nonWorkspaceComps.concat(depLegacyEnvs);
+    }
 
     const workspaceCompsIds = workspaceComps.map((c) => c.id);
     const nonWorkspaceCompsIds = nonWorkspaceComps.map((c) => c.id);
@@ -424,6 +478,34 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       componentsToResolveFromScope = nonWorkspaceCompsGroups.true || [];
       componentsToResolveFromInstalled = nonWorkspaceCompsGroups.false || [];
     }
+    // runtime dependencies of installed legacy-core envs were installed along with them as
+    // packages. resolve them from the installed packages instead of isolating them into scope
+    // capsules. their dev dependencies are not needed to run the env - drop them, unless they are
+    // also reachable from other requested aspects.
+    if (installedLegacyEnvs.length && componentsToResolveFromScope.length) {
+      const legacyEnvIds = installedLegacyEnvs.map((c) => c.id.toString());
+      const legacyRuntimeClosure = this.getGraphDescendants(graph, legacyEnvIds, ['runtime']);
+      const otherSeederIds = graphSeeders.map((c) => c.id.toString()).filter((idStr) => !legacyEnvIds.includes(idStr));
+      const otherClosure = this.getGraphDescendants(graph, otherSeederIds);
+      otherSeederIds.forEach((idStr) => otherClosure.add(idStr));
+      const fromScope: Component[] = [];
+      const fromInstalled: Component[] = [];
+      const dropped: Component[] = [];
+      componentsToResolveFromScope.forEach((component) => {
+        const idStr = component.id.toString();
+        if (otherClosure.has(idStr)) fromScope.push(component);
+        else if (legacyRuntimeClosure.has(idStr)) fromInstalled.push(component);
+        else dropped.push(component);
+      });
+      if (dropped.length) {
+        this.logger.debug(
+          `resolveAspects, dropped ${dropped.length} dev/peer dependencies of installed legacy-core envs from aspects resolution:\n${dropped.map((c) => c.id.toString()).join('\n')}`
+        );
+      }
+      componentsToResolveFromInstalled = componentsToResolveFromInstalled.concat(fromInstalled);
+      componentsToResolveFromScope = fromScope;
+    }
+    const installedResolverRootIds = uniq(rootAspectsIds.concat(installedLegacyEnvs.map((c) => c.id.toString())));
 
     const scopeIds = componentsToResolveFromScope.map((c) => c.id);
     this.logger.debug(
@@ -447,7 +529,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const installedAspectsDefs: AspectDefinition[] = componentsToResolveFromInstalled.length
       ? await this.aspectLoader.resolveAspects(
           componentsToResolveFromInstalled,
-          this.getInstalledAspectResolver(graph, rootAspectsIds, runtimeName, {
+          this.getInstalledAspectResolver(graph, installedResolverRootIds, runtimeName, {
             throwOnError: opts?.throwOnError ?? false,
           })
         )
@@ -774,6 +856,27 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * @param isAspect
    * @returns
    */
+  /**
+   * collect all the ids reachable from the given source ids, excluding the sources themselves.
+   * optionally traverse only edges of the given lifecycle types (e.g. ['runtime']).
+   * iterative BFS to avoid stack overflow on big graphs.
+   */
+  private getGraphDescendants(graph: Graph<Component, string>, sourceIds: string[], edgeTypes?: string[]): Set<string> {
+    const visited = new Set<string>();
+    const queue = [...sourceIds];
+    while (queue.length) {
+      const current = queue.shift() as string;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      graph.outEdges(current).forEach((edge) => {
+        if (edgeTypes && !edgeTypes.includes(edge.attr)) return;
+        queue.push(edge.targetId);
+      });
+    }
+    sourceIds.forEach((id) => visited.delete(id));
+    return visited;
+  }
+
   private async getAspectsGraphWithoutCore(
     components: Component[] = [],
     isAspect?: ShouldLoadFunc
@@ -946,6 +1049,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     // even if it's not there yet
     // in that case we will fail to load it, and the user will need to run bit install
     if (this.envs.hasEnvManifest(component)) {
+      return true;
+    }
+    // envs that used to be core aspects are expected to be installed into the workspace ("bit install"
+    // adds them to the root policy) rather than isolated into scope capsules, which is very slow.
+    // same as the env.jsonc case above - when not installed yet, loading fails gracefully and the
+    // user gets a NonLoadedEnv issue suggesting to run bit install.
+    if (this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion())) {
       return true;
     }
     return false;

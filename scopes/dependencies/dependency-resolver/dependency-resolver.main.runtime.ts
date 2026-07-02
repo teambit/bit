@@ -1906,6 +1906,22 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       });
     };
     ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
+
+    // validate aspects data (env id, dependencies data) before persisting them into the model during snap/tag.
+    // (was registered by teambit.harmony/aspect before it was removed from the core aspects)
+    ExtensionDataList.validateBeforePersistHook = (extensionDataList: ExtensionDataList) => {
+      const envExt = extensionDataList.findCoreExtension(EnvsAspect.id);
+      if (envExt) {
+        const result = envs.validateEnvId(envExt);
+        if (result) return result;
+      }
+      const depResolverExt = extensionDataList.findCoreExtension(DependencyResolverAspect.id);
+      if (depResolverExt) {
+        const result = dependencyResolver.validateAspectData(depResolverExt.data as any);
+        if (result) return result;
+      }
+      return undefined;
+    };
     PackageJsonTransformer.registerPackageJsonTransformer(async (component, packageJsonObject) => {
       const deps = dependencyResolver.getDependencies(component);
       const { optionalDependencies, peerDependenciesMeta } = deps.toDependenciesManifest();

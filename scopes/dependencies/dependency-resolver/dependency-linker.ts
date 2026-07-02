@@ -679,7 +679,15 @@ export class DependencyLinker {
     }
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
-      const newDir = getDistDirForDevEnv(packageName);
+      let newDir: string;
+      try {
+        newDir = getDistDirForDevEnv(packageName);
+      } catch (err: any) {
+        // the package may not exist at all (e.g. @teambit/legacy was removed from the repo).
+        // this link is best-effort for backward compatibility, skip it rather than failing.
+        this.logger.debug(`linkNonAspectCorePackages, unable to resolve ${packageName}, skipping the link. ${err}`);
+        return undefined;
+      }
       return { packageName, from: newDir, to: target };
     }
 

@@ -233,6 +233,15 @@ export class AspectLoaderMain {
     }
   }
 
+  /**
+   * whether any version of this aspect is already loaded into harmony.
+   */
+  isAspectLoadedIgnoringVersion(idWithoutVersion: string): boolean {
+    return this.harmony.extensionsIds.some(
+      (extId) => extId.split('@')[0] === idWithoutVersion && Boolean(this.harmony.extensions.get(extId)?.loaded)
+    );
+  }
+
   getDescriptor(id: string): AspectDescriptor | undefined {
     try {
       const instance = this.harmony.get<any>(id);

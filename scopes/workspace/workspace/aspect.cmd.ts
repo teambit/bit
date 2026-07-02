@@ -5,7 +5,7 @@ import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import type { AspectMain } from './aspect.main.runtime';
+import type { WorkspaceAspectsManager } from './workspace-aspects-manager';
 
 export class ListAspectCmd implements Command {
   name = 'list [pattern]';
@@ -19,7 +19,7 @@ export class ListAspectCmd implements Command {
   options = [['d', 'debug', 'show the origins where the aspects were taken from']] as CommandOptions;
   group = 'info-analysis';
 
-  constructor(private aspect: AspectMain) {}
+  constructor(private aspect: WorkspaceAspectsManager) {}
 
   async report([name]: [string], { debug }: { debug: boolean }) {
     const listAspectsResults = await this.aspect.listAspectsOfComponent(name);
@@ -52,7 +52,7 @@ export class ListCoreAspectCmd implements Command {
   options = [['j', 'json', 'format as json']] as CommandOptions;
   group = 'info-analysis';
 
-  constructor(private aspect: AspectMain) {}
+  constructor(private aspect: WorkspaceAspectsManager) {}
 
   async report() {
     return this.aspect.listCoreAspects().join('\n');
@@ -86,7 +86,7 @@ export class SetAspectCmd implements Command {
   ] as CommandOptions;
   group = 'component-config';
 
-  constructor(private aspect: AspectMain) {}
+  constructor(private aspect: WorkspaceAspectsManager) {}
 
   async report([pattern, aspectId, config]: [string, string, string], options: SetAspectOptions) {
     const configParsed = config ? JSON.parse(config) : {};
@@ -125,7 +125,7 @@ export class UpdateAspectCmd implements Command {
   options = [];
   group = 'component-config';
 
-  constructor(private aspect: AspectMain) {}
+  constructor(private aspect: WorkspaceAspectsManager) {}
 
   async report([aspectId, pattern]: [string, string]) {
     const { updated, alreadyUpToDate } = await this.aspect.updateAspectsToComponents(aspectId, pattern);
@@ -158,7 +158,7 @@ export class UnsetAspectCmd implements Command {
   options = [];
   group = 'component-config';
 
-  constructor(private aspect: AspectMain) {}
+  constructor(private aspect: WorkspaceAspectsManager) {}
 
   async report([pattern, aspectId]: [string, string]) {
     const results = await this.aspect.unsetAspectsFromComponents(pattern, aspectId);
@@ -183,7 +183,7 @@ export class GetAspectCmd implements Command {
   ] as CommandOptions;
   group = 'info-analysis';
 
-  constructor(private aspect: AspectMain) {}
+  constructor(private aspect: WorkspaceAspectsManager) {}
 
   async report([componentName]: [string], { debug }: { debug: boolean }) {
     const extensionsDetailsToString = (extensions: ExtensionDataList) =>
