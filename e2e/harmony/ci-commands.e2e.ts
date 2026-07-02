@@ -366,6 +366,81 @@ describe('ci commands', function () {
   });
 
   /**
+   * Regression for the "was not found on the filesystem" config-sync failure (#10460 follow-up).
+   *
+   * `syncConfigFromMain` does a 3-way merge that loads three Version objects per component: the
+   * lane head, main's head, and their COMMON ANCESTOR (the lane's fork point). On a real CI runner
+   * the workspace is fresh: switching to the lane fetches the lane heads plus the version-history
+   * (the parent graph) — enough to compute divergence — but NOT the full Version object of the fork
+   * point, which lives only on main. #10460 pre-fetched main's head; this test guards that the fork
+   * point is pre-fetched too. We reproduce the fresh-runner state by deleting the fork-point object
+   * from the local scope before the second `bit ci pr` — without the fix, loading it throws
+   * VersionNotFoundOnFS, the sync silently skips the component, and main's config never lands.
+   */
+  describe('bit ci pr syncs main config even when the fork-point object is not on the filesystem', () => {
+    let secondPrOutput: string;
+    let forkPointHash: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit();
+      // The fork point: comp1's head on main right now, before the lane snaps on top of it. This is
+      // the common ancestor the config merge will need as its base.
+      forkPointHash = helper.command.getHead('comp1');
+
+      // First PR commit + ci pr — lane forks here and snaps comp1 on top of the fork point.
+      helper.command.runCmd('git checkout -b feature/fork-point-test');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("pr commit 1");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 1"');
+      helper.command.runCmd('bit ci pr --keep-lane --message "first pr commit"');
+
+      // Main moves ahead with a deps-set config change, so the lane and main have both snapped since
+      // the fork (they diverge — the merge base is the fork point, not either head).
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.npm.addFakeNpmPackage('is-positive', '1.0.0');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-positive': '1.0.0' } });
+      helper.command.dependenciesSet('comp1', 'is-positive@1.0.0');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "chore: bump comp1 deps on main"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Simulate the fresh CI runner: it never fetched the fork-point Version object (only the lane
+      // heads + parent graph). Assert it's actually present first — so a wrong hash or setup change
+      // can't turn this into a no-op — then drop it so the merge base is missing on disk.
+      helper.fs.expectFileToExist(helper.general.getHashPathOfObject(forkPointHash, true));
+      helper.fs.deleteObject(helper.general.getHashPathOfObject(forkPointHash));
+
+      // Second PR commit + ci pr — must re-fetch the fork point and sync main's deps change.
+      helper.command.runCmd('git checkout feature/fork-point-test');
+      helper.command.runCmd(`git merge ${defaultBranch}`);
+      helper.fs.outputFile('comp2/comp2.js', 'console.log("pr commit 2");');
+      helper.command.runCmd('git add comp2/comp2.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 2"');
+      secondPrOutput = helper.command.runCmd('bit ci pr --keep-lane --message "second pr commit"');
+    });
+
+    it('should not skip config sync with a "was not found on the filesystem" error', () => {
+      // The exact production symptom (VersionNotFoundOnFS on the missing fork point). The functional
+      // outcome is covered by the config assertion below; this just guards the specific regression.
+      expect(secondPrOutput).to.not.include('was not found on the filesystem');
+    });
+
+    it("should still propagate main's deps-set config change to comp1 on the lane", () => {
+      helper.command.switchLocalLane('feature-fork-point-test');
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const dep = showConfig.data.dependencies.find((d: any) => d.id === 'is-positive');
+      expect(
+        dep,
+        `expected 'is-positive' on comp1's deps after merging main, got: ${JSON.stringify(showConfig.data.dependencies, null, 2)}`
+      ).to.exist;
+      expect(dep.version).to.equal('1.0.0');
+    });
+  });
+
+  /**
    * Same as the deps-set propagation test, but for an `bit env set` on main. Env config has its own
    * strategy in the config merger, so it's worth covering explicitly: a long-running PR's lane must
    * pick up an env that another PR changed (and tagged into objects) on main.
