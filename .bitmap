@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "2.0.3",
+        "version": "2.0.4",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -271,7 +271,7 @@
     "ci": {
         "name": "ci",
         "scope": "teambit.git",
-        "version": "1.0.430",
+        "version": "1.0.431",
         "mainFile": "index.ts",
         "rootDir": "scopes/git/ci"
     },
@@ -495,7 +495,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1112",
+        "version": "2.0.1113",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
