@@ -71,7 +71,13 @@ export class ComponentConfigMerger {
   private currentEnv: EnvData;
   private otherEnv: EnvData;
   private baseEnv?: EnvData;
-  private handledExtIds: string[] = [BuilderAspect.id]; // don't try to merge builder, it's possible that at one end it wasn't built yet, so it's empty
+  // don't try to merge builder, it's possible that at one end it wasn't built yet, so it's empty.
+  // teambit.envs/envs is handled exclusively by envStrategy() — the generic aspect merge would copy
+  // `config.env` verbatim, which never carries the env's version (the version lives in the separate
+  // env-aspect entry that only envStrategy knows to attach). If envStrategy declines (e.g. the
+  // current env is a workspace component), letting the generic merge run would leak an unversioned
+  // external env and break the snap with ExternalEnvWithoutVersion.
+  private handledExtIds: string[] = [BuilderAspect.id, EnvsAspect.id];
   private otherLaneIdsStr: string[];
   constructor(
     private compIdStr: string,
