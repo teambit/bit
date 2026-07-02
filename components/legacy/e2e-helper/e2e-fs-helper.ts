@@ -1,3 +1,4 @@
+/// <reference types="chai-fs" />
 import fs from 'fs-extra';
 import { use, expect } from 'chai';
 import { globSync } from 'glob';

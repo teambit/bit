@@ -8,6 +8,10 @@ import { ComponentID } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';
 
+type UseWorkspaceResult = Omit<ReturnType<typeof useDataQuery>, 'data' | 'previousData'> & {
+  workspace: Workspace | undefined;
+};
+
 type UseWorkspaceOptions = {
   onComponentAdded?: (component: ComponentModel[]) => void;
   onComponentUpdated?: (component: ComponentModel[]) => void;
@@ -127,7 +131,7 @@ const COMPONENT_SERVER_STARTED = gql`
   }
 `;
 
-export function useWorkspace(options: UseWorkspaceOptions = {}) {
+export function useWorkspace(options: UseWorkspaceOptions = {}): UseWorkspaceResult {
   const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
   const optionsRef = useLatest(options);
 
