@@ -836,7 +836,13 @@
         "scope": "teambit.toolbox",
         "version": "0.0.27",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/hard-link-directory"
+        "rootDir": "scopes/toolbox/fs/hard-link-directory",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.10": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "fs/is-dir-empty": {
         "name": "fs/is-dir-empty",
@@ -1232,7 +1238,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.41",
         "mainFile": "feature-toggle.ts",
-        "rootDir": "scopes/harmony/modules/feature-toggle"
+        "rootDir": "scopes/harmony/modules/feature-toggle",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.10": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "modules/fetch-html-from-url": {
         "name": "modules/fetch-html-from-url",
@@ -1419,7 +1431,13 @@
         "scope": "teambit.typescript",
         "version": "0.0.87",
         "mainFile": "index.ts",
-        "rootDir": "scopes/typescript/modules/ts-config-mutator"
+        "rootDir": "scopes/typescript/modules/ts-config-mutator",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.2.10": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "modules/workspace-locator": {
         "name": "modules/workspace-locator",
