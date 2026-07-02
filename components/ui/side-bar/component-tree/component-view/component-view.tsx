@@ -3,6 +3,8 @@ import type { ComponentTreeSlot } from '@teambit/component-tree';
 import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import satisfies from 'semver/functions/satisfies';
 import classNames from 'classnames';
 import { ComponentID } from '@teambit/component-id';
 import type { ComponentModel } from '@teambit/component';
@@ -207,6 +209,26 @@ export function ComponentView(props: ComponentViewProps) {
           (laneCompIdFromUrl.fullName === compIdName && componentScope === scopeFromQueryParams);
   }, [href, viewingMainCompOnLane, location?.pathname, component?.id.toString(), scope.name]);
 
+  const viewedVersion = React.useMemo(() => {
+    if (!location?.search) return undefined;
+    return new URLSearchParams(location.search).get('version') || undefined;
+  }, [location?.search]);
+
+  // The sidebar payload is always the component's head model, so on its own it can only reflect
+  // head deprecation. When the active component is being viewed at a historical version, surface
+  // that version's deprecation too (e.g. a range-deprecated older version of a non-deprecated head).
+  const isViewedVersionDeprecated = React.useMemo(() => {
+    if (!isActive || !viewedVersion) return false;
+    if (component.deprecation?.isDeprecate) return false; // already covered by <DeprecationIcon />
+    const range = component.deprecation?.range;
+    if (!range) return false;
+    try {
+      return satisfies(viewedVersion, range);
+    } catch {
+      return false;
+    }
+  }, [isActive, viewedVersion, component.deprecation?.isDeprecate, component.deprecation?.range]);
+
   if (isMissingCompOrEnvId) return null;
 
   const isCompModified =
@@ -240,6 +262,13 @@ export function ComponentView(props: ComponentViewProps) {
 
       <div className={styles.right}>
         <DeprecationIcon component={component} />
+        {isViewedVersionDeprecated && (
+          <Tooltip placement="bottom" content="This version is deprecated">
+            <div className={styles.deprecatedIcon}>
+              <Icon of="note-deprecated" />
+            </div>
+          </Tooltip>
+        )}
         {/* {isInternal && <Icon of="Internal" className={styles.componentIcon} />} */}
         {treeNodeSlot &&
           treeNodeSlot.toArray().map(([id, treeNode]) => <treeNode.widget key={id} component={component} />)}

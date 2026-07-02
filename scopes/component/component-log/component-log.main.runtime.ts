@@ -84,7 +84,9 @@ export class ComponentLogMain {
         return []; // component is new
       }
     }
-    const logs = await this.workspace.scope.getLogs(componentId, shortHash, undefined, true);
+    // route through workspace.getLogs (not scope.getLogs) so the staged (not-yet-snapped) deprecation
+    // overlay is applied consistently for both this CLI path and the workspace UI version-history.
+    const logs = await this.workspace.getLogs(componentId, shortHash, undefined, true);
     logs.forEach((log) => {
       log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;
       log.message = shortMessage ? log.message.split('\n')[0] : log.message;

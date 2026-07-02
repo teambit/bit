@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { parse } from 'comment-json';
+import semver from 'semver';
 import mapSeries from 'p-map-series';
 import pMap from 'p-map';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -44,6 +45,7 @@ import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { LoadFailure } from '@teambit/harmony.modules.load-trace';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { ExtensionDataList, REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
@@ -53,7 +55,12 @@ import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import type { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy, uniq } from 'lodash';
-import { MergeConfigFilename, BIT_ROOTS_DIR, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy.constants';
+import {
+  MergeConfigFilename,
+  BIT_ROOTS_DIR,
+  CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
+  Extensions,
+} from '@teambit/legacy.constants';
 import path from 'path';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
@@ -592,8 +599,34 @@ export class Workspace implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
-    return this.scope.getLogs(id, shortHash, startsFrom);
+  async getLogs(
+    id: ComponentID,
+    shortHash = false,
+    startsFrom?: string,
+    throwIfMissing = false
+  ): Promise<ComponentLog[]> {
+    const logs = await this.scope.getLogs(id, shortHash, startsFrom, throwIfMissing);
+    this.applyStagedDeprecation(id, logs);
+    return logs;
+  }
+
+  /**
+   * reflect the not-yet-snapped (staged) deprecation in the component logs.
+   * `bit deprecate` only writes the deprecation config to the workspace `.bitmap`; it's baked into a
+   * Version object on the next tag/snap. The `deprecated` field is otherwise computed from the committed
+   * head Version, so without this overlay a staged range-deprecation wouldn't be reflected in the logs
+   * (CLI `bit log` or the workspace UI version-history) until the next tag/snap. We mirror the model's
+   * range logic here so the staged state (including a staged `bit undeprecate` that clears the range)
+   * matches the post-snap output.
+   */
+  private applyStagedDeprecation(id: ComponentID, logs: ComponentLog[]): void {
+    const bitmapEntry = this.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true });
+    const stagedConfig = bitmapEntry?.config?.[Extensions.deprecation];
+    if (!stagedConfig || stagedConfig === '-') return;
+    const range = (stagedConfig as { range?: string }).range;
+    logs.forEach((log) => {
+      log.deprecated = Boolean(range && log.tag && semver.satisfies(log.tag, range));
+    });
   }
 
   async getGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<Graph<Component, string>> {
@@ -831,6 +864,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearCache();
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
+    this.aggregatedLoadFailures.clear();
     this._componentList = new ComponentsList(this);
   }
 
@@ -1716,7 +1750,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return { data, conflict };
   }
 
-  getWorkspaceIssues(): Error[] {
+  /**
+   * @param includeNonBlocking when true (default), also returns non-blocking issues (e.g. aggregated
+   * load failures) that should be shown in "bit status" but must not block tag/snap. The tag/snap
+   * gate (`builder.throwForComponentIssues`) passes `false` so previously-swallowed load failures
+   * stay best-effort — phase 1 of the loading redesign makes them visible without changing which
+   * operations succeed.
+   */
+  getWorkspaceIssues(opts?: { includeNonBlocking?: boolean }): Error[] {
+    const includeNonBlocking = opts?.includeNonBlocking ?? true;
     const errors: Error[] = [];
 
     // since PR #8393, the workspace.jsonc conflicts are not written to the config-merge file anymore.
@@ -1729,7 +1771,33 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         errors.push(err);
       }
     }
+    if (includeNonBlocking) {
+      this.aggregatedLoadFailures.forEach((failure) => {
+        const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;
+        errors.push(
+          new Error(
+            `failed loading "${failure.failedId}" (during ${failure.phase}), affects ${affected}: ${failure.error}. the load continued without it, data computed by it may be missing`
+          )
+        );
+      });
+    }
     return errors;
+  }
+
+  /**
+   * load failures of aspects/envs that affect multiple components. aggregated here (instead of
+   * attaching an issue to every affected component) to keep "bit status" readable when e.g. one
+   * env used by 100 components fails to load. the failing component itself still gets a
+   * per-component LoadFailures issue.
+   */
+  private aggregatedLoadFailures: Map<string, LoadFailure & { affected: Set<string> }> = new Map();
+
+  registerAggregatedLoadFailure(failure: LoadFailure, affectedComponentId: string) {
+    // keyed by the failing id only: the same root cause may be reported from several load phases,
+    // and it should still render as a single workspace issue.
+    const existing = this.aggregatedLoadFailures.get(failure.failedId);
+    if (existing) existing.affected.add(affectedComponentId);
+    else this.aggregatedLoadFailures.set(failure.failedId, { ...failure, affected: new Set([affectedComponentId]) });
   }
 
   async listComponentsDuringMerge(): Promise<ComponentID[]> {

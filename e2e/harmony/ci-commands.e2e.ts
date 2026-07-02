@@ -116,6 +116,160 @@ describe('ci commands', function () {
   });
 
   /**
+   * The default flow restores the workspace to main after export (asserted in the "bit ci pr
+   * workflow" describe above). `--skip-cleanup` opts out of that restore — used by the throwaway
+   * `bit_pr` CI container, where re-checking-out main's HEAD just to discard it is wasted work.
+   * These two describes assert that, with the flag, the workspace is intentionally LEFT on the PR
+   * lane on both code paths (default/temp-lane and `--keep-lane`), so a future change that drops the
+   * flag from either path (or re-introduces a `process.env.CI` auto-skip that fires in unintended
+   * contexts) is caught here.
+   */
+  describe('bit ci pr --skip-cleanup leaves the workspace on the PR lane (default/temp-lane flow)', () => {
+    let prOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+
+      helper.command.runCmd('git checkout -b feature/skip-cleanup-temp');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("updated component");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: update component"');
+
+      prOutput = helper.command.runCmd('bit ci pr --skip-cleanup --message "skip cleanup pr"');
+    });
+    it('should complete successfully', () => {
+      expect(prOutput).to.include('PR command executed successfully');
+    });
+    it('should report that it skipped the workspace restore', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.include('Skipping workspace restore');
+    });
+    it('should leave the workspace on the PR lane instead of switching back to main', () => {
+      const lanes = helper.command.listLanesParsed();
+      expect(lanes.currentLane).to.equal('feature-skip-cleanup-temp');
+    });
+    it('should still export the lane to the remote', () => {
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      const laneNames = remoteLanes.lanes.map((lane) => lane.name);
+      expect(laneNames).to.include('feature-skip-cleanup-temp');
+    });
+  });
+
+  describe('bit ci pr --keep-lane --skip-cleanup leaves the workspace on the PR lane', () => {
+    let prOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+
+      helper.command.runCmd('git checkout -b feature/skip-cleanup-keep');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("updated component");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: update component"');
+
+      prOutput = helper.command.runCmd('bit ci pr --keep-lane --skip-cleanup --message "skip cleanup pr"');
+    });
+    it('should complete successfully and report skipping the restore', () => {
+      expect(prOutput).to.include('PR command executed successfully');
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.include('Skipping workspace restore');
+    });
+    it('should leave the workspace on the PR lane instead of switching back to main', () => {
+      const lanes = helper.command.listLanesParsed();
+      expect(lanes.currentLane).to.equal('feature-skip-cleanup-keep');
+    });
+  });
+
+  /**
+   * Skipping build/publish tasks is opt-in: a PR build runs the full pipeline by default, and a dev
+   * trades specific tasks for speed either via the `--skip-tasks` flag (this describe) or a
+   * `[skip-tasks: ...]` commit-message token (next describe). A control run (no skip) proves these
+   * tasks DO run for these components, so the "skipped" assertions aren't vacuous, and a non-skipped
+   * sibling task (PackComponents — only PublishComponents is skipped from pkg) proves the pipeline
+   * still ran rather than being short-circuited.
+   */
+  describe('bit ci pr --skip-tasks omits the named tasks from the snap pipeline', () => {
+    let controlOutput: string;
+    let skipOutput: string;
+    before(() => {
+      // Control: a normal --build PR run establishes that ExtractSchema and PublishComponents run.
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+      helper.command.runCmd('git checkout -b feature/skip-tasks-control');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("control");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: control"');
+      controlOutput = helper.command.runCmd('bit ci pr --build --keep-lane --message "control pr"');
+
+      // Skip: a fresh workspace runs the same flow but skips schema extraction and publishing.
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+      helper.command.runCmd('git checkout -b feature/skip-tasks-skip');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("skipped");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: skip"');
+      skipOutput = helper.command.runCmd(
+        'bit ci pr --build --keep-lane --skip-tasks ExtractSchema,PublishComponents --message "skip tasks pr"'
+      );
+    });
+    it('runs ExtractSchema and PublishComponents by default (control)', () => {
+      expect(controlOutput).to.include('ExtractSchema');
+      expect(controlOutput).to.include('PublishComponents');
+    });
+    it('completes successfully with --skip-tasks', () => {
+      expect(skipOutput).to.include('PR command executed successfully');
+    });
+    it('does not run the skipped tasks', () => {
+      expect(skipOutput).to.not.include('ExtractSchema');
+      expect(skipOutput).to.not.include('PublishComponents');
+    });
+    it('still runs the non-skipped pipeline tasks (e.g. PackComponents)', () => {
+      expect(skipOutput).to.include('PackComponents');
+    });
+  });
+
+  /**
+   * The opt-in path used in CI: instead of a flag, the developer puts a `[skip-tasks: ...]` token in
+   * the commit message. `bit ci pr` (no --message here, so it reads the git commit message) parses
+   * the token, skips those tasks, and strips the token from the snap message. Asserts on the build's
+   * bracketed run-markers (`[Schema: ExtractSchema]`) rather than bare task names, because the
+   * "Skipping tasks from commit message: ..." log line itself names the tasks.
+   */
+  describe('bit ci pr skips tasks named by a [skip-tasks: ...] commit-message token', () => {
+    let prOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setupComponentsAndInitialCommit();
+      helper.command.runCmd('git checkout -b feature/skip-tasks-token');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("token");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      // No --message, so bit ci pr reads this commit message and parses the token out of it.
+      helper.command.runCmd('git commit -m "feat: ui change [skip-tasks: ExtractSchema,PublishComponents]"');
+      prOutput = helper.command.runCmd('bit ci pr --build --keep-lane');
+    });
+    it('reports it is skipping tasks from the commit message', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.include('Skipping tasks from commit message');
+    });
+    it('does not run the tasks named by the token', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.not.include('[Schema: ExtractSchema]');
+      expect(cleanOutput).to.not.include('[Pkg: PublishComponents]');
+    });
+    it('still runs the non-skipped pipeline tasks (e.g. PackComponents)', () => {
+      const cleanOutput = removeChalkCharacters(prOutput) as string;
+      expect(cleanOutput).to.include('[Pkg: PackComponents]');
+    });
+    it('completes successfully', () => {
+      expect(prOutput).to.include('PR command executed successfully');
+    });
+  });
+
+  /**
    * Subsequent commits to the same PR branch should re-use the existing remote lane rather than
    * deleting and recreating it. This preserves the lane's history (cloud UI shows the snap
    * progression), keeps user-made edits on the lane, and prevents a pile of archived lanes from
@@ -201,6 +355,81 @@ describe('ci commands', function () {
     it("should propagate main's deps-set config change to comp1 on the lane", () => {
       // Switch to the lane locally and inspect comp1's resolved deps.
       helper.command.switchLocalLane('feature-main-merge-test');
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      const dep = showConfig.data.dependencies.find((d: any) => d.id === 'is-positive');
+      expect(
+        dep,
+        `expected 'is-positive' on comp1's deps after merging main, got: ${JSON.stringify(showConfig.data.dependencies, null, 2)}`
+      ).to.exist;
+      expect(dep.version).to.equal('1.0.0');
+    });
+  });
+
+  /**
+   * Regression for the "was not found on the filesystem" config-sync failure (#10460 follow-up).
+   *
+   * `syncConfigFromMain` does a 3-way merge that loads three Version objects per component: the
+   * lane head, main's head, and their COMMON ANCESTOR (the lane's fork point). On a real CI runner
+   * the workspace is fresh: switching to the lane fetches the lane heads plus the version-history
+   * (the parent graph) — enough to compute divergence — but NOT the full Version object of the fork
+   * point, which lives only on main. #10460 pre-fetched main's head; this test guards that the fork
+   * point is pre-fetched too. We reproduce the fresh-runner state by deleting the fork-point object
+   * from the local scope before the second `bit ci pr` — without the fix, loading it throws
+   * VersionNotFoundOnFS, the sync silently skips the component, and main's config never lands.
+   */
+  describe('bit ci pr syncs main config even when the fork-point object is not on the filesystem', () => {
+    let secondPrOutput: string;
+    let forkPointHash: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit();
+      // The fork point: comp1's head on main right now, before the lane snaps on top of it. This is
+      // the common ancestor the config merge will need as its base.
+      forkPointHash = helper.command.getHead('comp1');
+
+      // First PR commit + ci pr — lane forks here and snaps comp1 on top of the fork point.
+      helper.command.runCmd('git checkout -b feature/fork-point-test');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("pr commit 1");');
+      helper.command.runCmd('git add comp1/comp1.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 1"');
+      helper.command.runCmd('bit ci pr --keep-lane --message "first pr commit"');
+
+      // Main moves ahead with a deps-set config change, so the lane and main have both snapped since
+      // the fork (they diverge — the merge base is the fork point, not either head).
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.npm.addFakeNpmPackage('is-positive', '1.0.0');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-positive': '1.0.0' } });
+      helper.command.dependenciesSet('comp1', 'is-positive@1.0.0');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "chore: bump comp1 deps on main"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Simulate the fresh CI runner: it never fetched the fork-point Version object (only the lane
+      // heads + parent graph). Assert it's actually present first — so a wrong hash or setup change
+      // can't turn this into a no-op — then drop it so the merge base is missing on disk.
+      helper.fs.expectFileToExist(helper.general.getHashPathOfObject(forkPointHash, true));
+      helper.fs.deleteObject(helper.general.getHashPathOfObject(forkPointHash));
+
+      // Second PR commit + ci pr — must re-fetch the fork point and sync main's deps change.
+      helper.command.runCmd('git checkout feature/fork-point-test');
+      helper.command.runCmd(`git merge ${defaultBranch}`);
+      helper.fs.outputFile('comp2/comp2.js', 'console.log("pr commit 2");');
+      helper.command.runCmd('git add comp2/comp2.js');
+      helper.command.runCmd('git commit -m "feat: pr commit 2"');
+      secondPrOutput = helper.command.runCmd('bit ci pr --keep-lane --message "second pr commit"');
+    });
+
+    it('should not skip config sync with a "was not found on the filesystem" error', () => {
+      // The exact production symptom (VersionNotFoundOnFS on the missing fork point). The functional
+      // outcome is covered by the config assertion below; this just guards the specific regression.
+      expect(secondPrOutput).to.not.include('was not found on the filesystem');
+    });
+
+    it("should still propagate main's deps-set config change to comp1 on the lane", () => {
+      helper.command.switchLocalLane('feature-fork-point-test');
       const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
       const dep = showConfig.data.dependencies.find((d: any) => d.id === 'is-positive');
       expect(

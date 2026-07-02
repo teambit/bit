@@ -21,6 +21,13 @@ import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { LoadSpan } from '@teambit/harmony.modules.load-trace';
+import {
+  startOrJoinLoadTrace,
+  loadSpan,
+  currentLoadTrace,
+  reportLoadFailure,
+} from '@teambit/harmony.modules.load-trace';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
@@ -121,9 +128,20 @@ export class WorkspaceComponentLoader {
     if (!idsWithoutEmpty.length) {
       return { components: [], invalidComponents: [] };
     }
+    return startOrJoinLoadTrace('workspace.getMany', { ids: idsWithoutEmpty.length }, (span) =>
+      this.getManyWithSpan(idsWithoutEmpty, span, loadOpts, throwOnFailure)
+    );
+  }
+
+  private async getManyWithSpan(
+    idsWithoutEmpty: Array<ComponentID>,
+    span: LoadSpan,
+    loadOpts?: ComponentLoadOptions,
+    throwOnFailure = true
+  ): Promise<GetManyRes> {
     const callId = Math.floor(Math.random() * 1000); // generate a random callId to be able to identify the call from the logs
     this.logger.profileTrace(`getMany-${callId}`);
-    this.logger.setStatusLine(`loading ${ids.length} component(s)`);
+    this.logger.setStatusLine(`loading ${idsWithoutEmpty.length} component(s)`);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       // We don't want to load extension or execute the load slot at this step
       // we will do it later
@@ -145,6 +163,8 @@ export class WorkspaceComponentLoader {
       }
     }, loadOrCached);
 
+    span.setAttribute('componentsCache:hits', loadOrCached.fromCache.length);
+    span.setAttribute('componentsCache:misses', loadOrCached.idsToLoad.length);
     const { components: loadedComponents, invalidComponents } = await this.getAndLoadSlotOrdered(
       loadOrCached.idsToLoad || [],
       loadOptsWithDefaults,
@@ -163,7 +183,7 @@ export class WorkspaceComponentLoader {
     components.forEach((comp) => {
       this.saveInCache(comp, { loadExtensions: true, executeLoadSlot: true });
     });
-    const idsWithEmptyStrs = ids.map((id) => id.toString());
+    const idsWithEmptyStrs = idsWithoutEmpty.map((id) => id.toString());
     const requestedComponents = components.filter(
       (comp) =>
         idsWithEmptyStrs.includes(comp.id.toString()) || idsWithEmptyStrs.includes(comp.id.toStringWithoutVersion())
@@ -180,9 +200,11 @@ export class WorkspaceComponentLoader {
   ): Promise<GetManyRes> {
     if (!ids?.length) return { components: [], invalidComponents: [] };
 
-    const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
+    const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await loadSpan('id-resolution', { ids: ids.length }, () =>
+      this.groupAndUpdateIds(ids)
+    );
     this.logger.profileTrace('buildLoadGroups');
-    const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
+    const groupsToHandle = await loadSpan('build-load-groups', {}, () => this.buildLoadGroups(workspaceScopeIdsMap));
     this.logger.profileTrace('buildLoadGroups');
     // prefix your command with "BIT_LOG=*" to see the detailed groups
     if (process.env.BIT_LOG) {
@@ -191,12 +213,17 @@ export class WorkspaceComponentLoader {
     const groupsRes = compact(
       await mapSeries(groupsToHandle, async (group, index) => {
         const { scopeIds, workspaceIds, aspects, core, seeders, envs } = group;
-        const groupDesc = `getMany-${callId} group ${index + 1}/${groupsToHandle.length} - ${loadGroupToStr(group)}`;
+        const groupStr = loadGroupToStr(group);
+        const groupDesc = `getMany-${callId} group ${index + 1}/${groupsToHandle.length} - ${groupStr}`;
         this.logger.profileTrace(groupDesc);
         if (!workspaceIds.length && !scopeIds.length) {
           throw new Error('getAndLoadSlotOrdered - group has no ids to load');
         }
-        const res = await this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs });
+        const res = await loadSpan(
+          'load-group',
+          { group: `${index + 1}/${groupsToHandle.length}`, desc: groupStr },
+          () => this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs })
+        );
         this.logger.profileTrace(groupDesc);
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
@@ -413,7 +440,9 @@ export class WorkspaceComponentLoader {
     });
     if (loadOpts.loadExtensions) {
       this.logger.profileTrace('loadComponentsExtensions');
-      await this.workspace.loadComponentsExtensions(filteredMergeExtensions);
+      await loadSpan('load-components-extensions', { extensions: filteredMergeExtensions.length }, () =>
+        this.workspace.loadComponentsExtensions(filteredMergeExtensions)
+      );
       this.logger.profileTrace('loadComponentsExtensions');
     }
     let wsComponentsWithAspects = workspaceComponents;
@@ -433,16 +462,20 @@ export class WorkspaceComponentLoader {
     // so we will get wrong dependencies from component who uses envs from the workspace
     this.logger.profileTrace('loadCompsAsAspects');
     if (loadOpts.loadSeedersAsAspects || (loadOpts.core && loadOpts.aspects)) {
-      await this.loadCompsAsAspects(workspaceComponents.concat(scopeComponents), {
-        loadApps: true,
-        loadEnvs: true,
-        loadAspects: loadOpts.aspects,
-        core: loadOpts.core,
-        seeders: loadOpts.seeders,
-        idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
-      });
+      await loadSpan('load-comps-as-aspects', { components: workspaceComponents.length + scopeComponents.length }, () =>
+        this.loadCompsAsAspects(workspaceComponents.concat(scopeComponents), {
+          loadApps: true,
+          loadEnvs: true,
+          loadAspects: loadOpts.aspects,
+          core: loadOpts.core,
+          seeders: loadOpts.seeders,
+          idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
+        })
+      );
     }
     this.logger.profileTrace('loadCompsAsAspects');
+
+    this.attachReportedLoadFailures(withAspects);
 
     return { components: withAspects, invalidComponents };
   }
@@ -485,14 +518,81 @@ export class WorkspaceComponentLoader {
       await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', { useScopeAspectsCapsule: true });
     } catch (err: any) {
       this.logger.warn(`failed loading components as aspects for components ${aspectIds.join(', ')}`, err);
-      // we ignore that errors at the moment
+      // the error is not thrown (best-effort loading), but it's surfaced as a component issue
+      // so it shows up in "bit status" instead of disappearing.
+      if (!this.workspace.inInstallContext) {
+        const errMsg = err.message || String(err);
+        aspectIds.forEach((aspectId) => {
+          reportLoadFailure({ failedId: aspectId, phase: 'load-comps-as-aspects', error: errMsg });
+        });
+        components.forEach((component) => {
+          if (!aspectIds.includes(component.id.toString())) return;
+          this.addLoadFailureIssue(component, component.id.toString(), 'load-comps-as-aspects', errMsg);
+        });
+      }
     }
   }
 
+  private addLoadFailureIssue(component: Component, failedId: string, phase: string, error: string) {
+    const consumerComponent = component.state._consumer;
+    if (!consumerComponent) return;
+    const issue = component.state.issues.getOrCreate(IssuesClasses.LoadFailures);
+    const alreadyReported = issue.data.some((entry) => entry.failedId === failedId && entry.phase === phase);
+    if (!alreadyReported) issue.data.push({ failedId, phase, error });
+  }
+
+  /**
+   * surface load failures that were reported to the active trace by deep loader code (e.g. aspect
+   * require failures in the scope loader). the failing component itself gets a per-component
+   * issue. components merely *using* the failed aspect/env are aggregated into a single
+   * workspace-level issue — one failing env may be used by 100 components, and attaching the
+   * issue to each of them would flood "bit status".
+   */
+  private attachReportedLoadFailures(components: Component[]) {
+    if (this.workspace.inInstallContext) return;
+    const failures = currentLoadTrace()?.loadFailures;
+    if (!failures?.length) return;
+    const noVersion = (id: string) => id.split('@')[0];
+    components.forEach((component) => {
+      const componentIdStr = component.id.toString();
+      const usedIds: string[] = component.state._consumer
+        ? component.state._consumer.extensions.map((ext) => ext.stringId)
+        : [];
+      // the env may be set via the EnvsAspect config rather than as a direct extension entry, in
+      // which case its id won't appear in the extensions list above. include it explicitly so a
+      // failure loading that env still gets aggregated to this component.
+      const envId = component.state.aspects.get(EnvsAspect.id)?.data?.id;
+      if (envId) usedIds.push(envId);
+      failures.forEach((failure) => {
+        if (noVersion(failure.failedId) === noVersion(componentIdStr)) {
+          this.addLoadFailureIssue(component, failure.failedId, failure.phase, failure.error);
+          return;
+        }
+        if (usedIds.some((usedId) => noVersion(usedId) === noVersion(failure.failedId))) {
+          this.workspace.registerAggregatedLoadFailure(failure, componentIdStr);
+        }
+      });
+    });
+  }
+
   private async populateScopeAndExtensionsCache(ids: ComponentID[], workspaceScopeIdsMap: WorkspaceScopeIdsMap) {
-    return mapSeries(ids, async (id) => {
+    return loadSpan('populate-scope-and-extensions-cache', { ids: ids.length }, (span) =>
+      this.populateScopeAndExtensionsCacheWithSpan(ids, workspaceScopeIdsMap, span)
+    );
+  }
+
+  private async populateScopeAndExtensionsCacheWithSpan(
+    ids: ComponentID[],
+    workspaceScopeIdsMap: WorkspaceScopeIdsMap,
+    span: LoadSpan
+  ) {
+    let scopeCacheHits = 0;
+    let extensionsCacheHits = 0;
+    const result = await mapSeries(ids, async (id) => {
       const idStr = id.toString();
       let componentFromScope;
+      if (this.scopeComponentsCache.has(idStr)) scopeCacheHits += 1;
+      if (this.componentsExtensionsCache.has(idStr)) extensionsCacheHits += 1;
       if (!this.scopeComponentsCache.has(idStr)) {
         try {
           // Do not import automatically if it's missing, it will throw an error later
@@ -520,6 +620,10 @@ export class WorkspaceComponentLoader {
         this.componentsExtensionsCache.set(idStr, { extensions, errors, envId });
       }
     });
+    span.setAttribute('scopeComponentsCache:hits', scopeCacheHits);
+    span.setAttribute('scopeComponentsCache:misses', ids.length - scopeCacheHits);
+    span.setAttribute('componentsExtensionsCache:hits', extensionsCacheHits);
+    return result;
   }
 
   private async warnAboutMisconfiguredEnvs(components: Component[]) {
@@ -587,10 +691,8 @@ export class WorkspaceComponentLoader {
       components: legacyComponents,
       invalidComponents: legacyInvalidComponents,
       removedComponents,
-    } = await this.workspace.consumer.loadComponents(
-      ComponentIdList.fromArray(workspaceIds),
-      false,
-      loadOptsWithDefaults
+    } = await loadSpan('consumer-fs-load', { ids: workspaceIds.length }, () =>
+      this.workspace.consumer.loadComponents(ComponentIdList.fromArray(workspaceIds), false, loadOptsWithDefaults)
     );
     this.logger.profileTrace('consumer.loadComponents');
     const allLegacyComponents = legacyComponents.concat(removedComponents);
@@ -659,7 +761,9 @@ export class WorkspaceComponentLoader {
     // as when loading the next batch of components (next group) we won't have the envs loaded
 
     try {
-      const scopeComponents = await this.workspace.scope.getMany(scopeIds);
+      const scopeComponents = await loadSpan('scope-load', { ids: scopeIds.length }, () =>
+        this.workspace.scope.getMany(scopeIds)
+      );
 
       // We don't want to load envs as part of this step, they will be loaded later
       // const scopeComponents = await this.workspace.scope.loadMany(scopeIds, undefined, {
@@ -709,6 +813,20 @@ export class WorkspaceComponentLoader {
     loadOpts?: ComponentLoadOptions,
     getOpts: ComponentGetOneOptions = { resolveIdVersion: true }
   ): Promise<Component> {
+    return startOrJoinLoadTrace('workspace.get', { id: componentId.toString() }, (span) =>
+      this.getWithSpan(componentId, span, legacyComponent, useCache, storeInCache, loadOpts, getOpts)
+    );
+  }
+
+  private async getWithSpan(
+    componentId: ComponentID,
+    span: LoadSpan,
+    legacyComponent?: ConsumerComponent,
+    useCache = true,
+    storeInCache = true,
+    loadOpts?: ComponentLoadOptions,
+    getOpts: ComponentGetOneOptions = { resolveIdVersion: true }
+  ): Promise<Component> {
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       { loadExtensions: true, executeLoadSlot: true },
       loadOpts || {}
@@ -716,17 +834,22 @@ export class WorkspaceComponentLoader {
     const id = getOpts?.resolveIdVersion ? this.resolveVersion(componentId) : componentId;
     const fromCache = this.getFromCache(id, loadOptsWithDefaults);
     if (fromCache && useCache) {
+      span.setAttribute('componentsCache', 'hit');
       return fromCache;
     }
+    span.setAttribute('componentsCache', 'miss');
     let consumerComponent = legacyComponent;
     const inWs = await this.isInWsIncludeDeleted(id);
     if (inWs && !consumerComponent) {
-      consumerComponent = await this.getConsumerComponent(id, loadOptsWithDefaults);
+      consumerComponent = await loadSpan('consumer-fs-load', { id: id.toString() }, () =>
+        this.getConsumerComponent(id, loadOptsWithDefaults)
+      );
     }
 
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? consumerComponent.id : id;
     const component = await this.loadOne(updatedId, consumerComponent, loadOptsWithDefaults);
+    this.attachReportedLoadFailures([component]);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
       this.saveInCache(component, loadOptsWithDefaults);
@@ -789,9 +912,10 @@ export class WorkspaceComponentLoader {
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, loadOpts?: ComponentLoadOptions) {
     const idStr = id.toString();
-    const componentFromScope = this.scopeComponentsCache.has(idStr)
+    const scopeCacheHit = this.scopeComponentsCache.has(idStr);
+    const componentFromScope = scopeCacheHit
       ? this.scopeComponentsCache.get(idStr)
-      : await this.workspace.scope.get(id);
+      : await loadSpan('scope-load', { id: idStr }, () => this.workspace.scope.get(id));
     if (!consumerComponent) {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
@@ -801,9 +925,14 @@ export class WorkspaceComponentLoader {
       : undefined;
     const { extensions, errors } =
       extErrorsFromCache ||
-      (await this.workspace.componentExtensions(id, componentFromScope, undefined, {
-        loadExtensions: loadOpts?.loadExtensions,
-      }));
+      (await loadSpan(
+        'extension-merge',
+        { id: idStr, scopeComponentsCache: scopeCacheHit ? 'hit' : 'miss', componentsExtensionsCache: 'miss' },
+        () =>
+          this.workspace.componentExtensions(id, componentFromScope, undefined, {
+            loadExtensions: loadOpts?.loadExtensions,
+          })
+      ));
     if (errors?.some((err) => err instanceof MergeConfigConflict)) {
       consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
     }
@@ -902,6 +1031,12 @@ export class WorkspaceComponentLoader {
   }
 
   private async executeLoadSlot(component: Component, loadOpts?: ComponentLoadOptions) {
+    return loadSpan('execute-load-slot', { id: component.id.toString() }, () =>
+      this.executeLoadSlotWithSpan(component, loadOpts)
+    );
+  }
+
+  private async executeLoadSlotWithSpan(component: Component, loadOpts?: ComponentLoadOptions) {
     if (component.state._consumer.removed) {
       // if it was soft-removed now, the component is not in the FS. loading aspects such as composition ends up with
       // errors as they try to read component files from the filesystem.
@@ -910,7 +1045,9 @@ export class WorkspaceComponentLoader {
 
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
-    const envsData = await this.envs.calcDescriptor(component, { skipWarnings: !!this.workspace.inInstallContext });
+    const envsData = await loadSpan('env-calc', {}, () =>
+      this.envs.calcDescriptor(component, { skipWarnings: !!this.workspace.inInstallContext })
+    );
 
     const wsDeps = component.state._consumer.dependencies.dependencies || [];
     const modelDeps = component.state._consumer.componentFromModel?.dependencies.dependencies || [];
@@ -918,17 +1055,20 @@ export class WorkspaceComponentLoader {
     const envExtendsDeps = merged.get();
 
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
-    const policy = await this.dependencyResolver.mergeVariantPolicies(
-      component.config.extensions,
-      component.id,
-      component.state._consumer.files,
-      envExtendsDeps
-    );
-    const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
-    const resolvedEnvJsonc = await this.envs.calculateEnvManifest(
-      component,
-      component.state._consumer.files,
-      envExtendsDeps
+    const { policy, dependenciesList } = await loadSpan('dependency-resolution', {}, async () => {
+      const mergedPolicy = await this.dependencyResolver.mergeVariantPolicies(
+        component.config.extensions,
+        component.id,
+        component.state._consumer.files,
+        envExtendsDeps
+      );
+      return {
+        policy: mergedPolicy,
+        dependenciesList: await this.dependencyResolver.extractDepsFromLegacy(component, mergedPolicy),
+      };
+    });
+    const resolvedEnvJsonc = await loadSpan('env-manifest', {}, () =>
+      this.envs.calculateEnvManifest(component, component.state._consumer.files, envExtendsDeps)
     );
     if (resolvedEnvJsonc) {
       // @ts-ignore
@@ -957,7 +1097,7 @@ export class WorkspaceComponentLoader {
 
     const entries = this.workspace.onComponentLoadSlot.toArray();
     await mapSeries(entries, async ([extension, onLoad]) => {
-      const data = await onLoad(component, loadOpts);
+      const data = await loadSpan('on-load', { aspect: extension }, () => onLoad(component, loadOpts));
       await this.upsertExtensionData(component, extension, data);
       // Update the aspect list to have changes happened during the on load slot (new data added above)
       component.state.aspects.upsertEntry(await this.workspace.resolveComponentId(extension), data);

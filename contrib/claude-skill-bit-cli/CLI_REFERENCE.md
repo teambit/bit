@@ -146,8 +146,8 @@ Runs lint, build, and status checks to catch dependency drift or broken builds e
 
 Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.
 
-Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.
-Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-lane
+Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. By default it then restores the workspace by switching back to main; pass --skip-cleanup to skip that restore when the workspace is about to be discarded (e.g. an ephemeral CI container). PR builds run the full pipeline by default; to trade specific tasks for speed on a given PR, add a [skip-tasks: ...] token to the commit message (e.g. [skip-tasks: GeneratePreview,ExtractSchema]), which merges with any --skip-tasks flag. Use in pull-request CI pipelines after tests and before deploy.
+Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-lane, --skip-cleanup, --skip-tasks <tasks>
 
 ## bit ci merge
 
@@ -218,11 +218,11 @@ show components that depend on the specified component
 displays components from both workspace and scope that depend on the specified component. useful for understanding impact before making changes to a component or when planning refactoring. shows both direct and transitive dependents organized by their origin (workspace vs scope).
 Flags: --json
 
-## bit deprecate <component-name>
+## bit deprecate <component-pattern>
 
-mark a component as deprecated to discourage its use
+mark components as deprecated to discourage their use
 
-marks a component as deprecated locally, then after snap/tag and export it becomes deprecated in the remote scope. optionally specify a replacement component or deprecate only specific version ranges. deprecated components remain available but display warnings when installed or imported.
+marks components as deprecated locally, then after snap/tag and export they become deprecated in the remote scope. the pattern can match multiple components, so several can be deprecated at once. optionally specify a replacement component (single component only) or deprecate only specific version ranges. deprecated components remain available but display warnings when installed or imported.
 Flags: --new-id <string>, --range <string>
 
 ## bit deps <sub-command>
@@ -955,11 +955,11 @@ run component tests
 executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.). by default only runs tests for new and modified components. use --unmodified to test all components. to run specific test files only, pass their paths instead of a component pattern, e.g. "bit test path/to/comp/my-comp.spec.ts". supports watch mode, coverage reporting, and debug mode for development workflows.
 Flags: --watch, --debug, --unmodified, --junit <filepath>, --coverage, --env <id>, --update-snapshot, --json, --verbose, --summary
 
-## bit undeprecate <id>
+## bit undeprecate <component-pattern>
 
-remove the deprecation status from a component
+remove the deprecation status from components
 
-reverses the deprecation of a component, removing warnings and allowing normal use again.
+reverses the deprecation of components, removing warnings and allowing normal use again. the pattern can match multiple components, so several can be undeprecated at once.
 
 ## bit uninstall [packages...]
 
