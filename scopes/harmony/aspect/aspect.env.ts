@@ -1,42 +1,48 @@
-import { JestTask, jestWorkerPath } from '@teambit/defender.jest-tester';
+import { JestTask, JestTester, jestWorkerPath } from '@teambit/defender.jest-tester';
 import type { JestWorker } from '@teambit/defender.jest-tester';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { BabelCompiler } from '@teambit/compilation.babel-compiler';
 import type { Compiler, CompilerMain } from '@teambit/compiler';
-import type {
-  DependenciesEnv,
-  PackageEnv,
-  PipeServiceModifier,
-  PipeServiceModifiersMap,
-  PreviewEnv,
-} from '@teambit/envs';
-import { merge } from 'lodash';
+import type { DependenciesEnv, PackageEnv, PipeServiceModifier, PipeServiceModifiersMap } from '@teambit/envs';
+import { merge, cloneDeep } from 'lodash';
 import type { PackageJsonProps } from '@teambit/pkg';
 import type { TsConfigSourceFile } from 'typescript';
-import type { ReactEnv } from '@teambit/react';
+import ts from 'typescript';
 import type { BuildTask } from '@teambit/builder';
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import type { Bundler, BundlerContext } from '@teambit/bundler';
-import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { Tester } from '@teambit/tester';
-import type { PreviewStrategyName } from '@teambit/preview';
-import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
+import type { LinterContext, Linter } from '@teambit/linter';
+import type { FormatterContext, Formatter } from '@teambit/formatter';
+import type { ESLint as ESLintLib } from 'eslint';
 import type { ConfigWriterEntry } from '@teambit/workspace-config-files';
-import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
+import { PrettierConfigWriter, PrettierFormatter } from '@teambit/defender.prettier-formatter';
+import type {
+  PrettierConfigTransformContext,
+  PrettierConfigTransformer,
+} from '@teambit/defender.prettier.config-mutator';
+import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
 import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
-import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
+import { EslintConfigWriter, ESLintLinter } from '@teambit/defender.eslint-linter';
+import type { ESLintOptions } from '@teambit/defender.eslint-linter';
+import type { EslintConfigTransformContext, EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
+import { EslintConfigMutator } from '@teambit/defender.eslint.config-mutator';
 import type { Logger } from '@teambit/logger';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import type { WorkerMain } from '@teambit/worker';
 
 import type { DevFilesMain } from '@teambit/dev-files';
-import type { TsConfigTransformer } from '@teambit/typescript';
+import type { TsConfigTransformer, TypescriptMain, TypeScriptCompilerOptions } from '@teambit/typescript';
+import type { SchemaExtractor } from '@teambit/schema';
 import type { TesterTask } from '@teambit/defender.tester-task';
 
 import { babelConfig } from './babel/babel-config';
 
 const tsconfig = require('./typescript/tsconfig.json');
+const baseTsConfig = require('./typescript/tsconfig.base.json');
+const buildTsConfig = require('./typescript/tsconfig.build.json');
+const eslintConfig = require('./eslint/eslintrc');
+const prettierConfig = require('./prettier/prettier.config.js');
 
 export const AspectEnvType = 'aspect';
 
@@ -45,12 +51,21 @@ type GetBuildPipeModifiers = PipeServiceModifiersMap & {
   jestModifier?: PipeServiceModifier;
 };
 
+export function runTransformersWithContext<P, T extends Function, C>(config: P, transformers: T[] = [], context: C): P {
+  if (!Array.isArray(transformers)) return config;
+  const newConfig = transformers.reduce((acc, transformer) => {
+    return transformer(acc, context);
+  }, config);
+  return newConfig;
+}
+
 /**
- * a component environment built for Aspects .
+ * a component environment built for Aspects. standalone - built directly on top of the core
+ * typescript/babel/jest tooling (it used to extend the react env, which is no longer a core aspect).
  */
-export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
+export class AspectEnv implements DependenciesEnv, PackageEnv {
   constructor(
-    private reactEnv: ReactEnv,
+    private tsAspect: TypescriptMain,
     private aspectLoader: AspectLoaderMain,
     private devFiles: DevFilesMain,
     private compiler: CompilerMain,
@@ -66,15 +81,33 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     };
   }
 
-  getTsConfig(tsConfig: TsConfigSourceFile) {
-    const targetConf = merge(tsconfig, tsConfig);
+  getTsConfig(tsConfig?: TsConfigSourceFile) {
+    const targetConf = merge(cloneDeep(tsconfig), tsConfig);
     return targetConf;
   }
 
-  // TODO: should probably use the transformer from the main runtime?
-  // TODO: this doesn't seems to work as expected, the getTsConfig is not a transformer and the react env API expect a transformers array not an object
+  private createTsCompilerOptions(mode: 'dev' | 'build' = 'dev'): TypeScriptCompilerOptions {
+    const baseConfig = mode === 'dev' ? cloneDeep(baseTsConfig) : cloneDeep(buildTsConfig);
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    return {
+      tsconfig: baseConfig,
+      types: [resolve(pathToSource, './typescript/style.d.ts'), resolve(pathToSource, './typescript/asset.d.ts')],
+      compileJs: true,
+      compileJsx: true,
+    };
+  }
+
+  createTsCjsCompiler(mode: 'dev' | 'build' = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const tsCompileOptions = this.createTsCompilerOptions(mode);
+    return this.tsAspect.createCjsCompiler(tsCompileOptions, transformers, tsModule);
+  }
+
   createTsCompiler(tsConfig: TsConfigSourceFile): Compiler {
-    return this.reactEnv.getTsCjsCompiler(this.getTsConfig(tsConfig));
+    const mergeConfTransformer: TsConfigTransformer = (configMutator) => {
+      configMutator.mergeTsConfig(this.getTsConfig(tsConfig));
+      return configMutator;
+    };
+    return this.createTsCjsCompiler('dev', [mergeConfTransformer]);
   }
 
   getCompiler(): Compiler {
@@ -97,7 +130,53 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
    */
   getTester(jestConfigPath: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.reactEnv.createCjsJestTester(config, jestModulePath);
+    const worker = this.getJestWorker();
+    return JestTester.create(
+      {
+        jest: jestModulePath || require.resolve('jest'),
+        config,
+      },
+      { logger: this.logger, worker, devFiles: this.devFiles }
+    );
+  }
+
+  /**
+   * returns the component linter.
+   */
+  getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
+    const tsconfigPath = require.resolve('./typescript/tsconfig.json');
+    const mergedOptions = {
+      // @ts-ignore - this is a bug in the @types/eslint types
+      overrideConfig: eslintConfig as ESLintLib.Options,
+      extensions: context.extensionFormats,
+      useEslintrc: false,
+      cwd: __dirname,
+      fix: !!context.fix,
+      fixTypes: context.fixTypes as ESLintLib.Options['fixTypes'],
+    } as ESLintOptions;
+    const configMutator = new EslintConfigMutator(mergedOptions);
+    const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
+    configMutator.setTsConfig(tsconfigPath);
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    return ESLintLinter.create(afterMutation.raw, { logger: this.logger });
+  }
+
+  /**
+   * returns the component formatter.
+   */
+  getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
+    const configMutator = new PrettierConfigMutator(prettierConfig);
+    const transformerContext: PrettierConfigTransformContext = { check: !!context?.check };
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    return PrettierFormatter.create({ config: afterMutation.raw }, { logger: this.logger });
+  }
+
+  getSchemaExtractor(
+    tsconfigSource?: TsConfigSourceFile,
+    tsserverPath?: string,
+    contextPath?: string
+  ): SchemaExtractor {
+    return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfigSource), tsserverPath, contextPath);
   }
 
   /**
@@ -114,7 +193,8 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     };
     // @ts-ignore
     const externalTransformer: TsConfigTransformer[] = modifiers?.tsModifier?.transformers || [];
-    const tsCompilerTask = this.reactEnv.getCjsCompilerTask([transformer, ...externalTransformer]);
+    const tsCjsCompiler = this.createTsCjsCompiler('build', [transformer, ...externalTransformer]);
+    const tsCompilerTask = this.compiler.createTask('TSCompiler', tsCjsCompiler);
     const babelCompiler = this.getBabelCompiler();
     const babelCompilerTask = this.compiler.createTask('BabelCompiler', babelCompiler);
     const jestTesterTask = this.getJestTesterTask();
@@ -138,20 +218,9 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     return this.worker.declareWorker<JestWorker>('jest', jestWorkerPath);
   }
 
-  async getTemplateBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    return this.createTemplateWebpackBundler(context, transformers);
-  }
-
-  async createTemplateWebpackBundler(
-    context: BundlerContext,
-    transformers: WebpackConfigTransformer[] = []
-  ): Promise<Bundler> {
-    return this.reactEnv.createTemplateWebpackBundler(context, transformers);
-  }
-
   getPackageJsonProps(): PackageJsonProps {
     return {
-      ...this.reactEnv.getCjsPackageJsonProps(),
+      ...this.tsAspect.getCjsPackageJsonProps(),
       exports: {
         node: {
           require: './dist/{main}.js',
@@ -164,13 +233,6 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
 
   getNpmIgnore() {
     return [`${CAPSULE_ARTIFACTS_DIR}/*`];
-  }
-
-  getPreviewConfig() {
-    return {
-      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
-      splitComponentBundle: false,
-    };
   }
 
   async getDependencies() {

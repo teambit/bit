@@ -119,6 +119,10 @@ export class CompilerMain {
     if (issuesToIgnore.includes(IssuesClasses.MissingDists.name)) return;
     await Promise.all(
       components.map(async (component) => {
+        const environment = this.envs.getOrCalculateEnv(component).env;
+        // an env without a compiler (e.g. the default empty-env) has no dists, the component is
+        // used as-source.
+        if (!environment.getCompiler) return;
         const exist = await this.isDistDirExists(component);
         if (!exist) {
           component.state.issues.getOrCreate(IssuesClasses.MissingDists).data = true;

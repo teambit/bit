@@ -17,7 +17,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { Logger } from '@teambit/logger';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect, DEFAULT_ENV } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
@@ -271,15 +271,6 @@ export class WorkspaceComponentLoader {
         }
       });
     });
-    // components with no env configured use the default env. as the default env is not a core
-    // aspect anymore, add it to the load groups so it gets loaded like any other env.
-    const hasComponentsWithoutEnv = allIds.some((id) => {
-      const fromCache = this.componentsExtensionsCache.get(id.toString());
-      return fromCache && !fromCache.envId;
-    });
-    if (hasComponentsWithoutEnv) {
-      nameOnlyLegacyEnvExtensions.add(DEFAULT_ENV);
-    }
     await Promise.all(
       Array.from(nameOnlyLegacyEnvExtensions).map(async (envIdStr) => {
         if (allExtIds.has(envIdStr)) return;
@@ -297,11 +288,6 @@ export class WorkspaceComponentLoader {
       const idStr = id.toString();
       const fromCache = this.componentsExtensionsCache.get(idStr);
       if (!fromCache) {
-        return;
-      }
-      if (!fromCache.envId) {
-        // components with no env configured use the default env
-        envsIdsOfWsComps.add(DEFAULT_ENV);
         return;
       }
       const envId = fromCache.envId;

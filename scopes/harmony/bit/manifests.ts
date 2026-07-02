@@ -1,3 +1,4 @@
+import { AspectAspect } from '@teambit/aspect';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BuilderAspect } from '@teambit/builder';
 import { BundlerAspect } from '@teambit/bundler';
@@ -12,6 +13,8 @@ import { DeprecationAspect } from '@teambit/deprecation';
 import { InternalizeAspect } from '@teambit/internalize';
 import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/envs';
+import { EnvAspect } from '@teambit/env';
+import { EmptyEnvAspect } from '@teambit/empty-env';
 import { ExpressAspect } from '@teambit/express';
 import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
@@ -137,6 +140,8 @@ export const manifestsMap = {
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
+  [EnvAspect.id]: EnvAspect,
+  [EmptyEnvAspect.id]: EmptyEnvAspect,
   [GraphAspect.id]: GraphAspect,
   [PubsubAspect.id]: PubsubAspect,
   [DependencyResolverAspect.id]: DependencyResolverAspect,
@@ -155,6 +160,7 @@ export const manifestsMap = {
   [DeprecationAspect.id]: DeprecationAspect,
   [InternalizeAspect.id]: InternalizeAspect,
   [ExpressAspect.id]: ExpressAspect,
+  [AspectAspect.id]: AspectAspect,
   [WebpackAspect.id]: WebpackAspect,
   [SchemaAspect.id]: SchemaAspect,
   [ReactRouterAspect.id]: ReactRouterAspect,

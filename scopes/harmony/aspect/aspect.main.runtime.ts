@@ -10,8 +10,8 @@ import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
 import type { Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { EnvContext, EnvsAspect } from '@teambit/envs';
-import type { ReactEnv, ReactMain } from '@teambit/react';
-import { ReactAspect } from '@teambit/react';
+import type { TypescriptMain } from '@teambit/typescript';
+import { TypescriptAspect } from '@teambit/typescript';
 import type { GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
 import { ComponentID } from '@teambit/component-id';
@@ -51,15 +51,15 @@ export class AspectMain {
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
       getDependencies: async () => {
-        const reactDeps = await this.aspectEnv.getDependencies();
-        return merge(reactDeps, dependencyPolicy);
+        const aspectDeps = await this.aspectEnv.getDependencies();
+        return merge(aspectDeps, dependencyPolicy);
       },
     });
   }
 
   static runtime = MainRuntime;
   static dependencies = [
-    ReactAspect,
+    TypescriptAspect,
     EnvsAspect,
     BuilderAspect,
     AspectLoaderAspect,
@@ -71,8 +71,8 @@ export class AspectMain {
   ];
 
   static async provider(
-    [react, envs, builder, aspectLoader, compiler, generator, loggerMain, workerMain, devFilesMain]: [
-      ReactMain,
+    [tsAspect, envs, builder, aspectLoader, compiler, generator, loggerMain, workerMain, devFilesMain]: [
+      TypescriptMain,
       EnvsMain,
       BuilderMain,
       AspectLoaderMain,
@@ -88,10 +88,7 @@ export class AspectMain {
   ) {
     const logger = loggerMain.createLogger(AspectAspect.id);
 
-    const aspectEnv = envs.merge<AspectEnv, ReactEnv>(
-      new AspectEnv(react.reactEnv, aspectLoader, devFilesMain, compiler, workerMain, logger),
-      react.reactEnv
-    );
+    const aspectEnv = new AspectEnv(tsAspect, aspectLoader, devFilesMain, compiler, workerMain, logger);
 
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);
     if (!__dirname.includes('@teambit/bit')) {
@@ -100,11 +97,11 @@ export class AspectMain {
 
     envs.registerEnv(aspectEnv);
     if (generator) {
-      const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
+      const envContext = new EnvContext(ComponentID.fromString(AspectAspect.id), loggerMain, workerMain, harmony);
       generator.registerComponentTemplate(() => getTemplates(envContext));
       generator.registerWorkspaceTemplate(() => getStarters(envContext));
     }
-    const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs);
+    const aspectMain = new AspectMain(aspectEnv, envs);
 
     return aspectMain;
   }

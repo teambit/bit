@@ -42,7 +42,13 @@
         "scope": "teambit.toolbox",
         "version": "0.0.3",
         "mainFile": "find-duplications.ts",
-        "rootDir": "scopes/toolbox/array/duplications-finder"
+        "rootDir": "scopes/toolbox/array/duplications-finder",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
     },
     "aspect": {
         "name": "aspect",
@@ -308,7 +314,13 @@
         "scope": "teambit.legacy",
         "version": "0.0.45",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/cli/error"
+        "rootDir": "components/legacy/cli/error",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
     },
     "cli/webpack-events-listener": {
         "name": "cli/webpack-events-listener",
@@ -582,6 +594,20 @@
         "version": "1.0.1042",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
+    },
+    "empty-env": {
+        "name": "empty-env",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/empty-env",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
     },
     "entities/lane-diff": {
         "name": "entities/lane-diff",
@@ -896,7 +922,13 @@
         "scope": "teambit.toolbox",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/json/jsonc-utils"
+        "rootDir": "scopes/toolbox/json/jsonc-utils",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
     },
     "lanes": {
         "name": "lanes",
@@ -938,7 +970,13 @@
         "scope": "teambit.mcp",
         "version": "0.0.9",
         "mainFile": "index.ts",
-        "rootDir": "components/mcp/mcp-config-writer"
+        "rootDir": "components/mcp/mcp-config-writer",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
     },
     "mdx": {
         "name": "mdx",
@@ -1064,7 +1102,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.41",
         "mainFile": "feature-toggle.ts",
-        "rootDir": "scopes/harmony/modules/feature-toggle"
+        "rootDir": "scopes/harmony/modules/feature-toggle",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
     },
     "modules/fetch-html-from-url": {
         "name": "modules/fetch-html-from-url",
@@ -1162,7 +1206,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/modules/load-trace"
+        "rootDir": "scopes/harmony/modules/load-trace",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
     },
     "modules/match-pattern": {
         "name": "modules/match-pattern",
@@ -1183,7 +1233,13 @@
         "scope": "teambit.component",
         "version": "0.0.73",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/modules/merge-helper"
+        "rootDir": "scopes/component/modules/merge-helper",
+        "config": {
+            "teambit.harmony/node": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/node"
+            }
+        }
     },
     "modules/module-resolver": {
         "name": "modules/module-resolver",

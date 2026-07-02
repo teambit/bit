@@ -108,7 +108,7 @@ export type EnvCompDescriptor = EnvCompDescriptorProps & {
 
 export type Descriptor = RegularCompDescriptor | EnvCompDescriptor;
 
-export const DEFAULT_ENV = 'teambit.harmony/node';
+export const DEFAULT_ENV = 'teambit.harmony/empty-env';
 
 export class EnvsMain {
   /**
@@ -225,26 +225,21 @@ export class EnvsMain {
   }
 
   /**
-   * get the configured default env.
+   * get the configured default env - the empty-env, a core aspect that is always loaded.
    */
   getDefaultEnv(): EnvDefinition {
     const defaultEnv = this.envSlot.get(DEFAULT_ENV);
     if (defaultEnv) return new EnvDefinition(DEFAULT_ENV, defaultEnv);
-    // the default env is not a core aspect anymore. when it is loaded (as a regular env), it is
-    // registered to the slot with a version. find it by matching the id ignoring the version.
-    const loadedDefaultEnv = this.getEnvFromSlotIgnoreVersion(DEFAULT_ENV);
-    if (loadedDefaultEnv) return loadedDefaultEnv;
-    // the default env was not loaded (probably not installed yet). return a minimal env
-    // definition so basic commands (e.g. "bit status" before "bit install") can still function.
+    // should not happen (the default env is a core aspect), a safety net for early-bootstrap calls.
     return new EnvDefinition(DEFAULT_ENV, this.getFallbackDefaultEnv());
   }
 
   private fallbackDefaultEnv: Environment | undefined;
   /**
-   * a bare-minimum env used when the default env (which is not a core aspect anymore) was not
-   * loaded yet. it provides a basic typescript transpiler (needed e.g. for compiling aspects/envs
-   * in capsules when their env is not loaded), and allows bit to keep functioning until
-   * "bit install" installs the real env.
+   * a bare-minimum env used for components whose env failed to load (e.g. an env that used to be
+   * a core aspect and was not installed yet, or a custom env that failed loading). it provides a
+   * basic typescript transpiler (needed e.g. for compiling aspects/envs in capsules when their
+   * env is not loaded), and allows bit to keep functioning until "bit install" installs the env.
    */
   private getFallbackDefaultEnv(): Environment {
     if (!this.fallbackDefaultEnv) {
@@ -258,11 +253,12 @@ export class EnvsMain {
   }
 
   /**
-   * envs are no longer part of the core aspects. this is kept for backward compatibility of the
-   * API and returns an empty list. see getLegacyCoreEnvsIds() for the envs that used to be core.
+   * ids of the envs that are core aspects (bundled with the bit binary and saved in components
+   * models without a version). most envs that used to be core were removed to keep bit slim, see
+   * getLegacyCoreEnvsIds() for those.
    */
   getCoreEnvsIds(): string[] {
-    return [];
+    return [DEFAULT_ENV, 'teambit.harmony/aspect', 'teambit.envs/env'];
   }
 
   /**
@@ -575,20 +571,36 @@ export class EnvsMain {
    */
   async getEnvComponent(component: Component): Promise<Component> {
     const envId = this.getEnvId(component);
-    // the env of the component might be the component itself. e.g. the default env (which used
-    // to be a core aspect) was not loaded, so a component of the default env itself falls back
-    // to itself. getting it from the host here would cause an infinite loop of loading it.
+    // the env of the component might be the component itself. e.g. an env whose own env was not
+    // loaded falls back to itself. getting it from the host here would cause an infinite loop of
+    // loading it.
     if (envId.split('@')[0] === component.id.toStringWithoutVersion()) {
       return component;
     }
-    return this.getEnvComponentByEnvId(envId, component.id.toString());
+    const envComponent = await this.getEnvComponentByEnvId(envId, component.id.toString());
+    if (!envComponent) {
+      throw new BitError(
+        `unable to get the env component of ${component.id.toString()}, its env ${envId} was not found`
+      );
+    }
+    return envComponent;
   }
 
   /**
    * get the env component by the env id.
    */
-  async getEnvComponentByEnvId(envId: string, requesting?: string): Promise<Component> {
+  async getEnvComponentByEnvId(envId: string, requesting?: string): Promise<Component | undefined> {
     const host = this.componentMain.getHost();
+    if (this.isCoreEnv(envId.split('@')[0])) {
+      // core envs are loaded from the binary. their env-component is needed only for extra
+      // metadata and may not exist anywhere (e.g. when it was not exported yet). best effort.
+      try {
+        const newId = await host.resolveComponentId(envId);
+        return await host.get(newId);
+      } catch {
+        return undefined;
+      }
+    }
     const newId = await host.resolveComponentId(envId);
     const envComponent = await host.get(newId);
     if (!envComponent) {
@@ -1070,6 +1082,7 @@ if needed, use "bit env set" command to align the env id`;
         return true;
       }
       const envComponent = await this.getEnvComponentByEnvId(id);
+      if (!envComponent) return false;
       const hasManifest = this.hasEnvManifest(envComponent);
       if (hasManifest) return true;
       const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
