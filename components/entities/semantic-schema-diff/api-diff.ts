@@ -1,17 +1,44 @@
-import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
+import type { APISchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { deepEqualNoLocation as deepEqual } from '@teambit/semantics.entities.semantic-schema';
 import type { APIDiffResult, APIDiffChange, SchemaAvailability, APIDiffComputeStatus } from './api-diff-change';
 import { APIDiffStatus } from './api-diff-change';
 import type { ImpactLevel } from './impact-rule';
 import type { ImpactAssessor, AssessedChange } from './impact-assessor';
 import { worstImpact } from './impact-assessor';
-import { buildExportMap, buildInternalMap, getSchemaTypeName, getDisplayName, toComparableObject } from './utils';
+import {
+  buildExportMap,
+  buildInternalMap,
+  getSchemaTypeName,
+  getDisplayName,
+  getExportName,
+  unwrapExport,
+  toComparableObject,
+} from './utils';
+
+/**
+ * Names of exports the extractor couldn't resolve on a side — it produced an `UnImplementedSchema`
+ * placeholder (no signature, no structure) rather than a real schema node. These are extraction gaps,
+ * not API surface, and must never be diffed as added/removed/modified. We collect them so the diff can
+ * (a) suppress the phantom add/remove they'd otherwise cause and (b) surface them as a distinct
+ * "couldn't analyze" state instead of a meaningful change.
+ */
+function collectUnresolvedNames(exports: SchemaNode[]): Set<string> {
+  const names = new Set<string>();
+  for (const exp of exports) {
+    if (getSchemaTypeName(unwrapExport(exp)) === 'UnImplementedSchema') {
+      const name = getExportName(exp);
+      if (name) names.add(name);
+    }
+  }
+  return names;
+}
 
 function diffExports(
   baseExports: ReturnType<typeof buildExportMap>,
   compareExports: ReturnType<typeof buildExportMap>,
   visibility: 'public' | 'internal',
-  assessor: ImpactAssessor
+  assessor: ImpactAssessor,
+  unresolved?: { base: Set<string>; compare: Set<string>; out: Set<string> }
 ): APIDiffChange[] {
   const allNames = new Set([...baseExports.keys(), ...compareExports.keys()]);
   const changes: APIDiffChange[] = [];
@@ -21,6 +48,12 @@ function diffExports(
     const compareEntry = compareExports.get(name);
 
     if (!baseEntry && compareEntry) {
+      // Present in compare, absent from base — but if base had it as an unresolved placeholder it
+      // existed there too; this is an extraction gap, not a new export. Surface it, don't add it.
+      if (unresolved?.base.has(name)) {
+        unresolved.out.add(name);
+        continue;
+      }
       const addedImpact = assessor.assessFact({
         changeKind: 'export-added',
         description: `export '${name}' added`,
@@ -37,6 +70,12 @@ function diffExports(
         compareNode: compareEntry.unwrapped.toObject(),
       });
     } else if (baseEntry && !compareEntry) {
+      // Absent from compare — but if compare has it as an unresolved placeholder it's still there,
+      // just un-analyzable. Not a removal; surface as "couldn't analyze" instead of a phantom remove.
+      if (unresolved?.compare.has(name)) {
+        unresolved.out.add(name);
+        continue;
+      }
       const removedImpact = assessor.assessFact({
         changeKind: 'export-removed',
         description: `export '${name}' removed`,
@@ -115,6 +154,24 @@ function dedupeInternals(
     if (publicExports.has(name)) deduped.delete(name);
   }
   return deduped;
+}
+
+/**
+ * Drop exports that are bare re-references (a `TypeRefSchema`) to a symbol already exported under its
+ * own name in the same module — e.g. `export default Foo` where `Foo` is also a named export. Such an
+ * alias adds no independent API surface, and extractors represent it inconsistently across builds
+ * (an unresolved default one build, a `Foo (default)` type-ref alias the next). Left in, that
+ * inconsistency surfaces as a phantom added/removed export on an otherwise unrelated (e.g. docs-only)
+ * change. Mirrors `dedupeInternals` — remove the redundant entry so the diff sees only real surface.
+ */
+function dedupeReexportAliases(exports: ReturnType<typeof buildExportMap>): ReturnType<typeof buildExportMap> {
+  for (const [key, entry] of exports) {
+    const target = (entry.unwrapped as any)?.name;
+    if (getSchemaTypeName(entry.unwrapped) === 'TypeRefSchema' && target && target !== key && exports.has(target)) {
+      exports.delete(key);
+    }
+  }
+  return exports;
 }
 
 /**
@@ -218,6 +275,7 @@ function emptyResult(status: APIDiffComputeStatus, availability: APIDiffAvailabi
     publicChanges: [],
     internalChanges: [],
     changes: [],
+    unresolvedExports: [],
     added: 0,
     removed: 0,
     modified: 0,
@@ -246,8 +304,17 @@ export function computeAPIDiff(
     return emptyResult(status, availability);
   }
 
-  const baseExports = buildExportMap(base.module.exports);
-  const compareExports = buildExportMap(compare.module.exports);
+  const baseExports = dedupeReexportAliases(buildExportMap(base.module.exports));
+  const compareExports = dedupeReexportAliases(buildExportMap(compare.module.exports));
+
+  // Exports the extractor couldn't resolve on either side. Tracked so their absence on the other side
+  // isn't mistaken for an add/remove, and so they can be surfaced as "couldn't analyze" (a `TypeRef`
+  // that resolves to a present export is already handled by dedupeReexportAliases above).
+  const unresolved = {
+    base: collectUnresolvedNames(base.module.exports),
+    compare: collectUnresolvedNames(compare.module.exports),
+    out: new Set<string>(),
+  };
 
   const baseInternals = dedupeInternals(buildInternalMap(base.internals || []), baseExports);
   const compareInternals = dedupeInternals(buildInternalMap(compare.internals || []), compareExports);
@@ -261,8 +328,20 @@ export function computeAPIDiff(
     assessor
   );
 
-  const publicChanges = [...visibilityChanges, ...diffExports(baseExports, compareExports, 'public', assessor)];
+  const publicChanges = [
+    ...visibilityChanges,
+    ...diffExports(baseExports, compareExports, 'public', assessor, unresolved),
+  ];
   const internalChanges = diffExports(baseInternals, compareInternals, 'internal', assessor);
+
+  // Names unresolved on BOTH sides that never surfaced as a resolved export — the export exists but is
+  // opaque to extraction in both versions. (Names resolved on at least one side are not "unresolved".)
+  for (const name of unresolved.base) {
+    if (unresolved.compare.has(name) && !baseExports.has(name) && !compareExports.has(name)) {
+      unresolved.out.add(name);
+    }
+  }
+  const unresolvedExports = [...unresolved.out];
 
   const allChanges = [...publicChanges, ...internalChanges];
 
@@ -291,6 +370,7 @@ export function computeAPIDiff(
     publicChanges,
     internalChanges,
     changes: allChanges,
+    unresolvedExports,
     ...counts,
   };
 }

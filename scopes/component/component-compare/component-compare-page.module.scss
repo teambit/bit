@@ -111,4 +111,9 @@
   &[data-view-mode='docs'] [data-tab-id]:not([data-tab-id='inline-docs']) {
     display: none;
   }
+  // The API view is not an inline `[data-tab-id]` tab — it's rendered as a direct child of the
+  // inline compare (only while active). Hide every inline tab so only the API element shows.
+  &[data-view-mode='api'] [data-tab-id] {
+    display: none;
+  }
 }

@@ -37,9 +37,11 @@ export function buildExportMap(
   for (const exp of exports) {
     const name = getExportName(exp);
     const unwrapped = unwrapExport(exp);
-    if (name) {
-      map.set(name, { name, node: exp, unwrapped });
-    }
+    // Skip exports the extractor couldn't resolve — an UnImplementedSchema carries no signature and
+    // is not a real API surface (the display path filters it too). Keeping it here also lets it mask
+    // a real export sharing the same name (last-write-wins on the map key), hiding actual changes.
+    if (!name || getSchemaTypeName(unwrapped) === 'UnImplementedSchema') continue;
+    map.set(name, { name, node: exp, unwrapped });
   }
   return map;
 }

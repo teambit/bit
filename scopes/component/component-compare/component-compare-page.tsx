@@ -25,23 +25,35 @@ import {
 } from '@teambit/component.ui.component-compare.component-compare';
 import type { CompareViewMode, ComponentComparePair } from '@teambit/component.ui.component-compare.component-compare';
 import { computeDepsDiff } from '@teambit/dependencies.ui.deps-diff-table';
+import { useApiDiff } from '@teambit/semantics.ui.api-diff-view';
 
 import styles from './component-compare-page.module.scss';
 
 export type ComponentComparePageProps = {
   host: string;
   tabs: TabItem[] | (() => TabItem[]);
+  /**
+   * Lazily resolves the API compare element (contributed by the api-reference aspect). Resolved at
+   * render — not construction — so it doesn't depend on UI-provider registration order. When it
+   * yields an element, the page exposes an `api` view mode; the element is only mounted while that
+   * view is active, so its diff query fires on-demand.
+   */
+  getApiTab?: () => React.ReactNode;
   className?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-type ViewMode = 'code' | 'preview' | 'docs' | 'dependencies' | 'tests' | 'config';
+type ViewMode = 'code' | 'preview' | 'docs' | 'dependencies' | 'tests' | 'config' | 'api';
 type DiffMode = 'split' | 'unified';
 
 // The single-component compare offers the same view modes as lane-compare. Which ones actually
 // appear is driven by real per-view content counts (see `CompareView`) — mirroring how the cloud
 // changes view derives available views from each component's change types, so a user never lands
-// on a view that has nothing to show.
+// on a view that has nothing to show. `api` is only listed when the api-reference aspect supplies
+// an API tab (see `getApiTab`); like lane-compare it's always available then (the view renders its
+// own "nothing to compare" state), since we only fetch the diff once the view is opened.
+// Order mirrors lane-compare exactly (API first), so the two compare surfaces read identically.
 const COMPARE_VIEW_MODES: CompareViewMode[] = [
+  { id: 'api', displayName: 'API', icon: 'schema' },
   { id: 'code', displayName: 'Code', icon: 'code' },
   { id: 'preview', displayName: 'Preview', icon: 'eye' },
   { id: 'docs', displayName: 'Docs', icon: 'overview' },
@@ -58,7 +70,13 @@ function findPrevVersionFromCurrent(currentVersion?: string) {
   };
 }
 
-export function ComponentComparePage({ host: hostFromProps, tabs, className, ...rest }: ComponentComparePageProps) {
+export function ComponentComparePage({
+  host: hostFromProps,
+  tabs,
+  getApiTab,
+  className,
+  ...rest
+}: ComponentComparePageProps) {
   // `component` from ComponentContext is authoritative for the compare side — mirrors legacy
   // `ComponentCompare` which never loaded a separate compareModel when there was no override.
   // Loading a separate copy via useComponent risks an id string that differs from the live
@@ -68,8 +86,15 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
   const componentDescriptor = useContext(ComponentDescriptorContext);
 
   const resolvedTabs = useMemo(() => (typeof tabs === 'function' ? tabs() : tabs), [tabs]);
+  const apiTab = useMemo(() => getApiTab?.(), [getApiTab]);
 
   const baseVersion = useCompareQueryParam('baseVersion');
+  // The compare side follows the component page's main version dropdown, which sets `?version`.
+  // When it's set the user is viewing a specific published version, so we compare against THAT
+  // version (clean); when absent we default to the live workspace. Read the exact `version` key —
+  // NOT `search.includes('version')`, which the old code used and which also matched `baseVersion`,
+  // wrongly flipping this whenever a base was picked.
+  const compareVersionParam = useCompareQueryParam('version');
   const isWorkspace = hostFromProps === 'teambit.workspace/workspace';
 
   const allVersionInfo = useMemo(
@@ -77,11 +102,10 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
     [component.id.toString(), component.logs?.length]
   );
   const isNew = allVersionInfo.length === 0;
-  // On the workspace host the compare side is always the live workspace (on-disk files, including
-  // uncommitted changes). It does NOT depend on whether a base version is in the URL — an explicit
-  // `?baseVersion` only changes what we diff *against*. (The previous `!search.includes('version')`
-  // check also matched `baseVersion`, so picking a base wrongly flipped this off.)
-  const compareHasLocalChanges = isWorkspace && !isNew;
+  // "workspace" (live on-disk files, incl. uncommitted) only when NO specific version is selected.
+  // With `?version` set, the compare side is that clean version — the server then diffs it as a real
+  // version instead of the live workspace (`computeCompare`'s `compareIsLiveWorkspace`).
+  const compareHasLocalChanges = isWorkspace && !isNew && !compareVersionParam;
 
   // Pick the base version: explicit URL param > previous published version > current.
   // The default base is the *previous* published version so the workspace compare shows the changes
@@ -174,11 +198,13 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
   const pairs = useMemo(() => (pair ? [pair] : []), [pair]);
 
   // Map the registered inline tabs to view-mode ids so `CompareView` only counts/shows modes that
-  // are actually registered (e.g. there is no `docs` inline tab today).
-  const registeredModeIds = useMemo(
-    () => resolvedTabs.map((t) => inlineTabIdToViewMode(t.id)).filter(Boolean) as ViewMode[],
-    [resolvedTabs]
-  );
+  // are actually registered (e.g. there is no `docs` inline tab today). The `api` view is not an
+  // inline tab — it's supplied separately by `getApiTab` — so append it here when available.
+  const registeredModeIds = useMemo(() => {
+    const ids = resolvedTabs.map((t) => inlineTabIdToViewMode(t.id)).filter(Boolean) as ViewMode[];
+    if (apiTab) ids.push('api');
+    return ids;
+  }, [resolvedTabs, apiTab]);
 
   const baseVersionShort = baseId?.version?.slice(0, 7);
   const compareVersionShort = compareHasLocalChanges ? 'workspace' : (component.id.version || '').slice(0, 7);
@@ -218,6 +244,7 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
                 compareVersionShort={compareVersionShort}
                 resolvedTabs={resolvedTabs}
                 registeredModeIds={registeredModeIds}
+                apiTab={apiTab}
                 host={hostFromProps}
               />
             )}
@@ -237,6 +264,8 @@ type CompareViewProps = {
   compareVersionShort?: string;
   resolvedTabs: TabItem[];
   registeredModeIds: ViewMode[];
+  /** API compare element, rendered only while the `api` view is active (on-demand fetch). */
+  apiTab?: React.ReactNode;
   host: string;
 };
 
@@ -255,6 +284,7 @@ function CompareView({
   compareVersionShort,
   resolvedTabs,
   registeredModeIds,
+  apiTab,
   host,
 }: CompareViewProps) {
   const [searchParams] = useSearchParams();
@@ -288,11 +318,30 @@ function CompareView({
   const data = compareData?.getData(compareId);
   const dataLoading = compareData?.loading ?? false;
 
+  // The API view mode appears when there's something meaningful to show. Unlike the bulk
+  // code/aspect/test data, the API diff is a separate query — fetch it here (cheap: one pair) so the
+  // count is real. The API tab element self-fetches the same query when opened, so Apollo serves it
+  // from cache (no double round-trip). Skipped entirely when there's no API tab registered.
+  const { result: apiDiffResult, loading: apiDiffLoading } = useApiDiff(baseId, compareId, { skip: !apiTab });
+  // A per-version extraction gap (a side built before API extraction, or a failed extraction) is a
+  // "couldn't compute" state worth surfacing — NOT the same as "no changes". Distinct from a
+  // component-wide DISABLED/NO_EXTRACTOR (a component that simply has no API), which stays hidden so
+  // the tab isn't noise on non-API components.
+  const apiExtractionGap = (side?: { available: boolean; reason?: string }) =>
+    !!side && !side.available && (side.reason === 'NOT_BUILT' || side.reason === 'FAILED');
+  const apiTabHasContent =
+    !!apiDiffResult &&
+    (apiDiffResult.hasChanges ||
+      (apiDiffResult.unresolvedExports?.length ?? 0) > 0 ||
+      apiExtractionGap(apiDiffResult.base) ||
+      apiExtractionGap(apiDiffResult.compare));
+
   // Single stability gate. `componentCompare.loading` is true while the base/compare *models* are
-  // still being fetched; `dataLoading` is true while the bulk code/aspect/test diff is in flight.
-  // We must not derive any per-view counts until BOTH are settled — otherwise a half-loaded state
-  // (base model not yet present) reads as "no base → new → everything changed".
-  const loading = (componentCompare?.loading ?? false) || dataLoading;
+  // still being fetched; `dataLoading` is true while the bulk code/aspect/test diff is in flight;
+  // `apiDiffLoading` while the API diff (which gates the API tab) resolves. We must not derive any
+  // per-view counts until ALL are settled — otherwise a half-loaded state (base model not yet
+  // present) reads as "no base → new → everything changed", or the API tab flickers in late.
+  const loading = (componentCompare?.loading ?? false) || dataLoading || (!!apiTab && apiDiffLoading);
 
   // All per-view derivation happens here, and ONLY in the stable branch. While anything is loading we
   // render a skeleton (below) instead of the toolbar, so we compute nothing — no counting, and most
@@ -339,12 +388,18 @@ function CompareView({
         case 'dependencies':
           acc.dependencies = depChanges;
           break;
+        case 'api':
+          // Show when there are real changes, unresolved exports, OR a per-version schema gap
+          // (so "schema unavailable for this version" is surfaced, not silently hidden). Stays
+          // hidden for a plain computed no-op and for non-API components.
+          acc.api = apiTabHasContent ? 1 : 0;
+          break;
         default:
           acc[id] = 1;
       }
     }
     return acc;
-  }, [loading, registeredModeIds, isNew, data, componentCompare]);
+  }, [loading, registeredModeIds, isNew, data, componentCompare, apiTabHasContent]);
 
   // If the active view has no content, fall back to the first view that does.
   useEffect(() => {
@@ -391,7 +446,12 @@ function CompareView({
           // the same snap for both sides — making the deps/config/preview tabs show base vs base.
           baseOverride={componentCompare?.base as { model?: any; descriptor?: any } | undefined}
           compareOverride={componentCompare?.compare as { model?: any; descriptor?: any } | undefined}
-        />
+        >
+          {/* The API view isn't an inline tab — render it inside the inline context (so it sees the
+              resolved base/compare pair) only while it's the active view, so its diff query fires
+              on-demand. CSS hides the inline `[data-tab-id]` panels when `data-view-mode='api'`. */}
+          {viewMode === 'api' ? apiTab : null}
+        </InlineComponentCompare>
       </div>
     </DiffModeProvider>
   );

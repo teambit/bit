@@ -58,6 +58,12 @@ export type APIDiffResult = {
   publicChanges: APIDiffChange[];
   internalChanges: APIDiffChange[];
   changes: APIDiffChange[];
+  /**
+   * exports the extractor couldn't resolve on one or both sides (an `UnImplementedSchema` placeholder).
+   * these are NOT diffed as add/remove/modify — extraction gaps, surfaced separately as "couldn't
+   * analyze" so a real change list stays meaningful.
+   */
+  unresolvedExports: string[];
   added: number;
   removed: number;
   modified: number;

@@ -269,23 +269,220 @@ $success: var(--success-color, #1a7f37);
   padding: 0 14px 12px;
 }
 
-.causeList {
+// ── member-cause clusters (severity groups + collapse-by-kind) ────────────────
+// A modified export's member changes are clustered by severity (breaking → minor → patch); within a
+// tier, additions/removals collapse by kind into signature snippets, modifications keep the token
+// diff, and doc-only changes render as notes.
+
+.causeClusters {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 4px 14px 14px;
 }
 
-.causeRow {
+.severityGroup {
+  padding: 2px 14px 14px;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 55%, transparent);
+  }
+}
+
+.severityHeader {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 2px 10px;
 }
 
-.causeHead {
+.severityLabel {
+  line-height: 1;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.severityCount {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 1px 9px;
+  border-radius: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+// only the breaking tier carries a faint tint — it's the one a reader must not miss. minor/patch
+// stay on the plain surface so the block doesn't turn into a stack of colored bands.
+.severity_BREAKING {
+  background: color-mix(in srgb, $danger 3.5%, transparent);
+
+  .severityHeader {
+    color: $danger;
+  }
+  .severityCount {
+    background: color-mix(in srgb, $danger 12%, transparent);
+    color: $danger;
+  }
+}
+
+.severity_NON_BREAKING {
+  .severityHeader {
+    color: $warning;
+  }
+  .severityCount {
+    background: color-mix(in srgb, $warning 14%, transparent);
+    color: $warning;
+  }
+}
+
+.severity_PATCH {
+  .severityHeader {
+    color: $success;
+  }
+  .severityCount {
+    background: color-mix(in srgb, $success 13%, transparent);
+    color: $success;
+  }
+}
+
+.memberGroup {
+  & + & {
+    margin-top: 12px;
+  }
+
+  // the label already provides the gap above the snippet; drop the diff block's own top margin.
+  .diffBlock {
+    margin-top: 0;
+  }
+}
+
+.memberLabel {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.memberName {
+  font-family: $code-font;
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.memberKind {
+  font-size: 12px;
+  color: $text-secondary;
+}
+
+.memberNote {
   display: flex;
   align-items: baseline;
   gap: 10px;
+  padding: 7px 0;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 45%, transparent);
+  }
+}
+
+// added/removed signatures sit on a NEUTRAL surface so the syntax colors (tuned for a light code
+// background) always clear contrast — the add/remove signal is the colored left edge + gutter, never
+// colored text on a green/red fill (which fails WCAG for yellow-on-green, red-on-red, …).
+.sigBlock {
+  border: 1px solid $border-color;
+  border-left-width: 3px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-neutral-color, #f6f8fa);
+}
+
+.sigBlockAdd {
+  border-left-color: $success;
+
+  .diffGutter {
+    color: $success;
+  }
+}
+
+.sigBlockRemove {
+  border-left-color: $danger;
+
+  .diffGutter {
+    color: $danger;
+  }
+}
+
+.sigLine {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: start;
+  font-family: $code-font;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: $text-primary;
+  padding: 7px 14px 7px 0;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 55%, transparent);
+  }
+}
+
+// documentation (JSDoc/comment) changes show the actual prose that was removed/added. Prose, not a
+// signature — dark text on a faint tint (dark-on-tint clears contrast), italic to read as doc.
+.docBlock {
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.docLine {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: start;
+  padding: 8px 14px 8px 0;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 55%, transparent);
+  }
+}
+
+.docRemoved {
+  background: color-mix(in srgb, $danger 7%, transparent);
+
+  .diffGutter {
+    color: $danger;
+  }
+}
+
+.docAdded {
+  background: color-mix(in srgb, $success 8%, transparent);
+
+  .diffGutter {
+    color: $success;
+  }
+}
+
+.docText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: $text-primary;
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+// the declaration the doc belongs to — an unchanged context line beneath the doc diff. Neutral
+// surface, monospace + syntax highlighting, a "·" gutter so it reads as context, not an edit.
+.docContext {
+  background: var(--surface-neutral-color, #f6f8fa);
+  font-family: $code-font;
+  font-size: 13px;
+  line-height: 1.65;
+  color: $text-primary;
+
+  .diffGutter {
+    color: $text-muted;
+  }
 }
 
 .causeDescription {
@@ -448,6 +645,74 @@ $success: var(--success-color, #1a7f37);
   background: rgba(0, 0, 0, 0.05);
   padding: 1px 8px;
   border-radius: 9px;
+}
+
+// ── blank state: no API to compare (neither side exposes one) ─────────────────
+// Calm, centered, neutral — NOT the amber warning treatment. There's nothing to act on here.
+.apiBlankState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 56px 24px;
+  min-height: 220px;
+}
+
+.apiBlankIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-neutral-color, #f6f8fa);
+  color: $text-muted;
+  border: 1px solid $border-color;
+}
+
+.apiBlankTitle {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.apiBlankDetail {
+  font-size: 13px;
+  line-height: 1.55;
+  color: $text-secondary;
+  max-width: 44ch;
+}
+
+// ── unresolved exports (extraction gaps — distinct from real changes) ─────────
+// A neutral, informational note (not the add/remove/modify vocabulary): the extractor couldn't read
+// these exports on one side, so their presence/absence is not a meaningful diff.
+.unresolvedNote {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 12px 16px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, $warning 35%, $border-color);
+  border-radius: 8px;
+  background: color-mix(in srgb, $warning 7%, transparent);
+}
+
+.unresolvedIcon {
+  color: $warning;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.unresolvedText {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: $text-secondary;
+
+  code {
+    font-family: $code-font;
+  }
 }
 
 // ── insights (slot-contributed) ──────────────────────────────────────────────

@@ -1,12 +1,16 @@
 import { expect } from 'chai';
 import type { Location as SchemaLocation, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import { APISchema, ModuleSchema, VariableLikeSchema, KeywordTypeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { ComponentID } from '@teambit/component-id';
 import {
-  computeAPIDiff,
-  ImpactAssessor,
-  DEFAULT_IMPACT_RULES,
-} from '@teambit/semantics.entities.semantic-schema-diff';
+  APISchema,
+  ModuleSchema,
+  VariableLikeSchema,
+  KeywordTypeSchema,
+  TypeRefSchema,
+  ExportSchema,
+  UnImplementedSchema,
+} from '@teambit/semantics.entities.semantic-schema';
+import { ComponentID } from '@teambit/component-id';
+import { computeAPIDiff, ImpactAssessor, DEFAULT_IMPACT_RULES } from '@teambit/semantics.entities.semantic-schema-diff';
 import { SchemaMain } from './schema.main.runtime';
 
 const loc: SchemaLocation = { filePath: 'index.ts', line: 0, character: 0 };
@@ -97,6 +101,82 @@ describe('computeAPIDiff', () => {
       expect(result.impact).to.equal('BREAKING');
       expect(result.internalImpact).to.equal('PATCH');
     });
+  });
+});
+
+describe('computeAPIDiff default/re-export aliases (extraction-inconsistency robustness)', () => {
+  // Repro of a real false positive: `class AttReact` + `export default AttReact`. Across two builds
+  // the default export was extracted inconsistently — an UnImplementedSchema one version, a
+  // `AttReact (default)` TypeRef alias the next — while only the docs changed. The diff must not
+  // report the default re-export alias as a newly added public API.
+  const classExport = () => new ExportSchema(loc, 'AttReact', makeVar('AttReact', 'string'));
+  const defaultAsUnimplemented = () => new UnImplementedSchema(loc, 'AttReact', 'Identifier');
+  const defaultAsTypeRefAlias = () =>
+    new ExportSchema(loc, 'AttReact (default)', new TypeRefSchema(loc, 'AttReact'), 'AttReact (default)');
+
+  it('should not report an added export when the default re-export alias changes representation', () => {
+    const base = makeSchema([classExport(), defaultAsUnimplemented()]);
+    const compare = makeSchema([classExport(), defaultAsTypeRefAlias()]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.hasChanges).to.equal(false);
+    expect(result.added).to.equal(0);
+    expect(result.publicChanges).to.have.lengthOf(0);
+  });
+
+  it('should drop a redundant default type-ref alias to an already-exported symbol', () => {
+    const base = makeSchema([classExport()]);
+    const compare = makeSchema([classExport(), defaultAsTypeRefAlias()]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.added).to.equal(0);
+    expect(result.hasChanges).to.equal(false);
+  });
+
+  it('should still report a genuinely new export alongside a redundant alias', () => {
+    const base = makeSchema([classExport()]);
+    const compare = makeSchema([classExport(), defaultAsTypeRefAlias(), makeVar('brandNew', 'string')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.added).to.equal(1);
+    expect(result.publicChanges.map((c) => c.exportName)).to.include('brandNew');
+    expect(result.publicChanges.map((c) => c.exportName)).to.not.include('AttReact (default)');
+  });
+});
+
+describe('computeAPIDiff unresolved exports (extraction gaps)', () => {
+  const unresolved = (name: string) => new UnImplementedSchema(loc, name, 'Identifier');
+
+  it('should not report a removal when the export is merely unresolved on the compare side', () => {
+    const base = makeSchema([makeVar('Foo', 'string')]);
+    const compare = makeSchema([unresolved('Foo')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.removed).to.equal(0);
+    expect(result.hasChanges).to.equal(false);
+    expect(result.unresolvedExports).to.include('Foo');
+  });
+
+  it('should not report an addition when the export was merely unresolved on the base side', () => {
+    const base = makeSchema([unresolved('Foo')]);
+    const compare = makeSchema([makeVar('Foo', 'string')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.added).to.equal(0);
+    expect(result.hasChanges).to.equal(false);
+    expect(result.unresolvedExports).to.include('Foo');
+  });
+
+  it('should surface an export unresolved on both sides without diffing it', () => {
+    const base = makeSchema([unresolved('Foo'), makeVar('Bar', 'string')]);
+    const compare = makeSchema([unresolved('Foo'), makeVar('Bar', 'string')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.hasChanges).to.equal(false);
+    expect(result.unresolvedExports).to.include('Foo');
+  });
+
+  it('should NOT surface a name that is unresolved on one side but resolved elsewhere (real export wins)', () => {
+    // mirrors AttReact: a class export + an unresolved default that shares the class name.
+    const base = makeSchema([makeVar('AttReact', 'string'), unresolved('AttReact')]);
+    const compare = makeSchema([makeVar('AttReact', 'string')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.hasChanges).to.equal(false);
+    expect(result.unresolvedExports).to.have.lengthOf(0);
   });
 });
 

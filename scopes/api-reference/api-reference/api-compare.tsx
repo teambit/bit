@@ -1,6 +1,11 @@
 import React from 'react';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { ComponentApiDiffSection, ApiDiffSlimRow, ApiDiffInsightProvider } from '@teambit/semantics.ui.api-diff-view';
+import {
+  ComponentApiDiffSection,
+  ApiDiffSlimRow,
+  ApiDiffInsightProvider,
+  useApiDiff,
+} from '@teambit/semantics.ui.api-diff-view';
 import type { ApiDiffInsight } from '@teambit/semantics.ui.api-diff-view';
 import styles from './api-compare.module.scss';
 
@@ -19,11 +24,23 @@ export type APICompareProps = {
  */
 export function APICompare({ getInsights }: APICompareProps) {
   const compareContext = useComponentCompare();
+  const baseModel = compareContext?.base?.model;
+  const compareModel = compareContext?.compare?.model;
+
+  // Prefer a diff already on the context — the legacy `ComponentCompare` fetches it once and sets
+  // it there. The redesign single-component page does NOT put it on its inline context, so we fetch
+  // on our own. This hook is only mounted when the API view is the active tab (the page renders the
+  // element on-demand), so lane-compare — which renders one panel per component and never mounts
+  // this tab — pays nothing.
+  const contextApiDiff = compareContext?.apiDiffResult;
+  const shouldSelfFetch = contextApiDiff === undefined;
+  const { result: fetchedApiDiff } = useApiDiff(baseModel?.id.toString(), compareModel?.id.toString(), {
+    skip: !shouldSelfFetch,
+  });
+  const apiDiffResult = shouldSelfFetch ? fetchedApiDiff : contextApiDiff;
+
   if (!compareContext) return null;
 
-  const { apiDiffResult } = compareContext;
-  const baseModel = compareContext.base?.model;
-  const compareModel = compareContext.compare?.model;
   const id = (compareModel || baseModel)?.id;
   if (!id) return null;
 

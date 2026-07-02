@@ -16,6 +16,7 @@ export function schemaSchema(schema: SchemaMain): Schema {
         impact: String!
         from: String
         to: String
+        signature: String
       }
 
       type APIDiffChange {
@@ -47,6 +48,7 @@ export function schemaSchema(schema: SchemaMain): Schema {
         publicChanges: [APIDiffChange!]!
         internalChanges: [APIDiffChange!]!
         changes: [APIDiffChange!]!
+        unresolvedExports: [String!]!
         added: Int!
         removed: Int!
         modified: Int!

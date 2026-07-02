@@ -83,8 +83,11 @@ function diffModifiedMembers(
       const bNode = ((baseNode as any).members as SchemaNode[])?.find((n: any) => n.name === name);
       const cNode = ((compareNode as any).members as SchemaNode[])?.find((n: any) => n.name === name);
       if (bNode && cNode) {
+        // carry the member signature so member-level facts (notably doc-only changes) can show the
+        // declaration as context in the UI — the doc sits on top of the signature it documents.
+        const signature = compareMember.signature || baseMember.signature;
         for (const d of bNode.diff(cNode)) {
-          facts.push({ ...d, description: `${kind} '${name}': ${d.description}` });
+          facts.push({ ...d, description: `${kind} '${name}': ${d.description}`, signature });
         }
         continue;
       }

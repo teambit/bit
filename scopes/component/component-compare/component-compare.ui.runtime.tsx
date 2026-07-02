@@ -71,7 +71,12 @@ export class ComponentCompareUI {
   getComponentComparePage = (props?: ComponentCompareProps & { pinned?: boolean }) => {
     const tabs = props?.tabs || (() => this.resolveCompareTabs());
     const host = props?.host || this.host;
-    return <ComponentComparePage tabs={tabs} host={host} />;
+    // The API compare tab is contributed by the api-reference aspect via `registerNavigation`
+    // (navSlot), which the redesign page's view-mode toolbar doesn't read. Hand it the API element
+    // lazily so it's resolved at render time — after every aspect's UI provider has registered,
+    // regardless of provider order — and rendered as a page-local `api` view mode.
+    const getApiTab = () => this.tabs.find((tab) => tab.id === 'api')?.element;
+    return <ComponentComparePage tabs={tabs} host={host} getApiTab={getApiTab} />;
   };
 
   getAspectsComparePage = () => {

@@ -19,6 +19,8 @@ export type APIDiffDetail = {
   impact: ImpactLevel;
   from?: string;
   to?: string;
+  /** owning member's signature — shown as context next to member-level (e.g. doc-only) changes. */
+  signature?: string;
 };
 
 export type APIDiffChange = {
@@ -47,6 +49,8 @@ export type APIDiffResult = {
   internalImpact: ImpactLevel;
   publicChanges: APIDiffChange[];
   internalChanges: APIDiffChange[];
+  /** exports the extractor couldn't analyze — surfaced distinctly, never as a change. */
+  unresolvedExports?: string[];
   added: number;
   removed: number;
   modified: number;
@@ -70,6 +74,7 @@ const API_DIFF_CHANGE_FIELDS = `
     impact
     from
     to
+    signature
   }
 `;
 
@@ -90,6 +95,7 @@ export const API_DIFF_RESULT_FIELDS = `
   hasChanges
   impact
   internalImpact
+  unresolvedExports
   added
   removed
   modified
@@ -154,7 +160,7 @@ export function impactLabel(impact: ImpactLevel | string): string {
 }
 
 const REASON_TEXT: Record<SchemaUnavailableReason, string> = {
-  NOT_BUILT: 'was built before API extraction — no API snapshot exists',
+  NOT_BUILT: 'was built before API extraction, so no API snapshot exists',
   NO_EXTRACTOR: "env doesn't provide a schema extractor",
   DISABLED: 'has schema extraction disabled',
   FAILED: 'API data could not be loaded',
@@ -179,7 +185,7 @@ export function unavailableText(
       const baseReason = REASON_TEXT[result.base.reason || 'FAILED'];
       const compareReason = REASON_TEXT[result.compare.reason || 'FAILED'];
       if (baseReason === compareReason) return `neither version has API data (${baseReason})`;
-      return `neither version has API data — base ${baseReason}; compare ${compareReason}`;
+      return `neither version has API data (base ${baseReason}; compare ${compareReason})`;
     }
     default:
       return undefined;
