@@ -1930,6 +1930,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/deps-diff-table"
     },
+    "ui/diff-viewer": {
+        "name": "ui/diff-viewer",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/diff-viewer"
+    },
     "ui/docs-app": {
         "name": "ui/docs-app",
         "scope": "teambit.react",

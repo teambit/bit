@@ -229,6 +229,9 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
 
 .diffPane {
   flex: 1;
+  // shrink below content width (default flex min-width:auto = min-content) so a wide diff scrolls
+  // inside its own file body instead of forcing the whole page horizontally wider.
+  min-width: 0;
   overflow-y: auto;
   background: var(--background-color, #f9fafb);
   scrollbar-width: thin;
@@ -341,6 +344,15 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
 
 .laneCompareGroup {
   --group-header-height: 42px;
+
+  // Hard width clamp: a single-column `minmax(0, 1fr)` grid forces every descendant (header +
+  // component panels + their code diffs) to the group's own width, which is the pane width. A grid
+  // item in a `minmax(0, ...)` track cannot be widened by its content, so a long code line can only
+  // scroll inside its diff body — it can never widen a panel, the pane, or the page. This is applied
+  // here (a confirmed pane-width block) because `contain: inline-size` lower down was defeated by the
+  // `content-visibility`/context wrappers in between.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
 
   &:not(:first-child) {
     margin-top: 8px;

@@ -3,6 +3,8 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  // shrink below content width so a wide diff scrolls inside its own body, not the page.
+  min-width: 0;
 }
 
 .top {
@@ -16,6 +18,14 @@
   overflow: hidden;
   flex-direction: column;
   flex: 1;
+  // shrink below content width so a wide diff scrolls inside its own body, not the page.
+  min-width: 0;
+
+  // direct children (the rendered tab subtrees, incl. the code diff) must also be allowed to
+  // shrink below their min-content width, otherwise a wide diff forces this column wider.
+  > * {
+    min-width: 0;
+  }
 
   &.hidden {
     display: none;

@@ -78,6 +78,9 @@
 .diffPane {
   flex: 1 1 auto;
   min-height: 0;
+  // shrink below content width so a wide diff scrolls inside its own file body instead of forcing
+  // the whole page horizontally wider.
+  min-width: 0;
   overflow: auto;
   // No padding/gap on the scroll container itself: the sticky component header (top:
   // `--group-header-height`) and diff-file headers (top: `--group-header-height` +
