@@ -2,7 +2,6 @@ import type { HTMLAttributes } from 'react';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import classnames from 'classnames';
 import { useSearchParams } from 'react-router-dom';
-import { useLocation } from '@teambit/base-react.navigation.link';
 import { ComponentContext, ComponentDescriptorContext, useComponent } from '@teambit/component';
 import type { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import {
@@ -67,7 +66,6 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
   // (`computeCompare`: `comparingWithLocalChanges = workspace && baseId === compareId`).
   const component = useContext(ComponentContext);
   const componentDescriptor = useContext(ComponentDescriptorContext);
-  const location = useLocation();
 
   const resolvedTabs = useMemo(() => (typeof tabs === 'function' ? tabs() : tabs), [tabs]);
 
@@ -79,15 +77,20 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
     [component.id.toString(), component.logs?.length]
   );
   const isNew = allVersionInfo.length === 0;
-  const compareHasLocalChanges = isWorkspace && !isNew && !location?.search.includes('version');
+  // On the workspace host the compare side is always the live workspace (on-disk files, including
+  // uncommitted changes). It does NOT depend on whether a base version is in the URL — an explicit
+  // `?baseVersion` only changes what we diff *against*. (The previous `!search.includes('version')`
+  // check also matched `baseVersion`, so picking a base wrongly flipped this off.)
+  const compareHasLocalChanges = isWorkspace && !isNew;
 
   // Pick the base version: explicit URL param > previous published version > current.
-  // For local-changes mode the base is the latest published snap (so the live workspace files
-  // are diffed against it).
-  const lastVersionInfo = useMemo(() => {
-    if (compareHasLocalChanges) return allVersionInfo[0];
-    return allVersionInfo.find(findPrevVersionFromCurrent(component.id.version));
-  }, [allVersionInfo, compareHasLocalChanges, component.id.version]);
+  // The default base is the *previous* published version so the workspace compare shows the changes
+  // since that version (committed + uncommitted). Defaulting to the current checked-out version made
+  // base === compare, so the diff was empty and the view collapsed to its always-on sections.
+  const lastVersionInfo = useMemo(
+    () => allVersionInfo.find(findPrevVersionFromCurrent(component.id.version)),
+    [allVersionInfo, component.id.version]
+  );
 
   const baseId = useMemo(
     () =>
@@ -112,11 +115,12 @@ export function ComponentComparePage({ host: hostFromProps, tabs, className, ...
   // covers the skip→fetch transition where the flag is briefly false with no model yet.
   const baseModelLoading = !isNew && !!baseId && !baseError && (!!baseLoading || !base);
 
-  // For the bulk compare pair we need `baseId === compareId` to trigger the server's
-  // local-changes branch in workspace mode. For non-local (explicit version param), they
-  // genuinely differ.
+  // The compare side is always the checked-out component. In workspace mode the server recognises
+  // this as the live workspace and diffs the base snap against the on-disk files (so uncommitted
+  // changes are included) — see `computeCompare`'s `compareIsLiveWorkspace`. The base then differs
+  // from the compare (previous version vs. current), which is what surfaces the real change set.
   const baseIdStr = baseId?.toString();
-  const compareIdStr = compareHasLocalChanges ? baseIdStr : component.id.toString();
+  const compareIdStr = component.id.toString();
 
   // When the resolved base and compare point at the exact same version (and we are not diffing
   // live workspace changes against a snap), there is nothing to diff. This is common: a

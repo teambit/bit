@@ -44,6 +44,12 @@ export type ComponentCompareResult = {
   code: FileDiff[];
   fields: FieldsDiff[];
   tests: FileDiff[];
+  /**
+   * true when the compare side is the live workspace (on-disk files, incl. uncommitted changes).
+   * such a result is inherently mutable, so it must never be persisted to the cross-run cache —
+   * only the in-flight single-flight dedupe applies. not exposed via graphql.
+   */
+  isLiveWorkspace?: boolean;
 };
 
 type ConfigDiff = {
@@ -100,8 +106,14 @@ export class ComponentCompareMain {
   }
 
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
-    return this.getOrCompute(this.compareInflight, `component-compare:result:${baseIdStr}|${compareIdStr}`, () =>
-      this.computeCompare(baseIdStr, compareIdStr)
+    return this.getOrCompute(
+      this.compareInflight,
+      `component-compare:result:${baseIdStr}|${compareIdStr}`,
+      () => this.computeCompare(baseIdStr, compareIdStr),
+      // never persist a live-workspace diff: it reflects on-disk files (incl. uncommitted changes),
+      // so a cached copy would go stale the moment the user edits a file. the (baseId, compareId)
+      // pair is otherwise immutable (keyed on snap hashes), so those stay cacheable.
+      (result) => !result.isLiveWorkspace
     );
   }
 
@@ -129,13 +141,21 @@ export class ComponentCompareMain {
     const compareComponent = components?.[1];
     const componentWithoutVersion = await host.get((baseCompId || compareCompId).changeVersion(undefined));
 
+    // When the compare side is the component currently checked out in the workspace, diff against the
+    // on-disk files rather than a stored snap: passing `undefined` as the compare version makes
+    // `computeDiff` fall back to `consumerComponent.files`, so uncommitted local changes are included.
+    // This covers two cases with one code path:
+    //   - base === compare (the classic "local changes" view): checked-out model → workspace files.
+    //   - base = an earlier version: that version's committed changes + any uncommitted changes on top.
+    // Without this, the default workspace compare resolves base and compare to the same checked-out
+    // snap and reports no changes, collapsing the compare view to only its always-on sections.
+    const checkedOutVersion = componentWithoutVersion?.id.version;
+    const compareIsLiveWorkspace = Boolean(this.workspace && checkedOutVersion && compareVersion === checkedOutVersion);
+    const effectiveBaseVersion = comparingWithLocalChanges ? undefined : baseVersion;
+    const effectiveCompareVersion = comparingWithLocalChanges || compareIsLiveWorkspace ? undefined : compareVersion;
+
     const diff = componentWithoutVersion
-      ? await this.computeDiff(
-          componentWithoutVersion,
-          comparingWithLocalChanges ? undefined : baseVersion,
-          comparingWithLocalChanges ? undefined : compareVersion,
-          {}
-        )
+      ? await this.computeDiff(componentWithoutVersion, effectiveBaseVersion, effectiveCompareVersion, {})
       : {
           filesDiff: [],
           fieldsDiff: [],
@@ -159,6 +179,7 @@ export class ComponentCompareMain {
       code: diff.filesDiff || [],
       fields: diff.fieldsDiff || [],
       tests: testFilesDiff,
+      isLiveWorkspace: compareIsLiveWorkspace,
     };
   }
 
