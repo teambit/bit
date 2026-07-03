@@ -146,7 +146,9 @@ export function DiffViewer({
           newHl={newHl}
           codeWidthCh={codeWidthCh}
           maxHeight={maxHeight}
-          virtualize={virtualize}
+          // wrap makes rows variable-height (height: auto), which invalidates the fixed-ROW_H
+          // windowing math; force full, non-windowed rendering (page scrolls) whenever wrap is on.
+          virtualize={virtualize && !wrap}
           onExpand={expandGap}
         />
       )}

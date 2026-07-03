@@ -18,7 +18,9 @@ type LaneData = {
   name: string;
   components: Array<{
     id: ComponentID;
-    head: Ref;
+    // undefined when the component has no version on the default lane / main — a genuinely-new
+    // component. downstream code guards on `!head` and reports these as "new".
+    head?: Ref;
   }>;
   remote: string | null;
 };
@@ -120,7 +122,7 @@ export class LaneDiffGenerator {
     });
 
     // Build an index of fromLaneData for O(1) lookups instead of repeated O(N) .find() calls.
-    const fromLaneIndex = new Map<string, Ref>();
+    const fromLaneIndex = new Map<string, Ref | undefined>();
     for (const comp of this.fromLaneData.components) {
       fromLaneIndex.set(comp.id.toStringWithoutVersion(), comp.head);
     }
@@ -297,7 +299,7 @@ export class LaneDiffGenerator {
 
   private async componentDiff(
     id: ComponentID,
-    toLaneHead: Ref | null,
+    toLaneHead: Ref | null | undefined,
     diffOptions: DiffOptions = {},
     compareToHeadIfEmpty = false,
     forkPoint?: Ref,
@@ -390,7 +392,7 @@ export class LaneDiffGenerator {
         const laneComponent = {
           id,
           // undefined when the component has no version on main at all - handled as "new" downstream.
-          head: headOnMain ? Ref.from(headOnMain) : (undefined as unknown as Ref),
+          head: headOnMain ? Ref.from(headOnMain) : undefined,
           version: headOnMain,
         };
         laneData.components.push(laneComponent);

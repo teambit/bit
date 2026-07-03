@@ -93,6 +93,9 @@ async function ensureLanguage(lang: string): Promise<boolean> {
         loadedLangs.add(lang);
         return true;
       } catch {
+        // don't cache a transient failure (e.g. a dynamic-chunk load error) — dropping the memoized
+        // promise lets the next call retry instead of leaving the language permanently unhighlighted.
+        langPromises.delete(lang);
         return false;
       }
     })();
