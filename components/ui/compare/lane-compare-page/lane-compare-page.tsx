@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { HTMLAttributes } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { LaneCompareProps, LanesModel } from '@teambit/lanes';
 import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import type { UseLanes } from '@teambit/lanes.hooks.use-lanes';
@@ -30,6 +31,7 @@ export function LaneComparePage({
   ...rest
 }: LaneComparePageProps) {
   const { lanesModel, loading, fetchMoreLanes, hasMore, offset, limit } = useLanes();
+  const location = useLocation();
   const [base, setBase] = useState<LaneModel | undefined>();
   const defaultLane = lanesModel?.getDefaultLane();
   const compare = lanesModel?.viewedLane;
@@ -98,10 +100,11 @@ export function LaneComparePage({
               nonMainLanes={lanes}
               mainLane={defaultLane}
               groupByScope={groupByScope}
-              // getHref: returning ' ' (space) keeps the LaneSelector menu item interactive.
-              // It's truthy, so it's accepted as a valid href.
-              // It appends a trailing '/' to the path without affecting routing or triggering navigation.
-              getHref={() => ' '}
+              // This page picks the base lane into local state (onLaneSelected → setBase) and stays put;
+              // it does not route on selection. But LaneSelector unconditionally `navigate(getHref(...))`
+              // on click/Enter, so returning ' ' would navigate to a bogus whitespace URL. Return the
+              // current location instead: the item stays interactive and the forced navigation is a no-op.
+              getHref={() => `${location.pathname}${location.search}`}
               onLaneSelected={(_, lane) => {
                 setBase(lane);
               }}

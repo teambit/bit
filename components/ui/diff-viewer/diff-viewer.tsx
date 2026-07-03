@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
 import type { DiffLineItem, DiffSection } from './diff-model';
 import { computeDiffLines, buildSections, statsFromItems, pairForSplit } from './diff-model';
@@ -275,6 +275,15 @@ function DiffBody({
   const totalHeight = total * ROW_H;
   // only window when virtualization is enabled AND the file is large enough to warrant it.
   const windowing = virtualize && total > VIRTUALIZE_THRESHOLD;
+
+  // cancel a pending scroll RAF on unmount — DiffBody is conditionally mounted (collapse hides it),
+  // so a queued frame could otherwise fire setScrollTop() after unmount.
+  useEffect(
+    () => () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    },
+    []
+  );
 
   const onScroll = useCallback(() => {
     if (rafRef.current != null) return;
