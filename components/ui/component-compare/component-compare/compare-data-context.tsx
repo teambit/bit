@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { gql, useQuery } from '@apollo/client';
 
@@ -74,7 +74,7 @@ export type CompareDataContextModel = {
    * list, or its page has not loaded yet (check `loading` to disambiguate).
    */
   getData: (compareId: string) => CompareComponentData | null | undefined;
-  /** true until every page has loaded */
+  /** true while pages are still loading; settles to false once every page loads or paging stops early */
   loading: boolean;
   /** number of pairs whose data has loaded so far */
   loadedCount: number;
@@ -109,23 +109,27 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
   const results: Array<CompareComponentData | null> = data?.getHost?.compareComponents ?? [];
   const allLoaded = skip || results.length >= stablePairs.length;
 
-  // flips off once a page returns empty (or a page fails) — guarantees the paging loop terminates
-  // even if the server returns fewer results than requested. reset when the pairs list changes.
-  const hasMoreRef = useRef(true);
+  // flips true once paging terminates early — a page returns empty/short or a fetch fails — so the loop
+  // stops AND `loading` can settle even when fewer results than pairs came back. reactive (not a ref) so
+  // the derived `loading` flag updates; without it `loading` could stay true forever. reset on pairs change.
+  const [terminated, setTerminated] = useState(false);
   useEffect(() => {
-    hasMoreRef.current = true;
+    setTerminated(false);
   }, [pairsKey]);
+
+  // every page loaded, or paging stopped early: no further requests will be made.
+  const done = allLoaded || terminated;
 
   // sequential background paging: whenever a page settles and pairs remain, request the next page.
   useEffect(() => {
-    if (skip || loading || allLoaded || !hasMoreRef.current) return;
+    if (skip || loading || done) return;
     fetchMore({
       variables: { pairs: stablePairs, offset: results.length, limit: COMPARE_PAGE_SIZE },
       updateQuery: (prev: any, { fetchMoreResult }: any) => {
         const prevHost = prev.getHost;
         if (!fetchMoreResult || !prevHost) return prev;
         const newItems = fetchMoreResult.getHost?.compareComponents ?? [];
-        if (newItems.length === 0) hasMoreRef.current = false;
+        if (newItems.length === 0) setTerminated(true);
         return {
           getHost: {
             ...prevHost,
@@ -135,9 +139,9 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
       },
     }).catch(() => {
       // a failed page stops the sequence; pages already loaded stay usable.
-      hasMoreRef.current = false;
+      setTerminated(true);
     });
-  }, [skip, loading, allLoaded, results.length, stablePairs, fetchMore]);
+  }, [skip, loading, done, results.length, stablePairs, fetchMore]);
 
   const dataByCompareId = useMemo(() => {
     const map = new Map<string, CompareComponentData | null>();
@@ -152,10 +156,10 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
   const value = useMemo<CompareDataContextModel>(
     () => ({
       getData: (compareId: string) => dataByCompareId.get(compareId),
-      loading: !allLoaded,
+      loading: !done,
       loadedCount: results.length,
     }),
-    [dataByCompareId, allLoaded, results.length]
+    [dataByCompareId, done, results.length]
   );
 
   return <CompareDataContext.Provider value={value}>{children}</CompareDataContext.Provider>;

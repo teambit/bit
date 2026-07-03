@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions, CLIArgs } from '@teambit/cli';
-import { warnSymbol } from '@teambit/cli';
+import { formatWarningSummary } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
 import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
@@ -139,7 +139,7 @@ examples:
   };
 
   private formatUnavailable(diff: APIDiffResult, pattern: string): string {
-    const lines = ['', `  ${warnSymbol} ${chalk.bold('Unable to compute API diff')} for ${chalk.cyan(pattern)}`, ''];
+    const lines = ['', `  ${formatWarningSummary(`Unable to compute API diff for ${chalk.cyan(pattern)}`)}`, ''];
     if (!diff.base.available) {
       lines.push(`  base version ${SchemaDiffCommand.REASON_TEXT[diff.base.reason || 'FAILED']}`);
     }

@@ -4,8 +4,7 @@ import { compact } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
-import type { ComponentID } from '@teambit/component-id';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { GraphqlMain } from '@teambit/graphql';
@@ -79,25 +78,33 @@ export class ComponentCompareMain {
 
   /**
    * Read-through cache with single-flight dedupe: serve a persisted result, else share an in-flight
-   * computation, else compute once and persist. `(baseId, compareId)` pairs are immutable (keyed on
-   * snap hashes), so a cached result never goes stale. `cacheable` gates which results are persisted.
+   * computation, else compute once and persist. Most `(baseId, compareId)` pairs are immutable (keyed
+   * on snap hashes), so a cached result never goes stale. `cacheable` gates which results are persisted.
+   *
+   * `skipPersistentCache` bypasses the persistent cache entirely (neither read nor write) while still
+   * sharing the in-flight computation. Callers must set it whenever the result depends on mutable state
+   * the key does not capture — e.g. a live-workspace diff against on-disk files — so a previously
+   * persisted snap-to-snap result for the same key is never served in its place.
    */
   private async getOrCompute<T>(
     inflight: Map<string, Promise<T>>,
     cacheKey: string,
     compute: () => Promise<T>,
-    cacheable: (value: T) => boolean = () => true
+    cacheable: (value: T) => boolean = () => true,
+    skipPersistentCache = false
   ): Promise<T> {
     const pending = inflight.get(cacheKey);
     if (pending) return pending;
-    const cached = await this.cache.get<T>(cacheKey);
-    if (cached !== undefined) return cached;
-    // a concurrent caller may have started computing while we awaited the cache read.
-    const started = inflight.get(cacheKey);
-    if (started) return started;
+    if (!skipPersistentCache) {
+      const cached = await this.cache.get<T>(cacheKey);
+      if (cached !== undefined) return cached;
+      // a concurrent caller may have started computing while we awaited the cache read.
+      const started = inflight.get(cacheKey);
+      if (started) return started;
+    }
     const promise = compute()
       .then((result) => {
-        if (cacheable(result)) void this.cache.set(cacheKey, result);
+        if (!skipPersistentCache && cacheable(result)) void this.cache.set(cacheKey, result);
         return result;
       })
       .finally(() => inflight.delete(cacheKey));
@@ -113,8 +120,33 @@ export class ComponentCompareMain {
       // never persist a live-workspace diff: it reflects on-disk files (incl. uncommitted changes),
       // so a cached copy would go stale the moment the user edits a file. the (baseId, compareId)
       // pair is otherwise immutable (keyed on snap hashes), so those stay cacheable.
-      (result) => !result.isLiveWorkspace
+      (result) => !result.isLiveWorkspace,
+      // whether this call *reads* the persistent cache is decided up front from the same signal:
+      // a live-workspace compare must skip the cache entirely, otherwise a snap-to-snap result
+      // persisted for this key in a prior run (or a non-live context) would mask on-disk changes.
+      this.comparesLiveWorkspace(baseIdStr, compareIdStr)
     );
+  }
+
+  /**
+   * cheap, synchronous pre-check mirroring the `comparingWithLocalChanges` / `compareIsLiveWorkspace`
+   * logic in `computeCompare`: will this compare diff against live on-disk workspace files rather than
+   * two immutable snaps? errs toward `true` (skip the persistent cache) whenever the id cannot be
+   * classified, so a stale snap-to-snap result is never served in place of a live one.
+   */
+  private comparesLiveWorkspace(baseIdStr: string, compareIdStr: string): boolean {
+    if (!this.workspace) return false; // scope/remote host: every compare is an immutable snap-to-snap pair
+    if (baseIdStr === compareIdStr) return true; // the "local changes" view: checked-out snap vs on-disk files
+    let compareId: ComponentID;
+    try {
+      compareId = ComponentID.fromString(compareIdStr);
+    } catch {
+      return true; // unclassifiable id → assume live so a stale cached diff is never returned
+    }
+    const checkedOut = this.workspace.getIdIfExist(compareId);
+    if (!checkedOut) return false; // compare side isn't checked out → two stored snaps, safe to cache
+    // live only when the compare side is the exact version currently checked out on disk.
+    return !compareId.hasVersion() || checkedOut.version === compareId.version;
   }
 
   /** The original `compare()` body — moved here so the public method can wrap with memo + single-flight. */
