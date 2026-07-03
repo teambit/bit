@@ -1682,7 +1682,11 @@ please create a new lane instead, which will include all components of this lane
     };
     const differsUnordered = (a: unknown, b: unknown) => canonical(a) !== canonical(b);
 
-    const hasCodeChanges = differs(baseObj.files, compareObj.files) || differs(baseObj.mainFile, compareObj.mainFile);
+    // `files` is a set keyed by path+hash; `Version.toObject()` emits it unsorted, so compare it
+    // order-insensitively too — a pure reorder must not read as a SOURCE_CODE change. `mainFile` is a
+    // single value, so ordered compare is fine.
+    const hasCodeChanges =
+      differsUnordered(baseObj.files, compareObj.files) || differs(baseObj.mainFile, compareObj.mainFile);
     // DEPENDENCY mirrors compare()'s deps fields: dependencies, devDependencies, extensionDependencies
     // (the last carries aspect/env-provided deps — present as model deps, not in the plain toObject()).
     const hasDepChanges =

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { gql, useQuery } from '@apollo/client';
 
@@ -118,19 +118,30 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
     setTerminated(false);
   }, [pairsKey]);
 
+  // the pairs set this provider is currently paging — a fetchMore started for an earlier set can still
+  // resolve/reject after `pairs` changed, so its callbacks check this before terminating the new loop.
+  const pairsKeyRef = useRef(pairsKey);
+  useEffect(() => {
+    pairsKeyRef.current = pairsKey;
+  }, [pairsKey]);
+
   // every page loaded, or paging stopped early: no further requests will be made.
   const done = allLoaded || terminated;
 
   // sequential background paging: whenever a page settles and pairs remain, request the next page.
   useEffect(() => {
     if (skip || loading || done) return;
+    // guard the async terminations below to this page's pairs set: an in-flight fetchMore from a
+    // previous pairsKey must not terminate the paging loop of a newer one (rapid target switches).
+    const activeKey = pairsKey;
+    const stillActive = () => pairsKeyRef.current === activeKey;
     fetchMore({
       variables: { pairs: stablePairs, offset: results.length, limit: COMPARE_PAGE_SIZE },
       updateQuery: (prev: any, { fetchMoreResult }: any) => {
         const prevHost = prev.getHost;
         if (!fetchMoreResult || !prevHost) return prev;
         const newItems = fetchMoreResult.getHost?.compareComponents ?? [];
-        if (newItems.length === 0) setTerminated(true);
+        if (newItems.length === 0 && stillActive()) setTerminated(true);
         return {
           getHost: {
             ...prevHost,
@@ -140,9 +151,9 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
       },
     }).catch(() => {
       // a failed page stops the sequence; pages already loaded stay usable.
-      setTerminated(true);
+      if (stillActive()) setTerminated(true);
     });
-  }, [skip, loading, done, results.length, stablePairs, fetchMore]);
+  }, [skip, loading, done, results.length, stablePairs, fetchMore, pairsKey]);
 
   const dataByCompareId = useMemo(() => {
     const map = new Map<string, CompareComponentData | null>();
