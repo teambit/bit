@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import type { APIDiffResult } from './api-diff-model';
@@ -30,11 +30,12 @@ export const QUERY_API_DIFFS = gql`
 export type ApiDiffDataContextModel = {
   /**
    * look up bulk api-diff data for a component pair by its `compareId`.
-   * `null` = the pair's diff could not be computed; `undefined` = the pair is not in this
+   * `null` = the pair's diff could not be computed, OR it was requested but paging finished/stopped
+   * early before reaching it (so it will never resolve); `undefined` = the pair is not in this
    * provider's list, or its page has not loaded yet (check `loading` to disambiguate).
    */
   getApiDiff: (compareId: string) => APIDiffResult | null | undefined;
-  /** true until every page has loaded */
+  /** true while pages are still loading; settles to false once every page loads or paging stops early */
   loading: boolean;
   /** number of pairs whose data has loaded so far */
   loadedCount: number;
@@ -86,23 +87,43 @@ export function ApiDiffDataProvider({
   const results: Array<APIDiffResult | null> = data?.getHost?.apiDiffs ?? [];
   const allLoaded = skip || results.length >= stablePairs.length;
 
-  // flips off once a page returns empty (or a page fails) — guarantees the paging loop terminates
-  // even if the server returns fewer results than requested. reset when the pairs list changes.
-  const hasMoreRef = useRef(true);
+  // flips true once paging terminates early — a page returns empty/short, a fetch fails, or the host is
+  // null — so the loop stops AND `loading` can settle even when fewer results than pairs came back.
+  // reactive (not a ref) so the derived `loading` flag updates. reset on pairs change.
+  const [terminated, setTerminated] = useState(false);
   useEffect(() => {
-    hasMoreRef.current = true;
+    setTerminated(false);
   }, [pairsKey]);
+
+  // the pairs set this provider is currently paging — a fetchMore started for an earlier set can still
+  // resolve/reject after `pairs` changed, so its callbacks check this before terminating the new loop.
+  const pairsKeyRef = useRef(pairsKey);
+  useEffect(() => {
+    pairsKeyRef.current = pairsKey;
+  }, [pairsKey]);
+
+  // every page loaded, or paging stopped early: no further requests will be made.
+  const done = allLoaded || terminated;
 
   // sequential background paging: whenever a page settles and pairs remain, request the next page.
   useEffect(() => {
-    if (skip || loading || allLoaded || !hasMoreRef.current) return;
+    if (skip || loading || done) return;
+    // guard the async terminations to this page's pairs set: an in-flight fetchMore from a previous
+    // pairsKey must not terminate the paging loop of a newer one.
+    const activeKey = pairsKey;
+    const stillActive = () => pairsKeyRef.current === activeKey;
     fetchMore({
       variables: { pairs: stablePairs, offset: results.length, limit: API_DIFF_PAGE_SIZE, host },
       updateQuery: (prev: any, { fetchMoreResult }: any) => {
         const prevHost = prev.getHost;
-        if (!fetchMoreResult || !prevHost) return prev;
+        if (!fetchMoreResult || !prevHost) {
+          // nothing came back, or the accumulated result has no host (getHost: null) to page against →
+          // can't fetch further; terminate so the effect stops re-issuing fetchMore and loading settles.
+          if (stillActive()) setTerminated(true);
+          return prev;
+        }
         const newItems = fetchMoreResult.getHost?.apiDiffs ?? [];
-        if (newItems.length === 0) hasMoreRef.current = false;
+        if (newItems.length === 0 && stillActive()) setTerminated(true);
         return {
           getHost: {
             ...prevHost,
@@ -112,9 +133,9 @@ export function ApiDiffDataProvider({
       },
     }).catch(() => {
       // a failed page stops the sequence; pages already loaded stay usable.
-      hasMoreRef.current = false;
+      if (stillActive()) setTerminated(true);
     });
-  }, [skip, loading, allLoaded, results.length, stablePairs, fetchMore, host]);
+  }, [skip, loading, done, results.length, stablePairs, fetchMore, host, pairsKey]);
 
   const dataByCompareId = useMemo(() => {
     // results are returned aligned to the requested slice and concatenated in order, so position
@@ -127,13 +148,25 @@ export function ApiDiffDataProvider({
     return map;
   }, [results, stablePairs]);
 
+  // every compareId this provider was asked to fetch — lets getApiDiff tell "requested but unresolved"
+  // (paging stopped early) apart from "not in this provider's list" once paging is done.
+  const requestedCompareIds = useMemo(() => new Set(stablePairs.map((p) => p.compareId)), [stablePairs]);
+
   const value = useMemo<ApiDiffDataContextModel>(
     () => ({
-      getApiDiff: (compareId: string) => dataByCompareId.get(compareId),
-      loading: !allLoaded,
+      getApiDiff: (compareId: string) => {
+        const found = dataByCompareId.get(compareId);
+        if (found !== undefined) return found;
+        // paging finished (fully, or stopped early on a short page / fetch error / null host) but this
+        // requested pair never produced an entry → surface it as failed (null) rather than "still
+        // loading" (undefined), so consumers keyed on `getApiDiff(...) === undefined` don't spin forever.
+        if (done && requestedCompareIds.has(compareId)) return null;
+        return undefined;
+      },
+      loading: !done,
       loadedCount: results.length,
     }),
-    [dataByCompareId, allLoaded, results.length]
+    [dataByCompareId, done, requestedCompareIds, results.length]
   );
 
   return <ApiDiffDataContext.Provider value={value}>{children}</ApiDiffDataContext.Provider>;

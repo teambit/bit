@@ -139,7 +139,12 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
       variables: { pairs: stablePairs, offset: results.length, limit: COMPARE_PAGE_SIZE },
       updateQuery: (prev: any, { fetchMoreResult }: any) => {
         const prevHost = prev.getHost;
-        if (!fetchMoreResult || !prevHost) return prev;
+        if (!fetchMoreResult || !prevHost) {
+          // nothing came back, or the accumulated result has no host (getHost: null) to page against →
+          // can't fetch further; terminate so the effect stops re-issuing fetchMore and loading settles.
+          if (stillActive()) setTerminated(true);
+          return prev;
+        }
         const newItems = fetchMoreResult.getHost?.compareComponents ?? [];
         if (newItems.length === 0 && stillActive()) setTerminated(true);
         return {
