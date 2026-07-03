@@ -846,17 +846,20 @@ function CompareRegistryEntry({ compareId }: { compareId: string }) {
   const data: CompareComponentData | null | undefined = compareData?.getData(compareId);
   const componentIdStr = compareId.split('@')[0];
 
-  // `data` is undefined while the bulk page loads and null if the pair failed to compare;
-  // both intentionally register nothing (matching the prior per-component behavior on failure).
+  // `data` undefined = the bulk page is still loading → register nothing (keep any prior entry). `data`
+  // null = the pair failed or paging terminated before reaching it → register an empty list so a stale
+  // file tree from a previous comparison is cleared rather than left behind in the sidebar registry.
   const registryFiles = useMemo(() => {
-    if (!data) return undefined;
+    if (data === undefined) return undefined;
+    if (data === null) return [];
     return (data.code || [])
       .filter((f) => f.status !== 'UNCHANGED')
       .map((f) => ({ name: f.fileName, status: f.status }));
   }, [data]);
 
   const aspectRegistryFiles = useMemo(() => {
-    if (!data) return undefined;
+    if (data === undefined) return undefined;
+    if (data === null) return [];
     return (data.aspects || []).map((a) => ({ name: a.fieldName, status: 'MODIFIED' }));
   }, [data]);
 

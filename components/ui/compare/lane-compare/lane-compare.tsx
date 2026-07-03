@@ -145,7 +145,7 @@ function LaneCompareInline({
   }, [_tabs]);
 
   // __bit's useLaneComponents keys on LaneId; hash-based invalidation is not needed here.
-  const { components: laneComponents, componentDescriptors: laneComponentDescriptors } = useLaneComponents(compare?.id);
+  const { componentDescriptors: laneComponentDescriptors } = useLaneComponents(compare?.id);
   const compositionsMap = useMemo(() => {
     const map = new Map<string, boolean>();
     if (!laneComponentDescriptors) return map;
@@ -155,7 +155,10 @@ function LaneCompareInline({
       map.set(comp.id.toStringWithoutVersion(), Array.isArray(compositions) && compositions.length > 0);
     });
     return map;
-  }, [laneComponents?.length]);
+    // depend on the descriptors themselves (like envIconsMap), not the component count — switching to a
+    // different lane with the same number of components changes the descriptors but not the length, and
+    // keying on length alone would keep the previous lane's composition data (wrong Preview visibility).
+  }, [laneComponentDescriptors]);
   // Build the env-icon lookup from the descriptors we already loaded. Falls back to the explicit
   // `envIcons` prop if the parent supplies it (e.g. for testing/storybook).
   //
