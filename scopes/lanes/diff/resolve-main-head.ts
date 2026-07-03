@@ -2,6 +2,7 @@ import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { ScopeMain } from '@teambit/scope';
+import { Ref } from '@teambit/objects';
 import { compact } from 'lodash';
 
 /**
@@ -37,8 +38,12 @@ export async function importMainHeads(scope: ScopeMain, componentIds: ComponentI
     await Promise.all(
       componentIds.map(async (id) => {
         if (!scope.isExported(id)) return undefined; // no remote to ask
-        const head = await getHeadOnMain(scope, id); // already resolvable (local head or cached remote ref)
-        return head ? undefined : id.changeVersion(undefined);
+        const head = await getHeadOnMain(scope, id);
+        if (!head) return undefined; // no head on main at all → a genuinely-new component, nothing to fetch
+        // a head resolved only from a remote-lanes ref may point at a Version object that isn't local;
+        // import unless the object is actually present, else downstream diff/merge loads a missing base.
+        const hasObject = await scope.legacyScope.objects.has(Ref.from(head));
+        return hasObject ? undefined : id.changeVersion(undefined);
       })
     )
   );
