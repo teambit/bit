@@ -1943,7 +1943,13 @@
         "version": "",
         "defaultScope": "teambit.code",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/diff-viewer"
+        "rootDir": "components/ui/diff-viewer",
+        "config": {
+            "teambit.react/react-env@1.3.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/docs-app": {
         "name": "ui/docs-app",

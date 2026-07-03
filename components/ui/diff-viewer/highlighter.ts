@@ -1,48 +1,18 @@
-// Side-effect import of the ambient shiki module shims. shiki is ESM-only (types shipped as `.d.mts`
-// behind an `exports` map), which the repo's classic `moduleResolution: "node"` can't read; the shim
-// declares the modules so `shiki/core` / `@shikijs/*` resolve. Importing it (rather than only relying
-// on the repo `include`) guarantees it's in scope when this file is compiled as a source-linked
-// dependency under a consumer env, whose tsconfig doesn't pick up stray declaration files.
-import './shiki-shims';
 import { useEffect, useMemo, useState } from 'react';
-import { createHighlighterCore } from 'shiki/core';
-import type { HighlighterCore } from 'shiki/core';
-import { createJavaScriptRegexEngine } from '@shikijs/engine-javascript';
 import { bitShikiTheme, BIT_THEME_NAME } from './shiki-bit-theme';
+// shiki's ESM-only subpath imports are contained in this one boundary module (see its header for
+// why); everything below is compiled against its explicitly-typed re-exports, not shiki directly.
+import {
+  createHighlighterCore,
+  createJavaScriptRegexEngine,
+  LANG_IMPORTERS,
+  type ShikiHighlighterCore as HighlighterCore,
+} from './shiki-imports';
 
 /** A single highlighted token: its text and the (sentinel) color shiki assigned to it. */
 export type HlToken = { content: string; color?: string };
 /** A file's tokens, indexed by line (line `n` is `lines[n - 1]`). */
 export type HlLines = HlToken[][];
-
-/**
- * shiki grammars are large, so each language is imported lazily and code-split. The map keys are the
- * normalized shiki language ids; values are dynamic imports of `@shikijs/langs/*`. Add a language by
- * adding an entry here — nothing else needs to change.
- */
-const LANG_IMPORTERS: Record<string, () => Promise<any>> = {
-  typescript: () => import('@shikijs/langs/typescript'),
-  tsx: () => import('@shikijs/langs/tsx'),
-  javascript: () => import('@shikijs/langs/javascript'),
-  jsx: () => import('@shikijs/langs/jsx'),
-  json: () => import('@shikijs/langs/json'),
-  jsonc: () => import('@shikijs/langs/jsonc'),
-  css: () => import('@shikijs/langs/css'),
-  scss: () => import('@shikijs/langs/scss'),
-  less: () => import('@shikijs/langs/less'),
-  html: () => import('@shikijs/langs/html'),
-  vue: () => import('@shikijs/langs/vue'),
-  markdown: () => import('@shikijs/langs/markdown'),
-  mdx: () => import('@shikijs/langs/mdx'),
-  yaml: () => import('@shikijs/langs/yaml'),
-  python: () => import('@shikijs/langs/python'),
-  go: () => import('@shikijs/langs/go'),
-  rust: () => import('@shikijs/langs/rust'),
-  java: () => import('@shikijs/langs/java'),
-  shellscript: () => import('@shikijs/langs/shellscript'),
-  graphql: () => import('@shikijs/langs/graphql'),
-  sql: () => import('@shikijs/langs/sql'),
-};
 
 /** map a file extension to a shiki language id (and the aliases shiki itself understands). */
 const EXTENSION_TO_LANG: Record<string, string> = {
