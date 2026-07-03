@@ -72,6 +72,15 @@ function LaneCompareProviderImpl({
     [loadingLaneDiff, base?.toString(), compare?.toString(), laneDiff]
   );
 
+  // canonical key of the current pair set — used to re-init compare state when the *set* changes, not
+  // just its size. two different diff sets can share a length, so keying on length alone would leave
+  // stale keys for the previous set; the key changes only on real membership changes, so it also avoids
+  // spuriously resetting state when componentsToDiff recomputes to the same set.
+  const componentsToDiffKey = useMemo(
+    () => componentsToDiff.map(([b, c]) => computeStateKey(b, c)).join('\n'),
+    [componentsToDiff]
+  );
+
   const defaultLaneState = useCallback(
     (compId?: string) => {
       const sortedTabs = extractLazyLoadedData(tabs)?.sort(sortTabs);
@@ -131,7 +140,7 @@ function LaneCompareProviderImpl({
 
       setLaneCompareState(compareState);
     }
-  }, [loadingLaneDiff, componentsToDiff.length, base?.toString(), compare?.toString(), defaultComponentCompareState]);
+  }, [loadingLaneDiff, componentsToDiffKey, base?.toString(), compare?.toString(), defaultComponentCompareState]);
 
   const laneComponentDiffByCompId = useMemo(() => {
     if (!laneDiff) return new Map<string, LaneComponentDiff>();
