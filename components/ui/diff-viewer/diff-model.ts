@@ -98,18 +98,33 @@ function tokenizeLine(s: string): string[] {
   return s.match(/[A-Za-z0-9_$]+|\s+|[^A-Za-z0-9_$\s]/g) || [];
 }
 
+// Cap the intra-line LCS: it allocates an (m+1)×(n+1) matrix in the token counts of the two lines, so a
+// pathological line (minified/generated, thousands of tokens) would build a multi-million-cell table and
+// stall — or crash — the viewer, and this runs for every del/add pair in a block. Past either cap we skip
+// character-level highlighting for that pair; the line still renders as fully changed, just without
+// intra-line ranges.
+const MAX_INTRA_LINE_CHARS = 2000;
+const MAX_INTRA_LINE_CELLS = 1_000_000;
+
 /**
  * Token-level (word) diff of two lines via an LCS walk, returning the half-open character ranges that
- * changed on each side. Adjacent changed ranges are merged so the highlight reads as one span.
+ * changed on each side. Adjacent changed ranges are merged so the highlight reads as one span. Lines
+ * past a size cap fall back to no intra-line ranges to keep the computation bounded.
  */
 export function intraLineDiff(
   from: string,
   to: string
 ): { delRanges: Array<[number, number]>; addRanges: Array<[number, number]> } {
+  if (from.length > MAX_INTRA_LINE_CHARS || to.length > MAX_INTRA_LINE_CHARS) {
+    return { delRanges: [], addRanges: [] };
+  }
   const a = tokenizeLine(from);
   const b = tokenizeLine(to);
   const m = a.length;
   const n = b.length;
+  if (m * n > MAX_INTRA_LINE_CELLS) {
+    return { delRanges: [], addRanges: [] };
+  }
   const dp: number[][] = Array.from({ length: m + 1 }, () => Array.from({ length: n + 1 }, () => 0));
   for (let i = m - 1; i >= 0; i--) {
     for (let j = n - 1; j >= 0; j--) {
