@@ -37,8 +37,8 @@ type CompareComponentsQueryResult = {
 };
 
 export const QUERY_COMPARE_COMPONENTS = gql`
-  query CompareComponents($pairs: [ComponentComparePair!]!, $offset: Int, $limit: Int) {
-    getHost {
+  query CompareComponents($pairs: [ComponentComparePair!]!, $offset: Int, $limit: Int, $host: String) {
+    getHost(id: $host) {
       id
       compareComponents(pairs: $pairs, offset: $offset, limit: $limit) {
         id
@@ -91,9 +91,19 @@ export function useCompareData(): CompareDataContextModel | undefined {
  * fires the bulk `compareComponents` query for the whole `pairs` list and exposes the results via context.
  * loads sequentially in pages of COMPARE_PAGE_SIZE — page 1 first, then fetchMore for each subsequent page
  * in the background until all pairs are covered. `pairs` is stabilized internally by content, so callers
- * do not have to memoize it.
+ * do not have to memoize it. `host` targets a specific GraphQL host (e.g. the workspace or a scope);
+ * omitting it resolves against the server default host.
  */
-export function CompareDataProvider({ pairs, children }: { pairs: ComponentComparePair[]; children: ReactNode }) {
+export function CompareDataProvider({
+  pairs,
+  host,
+  children,
+}: {
+  pairs: ComponentComparePair[];
+  /** GraphQL host id, e.g. "teambit.scope/scope" or "workspace" — must match the host of the compared models */
+  host?: string;
+  children: ReactNode;
+}) {
   // stabilize by content: a new array reference with the same pairs must not restart the query.
   const pairsKey = JSON.stringify(pairs);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,7 +112,7 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
   const skip = stablePairs.length === 0;
 
   const { data, loading, fetchMore } = useQuery<CompareComponentsQueryResult>(QUERY_COMPARE_COMPONENTS, {
-    variables: { pairs: stablePairs, offset: 0, limit: COMPARE_PAGE_SIZE },
+    variables: { pairs: stablePairs, offset: 0, limit: COMPARE_PAGE_SIZE, host },
     skip,
     notifyOnNetworkStatusChange: true,
   });
@@ -136,7 +146,7 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
     const activeKey = pairsKey;
     const stillActive = () => pairsKeyRef.current === activeKey;
     fetchMore({
-      variables: { pairs: stablePairs, offset: results.length, limit: COMPARE_PAGE_SIZE },
+      variables: { pairs: stablePairs, offset: results.length, limit: COMPARE_PAGE_SIZE, host },
       updateQuery: (prev: any, { fetchMoreResult }: any) => {
         const prevHost = prev.getHost;
         if (!fetchMoreResult || !prevHost) {
@@ -158,7 +168,7 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
       // a failed page stops the sequence; pages already loaded stay usable.
       if (stillActive()) setTerminated(true);
     });
-  }, [skip, loading, done, results.length, stablePairs, fetchMore, pairsKey]);
+  }, [skip, loading, done, results.length, stablePairs, fetchMore, pairsKey, host]);
 
   const dataByCompareId = useMemo(() => {
     const map = new Map<string, CompareComponentData | null>();

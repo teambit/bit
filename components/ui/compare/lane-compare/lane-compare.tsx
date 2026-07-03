@@ -124,7 +124,7 @@ function LaneCompareInline({
   base: _base,
   compare,
   className,
-  host: _host,
+  host,
   tabs: _tabs,
   customUseComponent: _customUseComponent,
   customUseLaneDiff: _customUseLaneDiff,
@@ -504,7 +504,7 @@ function LaneCompareInline({
   }
 
   return (
-    <CompareDataProvider pairs={comparePairs}>
+    <CompareDataProvider pairs={comparePairs} host={host}>
       <RegistryFeeder pairs={comparePairs} />
       <div {...rest} className={classnames(styles.rootLaneCompare, className)}>
         {/* Toolbar */}
@@ -550,7 +550,7 @@ function LaneCompareInline({
           >
             <ApiDiffLaneView
               diffs={apiDiffs}
-              host="teambit.scope/scope"
+              host={host}
               selectedId={selectedId}
               selectedExport={selectedFile}
               insights={apiDiffInsights}
@@ -598,7 +598,7 @@ function LaneCompareInline({
                         envIcon={envIconsMap.get(c.idStr)}
                         allTabs={resolvedTabs}
                         accentColor={ACCENT_COLORS[c.changeType] || undefined}
-                        host="teambit.scope/scope"
+                        host={host}
                         dataAttributes={componentDataAttrs.get(c.idStr)}
                       />
                     ))}
