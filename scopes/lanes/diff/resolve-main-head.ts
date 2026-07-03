@@ -39,11 +39,13 @@ export async function importMainHeads(scope: ScopeMain, componentIds: ComponentI
       componentIds.map(async (id) => {
         if (!scope.isExported(id)) return undefined; // no remote to ask
         const head = await getHeadOnMain(scope, id);
-        if (!head) return undefined; // no head on main at all → a genuinely-new component, nothing to fetch
-        // a head resolved only from a remote-lanes ref may point at a Version object that isn't local;
-        // import unless the object is actually present, else downstream diff/merge loads a missing base.
-        const hasObject = await scope.legacyScope.objects.has(Ref.from(head));
-        return hasObject ? undefined : id.changeVersion(undefined);
+        // skip only when the base is fully available locally: a resolvable head whose object is present.
+        // otherwise import — the head may be unresolvable simply because the default-lane ref was never
+        // fetched (the remote can still have a main version), or it resolves to an object not present
+        // locally. `ignoreMissingHead` in the import keeps a genuinely-new component (no main version on
+        // the remote) a real NEW after the fetch finds nothing.
+        if (head && (await scope.legacyScope.objects.has(Ref.from(head)))) return undefined;
+        return id.changeVersion(undefined);
       })
     )
   );
