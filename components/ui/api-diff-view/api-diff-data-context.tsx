@@ -122,8 +122,12 @@ export function ApiDiffDataProvider({
           if (stillActive()) setTerminated(true);
           return prev;
         }
+        // a fetchMore issued for a previous pairs set can resolve after `pairs` changed; discard its
+        // page rather than merging it into the current session's results (which would corrupt the new
+        // diff set) or terminating the new loop.
+        if (!stillActive()) return prev;
         const newItems = fetchMoreResult.getHost?.apiDiffs ?? [];
-        if (newItems.length === 0 && stillActive()) setTerminated(true);
+        if (newItems.length === 0) setTerminated(true);
         return {
           getHost: {
             ...prevHost,
