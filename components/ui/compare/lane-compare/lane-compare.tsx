@@ -294,14 +294,29 @@ function LaneCompareInline({
     return allComponents.filter((c) => selectedIds.has(c.idStr));
   }, [allComponents, selectedSearchComponents]);
 
+  // Whether a component belongs in the Code view. The lane-diff `changeType` (SOURCE_CODE) is a coarse
+  // hint that can disagree with the real bulk file diff — a component can be flagged as a code change yet
+  // have zero actually-changed files (metadata-only). Once the bulk data has loaded we trust the real
+  // file list (getFiles → [] means "loaded, no code changes" → hide it); until then we fall back to the
+  // coarse hint so components paint without waiting. NEW components render all files via a separate path
+  // (not the bulk registry), so they always qualify.
+  const hasCodeChanges = useCallback(
+    (c: (typeof allComponents)[number]) => {
+      if (c.changeType === ChangeType.NEW || c.changes.some((ch) => ch === ChangeType.NEW)) return true;
+      const files = fileRegistry?.getFiles(c.idStr);
+      if (files === undefined) return c.changes.some((ch) => ch === ChangeType.SOURCE_CODE);
+      return files.length > 0;
+    },
+    // getVersion() advances on every registration, so this recomputes as bulk file data streams in.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fileRegistry, fileRegistry?.getVersion()]
+  );
+
   const matchesView = useCallback(
     (c: (typeof allComponents)[number], mode: ViewMode) => {
       switch (mode) {
         case 'code':
-          return (
-            c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.NEW) ||
-            c.changeType === ChangeType.NEW
-          );
+          return hasCodeChanges(c);
         case 'preview':
           return compositionsMap.get(c.idStr) !== false;
         case 'dependencies':
@@ -313,7 +328,7 @@ function LaneCompareInline({
           return true;
       }
     },
-    [compositionsMap]
+    [compositionsMap, hasCodeChanges]
   );
 
   // View-mode-filtered set. Cheap (no heavy mounting) — used for the sidebar, the empty-state check,
@@ -330,18 +345,14 @@ function LaneCompareInline({
     const map = new Map<string, Record<string, string>>();
     allComponents.forEach((c) => {
       const attrs: Record<string, string> = {};
-      if (
-        c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.NEW) ||
-        c.changeType === ChangeType.NEW
-      )
-        attrs['data-has-code'] = '';
+      if (hasCodeChanges(c)) attrs['data-has-code'] = '';
       if (compositionsMap.get(c.idStr) !== false) attrs['data-has-preview'] = '';
       if (c.changes.some((ch) => ch === ChangeType.DEPENDENCY)) attrs['data-has-deps'] = '';
       if (c.changes.some((ch) => ch === ChangeType.ASPECTS)) attrs['data-has-config'] = '';
       map.set(c.idStr, attrs);
     });
     return map;
-  }, [allComponents, compositionsMap]);
+  }, [allComponents, compositionsMap, hasCodeChanges]);
 
   // Group helper (view-mode-independent grouping: by scope/namespace/status).
   const groupComponents = useCallback(
@@ -382,11 +393,7 @@ function LaneCompareInline({
   // Counts
   const counts = useMemo(() => {
     return {
-      code: allComponents.filter(
-        (c) =>
-          c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.NEW) ||
-          c.changeType === ChangeType.NEW
-      ).length,
+      code: allComponents.filter((c) => hasCodeChanges(c)).length,
       preview: allComponents.filter((c) => compositionsMap.get(c.idStr) !== false).length,
       docs: allComponents.length,
       dependencies: allComponents.filter((c) => c.changes.some((ch) => ch === ChangeType.DEPENDENCY)).length,
@@ -397,7 +404,7 @@ function LaneCompareInline({
       // auto-view-switch effect yank the user away from the view's own empty state.
       api: allComponents.length,
     };
-  }, [allComponents, compositionsMap]);
+  }, [allComponents, compositionsMap, hasCodeChanges]);
 
   const compareViewModes: CompareViewMode[] = useMemo(
     () => [
