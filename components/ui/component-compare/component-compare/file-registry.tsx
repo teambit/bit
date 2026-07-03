@@ -130,11 +130,20 @@ export function useFileRegistry() {
   return store;
 }
 
+// `undefined` = not loaded yet (register nothing); `[]` = loaded with no changed files (register the
+// empty list, so a component that becomes unchanged under a new base clears its stale sidebar entry
+// instead of keeping the previous non-empty one). the signature encodes definedness so an
+// `undefined → []` transition still re-runs the effect — otherwise both collapse to '' and it wouldn't.
+// `register*()` bails on an equal signature, so a repeated empty registration never notifies.
+function registerSignature(files: FileInfo[] | undefined): string | undefined {
+  return files === undefined ? undefined : filesSignature(files);
+}
+
 export function useFileRegistryRegister(componentId: string | undefined, files: FileInfo[] | undefined) {
   const store = useContext(FileRegistryContext);
-  const signature = files ? filesSignature(files) : '';
+  const signature = registerSignature(files);
   useEffect(() => {
-    if (store && componentId && files && files.length > 0) {
+    if (store && componentId && files) {
       store.register(componentId, files);
     }
   }, [store, componentId, signature]);
@@ -142,9 +151,9 @@ export function useFileRegistryRegister(componentId: string | undefined, files: 
 
 export function useAspectRegistryRegister(componentId: string | undefined, files: FileInfo[] | undefined) {
   const store = useContext(FileRegistryContext);
-  const signature = files ? filesSignature(files) : '';
+  const signature = registerSignature(files);
   useEffect(() => {
-    if (store && componentId && files && files.length > 0) {
+    if (store && componentId && files) {
       store.registerAspects(componentId, files);
     }
   }, [store, componentId, signature]);
