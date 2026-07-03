@@ -1661,20 +1661,44 @@ please create a new lane instead, which will include all components of this lane
     const compareObj = compareVersion.toObject();
     const differs = (a: unknown, b: unknown) => JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
 
+    // dependency lists and config maps are semantically unordered — two snaps can store the same
+    // set in a different order (deps aren't sorted at snap time). compare them order-insensitively so
+    // a pure reorder isn't misclassified as a DEPENDENCY/ASPECTS change. `canonical` recursively sorts
+    // object keys and sorts array elements by their serialized form, yielding a stable set signature.
+    const canonical = (value: unknown): string => {
+      const norm = (v: any): any => {
+        if (Array.isArray(v)) return v.map(norm).sort((x, y) => (JSON.stringify(x) < JSON.stringify(y) ? -1 : 1));
+        if (v && typeof v === 'object') {
+          return Object.keys(v)
+            .sort()
+            .reduce<Record<string, any>>((acc, k) => {
+              acc[k] = norm(v[k]);
+              return acc;
+            }, {});
+        }
+        return v;
+      };
+      return JSON.stringify(norm(value) ?? null);
+    };
+    const differsUnordered = (a: unknown, b: unknown) => canonical(a) !== canonical(b);
+
     const hasCodeChanges = differs(baseObj.files, compareObj.files) || differs(baseObj.mainFile, compareObj.mainFile);
     // DEPENDENCY mirrors compare()'s deps fields: dependencies, devDependencies, extensionDependencies
     // (the last carries aspect/env-provided deps — present as model deps, not in the plain toObject()).
     const hasDepChanges =
-      differs(baseObj.dependencies, compareObj.dependencies) ||
-      differs(baseObj.devDependencies, compareObj.devDependencies) ||
-      differs(baseVersion.extensionDependencies.cloneAsString(), compareVersion.extensionDependencies.cloneAsString());
+      differsUnordered(baseObj.dependencies, compareObj.dependencies) ||
+      differsUnordered(baseObj.devDependencies, compareObj.devDependencies) ||
+      differsUnordered(
+        baseVersion.extensionDependencies.cloneAsString(),
+        compareVersion.extensionDependencies.cloneAsString()
+      );
     const hasFieldChanges =
       hasDepChanges ||
-      differs(baseObj.extensions, compareObj.extensions) ||
-      differs(baseObj.overrides, compareObj.overrides) ||
-      differs(baseObj.packageDependencies, compareObj.packageDependencies) ||
-      differs(baseObj.devPackageDependencies, compareObj.devPackageDependencies) ||
-      differs(baseObj.peerPackageDependencies, compareObj.peerPackageDependencies);
+      differsUnordered(baseObj.extensions, compareObj.extensions) ||
+      differsUnordered(baseObj.overrides, compareObj.overrides) ||
+      differsUnordered(baseObj.packageDependencies, compareObj.packageDependencies) ||
+      differsUnordered(baseObj.devPackageDependencies, compareObj.devPackageDependencies) ||
+      differsUnordered(baseObj.peerPackageDependencies, compareObj.peerPackageDependencies);
 
     if (!hasFieldChanges && !hasCodeChanges) {
       return [ChangeType.NONE];
