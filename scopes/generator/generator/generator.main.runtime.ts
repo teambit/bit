@@ -8,7 +8,7 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { EnvDefinition, EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, resolveLegacyCoreEnvId } from '@teambit/envs';
 import { ComponentConfig } from '@teambit/legacy.consumer-config';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
@@ -392,6 +392,29 @@ export class GeneratorMain {
   }
 
   /**
+   * same as getTemplateWithId, but when the template is not found and --env was provided, try
+   * loading the template from that env. needed for envs that used to be core aspects with
+   * built-in templates, e.g. "bit create react comp1 --env teambit.react/react". such envs are
+   * loaded on-demand, and legacy core env ids are resolved to their pinned version.
+   */
+  private async getTemplateWithIdOrEnvFallback(
+    templateName: string,
+    aspect?: string,
+    env?: string
+  ): Promise<ComponentTemplateWithId> {
+    try {
+      return await this.getTemplateWithId(templateName, aspect);
+    } catch (err) {
+      if (!env || env === aspect) throw err;
+      try {
+        return await this.getTemplateWithId(templateName, resolveLegacyCoreEnvId(env));
+      } catch {
+        throw err; // the original "template not found" error is more relevant
+      }
+    }
+  }
+
+  /**
    * Parse the scope from a component name if provided in the format: scope/name
    * This only works for bit.cloud scopes (containing a dot), e.g., "my-org.my-scope/hooks/use-session"
    * Local bare-scopes don't contain a dot, so we can't distinguish between scope/name and namespace/name.
@@ -425,7 +448,7 @@ export class GeneratorMain {
     await this.loadAspects();
     const { namespace, aspect } = options;
 
-    const templateWithId = await this.getTemplateWithId(templateName, aspect);
+    const templateWithId = await this.getTemplateWithIdOrEnvFallback(templateName, aspect, options.env);
 
     const componentIds = componentNames.map((componentName) => {
       // Support scope/name syntax for bit.cloud scopes (containing a dot)
@@ -616,10 +639,19 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     const configEnvs = this.config.envs || [];
     let remoteEnvsAspect;
     let fullAspectId;
+    let remoteSlotTemplates: Array<ComponentTemplateWithId> = [];
     if (aspectId && !configEnvs.includes(aspectId)) {
       const globals = await this.getGlobalGeneratorEnvs(aspectId);
       remoteEnvsAspect = globals.remoteEnvsAspect;
       fullAspectId = globals.fullAspectId;
+      // aspects loaded from the global scope register their templates on the remote generator
+      // instance. old-style envs (e.g. teambit.react/react) register via the generator slot, not
+      // via env.getGeneratorTemplates(), so collect their slot registrations as well.
+      const stripVersion = (id: string) => id.split('@')[0];
+      remoteSlotTemplates = globals.remoteGenerator
+        .getAllComponentTemplatesFlattened()
+        .filter((tpl) => stripVersion(tpl.id) === stripVersion(fullAspectId))
+        .map((tpl) => ({ id: fullAspectId, template: tpl.template }));
     }
     const allIds = uniq(configEnvs?.concat(ids).concat([aspectId, fullAspectId]).filter(Boolean));
     const envs = await this.loadEnvs(allIds, remoteEnvsAspect);
@@ -636,7 +668,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       });
     });
 
-    return templates;
+    return templates.concat(remoteSlotTemplates);
   }
 
   async loadEnvs(ids: string[] = this.config.envs || [], remoteEnvsAspect?: EnvsMain): Promise<EnvDefinition[]> {

@@ -41,8 +41,11 @@ import { babelConfig } from './babel/babel-config';
 const tsconfig = require('./typescript/tsconfig.json');
 const baseTsConfig = require('./typescript/tsconfig.base.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
-const eslintConfig = require('./eslint/eslintrc');
-const prettierConfig = require('./prettier/prettier.config.js');
+// require the eslint/prettier configs lazily. the eslint config pulls in a heavy chain of modules
+// (eslint-config -> eslint-plugin-mdx -> remark -> @babel/core, hundreds of files), and since this
+// file is loaded on every bit bootstrap (core aspect), an eager require slows down every command.
+const getEslintConfig = () => require('./eslint/eslintrc');
+const getPrettierConfig = () => require('./prettier/prettier.config.js');
 
 export const AspectEnvType = 'aspect';
 
@@ -147,7 +150,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv {
     const tsconfigPath = require.resolve('./typescript/tsconfig.json');
     const mergedOptions = {
       // @ts-ignore - this is a bug in the @types/eslint types
-      overrideConfig: eslintConfig as ESLintLib.Options,
+      overrideConfig: getEslintConfig() as ESLintLib.Options,
       extensions: context.extensionFormats,
       useEslintrc: false,
       cwd: __dirname,
@@ -165,7 +168,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv {
    * returns the component formatter.
    */
   getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
-    const configMutator = new PrettierConfigMutator(prettierConfig);
+    const configMutator = new PrettierConfigMutator(getPrettierConfig());
     const transformerContext: PrettierConfigTransformContext = { check: !!context?.check };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
     return PrettierFormatter.create({ config: afterMutation.raw }, { logger: this.logger });
