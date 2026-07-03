@@ -67,7 +67,9 @@ function LaneCompareProviderImpl({
 
   const componentsToDiff = useMemo(
     () => extractCompsToDiff(laneDiff),
-    [loadingLaneDiff, base?.toString(), compare?.toString()]
+    // include `laneDiff` itself: an Apollo cache merge can update it without flipping `loadingLaneDiff`
+    // or changing base/compare, and this derivation must not go stale (matches `groupedComponentsToDiff`).
+    [loadingLaneDiff, base?.toString(), compare?.toString(), laneDiff]
   );
 
   const defaultLaneState = useCallback(
@@ -137,7 +139,8 @@ function LaneCompareProviderImpl({
       accum.set(next.componentId.toStringWithoutVersion(), next as any);
       return accum;
     }, new Map<string, LaneComponentDiff>());
-  }, [base?.toString(), compare?.toString(), loadingLaneDiff]);
+    // `laneDiff` in deps for the same reason as `componentsToDiff`: track content, not just load state.
+  }, [base?.toString(), compare?.toString(), loadingLaneDiff, laneDiff]);
 
   const groupedComponentsToDiff = useMemo(() => {
     if (laneComponentDiffByCompId.size === 0) return null;

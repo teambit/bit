@@ -70,8 +70,9 @@ export const QUERY_COMPARE_COMPONENTS = gql`
 export type CompareDataContextModel = {
   /**
    * look up bulk compare data for a component by its `compareId`.
-   * `null` = the pair failed to compare; `undefined` = the pair is not in this provider's
-   * list, or its page has not loaded yet (check `loading` to disambiguate).
+   * `null` = the pair failed to compare, OR it was requested but paging finished/stopped early before
+   * reaching it (so it will never resolve); `undefined` = the pair is not in this provider's list, or
+   * its page has not loaded yet (check `loading` to disambiguate).
    */
   getData: (compareId: string) => CompareComponentData | null | undefined;
   /** true while pages are still loading; settles to false once every page loads or paging stops early */
@@ -153,13 +154,25 @@ export function CompareDataProvider({ pairs, children }: { pairs: ComponentCompa
     return map;
   }, [results, stablePairs]);
 
+  // every compareId this provider was asked to fetch — lets getData tell "requested but unresolved"
+  // (paging stopped early) apart from "not in this provider's list" once paging is done.
+  const requestedCompareIds = useMemo(() => new Set(stablePairs.map((p) => p.compareId)), [stablePairs]);
+
   const value = useMemo<CompareDataContextModel>(
     () => ({
-      getData: (compareId: string) => dataByCompareId.get(compareId),
+      getData: (compareId: string) => {
+        const found = dataByCompareId.get(compareId);
+        if (found !== undefined) return found;
+        // paging finished (fully, or stopped early on a short page / fetch error) but this requested
+        // pair never produced an entry → surface it as failed (null) rather than "still loading"
+        // (undefined), so consumers keyed on `getData(...) === undefined` don't spin forever.
+        if (done && requestedCompareIds.has(compareId)) return null;
+        return undefined;
+      },
       loading: !done,
       loadedCount: results.length,
     }),
-    [dataByCompareId, done, results.length]
+    [dataByCompareId, done, requestedCompareIds, results.length]
   );
 
   return <CompareDataContext.Provider value={value}>{children}</CompareDataContext.Provider>;
