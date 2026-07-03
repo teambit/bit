@@ -1,3 +1,9 @@
+// Side-effect import of the ambient shiki module shims. shiki is ESM-only (types shipped as `.d.mts`
+// behind an `exports` map), which the repo's classic `moduleResolution: "node"` can't read; the shim
+// declares the modules so `shiki/core` / `@shikijs/*` resolve. Importing it (rather than only relying
+// on the repo `include`) guarantees it's in scope when this file is compiled as a source-linked
+// dependency under a consumer env, whose tsconfig doesn't pick up stray declaration files.
+import './shiki-shims';
 import { useEffect, useMemo, useState } from 'react';
 import { createHighlighterCore } from 'shiki/core';
 import type { HighlighterCore } from 'shiki/core';
@@ -88,13 +94,18 @@ const langPromises = new Map<string, Promise<boolean>>();
 
 /** lazily create the single shared highlighter (JS regex engine → no WASM, synchronous tokenizing). */
 function getHighlighter(): Promise<HighlighterCore> {
-  highlighterPromise ??= createHighlighterCore({
+  // Capture in a const rather than relying on `??=` control-flow narrowing — older TS (the per-env
+  // capsule compiler) doesn't narrow `Promise<...> | undefined` after `??=`, so `return` would error.
+  const existing = highlighterPromise;
+  if (existing) return existing;
+  const created = createHighlighterCore({
     themes: [bitShikiTheme],
     langs: [],
     // forgiving: don't throw on grammar patterns the JS engine can't compile — skip them instead.
     engine: createJavaScriptRegexEngine({ forgiving: true }),
   });
-  return highlighterPromise;
+  highlighterPromise = created;
+  return created;
 }
 
 /** ensure a language grammar is loaded into the shared highlighter. Resolves `false` if unsupported. */
