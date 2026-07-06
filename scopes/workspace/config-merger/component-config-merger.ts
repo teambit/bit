@@ -71,7 +71,12 @@ export class ComponentConfigMerger {
   private currentEnv: EnvData;
   private otherEnv: EnvData;
   private baseEnv?: EnvData;
-  private handledExtIds: string[] = [BuilderAspect.id]; // don't try to merge builder, it's possible that at one end it wasn't built yet, so it's empty
+  // don't try to merge builder, it's possible that at one end it wasn't built yet, so it's empty.
+  // teambit.envs/envs is handled exclusively by envStrategy() — the generic aspect merge only sees the
+  // raw `config.env`, which never carries the env's version (the version lives in the separate env-aspect
+  // entry that only envStrategy knows to attach). Letting the generic merge run would leak an unversioned
+  // external env and break the snap with ExternalEnvWithoutVersion.
+  private handledExtIds: string[] = [BuilderAspect.id, EnvsAspect.id];
   private otherLaneIdsStr: string[];
   constructor(
     private compIdStr: string,
@@ -203,8 +208,14 @@ export class ComponentConfigMerger {
     if (this.currentEnv.id === this.otherEnv.id && this.currentEnv.version === this.otherEnv.version) {
       return null;
     }
-    if (this.isIdInWorkspaceOrOtherLane(this.currentEnv.id, this.otherEnv.version)) {
-      // the env currently used is part of the workspace, that's what the user needs. don't try to resolve anything.
+    // did the current lane deliberately change its env away from the diversion point (base)?
+    const currentChangedEnvFromBase =
+      !this.baseEnv || this.baseEnv.id !== this.currentEnv.id || this.baseEnv.version !== this.currentEnv.version;
+    // if the current lane deliberately set its env to a workspace component (or one that exists on the other
+    // lane), keep it — that's the env the user chose for this lane. but if the current lane did NOT touch the
+    // env (base === current) and only "other" changed it (e.g. an env migration on main), don't short-circuit:
+    // fall through to the 3-way merge below so "other"'s env propagates *with its version*.
+    if (currentChangedEnvFromBase && this.isIdInWorkspaceOrOtherLane(this.currentEnv.id, this.currentEnv.version)) {
       return null;
     }
     return this.basicConfigMerge(mergeStrategyParams);
