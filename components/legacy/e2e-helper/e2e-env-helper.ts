@@ -183,8 +183,11 @@ export default new EmptyEnv();
     // Pin the base react-env to a React 18 version. Otherwise it floats onto the latest
     // published react-env (2.0.0+, which is on React 19), and react-dom 19 enforces an exact
     // react/react-dom version match that breaks these tests when they override react to 16/17/18.
+    // Merge into any existing dependency pins rather than replacing them, since
+    // addPolicyToDependencyResolver shallow-assigns and would otherwise drop prior pins.
+    const existingPolicyDeps = this.extensions.workspaceJsonc.getPolicyFromDependencyResolver()?.dependencies || {};
     this.extensions.workspaceJsonc.addPolicyToDependencyResolver({
-      dependencies: { '@teambit/react.react-env': '1.3.5' },
+      dependencies: { ...existingPolicyDeps, '@teambit/react.react-env': '1.3.5' },
     });
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder, undefined, targetFolder);
     this.command.addComponent(targetFolder || extensionsBaseFolder, addOptions);
