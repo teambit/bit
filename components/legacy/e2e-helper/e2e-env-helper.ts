@@ -173,13 +173,33 @@ export default new EmptyEnv();
    */
   setCustomNewEnv(
     extensionsBaseFolder = 'react-based-env',
-    basePackages: string[] = ['@teambit/react.react-env'],
+    basePackages: string[] = ['@teambit/react.react-env@1.3.5'],
     envJsoncOptions: GenerateEnvJsoncOptions = { policy: ENV_POLICY },
     runInstall = true,
     targetFolder?: string,
     id?: string
   ): string {
     const addOptions = id ? { i: id } : {};
+    // Pin the base react-env to a React 18 version, but only for envs that actually pull in react-env.
+    // Otherwise it floats onto the latest published react-env (2.0.0+, which is on React 19), and
+    // react-dom 19 enforces an exact react/react-dom version match that breaks these tests when they
+    // override react to 16/17/18. Skipping the pin for non-React fixtures (e.g. a mocha-only env)
+    // avoids installing react-env where it isn't used.
+    const usesReactEnv = basePackages.some(
+      (pkg) => pkg === '@teambit/react.react-env' || pkg.startsWith('@teambit/react.react-env@')
+    );
+    if (usesReactEnv) {
+      // Merge into any existing dependency pins rather than replacing them, since
+      // addPolicyToDependencyResolver shallow-assigns and would otherwise drop prior pins.
+      // Guard against a non-object `dependencies` (a few tests set it to a string, e.g. 'chai@4.1.2'),
+      // which would otherwise spread into a char-indexed object and corrupt the policy.
+      const existingDeps = this.extensions.workspaceJsonc.getPolicyFromDependencyResolver()?.dependencies;
+      const existingPolicyDeps =
+        existingDeps && typeof existingDeps === 'object' && !Array.isArray(existingDeps) ? existingDeps : {};
+      this.extensions.workspaceJsonc.addPolicyToDependencyResolver({
+        dependencies: { ...existingPolicyDeps, '@teambit/react.react-env': '1.3.5' },
+      });
+    }
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder, undefined, targetFolder);
     this.command.addComponent(targetFolder || extensionsBaseFolder, addOptions);
     this.fixtures.generateEnvJsoncFile(targetFolder || extensionsBaseFolder, envJsoncOptions);
