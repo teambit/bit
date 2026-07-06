@@ -157,6 +157,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
       peers,
       previewRoot,
     });
+    if (!entries) return undefined;
     const outputPath = this.computeOutputPath(context, envComponent);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
     const resolvedEnvAspects = await this.preview.resolveAspects(MainRuntime.name, [envComponent.id], undefined, {
@@ -199,6 +200,9 @@ export class EnvPreviewTemplateTask implements BuildTask {
     splitComponentBundle: boolean;
   }) {
     const previewModules = await this.getPreviewModules(envDef);
+    // an env with no preview modules at all (e.g. the default empty-env, which has no mounter and
+    // no docs template) has no env template to generate.
+    if (!previewModules.length) return undefined;
     const previewEntries = previewModules.map(({ name, path, ...rest }) => {
       const linkFile = this.preview.writeLink(
         name,
@@ -251,9 +255,13 @@ export class EnvPreviewTemplateTask implements BuildTask {
       await Promise.all(
         previewDefs.map(async (def) => {
           if (!def.renderTemplatePathByEnv) return undefined;
+          const path = await def.renderTemplatePathByEnv(envDef.env);
+          // an env that doesn't implement this preview def has nothing to render for it. an empty
+          // path would end up as an empty import in the generated link file and fail the bundler.
+          if (!path) return undefined;
           return {
             name: def.prefix,
-            path: (await def.renderTemplatePathByEnv(envDef.env)) || '',
+            path,
             include: def.include,
           };
         })
