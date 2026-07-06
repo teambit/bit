@@ -18,7 +18,9 @@ export function getBuiltinTemplates(envContext: EnvContext): ComponentTemplate[]
 }
 
 export function getBuiltinStarters(envContext: EnvContext): WorkspaceTemplate[] {
-  const starterListHandler = StarterList.from([HarmonyWorkspaceStarter.from({ env: 'bitdev.symphony/symphony-env' })]);
+  const starterListHandler = StarterList.from([
+    HarmonyWorkspaceStarter.from({ env: 'bitdev.symphony/envs/symphony-env' }),
+  ]);
   const starterList = starterListHandler(envContext);
   return starterList.compute();
 }
