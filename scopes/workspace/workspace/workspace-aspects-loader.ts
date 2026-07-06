@@ -873,8 +873,10 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   private getGraphDescendants(graph: Graph<Component, string>, sourceIds: string[], edgeTypes?: string[]): Set<string> {
     const visited = new Set<string>();
     const queue = [...sourceIds];
-    while (queue.length) {
-      const current = queue.shift() as string;
+    let queueIndex = 0;
+    while (queueIndex < queue.length) {
+      const current = queue[queueIndex];
+      queueIndex += 1;
       if (visited.has(current)) continue;
       visited.add(current);
       graph.outEdges(current).forEach((edge) => {
