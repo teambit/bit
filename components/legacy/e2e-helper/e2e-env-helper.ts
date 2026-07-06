@@ -173,13 +173,19 @@ export default new EmptyEnv();
    */
   setCustomNewEnv(
     extensionsBaseFolder = 'react-based-env',
-    basePackages: string[] = ['@teambit/react.react-env'],
+    basePackages: string[] = ['@teambit/react.react-env@1.3.5'],
     envJsoncOptions: GenerateEnvJsoncOptions = { policy: ENV_POLICY },
     runInstall = true,
     targetFolder?: string,
     id?: string
   ): string {
     const addOptions = id ? { i: id } : {};
+    // Pin the base react-env to a React 18 version. Otherwise it floats onto the latest
+    // published react-env (2.0.0+, which is on React 19), and react-dom 19 enforces an exact
+    // react/react-dom version match that breaks these tests when they override react to 16/17/18.
+    this.extensions.workspaceJsonc.addPolicyToDependencyResolver({
+      dependencies: { '@teambit/react.react-env': '1.3.5' },
+    });
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder, undefined, targetFolder);
     this.command.addComponent(targetFolder || extensionsBaseFolder, addOptions);
     this.fixtures.generateEnvJsoncFile(targetFolder || extensionsBaseFolder, envJsoncOptions);
