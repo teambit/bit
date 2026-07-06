@@ -54,12 +54,25 @@ echo "Found @teambit/harmony in ${WORKSPACE_FILE}: $EXPECTED"
 
 # The config.yml overrides look like:
 #   pnpm.overrides.@teambit/harmony" --values "0.4.12"
-CONFIG_VERSIONS=$(grep -oE 'pnpm\.overrides\.@teambit/harmony" --values "[0-9]+\.[0-9]+\.[0-9]+"' "$CONFIG_FILE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -u)
+# There are two (one per bundle-install step); both must be present and match.
+EXPECTED_CONFIG_OVERRIDES=2
+CONFIG_MATCHES=$(grep -oE 'pnpm\.overrides\.@teambit/harmony" --values "[0-9]+\.[0-9]+\.[0-9]+"' "$CONFIG_FILE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
 
-if [ -z "$CONFIG_VERSIONS" ]; then
+if [ -z "$CONFIG_MATCHES" ]; then
   echo -e "${RED}✗ ERROR: no 'pnpm.overrides.@teambit/harmony' override found in ${CONFIG_FILE}${NC}"
   exit 1
 fi
+
+# Guard against a false "in sync": `sort -u` below would hide a missing/renamed override (e.g. only one
+# of the two matched), so require exactly the expected number of overrides before comparing versions.
+CONFIG_COUNT=$(echo "$CONFIG_MATCHES" | grep -c .)
+if [ "$CONFIG_COUNT" -ne "$EXPECTED_CONFIG_OVERRIDES" ]; then
+  echo -e "${RED}✗ ERROR: expected ${EXPECTED_CONFIG_OVERRIDES} @teambit/harmony overrides in ${CONFIG_FILE}, found ${CONFIG_COUNT}${NC}"
+  echo -e "${YELLOW}Each bundle-install step must pin pnpm.overrides.@teambit/harmony.${NC}"
+  exit 1
+fi
+
+CONFIG_VERSIONS=$(echo "$CONFIG_MATCHES" | sort -u)
 
 if [ "$CONFIG_VERSIONS" = "$EXPECTED" ]; then
   echo -e "${GREEN}✓ config.yml overrides match: @teambit/harmony@${EXPECTED}${NC}"
