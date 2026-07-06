@@ -46,5 +46,12 @@ export function getFallbackTypescriptCompiler() {
         },
       ];
     },
+    // the fallback env has no build pipeline, so this should never run. it's here to satisfy the
+    // Compiler contract with an actionable error instead of "build is not a function".
+    build: () => {
+      throw new Error(
+        'the fallback compiler cannot run inside a build pipeline. the component env was not loaded, run "bit install" to install it'
+      );
+    },
   };
 }
