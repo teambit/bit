@@ -294,8 +294,7 @@ export function BadgeSection({ badges, position, componentDescriptor, component 
             badge.position === position
           );
         })
-        // @ts-ignore
-        ?.sort((a, b) => a?.weight - b?.weight)
+        ?.sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0))
         ?.map((titleBadge, index) => {
           return (
             <titleBadge.component

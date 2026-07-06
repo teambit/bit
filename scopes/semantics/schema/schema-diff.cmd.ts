@@ -143,7 +143,7 @@ examples:
   };
 
   private formatUnavailable(diff: APIDiffResult, pattern: string): string {
-    const lines = ['', `  ${formatWarningSummary(`Unable to compute API diff for ${chalk.cyan(pattern)}`)}`, ''];
+    const lines = ['', `  ${formatWarningSummary(`Unable to compute API diff for "${pattern}"`)}`, ''];
     if (!diff.base.available) {
       lines.push(`  base version ${SchemaDiffCommand.REASON_TEXT[diff.base.reason || 'FAILED']}`);
     }

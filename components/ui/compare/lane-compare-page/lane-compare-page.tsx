@@ -37,14 +37,20 @@ export function LaneComparePage({
   const compare = lanesModel?.viewedLane;
   const nonMainLanes = lanesModel?.getNonMainLanes() || [];
   useEffect(() => {
-    if (!base && !compare?.id.isDefault() && defaultLane) {
+    const compareId = compare?.id.toString();
+    // `base` goes stale when `compare` changes underneath it: the page keeps `base` in local state and
+    // never routes on selection, so a base that now equals `compare` is a self-diff, and a deleted base
+    // is no longer selectable. In either case re-derive a sensible default; otherwise keep the choice.
+    const baseInvalid = !!base && (base.id.toString() === compareId || base.deleted);
+    if (base && !baseInvalid) return;
+
+    if (!compare?.id.isDefault() && defaultLane) {
       setBase(defaultLane);
-    }
-    if (!base && compare?.id.isDefault() && (nonMainLanes?.length ?? 0) > 0) {
-      const firstActive = nonMainLanes.find((l) => !l.deleted);
+    } else if (compare?.id.isDefault()) {
+      const firstActive = nonMainLanes.find((l) => !l.deleted && l.id.toString() !== compareId);
       if (firstActive) setBase(firstActive);
     }
-  }, [defaultLane, compare?.id.toString(), nonMainLanes?.length]);
+  }, [defaultLane, compare?.id.toString(), nonMainLanes?.length, base?.id.toString()]);
 
   const LaneCompareComponent = getLaneCompare({ base, compare, groupBy: 'status' });
 

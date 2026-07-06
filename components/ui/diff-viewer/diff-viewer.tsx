@@ -471,17 +471,25 @@ function renderLineContent(tokens: HlToken[] | null, text: string, intra?: Array
   }
 
   // overlay intra-line change ranges by splitting each syntax segment at range boundaries.
+  // `intra` ranges are produced sorted and non-overlapping, and `pos` advances monotonically across the
+  // whole line, so a single advancing pointer (`ri`) over the ranges makes this O(slices + ranges)
+  // instead of re-scanning every range for each emitted slice.
   const out: React.ReactNode[] = [];
   let offset = 0;
   let key = 0;
+  let ri = 0;
   for (const seg of base) {
     const segStart = offset;
     const segEnd = offset + seg.text.length;
     let pos = segStart;
     while (pos < segEnd) {
-      const boundary = nextBoundary(intra, pos, segEnd);
+      // drop ranges that already ended at/before `pos`; the first survivor (if any) is the next relevant one.
+      while (ri < intra.length && intra[ri][1] <= pos) ri += 1;
+      const range = ri < intra.length ? intra[ri] : undefined;
+      const changed = !!range && pos >= range[0] && pos < range[1];
+      // next offset at which changed-ness flips, clamped to this segment's end.
+      const boundary = changed ? Math.min(range[1], segEnd) : Math.min(range ? range[0] : segEnd, segEnd);
       const slice = seg.text.slice(pos - segStart, boundary - segStart);
-      const changed = isChanged(intra, pos);
       const style = seg.color ? { color: seg.color } : undefined;
       out.push(
         changed ? (
@@ -501,20 +509,6 @@ function renderLineContent(tokens: HlToken[] | null, text: string, intra?: Array
   return out;
 }
 
-function isChanged(ranges: Array<[number, number]>, pos: number): boolean {
-  return ranges.some(([s, e]) => pos >= s && pos < e);
-}
-
-/** the next character offset (≤ limit) at which "changed-ness" flips, so we can slice on boundaries. */
-function nextBoundary(ranges: Array<[number, number]>, pos: number, limit: number): number {
-  let next = limit;
-  for (const [s, e] of ranges) {
-    if (s > pos && s < next) next = s;
-    if (e > pos && e < next) next = e;
-  }
-  return next;
-}
-
 // --- render-row assembly ---
 
 function buildRenderRows(
@@ -524,17 +518,24 @@ function buildRenderRows(
 ): RenderRow[] {
   const rows: RenderRow[] = [];
   let buffer: DiffLineItem[] = [];
-  let keyCounter = 0;
 
+  // keys are derived from the row's underlying line numbers (unique across the file), not a rebuild
+  // counter, so they stay stable when `view` toggles or a gap expands — otherwise every row's key would
+  // change on each buildRenderRows() call, forcing React to remount all rows and defeating windowing.
   const flush = () => {
     if (buffer.length === 0) return;
     if (view === 'split') {
       for (const pair of pairForSplit(buffer)) {
-        rows.push({ kind: 'split', left: pair.left, right: pair.right, key: `r${keyCounter++}` });
+        rows.push({
+          kind: 'split',
+          left: pair.left,
+          right: pair.right,
+          key: `s:${pair.left?.oldLn ?? 'x'}:${pair.right?.newLn ?? 'x'}`,
+        });
       }
     } else {
       for (const item of buffer) {
-        rows.push({ kind: 'unified', item, key: `r${keyCounter++}` });
+        rows.push({ kind: 'unified', item, key: `u:${item.oldLn ?? 'x'}:${item.newLn ?? 'x'}:${item.type}` });
       }
     }
     buffer = [];

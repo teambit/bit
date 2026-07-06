@@ -93,10 +93,12 @@ export function useBulkPagedQuery<TItem>({
 
   // the pairs set this hook is currently paging — a fetchMore started for an earlier set can still
   // resolve/reject after `pairs` changed, so its callbacks check this before terminating the new loop.
+  // updated synchronously during render (not in an effect): passive effects flush after paint, so an
+  // in-flight fetchMore from the previous session can resolve in the gap between commit and that flush;
+  // if the ref lagged behind it would still pass `stillActive()` and mutate the new session's paging
+  // state. Assigning here makes `pairsKeyRef.current` reflect the latest key the instant `pairs` change.
   const pairsKeyRef = useRef(pairsKey);
-  useEffect(() => {
-    pairsKeyRef.current = pairsKey;
-  }, [pairsKey]);
+  pairsKeyRef.current = pairsKey;
 
   // every page loaded, paging stopped at a short page, or transient retries exhausted: no more requests.
   // NB: a transient error alone does NOT make us `done` — the loop retries it (up to MAX_PAGE_RETRIES),
