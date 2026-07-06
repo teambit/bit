@@ -216,11 +216,17 @@ export class ComponentConfigMerger {
       !this.baseEnv ||
       this.baseEnv.id !== this.currentEnv.id ||
       Boolean(this.baseEnv.version && this.currentEnv.version && this.baseEnv.version !== this.currentEnv.version);
-    // if the current lane deliberately set its env to a workspace component (or one that exists on the other
-    // lane), keep it — that's the env the user chose for this lane. but if the current lane did NOT touch the
-    // env (base === current) and only "other" changed it (e.g. an env migration on main), don't short-circuit:
-    // fall through to the 3-way merge below so "other"'s env propagates *with its version*.
-    if (currentChangedEnvFromBase && this.isIdInWorkspaceOrOtherLane(this.currentEnv.id, this.currentEnv.version)) {
+    // did "other" switch to a *different* env (a migration), or merely bump the same env's version?
+    const envIdChanged = this.currentEnv.id !== this.otherEnv.id;
+    // keep the current env (don't sync from "other") when it's a workspace component (or exists on the other
+    // lane) AND either the current lane deliberately changed its env, OR only the env's *version* differs.
+    // rationale: a workspace env's version is owned by the workspace, so we never adopt a different version of
+    // the *same* env from the other lane. only a genuine env *migration* (id change) that the current lane did
+    // not make is allowed to propagate — handled by the 3-way merge below (with the new env's version).
+    if (
+      (currentChangedEnvFromBase || !envIdChanged) &&
+      this.isIdInWorkspaceOrOtherLane(this.currentEnv.id, this.currentEnv.version)
+    ) {
       return null;
     }
     return this.basicConfigMerge(mergeStrategyParams);

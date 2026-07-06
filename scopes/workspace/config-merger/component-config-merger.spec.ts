@@ -113,4 +113,23 @@ describe('ComponentConfigMerger', () => {
       expect(mergedConfig[EnvsAspect.id]).to.deep.equal({ env: 'other-scope.envs/ext-env@1.0.0' });
     });
   });
+
+  describe('other bumped only the VERSION of the same workspace env (no id change)', () => {
+    // current and other use the SAME workspace env id; only the version differs and the current lane did not
+    // change it (base === current). A workspace env's version is owned by the workspace, so the other lane's
+    // version must NOT be synced. (Uses 'theirs' to prove it's the keep-env short-circuit, not the strategy,
+    // that prevents the sync — a plain 3-way merge with base===current would otherwise adopt other's version.)
+    let mergedConfig: Record<string, any>;
+    before(() => {
+      const env = 'my-scope.envs/ws-env'; // workspace-component env, same id on both sides.
+      const base = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@0.0.1`));
+      const current = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@0.0.1`));
+      const other = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@0.0.2`));
+      const workspaceIds = [ComponentID.fromString(`${env}@0.0.1`)];
+      mergedConfig = mergeEnvConfig(current, base, other, workspaceIds, 'theirs');
+    });
+    it("should keep the workspace env and NOT sync the other lane's version", () => {
+      expect(mergedConfig[EnvsAspect.id]).to.be.undefined;
+    });
+  });
 });

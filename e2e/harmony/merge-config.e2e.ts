@@ -483,6 +483,53 @@ describe('merge config scenarios', function () {
       });
     });
   });
+  describe('other lane bumped the env VERSION only, current lane kept a workspace env', () => {
+    // comp1 uses a WORKSPACE-component env. The lane never changes comp1's env; only "other" (main) bumps
+    // the env version. Because the env is a workspace component, the merge must NOT sync the other side's
+    // env version onto the lane — the workspace owns its env version. This guards the config-merger env
+    // propagation change: propagate real env *migrations* (id change), but leave workspace-env version
+    // bumps alone.
+    let envName: string;
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.env.setEmptyEnv(); // lightweight workspace-component env named "empty-env"
+      envName = 'empty-env';
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.tagAllWithoutBuild(); // envName@0.0.1, comp1@0.0.1 (env envId@0.0.1)
+      helper.command.export();
+      const base = helper.scopeHelper.cloneWorkspace();
+
+      // Lane (current): does NOT change comp1's env; just snaps an (unmodified) divergence.
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      const laneWs = helper.scopeHelper.cloneWorkspace();
+
+      // Main (other): bump the env to 0.0.2 and point comp1 at it, so main's comp1 uses envId@0.0.2.
+      helper.scopeHelper.getClonedWorkspace(base);
+      helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // envName@0.0.2
+      helper.command.setEnv('comp1', `${envId}@0.0.2`);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Merge main into the lane, in a workspace where the env is still a tracked workspace component.
+      // --ignore-config-changes: the env component itself diverged (0.0.1 vs 0.0.2) and would otherwise
+      // block the merge asking to snap it; we only care about comp1's env config here.
+      helper.scopeHelper.getClonedWorkspace(laneWs);
+      helper.command.import();
+      helper.command.mergeLaneWithoutBuild('main', '--no-auto-snap --ignore-config-changes');
+    });
+    it("should NOT sync the other lane's env version onto the lane (keep the workspace env version)", () => {
+      // main's bumped env version must NOT be adopted onto the lane.
+      expect(helper.command.showAspectConfig('comp1', `${envId}@0.0.2`)).to.be.undefined;
+      // the lane keeps its own workspace env; teambit.envs/envs holds the id without a version.
+      const envConfig = helper.command.showAspectConfig('comp1', Extensions.envs);
+      expect(envConfig.config.env).to.equal(envId);
+    });
+  });
   // for this test, there are two workspace.
   // 1. includes a component "bar/foo" which is used as a package for the another workspace.
   // 2. has a component "comp1", which uses bar.foo pkg in different versions.
