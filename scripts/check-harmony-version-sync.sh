@@ -56,7 +56,9 @@ echo "Found @teambit/harmony in ${WORKSPACE_FILE}: $EXPECTED"
 #   pnpm.overrides.@teambit/harmony" --values "0.4.12"
 # There are two (one per bundle-install step); both must be present and match.
 EXPECTED_CONFIG_OVERRIDES=2
-CONFIG_MATCHES=$(grep -oE 'pnpm\.overrides\.@teambit/harmony" --values "[0-9]+\.[0-9]+\.[0-9]+"' "$CONFIG_FILE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+# `|| true`: the pipeline ends in grep (no trailing sort), so with no matches it would exit non-zero
+# and abort under `set -e` before the friendly empty-check below.
+CONFIG_MATCHES=$(grep -oE 'pnpm\.overrides\.@teambit/harmony" --values "[0-9]+\.[0-9]+\.[0-9]+"' "$CONFIG_FILE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
 
 if [ -z "$CONFIG_MATCHES" ]; then
   echo -e "${RED}✗ ERROR: no 'pnpm.overrides.@teambit/harmony' override found in ${CONFIG_FILE}${NC}"
