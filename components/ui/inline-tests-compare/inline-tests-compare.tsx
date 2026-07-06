@@ -1,20 +1,10 @@
 import React, { useMemo } from 'react';
 import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
-import {
-  DiffFileRenderer,
-  DiffLoadingSkeleton,
-  buildFileDiffsFromMap,
-  type DiffDisplayMode,
-} from '@teambit/code.ui.inline-diff-viewer';
+import { DiffFileRenderer, DiffLoadingSkeleton, buildFileDiffsFromMap } from '@teambit/code.ui.inline-diff-viewer';
 
-export type InlineTestsCompareProps = {
-  diffMode?: DiffDisplayMode;
-};
-
-export function InlineTestsCompare({ diffMode: diffModeProp }: InlineTestsCompareProps) {
-  const contextDiffMode = useDiffMode();
-  const diffMode = diffModeProp || contextDiffMode;
+export function InlineTestsCompare() {
+  const diffMode = useDiffMode();
   const componentCompare = useComponentCompare();
 
   const testCompareDataByName = (componentCompare as any)?.testCompareDataByName as Map<string, any> | undefined | null;

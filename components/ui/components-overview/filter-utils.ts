@@ -8,14 +8,6 @@ export interface ActiveFilters {
 
 export const ALL_STATUSES: ComponentStatus[] = ['built', 'changed', 'building', 'queued'];
 
-export function parseActiveFilters(search: URLSearchParams): ActiveFilters {
-  return {
-    namespaces: (search.get('ns') || '').split(',').filter(Boolean),
-    scopes: (search.get('scopes') || '').split(',').filter(Boolean),
-    statuses: new Set(ALL_STATUSES),
-  };
-}
-
 export function getComponentStatus(item: WorkspaceItem): ComponentStatus {
   const buildStatus = (item.component as any).buildStatus;
   const status = (item.component as any).status;

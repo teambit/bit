@@ -19,7 +19,7 @@ export type BaseSourceIndicatorProps = {
  */
 export function BaseSourceIndicator({ compareId }: BaseSourceIndicatorProps) {
   const compareData = useCompareData();
-  const data = compareData?.getData(compareId);
+  const data = compareData?.compareDataFor(compareId);
   const loading = Boolean(compareData?.loading) && data === undefined;
 
   if (loading) {

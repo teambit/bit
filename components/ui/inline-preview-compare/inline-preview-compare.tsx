@@ -25,13 +25,14 @@ export function InlinePreviewCompare({ minHeight: _minHeight = 200 }: InlinePrev
     const container = containerRef.current;
     if (!container) return;
 
+    let domLoadedTimer: ReturnType<typeof setTimeout> | undefined;
     const handler = (event: MessageEvent) => {
       if (event.data?.event !== '_DOM_LOADED_') return;
       const iframes = container.querySelectorAll('iframe');
       for (const iframe of iframes) {
         try {
           if (iframe.contentWindow === event.source) {
-            setTimeout(() => setLoaded(true), 500);
+            domLoadedTimer = setTimeout(() => setLoaded(true), 500);
             return;
           }
         } catch {
@@ -44,6 +45,7 @@ export function InlinePreviewCompare({ minHeight: _minHeight = 200 }: InlinePrev
     return () => {
       window.removeEventListener('message', handler);
       clearTimeout(fallback);
+      if (domLoadedTimer) clearTimeout(domLoadedTimer);
     };
   }, [loaded]);
 

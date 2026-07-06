@@ -39,6 +39,10 @@ export function APICompare({ getInsights }: APICompareProps) {
   });
   const apiDiffResult = shouldSelfFetch ? fetchedApiDiff : contextApiDiff;
 
+  // memoized so the insights context value keeps a stable identity — otherwise a fresh array every
+  // render would re-render every `useApiDiffInsights` consumer (incl. the React.memo'd ApiChangeBlock).
+  const insights = React.useMemo(() => getInsights?.(), [getInsights]);
+
   if (!compareContext) return null;
 
   const id = (compareModel || baseModel)?.id;
@@ -52,7 +56,7 @@ export function APICompare({ getInsights }: APICompareProps) {
   const nothingToCompare = apiDiffResult === null && (!baseVersion || baseVersion === compareVersion);
 
   return (
-    <ApiDiffInsightProvider insights={getInsights?.()}>
+    <ApiDiffInsightProvider insights={insights}>
       <div className={styles.apiCompareContainer}>
         {nothingToCompare ? (
           <ApiDiffSlimRow

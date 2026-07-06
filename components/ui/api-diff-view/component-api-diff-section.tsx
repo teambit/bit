@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useHighlightedLines, resolveTokenColor, computeDiffLines } from '@teambit/code.ui.diff-viewer';
 import type { DiffLineItem } from '@teambit/code.ui.diff-viewer';
 import type { APIDiffChange, APIDiffDetail, APIDiffResult, ImpactLevel } from './api-diff-model';
-import { impactLabel, unavailableText } from './api-diff-model';
+import { impactLabel, unavailableText } from './api-diff-format';
 import { useApiDiffInsights } from './api-diff-insights';
 import type { ApiDiffInsightContext } from './api-diff-insights';
 import styles from './api-diff-view.module.scss';
@@ -59,6 +59,11 @@ function ImpactDot({ impact }: { impact: string }) {
 
 type Tok = { text: string; changed: boolean };
 
+// bound the LCS matrix: a very long signature (e.g. a generated union/mapped type from a .d.ts) would
+// otherwise allocate an (m+1)x(n+1) grid on every render. mirrors diff-model's intra-line caps.
+const MAX_SIG_CHARS = 2000;
+const MAX_SIG_CELLS = 1_000_000;
+
 /** split into identifier / whitespace / punctuation tokens so the diff aligns on real boundaries. */
 function tokenize(s: string): string[] {
   return s.match(/[A-Za-z0-9_$]+|\s+|[^A-Za-z0-9_$\s]/g) || [];
@@ -67,13 +72,20 @@ function tokenize(s: string): string[] {
 /**
  * token-level (word) diff of two signature strings via an LCS walk — marks exactly which tokens
  * were removed on the `from` side and added on the `to` side, so a one-character type change is
- * visible instead of two identical-looking lines.
+ * visible instead of two identical-looking lines. Past the size cap it falls back to showing each
+ * line whole (no token highlighting) to keep the computation bounded.
  */
 function tokenDiff(from: string, to: string): { fromParts: Tok[]; toParts: Tok[] } {
+  if (from.length > MAX_SIG_CHARS || to.length > MAX_SIG_CHARS) {
+    return { fromParts: [{ text: from, changed: false }], toParts: [{ text: to, changed: false }] };
+  }
   const a = tokenize(from);
   const b = tokenize(to);
   const m = a.length;
   const n = b.length;
+  if (m * n > MAX_SIG_CELLS) {
+    return { fromParts: [{ text: from, changed: false }], toParts: [{ text: to, changed: false }] };
+  }
   const dp: number[][] = Array.from({ length: m + 1 }, () => Array.from({ length: n + 1 }, () => 0));
   for (let i = m - 1; i >= 0; i--) {
     for (let j = n - 1; j >= 0; j--) {
@@ -131,6 +143,9 @@ function DiffCode({ parts }: { parts: Tok[] }) {
  * the reader still sees the member's type and can tell it's unchanged at the surface.
  */
 function DiffPair({ from, to }: { from?: string; to?: string }) {
+  // computed before the identical-signature early return so the hook order is stable across renders.
+  const diff = useMemo(() => (from && to && from !== to ? tokenDiff(from, to) : undefined), [from, to]);
+
   if (from && to && from === to) {
     return (
       <div className={styles.diffBlock}>
@@ -144,7 +159,6 @@ function DiffPair({ from, to }: { from?: string; to?: string }) {
       </div>
     );
   }
-  const diff = from && to ? tokenDiff(from, to) : undefined;
 
   return (
     <div className={styles.diffBlock}>
@@ -363,7 +377,7 @@ function ProseLine({ line }: { line: DiffLineItem }) {
  * one word, not two near-identical paragraphs.
  */
 function DocDiff({ from, to }: { from: string; to: string }) {
-  const lines = computeDiffLines(from, to);
+  const lines = useMemo(() => computeDiffLines(from, to), [from, to]);
   return (
     <>
       {lines.map((line, i) => {
@@ -515,8 +529,11 @@ export type ApiChangeBlockProps = {
 /**
  * one API change, fully expanded: what changed (signatures), why it carries its
  * impact (assessed change facts), and any slot-contributed insights.
+ *
+ * memoized: in a section with many changes it re-renders only when its own `change`/`focused`/`dimmed`/
+ * `insightCtx` identity changes, not on every parent render (the caller keeps `insightCtx` stable).
  */
-export function ApiChangeBlock({ change, anchorId, focused, dimmed, insightCtx }: ApiChangeBlockProps) {
+function ApiChangeBlockImpl({ change, anchorId, focused, dimmed, insightCtx }: ApiChangeBlockProps) {
   const insights = useApiDiffInsights();
   const matching = insightCtx ? insights.filter((i) => !i.matches || i.matches(change, insightCtx)) : [];
 
@@ -558,6 +575,8 @@ export function ApiChangeBlock({ change, anchorId, focused, dimmed, insightCtx }
     </div>
   );
 }
+
+export const ApiChangeBlock = React.memo(ApiChangeBlockImpl);
 
 export type ApiDiffSlimRowProps = {
   componentIdStr: string;
@@ -686,8 +705,6 @@ export function ComponentApiDiffSection({
   error,
   selectedExport,
 }: ComponentApiDiffSectionProps) {
-  const [internalExpanded, setInternalExpanded] = useState(false);
-
   if (loading) {
     return (
       <div className={styles.section} data-component-id={componentIdStr}>
@@ -758,10 +775,69 @@ export function ComponentApiDiffSection({
     );
   }
 
-  const insightCtx: ApiDiffInsightContext = { componentId: componentIdStr, baseId, compareId, result };
+  // result is COMPUTED — hand off to a dedicated component so its data derivations (insightCtx, stats,
+  // grouped changes) run through hooks unconditionally, below all the guard early-returns above.
+  return (
+    <ComputedApiDiffBody
+      componentIdStr={componentIdStr}
+      displayName={displayName}
+      baseId={baseId}
+      compareId={compareId}
+      baseVersion={baseVersion}
+      compareVersion={compareVersion}
+      result={result}
+      selectedExport={selectedExport}
+    />
+  );
+}
+
+/**
+ * renders a fully-computed API diff (public changes present, or internal-only). Split out from
+ * `ComponentApiDiffSection` so its derivations can be memoized — the parent's early-return guards would
+ * otherwise force these hooks to sit after conditional returns.
+ */
+function ComputedApiDiffBody({
+  componentIdStr,
+  displayName,
+  baseId,
+  compareId,
+  baseVersion,
+  compareVersion,
+  result,
+  selectedExport,
+}: Omit<ComponentApiDiffSectionProps, 'loading' | 'error'> & { result: APIDiffResult }) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
   const publicChanges = result.publicChanges || [];
   const internalChanges = result.internalChanges || [];
   const unresolvedExports = result.unresolvedExports || [];
+
+  // stable across renders so the memoized ApiChangeBlock children don't re-render on every parent render.
+  const insightCtx = useMemo<ApiDiffInsightContext>(
+    () => ({ componentId: componentIdStr, baseId, compareId, result }),
+    [componentIdStr, baseId, compareId, result]
+  );
+  // one pass over publicChanges instead of four filter().length scans.
+  const stats = useMemo(
+    () =>
+      publicChanges.reduce(
+        (acc, c) => {
+          if (c.status === 'ADDED') acc.added += 1;
+          else if (c.status === 'REMOVED') acc.removed += 1;
+          else if (c.status === 'MODIFIED') acc.modified += 1;
+          if (c.impact === 'BREAKING') acc.breaking += 1;
+          return acc;
+        },
+        { added: 0, removed: 0, modified: 0, breaking: 0 }
+      ),
+    [publicChanges]
+  );
+  const groups = useMemo(
+    () =>
+      CHANGE_GROUPS.map((group) => ({ group, changes: publicChanges.filter(group.match) })).filter(
+        (g) => g.changes.length > 0
+      ),
+    [publicChanges]
+  );
 
   if (publicChanges.length === 0 && internalChanges.length === 0) {
     // Extraction couldn't read some exports but nothing actually changed — say so plainly instead of a
@@ -807,13 +883,6 @@ export function ComponentApiDiffSection({
     );
   }
 
-  const stats = {
-    added: publicChanges.filter((c) => c.status === 'ADDED').length,
-    removed: publicChanges.filter((c) => c.status === 'REMOVED').length,
-    modified: publicChanges.filter((c) => c.status === 'MODIFIED').length,
-    breaking: publicChanges.filter((c) => c.impact === 'BREAKING').length,
-  };
-
   return (
     <div className={styles.section} data-component-id={componentIdStr}>
       <div className={styles.sectionHeader}>
@@ -832,28 +901,24 @@ export function ComponentApiDiffSection({
         </span>
       </div>
 
-      {CHANGE_GROUPS.map((group) => {
-        const groupChanges = publicChanges.filter(group.match);
-        if (groupChanges.length === 0) return null;
-        return (
-          <div key={group.key} className={styles.changeGroup}>
-            <div className={styles.changeGroupHeader}>
-              <span className={styles.changeGroupDot} data-impact={group.key} />
-              <span className={styles.changeGroupLabel}>{group.label}</span>
-              <span className={styles.changeGroupCount}>{groupChanges.length}</span>
-            </div>
-            {groupChanges.map((change, i) => (
-              <ApiChangeBlock
-                key={`${change.exportName}-${i}`}
-                change={change}
-                anchorId={`${componentIdStr}:${change.exportName}`}
-                focused={selectedExport === change.exportName}
-                insightCtx={insightCtx}
-              />
-            ))}
+      {groups.map(({ group, changes }) => (
+        <div key={group.key} className={styles.changeGroup}>
+          <div className={styles.changeGroupHeader}>
+            <span className={styles.changeGroupDot} data-impact={group.key} />
+            <span className={styles.changeGroupLabel}>{group.label}</span>
+            <span className={styles.changeGroupCount}>{changes.length}</span>
           </div>
-        );
-      })}
+          {changes.map((change, i) => (
+            <ApiChangeBlock
+              key={`${change.exportName}-${i}`}
+              change={change}
+              anchorId={`${componentIdStr}:${change.exportName}`}
+              focused={selectedExport === change.exportName}
+              insightCtx={insightCtx}
+            />
+          ))}
+        </div>
+      ))}
 
       {internalChanges.length > 0 && (
         <div className={styles.internalSection}>

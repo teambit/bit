@@ -262,7 +262,13 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           // Defer `changes` derivation to the per-component field resolver so the eager pMap inside
           // `diffStatus` is fast. The field resolver only fires when the client selects `changes`,
           // and graphql-js runs each component's resolver in parallel via `Promise.all`.
-          return lanesMain.diffStatus(sourceLaneId, targetLaneId, { ...options, deferChanges: true });
+          // `prewarmCaches`: this is the UI caller, which fires the follow-up compare/host queries the
+          // prewarm warms. Non-UI callers of `diffStatus` leave it off so they don't pay the fan-out.
+          return lanesMain.diffStatus(sourceLaneId, targetLaneId, {
+            ...options,
+            deferChanges: true,
+            prewarmCaches: true,
+          });
         },
         removeUpdateDependents: async (lanesMain: LanesMain, { laneId, ids }: { laneId: string; ids?: string[] }) => {
           const laneIdParsed = LaneId.parse(laneId);

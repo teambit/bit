@@ -318,7 +318,7 @@ function CompareView({
 
   const componentCompare = useComponentCompare();
   const compareData = useCompareData();
-  const data = compareData?.getData(compareId);
+  const data = compareData?.compareDataFor(compareId);
   const dataLoading = compareData?.loading ?? false;
 
   // The API view mode appears when there's something meaningful to show. Unlike the bulk

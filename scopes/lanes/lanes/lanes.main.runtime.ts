@@ -170,6 +170,12 @@ export type LaneDiffStatusOptions = {
    * via `deriveComponentChanges` (used by GraphQL field resolvers).
    */
   deferChanges?: boolean;
+  /**
+   * after computing the result, eagerly warm the compare/host caches the lane-compare UI will hit next.
+   * UI-only: it fans out concurrent component loads, so CLI/programmatic callers (which never make those
+   * follow-up queries) must leave it off to avoid paying — and multiplying — that cold-load cost.
+   */
+  prewarmCaches?: boolean;
 };
 
 type SerializedSnapsDistance = {
@@ -267,17 +273,26 @@ export class LanesMain {
    * the per-component schema-extraction cost goes from seconds to a Map.get().
    */
   private changeTypesMemo = new Map<string, ChangeType[]>();
-  private changeTypesInflight = new Map<string, Promise<ChangeType[]>>();
+  private changeTypesInflight = new Map<string, Promise<ChangeType[] | undefined>>();
   private changeTypesMemoDirty = false;
   private changeTypesMemoSaveTimer: NodeJS.Timeout | undefined;
   private static CHANGE_TYPES_MEMO_MAX = 5000;
   private static CHANGE_TYPES_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-change-types.json');
 
+  /**
+   * bumped when the meaning of the memoized `ChangeType[]` changes. keyed only on immutable hashes,
+   * so without a version tag a stale entry (e.g. one written before the classification logic changed)
+   * would be served verbatim across an upgrade. bump this whenever `deriveChangeTypes` semantics change.
+   */
+  private static CHANGE_TYPES_MEMO_VERSION = 1;
+
   private async loadChangeTypesMemoFromDisk() {
     try {
       const raw = await fs.readFile(LanesMain.CHANGE_TYPES_MEMO_FILE, 'utf8');
-      const parsed = JSON.parse(raw) as Record<string, ChangeType[]>;
-      for (const [k, v] of Object.entries(parsed)) this.changeTypesMemo.set(k, v);
+      const parsed = JSON.parse(raw) as { v?: number; entries?: Record<string, ChangeType[]> };
+      // legacy unversioned format (a plain key->ChangeType[] map) or an older version: discard.
+      if (parsed.v !== LanesMain.CHANGE_TYPES_MEMO_VERSION || !parsed.entries) return;
+      for (const [k, v] of Object.entries(parsed.entries)) this.changeTypesMemo.set(k, v);
       this.logger?.debug(`[lane-diff memo] loaded ${this.changeTypesMemo.size} change-types entries`);
     } catch {
       // first run / corrupted file.
@@ -291,9 +306,12 @@ export class LanesMain {
       this.changeTypesMemoSaveTimer = undefined;
       if (!this.changeTypesMemoDirty) return;
       this.changeTypesMemoDirty = false;
-      const serialized: Record<string, ChangeType[]> = {};
-      for (const [k, v] of this.changeTypesMemo) serialized[k] = v;
-      fs.outputFile(LanesMain.CHANGE_TYPES_MEMO_FILE, JSON.stringify(serialized)).catch(() => {});
+      const entries: Record<string, ChangeType[]> = {};
+      for (const [k, v] of this.changeTypesMemo) entries[k] = v;
+      fs.outputFile(
+        LanesMain.CHANGE_TYPES_MEMO_FILE,
+        JSON.stringify({ v: LanesMain.CHANGE_TYPES_MEMO_VERSION, entries })
+      ).catch(() => {});
     }, 500);
   }
 
@@ -323,11 +341,20 @@ export class LanesMain {
   private static DIFF_STATUS_MEMO_MAX = 200;
   private static DIFF_STATUS_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-results.json');
 
+  /**
+   * bumped when the shape/meaning of a serialized status changes (it embeds the `changes`/`changeType`
+   * produced by `deriveChangeTypes`). without a version tag a stale entry keyed on immutable hashes
+   * would survive an upgrade and serve an outdated classification.
+   */
+  private static DIFF_STATUS_MEMO_VERSION = 1;
+
   private async loadDiffStatusMemoFromDisk() {
     try {
       const raw = await fs.readFile(LanesMain.DIFF_STATUS_MEMO_FILE, 'utf8');
-      const parsed = JSON.parse(raw) as Record<string, SerializedComponentStatus[]>;
-      for (const [k, v] of Object.entries(parsed)) this.diffStatusResultMemo.set(k, v);
+      const parsed = JSON.parse(raw) as { v?: number; entries?: Record<string, SerializedComponentStatus[]> };
+      // legacy unversioned format (a plain key->statuses map) or an older version: discard.
+      if (parsed.v !== LanesMain.DIFF_STATUS_MEMO_VERSION || !parsed.entries) return;
+      for (const [k, v] of Object.entries(parsed.entries)) this.diffStatusResultMemo.set(k, v);
       this.logger?.debug(`[lane-diff memo] loaded ${this.diffStatusResultMemo.size} diff-status entries`);
     } catch {
       // first run / corrupted file.
@@ -341,9 +368,12 @@ export class LanesMain {
       this.diffStatusMemoSaveTimer = undefined;
       if (!this.diffStatusMemoDirty) return;
       this.diffStatusMemoDirty = false;
-      const serialized: Record<string, SerializedComponentStatus[]> = {};
-      for (const [k, v] of this.diffStatusResultMemo) serialized[k] = v;
-      fs.outputFile(LanesMain.DIFF_STATUS_MEMO_FILE, JSON.stringify(serialized)).catch(() => {});
+      const entries: Record<string, SerializedComponentStatus[]> = {};
+      for (const [k, v] of this.diffStatusResultMemo) entries[k] = v;
+      fs.outputFile(
+        LanesMain.DIFF_STATUS_MEMO_FILE,
+        JSON.stringify({ v: LanesMain.DIFF_STATUS_MEMO_VERSION, entries })
+      ).catch(() => {});
     }, 500);
   }
 
@@ -486,7 +516,14 @@ export class LanesMain {
         status.changes = await this.deriveComponentChanges(status);
       })
     )
-      .then(() => this.memoStoreDiffStatus(resultMemoKey, results))
+      .then(() => {
+        // don't persist a result set where a component's change types couldn't be derived: `changes`
+        // came back undefined for a reason OTHER than being explicitly skipped (i.e. a transient
+        // Version-load failure). persisting it under the immutable lane-pair key would serve that gap
+        // forever; it recomputes and persists on a later request once the objects are available.
+        const anyFailed = results.some((s) => s.changes === undefined && !s.changesContext?.skipped);
+        if (!anyFailed) this.memoStoreDiffStatus(resultMemoKey, results);
+      })
       .catch(() => {});
   }
   private apiDiffMemoDirty = false;
@@ -1493,9 +1530,9 @@ please create a new lane instead, which will include all components of this lane
     //      for each side of each visible pair) all hit cache instead of racing through cold loads.
     //   - `componentCompare.compareComponents(pairs)` populates the new compare-result memo so the UI's
     //      `CompareComponents` query is answered from cache.
-    // Fired *after* we have the answer ready — never blocks the response. Wrapped in catch() so any
-    // background failure stays invisible to the caller.
-    if (visibleDiffProps.length > 0) this.prewarmCompareCaches(host, visibleDiffProps);
+    // Fired *after* we have the answer ready — never blocks the response, catch() hides any failure.
+    // Gated to `prewarmCaches` (the UI caller) so CLI/programmatic consumers don't pay & multiply it.
+    if (options?.prewarmCaches && visibleDiffProps.length > 0) this.prewarmCompareCaches(host, visibleDiffProps);
 
     this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
 
@@ -1582,7 +1619,9 @@ please create a new lane instead, which will include all components of this lane
         this.deriveChangeTypes(context.commonSnap, status.componentId, status.sourceHead)
       )
         .then((result) => {
-          this.memoStoreChangeTypes(memoKey, result);
+          // `undefined` means the derivation couldn't load a Version object (transient) — don't persist
+          // it under the immutable-hash key; let it recompute on a later request once the object exists.
+          if (result) this.memoStoreChangeTypes(memoKey, result);
           return result;
         })
         .finally(() => {
@@ -1594,54 +1633,11 @@ please create a new lane instead, which will include all components of this lane
     return pending;
   }
 
-  async componentDiffStatusOld(
-    componentId: ComponentID,
-    sourceHead: string,
-    targetHead?: string,
-    options?: LaneDiffStatusOptions
-  ): Promise<LaneComponentDiffStatus> {
-    const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(componentId, sourceHead, targetHead, false);
-
-    if (snapsDistance?.err) {
-      const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
-
-      return {
-        componentId,
-        sourceHead,
-        targetHead,
-        upToDate: snapsDistance?.isUpToDate(),
-        unrelated: noCommonSnap || undefined,
-        changes: [],
-      };
-    }
-
-    const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
-
-    const changes = !options?.skipChanges
-      ? await this.deriveChangeTypes(commonSnap, componentId, sourceHead)
-      : undefined;
-    const changeType = changes ? changes[0] : undefined;
-
-    return {
-      componentId,
-      changeType,
-      changes,
-      sourceHead,
-      targetHead: commonSnap?.hash,
-      upToDate: snapsDistance?.isUpToDate(),
-      snapsDistance: {
-        onSource: snapsDistance?.snapsOnSourceOnly.map((s) => s.hash) ?? [],
-        onTarget: snapsDistance?.snapsOnTargetOnly.map((s) => s.hash) ?? [],
-        common: snapsDistance?.commonSnapBeforeDiverge?.hash,
-      },
-    };
-  }
-
   private async deriveChangeTypes(
     commonSnap: { hash: string } | null | undefined,
     componentId: ComponentID,
     sourceHead: string
-  ): Promise<ChangeType[]> {
+  ): Promise<ChangeType[] | undefined> {
     if (!commonSnap) return [ChangeType.NEW];
 
     // Classify changes by comparing the two raw `Version` objects directly (files-by-hash, deps,
@@ -1655,7 +1651,11 @@ please create a new lane instead, which will include all components of this lane
       repo.load(Ref.from(commonSnap.hash), false),
       repo.load(Ref.from(sourceHead), false),
     ])) as [Version | undefined, Version | undefined];
-    if (!baseVersion || !compareVersion) return [];
+    // a Version object couldn't be loaded (e.g. the common snap isn't in the local scope yet). this is
+    // a transient "couldn't classify", NOT "no changes" ([ChangeType.NONE]) — return undefined so it is
+    // distinguishable and never persisted to the immutable-hash-keyed memo, or the component would be
+    // reported with no change types forever, even once the object becomes loadable.
+    if (!baseVersion || !compareVersion) return undefined;
 
     const baseObj = baseVersion.toObject();
     const compareObj = compareVersion.toObject();

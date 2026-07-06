@@ -60,6 +60,10 @@ export function InlineDepsCompare(_props: InlineDepsCompareProps) {
   }, [
     componentCompare?.base?.model?.id?.toString(),
     componentCompare?.compare?.model?.id?.toString(),
+    // descriptors load asynchronously; without them in the deps the memo stays cached with an empty
+    // `entries` (the guard above returns [] until they arrive) and the table never populates.
+    componentCompare?.base?.descriptor,
+    componentCompare?.compare?.descriptor,
     (componentCompare?.compare as any)?.hasLocalChanges,
   ]);
 

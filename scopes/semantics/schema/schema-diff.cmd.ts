@@ -117,7 +117,11 @@ examples:
       base: diff.base,
       compare: diff.compare,
       hasChanges: diff.hasChanges,
+      // `impact` is consumer-facing (public changes only); `internalImpact` covers non-exported changes,
+      // which still count toward `summary.breaking` — surface both so an internal-only breaking change
+      // isn't read as a PATCH from `impact` alone.
       impact: diff.impact,
+      internalImpact: diff.internalImpact,
       summary: {
         added: diff.added,
         removed: diff.removed,
@@ -177,15 +181,19 @@ examples:
     lines.push(`  ${parts.join(chalk.dim(' · '))}  ${chalk.dim('|')}  ${impactParts.join(chalk.dim(' · '))}`);
     lines.push('');
 
+    // the header badge above is the consumer-facing (public) impact. internal changes carry their own
+    // impact — show it on the internal section so an internal-only breaking change is visible and not
+    // masked by a PATCH header.
     this.formatSection(lines, 'Public API', diff.publicChanges);
-    this.formatSection(lines, 'Internal (non-exported)', diff.internalChanges);
+    this.formatSection(lines, 'Internal (non-exported)', diff.internalChanges, diff.internalImpact);
 
     return lines.join('\n');
   }
 
-  private formatSection(lines: string[], title: string, changes: APIDiffChange[]): void {
+  private formatSection(lines: string[], title: string, changes: APIDiffChange[], impact?: ImpactLevel): void {
     if (changes.length === 0) return;
-    lines.push(`  ${chalk.bold.underline(title)}`);
+    const badge = impact ? `  ${this.impactBadge(impact)}` : '';
+    lines.push(`  ${chalk.bold.underline(title)}${badge}`);
     lines.push('');
     for (const change of this.sortChanges(changes)) {
       lines.push(...this.formatChange(change));

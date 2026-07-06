@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
-import { DiffLoadingSkeleton, type DiffDisplayMode } from '@teambit/code.ui.inline-diff-viewer';
+import { DiffLoadingSkeleton } from '@teambit/code.ui.inline-diff-viewer';
 import {
   DiffViewer,
   computeDiffLines,
@@ -10,11 +10,6 @@ import {
   type DiffViewMode,
   type DiffFileStatus,
 } from '@teambit/code.ui.diff-viewer';
-
-export type InlineCodeCompareProps = {
-  /** Split or unified diff mode */
-  diffMode?: DiffDisplayMode;
-};
 
 type FileCompareData = { status: string; baseContent?: string; compareContent?: string };
 
@@ -33,9 +28,8 @@ function toDiffStatus(status: string): DiffFileStatus {
 const GRID_WRAP: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)' };
 const CELL_WRAP: React.CSSProperties = { minWidth: 0 };
 
-export function InlineCodeCompare({ diffMode: diffModeProp }: InlineCodeCompareProps) {
-  const contextDiffMode = useDiffMode();
-  const diffMode = diffModeProp || contextDiffMode;
+export function InlineCodeCompare() {
+  const diffMode = useDiffMode();
   const view: DiffViewMode = diffMode === 'unified' ? 'unified' : 'split';
   const componentCompare = useComponentCompare();
 

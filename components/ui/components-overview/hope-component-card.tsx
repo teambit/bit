@@ -32,9 +32,13 @@ export function HopeComponentCard({
   useEffect(() => {
     if (prevServerUrlRef.current !== component.server?.url && shouldShowPreview) {
       setShouldShowPreview(false);
-      setTimeout(() => setShouldShowPreview(true), 50);
+      // remount the preview after the server url changes; clear on unmount so it can't setState after.
+      const timer = setTimeout(() => setShouldShowPreview(true), 50);
+      prevServerUrlRef.current = component.server?.url;
+      return () => clearTimeout(timer);
     }
     prevServerUrlRef.current = component.server?.url;
+    return undefined;
   }, [component.server?.url]);
 
   useEffect(() => {

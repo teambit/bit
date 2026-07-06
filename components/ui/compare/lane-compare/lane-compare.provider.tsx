@@ -188,18 +188,34 @@ function LaneCompareProviderImpl({
     groupBy,
   ]);
 
-  const laneCompareContextModel: LaneCompareContextModel = {
-    laneCompareState,
-    setLaneCompareState,
-    filters,
-    groupBy,
-    defaultLaneState,
-    laneDiff,
-    loadingLaneDiff,
-    componentsToDiff,
-    groupedComponentsToDiff,
-    laneComponentDiffByCompId,
-  };
+  // memoized so a panel updating `laneCompareState` doesn't hand every lane-compare consumer a fresh
+  // context value and re-render the whole component list, not just the panel that changed.
+  const laneCompareContextModel = useMemo<LaneCompareContextModel>(
+    () => ({
+      laneCompareState,
+      setLaneCompareState,
+      filters,
+      groupBy,
+      defaultLaneState,
+      laneDiff,
+      loadingLaneDiff,
+      componentsToDiff,
+      groupedComponentsToDiff,
+      laneComponentDiffByCompId,
+    }),
+    [
+      laneCompareState,
+      setLaneCompareState,
+      filters,
+      groupBy,
+      defaultLaneState,
+      laneDiff,
+      loadingLaneDiff,
+      componentsToDiff,
+      groupedComponentsToDiff,
+      laneComponentDiffByCompId,
+    ]
+  );
 
   return <LaneCompareContext.Provider value={laneCompareContextModel}>{children}</LaneCompareContext.Provider>;
 }

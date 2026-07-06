@@ -257,12 +257,19 @@ export class ComponentCompareMain {
 
   private static isApiDiffCacheable(result: Record<string, any>): boolean {
     if (result.status === 'COMPUTED') return true;
-    return result.base?.reason !== 'FAILED' && result.compare?.reason !== 'FAILED';
+    // A non-COMPUTED result is only safe to persist (disk cache, keyed on the immutable snap pair, no
+    // TTL) when it can never change for that pair. FAILED is transient. NOT_BUILT is *pending*: the snap
+    // simply hasn't been built yet, and once CI builds it (same hash) the schema appears — caching the
+    // pre-build "unavailable" answer would keep the API view blank forever. NO_EXTRACTOR/DISABLED are
+    // stable properties of the snap's env, so they stay cacheable.
+    const pendingOrTransient = (reason?: string) => reason === 'FAILED' || reason === 'NOT_BUILT';
+    return !pendingOrTransient(result.base?.reason) && !pendingOrTransient(result.compare?.reason);
   }
 
   async getAPIDiff(baseIdStr: string, compareIdStr: string): Promise<Record<string, any> | null> {
-    // never persist transient failures: `null` (snaps couldn't load) or FAILED availability (schema
-    // retrieval threw) must recompute next call; NOT_BUILT/NO_EXTRACTOR/DISABLED are stable and safe.
+    // never persist a result that can still change: `null` (snaps couldn't load), FAILED (schema
+    // retrieval threw) and NOT_BUILT (snap not yet built) must recompute next call; NO_EXTRACTOR/
+    // DISABLED are stable env properties and safe to cache (see `isApiDiffCacheable`).
     // the `:v2` namespace keeps pre-availability-aware results from being served.
     return this.getOrCompute(
       this.apiDiffInflight,

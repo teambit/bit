@@ -3,12 +3,8 @@ import { gql } from '@apollo/client';
 import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
-import { DiffLoadingSkeleton, type DiffDisplayMode } from '@teambit/code.ui.inline-diff-viewer';
+import { DiffLoadingSkeleton } from '@teambit/code.ui.inline-diff-viewer';
 import { DiffViewer, computeDiffLines, statsFromItems, type DiffViewMode } from '@teambit/code.ui.diff-viewer';
-
-export type InlineConfigCompareProps = {
-  diffMode?: DiffDisplayMode;
-};
 
 // `grid-template-columns: minmax(0, 1fr)` hard-constrains every aspect row to the pane width: a grid
 // item in a `minmax(0, ...)` track cannot be widened by its (wide) content, so a long JSON line can
@@ -55,9 +51,8 @@ type AspectDiff = {
   compareData: string;
 };
 
-export function InlineConfigCompare({ diffMode: diffModeProp }: InlineConfigCompareProps) {
-  const contextDiffMode = useDiffMode();
-  const diffMode = diffModeProp || contextDiffMode;
+export function InlineConfigCompare() {
+  const diffMode = useDiffMode();
   const view: DiffViewMode = diffMode === 'unified' ? 'unified' : 'split';
   const componentCompare = useComponentCompare();
 

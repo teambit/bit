@@ -2014,6 +2014,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/scope-context"
     },
+    "ui/hooks/use-bulk-paged-query": {
+        "name": "ui/hooks/use-bulk-paged-query",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.ui-foundation",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-bulk-paged-query",
+        "config": {
+            "bitdev.react/react-env@6.0.20": {},
+            "teambit.envs/envs": {
+                "env": "bitdev.react/react-env"
+            }
+        }
+    },
     "ui/hooks/use-core-aspects": {
         "name": "ui/hooks/use-core-aspects",
         "scope": "teambit.harmony",

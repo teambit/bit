@@ -1,6 +1,5 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import type { ComponentID } from '@teambit/component-id';
-import type { APIDiffResult } from './api-diff-model';
 import { ApiDiffDataProvider, useApiDiffData } from './api-diff-data-context';
 import type { ApiDiffPair } from './api-diff-data-context';
 import { ApiDiffInsightProvider } from './api-diff-insights';
@@ -69,35 +68,26 @@ const REGISTRY_STATUS: Record<string, string> = { ADDED: 'NEW', REMOVED: 'DELETE
 
 function ComponentApiDiffContainer({
   entry,
+  baseId,
+  compareId,
   selectedExport,
-  onLoaded,
   onApiEntries,
-  active,
 }: {
   entry: ComponentDiffEntry;
+  /** versioned ids precomputed by the parent (see `ApiDiffEntry`) so they aren't re-derived per render. */
+  baseId?: string;
+  compareId?: string;
   selectedExport?: string;
-  onLoaded: (id: string, result: APIDiffResult | null) => void;
   onApiEntries?: (componentId: string, entries: ApiEntry[]) => void;
-  active?: boolean;
 }) {
-  const baseId = entry.targetHead ? entry.componentId.changeVersion(entry.targetHead)?.toString() : undefined;
-  const compareId = entry.sourceHead ? entry.componentId.changeVersion(entry.sourceHead)?.toString() : undefined;
   const componentIdStr = entry.componentId.toStringWithoutVersion();
 
   // read this pair's diff from the batched bulk query rather than firing a per-component query.
   // `undefined` = still loading (its page hasn't returned); `null` = couldn't be computed.
   const apiData = useApiDiffData();
   const providerLoading = apiData?.loading ?? true;
-  const result = compareId ? apiData?.getApiDiff(compareId) : undefined;
+  const result = compareId ? apiData?.apiDiffFor(compareId) : undefined;
   const loading = result === undefined && providerLoading;
-  const error = undefined;
-
-  React.useEffect(() => {
-    // don't mark a pair "loaded" while its page is still in flight, or the totals/progress would
-    // count it as failed before the bulk query reaches it. the `active` guard keeps a hidden pane
-    // (whose bulk query is skipped) from reporting everything as loaded/failed prematurely.
-    if (active && !loading) onLoaded(componentIdStr, result ?? null);
-  }, [active, loading, result, componentIdStr, onLoaded]);
 
   // feed changed public exports to the host's sidebar tree (nested under the component, exactly like
   // files in code mode). the sidebar's scroll-sync then targets the `data-file-id="<componentId>:
@@ -123,56 +113,44 @@ function ComponentApiDiffContainer({
       compareVersion={entry.sourceHead}
       result={result}
       loading={loading}
-      error={error}
       selectedExport={selectedExport}
     />
   );
 }
 
+type ApiDiffEntry = {
+  entry: ComponentDiffEntry;
+  kind: EntryKind;
+  /** versioned base/compare ids, resolved once here so `queryPairs`, totals, and visibility all reuse
+   * them instead of each re-cloning the ComponentID + serializing per render. */
+  baseId?: string;
+  compareId?: string;
+};
+
+type ApiDiffTotals = {
+  added: number;
+  removed: number;
+  modified: number;
+  breaking: number;
+  internal: number;
+  withPublicChanges: number;
+  withAnyChanges: number;
+  unavailable: number;
+  failed: number;
+  loaded: number;
+};
+
 /**
- * full-pane API diff for a set of component pairs (lane compare's API view).
- * always renders every component (sections for changed ones, slim rows for the rest);
- * selection from the sidebar scrolls — it never filters.
+ * derives everything the pane renders from the bulk-query provider (`useApiDiffData`) instead of a
+ * per-child `onLoaded` mirror: the aggregate totals/progress, whether the surface is "stable", and a
+ * per-component visibility predicate. Keeping the computation here (over the queried set only, so a
+ * previous comparison's pairs can't leak in) lets the view be pure rendering.
  */
-export function ApiDiffLaneView({
-  diffs,
-  host,
-  selectedId,
-  selectedExport,
-  insights,
-  onApiEntries,
-  active,
-}: ApiDiffLaneViewProps) {
-  const entries = useMemo(() => diffs.map((d) => ({ entry: d, kind: classifyEntry(d) })), [diffs]);
-  const queried = useMemo(() => entries.filter((e) => e.kind === 'query'), [entries]);
+function useApiDiffAggregate(entries: ApiDiffEntry[], queried: ApiDiffEntry[]) {
+  const apiData = useApiDiffData();
+  const apiDiffFor = apiData?.apiDiffFor;
 
-  // one bulk-query pair per component that needs a real diff (base = target head, compare = source head).
-  // 'query' kind guarantees both heads exist, so these ids are always defined.
-  const queryPairs = useMemo<ApiDiffPair[]>(
-    () =>
-      queried
-        .map(({ entry }) => ({
-          baseId: entry.componentId.changeVersion(entry.targetHead)?.toString() ?? '',
-          compareId: entry.componentId.changeVersion(entry.sourceHead)?.toString() ?? '',
-        }))
-        .filter((p) => p.baseId && p.compareId),
-    [queried]
-  );
-
-  const [results, setResults] = useState<Map<string, APIDiffResult | null>>(new Map());
-  const onDiffLoaded = useCallback((componentId: string, result: APIDiffResult | null) => {
-    setResults((prev) => {
-      if (prev.has(componentId) && prev.get(componentId) === result) return prev;
-      const next = new Map(prev);
-      next.set(componentId, result);
-      return next;
-    });
-  }, []);
-
-  // aggregate only over the CURRENT queried set — the results map is append-only, so if
-  // `diffs` changes while mounted, entries from a previous comparison must not leak into
-  // the totals or the progress count.
-  const totals = useMemo(() => {
+  const totals = useMemo<ApiDiffTotals>(() => {
     let added = 0;
     let removed = 0;
     let modified = 0;
@@ -183,12 +161,11 @@ export function ApiDiffLaneView({
     let unavailable = 0;
     let failed = 0;
     let loaded = 0;
-    queried.forEach(({ entry }) => {
-      const idStr = entry.componentId.toStringWithoutVersion();
-      if (!results.has(idStr)) return;
+    queried.forEach((e) => {
+      const r = e.compareId ? apiDiffFor?.(e.compareId) : undefined;
+      if (r === undefined) return; // its page hasn't resolved yet — not counted as loaded
       loaded += 1;
-      const r = results.get(idStr);
-      if (!r) {
+      if (r === null) {
         failed += 1;
         return;
       }
@@ -217,10 +194,160 @@ export function ApiDiffLaneView({
       failed,
       loaded,
     };
-  }, [results, queried]);
+  }, [apiDiffFor, queried]);
 
   const loadedCount = totals.loaded;
   const allLoaded = loadedCount >= queried.length;
+  // gated entries were analyzed cheaply (no relevant changes → no query needed). failed
+  // queries are NOT analyzed — they must not inflate the stable hero's claim.
+  const gatedCount = useMemo(() => entries.filter((e) => e.kind === 'gated').length, [entries]);
+  const analyzedCount = loadedCount - totals.unavailable - totals.failed + gatedCount;
+  const stable = allLoaded && totals.withAnyChanges === 0 && totals.failed === 0 && analyzedCount > 0;
+
+  // which components actually have a public-API diff to show: a queried pair that is still loading (keep
+  // it visible so there's no flash) or that resolved to at least one public change. gated/incomparable
+  // and computed-no-change pairs are dropped, so the pane lists only real diffs.
+  const isVisible = useCallback(
+    (e: ApiDiffEntry) => {
+      if (e.kind !== 'query') return false;
+      const r = e.compareId ? apiDiffFor?.(e.compareId) : undefined;
+      if (r === undefined) return true; // still analyzing — keep visible
+      return !!r && r.status === 'COMPUTED' && (r.publicChanges?.length || 0) > 0;
+    },
+    [apiDiffFor]
+  );
+
+  return { totals, loadedCount, allLoaded, analyzedCount, stable, isVisible };
+}
+
+/** pure rendering of the lane API view — runs under `ApiDiffDataProvider`, reads derived data from `useApiDiffAggregate`. */
+function ApiDiffLaneBody({
+  entries,
+  queried,
+  selectedId,
+  selectedExport,
+  onApiEntries,
+}: {
+  entries: ApiDiffEntry[];
+  queried: ApiDiffEntry[];
+  selectedId?: string;
+  selectedExport?: string;
+  onApiEntries?: (componentId: string, entries: ApiEntry[]) => void;
+}) {
+  const { totals, loadedCount, allLoaded, analyzedCount, stable, isVisible } = useApiDiffAggregate(entries, queried);
+
+  return (
+    <div className={styles.fullView}>
+      <div className={styles.summaryBar}>
+        <div className={styles.summaryTitle}>
+          <span className={styles.summaryHeading}>API Surface Changes</span>
+          {!allLoaded && (
+            <span className={styles.summaryLoading}>
+              Analyzing {loadedCount} of {queried.length}…
+            </span>
+          )}
+        </div>
+        {!allLoaded && queried.length > 0 && (
+          <div className={styles.summaryProgress}>
+            <div
+              className={styles.summaryProgressFill}
+              style={{ width: `${Math.round((loadedCount / queried.length) * 100)}%` }}
+            />
+          </div>
+        )}
+        {allLoaded && totals.withAnyChanges > 0 && (
+          <div className={styles.summaryStats}>
+            {totals.breaking > 0 && (
+              <span className={styles.summaryStat}>
+                <span
+                  className={styles.summaryDot}
+                  style={{ background: 'var(--on-surface-negative-bold, #cf222e)' }}
+                />
+                {totals.breaking} breaking
+              </span>
+            )}
+            <span className={styles.summaryStat}>
+              <span className={styles.summaryDot} style={{ background: 'var(--success-color, #1a7f37)' }} />
+              {totals.added} added
+            </span>
+            <span className={styles.summaryStat}>
+              <span className={styles.summaryDot} style={{ background: 'var(--on-surface-negative-bold, #cf222e)' }} />
+              {totals.removed} removed
+            </span>
+            <span className={styles.summaryStat}>
+              <span className={styles.summaryDot} style={{ background: 'var(--warning-color, #d6a022)' }} />
+              {totals.modified} modified
+            </span>
+            {totals.internal > 0 && <span className={styles.summaryStatMuted}>{totals.internal} internal</span>}
+          </div>
+        )}
+      </div>
+
+      {stable && (
+        <EmptyState
+          icon="✓"
+          tone="success"
+          title="API surface is stable"
+          subtitle={`${analyzedCount} component${analyzedCount !== 1 ? 's' : ''} analyzed — no API changes between these versions.`}
+        />
+      )}
+
+      {/* only components that actually have a public-API diff render (matching the code view, which
+        hides components with no file changes). gated / incomparable / computed-no-change pairs are
+        dropped; still-analyzing pairs stay so there's no flash. */}
+      {entries.map((e) => {
+        const idStr = e.entry.componentId.toStringWithoutVersion();
+        if (!isVisible(e)) return null;
+        return (
+          <ComponentApiDiffContainer
+            key={idStr}
+            entry={e.entry}
+            baseId={e.baseId}
+            compareId={e.compareId}
+            selectedExport={selectedId === idStr ? selectedExport : undefined}
+            onApiEntries={onApiEntries}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * full-pane API diff for a set of component pairs (lane compare's API view).
+ * always renders every component (sections for changed ones, slim rows for the rest);
+ * selection from the sidebar scrolls — it never filters.
+ */
+export function ApiDiffLaneView({
+  diffs,
+  host,
+  selectedId,
+  selectedExport,
+  insights,
+  onApiEntries,
+  active,
+}: ApiDiffLaneViewProps) {
+  const entries = useMemo<ApiDiffEntry[]>(
+    () =>
+      diffs.map((d) => ({
+        entry: d,
+        kind: classifyEntry(d),
+        baseId: d.targetHead ? d.componentId.changeVersion(d.targetHead)?.toString() : undefined,
+        compareId: d.sourceHead ? d.componentId.changeVersion(d.sourceHead)?.toString() : undefined,
+      })),
+    [diffs]
+  );
+  const queried = useMemo(() => entries.filter((e) => e.kind === 'query'), [entries]);
+
+  // one bulk-query pair per component that needs a real diff (base = target head, compare = source head).
+  // 'query' kind guarantees both heads exist, so these ids are always defined.
+  const queryPairs = useMemo<ApiDiffPair[]>(
+    () =>
+      queried
+        .map((e) => ({ baseId: e.baseId ?? '', compareId: e.compareId ?? '' }))
+        .filter((p) => p.baseId && p.compareId),
+    [queried]
+  );
 
   // register an empty entry-list for every component that can't have a diff (no comparable pair, or no
   // API-relevant changes), so the host sidebar can tell these apart from still-analyzing ones and hide
@@ -231,19 +358,6 @@ export function ApiDiffLaneView({
       if (kind === 'gated' || kind === 'incomparable') onApiEntries(entry.componentId.toStringWithoutVersion(), []);
     });
   }, [entries, onApiEntries]);
-
-  // which components actually have a public-API diff to show: a queried pair that is still loading (keep
-  // it visible so there's no flash) or that resolved to at least one public change. gated/incomparable
-  // and computed-no-change pairs are dropped, so the pane lists only real diffs.
-  const hasVisibleDiff = React.useCallback(
-    (idStr: string, kind: EntryKind) => {
-      if (kind !== 'query') return false;
-      if (!results.has(idStr)) return true; // still analyzing — keep visible
-      const r = results.get(idStr);
-      return !!r && r.status === 'COMPUTED' && (r.publicChanges?.length || 0) > 0;
-    },
-    [results]
-  );
 
   if (entries.length === 0) {
     return (
@@ -272,91 +386,16 @@ export function ApiDiffLaneView({
     );
   }
 
-  // gated entries were analyzed cheaply (no relevant changes → no query needed). failed
-  // queries are NOT analyzed — they must not inflate the stable hero's claim.
-  const gatedCount = entries.filter((e) => e.kind === 'gated').length;
-  const analyzedCount = loadedCount - totals.unavailable - totals.failed + gatedCount;
-  const stable = allLoaded && totals.withAnyChanges === 0 && totals.failed === 0 && analyzedCount > 0;
-
   return (
     <ApiDiffInsightProvider insights={insights}>
       <ApiDiffDataProvider pairs={queryPairs} active={active} host={host}>
-        <div className={styles.fullView}>
-          <div className={styles.summaryBar}>
-            <div className={styles.summaryTitle}>
-              <span className={styles.summaryHeading}>API Surface Changes</span>
-              {!allLoaded && (
-                <span className={styles.summaryLoading}>
-                  Analyzing {loadedCount} of {queried.length}…
-                </span>
-              )}
-            </div>
-            {!allLoaded && queried.length > 0 && (
-              <div className={styles.summaryProgress}>
-                <div
-                  className={styles.summaryProgressFill}
-                  style={{ width: `${Math.round((loadedCount / queried.length) * 100)}%` }}
-                />
-              </div>
-            )}
-            {allLoaded && totals.withAnyChanges > 0 && (
-              <div className={styles.summaryStats}>
-                {totals.breaking > 0 && (
-                  <span className={styles.summaryStat}>
-                    <span
-                      className={styles.summaryDot}
-                      style={{ background: 'var(--on-surface-negative-bold, #cf222e)' }}
-                    />
-                    {totals.breaking} breaking
-                  </span>
-                )}
-                <span className={styles.summaryStat}>
-                  <span className={styles.summaryDot} style={{ background: 'var(--success-color, #1a7f37)' }} />
-                  {totals.added} added
-                </span>
-                <span className={styles.summaryStat}>
-                  <span
-                    className={styles.summaryDot}
-                    style={{ background: 'var(--on-surface-negative-bold, #cf222e)' }}
-                  />
-                  {totals.removed} removed
-                </span>
-                <span className={styles.summaryStat}>
-                  <span className={styles.summaryDot} style={{ background: 'var(--warning-color, #d6a022)' }} />
-                  {totals.modified} modified
-                </span>
-                {totals.internal > 0 && <span className={styles.summaryStatMuted}>{totals.internal} internal</span>}
-              </div>
-            )}
-          </div>
-
-          {stable && (
-            <EmptyState
-              icon="✓"
-              tone="success"
-              title="API surface is stable"
-              subtitle={`${analyzedCount} component${analyzedCount !== 1 ? 's' : ''} analyzed — no API changes between these versions.`}
-            />
-          )}
-
-          {/* only components that actually have a public-API diff render (matching the code view, which
-            hides components with no file changes). gated / incomparable / computed-no-change pairs are
-            dropped; still-analyzing pairs stay so there's no flash. */}
-          {entries.map(({ entry, kind }) => {
-            const idStr = entry.componentId.toStringWithoutVersion();
-            if (!hasVisibleDiff(idStr, kind)) return null;
-            return (
-              <ComponentApiDiffContainer
-                key={idStr}
-                entry={entry}
-                selectedExport={selectedId === idStr ? selectedExport : undefined}
-                onLoaded={onDiffLoaded}
-                onApiEntries={onApiEntries}
-                active={active}
-              />
-            );
-          })}
-        </div>
+        <ApiDiffLaneBody
+          entries={entries}
+          queried={queried}
+          selectedId={selectedId}
+          selectedExport={selectedExport}
+          onApiEntries={onApiEntries}
+        />
       </ApiDiffDataProvider>
     </ApiDiffInsightProvider>
   );

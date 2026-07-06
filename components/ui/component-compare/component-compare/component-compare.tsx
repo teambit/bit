@@ -336,7 +336,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     if (compareIsLocalChanges) return allVersionInfo[0];
     const prevVersionInfo = allVersionInfo.find(findPrevVersionFromCurrent(compareVersion));
     return prevVersionInfo;
-  }, [component.logs?.length, loadingCompare, compareComponent?.logs?.length]);
+  }, [allVersionInfo, compareVersion, compareIsLocalChanges]);
 
   const baseId = React.useMemo(
     () =>
@@ -395,7 +395,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
       fileCompareDataByNameLookup.set(codeCompareData.fileName, codeCompareData);
     });
     return fileCompareDataByNameLookup;
-  }, [compCompareLoading, loading, compCompareId]);
+  }, [compCompareLoading, loading, compCompareId, componentCompareData]);
 
   const fieldCompareDataByName = useMemo(() => {
     if (loading || compCompareLoading) return undefined;
@@ -405,7 +405,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
       fieldCompareDataByNameLookup.set(aspectCompareData.fieldName, aspectCompareData);
     });
     return fieldCompareDataByNameLookup;
-  }, [compCompareLoading, loading, compCompareId]);
+  }, [compCompareLoading, loading, compCompareId, componentCompareData]);
 
   const testCompareDataByName = useMemo(() => {
     if (loading || compCompareLoading) return undefined;
@@ -415,47 +415,82 @@ export function ComponentCompare(props: ComponentCompareProps) {
       testCompareDataByNameLookup.set(testCompareData.fileName, testCompareData);
     });
     return testCompareDataByNameLookup;
-  }, [compCompareLoading, loading, compCompareId]);
+  }, [compCompareLoading, loading, compCompareId, componentCompareData]);
 
   const resolvedApiDiff = useMemo(() => {
     if (loading || apiDiffLoading) return undefined;
     return apiDiffResult ?? null;
   }, [loading, apiDiffLoading, compCompareId, apiDiffResult]);
 
-  const componentCompareModel = {
-    compare: compare && {
-      model: compare,
-      descriptor: compareComponentDescriptor || componentDescriptor,
-      hasLocalChanges: compareIsLocalChanges,
-    },
-    base: base && {
-      model: base,
-      descriptor: baseComponentDescriptor,
-    },
-    loading,
-    logsByVersion,
-    state,
-    hooks,
-    baseContext,
-    compareContext,
-    fieldCompareDataByName,
-    fileCompareDataByName,
-    testCompareDataByName,
-    apiDiffResult: resolvedApiDiff,
-    isFullScreen,
-    hidden,
-  };
+  // memoized so consumers of this context (and the child screen) don't reconcile on every render when
+  // the underlying models/diff data are unchanged.
+  const componentCompareModel = useMemo(
+    () => ({
+      compare: compare && {
+        model: compare,
+        descriptor: compareComponentDescriptor || componentDescriptor,
+        hasLocalChanges: compareIsLocalChanges,
+      },
+      base: base && {
+        model: base,
+        descriptor: baseComponentDescriptor,
+      },
+      loading,
+      logsByVersion,
+      state,
+      hooks,
+      baseContext,
+      compareContext,
+      fieldCompareDataByName,
+      fileCompareDataByName,
+      testCompareDataByName,
+      apiDiffResult: resolvedApiDiff,
+      isFullScreen,
+      hidden,
+    }),
+    [
+      compare,
+      compareComponentDescriptor,
+      componentDescriptor,
+      compareIsLocalChanges,
+      base,
+      baseComponentDescriptor,
+      loading,
+      logsByVersion,
+      state,
+      hooks,
+      baseContext,
+      compareContext,
+      fieldCompareDataByName,
+      fileCompareDataByName,
+      testCompareDataByName,
+      resolvedApiDiff,
+      isFullScreen,
+      hidden,
+    ]
+  );
 
-  const changes =
-    changesFromProps ||
-    deriveChangeType(
+  const changes = useMemo(
+    () =>
+      changesFromProps ||
+      deriveChangeType(
+        baseId,
+        compare?.id,
+        fileCompareDataByName,
+        fieldCompareDataByName,
+        testCompareDataByName,
+        resolvedApiDiff
+      ),
+    [
+      changesFromProps,
       baseId,
-      compare?.id,
+      compare,
       fileCompareDataByName,
       fieldCompareDataByName,
       testCompareDataByName,
-      resolvedApiDiff
-    );
+      resolvedApiDiff,
+    ]
+  );
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
@@ -644,6 +679,10 @@ export function DeferredTab({ tabId, children }: { tabId: string; children: Reac
   return <div data-tab-id={tabId}>{children}</div>;
 }
 
+// the inline compare context has no per-version logs; share one empty map rather than allocating a new
+// one every render (which would also change the memoized context value's identity each time).
+const EMPTY_LOGS_BY_VERSION = new Map();
+
 function InlineContextProvider({
   baseId,
   compareId,
@@ -685,7 +724,7 @@ function InlineContextProvider({
   const hasCompare = !compareId || !!compareModel;
 
   const compareData = useCompareData();
-  const componentCompareData = compareId ? compareData?.getData(compareId) : undefined;
+  const componentCompareData = compareId ? compareData?.compareDataFor(compareId) : undefined;
   // for non-new components with a compareId: undefined = bulk page not loaded yet, null = pair failed to compare.
   // a component with no compareId (deleted in the compare lane) is never in the bulk pairs, so it is not "loading".
   const compCompareLoading = !isNew && !!compareId && componentCompareData === undefined;
@@ -726,23 +765,39 @@ function InlineContextProvider({
     return lookup;
   }, [compCompareLoading, componentCompareData]);
 
+  // memoized so an unrelated ancestor re-render doesn't hand every `useComponentCompare()` consumer
+  // (each mounted tab panel) a fresh context value and force it to reconcile. computed before the
+  // skeleton early-return so the hook order stays stable.
+  const contextValue = useMemo(
+    () => ({
+      base: baseModel ? { model: baseModel, descriptor: baseDescriptor } : undefined,
+      compare: compareModel
+        ? { model: compareModel, descriptor: compareDescriptor, hasLocalChanges: compareOverride?.hasLocalChanges }
+        : undefined,
+      loading: compCompareLoading,
+      logsByVersion: EMPTY_LOGS_BY_VERSION,
+      fileCompareDataByName,
+      fieldCompareDataByName,
+      testCompareDataByName,
+      isFullScreen: false,
+      hidden: false,
+    }),
+    [
+      baseModel,
+      baseDescriptor,
+      compareModel,
+      compareDescriptor,
+      compareOverride?.hasLocalChanges,
+      compCompareLoading,
+      fileCompareDataByName,
+      fieldCompareDataByName,
+      testCompareDataByName,
+    ]
+  );
+
   if (!hasBase || !hasCompare) {
     return <InlineSkeleton lines={2} />;
   }
-
-  const contextValue = {
-    base: baseModel ? { model: baseModel, descriptor: baseDescriptor } : undefined,
-    compare: compareModel
-      ? { model: compareModel, descriptor: compareDescriptor, hasLocalChanges: compareOverride?.hasLocalChanges }
-      : undefined,
-    loading: compCompareLoading,
-    logsByVersion: new Map(),
-    fileCompareDataByName,
-    fieldCompareDataByName,
-    testCompareDataByName,
-    isFullScreen: false,
-    hidden: false,
-  };
 
   return <ComponentCompareContext.Provider value={contextValue as any}>{children}</ComponentCompareContext.Provider>;
 }
@@ -868,7 +923,7 @@ function InlineSkeleton({ lines = 3 }: { lines?: number }) {
 /** registers one component's bulk compare data into the FileRegistry. renders nothing. */
 function CompareRegistryEntry({ compareId }: { compareId: string }) {
   const compareData = useCompareData();
-  const data: CompareComponentData | null | undefined = compareData?.getData(compareId);
+  const data: CompareComponentData | null | undefined = compareData?.compareDataFor(compareId);
   const componentIdStr = compareId.split('@')[0];
 
   // `data` undefined = the bulk page is still loading → register nothing (keep any prior entry). `data`
