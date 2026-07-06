@@ -185,7 +185,11 @@ export default new EmptyEnv();
     // react/react-dom version match that breaks these tests when they override react to 16/17/18.
     // Merge into any existing dependency pins rather than replacing them, since
     // addPolicyToDependencyResolver shallow-assigns and would otherwise drop prior pins.
-    const existingPolicyDeps = this.extensions.workspaceJsonc.getPolicyFromDependencyResolver()?.dependencies || {};
+    // Guard against a non-object `dependencies` (a few tests set it to a string, e.g. 'chai@4.1.2'),
+    // which would otherwise spread into a char-indexed object and corrupt the policy.
+    const existingDeps = this.extensions.workspaceJsonc.getPolicyFromDependencyResolver()?.dependencies;
+    const existingPolicyDeps =
+      existingDeps && typeof existingDeps === 'object' && !Array.isArray(existingDeps) ? existingDeps : {};
     this.extensions.workspaceJsonc.addPolicyToDependencyResolver({
       dependencies: { ...existingPolicyDeps, '@teambit/react.react-env': '1.3.5' },
     });
