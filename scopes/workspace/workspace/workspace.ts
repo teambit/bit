@@ -2451,7 +2451,11 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    */
   async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[], verifyEnv = true) {
     const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
-    if (verifyEnv) {
+    // envs that used to be core aspects are known envs. verifying them here would fetch the
+    // latest version (they are configured without a version), which is not the pinned version
+    // bit loads, and the env-check may fail on it as its own env is not loaded.
+    const isLegacyCoreEnv = this.envs.isLegacyCoreEnv(envId.toStringWithoutVersion());
+    if (verifyEnv && !isLegacyCoreEnv) {
       const envComp = await this.get(ComponentID.fromString(envStrWithPossiblyVersion));
       const isEnv = this.envs.isEnv(envComp);
       if (!isEnv) throw new BitError(`the component ${envComp.id.toString()} is not an env`);
