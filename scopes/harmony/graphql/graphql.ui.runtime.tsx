@@ -34,10 +34,13 @@ type ClientOptions = {
 
 export type GraphQLConfig = {
   /**
-   * batching is always wired up. operations are *opt-in*: each Apollo operation that sets
-   * `context: { batch: true }` is coalesced via BatchHttpLink, every other operation goes through
-   * a plain HttpLink unchanged. tune the batching window/cap via the fields below.
+   * master switch for request batching, off by default (a workspace opts in). When enabled, batching is
+   * still *per-operation opt-in*: only Apollo operations that set `context: { batch: true }` are coalesced
+   * via BatchHttpLink; everything else goes through a plain HttpLink. When disabled (the default) NO
+   * operation batches regardless of its context — a global opt-out for the whole workspace. Mutations
+   * never batch. tune the batching window/cap via the fields below.
    */
+  enableBatching?: boolean;
   batchInterval?: number;
   batchMax?: number;
 };
@@ -123,8 +126,10 @@ export class GraphqlUI {
     return cache;
   }
 
-  // operations opt in to batching by setting `context: { batch: true }`. mutations never batch.
+  // batch only when the workspace enabled batching (`enableBatching`, default off) AND the operation
+  // opted in via `context: { batch: true }`. mutations never batch.
   private readonly shouldBatch = (op: Operation) => {
+    if (!this.config.enableBatching) return false;
     const def = getMainDefinition(op.query) as OperationDefinitionNode;
     if (def.kind === 'OperationDefinition' && def.operation === 'mutation') return false;
     return op.getContext().batch === true;
@@ -159,6 +164,7 @@ export class GraphqlUI {
   static slots = [];
 
   static defaultConfig: GraphQLConfig = {
+    enableBatching: false,
     batchInterval: 50,
     batchMax: 20,
   };

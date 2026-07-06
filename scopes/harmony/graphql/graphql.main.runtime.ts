@@ -34,8 +34,13 @@ export type GraphQLConfig = {
   subscriptionsPath: string;
   disableCors?: boolean;
   /**
+   * master switch for accepting batched request bodies, off by default (a workspace opts in, matching
+   * the client's `enableBatching`). When disabled, a batched (array) body is not processed as a batch.
+   */
+  enableBatching?: boolean;
+  /**
    * cap on the number of operations in a single batched request body. requests over this size
-   * are rejected with HTTP 413. batching is always accepted on the server; clients opt in.
+   * are rejected with HTTP 413.
    */
   batchMax?: number;
 };
@@ -152,6 +157,9 @@ export class GraphqlMain {
     app.use('/graphql', async (req, res, next) => {
       if (req.method !== 'POST') return next();
       if (!Array.isArray(req.body)) return next();
+      // batching disabled (default) → don't process array bodies as a batch; matches the client, which
+      // won't send batches unless the workspace opted in via `enableBatching`.
+      if (!this.config.enableBatching) return next();
       if (!req.is('application/json')) return next();
       const max = this.config.batchMax ?? 20;
       if (req.body.length > max) {
@@ -412,6 +420,7 @@ export class GraphqlMain {
     subscriptionsPortRange: [2000, 2100],
     disableCors: false,
     subscriptionsPath: '/subscriptions',
+    enableBatching: false,
     batchMax: 20,
   };
 

@@ -393,7 +393,6 @@ export class LaneDiffGenerator {
           id,
           // undefined when the component has no version on main at all - handled as "new" downstream.
           head: headOnMain ? Ref.from(headOnMain) : undefined,
-          version: headOnMain,
         };
         laneData.components.push(laneComponent);
       })
@@ -409,7 +408,6 @@ export class LaneDiffGenerator {
       components: components.map((lc) => ({
         id: lc.id,
         head: lc.head,
-        version: lc.id.version?.toString(),
       })),
       remote: lane.toLaneId().toString(),
     };

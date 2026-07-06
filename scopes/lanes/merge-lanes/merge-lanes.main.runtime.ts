@@ -71,6 +71,11 @@ export type MergeLaneOptions = {
   fetchCurrent?: boolean; // needed when merging from a bare-scope (because it's empty)
   detachHead?: boolean;
   loose?: boolean; // relevant for --build, to allow build to succeed even if tasks like tests or lint fail
+  // opt in to resolving each component's head on main from the REMOTE scope (via getHeadOnMain) when
+  // merging from main, so a base that lives only on the remote is still merged. off by default: the
+  // merge resolves heads from the local scope only (matches the historical behavior), so this remote
+  // round-trip is paid solely by callers that explicitly need it, not every merge-from-main consumer.
+  resolveMainHeadsFromRemote?: boolean;
 };
 export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean; configConflict?: string };
 
@@ -353,17 +358,27 @@ export class MergeLanesMain {
     const getBitIds = async () => {
       if (isDefaultLane) {
         const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps, shouldIncludeUpdateDependents);
-        // resolve each component's head on main, falling back to the remote scope. the main objects
-        // were already fetched above (importObjectsFromMainIfExist), so a base that lives on the remote
-        // but wasn't in the local scope is still included in the merge instead of being skipped as
-        // "never merged to main". a component with no head on main at all is genuinely new and dropped.
-        const idsWithHead = await Promise.all(
-          ids.map(async (id) => {
-            const head = await this.lanes.getHeadOnMain(id);
-            return head ? id.changeVersion(head) : null;
+        if (options.resolveMainHeadsFromRemote) {
+          // opt-in: resolve each head on main falling back to the remote scope, so a base that lives on
+          // the remote but wasn't fetched locally is still included instead of being skipped. a component
+          // with no head on main at all is genuinely new and dropped.
+          const idsWithHead = await Promise.all(
+            ids.map(async (id) => {
+              const head = await this.lanes.getHeadOnMain(id);
+              return head ? id.changeVersion(head) : null;
+            })
+          );
+          return compact(idsWithHead);
+        }
+        // default: resolve heads from the local scope only (historical behavior). a component not in the
+        // local scope throws, and one with no local head was never merged to main and is dropped.
+        const modelComponents = await Promise.all(ids.map((id) => this.scope.legacyScope.getModelComponent(id)));
+        return compact(
+          modelComponents.map((c) => {
+            if (!c.head) return null; // probably the component was never merged to main
+            return c.toComponentId().changeVersion(c.head.toString());
           })
         );
-        return compact(idsWithHead);
       }
       if (!otherLane) throw new Error(`lane must be defined for non-default`);
       return shouldIncludeUpdateDependents
