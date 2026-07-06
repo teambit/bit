@@ -682,8 +682,8 @@
         "core-js": "^3.10.0",
         "graphql": "15.8.0",
         "mz": "2.7.0",
-        "react": "19.1.0",
-        "react-dom": "19.1.0",
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
         "react-router-dom": "^6.22.3"
       }
     },
@@ -709,12 +709,15 @@
       // react-animate-height < 2.1.2 reads this.state.animating after unmount,
       // which throws under React 19 because React 19 nullifies state on unmount.
       "react-animate-height@2": "^3.2.3",
-      // Collapse react/react-dom to a single version in capsules. Some older published
-      // components still pull react@17.0.2; without this, @teambit/logger resolves into two
-      // pnpm variants (_react@17.0.2 and _react@19.1.0) whose Logger types are incompatible
-      // (TS2345 "separate declarations of a private property 'extensionName'") and the build fails.
-      "react@17": "19.1.0",
-      "react-dom@17": "19.1.0",
+      // Collapse react/react-dom to a single version in capsules. Published components pull a
+      // range of react versions (17.0.2, 19.1.0, 19.2.0); without this, @teambit/logger resolves
+      // into multiple pnpm variants (e.g. _react@19.1.0 and _react@19.2.7) whose Logger types are
+      // incompatible (TS2345 "separate declarations of a private property 'extensionName'") and the
+      // build fails. react-env@2.0.0 uses 19.2.7, so standardize every react major on it.
+      "react@17": "19.2.7",
+      "react-dom@17": "19.2.7",
+      "react@19": "19.2.7",
+      "react-dom@19": "19.2.7",
       "minio@7.0": "7.1.3",
       // See more info here -
       // https://github.com/garycourt/uri-js/pull/95
@@ -838,8 +841,8 @@
             "reflect-metadata": "0.1.13",
             "monaco-editor": "0.52.2",
             "mz": "2.7.0",
-            "react": "19.1.0",
-            "react-dom": "19.1.0",
+            "react": "19.2.7",
+            "react-dom": "19.2.7",
             "core-js": "3.13.0",
             // Those are here to make sure we have them in the root with specific versions when installing with bvm
             "postcss": "8.4.18",

@@ -434,7 +434,13 @@
         "scope": "teambit.compositions",
         "version": "0.0.216",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/composition-card"
+        "rootDir": "scopes/compositions/composition-card",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "compositions": {
         "name": "compositions",
@@ -791,14 +797,26 @@
         "scope": "teambit.lanes",
         "version": "0.0.305",
         "mainFile": "index.ts",
-        "rootDir": "components/hooks/use-lane-components"
+        "rootDir": "components/hooks/use-lane-components",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "hooks/use-lanes": {
         "name": "hooks/use-lanes",
         "scope": "teambit.lanes",
         "version": "0.0.293",
         "mainFile": "index.ts",
-        "rootDir": "components/hooks/use-lanes"
+        "rootDir": "components/hooks/use-lanes",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "hooks/use-logout": {
         "name": "hooks/use-logout",
@@ -812,14 +830,26 @@
         "scope": "teambit.workspace",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "components/hooks/use-navigation-message-listener"
+        "rootDir": "components/hooks/use-navigation-message-listener",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "hooks/use-url-change-broadcaster": {
         "name": "hooks/use-url-change-broadcaster",
         "scope": "teambit.workspace",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "components/hooks/use-url-change-broadcaster"
+        "rootDir": "components/hooks/use-url-change-broadcaster",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "hooks/use-viewed-lane-from-url": {
         "name": "hooks/use-viewed-lane-from-url",
@@ -973,7 +1003,13 @@
         "scope": "teambit.compositions",
         "version": "0.0.507",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/model/composition-id"
+        "rootDir": "scopes/compositions/model/composition-id",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "model/composition-type": {
         "name": "model/composition-type",
@@ -1316,7 +1352,13 @@
         "scope": "teambit.api-reference",
         "version": "0.0.61",
         "mainFile": "index.ts",
-        "rootDir": "components/overview/renderers/grouped-schema-nodes-overview-summary"
+        "rootDir": "components/overview/renderers/grouped-schema-nodes-overview-summary",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "panels": {
         "name": "panels",
@@ -1330,7 +1372,13 @@
         "scope": "teambit.compositions",
         "version": "0.0.227",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/panels/composition-gallery"
+        "rootDir": "scopes/compositions/panels/composition-gallery",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "path/is-path-inside": {
         "name": "path/is-path-inside",
@@ -1484,14 +1532,26 @@
         "scope": "teambit.api-reference",
         "version": "0.0.14",
         "mainFile": "index.ts",
-        "rootDir": "components/renderers/default-node-renderers"
+        "rootDir": "components/renderers/default-node-renderers",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "renderers/tuple-type": {
         "name": "renderers/tuple-type",
         "scope": "teambit.api-reference",
         "version": "0.0.25",
         "mainFile": "index.ts",
-        "rootDir": "components/renderers/tuple-type"
+        "rootDir": "components/renderers/tuple-type",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ripple": {
         "name": "ripple",
@@ -1610,7 +1670,13 @@
         "scope": "teambit.api-reference",
         "version": "0.0.53",
         "mainFile": "index.ts",
-        "rootDir": "components/tagged-exports"
+        "rootDir": "components/tagged-exports",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "teambit.harmony/logger": {
         "name": "logger",
@@ -1715,21 +1781,39 @@
         "scope": "teambit.harmony",
         "version": "0.0.511",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/ui/aspect-box"
+        "rootDir": "scopes/harmony/ui/aspect-box",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/avatar": {
         "name": "ui/avatar",
         "scope": "teambit.design",
         "version": "1.1.34",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/avatar"
+        "rootDir": "components/ui/avatar",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/buttons/collapser": {
         "name": "ui/buttons/collapser",
         "scope": "teambit.ui-foundation",
         "version": "0.0.234",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/buttons/collapser"
+        "rootDir": "components/ui/buttons/collapser",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/code-compare": {
         "name": "ui/code-compare",
@@ -1743,28 +1827,52 @@
         "scope": "teambit.code",
         "version": "0.0.16",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/code-editor"
+        "rootDir": "components/ui/code-editor",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/code-tab-page": {
         "name": "ui/code-tab-page",
         "scope": "teambit.code",
         "version": "0.0.701",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/code-tab-page"
+        "rootDir": "components/ui/code-tab-page",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/code-view": {
         "name": "ui/code-view",
         "scope": "teambit.code",
         "version": "0.0.562",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/code-view"
+        "rootDir": "components/ui/code-view",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-compare/changelog": {
         "name": "ui/component-compare/changelog",
         "scope": "teambit.component",
         "version": "0.0.241",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/changelog"
+        "rootDir": "components/ui/component-compare/changelog",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-compare/component-compare": {
         "name": "ui/component-compare/component-compare",
@@ -1778,7 +1886,13 @@
         "scope": "teambit.component",
         "version": "0.0.125",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/context"
+        "rootDir": "components/ui/component-compare/context",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-compare/models/component-compare-props": {
         "name": "ui/component-compare/models/component-compare-props",
@@ -1792,133 +1906,247 @@
         "scope": "teambit.component",
         "version": "0.0.8",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/utils/lazy-loading"
+        "rootDir": "components/ui/component-compare/utils/lazy-loading",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-compare/version-picker": {
         "name": "ui/component-compare/version-picker",
         "scope": "teambit.component",
         "version": "0.0.247",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/version-picker"
+        "rootDir": "components/ui/component-compare/version-picker",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-drawer": {
         "name": "ui/component-drawer",
         "scope": "teambit.component",
         "version": "0.0.487",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-drawer"
+        "rootDir": "components/ui/component-drawer",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-filters/component-filter-context": {
         "name": "ui/component-filters/component-filter-context",
         "scope": "teambit.component",
         "version": "0.0.242",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-filters/component-filter-context"
+        "rootDir": "components/ui/component-filters/component-filter-context",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-filters/deprecate-filter": {
         "name": "ui/component-filters/deprecate-filter",
         "scope": "teambit.component",
         "version": "0.0.244",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-filters/deprecate-filter"
+        "rootDir": "components/ui/component-filters/deprecate-filter",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-filters/env-filter": {
         "name": "ui/component-filters/env-filter",
         "scope": "teambit.component",
         "version": "0.0.277",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-filters/env-filter"
+        "rootDir": "components/ui/component-filters/env-filter",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-filters/show-main-filter": {
         "name": "ui/component-filters/show-main-filter",
         "scope": "teambit.component",
         "version": "0.0.237",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-filters/show-main-filter"
+        "rootDir": "components/ui/component-filters/show-main-filter",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-preview": {
         "name": "ui/component-preview",
         "scope": "teambit.preview",
         "version": "1.0.36",
         "mainFile": "index.ts",
-        "rootDir": "scopes/preview/ui/component-preview"
+        "rootDir": "scopes/preview/ui/component-preview",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/composition-compare": {
         "name": "ui/composition-compare",
         "scope": "teambit.compositions",
         "version": "0.0.265",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/composition-compare"
+        "rootDir": "components/ui/composition-compare",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/composition-compare-section": {
         "name": "ui/composition-compare-section",
         "scope": "teambit.compositions",
         "version": "0.0.106",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/composition-compare-section"
+        "rootDir": "components/ui/composition-compare-section",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/compositions-app": {
         "name": "ui/compositions-app",
         "scope": "teambit.react",
         "version": "0.0.27",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/compositions-app"
+        "rootDir": "scopes/react/ui/compositions-app",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/current-user": {
         "name": "ui/current-user",
         "scope": "teambit.cloud",
         "version": "0.0.42",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/ui/current-user"
+        "rootDir": "scopes/cloud/ui/current-user",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/docs-app": {
         "name": "ui/docs-app",
         "scope": "teambit.react",
         "version": "1.0.38",
         "mainFile": "index.tsx",
-        "rootDir": "scopes/react/ui/docs-app"
+        "rootDir": "scopes/react/ui/docs-app",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/docs/apply-providers": {
         "name": "ui/docs/apply-providers",
         "scope": "teambit.react",
         "version": "0.0.27",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/docs/apply-providers"
+        "rootDir": "scopes/react/ui/docs/apply-providers",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/docs/compositions-carousel": {
         "name": "ui/docs/compositions-carousel",
         "scope": "teambit.react",
         "version": "0.0.32",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/docs/compositions-carousel"
+        "rootDir": "scopes/react/ui/docs/compositions-carousel",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/docs/docs-content": {
         "name": "ui/docs/docs-content",
         "scope": "teambit.react",
         "version": "0.0.41",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/docs/docs-content"
+        "rootDir": "scopes/react/ui/docs/docs-content",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/docs/properties-table": {
         "name": "ui/docs/properties-table",
         "scope": "teambit.react",
         "version": "0.0.30",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/docs/properties-table"
+        "rootDir": "scopes/react/ui/docs/properties-table",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/env-icon": {
         "name": "ui/env-icon",
         "scope": "teambit.envs",
         "version": "0.0.508",
         "mainFile": "index.ts",
-        "rootDir": "scopes/envs/ui/env-icon"
+        "rootDir": "scopes/envs/ui/env-icon",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/error-fallback": {
         "name": "ui/error-fallback",
         "scope": "teambit.react",
         "version": "0.0.136",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/error-fallback"
+        "rootDir": "scopes/react/ui/error-fallback",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/highlighter-provider": {
         "name": "ui/highlighter-provider",
@@ -1932,91 +2160,169 @@
         "scope": "teambit.scope",
         "version": "0.0.548",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/hooks/scope-context"
+        "rootDir": "components/ui/hooks/scope-context",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/hooks/use-core-aspects": {
         "name": "ui/hooks/use-core-aspects",
         "scope": "teambit.harmony",
         "version": "0.0.6",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/hooks/use-core-aspects"
+        "rootDir": "components/ui/hooks/use-core-aspects",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
         "version": "0.0.297",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inputs/lane-selector_1"
+        "rootDir": "components/ui/inputs/lane-selector_1",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/lane-overview": {
         "name": "ui/lane-overview",
         "scope": "teambit.lanes",
         "version": "0.0.311",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/lane-overview"
+        "rootDir": "components/ui/lane-overview",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/loader-fallback": {
         "name": "ui/loader-fallback",
         "scope": "teambit.react",
         "version": "0.0.114",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/loader-fallback"
+        "rootDir": "scopes/react/ui/loader-fallback",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/login": {
         "name": "ui/login",
         "scope": "teambit.cloud",
         "version": "0.0.10",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/ui/login"
+        "rootDir": "scopes/cloud/ui/login",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/models/lanes-model": {
         "name": "ui/models/lanes-model",
         "scope": "teambit.lanes",
         "version": "0.0.233",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/models/lanes-model"
+        "rootDir": "components/ui/models/lanes-model",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/pages/preview-not-found": {
         "name": "ui/pages/preview-not-found",
         "scope": "teambit.ui-foundation",
         "version": "0.0.88",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/pages/preview-not-found"
+        "rootDir": "components/ui/pages/preview-not-found",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/pages/static-error": {
         "name": "ui/pages/static-error",
         "scope": "teambit.ui-foundation",
         "version": "0.0.111",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/pages/static-error"
+        "rootDir": "components/ui/pages/static-error",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/preserve-workspace-mode": {
         "name": "ui/preserve-workspace-mode",
         "scope": "teambit.workspace",
         "version": "0.0.3",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/preserve-workspace-mode"
+        "rootDir": "components/ui/preserve-workspace-mode",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
         "scope": "teambit.preview",
         "version": "0.0.570",
         "mainFile": "index.ts",
-        "rootDir": "scopes/preview/ui/preview-placeholder"
+        "rootDir": "scopes/preview/ui/preview-placeholder",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/queries/get-docs": {
         "name": "ui/queries/get-docs",
         "scope": "teambit.docs",
         "version": "0.0.511",
         "mainFile": "index.ts",
-        "rootDir": "scopes/docs/ui/queries/get-docs"
+        "rootDir": "scopes/docs/ui/queries/get-docs",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/queries/get-file-content": {
         "name": "ui/queries/get-file-content",
         "scope": "teambit.code",
         "version": "0.0.507",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/queries/get-file-content"
+        "rootDir": "components/ui/queries/get-file-content",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/react-router/slot-router": {
         "name": "ui/react-router/slot-router",
@@ -2030,7 +2336,13 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.97",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/rendering/html"
+        "rootDir": "components/ui/rendering/html",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/side-bar": {
         "name": "ui/side-bar",
@@ -2044,63 +2356,117 @@
         "scope": "teambit.defender",
         "version": "0.0.307",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/test-compare"
+        "rootDir": "components/ui/test-compare",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/test-page": {
         "name": "ui/test-page",
         "scope": "teambit.defender",
         "version": "0.0.85",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/test-page"
+        "rootDir": "components/ui/test-page",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/time-ago": {
         "name": "ui/time-ago",
         "scope": "teambit.design",
         "version": "0.0.384",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/time-ago"
+        "rootDir": "components/ui/time-ago",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/tooltip": {
         "name": "ui/tooltip",
         "scope": "teambit.design",
         "version": "0.0.383",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/tooltip"
+        "rootDir": "components/ui/tooltip",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/use-workspace-mode": {
         "name": "ui/use-workspace-mode",
         "scope": "teambit.workspace",
         "version": "0.0.3",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/use-workspace-mode"
+        "rootDir": "components/ui/use-workspace-mode",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/user-bar": {
         "name": "ui/user-bar",
         "scope": "teambit.cloud",
         "version": "0.0.52",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/ui/user-bar"
+        "rootDir": "scopes/cloud/ui/user-bar",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/version-block": {
         "name": "ui/version-block",
         "scope": "teambit.component",
         "version": "0.0.946",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/version-block"
+        "rootDir": "components/ui/version-block",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/version-dropdown": {
         "name": "ui/version-dropdown",
         "scope": "teambit.component",
         "version": "0.0.927",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/version-dropdown"
+        "rootDir": "components/ui/version-dropdown",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/workspace-component-card": {
         "name": "ui/workspace-component-card",
         "scope": "teambit.workspace",
         "version": "0.0.574",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/workspace-component-card"
+        "rootDir": "components/ui/workspace-component-card",
+        "config": {
+            "teambit.react/react-env@2.0.0": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "url/add-avatar-query-params": {
         "name": "url/add-avatar-query-params",
