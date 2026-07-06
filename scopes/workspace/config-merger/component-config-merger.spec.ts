@@ -3,6 +3,7 @@ import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { Logger } from '@teambit/logger';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { ComponentConfigMerger } from './component-config-merger';
 
 const noopLogger = { debug() {}, trace() {} } as unknown as Logger;
@@ -19,7 +20,8 @@ function mergeEnvConfig(
   current: ExtensionDataList,
   base: ExtensionDataList,
   other: ExtensionDataList,
-  workspaceIds: ComponentID[]
+  workspaceIds: ComponentID[],
+  mergeStrategy: MergeStrategy = 'ours'
 ) {
   const merger = new ComponentConfigMerger(
     'my-scope/some-comp',
@@ -31,7 +33,7 @@ function mergeEnvConfig(
     'lane',
     'main',
     noopLogger,
-    'ours'
+    mergeStrategy
   );
   return merger.merge().getSuccessfullyMergedConfig();
 }
@@ -88,6 +90,27 @@ describe('ComponentConfigMerger', () => {
     });
     it('should keep the lane env and not sync teambit.envs/envs from "other"', () => {
       expect(mergedConfig[EnvsAspect.id]).to.be.undefined;
+    });
+  });
+
+  describe('base env version is unknown (base env-aspect entry absent)', () => {
+    // base and current share the env id, but base's version is unknown (its env-aspect entry is missing).
+    // that must NOT be treated as "the current lane changed its env" — otherwise the keep-workspace-env
+    // short-circuit would fire and silently swallow the env change made on "other". Instead the normal
+    // 3-way merge applies; with 'theirs' it takes the other lane's env (with its version).
+    let mergedConfig: Record<string, any>;
+    before(() => {
+      const env = 'my-scope.envs/ws-env'; // same env id on base & current; also a workspace component.
+      const otherEnv = 'other-scope.envs/ext-env';
+      // base carries the env id but NO env-aspect entry -> its version resolves to undefined (unknown).
+      const base = new ExtensionDataList(envsEntry(env));
+      const current = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@0.0.1`));
+      const other = new ExtensionDataList(envsEntry(otherEnv), envAspectEntry(`${otherEnv}@1.0.0`));
+      const workspaceIds = [ComponentID.fromString(`${env}@0.0.1`)];
+      mergedConfig = mergeEnvConfig(current, base, other, workspaceIds, 'theirs');
+    });
+    it('should not short-circuit on the workspace env; the merge strategy decides (takes other)', () => {
+      expect(mergedConfig[EnvsAspect.id]).to.deep.equal({ env: 'other-scope.envs/ext-env@1.0.0' });
     });
   });
 });

@@ -209,8 +209,13 @@ export class ComponentConfigMerger {
       return null;
     }
     // did the current lane deliberately change its env away from the diversion point (base)?
+    // a version difference counts only when both sides have a known version — a missing base version
+    // (versionless/core env, or an absent base env-aspect entry) is "unknown", not "changed", so it must
+    // not block propagation of an env change made on the other lane.
     const currentChangedEnvFromBase =
-      !this.baseEnv || this.baseEnv.id !== this.currentEnv.id || this.baseEnv.version !== this.currentEnv.version;
+      !this.baseEnv ||
+      this.baseEnv.id !== this.currentEnv.id ||
+      Boolean(this.baseEnv.version && this.currentEnv.version && this.baseEnv.version !== this.currentEnv.version);
     // if the current lane deliberately set its env to a workspace component (or one that exists on the other
     // lane), keep it — that's the env the user chose for this lane. but if the current lane did NOT touch the
     // env (base === current) and only "other" changed it (e.g. an env migration on main), don't short-circuit:
