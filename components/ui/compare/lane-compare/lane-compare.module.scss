@@ -280,9 +280,12 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
   // Per-panel visibility driven by `data-view-mode` on the pane. Every component panel is mounted
   // regardless of the active view (the set is filtered by search only) so that switching modes never
   // remounts panels — it's just this attribute flip. CSS then hides panels that have no changes for
-  // the active view, using the stable `data-has-*` attributes stamped in lane-compare.tsx. `docs`,
-  // `tests` and `api` show every panel, so they get no hide rule here.
+  // the active view, using the stable `data-has-*` attributes stamped in lane-compare.tsx. `tests` and
+  // `api` show every panel (api filters in its own full-pane view), so they get no hide rule here.
   &[data-view-mode='code'] [data-component-id]:not([data-has-code]) {
+    display: none;
+  }
+  &[data-view-mode='docs'] [data-component-id]:not([data-has-docs]) {
     display: none;
   }
   &[data-view-mode='preview'] [data-component-id]:not([data-has-preview]) {
@@ -293,6 +296,12 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
   }
   &[data-view-mode='config'] [data-component-id]:not([data-has-config]) {
     display: none;
+  }
+
+  // reveal the header note a view registered for the active view (e.g. the deps change tally in the
+  // Dependencies view). The header itself is view-agnostic; the app names the view here.
+  &[data-view-mode='dependencies'] [data-header-extra-view='dependencies'] {
+    display: inline-flex;
   }
 }
 

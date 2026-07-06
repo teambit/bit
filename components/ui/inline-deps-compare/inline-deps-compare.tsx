@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+import { useDepsFilter, useHeaderExtraRegister } from '@teambit/component.ui.component-compare.component-compare';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import {
@@ -14,12 +15,14 @@ export type InlineDepsCompareProps = {};
 
 export function InlineDepsCompare(_props: InlineDepsCompareProps) {
   const componentCompare = useComponentCompare();
+  const showAll = useDepsFilter();
 
-  const { entries, baseLabel, compareLabel } = useMemo(() => {
+  const { entries, baseLabel, compareLabel, componentIdStr } = useMemo(() => {
     const base = componentCompare?.base;
     const compare = componentCompare?.compare;
+    const idStr = (compare?.model?.id || base?.model?.id)?.toStringWithoutVersion?.() || '';
     if (!base?.descriptor || !compare?.descriptor) {
-      return { entries: [], baseLabel: 'Base', compareLabel: 'Compare' };
+      return { entries: [], baseLabel: 'Base', compareLabel: 'Compare', componentIdStr: idStr };
     }
 
     const baseDepsAspect = base.descriptor.get<any>('teambit.dependencies/dependency-resolver');
@@ -52,6 +55,7 @@ export function InlineDepsCompare(_props: InlineDepsCompareProps) {
       compareLabel: (compare as any).hasLocalChanges
         ? 'workspace'
         : shortenVersion(compare.model.id.version) || 'Compare',
+      componentIdStr: idStr,
     };
   }, [
     componentCompare?.base?.model?.id?.toString(),
@@ -59,9 +63,22 @@ export function InlineDepsCompare(_props: InlineDepsCompareProps) {
     (componentCompare?.compare as any)?.hasLocalChanges,
   ]);
 
+  // change/unchanged tally, surfaced in the component header via the generic header-note registry (the
+  // per-table toolbar that used to show it is gone — the toggle is now global in the compare toolbar).
+  const summaryText = useMemo(() => {
+    let changed = 0;
+    let unchanged = 0;
+    for (const e of entries) {
+      if (e.status === 'unchanged') unchanged += 1;
+      else changed += 1;
+    }
+    return `${changed} changed${unchanged > 0 ? ` · ${unchanged} unchanged` : ''}`;
+  }, [entries]);
+  useHeaderExtraRegister(componentIdStr || undefined, 'dependencies', summaryText);
+
   if (!componentCompare || componentCompare.loading) {
     return <DiffLoadingSkeleton />;
   }
 
-  return <DepsDiffTable entries={entries} baseLabel={baseLabel} compareLabel={compareLabel} />;
+  return <DepsDiffTable entries={entries} baseLabel={baseLabel} compareLabel={compareLabel} showAll={showAll} />;
 }

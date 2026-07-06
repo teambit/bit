@@ -17,7 +17,9 @@ import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import {
   CompareDataProvider,
   CompareToolbar,
+  CompareToolbarActions,
   DiffModeProvider,
+  DepsFilterProvider,
   FileRegistryProvider,
   InlineComponentCompare,
   RegistryFeeder,
@@ -290,6 +292,7 @@ function CompareView({
   const [searchParams] = useSearchParams();
   const [viewMode, setViewModeState] = useState<ViewMode>((searchParams.get('view') as ViewMode) || 'code');
   const [diffMode, setDiffModeState] = useState<DiffMode>((searchParams.get('diffMode') as DiffMode) || 'split');
+  const [showAllDeps, setShowAllDeps] = useState(false);
 
   const syncUrl = React.useCallback((key: string, value: string | undefined) => {
     const url = new URL(window.location.href);
@@ -420,39 +423,48 @@ function CompareView({
 
   return (
     <DiffModeProvider mode={diffMode}>
-      <CompareToolbar
-        viewMode={viewMode}
-        onViewModeChange={(v) => setViewMode(v as ViewMode)}
-        diffMode={diffMode}
-        onDiffModeChange={setDiffMode}
-        viewModes={COMPARE_VIEW_MODES}
-        counts={counts}
-        showCounts={false}
-        loading={loading}
-      />
+      <DepsFilterProvider showAll={showAllDeps}>
+        <CompareToolbar
+          viewMode={viewMode}
+          onViewModeChange={(v) => setViewMode(v as ViewMode)}
+          endActions={
+            <CompareToolbarActions
+              viewMode={viewMode}
+              diffMode={diffMode}
+              onDiffModeChange={setDiffMode}
+              depsShowAll={showAllDeps}
+              onDepsShowAllChange={setShowAllDeps}
+            />
+          }
+          viewModes={COMPARE_VIEW_MODES}
+          counts={counts}
+          showCounts={false}
+          loading={loading}
+        />
 
-      <div className={styles.diffPane} data-view-mode={viewMode}>
-        <InlineComponentCompare
-          name={name}
-          baseId={baseId}
-          compareId={compareId}
-          baseVersion={baseVersionShort}
-          compareVersion={compareVersionShort}
-          allTabs={resolvedTabs}
-          host={host}
-          // Hand the inner context our already-resolved pair: base = the scope's published snap,
-          // compare = the live workspace component (with local changes). Without this the inner
-          // context re-fetches by id and, in local-changes mode (compareId === baseId), would load
-          // the same snap for both sides — making the deps/config/preview tabs show base vs base.
-          baseOverride={componentCompare?.base as { model?: any; descriptor?: any } | undefined}
-          compareOverride={componentCompare?.compare as { model?: any; descriptor?: any } | undefined}
-        >
-          {/* The API view isn't an inline tab — render it inside the inline context (so it sees the
+        <div className={styles.diffPane} data-view-mode={viewMode}>
+          <InlineComponentCompare
+            name={name}
+            baseId={baseId}
+            compareId={compareId}
+            baseVersion={baseVersionShort}
+            compareVersion={compareVersionShort}
+            allTabs={resolvedTabs}
+            host={host}
+            // Hand the inner context our already-resolved pair: base = the scope's published snap,
+            // compare = the live workspace component (with local changes). Without this the inner
+            // context re-fetches by id and, in local-changes mode (compareId === baseId), would load
+            // the same snap for both sides — making the deps/config/preview tabs show base vs base.
+            baseOverride={componentCompare?.base as { model?: any; descriptor?: any } | undefined}
+            compareOverride={componentCompare?.compare as { model?: any; descriptor?: any } | undefined}
+          >
+            {/* The API view isn't an inline tab — render it inside the inline context (so it sees the
               resolved base/compare pair) only while it's the active view, so its diff query fires
               on-demand. CSS hides the inline `[data-tab-id]` panels when `data-view-mode='api'`. */}
-          {viewMode === 'api' ? apiTab : null}
-        </InlineComponentCompare>
-      </div>
+            {viewMode === 'api' ? apiTab : null}
+          </InlineComponentCompare>
+        </div>
+      </DepsFilterProvider>
     </DiffModeProvider>
   );
 }

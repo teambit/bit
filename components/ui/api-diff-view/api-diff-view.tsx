@@ -5,7 +5,7 @@ import { ApiDiffDataProvider, useApiDiffData } from './api-diff-data-context';
 import type { ApiDiffPair } from './api-diff-data-context';
 import { ApiDiffInsightProvider } from './api-diff-insights';
 import type { ApiDiffInsight } from './api-diff-insights';
-import { ComponentApiDiffSection, ApiDiffSlimRow } from './component-api-diff-section';
+import { ComponentApiDiffSection } from './component-api-diff-section';
 import styles from './api-diff-view.module.scss';
 
 export type ComponentDiffEntry = {
@@ -65,12 +65,6 @@ function classifyEntry(entry: ComponentDiffEntry): EntryKind {
   return 'query';
 }
 
-/** copy for components without a comparable pair — new components are the common case */
-function incomparableCopy(entry: ComponentDiffEntry): { chip: string; detail: string } {
-  if (entry.changes?.includes('NEW')) return { chip: 'new component', detail: 'no base version to compare' };
-  return { chip: 'not comparable', detail: 'no common base version between these lanes' };
-}
-
 const REGISTRY_STATUS: Record<string, string> = { ADDED: 'NEW', REMOVED: 'DELETED', MODIFIED: 'MODIFIED' };
 
 function ComponentApiDiffContainer({
@@ -105,16 +99,19 @@ function ComponentApiDiffContainer({
     if (active && !loading) onLoaded(componentIdStr, result ?? null);
   }, [active, loading, result, componentIdStr, onLoaded]);
 
-  // feed changed public exports to the host's sidebar tree (nested under the component,
-  // exactly like files in code mode). the sidebar's scroll-sync then targets the
-  // `data-file-id="<componentId>:<exportName>"` anchors rendered by ApiChangeBlock.
+  // feed changed public exports to the host's sidebar tree (nested under the component, exactly like
+  // files in code mode). the sidebar's scroll-sync then targets the `data-file-id="<componentId>:
+  // <exportName>"` anchors rendered by ApiChangeBlock. once a pair's result is known we always register
+  // — the changed exports when there are any, otherwise an empty list — so the host can tell "analyzed,
+  // no API changes" (hide it, like code does) from "still analyzing" (unregistered).
   React.useEffect(() => {
-    if (!onApiEntries || !result || result.status !== 'COMPUTED') return;
-    onApiEntries(
-      componentIdStr,
-      result.publicChanges.map((c) => ({ name: c.exportName, status: REGISTRY_STATUS[c.status] || 'MODIFIED' }))
-    );
-  }, [result, componentIdStr, onApiEntries]);
+    if (!onApiEntries || loading) return;
+    const entries =
+      result && result.status === 'COMPUTED'
+        ? result.publicChanges.map((c) => ({ name: c.exportName, status: REGISTRY_STATUS[c.status] || 'MODIFIED' }))
+        : [];
+    onApiEntries(componentIdStr, entries);
+  }, [result, loading, componentIdStr, onApiEntries]);
 
   return (
     <ComponentApiDiffSection
@@ -225,6 +222,29 @@ export function ApiDiffLaneView({
   const loadedCount = totals.loaded;
   const allLoaded = loadedCount >= queried.length;
 
+  // register an empty entry-list for every component that can't have a diff (no comparable pair, or no
+  // API-relevant changes), so the host sidebar can tell these apart from still-analyzing ones and hide
+  // them — mirroring how the code view hides components with no file changes.
+  React.useEffect(() => {
+    if (!onApiEntries) return;
+    entries.forEach(({ entry, kind }) => {
+      if (kind === 'gated' || kind === 'incomparable') onApiEntries(entry.componentId.toStringWithoutVersion(), []);
+    });
+  }, [entries, onApiEntries]);
+
+  // which components actually have a public-API diff to show: a queried pair that is still loading (keep
+  // it visible so there's no flash) or that resolved to at least one public change. gated/incomparable
+  // and computed-no-change pairs are dropped, so the pane lists only real diffs.
+  const hasVisibleDiff = React.useCallback(
+    (idStr: string, kind: EntryKind) => {
+      if (kind !== 'query') return false;
+      if (!results.has(idStr)) return true; // still analyzing — keep visible
+      const r = results.get(idStr);
+      return !!r && r.status === 'COMPUTED' && (r.publicChanges?.length || 0) > 0;
+    },
+    [results]
+  );
+
   if (entries.length === 0) {
     return (
       <div className={styles.fullView}>
@@ -319,36 +339,12 @@ export function ApiDiffLaneView({
             />
           )}
 
-          {/* every component always renders (sections or slim rows) — even in the stable
-            state — so the sidebar's data-component-id scroll anchors always exist. */}
+          {/* only components that actually have a public-API diff render (matching the code view, which
+            hides components with no file changes). gated / incomparable / computed-no-change pairs are
+            dropped; still-analyzing pairs stay so there's no flash. */}
           {entries.map(({ entry, kind }) => {
             const idStr = entry.componentId.toStringWithoutVersion();
-            if (kind === 'incomparable') {
-              const copy = incomparableCopy(entry);
-              return (
-                <ApiDiffSlimRow
-                  key={idStr}
-                  componentIdStr={idStr}
-                  displayName={entry.componentId.fullName}
-                  chip={copy.chip}
-                  detail={copy.detail}
-                  tone="ok"
-                />
-              );
-            }
-            if (kind === 'gated') {
-              const sameVersion = entry.sourceHead === entry.targetHead;
-              return (
-                <ApiDiffSlimRow
-                  key={idStr}
-                  componentIdStr={idStr}
-                  displayName={entry.componentId.fullName}
-                  chip="✓ no API changes"
-                  detail={sameVersion ? 'same version on both sides' : 'no source or dependency changes'}
-                  tone="ok"
-                />
-              );
-            }
+            if (!hasVisibleDiff(idStr, kind)) return null;
             return (
               <ComponentApiDiffContainer
                 key={idStr}

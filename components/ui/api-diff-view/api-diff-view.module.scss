@@ -452,6 +452,11 @@ $success: var(--success-color, #1a7f37);
   .diffGutter {
     color: $danger;
   }
+
+  .docTok {
+    background: color-mix(in srgb, $danger 24%, transparent);
+    color: $danger;
+  }
 }
 
 .docAdded {
@@ -460,6 +465,31 @@ $success: var(--success-color, #1a7f37);
   .diffGutter {
     color: $success;
   }
+
+  .docTok {
+    background: color-mix(in srgb, $success 22%, transparent);
+    color: var(--success-color, #136a2e);
+  }
+}
+
+// unchanged prose lines between doc changes — neutral surface, muted gutter, so only the real edits
+// carry color and the surrounding sentence reads as context (mirrors the code view's context lines).
+.docUnchanged {
+  .diffGutter {
+    color: $text-muted;
+  }
+}
+
+// within-line change emphasis on PROSE doc diffs — mirrors .diffTok but scoped to the doc tint
+// classes so a changed word/phrase stands out against the faint red/green while the rest reads as
+// context. Bold weight + a stronger tint of the same hue keeps it legible on either tint (no syntax
+// color — this is prose, not code). `<mark>`'s default yellow is overridden here.
+.docTok {
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 1px;
 }
 
 .docText {

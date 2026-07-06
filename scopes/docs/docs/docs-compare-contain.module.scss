@@ -1,0 +1,25 @@
+// Width containment for the inline-docs compare tab. OverviewCompare renders base/compare docs side by
+// side via the external `compare-split-layout-preset`, whose two panes are `flex: 1` with no
+// `min-width: 0` — so each grows to its (often very wide) docs content instead of sharing the width, and
+// the pair overflows the pane/page.
+.contain {
+  // Hard-cap the width to the pane regardless of any ancestor flex item lacking min-width:0 — a grid
+  // item cannot exceed its track. `height: 100%` + `minmax(0,1fr)` rows keep OverviewCompare's
+  // full-height layout (`.subView { height: 100% }`) intact.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  // Force the split panes shrinkable so they share the width (~50% each) instead of each spanning the
+  // full content width. Targeted by the preset's (and OverviewCompare's own) stable module-class prefix,
+  // so it only touches the two side-by-side panes — not arbitrary descendants. Once a pane is
+  // width-constrained, OverviewCompare's own `.subView { overflow: auto }` scrolls any wide content
+  // inside it rather than pushing the layout wider.
+  :global([class*='subContainerLeft']),
+  :global([class*='subContainerRight']) {
+    min-width: 0;
+  }
+}

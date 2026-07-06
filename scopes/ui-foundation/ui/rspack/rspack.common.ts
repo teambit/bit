@@ -24,8 +24,14 @@ export const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT
 
 export function resolveAlias(opts?: { profile?: boolean }): Record<string, string | false> {
   return {
+    // every react/react-dom entry point used at runtime must be listed here, or it escapes
+    // the alias and resolves to the importer's own copy — pairing mismatched react versions
     'react/jsx-runtime': require.resolve('react/jsx-runtime'),
     react: require.resolve('react'),
+    'react-dom/client': require.resolve('react-dom/client'),
+    // resolve the browser entry explicitly — require.resolve runs under node's export
+    // conditions and would otherwise pin server.node.js (needs crypto/stream) into web bundles
+    'react-dom/server': require.resolve('react-dom/server.browser'),
     'react-dom': require.resolve('react-dom'),
     ...(opts?.profile && {
       'react-dom$': 'react-dom/profiling',

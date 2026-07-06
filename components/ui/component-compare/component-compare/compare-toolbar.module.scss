@@ -34,6 +34,15 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
   }
 }
 
+// pinned to the right end of the toolbar (toolbarLeft's flex:1 pushes it over) — holds the
+// dependencies Changed/All toggle.
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding-left: 12px;
+}
+
 .toolbarOption {
   display: flex;
   align-items: center;

@@ -1,4 +1,5 @@
 import React from 'react';
+import type { ReactNode } from 'react';
 import { ToggleButton } from '@teambit/design.inputs.toggle-button';
 import { Icon } from '@teambit/design.elements.icon';
 import { Tooltip } from '@teambit/design.ui.tooltip';
@@ -25,8 +26,12 @@ export type CompareToolbarProps = {
   onViewModeChange: (mode: string) => void;
   groupBy?: string;
   onGroupByChange?: (groupBy: string) => void;
-  diffMode: DiffMode;
-  onDiffModeChange: (mode: DiffMode) => void;
+  /**
+   * View-specific controls, rendered pinned to the right end of the toolbar. The toolbar is agnostic to
+   * what these are — the compare app composes them per active view (see `CompareToolbarActions`), so the
+   * toolbar stays a generic container with no knowledge of diff modes, dependencies, or any single view.
+   */
+  endActions?: ReactNode;
   viewModes: CompareViewMode[];
   groupByOptions?: CompareGroupByOption[];
   counts: Record<string, number>;
@@ -62,8 +67,7 @@ export function CompareToolbar({
   onViewModeChange,
   groupBy,
   onGroupByChange,
-  diffMode,
-  onDiffModeChange,
+  endActions,
   counts,
   showCounts = true,
   loading,
@@ -156,23 +160,10 @@ export function CompareToolbar({
             />
           </>
         )}
-
-        {(viewMode === 'code' || viewMode === 'config' || viewMode === 'tests') && (
-          <>
-            <div className={styles.toolbarSeparator} />
-
-            <ToggleButton
-              onOptionSelect={(idx) => onDiffModeChange(idx === 0 ? 'split' : 'unified')}
-              defaultIndex={diffMode === 'split' ? 0 : 1}
-              options={[
-                { value: 'split', element: <span>Split</span> },
-                { value: 'unified', element: <span>Unified</span> },
-              ]}
-              className={styles.diffModeToggle}
-            />
-          </>
-        )}
       </div>
+
+      {/* Generic slot for the active view's controls — pinned right, contents supplied by the caller. */}
+      {endActions && <div className={styles.toolbarRight}>{endActions}</div>}
     </div>
   );
 }

@@ -17,6 +17,13 @@ class ComponentRegistry {
   /** changed API exports per component — populates the sidebar tree in API view mode */
   private apiEntries = new Map<string, FileInfo[]>();
 
+  /**
+   * per-component, per-view header notes (component id → view id → text). A view registers a short
+   * summary it wants shown in the component header; the header renders it generically and the app
+   * reveals it for the matching view via CSS. Keeps the header agnostic — it never names any view.
+   */
+  private headerExtras = new Map<string, Map<string, string>>();
+
   private compositions = new Map<string, boolean>();
 
   private listeners = new Set<Listener>();
@@ -52,6 +59,23 @@ class ComponentRegistry {
 
   getApiEntries(componentId: string) {
     return this.apiEntries.get(componentId);
+  }
+
+  registerHeaderExtra(componentId: string, view: string, text: string) {
+    let byView = this.headerExtras.get(componentId);
+    if (byView?.get(view) === text) return;
+    if (!byView) {
+      byView = new Map();
+      this.headerExtras.set(componentId, byView);
+    }
+    byView.set(view, text);
+    this.notify();
+  }
+
+  getHeaderExtras(componentId: string): Array<{ view: string; text: string }> {
+    const byView = this.headerExtras.get(componentId);
+    if (!byView) return [];
+    return [...byView.entries()].map(([view, text]) => ({ view, text }));
   }
 
   registerCompositions(componentId: string, hasCompositions: boolean) {
@@ -166,4 +190,14 @@ export function useCompositionsRegistryRegister(componentId: string | undefined,
       store.registerCompositions(componentId, hasCompositions);
     }
   }, [store, componentId, hasCompositions]);
+}
+
+/** register a short per-view note for a component, shown generically in its compare header. */
+export function useHeaderExtraRegister(componentId: string | undefined, view: string, text: string | undefined) {
+  const store = useContext(FileRegistryContext);
+  useEffect(() => {
+    if (store && componentId && text !== undefined) {
+      store.registerHeaderExtra(componentId, view, text);
+    }
+  }, [store, componentId, view, text]);
 }

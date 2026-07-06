@@ -228,6 +228,16 @@ $inline-code-font: 'JetBrains Mono', ui-monospace, monospace;
   letter-spacing: 0.02em;
 }
 
+// Per-view header note (e.g. the deps change tally). Hidden by default; the compare pane reveals the
+// note whose `data-header-extra-view` matches the active view (see the pane scss). The header stays
+// view-agnostic — it never names a specific view.
+.headerExtra {
+  display: none;
+  align-items: center;
+  font-size: 13px;
+  color: var(--on-background-medium-color, #a0aec0);
+}
+
 .versions {
   display: flex;
   align-items: center;

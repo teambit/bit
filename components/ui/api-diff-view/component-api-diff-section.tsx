@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ReactNode } from 'react';
-import { useHighlightedLines, resolveTokenColor } from '@teambit/code.ui.diff-viewer';
+import { useHighlightedLines, resolveTokenColor, computeDiffLines } from '@teambit/code.ui.diff-viewer';
+import type { DiffLineItem } from '@teambit/code.ui.diff-viewer';
 import type { APIDiffChange, APIDiffDetail, APIDiffResult, ImpactLevel } from './api-diff-model';
 import { impactLabel, unavailableText } from './api-diff-model';
 import { useApiDiffInsights } from './api-diff-insights';
@@ -330,10 +331,67 @@ function ModifiedCause({ detail }: { detail: APIDiffDetail }) {
 }
 
 /**
+ * one prose line of a doc diff, emphasizing only the intra-line char ranges that actually changed
+ * (the `intra` ranges computed by `computeDiffLines`). Unlike code, prose is NOT syntax-highlighted —
+ * only the changed words/phrases get a `<mark>` so the rest reads as context. Ranges are half-open,
+ * sorted and non-overlapping, so a single left-to-right walk covers the line.
+ */
+function ProseLine({ line }: { line: DiffLineItem }) {
+  const { text, intra } = line;
+  if (!intra || intra.length === 0) return <>{text || ' '}</>;
+  const out: ReactNode[] = [];
+  let pos = 0;
+  let key = 0;
+  for (const [s, e] of intra) {
+    if (s > pos) out.push(<span key={key++}>{text.slice(pos, s)}</span>);
+    out.push(
+      <mark key={key++} className={styles.docTok}>
+        {text.slice(s, e)}
+      </mark>
+    );
+    pos = e;
+  }
+  if (pos < text.length) out.push(<span key={key++}>{text.slice(pos)}</span>);
+  return <>{out}</>;
+}
+
+/**
+ * a real documentation *change* (both a before and an after) rendered as a git-style stacked diff:
+ * removed lines over added lines with context lines between, and — exactly like the code view — only
+ * the words/characters that actually changed emphasized (via `computeDiffLines`' intra ranges). This
+ * replaces the old "whole `from` in red / whole `to` in green" blocks so a one-word doc edit reads as
+ * one word, not two near-identical paragraphs.
+ */
+function DocDiff({ from, to }: { from: string; to: string }) {
+  const lines = computeDiffLines(from, to);
+  return (
+    <>
+      {lines.map((line, i) => {
+        const tone =
+          line.type === 'add' ? styles.docAdded : line.type === 'del' ? styles.docRemoved : styles.docUnchanged;
+        const gutter = line.type === 'add' ? '+' : line.type === 'del' ? '−' : '·';
+        return (
+          <div key={i} className={`${styles.docLine} ${tone}`}>
+            <span className={styles.diffGutter} aria-hidden="true">
+              {gutter}
+            </span>
+            <span className={styles.docText}>
+              <ProseLine line={line} />
+            </span>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+/**
  * a documentation-only cause. Beyond the label, it shows the actual doc/comment prose that was
  * removed (red) and/or added (green) — so "documentation removed" reveals *what* was removed rather
  * than just stating it. Doc text is prose (never a signature), so it renders as dark text on a faint
- * tint (dark-on-tint clears contrast) with no syntax highlighting. Falls back to a plain note when
+ * tint (dark-on-tint clears contrast) with no syntax highlighting. When BOTH sides are present (a real
+ * change) it renders a line-level diff with only the changed words emphasized, like the code view; a
+ * pure removal/addition (one side) keeps the single-block form. Falls back to a plain note when
  * neither side carries text.
  */
 function NoteCause({ detail, ownerName }: { detail: APIDiffDetail; ownerName: string }) {
@@ -354,21 +412,29 @@ function NoteCause({ detail, ownerName }: { detail: APIDiffDetail; ownerName: st
         <span className={styles.memberKind}>documentation {docVerb(detail.changeKind)}</span>
       </div>
       <div className={styles.docBlock}>
-        {detail.from && (
-          <div className={`${styles.docLine} ${styles.docRemoved}`}>
-            <span className={styles.diffGutter} aria-hidden="true">
-              −
-            </span>
-            <span className={styles.docText}>{detail.from}</span>
-          </div>
-        )}
-        {detail.to && (
-          <div className={`${styles.docLine} ${styles.docAdded}`}>
-            <span className={styles.diffGutter} aria-hidden="true">
-              +
-            </span>
-            <span className={styles.docText}>{detail.to}</span>
-          </div>
+        {detail.from && detail.to ? (
+          // a real change — show the within-block diff (changed words emphasized), like the code view.
+          <DocDiff from={detail.from} to={detail.to} />
+        ) : (
+          // pure removal or pure addition — nothing to intra-diff, so keep the single-block form.
+          <>
+            {detail.from && (
+              <div className={`${styles.docLine} ${styles.docRemoved}`}>
+                <span className={styles.diffGutter} aria-hidden="true">
+                  −
+                </span>
+                <span className={styles.docText}>{detail.from}</span>
+              </div>
+            )}
+            {detail.to && (
+              <div className={`${styles.docLine} ${styles.docAdded}`}>
+                <span className={styles.diffGutter} aria-hidden="true">
+                  +
+                </span>
+                <span className={styles.docText}>{detail.to}</span>
+              </div>
+            )}
+          </>
         )}
         {contextSignature && (
           <code className={`${styles.docLine} ${styles.docContext}`}>

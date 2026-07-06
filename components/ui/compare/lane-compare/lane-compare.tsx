@@ -10,10 +10,12 @@ import type { UseLaneDiffStatus } from '@teambit/lanes.ui.compare.lane-compare-h
 import {
   InlineComponentCompare,
   CompareToolbar,
+  CompareToolbarActions,
   CompareSidebar,
   FileRegistryProvider,
   useFileRegistry,
   DiffModeProvider,
+  DepsFilterProvider,
   CompareDataProvider,
   RegistryFeeder,
 } from '@teambit/component.ui.component-compare.component-compare';
@@ -118,6 +120,15 @@ const ACCENT_COLORS: Record<string, string> = {
   [ChangeType.DEPENDENCY]: 'var(--warning-color, #d6a022)',
 };
 
+/**
+ * Whether a component actually changed between base and compare — any change type other than NONE
+ * (NEW / SOURCE_CODE / DEPENDENCY / ASPECTS / API). Used by the docs and preview views, which have no
+ * per-view diff signal of their own, so they show only modified components rather than every one.
+ */
+function isModified(changeType?: ChangeType, changes: ChangeType[] = []): boolean {
+  return changes.some((ch) => ch !== ChangeType.NONE) || (changeType != null && changeType !== ChangeType.NONE);
+}
+
 // ── Main Component ──────────────────────────────────────────────────────────
 
 function LaneCompareInline({
@@ -183,6 +194,9 @@ function LaneCompareInline({
   const [viewMode, setViewModeState] = useState<ViewMode>((searchParams.get('view') as ViewMode) || 'code');
   const [groupBy, setGroupByState] = useState<GroupBy>((searchParams.get('groupBy') as GroupBy) || 'scope');
   const [diffMode, setDiffModeState] = useState<'split' | 'unified'>((searchParams.get('diffMode') as any) || 'split');
+  // global "show all dependencies" toggle for the deps view (changed-only by default), lifted here so a
+  // single toolbar control drives every deps panel via DepsFilterProvider.
+  const [showAllDeps, setShowAllDeps] = useState(false);
   const [selectedId, setSelectedIdState] = useState<string | undefined>(searchParams.get('componentId') || undefined);
   const [selectedFile, setSelectedFileState] = useState<string | undefined>(searchParams.get('file') || undefined);
   const [selectedSearchComponents, setSelectedSearchComponents] = useState<{ value: string; payload: string }[]>([]);
@@ -315,23 +329,47 @@ function LaneCompareInline({
     [fileRegistry, fileRegistry?.getVersion()]
   );
 
+  // Whether a component belongs in the API view — the API analog of `hasCodeChanges`. The API diff view
+  // registers each analyzed component's changed public exports (or an empty list when it has none), so
+  // once that's known `getApiEntries` is the authoritative signal: a non-empty list means real changes.
+  // Until it's known (undefined) we fall back to the coarse hint — a source or dependency change can
+  // move the public API; a new component has no base to diff, so it's excluded — so the sidebar paints
+  // while analysis streams in, then settles to the real answer.
+  const hasApiChanges = useCallback(
+    (c: (typeof allComponents)[number]) => {
+      const entries = fileRegistry?.getApiEntries(c.idStr);
+      if (entries === undefined)
+        return c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.DEPENDENCY);
+      return entries.length > 0;
+    },
+    // getVersion() advances on every registration, so this recomputes as API results stream in.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fileRegistry, fileRegistry?.getVersion()]
+  );
+
   const matchesView = useCallback(
     (c: (typeof allComponents)[number], mode: ViewMode) => {
       switch (mode) {
         case 'code':
           return hasCodeChanges(c);
+        case 'api':
+          return hasApiChanges(c);
         case 'preview':
-          return compositionsMap.get(c.idStr) !== false;
+          // a modified component that actually has compositions to preview.
+          return isModified(c.changeType, c.changes) && compositionsMap.get(c.idStr) !== false;
+        case 'docs':
+          // docs have no dedicated diff signal, so show every modified component.
+          return isModified(c.changeType, c.changes);
         case 'dependencies':
           return c.changes.some((ch) => ch === ChangeType.DEPENDENCY);
         case 'config':
           return c.changes.some((ch) => ch === ChangeType.ASPECTS);
         default:
-          // docs / tests / api show every component.
+          // tests show every component.
           return true;
       }
     },
-    [compositionsMap, hasCodeChanges]
+    [compositionsMap, hasCodeChanges, hasApiChanges]
   );
 
   // View-mode-filtered set. Cheap (no heavy mounting) — used for the sidebar, the empty-state check,
@@ -348,8 +386,11 @@ function LaneCompareInline({
     const map = new Map<string, Record<string, string>>();
     allComponents.forEach((c) => {
       const attrs: Record<string, string> = {};
+      const modified = isModified(c.changeType, c.changes);
       if (hasCodeChanges(c)) attrs['data-has-code'] = '';
-      if (compositionsMap.get(c.idStr) !== false) attrs['data-has-preview'] = '';
+      // docs and preview only surface modified components (preview additionally needs compositions).
+      if (modified) attrs['data-has-docs'] = '';
+      if (modified && compositionsMap.get(c.idStr) !== false) attrs['data-has-preview'] = '';
       if (c.changes.some((ch) => ch === ChangeType.DEPENDENCY)) attrs['data-has-deps'] = '';
       if (c.changes.some((ch) => ch === ChangeType.ASPECTS)) attrs['data-has-config'] = '';
       map.set(c.idStr, attrs);
@@ -397,14 +438,19 @@ function LaneCompareInline({
   const counts = useMemo(() => {
     return {
       code: allComponents.filter((c) => hasCodeChanges(c)).length,
-      preview: allComponents.filter((c) => compositionsMap.get(c.idStr) !== false).length,
-      docs: allComponents.length,
+      // docs and preview show only modified components (they have no per-view diff signal); the count
+      // must match so the tab badge and the auto-view-switch reflect what actually renders.
+      preview: allComponents.filter(
+        (c) => isModified(c.changeType, c.changes) && compositionsMap.get(c.idStr) !== false
+      ).length,
+      docs: allComponents.filter((c) => isModified(c.changeType, c.changes)).length,
       dependencies: allComponents.filter((c) => c.changes.some((ch) => ch === ChangeType.DEPENDENCY)).length,
       tests: allComponents.length,
       config: allComponents.filter((c) => c.changes.some((ch) => ch === ChangeType.ASPECTS)).length,
-      // the API view shows every component (sections or slim rows), matching matchesView('api').
-      // counting only diffable pairs would zero the tab on an all-new lane and make the
-      // auto-view-switch effect yank the user away from the view's own empty state.
+      // API tab count stays the full component set on purpose: a mode with count 0 is hidden by the
+      // toolbar, and the API view must stay reachable even when nothing changed (to show its own
+      // "stable"/"nothing to compare" states) — the sidebar and pane filter to real diffs via
+      // hasApiChanges/hasVisibleDiff, this count only keeps the tab present.
       api: allComponents.length,
     };
   }, [allComponents, compositionsMap, hasCodeChanges]);
@@ -523,8 +569,15 @@ function LaneCompareInline({
           onViewModeChange={(v) => setViewMode(v as ViewMode)}
           groupBy={groupBy}
           onGroupByChange={(g) => setGroupBy(g as GroupBy)}
-          diffMode={diffMode}
-          onDiffModeChange={setDiffMode}
+          endActions={
+            <CompareToolbarActions
+              viewMode={viewMode}
+              diffMode={diffMode}
+              onDiffModeChange={setDiffMode}
+              depsShowAll={showAllDeps}
+              onDepsShowAllChange={setShowAllDeps}
+            />
+          }
           viewModes={compareViewModes}
           groupByOptions={groupByOptions}
           counts={counts}
@@ -571,56 +624,58 @@ function LaneCompareInline({
 
           {/* Per-component diff pane */}
           <DiffModeProvider mode={diffMode}>
-            <div
-              ref={isFullPaneView ? undefined : diffPaneRef}
-              className={styles.diffPane}
-              data-view-mode={viewMode}
-              style={isFullPaneView ? { display: 'none' } : undefined}
-            >
-              {paneGrouped.map(([key, comps]) => {
-                // Count/hide use the active view's visible set; the panels themselves are always
-                // mounted (CSS hides the non-matching ones). An all-hidden group collapses via the
-                // `groupHidden` class — a parent attribute flip that keeps its children mounted.
-                const visibleCount = comps.reduce((n, c) => n + (visibleIds.has(c.idStr) ? 1 : 0), 0);
-                return (
-                  <div
-                    key={key}
-                    className={classnames(styles.laneCompareGroup, visibleCount === 0 && styles.groupHidden)}
-                  >
-                    {groupBy !== 'none' && (
-                      <div className={styles.laneCompareGroupHeader}>
-                        <span className={styles.laneCompareGroupLabel}>
-                          {groupBy === 'status' ? displayChangeType(key as ChangeType) : key}
-                        </span>
-                        <span className={styles.laneCompareGroupCount}>{visibleCount}</span>
-                      </div>
-                    )}
-                    {comps.map((c) => (
-                      <InlineComponentCompare
-                        key={c.idStr}
-                        name={c.name}
-                        baseId={c.baseId}
-                        compareId={c.compareId}
-                        baseVersion={c.baseVersion}
-                        compareVersion={c.compareVersion}
-                        baseUrl={c.baseUrl}
-                        compareUrl={c.compareUrl}
-                        envIcon={envIconsMap.get(c.idStr)}
-                        allTabs={resolvedTabs}
-                        accentColor={ACCENT_COLORS[c.changeType] || undefined}
-                        host={host}
-                        dataAttributes={componentDataAttrs.get(c.idStr)}
-                      />
-                    ))}
+            <DepsFilterProvider showAll={showAllDeps}>
+              <div
+                ref={isFullPaneView ? undefined : diffPaneRef}
+                className={styles.diffPane}
+                data-view-mode={viewMode}
+                style={isFullPaneView ? { display: 'none' } : undefined}
+              >
+                {paneGrouped.map(([key, comps]) => {
+                  // Count/hide use the active view's visible set; the panels themselves are always
+                  // mounted (CSS hides the non-matching ones). An all-hidden group collapses via the
+                  // `groupHidden` class — a parent attribute flip that keeps its children mounted.
+                  const visibleCount = comps.reduce((n, c) => n + (visibleIds.has(c.idStr) ? 1 : 0), 0);
+                  return (
+                    <div
+                      key={key}
+                      className={classnames(styles.laneCompareGroup, visibleCount === 0 && styles.groupHidden)}
+                    >
+                      {groupBy !== 'none' && (
+                        <div className={styles.laneCompareGroupHeader}>
+                          <span className={styles.laneCompareGroupLabel}>
+                            {groupBy === 'status' ? displayChangeType(key as ChangeType) : key}
+                          </span>
+                          <span className={styles.laneCompareGroupCount}>{visibleCount}</span>
+                        </div>
+                      )}
+                      {comps.map((c) => (
+                        <InlineComponentCompare
+                          key={c.idStr}
+                          name={c.name}
+                          baseId={c.baseId}
+                          compareId={c.compareId}
+                          baseVersion={c.baseVersion}
+                          compareVersion={c.compareVersion}
+                          baseUrl={c.baseUrl}
+                          compareUrl={c.compareUrl}
+                          envIcon={envIconsMap.get(c.idStr)}
+                          allTabs={resolvedTabs}
+                          accentColor={ACCENT_COLORS[c.changeType] || undefined}
+                          host={host}
+                          dataAttributes={componentDataAttrs.get(c.idStr)}
+                        />
+                      ))}
+                    </div>
+                  );
+                })}
+                {filteredComponents.length === 0 && (
+                  <div className={styles.emptyState}>
+                    <InlineCompareEmpty message={emptyState.message} hint={emptyState.hint} />
                   </div>
-                );
-              })}
-              {filteredComponents.length === 0 && (
-                <div className={styles.emptyState}>
-                  <InlineCompareEmpty message={emptyState.message} hint={emptyState.hint} />
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            </DepsFilterProvider>
           </DiffModeProvider>
         </div>
       </div>

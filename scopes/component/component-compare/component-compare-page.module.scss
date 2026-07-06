@@ -116,4 +116,9 @@
   &[data-view-mode='api'] [data-tab-id] {
     display: none;
   }
+
+  // reveal the header note a view registered for the active view (e.g. the deps change tally).
+  &[data-view-mode='dependencies'] [data-header-extra-view='dependencies'] {
+    display: inline-flex;
+  }
 }

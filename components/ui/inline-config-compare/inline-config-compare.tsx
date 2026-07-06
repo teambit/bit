@@ -3,17 +3,19 @@ import { gql } from '@apollo/client';
 import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
-import {
-  DiffFileRenderer,
-  DiffLoadingSkeleton,
-  computeDiffFromContent,
-  type DiffHunk,
-  type DiffDisplayMode,
-} from '@teambit/code.ui.inline-diff-viewer';
+import { DiffLoadingSkeleton, type DiffDisplayMode } from '@teambit/code.ui.inline-diff-viewer';
+import { DiffViewer, computeDiffLines, statsFromItems, type DiffViewMode } from '@teambit/code.ui.diff-viewer';
 
 export type InlineConfigCompareProps = {
   diffMode?: DiffDisplayMode;
 };
+
+// `grid-template-columns: minmax(0, 1fr)` hard-constrains every aspect row to the pane width: a grid
+// item in a `minmax(0, ...)` track cannot be widened by its (wide) content, so a long JSON line can
+// only scroll/wrap inside the diff body — it can never push the row, pane, or page horizontally wider.
+// Same fix the code view uses to stop the config diff overflowing.
+const GRID_WRAP: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)' };
+const CELL_WRAP: React.CSSProperties = { minWidth: 0 };
 
 const GET_COMPONENT_ASPECTS = gql`
   query GetComponentAspectData($id: String!) {
@@ -45,17 +47,18 @@ type AspectData = {
 
 type AspectDiff = {
   aspectId: string;
-  configHunks: DiffHunk[];
-  configAdditions: number;
-  configDeletions: number;
-  dataHunks: DiffHunk[];
-  dataAdditions: number;
-  dataDeletions: number;
+  configChanged: boolean;
+  baseConfig: string;
+  compareConfig: string;
+  dataChanged: boolean;
+  baseData: string;
+  compareData: string;
 };
 
 export function InlineConfigCompare({ diffMode: diffModeProp }: InlineConfigCompareProps) {
   const contextDiffMode = useDiffMode();
   const diffMode = diffModeProp || contextDiffMode;
+  const view: DiffViewMode = diffMode === 'unified' ? 'unified' : 'split';
   const componentCompare = useComponentCompare();
 
   const baseModel = componentCompare?.base?.model;
@@ -103,22 +106,23 @@ export function InlineConfigCompare({ diffMode: diffModeProp }: InlineConfigComp
       const baseDataStr = ensureTrailingNewline(JSON.stringify(baseAspect?.data ?? null, null, 2));
       const compareDataStr = ensureTrailingNewline(JSON.stringify(compareAspect?.data ?? null, null, 2));
 
-      const configChanged = baseConfig !== compareConfig;
-      const dataChanged = baseDataStr !== compareDataStr;
+      // a real diff = at least one changed line. compare rendered content directly, then confirm via the
+      // same line-diff the viewer uses so a whitespace-only reformat doesn't surface as an empty section.
+      const configChanged =
+        baseConfig !== compareConfig && statsHaveChanges(computeDiffLines(baseConfig, compareConfig));
+      const dataChanged =
+        baseDataStr !== compareDataStr && statsHaveChanges(computeDiffLines(baseDataStr, compareDataStr));
 
       if (!configChanged && !dataChanged) continue;
 
-      const configHunks = configChanged ? computeDiffFromContent(baseConfig, compareConfig) : [];
-      const dataHunks = dataChanged ? computeDiffFromContent(baseDataStr, compareDataStr) : [];
-
       diffs.push({
         aspectId,
-        configHunks,
-        configAdditions: configHunks.reduce((s, h) => s + h.lines.filter((l) => l.type === 'added').length, 0),
-        configDeletions: configHunks.reduce((s, h) => s + h.lines.filter((l) => l.type === 'removed').length, 0),
-        dataHunks,
-        dataAdditions: dataHunks.reduce((s, h) => s + h.lines.filter((l) => l.type === 'added').length, 0),
-        dataDeletions: dataHunks.reduce((s, h) => s + h.lines.filter((l) => l.type === 'removed').length, 0),
+        configChanged,
+        baseConfig,
+        compareConfig,
+        dataChanged,
+        baseData: baseDataStr,
+        compareData: compareDataStr,
       });
     }
 
@@ -134,30 +138,43 @@ export function InlineConfigCompare({ diffMode: diffModeProp }: InlineConfigComp
     return <InlineCompareEmpty message="No configuration changes" />;
   }
 
+  // GRID_WRAP (minmax(0,1fr)) constrains each aspect row to the pane width so a long JSON line can only
+  // scroll/wrap inside the diff body — never widening the row, pane, or page (the overflow the old
+  // renderer had). `wrap` + `virtualize={false}` = the same soft-wrap, full-render mode as the code view.
   return (
-    <div>
+    <div style={GRID_WRAP}>
       {aspectDiffs.map((aspect) => {
         const shortName = aspect.aspectId.split('/').pop() || aspect.aspectId;
         return (
-          <div key={aspect.aspectId} data-file-id={componentIdStr ? `${componentIdStr}:${shortName}` : undefined}>
-            {aspect.configHunks.length > 0 && (
-              <DiffFileRenderer
+          <div
+            key={aspect.aspectId}
+            data-file-id={componentIdStr ? `${componentIdStr}:${shortName}` : undefined}
+            style={CELL_WRAP}
+          >
+            {aspect.configChanged && (
+              <DiffViewer
                 fileName={`${shortName} — config`}
-                hunks={aspect.configHunks}
-                status="MODIFIED"
-                diffMode={diffMode}
-                additions={aspect.configAdditions}
-                deletions={aspect.configDeletions}
+                oldContent={aspect.baseConfig}
+                newContent={aspect.compareConfig}
+                language="json"
+                status="modified"
+                view={view}
+                showViewToggle={false}
+                virtualize={false}
+                wrap
               />
             )}
-            {aspect.dataHunks.length > 0 && (
-              <DiffFileRenderer
+            {aspect.dataChanged && (
+              <DiffViewer
                 fileName={`${shortName} — data`}
-                hunks={aspect.dataHunks}
-                status="MODIFIED"
-                diffMode={diffMode}
-                additions={aspect.dataAdditions}
-                deletions={aspect.dataDeletions}
+                oldContent={aspect.baseData}
+                newContent={aspect.compareData}
+                language="json"
+                status="modified"
+                view={view}
+                showViewToggle={false}
+                virtualize={false}
+                wrap
               />
             )}
           </div>
@@ -165,6 +182,12 @@ export function InlineConfigCompare({ diffMode: diffModeProp }: InlineConfigComp
       })}
     </div>
   );
+}
+
+/** true when a computed line-diff contains at least one added or removed line. */
+function statsHaveChanges(items: ReturnType<typeof computeDiffLines>): boolean {
+  const stats = statsFromItems(items);
+  return stats.additions > 0 || stats.deletions > 0;
 }
 
 function ensureTrailingNewline(s: string): string {

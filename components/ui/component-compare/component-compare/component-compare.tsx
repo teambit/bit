@@ -34,7 +34,7 @@ import { useApiDiff } from '@teambit/semantics.ui.api-diff-view';
 import type { APIDiffResult } from '@teambit/semantics.ui.api-diff-view';
 import type { ComponentComparePair, CompareComponentData } from './compare-data-context';
 import { useCompareData } from './compare-data-context';
-import { useFileRegistryRegister, useAspectRegistryRegister } from './file-registry';
+import { useFileRegistryRegister, useAspectRegistryRegister, useFileRegistry } from './file-registry';
 
 import styles from './component-compare.module.scss';
 
@@ -594,6 +594,7 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
       >
         <ComponentCompareHeader
           name={name}
+          componentId={compareId.split('@')[0]}
           envIcon={envIcon}
           baseVersion={baseVersion}
           compareVersion={compareVersion}
@@ -769,6 +770,8 @@ export function NewComponentFileRegistrar({ compareId }: { compareId: string }) 
 
 export type ComponentCompareHeaderProps = {
   name: string;
+  /** component id (without version) — used to look up any per-view header notes registered for it */
+  componentId?: string;
   envIcon?: string;
   baseVersion?: string;
   compareVersion?: string;
@@ -777,8 +780,29 @@ export type ComponentCompareHeaderProps = {
   changeTags?: Array<{ label: string; color: string }>;
 };
 
+/**
+ * Renders any per-view header notes a view registered for this component (e.g. the deps view's
+ * change tally). Fully view-agnostic: it stamps `data-header-extra-view` and the app reveals the note
+ * for the matching active view via CSS, so this header never names or knows about any specific view.
+ */
+function CompareHeaderExtras({ componentId }: { componentId?: string }) {
+  const registry = useFileRegistry();
+  const extras = componentId ? registry?.getHeaderExtras(componentId) : undefined;
+  if (!extras || extras.length === 0) return null;
+  return (
+    <>
+      {extras.map(({ view, text }) => (
+        <span key={view} className={styles.headerExtra} data-header-extra-view={view}>
+          {text}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export function ComponentCompareHeader({
   name,
+  componentId,
   envIcon,
   baseVersion,
   compareVersion,
@@ -797,6 +821,7 @@ export function ComponentCompareHeader({
         <span className={styles.componentName}>{name}</span>
       </div>
       <div className={styles.headerRight}>
+        <CompareHeaderExtras componentId={componentId} />
         {changeTags && changeTags.length > 0 && (
           <div className={styles.changeTags}>
             {changeTags.map((t) => (

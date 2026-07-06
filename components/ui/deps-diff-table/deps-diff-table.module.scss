@@ -9,6 +9,18 @@ $code-font: 'JetBrains Mono', ui-monospace, monospace;
   width: 100%;
 }
 
+// within-value emphasis on a modified dependency's version — the table analog of the code view's
+// intra-line highlight. Bold + a faint tint of the cell's own status color (via currentColor), so the
+// part that moved stands out while inheriting green/blue/gray from the column. `<mark>`'s default
+// yellow is overridden.
+.verTok {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  color: inherit;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
 .empty {
   padding: 16px;
   text-align: center;
