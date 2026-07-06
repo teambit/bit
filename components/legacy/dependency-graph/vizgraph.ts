@@ -8,6 +8,7 @@ import { Digraph, Subgraph, Node, Edge, toDot } from 'ts-graphviz';
 // eslint-disable-next-line import/no-unresolved
 import { toFile } from 'ts-graphviz/adapter';
 // @ts-ignore
+// eslint-disable-next-line import/no-unresolved
 import type { Format } from 'ts-graphviz/adapter';
 import { instance } from '@viz-js/viz';
 import type { Graph as ClearGraph } from '@teambit/graph.cleargraph';
