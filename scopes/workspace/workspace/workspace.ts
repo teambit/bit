@@ -1797,14 +1797,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         // envs that used to be core aspects fail with module-not-found until "bit install"
         // installs them. this is an expected state, already reported as a per-component
         // NonLoadedEnv issue with a "bit install" remediation - don't repeat it as a scary
-        // workspace issue. suppress only when the missing module is the env package itself,
-        // a missing module inside an already-installed env is a real failure worth surfacing.
+        // workspace issue. suppress only when the env package is not installed yet, a missing
+        // module inside an already-installed env is a real failure worth surfacing.
         const failedIdWithoutVersion = failure.failedId.split('@')[0];
-        if (
-          this.envs.isLegacyCoreEnv(failedIdWithoutVersion) &&
-          String(failure.error).includes(`Cannot find module '${getLegacyCoreEnvPackageName(failedIdWithoutVersion)}`)
-        ) {
-          return;
+        if (this.envs.isLegacyCoreEnv(failedIdWithoutVersion)) {
+          const envPackageName = getLegacyCoreEnvPackageName(failedIdWithoutVersion);
+          const isEnvPackageInstalled = fs.existsSync(path.join(this.path, 'node_modules', envPackageName));
+          if (String(failure.error).includes(`Cannot find module '${envPackageName}`) && !isEnvPackageInstalled) {
+            return;
+          }
         }
         const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;
         errors.push(
