@@ -157,17 +157,32 @@ function dedupeInternals(
 }
 
 /**
- * Drop exports that are bare re-references (a `TypeRefSchema`) to a symbol already exported under its
- * own name in the same module — e.g. `export default Foo` where `Foo` is also a named export. Such an
- * alias adds no independent API surface, and extractors represent it inconsistently across builds
- * (an unresolved default one build, a `Foo (default)` type-ref alias the next). Left in, that
- * inconsistency surfaces as a phantom added/removed export on an otherwise unrelated (e.g. docs-only)
- * change. Mirrors `dedupeInternals` — remove the redundant entry so the diff sees only real surface.
+ * Drop the default export when it's a bare re-reference (a `TypeRefSchema`) to a symbol already
+ * exported under its own name in the same module — e.g. `export default Foo` where `Foo` is also a
+ * named export. Such a default alias adds no independent API surface, and extractors represent it
+ * inconsistently across builds (an unresolved default one build, a type-ref alias the next). Left in,
+ * that inconsistency surfaces as a phantom added/removed export on an otherwise unrelated (e.g.
+ * docs-only) change. Mirrors `dedupeInternals` — remove the redundant entry so the diff sees only real
+ * surface.
+ *
+ * Scoped to the *default* export only (keyed `'default'`, or a legacy `... (default)` alias): a named
+ * re-export like `export { Foo as Bar }` is a distinct public export and must still be diffed, so it
+ * must not be deduped even when its target `Foo` is also exported.
  */
+function isDefaultExportKey(key: string): boolean {
+  return key === 'default' || key.endsWith('(default)');
+}
+
 function dedupeReexportAliases(exports: ReturnType<typeof buildExportMap>): ReturnType<typeof buildExportMap> {
   for (const [key, entry] of exports) {
     const target = (entry.unwrapped as any)?.name;
-    if (getSchemaTypeName(entry.unwrapped) === 'TypeRefSchema' && target && target !== key && exports.has(target)) {
+    if (
+      isDefaultExportKey(key) &&
+      getSchemaTypeName(entry.unwrapped) === 'TypeRefSchema' &&
+      target &&
+      target !== key &&
+      exports.has(target)
+    ) {
       exports.delete(key);
     }
   }

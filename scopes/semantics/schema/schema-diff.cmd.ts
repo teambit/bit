@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions, CLIArgs } from '@teambit/cli';
-import { formatWarningSummary } from '@teambit/cli';
+import { formatWarningSummary, formatTitle } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
 import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
@@ -193,7 +193,7 @@ examples:
   private formatSection(lines: string[], title: string, changes: APIDiffChange[], impact?: ImpactLevel): void {
     if (changes.length === 0) return;
     const badge = impact ? `  ${this.impactBadge(impact)}` : '';
-    lines.push(`  ${chalk.bold.underline(title)}${badge}`);
+    lines.push(`  ${formatTitle(title)}${badge}`);
     lines.push('');
     for (const change of this.sortChanges(changes)) {
       lines.push(...this.formatChange(change));
