@@ -40,13 +40,14 @@ describe('ComponentConfigMerger', () => {
   // teambit.envs/envs is a core extension at full runtime (registered by the core aspects). Register it here
   // so the merger behaves the same inside an isolated component test, and restore the prior state afterwards
   // so we don't leak into the shared static map (which would make other tests order-dependent).
-  let hadEnvsCoreName: boolean;
+  let prevEnvsCoreName: string | undefined;
   before(() => {
-    hadEnvsCoreName = ExtensionDataList.coreExtensionsNames.has(EnvsAspect.id);
+    prevEnvsCoreName = ExtensionDataList.coreExtensionsNames.get(EnvsAspect.id);
     ExtensionDataList.coreExtensionsNames.set(EnvsAspect.id, '');
   });
   after(() => {
-    if (!hadEnvsCoreName) ExtensionDataList.coreExtensionsNames.delete(EnvsAspect.id);
+    if (prevEnvsCoreName === undefined) ExtensionDataList.coreExtensionsNames.delete(EnvsAspect.id);
+    else ExtensionDataList.coreExtensionsNames.set(EnvsAspect.id, prevEnvsCoreName);
   });
 
   describe('env migrated on "other" (main) while the current lane kept the old env', () => {
