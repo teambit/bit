@@ -6,8 +6,15 @@
  * requirable dists.
  */
 export function getFallbackTypescriptCompiler() {
-  // eslint-disable-next-line global-require
-  const ts = require('typescript');
+  let ts;
+  try {
+    // eslint-disable-next-line global-require
+    ts = require('typescript');
+  } catch {
+    throw new Error(
+      'the fallback compiler requires the "typescript" package, which is not installed. run "bit install" to install the component env'
+    );
+  }
   const supportedExtensions = ['.ts', '.tsx', '.jsx'];
   const compilerOptions = {
     module: ts.ModuleKind.CommonJS,

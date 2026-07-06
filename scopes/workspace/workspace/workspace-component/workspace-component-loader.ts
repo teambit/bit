@@ -274,8 +274,16 @@ export class WorkspaceComponentLoader {
     await Promise.all(
       Array.from(nameOnlyLegacyEnvExtensions).map(async (envIdStr) => {
         if (allExtIds.has(envIdStr)) return;
-        // resolve to the pinned version. otherwise, when the env is not a workspace component, a
-        // versionless id resolves to the latest version, which may not exist in the local scope.
+        // when the env is a workspace component (e.g. in the bit repo itself), use the workspace
+        // version. resolving to the pinned version would load a second copy of the component at a
+        // version that may not exist in the local scope.
+        const workspaceId = this.workspace.listIds().find((wsId) => wsId.toStringWithoutVersion() === envIdStr);
+        if (workspaceId) {
+          allExtIds.set(envIdStr, workspaceId);
+          return;
+        }
+        // resolve to the pinned version. otherwise, a versionless id resolves to the latest
+        // version, which may not exist in the local scope.
         const resolved = await this.workspace.resolveComponentId(resolveLegacyCoreEnvId(envIdStr));
         allExtIds.set(envIdStr, resolved);
       })

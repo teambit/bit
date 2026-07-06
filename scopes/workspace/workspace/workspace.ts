@@ -28,7 +28,7 @@ import type {
 } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
 import type { EnvsMain, EnvJsonc } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, getLegacyCoreEnvPackageName } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import type { Harmony } from '@teambit/harmony';
 import type { Logger } from '@teambit/logger';
@@ -737,8 +737,10 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const visited = new Set<string>();
     const queue = ids.map((id) => id.toString());
     const dependents: ComponentID[] = [];
-    while (queue.length) {
-      const current = queue.shift() as string;
+    let queueIndex = 0;
+    while (queueIndex < queue.length) {
+      const current = queue[queueIndex];
+      queueIndex += 1;
       graph.inEdges(current).forEach((edge) => {
         const predecessorId = edge.sourceId;
         if (visited.has(predecessorId)) return;
@@ -1795,9 +1797,13 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         // envs that used to be core aspects fail with module-not-found until "bit install"
         // installs them. this is an expected state, already reported as a per-component
         // NonLoadedEnv issue with a "bit install" remediation - don't repeat it as a scary
-        // workspace issue.
+        // workspace issue. suppress only when the missing module is the env package itself,
+        // a missing module inside an already-installed env is a real failure worth surfacing.
         const failedIdWithoutVersion = failure.failedId.split('@')[0];
-        if (this.envs.isLegacyCoreEnv(failedIdWithoutVersion) && String(failure.error).includes('Cannot find module')) {
+        if (
+          this.envs.isLegacyCoreEnv(failedIdWithoutVersion) &&
+          String(failure.error).includes(`Cannot find module '${getLegacyCoreEnvPackageName(failedIdWithoutVersion)}`)
+        ) {
           return;
         }
         const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;

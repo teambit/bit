@@ -190,7 +190,7 @@ export default new EmptyEnv();
       .map((file) => fs.readFileSync(path.join(extensionDir, file)).toString())
       .join('\n');
     return Object.keys(FIXTURE_ENV_BASE_PACKAGES)
-      .filter((pkg) => allContent.includes(`'${pkg}'`))
+      .filter((pkg) => allContent.includes(`'${pkg}'`) || allContent.includes(`"${pkg}"`))
       .map((pkg) => FIXTURE_ENV_BASE_PACKAGES[pkg]);
   }
 
