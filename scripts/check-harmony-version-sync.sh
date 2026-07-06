@@ -33,13 +33,15 @@ echo "Checking @teambit/harmony version synchronization..."
 # Source of truth: the harmony pins in workspace.jsonc. There are two (the
 # dependency policy and the dependency-resolver overrides); they must agree.
 WS_VERSIONS=$(grep -oE '"@teambit/harmony": *"[0-9]+\.[0-9]+\.[0-9]+"' "$WORKSPACE_FILE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -u)
-WS_COUNT=$(echo "$WS_VERSIONS" | grep -c .)
 
 if [ -z "$WS_VERSIONS" ]; then
   echo -e "${RED}✗ ERROR: no @teambit/harmony pin found in ${WORKSPACE_FILE}${NC}"
   exit 1
 fi
 
+# Count AFTER the empty-check: under `set -e`, `grep -c .` on empty input exits non-zero and would abort
+# the script before the friendly error above. Here WS_VERSIONS is guaranteed non-empty, so this is safe.
+WS_COUNT=$(echo "$WS_VERSIONS" | grep -c .)
 if [ "$WS_COUNT" -ne 1 ]; then
   echo -e "${RED}✗ ERROR: ${WORKSPACE_FILE} has inconsistent @teambit/harmony pins:${NC}"
   echo "$WS_VERSIONS" | sed 's/^/  /'

@@ -132,7 +132,9 @@ const COMPONENT_SERVER_STARTED = gql`
 `;
 
 export function useWorkspace(options: UseWorkspaceOptions = {}): UseWorkspaceResult {
-  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
+  // `previousData` is destructured out (not spread into `...rest`) so the returned shape matches
+  // UseWorkspaceResult, which omits it (along with `data`, replaced by `workspace`).
+  const { data, previousData: _previousData, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
   const optionsRef = useLatest(options);
 
   useEffect(() => {
