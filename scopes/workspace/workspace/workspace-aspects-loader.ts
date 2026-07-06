@@ -229,9 +229,13 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
    */
   private isAspectLoadedInclLegacyEnvs(id: string): boolean {
     if (this.aspectLoader.isAspectLoaded(id)) return true;
-    if (id.includes('@') || !this.envs.isLegacyCoreEnv(id)) return false;
+    const idWithoutVersion = id.split('@')[0];
+    if (!this.envs.isLegacyCoreEnv(idWithoutVersion)) return false;
+    // a legacy core env should have a single instance regardless of the requested version. old
+    // components request it without a version while a workspace/pinned copy is loaded with one.
+    // a second instance of the same env would register duplicate build tasks.
     return this.harmony.extensionsIds.some(
-      (extId) => extId.split('@')[0] === id && this.harmony.extensions.get(extId)?.loaded
+      (extId) => extId.split('@')[0] === idWithoutVersion && this.harmony.extensions.get(extId)?.loaded
     );
   }
 
@@ -244,7 +248,12 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     return componentIds.map((componentId) => {
       if (componentId.hasVersion()) return componentId;
       if (!this.envs.isLegacyCoreEnv(componentId.toStringWithoutVersion())) return componentId;
-      if (this.workspace.getIdIfExist(componentId)) return componentId;
+      // when the env is a workspace component (e.g. in the bit repo itself), use the workspace id
+      // including its version. loading it versionless would create a second harmony instance of
+      // the same aspect (it is loaded with a version when loaded as a workspace component),
+      // causing duplicate build tasks.
+      const workspaceId = this.workspace.getIdIfExist(componentId);
+      if (workspaceId) return workspaceId;
       const resolved = resolveLegacyCoreEnvId(componentId.toString());
       if (resolved === componentId.toString()) return componentId;
       return ComponentID.fromString(resolved);

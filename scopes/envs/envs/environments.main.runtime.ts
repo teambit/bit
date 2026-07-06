@@ -557,10 +557,14 @@ export class EnvsMain {
     if (envDef) {
       return envDef;
     }
-    // envs that used to be core aspects are used by old components without a version. if such an
-    // env was not loaded (e.g. "bit install" was not running yet), return a minimal env
-    // definition so basic commands can still function (a warning/issue is shown separately).
     if (this.isLegacyCoreEnvWithoutVersion(id)) {
+      // the env may be loaded and registered to the slot with a version (e.g. as a workspace
+      // component or with its pinned version).
+      const fromSlot = this.getLegacyCoreEnvFromSlot(id);
+      if (fromSlot) return fromSlot;
+      // envs that used to be core aspects are used by old components without a version. if such an
+      // env was not loaded (e.g. "bit install" was not running yet), return a minimal env
+      // definition so basic commands can still function (a warning/issue is shown separately).
       return new EnvDefinition(id, this.getFallbackDefaultEnv());
     }
     // Do not allow a non existing env
