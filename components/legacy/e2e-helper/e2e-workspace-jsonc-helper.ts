@@ -84,7 +84,9 @@ export default class WorkspaceJsoncHelper {
 
   addKeyValToDependencyResolver(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
     const workspaceJsonc = this.read(bitJsoncDir);
-    const depResolver = workspaceJsonc['teambit.dependencies/dependency-resolver'];
+    // default to {} so callers can add to a workspace that has no dependency-resolver entry yet,
+    // instead of assign() throwing on an undefined target.
+    const depResolver = workspaceJsonc['teambit.dependencies/dependency-resolver'] || {};
     assign(depResolver, { [key]: val });
     this.addKeyVal('teambit.dependencies/dependency-resolver', depResolver, bitJsoncDir);
   }
@@ -92,11 +94,13 @@ export default class WorkspaceJsoncHelper {
   getPolicyFromDependencyResolver() {
     const workspaceJsonc = this.read();
     const depResolver = workspaceJsonc['teambit.dependencies/dependency-resolver'];
-    return depResolver.policy;
+    return depResolver?.policy;
   }
 
   addPolicyToDependencyResolver(policy: Record<string, any>) {
-    const currentPolicy = this.getPolicyFromDependencyResolver();
+    // default to {} so the first policy can be added to a workspace with no existing policy,
+    // instead of assign() throwing on an undefined target.
+    const currentPolicy = this.getPolicyFromDependencyResolver() || {};
     assign(currentPolicy, policy);
     this.addKeyValToDependencyResolver('policy', currentPolicy);
   }
