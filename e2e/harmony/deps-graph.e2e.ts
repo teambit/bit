@@ -87,8 +87,13 @@ chai.use(chaiFs);
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-react/env1`, {});
       helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-react/env2`, {});
       helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
+      // Preserve existing policy pins (e.g. the base react-env pinned by setCustomNewEnv) instead of
+      // replacing the whole policy. Otherwise react-env floats onto React 19 and its react-dom 19
+      // trips the exact react/react-dom version check against the React 16/17 env peers above.
+      const existingPolicyDeps = helper.workspaceJsonc.getPolicyFromDependencyResolver()?.dependencies || {};
       helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
+          ...existingPolicyDeps,
           '@pnpm.e2e/foo': '^100.0.0',
           '@pnpm.e2e/bar': '^100.0.0',
         },
