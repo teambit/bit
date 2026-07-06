@@ -1,4 +1,3 @@
-import type { Harmony } from '@teambit/harmony';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import type { LoggerMain } from '@teambit/logger';
@@ -9,12 +8,9 @@ import { merge } from 'lodash';
 import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
 import type { Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
-import { EnvContext, EnvsAspect } from '@teambit/envs';
-import type { TypescriptMain } from '@teambit/typescript';
-import { TypescriptAspect } from '@teambit/typescript';
-import type { GeneratorMain } from '@teambit/generator';
-import { GeneratorAspect } from '@teambit/generator';
-import { ComponentID } from '@teambit/component-id';
+import { EnvsAspect } from '@teambit/envs';
+import type { ReactEnv, ReactMain } from '@teambit/react';
+import { ReactAspect } from '@teambit/react';
 import type { WorkerMain } from '@teambit/worker';
 import { WorkerAspect } from '@teambit/worker';
 import type { CompilerMain } from '@teambit/compiler';
@@ -23,8 +19,6 @@ import { AspectAspect } from './aspect.aspect';
 import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
 import { babelConfig } from './babel/babel-config';
-import { getTemplates } from './aspect.templates';
-import { getStarters } from './aspect.starters';
 import type { DevFilesMain } from '@teambit/dev-files';
 import { DevFilesAspect } from '@teambit/dev-files';
 
@@ -51,44 +45,40 @@ export class AspectMain {
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
       getDependencies: async () => {
-        const aspectDeps = await this.aspectEnv.getDependencies();
-        return merge(aspectDeps, dependencyPolicy);
+        const reactDeps = await this.aspectEnv.getDependencies();
+        return merge(reactDeps, dependencyPolicy);
       },
     });
   }
 
   static runtime = MainRuntime;
   static dependencies = [
-    TypescriptAspect,
+    ReactAspect,
     EnvsAspect,
     BuilderAspect,
     AspectLoaderAspect,
     CompilerAspect,
-    GeneratorAspect,
     LoggerAspect,
     WorkerAspect,
     DevFilesAspect,
   ];
 
-  static async provider(
-    [tsAspect, envs, builder, aspectLoader, compiler, generator, loggerMain, workerMain, devFilesMain]: [
-      TypescriptMain,
-      EnvsMain,
-      BuilderMain,
-      AspectLoaderMain,
-      CompilerMain,
-      GeneratorMain,
-      LoggerMain,
-      WorkerMain,
-      DevFilesMain,
-    ],
-    config,
-    slots,
-    harmony: Harmony
-  ) {
+  static async provider([react, envs, builder, aspectLoader, compiler, loggerMain, workerMain, devFilesMain]: [
+    ReactMain,
+    EnvsMain,
+    BuilderMain,
+    AspectLoaderMain,
+    CompilerMain,
+    LoggerMain,
+    WorkerMain,
+    DevFilesMain,
+  ]) {
     const logger = loggerMain.createLogger(AspectAspect.id);
 
-    const aspectEnv = new AspectEnv(tsAspect, aspectLoader, devFilesMain, compiler, workerMain, logger);
+    const aspectEnv = envs.merge<AspectEnv, ReactEnv>(
+      new AspectEnv(react.reactEnv, aspectLoader, devFilesMain, compiler, workerMain, logger),
+      react.reactEnv
+    );
 
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);
     if (!__dirname.includes('@teambit/bit')) {
@@ -96,12 +86,9 @@ export class AspectMain {
     }
 
     envs.registerEnv(aspectEnv);
-    if (generator) {
-      const envContext = new EnvContext(ComponentID.fromString(AspectAspect.id), loggerMain, workerMain, harmony);
-      generator.registerComponentTemplate(() => getTemplates(envContext));
-      generator.registerWorkspaceTemplate(() => getStarters(envContext));
-    }
-    const aspectMain = new AspectMain(aspectEnv, envs);
+    // note: the aspect templates and starters were moved to the generator aspect (which stays a
+    // core aspect), so "bit create bit-aspect" and "bit new" work without loading this env.
+    const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs);
 
     return aspectMain;
   }

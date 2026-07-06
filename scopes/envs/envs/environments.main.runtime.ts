@@ -41,6 +41,7 @@ import { EnvJsoncDetector } from './env-jsonc.detector';
 import {
   getLegacyCoreEnvsIds as getLegacyCoreEnvsIdsList,
   isLegacyCoreEnv as isLegacyCoreEnvId,
+  resolveLegacyCoreEnvId,
 } from './legacy-core-envs';
 import { getFallbackTypescriptCompiler } from './fallback-typescript-compiler';
 
@@ -258,7 +259,7 @@ export class EnvsMain {
    * getLegacyCoreEnvsIds() for those.
    */
   getCoreEnvsIds(): string[] {
-    return [DEFAULT_ENV, 'teambit.harmony/aspect', 'teambit.envs/env'];
+    return [DEFAULT_ENV];
   }
 
   /**
@@ -601,7 +602,10 @@ export class EnvsMain {
         return undefined;
       }
     }
-    const newId = await host.resolveComponentId(envId);
+    // envs that used to be core aspects are configured without a version. fetching them without a
+    // version resolves to the latest, which may not exist locally - use the pinned version instead.
+    const envIdWithPotentialPinnedVersion = resolveLegacyCoreEnvId(envId);
+    const newId = await host.resolveComponentId(envIdWithPotentialPinnedVersion);
     const envComponent = await host.get(newId);
     if (!envComponent) {
       throw new BitError(`can't load env. env id is ${envId} used by component ${requesting || 'unknown'}`);
@@ -1138,11 +1142,12 @@ if needed, use "bit env set" command to align the env id`;
   }
 
   /**
-   * Return the env definition of teambit.envs/env
+   * Return the env definition of teambit.envs/env.
+   * this env is no longer a core aspect, so it's available only when loaded (as a regular env, in
+   * which case it's registered to the slot with a version).
    */
-  getEnvsEnvDefinition(): EnvDefinition {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.getEnvDefinitionByStringId('teambit.envs/env')!;
+  getEnvsEnvDefinition(): EnvDefinition | undefined {
+    return this.getEnvDefinitionByStringId('teambit.envs/env') || this.getEnvFromSlotIgnoreVersion('teambit.envs/env');
   }
 
   private printWarningIfFirstTime(envId: string, message: string) {

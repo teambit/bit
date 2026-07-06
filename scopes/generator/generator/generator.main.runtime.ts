@@ -8,7 +8,7 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { EnvDefinition, EnvsMain } from '@teambit/envs';
-import { EnvsAspect, resolveLegacyCoreEnvId } from '@teambit/envs';
+import { EnvsAspect, EnvContext, resolveLegacyCoreEnvId } from '@teambit/envs';
 import { ComponentConfig } from '@teambit/legacy.consumer-config';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
@@ -21,6 +21,8 @@ import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { GitMain } from '@teambit/git';
 import { GitAspect } from '@teambit/git';
+import type { WorkerMain } from '@teambit/worker';
+import { WorkerAspect } from '@teambit/worker';
 import { BitError } from '@teambit/bit-error';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
@@ -53,6 +55,7 @@ import {
   starterTemplateStandalone,
 } from './templates';
 import { BasicWorkspaceStarter } from './templates/basic';
+import { getBuiltinTemplates, getBuiltinStarters } from './builtin-templates';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
 import { WorkspacePathExists } from './exceptions/workspace-path-exists';
@@ -260,9 +263,15 @@ export class GeneratorMain {
     // don't use `await scope.loadAspectsFromCapsules(components, true);`
     // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
     // is not the same as the aspectLoader instance Scope has)
-    const resolvedAspects = await scope.getResolvedAspects(components, { workspaceName: 'global-scope' });
     try {
-      await aspectLoader.loadRequireableExtensions(resolvedAspects, true);
+      // load through the scope aspects-loader (of the global-scope harmony) rather than requiring
+      // the seeders directly - it loads the full manifest graph, including dependency envs (e.g.
+      // an env that depends on another env that used to be a core aspect, such as aspect -> react).
+      await scope.loadAspects(
+        components.map((c) => c.id.toString()),
+        true,
+        'to load aspects from global scope'
+      );
     } catch (err: any) {
       if (err?.error?.code === 'MODULE_NOT_FOUND') {
         const resolvedAspectsAgain = await scope.getResolvedAspects(components, {
@@ -734,6 +743,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     GitAspect,
     WorkspaceConfigFilesAspect,
     DeprecationAspect,
+    WorkerAspect,
   ];
 
   static runtime = MainRuntime;
@@ -752,6 +762,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       git,
       wsConfigFiles,
       deprecation,
+      workerMain,
     ]: [
       Workspace,
       CLIMain,
@@ -765,13 +776,15 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       GitMain,
       WorkspaceConfigFilesMain,
       DeprecationMain,
+      WorkerMain,
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot, onComponentCreateSlot]: [
       ComponentTemplateSlot,
       WorkspaceTemplateSlot,
       OnComponentCreateSlot,
-    ]
+    ],
+    harmony: Harmony
   ) {
     const logger = loggerMain.createLogger(GeneratorAspect.id);
     const generator = new GeneratorMain(
@@ -810,6 +823,12 @@ the reason is that after refactoring, the code will have this invalid class: "cl
         starterTemplateStandalone,
       ]);
     generator.registerWorkspaceTemplate(() => [BasicWorkspaceStarter]);
+
+    // templates and starters for creating aspects and harmony workspaces (used to be registered
+    // by teambit.harmony/aspect when it was a core aspect).
+    const envContext = new EnvContext(ComponentID.fromString(GeneratorAspect.id), loggerMain, workerMain, harmony);
+    generator.registerComponentTemplate(() => getBuiltinTemplates(envContext));
+    generator.registerWorkspaceTemplate(() => getBuiltinStarters(envContext));
 
     return generator;
   }

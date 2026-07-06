@@ -13,7 +13,7 @@ import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, resolveLegacyCoreEnvId } from '@teambit/envs';
 import type { DependenciesEnv, EnvDefinition, EnvJsonc, EnvsMain } from '@teambit/envs';
 import type { SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
@@ -1416,6 +1416,11 @@ export class DependencyResolverMain {
             dep.id = canonicalId;
             return;
           }
+          // neither loaded nor a workspace component (e.g. scope/global-scope context). the parent
+          // was built when this dep was still a core aspect, so it's not in the parent's model deps
+          // either. bind it to the pinned version - the same version the scope loader imports.
+          dep.id = resolveLegacyCoreEnvId(depIdWithoutVersion);
+          return;
         }
         // Lazily get the parent component
         if (typeof parentComponent === 'string') {

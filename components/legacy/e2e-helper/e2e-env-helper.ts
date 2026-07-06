@@ -1,4 +1,5 @@
 import * as path from 'path';
+import fs from 'fs-extra';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
 import type CommandHelper from './e2e-command-helper';
 import type ExtensionsHelper from './e2e-extensions-helper';
@@ -12,6 +13,17 @@ type SetCustomEnvOpts = {
   skipInstall?: boolean;
   skipCompile?: boolean;
   skipLink?: boolean;
+};
+
+/**
+ * env packages that the old-format env fixtures import. these envs used to be core aspects, so
+ * their packages were always available. now they need to be installed. the versions should match
+ * the pinned versions in legacy-core-envs.ts (scopes/envs/envs).
+ */
+const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
+  '@teambit/node': '@teambit/node@1.0.1042',
+  '@teambit/react': '@teambit/react@1.0.1042',
+  '@teambit/mdx': '@teambit/mdx@1.0.1043',
 };
 
 export const ENV_POLICY = {
@@ -161,9 +173,25 @@ export default new EmptyEnv();
     this.command.addComponent(extensionsBaseFolder);
     this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
     if (!options.skipLink) this.command.link();
-    if (!options.skipInstall) this.command.install();
+    if (!options.skipInstall) this.command.install(this.getFixtureEnvBasePackages(extensionsBaseFolder).join(' '));
     if (!options.skipCompile) this.command.compile();
     return extensionsBaseFolder;
+  }
+
+  /**
+   * find which env packages the given fixture imports, so they can be installed (see
+   * FIXTURE_ENV_BASE_PACKAGES).
+   */
+  getFixtureEnvBasePackages(extensionsBaseFolder: string): string[] {
+    const extensionDir = path.join(this.scopes.localPath, extensionsBaseFolder);
+    const allContent = fs
+      .readdirSync(extensionDir)
+      .filter((file) => file.endsWith('.ts'))
+      .map((file) => fs.readFileSync(path.join(extensionDir, file)).toString())
+      .join('\n');
+    return Object.keys(FIXTURE_ENV_BASE_PACKAGES)
+      .filter((pkg) => allContent.includes(`'${pkg}'`))
+      .map((pkg) => FIXTURE_ENV_BASE_PACKAGES[pkg]);
   }
 
   /**

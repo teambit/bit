@@ -603,9 +603,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/empty-env",
         "config": {
-            "teambit.harmony/aspect": {},
+            "teambit.harmony/envs/core-aspect-env@0.1.7": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/aspect"
+                "env": "teambit.harmony/envs/core-aspect-env"
             }
         }
     },

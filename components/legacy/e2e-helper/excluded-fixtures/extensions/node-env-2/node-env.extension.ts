@@ -1,23 +1,18 @@
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
-import { AspectMain, AspectAspect } from '@teambit/aspect';
+import { NodeMain, NodeAspect } from '@teambit/node';
 import flatten from 'lodash.flatten'
 
 export class NodeEnv {
-  constructor(private aspect: AspectMain) {}
+  constructor(private node: NodeMain) {}
 
-  static dependencies: any = [EnvsAspect, AspectAspect];
+  static dependencies: any = [EnvsAspect, NodeAspect];
 
-  static async provider([envs, aspect]: [EnvsMain, AspectMain]) {
-    // compose on top of the core aspect env. (node/react are no longer core aspects, using them
-    // would require installing them first). override the descriptor type so components using this
-    // env are not treated as aspects.
-    const nodeEnv = aspect.compose([], {
-      async __getDescriptor() {
-        return { type: 'node' };
-      },
-    });
+  static async provider([envs, node]: [EnvsMain, NodeMain]) {
+
+
+    const nodeEnv = node.compose([]);
 
     envs.registerEnv(nodeEnv);
-    return new NodeEnv(aspect);
+    return new NodeEnv(node);
   }
 }

@@ -1,4 +1,4 @@
-import type { ComponentContext } from '@teambit/generator';
+import type { ComponentContext } from '../../../component-template';
 
 export function aspectFile({ namePascalCase, componentId }: ComponentContext) {
   return `import { Aspect } from '@teambit/harmony';

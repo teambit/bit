@@ -2472,6 +2472,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       // the env needs to be without version
       return envId.toStringWithoutVersion();
     }
+    // envs that used to be core aspects are configured without a version, the same way they were
+    // configured when they were core. their version is resolved at install/load time from the
+    // pinned versions map (see legacy-core-envs.ts).
+    if (!envId.hasVersion() && this.envs.isLegacyCoreEnv(envId.toStringWithoutVersion())) {
+      return envId.toStringWithoutVersion();
+    }
     // the env must include a version
     if (envId.hasVersion()) {
       return envId.toString();

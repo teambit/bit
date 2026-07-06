@@ -17,7 +17,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { Logger } from '@teambit/logger';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, resolveLegacyCoreEnvId } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
@@ -274,7 +274,9 @@ export class WorkspaceComponentLoader {
     await Promise.all(
       Array.from(nameOnlyLegacyEnvExtensions).map(async (envIdStr) => {
         if (allExtIds.has(envIdStr)) return;
-        const resolved = await this.workspace.resolveComponentId(envIdStr);
+        // resolve to the pinned version. otherwise, when the env is not a workspace component, a
+        // versionless id resolves to the latest version, which may not exist in the local scope.
+        const resolved = await this.workspace.resolveComponentId(resolveLegacyCoreEnvId(envIdStr));
         allExtIds.set(envIdStr, resolved);
       })
     );

@@ -11,6 +11,8 @@
 export const LEGACY_CORE_ENVS_VERSIONS: Record<string, string> = {
   'teambit.harmony/node': '1.0.1042',
   'teambit.react/react': '1.0.1042',
+  'teambit.harmony/aspect': '1.0.1042',
+  'teambit.envs/env': '1.0.1042',
   'teambit.mdx/mdx': '1.0.1043',
   'teambit.mdx/readme': '1.0.1043',
   'teambit.react/react-native': '1.0.491',
