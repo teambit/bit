@@ -25,12 +25,15 @@ export const LEGACY_CORE_ENVS_VERSIONS: Record<string, string> = {
  */
 const OLDER_REMOVED_CORE_ENVS = ['teambit.harmony/bit-custom-aspect'];
 
+const LEGACY_CORE_ENVS_IDS = [...Object.keys(LEGACY_CORE_ENVS_VERSIONS), ...OLDER_REMOVED_CORE_ENVS];
+const LEGACY_CORE_ENVS_IDS_SET = new Set(LEGACY_CORE_ENVS_IDS);
+
 export function getLegacyCoreEnvsIds(): string[] {
-  return [...Object.keys(LEGACY_CORE_ENVS_VERSIONS), ...OLDER_REMOVED_CORE_ENVS];
+  return LEGACY_CORE_ENVS_IDS;
 }
 
 export function isLegacyCoreEnv(envIdWithoutVersion: string): boolean {
-  return getLegacyCoreEnvsIds().includes(envIdWithoutVersion);
+  return LEGACY_CORE_ENVS_IDS_SET.has(envIdWithoutVersion);
 }
 
 export function getPinnedLegacyCoreEnvVersion(envIdWithoutVersion: string): string | undefined {
