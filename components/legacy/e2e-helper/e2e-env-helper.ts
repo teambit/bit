@@ -190,6 +190,10 @@ export default new EmptyEnv();
   setNodeEnv(variantPattern = '*') {
     this.extensions.addExtensionToVariant(variantPattern, 'teambit.harmony/node', {});
     this.command.install(FIXTURE_ENV_BASE_PACKAGES['@teambit/node']);
+    // the env is loaded only at the end of the first install. run a second install so its
+    // dependency policies (e.g. @types/jest as a dev dep) are applied to the components - the
+    // standard flow for old-style envs (see the "run bit install again" suggestion).
+    this.command.install();
   }
 
   /**
