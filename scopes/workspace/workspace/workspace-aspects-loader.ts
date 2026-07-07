@@ -827,41 +827,47 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       const resolvedPath = this.resolvedInstalledAspects.get(aspectStringId);
       return resolvedPath;
     }
-    // guard against circular dependencies in the graph
+    // guard against circular dependencies in the graph. the set acts as the active call stack -
+    // ids are removed when unwinding (finally below), so it never misclassifies reconverging
+    // (diamond) paths as cycles.
     if (visiting.has(aspectStringId)) return undefined;
     visiting.add(aspectStringId);
-    if (rootIds.includes(aspectStringId)) {
-      const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
-      this.resolvedInstalledAspects.set(aspectStringId, localPath);
-      return localPath;
-    }
-    // use inEdges to get the immediate parent. don't use graph.predecessors() as it returns all
-    // the recursive predecessors, which may throw "Maximum call stack size exceeded" on big graphs
-    const parentEdge = graph.inEdges(aspectStringId)[0];
-    const parent = parentEdge ? graph.node(parentEdge.sourceId) : undefined;
-    if (!parent) return undefined;
-    const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph, opts, visiting);
-    if (!parentPath) {
-      this.resolvedInstalledAspects.set(aspectStringId, null);
-      return undefined;
-    }
-    const packageName = this.dependencyResolver.getPackageName(aspectComponent);
     try {
-      const resolvedPath = resolveFrom(parentPath, [packageName]);
-      const localPath = findRoot(resolvedPath);
-      this.resolvedInstalledAspects.set(aspectStringId, localPath);
-      return localPath;
-    } catch (error: any) {
-      this.resolvedInstalledAspects.set(aspectStringId, null);
-      if (opts.throwOnError) {
-        throw error;
+      if (rootIds.includes(aspectStringId)) {
+        const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
+        this.resolvedInstalledAspects.set(aspectStringId, localPath);
+        return localPath;
       }
-      this.logger.consoleWarning(
-        `failed resolving aspect ${aspectStringId} from ${parentPath}, error: ${error.message}`
-      );
-      // record the swallowed failure on the active load-trace so it surfaces as a component issue
-      reportLoadFailure({ failedId: aspectStringId, phase: 'resolve-installed-aspect', error: error.message });
-      return undefined;
+      // use inEdges to get the immediate parent. don't use graph.predecessors() as it returns all
+      // the recursive predecessors, which may throw "Maximum call stack size exceeded" on big graphs
+      const parentEdge = graph.inEdges(aspectStringId)[0];
+      const parent = parentEdge ? graph.node(parentEdge.sourceId) : undefined;
+      if (!parent) return undefined;
+      const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph, opts, visiting);
+      if (!parentPath) {
+        this.resolvedInstalledAspects.set(aspectStringId, null);
+        return undefined;
+      }
+      const packageName = this.dependencyResolver.getPackageName(aspectComponent);
+      try {
+        const resolvedPath = resolveFrom(parentPath, [packageName]);
+        const localPath = findRoot(resolvedPath);
+        this.resolvedInstalledAspects.set(aspectStringId, localPath);
+        return localPath;
+      } catch (error: any) {
+        this.resolvedInstalledAspects.set(aspectStringId, null);
+        if (opts.throwOnError) {
+          throw error;
+        }
+        this.logger.consoleWarning(
+          `failed resolving aspect ${aspectStringId} from ${parentPath}, error: ${error.message}`
+        );
+        // record the swallowed failure on the active load-trace so it surfaces as a component issue
+        reportLoadFailure({ failedId: aspectStringId, phase: 'resolve-installed-aspect', error: error.message });
+        return undefined;
+      }
+    } finally {
+      visiting.delete(aspectStringId);
     }
   }
 
