@@ -1070,7 +1070,12 @@ if needed, use "bit env set" command to align the env id`;
       }
     });
     const envId = await this.findFirstEnv(ids);
-    const envDef = envId ? this.getEnvDefinitionByStringId(envId) : undefined;
+    let envDef = envId ? this.getEnvDefinitionByStringId(envId) : undefined;
+    if (!envDef && envId) {
+      // envs that used to be core are configured (e.g. via variants) without a version, but once
+      // loaded (as regular envs) they are registered to the slot with a version.
+      envDef = this.getLegacyCoreEnvFromSlot(envId.split('@')[0]);
+    }
 
     return envDef || this.getDefaultEnv();
   }
