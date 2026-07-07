@@ -92,6 +92,18 @@ export class YargsAdapter implements CommandModule {
         'useful when it fails to load normally. it skips loading aspects from workspace.jsonc, and for legacy-commands it initializes only the CLI aspect',
       group: GLOBAL_GROUP,
     };
+    if (command.pager) {
+      globalOptions.pager = {
+        describe: 'pipe the output through a pager (e.g. less). auto-enabled for interactive terminals',
+        group: GLOBAL_GROUP,
+        type: 'boolean',
+      };
+      globalOptions['no-pager'] = {
+        describe: 'print all output at once without a pager (default for ai-agents, CI, and piped output)',
+        group: GLOBAL_GROUP,
+        type: 'boolean',
+      };
+    }
     return globalOptions;
   }
 }
