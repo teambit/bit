@@ -572,9 +572,12 @@ export class DependencyResolverMain {
     let dirInEnvRoot: string | undefined;
     try {
       dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
-    } catch {
+    } catch (err: any) {
       // the component env couldn't be determined (e.g. a component loaded from the scope before
       // its extensions were calculated). fall back to the root node_modules.
+      this.logger.debug(
+        `getRuntimeModulePath: failed getting the env root dir of ${component.id.toString()} (pkg: ${pkgName}), falling back to the root node_modules. error: ${err.message}`
+      );
     }
     if (dirInEnvRoot && fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
     return this.getModulePath(component);
