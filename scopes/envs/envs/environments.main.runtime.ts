@@ -1135,7 +1135,13 @@ if needed, use "bit env set" command to align the env id`;
     const envDef =
       this.getEnvDefinitionByStringId(id.toString()) ||
       this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }));
-    return envDef;
+    if (envDef) return envDef;
+    // envs that used to be core are configured on old components without a version (e.g. via a
+    // variant), but once loaded (as regular envs) they are registered to the slot with a version.
+    if (isLegacyCoreEnvId(id.toString({ ignoreVersion: true }))) {
+      return this.getLegacyCoreEnvFromSlot(id.toString({ ignoreVersion: true }));
+    }
+    return undefined;
   }
 
   public getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {

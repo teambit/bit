@@ -26,6 +26,12 @@ const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
   '@teambit/mdx': '@teambit/mdx@1.0.1043',
 };
 
+/**
+ * the env configured on the old-format env fixtures (see setCustomEnv). it used to be a core
+ * aspect, now its package must be installed for the fixture env to be compiled and loaded.
+ */
+const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1042';
+
 export const ENV_POLICY = {
   peers: [
     {
@@ -168,12 +174,24 @@ export default new EmptyEnv();
     this.command.setEnv('empty-env', 'teambit.envs/env');
   }
 
+  /**
+   * set the legacy `teambit.harmony/node` env on the given variant and install its package.
+   * this env used to be a core aspect so no installation was needed, now it must be installed
+   * (with the version pinned in legacy-core-envs.ts, see FIXTURE_ENV_BASE_PACKAGES).
+   */
+  setNodeEnv(variantPattern = '*') {
+    this.extensions.addExtensionToVariant(variantPattern, 'teambit.harmony/node', {});
+    this.command.install(FIXTURE_ENV_BASE_PACKAGES['@teambit/node']);
+  }
+
   setCustomEnv(extensionsBaseFolder = 'node-env', options: SetCustomEnvOpts = {}): string {
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
     this.command.addComponent(extensionsBaseFolder);
     this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
     if (!options.skipLink) this.command.link();
-    if (!options.skipInstall) this.command.install(this.getFixtureEnvBasePackages(extensionsBaseFolder).join(' '));
+    if (!options.skipInstall) {
+      this.command.install([ENVS_ENV_PACKAGE, ...this.getFixtureEnvBasePackages(extensionsBaseFolder)].join(' '));
+    }
     if (!options.skipCompile) this.command.compile();
     return extensionsBaseFolder;
   }
