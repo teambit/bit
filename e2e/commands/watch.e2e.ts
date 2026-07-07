@@ -23,7 +23,7 @@ chai.use(chaiFs);
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
+      helper.env.setNodeEnv();
     });
     describe('run bit watch', () => {
       let watchRunner: WatchRunner;
@@ -113,7 +113,7 @@ chai.use(chaiFs);
       before(async () => {
         helper.scopeHelper.setWorkspaceWithRemoteScope({ initGit });
         helper.fixtures.populateComponentsTS();
-        helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
+        helper.env.setNodeEnv();
         watchRunner = new WatchRunner(helper, true);
         await watchRunner.watch();
         allOutput = '';
