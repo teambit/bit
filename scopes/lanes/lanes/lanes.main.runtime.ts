@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import pMap from 'p-map';
@@ -1647,14 +1648,37 @@ please create a new lane instead, which will include all components of this lane
     // The API change type is intentionally not computed here: it needs serial tsserver schema
     // extraction and is resolved lazily by the API view, gated on the SOURCE_CODE/DEPENDENCY evidence.
     const repo = this.scope.legacyScope.objects;
-    const [baseVersion, compareVersion] = (await Promise.all([
-      repo.load(Ref.from(commonSnap.hash), false),
-      repo.load(Ref.from(sourceHead), false),
-    ])) as [Version | undefined, Version | undefined];
-    // a Version object couldn't be loaded (e.g. the common snap isn't in the local scope yet). this is
-    // a transient "couldn't classify", NOT "no changes" ([ChangeType.NONE]) — return undefined so it is
-    // distinguishable and never persisted to the immutable-hash-keyed memo, or the component would be
-    // reported with no change types forever, even once the object becomes loadable.
+    const loadPair = () =>
+      Promise.all([repo.load(Ref.from(commonSnap.hash), false), repo.load(Ref.from(sourceHead), false)]) as Promise<
+        [Version | undefined, Version | undefined]
+      >;
+    let [baseVersion, compareVersion] = await loadPair();
+
+    // the deferChanges path (the default for UI lane compares) skips the eager common-snap import, so
+    // the merge-base Version can be absent locally here. rather than give up — which classifies a
+    // genuinely-changed component as "couldn't classify" and drops it from the diff views — import the
+    // missing snap(s) on demand and retry once. this fires only on a miss and is per-component, so the
+    // fast deferred path stays fast while staying correct; the derived result is memoized afterwards.
+    if (!baseVersion || !compareVersion) {
+      const missing: ComponentID[] = [];
+      if (!baseVersion) missing.push(componentId.changeVersion(commonSnap.hash));
+      if (!compareVersion) missing.push(componentId.changeVersion(sourceHead));
+      try {
+        await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(missing), {
+          cache: true,
+          ignoreMissingHead: true,
+          reason: `derive lane diff change types (snap missing locally)`,
+        });
+        [baseVersion, compareVersion] = await loadPair();
+      } catch {
+        // best-effort: if the import fails (e.g. the snap only exists on a lane we lack context for here),
+        // fall through to the undefined return below rather than throwing out of the field resolver.
+      }
+    }
+
+    // still couldn't load a Version. this is a transient "couldn't classify", NOT "no changes"
+    // ([ChangeType.NONE]) — return undefined so it's distinguishable and never persisted to the
+    // immutable-hash-keyed memo, or the component would be reported with no change types forever.
     if (!baseVersion || !compareVersion) return undefined;
 
     const baseObj = baseVersion.toObject();
