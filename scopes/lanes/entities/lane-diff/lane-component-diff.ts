@@ -44,6 +44,12 @@ export class LaneComponentDiff {
   }
 
   get changeType() {
+    // an empty `changes` list means the server couldn't classify this component — the derivation
+    // returned null (skipped / a transient version-load failure), collapsed to `[]` on the way in.
+    // it does NOT mean an aspects change: `deriveChangeTypes` never emits `[]` for a real change
+    // (ASPECTS is always pushed explicitly). so treat empty as NONE rather than falling through to
+    // the ASPECTS fallback below, which would fabricate a change and mark the component modified.
+    if (this.changes.length === 0) return ChangeType.NONE;
     if (this.changes.length === 1) return this.changes[0];
     if (this.sourceCodeChanged) return ChangeType.SOURCE_CODE;
     if (this.dependencyChanged) return ChangeType.DEPENDENCY;
