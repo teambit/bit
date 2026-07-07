@@ -89,6 +89,10 @@ module.exports.default = {
         },
       });
       helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
+      // the envs were not loaded during the first install, so the component manifests were built
+      // without their dependency policies. a second install applies them (the standard flow for
+      // old-style envs, see the "run bit install again" suggestion).
+      helper.command.install();
       virtualStoreDir = path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm');
       numberOfFilesInVirtualStore = fs.readdirSync(virtualStoreDir).length;
     });
@@ -512,6 +516,10 @@ module.exports.default = {
         },
       });
       helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
+      // the envs were not loaded during the first install, so the component manifests were built
+      // without their dependency policies. a second install applies them (the standard flow for
+      // old-style envs, see the "run bit install again" suggestion).
+      helper.command.install();
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -900,6 +908,8 @@ module.exports.default = {
       });
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
       helper.command.install('@teambit/node@1.0.1042');
+      // second install to apply the env dependency policies (see the comment in the pnpm variant)
+      helper.command.install();
     });
     after(() => {
       helper.scopeHelper.destroy();
