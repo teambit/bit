@@ -363,7 +363,13 @@ export class WorkspaceCompiler {
   async onAspectLoadFail(err: Error & { code?: string }, component: Component): Promise<boolean> {
     if (
       ((err.code &&
-        (err.code === 'MODULE_NOT_FOUND' || err.code === 'ERR_MODULE_NOT_FOUND' || err.code === 'ERR_REQUIRE_ESM')) ||
+        (err.code === 'MODULE_NOT_FOUND' ||
+          err.code === 'ERR_MODULE_NOT_FOUND' ||
+          err.code === 'ERR_REQUIRE_ESM' ||
+          // node refuses to load .ts files from node_modules. happens when the loaded instance
+          // has only the component sources (e.g. re-created by the package manager mid-install)
+          // and compiling the component fixes it, same as a missing-module failure
+          err.code === 'ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING')) ||
         err.message.includes('import.meta') ||
         err.message.includes('exports is not defined')) &&
       this.workspace
