@@ -73,6 +73,9 @@ describe('dependency-resolver extension', function () {
           helper.fixtures.addComponentBarFoo();
           // TODO: use custom env with versions provided from outside in the config by the user
           helper.extensions.addExtensionToVariant('bar', 'teambit.react/react', {});
+          // the react env used to be a core aspect, now its package (and its env chain) must be
+          // installed for the env to load and provide its dependency policies
+          helper.command.install('@teambit/react@1.0.1042 @teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
           barFooOutput = helper.command.showComponentParsed('bar/foo');
         });
         it('should have the updated dependencies for bar/foo from the env', function () {
@@ -182,8 +185,8 @@ describe('dependency-resolver extension', function () {
       const depResolverExt = comp2.extensions.find((e) => e.name === Extensions.dependencyResolver);
       expect(depResolverExt).to.be.ok;
       expect(depResolverExt.data).to.have.property('dependencies');
-      // some of the entries are @types/jest, @types/node, @babel/runtime coming from the node env
-      expect(depResolverExt.data.dependencies).to.have.lengthOf(3);
+      // the default env (empty-env) provides no dependency policies, so the only entry is comp3
+      expect(depResolverExt.data.dependencies).to.have.lengthOf(1);
       expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
       expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
       expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);
@@ -331,6 +334,10 @@ describe('dependency-resolver extension', function () {
       npmCiRegistry.configureCiInPackageJsonHarmony();
 
       helper.fixtures.populateComponents(1);
+      // comp1 is a dependency (peer) of the env below, whose build compiles with typescript. the
+      // default env provides no compiler, so comp1's capsule would get no tsconfig.json and the
+      // env's ts solution-build would fail referencing it. give comp1 a compiling env.
+      helper.env.setNodeEnv('comp1');
       helper.command.tagAllComponents();
       helper.env.setEmptyEnv();
       helper.fs.outputFile(
@@ -403,6 +410,10 @@ describe('dependency-resolver extension', function () {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
+      // comp2 is a dependency of comp1, whose env (empty-env below) compiles with typescript. the
+      // default env provides no compiler, so comp2's capsule would get no tsconfig.json and the
+      // ts solution-build of comp1 would fail referencing it. give comp2 a compiling env.
+      helper.env.setNodeEnv('comp2');
       helper.env.setEmptyEnv();
       helper.fs.outputFile(
         'empty-env/env.jsonc',

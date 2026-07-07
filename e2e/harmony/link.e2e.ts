@@ -29,6 +29,9 @@ describe('linking to a target including peers', function () {
     helper = new Helper();
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.command.create('react', 'button', '--env teambit.react/react');
+    // the react env used to be a core aspect, now its package (and its env chain) must be
+    // installed for the env to load and provide its peers policy
+    helper.command.install('@teambit/react@1.0.1042 @teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
     helper.command.install();
     targetDir = globalBitTempDir();
     helper.command.link(`--target=${targetDir} --peers`);
