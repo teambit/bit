@@ -705,14 +705,27 @@ export class InstallMain {
     }
     const loadedPlugins = compact(
       await Promise.all(
-        aspects.map((aspectDef) => {
+        aspects.map(async (aspectDef) => {
           const localPath = aspectDef.aspectPath;
           const component = aspectDef.component;
           if (!component) return undefined;
+          // honor the workspace's scope-trust hook (registered on ScopeMain). this path requires
+          // the aspect's plugin files directly, so it must be guarded like the workspace and
+          // scope-aspects-loader require paths.
+          const guard = this.workspace.scope.getAspectLoadGuard();
+          if (guard) {
+            try {
+              await guard(component.id);
+            } catch (err: any) {
+              this.logger.consoleWarning(`skipping the load of ${component.id.toString()}: ${err.message}`);
+              return undefined;
+            }
+          }
           const plugins = this.aspectLoader.getPlugins(component, localPath);
           if (plugins.has()) {
             return plugins.load(MainRuntime.name);
           }
+          return undefined;
         })
       )
     );
