@@ -999,7 +999,18 @@ export class InstallMain {
   public setOldNonLoadedEnvs() {
     const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
     const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
-    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
+    // envs that used to be core aspects fail to load quietly when their package is not installed
+    // yet (an expected state, so they are not listed in the failed-to-load envs). count them as
+    // non-loaded so the recurring-install flow (or the "run bit install again" suggestion)
+    // re-calculates the component manifests with their dependency policies once they are loadable.
+    const nonLoadedLegacyEnvs = envsWithoutManifest.filter((envId) => {
+      const envIdWithoutVersion = envId.split('@')[0];
+      // ignore legacy envs with no pinned version (removed from the core long ago, nothing to
+      // install) - suggesting another install for them would never converge.
+      if (!getPinnedLegacyCoreEnvVersion(envIdWithoutVersion)) return false;
+      return !this.envs.isEnvRegistered(envId);
+    });
+    const oldNonLoadedEnvs = intersection([...nonLoadedEnvs, ...nonLoadedLegacyEnvs], envsWithoutManifest);
     this.oldNonLoadedEnvs = oldNonLoadedEnvs;
     return oldNonLoadedEnvs;
   }
