@@ -1,3 +1,7 @@
+// @ts-nocheck
+// the e2e runs inside the bit repo, where core-aspect types (e.g. @teambit/compiler) resolve
+// to the repo sources while the env tree in the capsule brings the published @teambit/builder.
+// the two BuildContext types are structurally identical but nominally different - skip checking.
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { BabelAspect, BabelMain } from '@teambit/babel';

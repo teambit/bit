@@ -459,9 +459,10 @@ describe('ci commands', function () {
       helper.command.runCmd('bit ci pr --keep-lane --message "first pr commit"');
 
       // Main moves ahead: change comp1's env, tag, export, push.
-      // empty-env is used as it's a core env, so no installation is needed for it to load.
+      // core-aspect-env is used as it's a core env (no installation needed) that is NOT the
+      // default env (the default env config is normalized away on tag, so it won't propagate).
       helper.command.runCmd(`git checkout ${defaultBranch}`);
-      helper.command.setEnv('comp1', 'teambit.harmony/empty-env');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.runCmd('git add .');
@@ -484,7 +485,7 @@ describe('ci commands', function () {
       expect(
         envData.config.env,
         `expected comp1's env to be updated from main, got: ${JSON.stringify(envData.config)}`
-      ).to.equal('teambit.harmony/empty-env');
+      ).to.equal('teambit.harmony/envs/core-aspect-env');
     });
   });
 
@@ -868,9 +869,10 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
       const defaultBranch = setupComponentsAndInitialCommit();
 
       // Create lane and change env on comp1.
-      // empty-env is used as it's a core env, so no installation is needed for it to load.
+      // core-aspect-env is used as it's a core env (no installation needed) that is NOT the
+      // default env (the default env config is normalized away on tag).
       helper.command.createLane('config-lane');
-      helper.command.setEnv('comp1', 'teambit.harmony/empty-env');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -887,7 +889,7 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     });
     it('should preserve the env config from the lane', () => {
       const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
-      expect(envData.config.env).to.equal('teambit.harmony/empty-env');
+      expect(envData.config.env).to.equal('teambit.harmony/envs/core-aspect-env');
     });
     it('should tag the component', () => {
       expect(mergeOutput).to.include('Merged PR');
