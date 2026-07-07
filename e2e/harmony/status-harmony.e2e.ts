@@ -29,6 +29,9 @@ describe('status command on Harmony', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(1);
+      // the default env (empty env) has no compiler hence no dists. set the node env so the
+      // components have dists (it used to be the default when it was a core aspect)
+      helper.env.setNodeEnv();
       helper.command.status(); // to populate the cache
       // as an intermediate step, make sure the missing-dist is not an issue.
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingDists.name);

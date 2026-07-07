@@ -103,6 +103,8 @@ import { HttpHelper } from '../http-helper';
       httpHelper = new HttpHelper(helper);
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
+      // the react env is not a core aspect anymore, install it for the variant above to load
+      helper.command.install('@teambit/react@1.0.1042');
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();

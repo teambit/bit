@@ -44,6 +44,9 @@ export default new MyEnv();
       helper.fs.outputFile(`${envName}/index.ts`, `export { MyEnv } from './${envName}.bit-env';`);
       helper.command.addComponent(envName);
       helper.extensions.addExtensionToVariant(envName, 'teambit.envs/env');
+      // teambit.envs/env is no longer a core aspect - install it so my-env loads and is
+      // recognized as an env when setting it on components below
+      helper.command.install('@teambit/env@1.0.1042');
 
       // Create comp2 that uses the env
       helper.fs.outputFile('comp2/index.ts', 'export const comp2 = "v1";');

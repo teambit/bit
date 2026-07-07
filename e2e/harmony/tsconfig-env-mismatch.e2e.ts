@@ -145,6 +145,10 @@ export default new StrictEnv();
       helper.command.addComponent('strict-env');
       helper.command.setEnv('strict-env', 'teambit.envs/env');
 
+      // teambit.envs/env is no longer a core aspect - install it so the .bit-env envs load and
+      // are recognized as envs when setting them on components below
+      helper.command.install('@teambit/env@1.0.1042');
+
       // Create theme component with code that passes permissive but fails strict mode
       // Using strictNullChecks pattern - accessing property on potentially null value
       const themeCode = `export type ThemeMode = 'light' | 'dark';
