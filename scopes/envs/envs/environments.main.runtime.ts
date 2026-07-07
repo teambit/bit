@@ -557,6 +557,15 @@ export class EnvsMain {
     if (envDef) {
       return envDef;
     }
+    // the env may be recorded on the component with a version while it is registered to the slot
+    // without one - e.g. an env that is core now but was a regular exported env when the
+    // component was tagged (such as core-aspect-env on the envs/env pinned version).
+    if (id.includes('@')) {
+      const versionlessDef = this.getEnvDefinitionByStringId(id.split('@')[0]);
+      if (versionlessDef) {
+        return versionlessDef;
+      }
+    }
     if (this.isLegacyCoreEnvWithoutVersion(id)) {
       // the env may be loaded and registered to the slot with a version (e.g. as a workspace
       // component or with its pinned version).
@@ -1070,7 +1079,12 @@ if needed, use "bit env set" command to align the env id`;
       }
     });
     const envId = await this.findFirstEnv(ids);
-    const envDef = envId ? this.getEnvDefinitionByStringId(envId) : undefined;
+    let envDef = envId ? this.getEnvDefinitionByStringId(envId) : undefined;
+    if (!envDef && envId) {
+      // envs that used to be core are configured (e.g. via variants) without a version, but once
+      // loaded (as regular envs) they are registered to the slot with a version.
+      envDef = this.getLegacyCoreEnvFromSlot(envId.split('@')[0]);
+    }
 
     return envDef || this.getDefaultEnv();
   }
