@@ -55,4 +55,8 @@ export const LANG_IMPORTERS: Record<string, () => Promise<{ default?: unknown }>
   shellscript: () => import('@shikijs/langs/shellscript'),
   graphql: () => import('@shikijs/langs/graphql'),
   sql: () => import('@shikijs/langs/sql'),
+  python: () => import('@shikijs/langs/python'),
+  go: () => import('@shikijs/langs/go'),
+  rust: () => import('@shikijs/langs/rust'),
+  java: () => import('@shikijs/langs/java'),
 };

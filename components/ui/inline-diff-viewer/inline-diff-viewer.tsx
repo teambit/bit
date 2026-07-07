@@ -259,23 +259,29 @@ function buildSplitRows(hunks: DiffHunk[]): { rows: SplitRow[]; hunkHeaders: Map
   const hunkHeaders = new Map<number, string>();
   for (const hunk of hunks) {
     hunkHeaders.set(rows.length, hunk.header);
-    const removed: DiffLine[] = [];
-    const added: DiffLine[] = [];
+    let removed: DiffLine[] = [];
+    let added: DiffLine[] = [];
+    // pair the pending removed/added runs positionally by index, then reset. indexed reads are O(1),
+    // whereas draining with Array.shift() (O(n)) made this O(n²) — the pathological case is a single
+    // large hunk of all-added/all-removed lines (new or deleted whole files). `arr[i]` past the end is
+    // `undefined`, matching the old `shift()` semantics for the shorter side.
+    const flush = () => {
+      const max = Math.max(removed.length, added.length);
+      for (let i = 0; i < max; i += 1) rows.push({ left: removed[i], right: added[i] });
+      removed = [];
+      added = [];
+    };
     for (const line of hunk.lines) {
       if (line.type === 'removed') {
         removed.push(line);
       } else if (line.type === 'added') {
         added.push(line);
       } else {
-        while (removed.length || added.length) {
-          rows.push({ left: removed.shift(), right: added.shift() });
-        }
+        flush();
         rows.push({ left: line, right: line });
       }
     }
-    while (removed.length || added.length) {
-      rows.push({ left: removed.shift(), right: added.shift() });
-    }
+    flush();
   }
   return { rows, hunkHeaders };
 }
@@ -510,9 +516,20 @@ export function parseDiffOutput(diffOutput: string): DiffHunk[] {
   return hunks;
 }
 
+/**
+ * Split file content into lines, dropping the spurious trailing '' that `split('\n')` leaves when the
+ * file ends in a newline (most files do). Without this a new/deleted file renders a phantom blank
+ * added/removed line and the hunk header's line count is off by one.
+ */
+function splitFileLines(content: string): string[] {
+  const lines = content.split('\n');
+  if (lines.length > 1 && lines[lines.length - 1] === '') lines.pop();
+  return lines;
+}
+
 /** A single full file rendered as one hunk where every line is `added`. */
 export function computeNewFileHunks(content: string): DiffHunk[] {
-  const lines = content.split('\n');
+  const lines = splitFileLines(content);
   return [
     {
       header: `@@ -0,0 +1,${lines.length} @@`,
@@ -523,7 +540,7 @@ export function computeNewFileHunks(content: string): DiffHunk[] {
 
 /** A single full file rendered as one hunk where every line is `removed`. */
 export function computeDeletedFileHunks(content: string): DiffHunk[] {
-  const lines = content.split('\n');
+  const lines = splitFileLines(content);
   return [
     {
       header: `@@ -1,${lines.length} +0,0 @@`,
