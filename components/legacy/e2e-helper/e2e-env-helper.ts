@@ -192,6 +192,14 @@ export default new EmptyEnv();
     this.command.install(FIXTURE_ENV_BASE_PACKAGES['@teambit/node']);
   }
 
+  /**
+   * install the packages of the legacy `teambit.harmony/aspect` env (and its node env runtime
+   * dependency). needed after configuring the aspect env on a component the old way (versionless).
+   */
+  installAspectEnv() {
+    this.command.install(ASPECT_ENV_PACKAGES.join(' '));
+  }
+
   setCustomEnv(extensionsBaseFolder = 'node-env', options: SetCustomEnvOpts = {}): string {
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
     this.command.addComponent(extensionsBaseFolder);
