@@ -2686,6 +2686,11 @@
         "",
         "owner",
         "treat the argument as an owner name and import all components from all scopes of that owner"
+      ],
+      [
+        "",
+        "write-to-empty-dir",
+        "when the target directory is not empty, import into an available empty directory (e.g. \"foo\" => \"foo_1\") instead of failing"
       ]
     ],
     "description": "bring components from remote scopes into your workspace",
