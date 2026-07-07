@@ -166,6 +166,8 @@ export class ComponentWriterMain {
     const componentWriterInstances = writeComponentsParams.map((writeParams) => new ComponentWriter(writeParams));
     this.fixDirsIfEqual(componentWriterInstances);
     this.fixDirsIfNested(componentWriterInstances);
+    // must run after the fixDirs* passes above, which may still move writeToPath onto an occupied dir.
+    this.relocateOccupiedDirs(componentWriterInstances, opts);
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
     await Promise.all(
@@ -270,18 +272,15 @@ export class ComponentWriterMain {
     component: ConsumerComponent,
     opts: ManyComponentsWriterParams
   ): ComponentWriterProps {
-    let componentRootDir: PathLinuxRelative = opts.writeToPath
+    const componentRootDir: PathLinuxRelative = opts.writeToPath
       ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath)))
       : this.consumer.composeRelativeComponentPath(component.id);
     // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
     const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
-    if (this.consumer) {
-      if (opts.writeToEmptyDir) {
-        // instead of failing when the target dir is occupied, relocate to an available empty dir.
-        componentRootDir = this.resolveAvailableDir(componentRootDir, existingComponentMap, opts);
-      } else {
-        this.throwErrorWhenDirectoryNotEmpty(componentRootDir, existingComponentMap, opts);
-      }
+    // with --write-to-empty-dir, dir-conflict resolution is deferred to relocateOccupiedDirs() so it runs after the
+    // fixDirs* passes (which may still adjust writeToPath); otherwise fail here when the target dir is occupied.
+    if (this.consumer && !opts.writeToEmptyDir) {
+      this.throwErrorWhenDirectoryNotEmpty(componentRootDir, existingComponentMap, opts);
     }
     return {
       workspace: this.workspace,
@@ -360,34 +359,40 @@ either use --path to specify a different directory or modify "defaultDirectory" 
   }
 
   /**
-   * used by the `--write-to-empty-dir` import flag, mainly for non-interactive clients (such as the IDE) that
-   * can't prompt for `--override`. when the target directory is occupied - either by files that don't belong to
-   * this component or by another component - find the next available empty directory (e.g. "renderers/class" =>
-   * "renderers/class_1") instead of throwing.
-   * when the directory already belongs to this component, it's returned as-is (the existing files are overridden,
-   * same as the default import behavior).
+   * final `writeToPath` resolution for the `--write-to-empty-dir` import flag, mainly for non-interactive clients
+   * (such as the IDE) that can't prompt for `--override`. runs after fixDirsIfEqual()/fixDirsIfNested() - which may
+   * still move dirs using string-only collision checks - so the flag's guarantee holds against the final paths:
+   * every relocated component lands in a directory that is empty (or non-existent) and unclaimed in .bitmap.
+   * when a target is occupied (by foreign files, or a dir/rootDir owned by another component), it's relocated by
+   * suffixing "_N" (e.g. "renderers/class" => "renderers/class_1"). a dir already owned by this component is left
+   * as-is (its files are overridden, same as the default import behavior).
    */
-  private resolveAvailableDir(
-    componentDirRelative: PathLinuxRelative,
-    componentMap: ComponentMap | null | undefined,
-    opts: ManyComponentsWriterParams
-  ): PathLinuxRelative {
-    // when writing is skipped or the dir already belongs to this component, no need to relocate.
-    if (this.shouldSkipDirConflictCheck(componentDirRelative, componentMap, opts)) return componentDirRelative;
-    const unavailableReason = this.getDirUnavailableReason(componentDirRelative, componentMap);
-    if (!unavailableReason) return componentDirRelative;
+  private relocateOccupiedDirs(componentWriterInstances: ComponentWriter[], opts: ManyComponentsWriterParams) {
+    if (!opts.writeToEmptyDir) return;
+    // track dirs already claimed in .bitmap and by other components in this batch, so two relocations never collide.
+    const takenDirs = new Set<string>([
+      ...this.workspace.bitMap.getAllRootDirs(),
+      ...componentWriterInstances.map((componentWriter) => componentWriter.writeToPath),
+    ]);
+    componentWriterInstances.forEach((componentWriter) => {
+      const currentDir = componentWriter.writeToPath;
+      const componentMap = componentWriter.existingComponentMap;
+      if (this.shouldSkipDirConflictCheck(currentDir, componentMap, opts)) return;
+      const unavailableReason = this.getDirUnavailableReason(currentDir, componentMap);
+      if (!unavailableReason) return;
 
-    const existingRootDirs = this.workspace.bitMap.getAllRootDirs();
-    let num = 1;
-    let candidate = `${componentDirRelative}_${num}`;
-    while (existingRootDirs.includes(candidate) || this.getDirUnavailableReason(candidate, componentMap)) {
-      num += 1;
-      candidate = `${componentDirRelative}_${num}`;
-    }
-    this.logger.consoleWarning(
-      `unable to import into "${componentDirRelative}" (${unavailableReason}), importing into "${candidate}" instead`
-    );
-    return candidate;
+      let num = 1;
+      let candidate = `${currentDir}_${num}`;
+      while (takenDirs.has(candidate) || this.getDirUnavailableReason(candidate, componentMap)) {
+        num += 1;
+        candidate = `${currentDir}_${num}`;
+      }
+      this.logger.consoleWarning(
+        `unable to import into "${currentDir}" (${unavailableReason}), importing into "${candidate}" instead`
+      );
+      componentWriter.writeToPath = candidate;
+      takenDirs.add(candidate);
+    });
   }
 
   /**
