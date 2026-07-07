@@ -311,6 +311,7 @@ describe('bit reset command', function () {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', 'teambit.react/react');
+        helper.command.install('@teambit/react@1.0.1042');
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.resetAll();
@@ -325,6 +326,7 @@ describe('bit reset command', function () {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', 'teambit.react/react');
+        helper.command.install('@teambit/react@1.0.1042 @teambit/node@1.0.1042');
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.setEnv('comp1', 'teambit.harmony/node');
         helper.command.snapAllComponentsWithoutBuild();
@@ -340,6 +342,7 @@ describe('bit reset command', function () {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', 'teambit.react/react');
+        helper.command.install('@teambit/react@1.0.1042');
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.dependenciesSet('comp1', 'lodash@4.17.21');
         helper.command.snapAllComponentsWithoutBuild();

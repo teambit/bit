@@ -23,6 +23,7 @@ describe('env command', function () {
         helper.extensions.addExtensionToVariant('*', 'teambit.react/react', undefined, true);
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+        helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042 @teambit/react@1.0.1042');
         helper.command.tagAllWithoutBuild();
       });
       it('should not be modified', () => {
@@ -89,6 +90,7 @@ describe('env command', function () {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+        helper.env.installAspectEnv();
         helper.command.tagAllWithoutBuild();
       });
       it('should indicate that there was no env config in .bitmap to remove', () => {

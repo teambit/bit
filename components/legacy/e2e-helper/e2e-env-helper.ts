@@ -180,6 +180,8 @@ export default new EmptyEnv();
     this.fs.outputFile('empty-env/index.ts', `export { EmptyEnv } from './empty-env.bit-env';`);
     this.command.addComponent('empty-env');
     this.command.setEnv('empty-env', 'teambit.envs/env');
+    // teambit.envs/env is no longer a core aspect - install it so the .bit-env plugin compiles
+    this.command.install(ENVS_ENV_PACKAGE);
   }
 
   /**
