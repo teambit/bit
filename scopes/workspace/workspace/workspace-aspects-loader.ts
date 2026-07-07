@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
@@ -676,11 +677,30 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
 
         const isModule = await this.aspectLoader.isEsmModule(localPath);
 
-        const aspect = !isModule
-          ? // eslint-disable-next-line global-require, import/no-dynamic-require
-            require(localPath)
-          : // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
-            await this.aspectLoader.loadEsm(localPath);
+        let aspect;
+        try {
+          aspect = !isModule
+            ? // eslint-disable-next-line global-require, import/no-dynamic-require
+              require(localPath)
+            : // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
+              await this.aspectLoader.loadEsm(localPath);
+        } catch (err: any) {
+          // the package.json of a workspace-component instance may point its "main" at the source
+          // file - it's generated from the component manifest, which is calculated before the
+          // component's env (hence its compiler) is loaded, e.g. on the first install cycle - and
+          // node refuses to load .ts sources from node_modules. the compiled dist is reliable
+          // when it exists, so require it directly, bypassing the stale "main".
+          const distMain =
+            err.code === 'ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING'
+              ? this.getDistMain(component, localPath)
+              : undefined;
+          if (!distMain) throw err;
+          this.logger.debug(
+            `aspectDefsToRequireableComponents: failed loading ${component.id.toString()} from ${localPath} (stale source "main"), falling back to ${distMain}`
+          );
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          aspect = isModule ? await this.aspectLoader.loadEsm(distMain) : require(distMain);
+        }
 
         // require aspect runtimes
         const runtimePath = await this.aspectLoader.getRuntimePath(component, localPath, MainRuntime.name);
@@ -694,6 +714,17 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       return new RequireableComponent(component, requireFunc);
     });
     return compact(requireableComponents);
+  }
+
+  /**
+   * the compiled main file of the component inside `localPath`, if it exists.
+   * (e.g. `<localPath>/dist/index.js` for an `index.ts` main file).
+   */
+  private getDistMain(component: Component, localPath: string): string | undefined {
+    const mainFile = component.state._consumer.mainFile;
+    if (!mainFile) return undefined;
+    const distMain = join(localPath, 'dist', mainFile.replace(/\.(ts|tsx)$/, '.js'));
+    return fs.pathExistsSync(distMain) ? distMain : undefined;
   }
 
   private async linkIfMissingWorkspaceAspects(aspects: AspectDefinition[]) {
