@@ -8,7 +8,6 @@
 export function getFallbackTypescriptCompiler() {
   let ts;
   try {
-    // eslint-disable-next-line global-require
     ts = require('typescript');
   } catch {
     throw new Error(
