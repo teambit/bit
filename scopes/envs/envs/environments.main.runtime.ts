@@ -611,8 +611,11 @@ export class EnvsMain {
     // when the env is a component of the host (e.g. in the bit repo itself), use the host version.
     let envIdWithPotentialPinnedVersion = envId;
     if (!envId.includes('@') && this.isLegacyCoreEnv(envId)) {
-      const hostIds = await host.listIds();
-      const fromHost = hostIds.find((id) => id.toStringWithoutVersion() === envId);
+      // prefer the host (workspace) component when it exists. getIdIfExist is a cheap in-memory
+      // lookup implemented by the workspace host; scope hosts don't implement it and always get
+      // the pinned version (listing all ids of a scope here would be too expensive).
+      const hostWithGetIdIfExist = host as { getIdIfExist?: (id: ComponentID) => ComponentID | undefined };
+      const fromHost = hostWithGetIdIfExist.getIdIfExist?.(ComponentID.fromString(envId));
       envIdWithPotentialPinnedVersion = fromHost ? fromHost.toString() : resolveLegacyCoreEnvId(envId);
     }
     const newId = await host.resolveComponentId(envIdWithPotentialPinnedVersion);
