@@ -734,8 +734,10 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const graph = await this.getGraphIds();
     // traverse the graph iteratively (and not via graph.predecessors which is recursive) to
     // avoid "Maximum call stack size exceeded" on large/deep graphs
-    const visited = new Set<string>();
     const queue = ids.map((id) => id.toString());
+    // seed with the input ids so that in cyclic graphs a seed is not re-discovered and returned
+    // as its own dependent
+    const visited = new Set<string>(queue);
     const dependents: ComponentID[] = [];
     let queueIndex = 0;
     while (queueIndex < queue.length) {
