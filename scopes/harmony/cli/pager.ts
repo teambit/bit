@@ -59,6 +59,18 @@ export function shouldUsePager(command: Command, flags: Flags, output: string): 
 }
 
 /**
+ * split a configured pager string (BIT_PAGER / PAGER) into [command, ...args], honoring single and
+ * double quotes so an executable path that contains spaces can be configured, e.g.
+ * `"/Applications/My Pager/less" -R`. we deliberately don't run the pager through a shell (avoids
+ * shell-injection and the ENOENT-swallows-output problem), so quoting is how a spaced path is
+ * expressed.
+ */
+function parsePagerCommand(pager: string): string[] {
+  const tokens = pager.match(/"[^"]*"|'[^']*'|\S+/g) || [];
+  return tokens.map((token) => token.replace(/^["']|["']$/g, ''));
+}
+
+/**
  * pipe the given output through a pager (`less` by default). resolves to `true` once the data
  * was handed off to the pager, or `false` when no pager could be launched - in which case the
  * caller must write the data directly so nothing is lost.
@@ -70,7 +82,7 @@ export function shouldUsePager(command: Command, flags: Flags, output: string): 
 export function writeToPager(data: string): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
     const configuredPager = process.env.BIT_PAGER || process.env.PAGER;
-    const [cmd, ...args] = (configuredPager || 'less').trim().split(/\s+/);
+    const [cmd, ...args] = parsePagerCommand(configuredPager || 'less');
     if (!cmd || cmd === 'cat') {
       resolve(false); // paging effectively disabled by the user (empty / "cat" pager)
       return;
@@ -82,7 +94,10 @@ export function writeToPager(data: string): Promise<boolean> {
       const child = spawn(cmd, args, { stdio: ['pipe', 'inherit', 'inherit'], env });
       // pager missing (ENOENT) or otherwise failed to launch => fall back to a direct write.
       child.on('error', () => resolve(false));
-      child.on('close', () => resolve(true));
+      // resolve success only on a clean exit (code 0) or a signal (code null, e.g. the user killed
+      // it). a non-zero exit means the pager failed (bad args, couldn't render) without showing the
+      // output, so fall back to a direct write and never lose it.
+      child.on('close', (code) => resolve(code === 0 || code === null));
       // ignore EPIPE that happens when the user quits the pager (e.g. "q") before all data is read.
       child.stdin?.on('error', () => {});
       child.stdin?.write(data);
