@@ -17,6 +17,7 @@ describe('test command on Harmony', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
+      helper.env.setNodeEnv();
       helper.fs.outputFile('comp1/comp1.spec.js');
     });
     it('--junit should show the error', () => {
@@ -30,6 +31,7 @@ describe('test command on Harmony', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
+      helper.env.setNodeEnv();
       helper.fs.outputFile(
         'comp1/comp1.spec.ts',
         `it('should pass', () => { expect(true).toBeTruthy(); });

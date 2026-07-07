@@ -49,6 +49,7 @@ describe('validate command', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
+      helper.env.setNodeEnv();
       // Create a real linting error (undefined variable)
       helper.fs.outputFile('comp1/comp1.js', 'console.log(undefinedVariable);');
     });
@@ -84,6 +85,7 @@ describe('validate command', function () {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
+        helper.env.setNodeEnv();
         helper.fs.outputFile('comp1/comp1.js', 'console.log(undefinedVariable);');
       });
       it('should stop at linting and not run testing', () => {
@@ -149,6 +151,7 @@ describe('validate command', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
+      helper.env.setNodeEnv();
       helper.fs.outputFile('comp1/comp1.js', 'console.log(undefinedVariable);');
     });
     it('should fail at linting step without --skip-tasks', () => {
