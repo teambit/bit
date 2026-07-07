@@ -193,12 +193,12 @@ needed-for: ${neededFor || '<unknown>'}`);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     // filter out core aspects also when they are requested with a version (e.g. when they are
     // dependencies of a loaded aspect, the version is the component version)
-    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds).filter(
+    const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds).filter(
       (id) => !coreAspectsStringIds.includes(id.split('@')[0])
     );
     const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
     // TODO: use diff instead of filter twice
-    const localAspects = ids.filter((id) => id.startsWith('file://'));
+    const localAspects = notLoadedIds.filter((id) => id.startsWith('file://'));
     this.scope.localAspects = uniq(this.scope.localAspects.concat(localAspects));
     // load local aspects for debugging purposes.
     await this.aspectLoader.loadAspectFromPath(localAspects);
