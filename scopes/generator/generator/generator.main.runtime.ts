@@ -649,7 +649,9 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     let remoteEnvsAspect;
     let fullAspectId;
     let remoteSlotTemplates: Array<ComponentTemplateWithId> = [];
-    if (aspectId && !configEnvs.includes(aspectId)) {
+    // an env from the workspace is loaded via the workspace host (see loadEnvs below). fetching
+    // it from the global scope would fail as it may have never been exported.
+    if (aspectId && !configEnvs.includes(aspectId) && !(await this.isIdInWorkspace(aspectId))) {
       const globals = await this.getGlobalGeneratorEnvs(aspectId);
       remoteEnvsAspect = globals.remoteEnvsAspect;
       fullAspectId = globals.fullAspectId;
@@ -678,6 +680,16 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     });
 
     return templates.concat(remoteSlotTemplates);
+  }
+
+  private async isIdInWorkspace(idStr: string): Promise<boolean> {
+    if (!this.workspace) return false;
+    try {
+      const componentId = await this.workspace.resolveComponentId(idStr);
+      return this.workspace.hasId(componentId, { ignoreVersion: true });
+    } catch {
+      return false;
+    }
   }
 
   async loadEnvs(ids: string[] = this.config.envs || [], remoteEnvsAspect?: EnvsMain): Promise<EnvDefinition[]> {
