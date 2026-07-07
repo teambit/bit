@@ -33,6 +33,8 @@ export interface ManyComponentsWriterParams {
   components: ConsumerComponent[];
   writeToPath?: string;
   throwForExistingDir?: boolean;
+  // when the target dir is occupied, import into an available empty dir (e.g. "foo" => "foo_1") instead of failing.
+  writeToEmptyDir?: boolean;
   writeConfig?: boolean;
   skipDependencyInstallation?: boolean;
   verbose?: boolean;
@@ -268,7 +270,7 @@ export class ComponentWriterMain {
     component: ConsumerComponent,
     opts: ManyComponentsWriterParams
   ): ComponentWriterProps {
-    const componentRootDir: PathLinuxRelative = opts.writeToPath
+    let componentRootDir: PathLinuxRelative = opts.writeToPath
       ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath)))
       : this.consumer.composeRelativeComponentPath(component.id);
     const getParams = () => {
@@ -279,11 +281,18 @@ export class ComponentWriterMain {
       const componentMap = this.consumer.bitMap.getComponentIfExist(component.id, {
         ignoreVersion: true,
       });
-      this.throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap, opts);
+      if (opts.writeToEmptyDir) {
+        // instead of failing when the target dir is occupied, relocate to an available empty dir.
+        componentRootDir = this.resolveAvailableDir(componentRootDir, componentMap, opts);
+      } else {
+        this.throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap, opts);
+      }
       return {
         existingComponentMap: componentMap,
       };
     };
+    // getParams() may reassign componentRootDir (when relocating), so call it before building the props object.
+    const params = getParams();
     return {
       workspace: this.workspace,
       bitMap: this.consumer.bitMap,
@@ -291,7 +300,7 @@ export class ComponentWriterMain {
       writeToPath: componentRootDir,
       writeConfig: opts.writeConfig,
       skipUpdatingBitMap: opts.skipUpdatingBitMap,
-      ...getParams(),
+      ...params,
     };
   }
   private moveComponentsIfNeeded(opts: ManyComponentsWriterParams) {
@@ -345,6 +354,55 @@ either use --path to specify a different directory or modify "defaultDirectory" 
         `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
       );
     }
+  }
+
+  /**
+   * used by the `--write-to-empty-dir` import flag, mainly for non-interactive clients (such as the IDE) that
+   * can't prompt for `--override`. when the target directory is occupied - either by files that don't belong to
+   * this component or by another component - find the next available empty directory (e.g. "renderers/class" =>
+   * "renderers/class_1") instead of throwing.
+   * when the directory already belongs to this component, it's returned as-is (the existing files are overridden,
+   * same as the default import behavior).
+   */
+  private resolveAvailableDir(
+    componentDirRelative: PathLinuxRelative,
+    componentMap: ComponentMap | null | undefined,
+    opts: ManyComponentsWriterParams
+  ): PathLinuxRelative {
+    if (opts.skipWritingToFs) return componentDirRelative;
+    // the dir already belongs to this exact component, it's safe to override, no need to relocate.
+    if (!opts.writeToPath && componentMap) return componentDirRelative;
+    if (opts.writeToPath && componentMap && componentMap.rootDir && componentMap.rootDir === opts.writeToPath) {
+      return componentDirRelative;
+    }
+    if (this.isDirAvailableForImport(componentDirRelative, componentMap)) return componentDirRelative;
+
+    const existingRootDirs = this.workspace.bitMap.getAllRootDirs();
+    let num = 1;
+    let candidate = `${componentDirRelative}_${num}`;
+    while (existingRootDirs.includes(candidate) || !this.isDirAvailableForImport(candidate, componentMap)) {
+      num += 1;
+      candidate = `${componentDirRelative}_${num}`;
+    }
+    this.logger.consoleWarning(
+      `the directory "${componentDirRelative}" is not empty, importing into "${candidate}" instead`
+    );
+    return candidate;
+  }
+
+  /**
+   * a directory is available for import when it doesn't exist yet, or it's an empty directory that is not already
+   * used by another component in the .bitmap file.
+   */
+  private isDirAvailableForImport(
+    componentDirRelative: PathLinuxRelative,
+    componentMap: ComponentMap | null | undefined
+  ): boolean {
+    const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
+    if (!fs.pathExistsSync(componentDir)) return true;
+    if (!componentMap && this.consumer.bitMap.getComponentIdByRootPath(componentDirRelative)) return false;
+    if (!isDir(componentDir)) return false;
+    return isDirEmptySync(componentDir);
   }
 
   static slots = [];
