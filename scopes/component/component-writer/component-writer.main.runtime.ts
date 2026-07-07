@@ -273,26 +273,16 @@ export class ComponentWriterMain {
     let componentRootDir: PathLinuxRelative = opts.writeToPath
       ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath)))
       : this.consumer.composeRelativeComponentPath(component.id);
-    const getParams = () => {
-      if (!this.consumer) {
-        return {};
-      }
-      // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
-      const componentMap = this.consumer.bitMap.getComponentIfExist(component.id, {
-        ignoreVersion: true,
-      });
+    // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
+    const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
+    if (this.consumer) {
       if (opts.writeToEmptyDir) {
         // instead of failing when the target dir is occupied, relocate to an available empty dir.
-        componentRootDir = this.resolveAvailableDir(componentRootDir, componentMap, opts);
+        componentRootDir = this.resolveAvailableDir(componentRootDir, existingComponentMap, opts);
       } else {
-        this.throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap, opts);
+        this.throwErrorWhenDirectoryNotEmpty(componentRootDir, existingComponentMap, opts);
       }
-      return {
-        existingComponentMap: componentMap,
-      };
-    };
-    // getParams() may reassign componentRootDir (when relocating), so call it before building the props object.
-    const params = getParams();
+    }
     return {
       workspace: this.workspace,
       bitMap: this.consumer.bitMap,
@@ -300,7 +290,7 @@ export class ComponentWriterMain {
       writeToPath: componentRootDir,
       writeConfig: opts.writeConfig,
       skipUpdatingBitMap: opts.skipUpdatingBitMap,
-      ...params,
+      existingComponentMap: existingComponentMap ?? undefined,
     };
   }
   private moveComponentsIfNeeded(opts: ManyComponentsWriterParams) {
@@ -323,17 +313,27 @@ to move all component files to a different directory, run bit remove and then bi
       });
     }
   }
+  /**
+   * true when the directory-conflict check can be skipped: either nothing is written to the filesystem, or the
+   * target directory already belongs to this exact component (so overriding it in place is safe).
+   */
+  private shouldSkipDirConflictCheck(
+    componentMap: ComponentMap | null | undefined,
+    opts: ManyComponentsWriterParams
+  ): boolean {
+    if (opts.skipWritingToFs) return true;
+    // no writeToPath: it goes to the default directory. an existing componentMap means the component is not new.
+    if (!opts.writeToPath && componentMap) return true;
+    // writeToPath specified and that directory is already used for that component.
+    return Boolean(opts.writeToPath && componentMap && componentMap.rootDir === opts.writeToPath);
+  }
+
   private throwErrorWhenDirectoryNotEmpty(
     componentDirRelative: PathOsBasedAbsolute,
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
   ) {
-    if (opts.skipWritingToFs) return;
-    // if not writeToPath specified, it goes to the default directory. When componentMap exists, the
-    // component is not new, and it's ok to override the existing directory.
-    if (!opts.writeToPath && componentMap) return;
-    // if writeToPath specified and that directory is already used for that component, it's ok to override
-    if (opts.writeToPath && componentMap && componentMap.rootDir && componentMap.rootDir === opts.writeToPath) return;
+    if (this.shouldSkipDirConflictCheck(componentMap, opts)) return;
 
     const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
     if (!fs.pathExistsSync(componentDir)) return;
@@ -369,12 +369,8 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
   ): PathLinuxRelative {
-    if (opts.skipWritingToFs) return componentDirRelative;
-    // the dir already belongs to this exact component, it's safe to override, no need to relocate.
-    if (!opts.writeToPath && componentMap) return componentDirRelative;
-    if (opts.writeToPath && componentMap && componentMap.rootDir && componentMap.rootDir === opts.writeToPath) {
-      return componentDirRelative;
-    }
+    // when writing is skipped or the dir already belongs to this component, no need to relocate.
+    if (this.shouldSkipDirConflictCheck(componentMap, opts)) return componentDirRelative;
     if (this.isDirAvailableForImport(componentDirRelative, componentMap)) return componentDirRelative;
 
     const existingRootDirs = this.workspace.bitMap.getAllRootDirs();
