@@ -81,12 +81,14 @@ module.exports.default = {
       });
       helper.extensions.addExtensionToVariant('comp3', 'teambit.harmony/aspect');
       helper.extensions.addExtensionToVariant('comp4', 'teambit.harmony/aspect');
+      helper.extensions.addExtensionToVariant('comp1', 'teambit.harmony/node', {});
+      helper.extensions.addExtensionToVariant('comp2', 'teambit.harmony/node', {});
       helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
           react: '17',
         },
       });
-      helper.command.install();
+      helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
       virtualStoreDir = path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm');
       numberOfFilesInVirtualStore = fs.readdirSync(virtualStoreDir).length;
     });
@@ -502,12 +504,14 @@ module.exports.default = {
       });
       helper.extensions.addExtensionToVariant('comp3', 'teambit.harmony/aspect');
       helper.extensions.addExtensionToVariant('comp4', 'teambit.harmony/aspect');
+      helper.extensions.addExtensionToVariant('comp1', 'teambit.harmony/node', {});
+      helper.extensions.addExtensionToVariant('comp2', 'teambit.harmony/node', {});
       helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
           'is-odd': '2',
         },
       });
-      helper.command.install();
+      helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -894,7 +898,8 @@ module.exports.default = {
           },
         },
       });
-      helper.command.install();
+      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
+      helper.command.install('@teambit/node@1.0.1042');
     });
     after(() => {
       helper.scopeHelper.destroy();
