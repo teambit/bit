@@ -27,6 +27,7 @@ import {
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
+  DEFAULT_DIST_DIRNAME,
   DEFAULT_HARMONY_PACKAGE_MANAGER,
   getCloudDomain,
 } from '@teambit/legacy.constants';
@@ -564,7 +565,15 @@ export class DependencyResolverMain {
     // In case the component is it's own root we want to load it from it's own root folder
     if (fs.pathExistsSync(selfRootDir)) {
       const innerDir = join(selfRootDir, 'node_modules', pkgName);
-      if (fs.pathExistsSync(innerDir)) return innerDir;
+      if (fs.pathExistsSync(innerDir)) {
+        // the roots instance may contain only the source files (e.g. when installed as a file:
+        // dependency of another component), while requiring the module needs the compiled dist.
+        // prefer the workspace module dir when it has dists and the roots instance doesn't.
+        if (fs.pathExistsSync(join(innerDir, DEFAULT_DIST_DIRNAME))) return innerDir;
+        const rootModulePath = this.getModulePath(component);
+        if (fs.pathExistsSync(join(rootModulePath, DEFAULT_DIST_DIRNAME))) return rootModulePath;
+        return innerDir;
+      }
       // sometime for the env itself we don't have the env package in the env root dir, because it was hoisted
       // in that case we return the dir from the root node_modules
       return this.getModulePath(component);

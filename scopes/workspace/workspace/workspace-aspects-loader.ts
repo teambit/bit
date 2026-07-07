@@ -838,6 +838,15 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         this.resolvedInstalledAspects.set(aspectStringId, localPath);
         return localPath;
       }
+      // a workspace component may reach here as a dependency of another aspect. resolve it from
+      // the workspace (where its dists are) rather than from a copy nested in the parent's
+      // node_modules, which may contain only its sources (e.g. a file: instance of the package
+      // manager) and fail to require.
+      if (this.workspace.hasId(aspectComponent.id)) {
+        const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
+        this.resolvedInstalledAspects.set(aspectStringId, localPath);
+        return localPath;
+      }
       // use inEdges to get the immediate parent. don't use graph.predecessors() as it returns all
       // the recursive predecessors, which may throw "Maximum call stack size exceeded" on big graphs
       const parentEdge = graph.inEdges(aspectStringId)[0];
