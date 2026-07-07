@@ -1196,10 +1196,14 @@ if needed, use "bit env set" command to align the env id`;
    */
   public isEnvRegistered(id: string) {
     if (this.envSlot.get(id)) return true;
+    const idWithoutVersion = id.split('@')[0];
+    // core envs (and new workspace envs) register to the slot without a version. a versioned id
+    // of such an env (e.g. recorded in the model once tagged) should match the versionless entry.
+    if (id !== idWithoutVersion && this.envSlot.get(idWithoutVersion)) return true;
     // old components use envs that used to be core without a version, while these envs are
     // registered to the slot with a version once loaded as regular envs. these envs are
     // single-instance, so match ignoring the version (the given id may be versioned as well).
-    return Boolean(this.getLegacyCoreEnvFromSlot(id.split('@')[0]));
+    return Boolean(this.getLegacyCoreEnvFromSlot(idWithoutVersion));
   }
 
   isUsingAspectEnv(component: Component): boolean {
