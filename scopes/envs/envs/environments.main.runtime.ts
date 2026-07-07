@@ -608,7 +608,13 @@ export class EnvsMain {
     }
     // envs that used to be core aspects are configured without a version. fetching them without a
     // version resolves to the latest, which may not exist locally - use the pinned version instead.
-    const envIdWithPotentialPinnedVersion = resolveLegacyCoreEnvId(envId);
+    // when the env is a component of the host (e.g. in the bit repo itself), use the host version.
+    let envIdWithPotentialPinnedVersion = envId;
+    if (!envId.includes('@') && this.isLegacyCoreEnv(envId)) {
+      const hostIds = await host.listIds();
+      const fromHost = hostIds.find((id) => id.toStringWithoutVersion() === envId);
+      envIdWithPotentialPinnedVersion = fromHost ? fromHost.toString() : resolveLegacyCoreEnvId(envId);
+    }
     const newId = await host.resolveComponentId(envIdWithPotentialPinnedVersion);
     const envComponent = await host.get(newId);
     if (!envComponent) {
