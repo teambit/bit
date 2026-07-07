@@ -43,6 +43,9 @@ describe('multiple envs', function () {
       const reactEnv = 'teambit.react/react';
       helper.extensions.addExtensionToVariant('*', reactEnv);
       helper.extensions.addExtensionToVariant('comp1', 'teambit.harmony/aspect');
+      // the react and aspect envs are not core aspects anymore, install them so both envs load
+      // and the multiple-envs issue is detected (rather than a non-loaded-env issue)
+      helper.command.install('@teambit/react@1.0.1042 @teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
     });
     it('bit status should show it as an issue', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MultipleEnvs.name);
