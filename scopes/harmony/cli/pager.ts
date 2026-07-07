@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import { logger } from '@teambit/legacy.logger';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
 import type { Command, Flags } from './command';
 
 /**
@@ -22,10 +23,6 @@ export function isInteractiveTerminal(): boolean {
   return true;
 }
 
-// matches ansi SGR color sequences (ESC[...m) so they don't count toward the display width.
-// built dynamically to keep a literal control char out of the source (and out of no-control-regex).
-const ANSI_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
-
 /**
  * whether the output already fits within the current terminal, in which case there's no reason
  * to page it (avoids the "press q to exit" annoyance for short output, without relying on the
@@ -39,9 +36,9 @@ export function fitsOnScreen(output: string): boolean {
   const lines = output.replace(/\n$/, '').split('\n');
   let usedRows = 0;
   for (const line of lines) {
-    const width = line.replace(ANSI_PATTERN, '').length;
+    const width = (removeChalkCharacters(line) || '').length;
     usedRows += width === 0 ? 1 : Math.ceil(width / columns);
-    if (usedRows > rows) return false;
+    if (usedRows > rows) return false; // stop early once we know it overflows one screen
   }
   return true;
 }
@@ -67,9 +64,8 @@ export function shouldUsePager(command: Command, flags: Flags, output: string): 
  * caller must write the data directly so nothing is lost.
  *
  * the pager binary is taken from BIT_PAGER, then PAGER, defaulting to `less`. for `less` we set
- * `LESS=FRX` (unless already set): keep ansi colors (-R) and don't clear the screen on exit (-X).
- * short output never reaches here (shouldUsePager filters it out via fitsOnScreen), so the pager
- * only ever receives output that genuinely exceeds one screen.
+ * `LESS=FRX` (unless already set, matching git's default): keep ansi colors (-R), don't clear the
+ * screen on exit (-X), and quit if the output fits one screen (-F).
  */
 export function writeToPager(data: string): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
