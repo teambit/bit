@@ -94,12 +94,12 @@ export class YargsAdapter implements CommandModule {
     };
     if (command.pager) {
       globalOptions.pager = {
-        describe: 'pipe the output through a pager (e.g. less). auto-enabled for interactive terminals',
+        describe: 'force paging the output through a pager (e.g. less), even if it fits on one screen',
         group: GLOBAL_GROUP,
         type: 'boolean',
       };
       globalOptions['no-pager'] = {
-        describe: 'print all output at once without a pager (default for ai-agents, CI, and piped output)',
+        describe: 'do not use a pager; print all output at once (default for ai-agents, CI, and piped output)',
         group: GLOBAL_GROUP,
         type: 'boolean',
       };

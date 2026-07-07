@@ -22,17 +22,43 @@ export function isInteractiveTerminal(): boolean {
   return true;
 }
 
+// matches ansi SGR color sequences (ESC[...m) so they don't count toward the display width.
+// built dynamically to keep a literal control char out of the source (and out of no-control-regex).
+const ANSI_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
+
+/**
+ * whether the output already fits within the current terminal, in which case there's no reason
+ * to page it (avoids the "press q to exit" annoyance for short output, without relying on the
+ * version-dependent `less -F` behavior which is broken by `-X` in modern less). accounts for line
+ * wrapping and ignores ansi color codes when measuring width. returns false when the terminal size
+ * is unknown.
+ */
+export function fitsOnScreen(output: string): boolean {
+  const { rows, columns } = process.stdout;
+  if (!rows || !columns) return false;
+  const lines = output.replace(/\n$/, '').split('\n');
+  let usedRows = 0;
+  for (const line of lines) {
+    const width = line.replace(ANSI_PATTERN, '').length;
+    usedRows += width === 0 ? 1 : Math.ceil(width / columns);
+    if (usedRows > rows) return false;
+  }
+  return true;
+}
+
 /**
  * decide whether a command's report output should be piped through a pager.
  * mirrors git: on by default for interactive terminals, off for anything else. explicit flags
- * (--pager / --no-pager) and the BIT_NO_PAGER env var override the automatic behavior.
+ * (--pager / --no-pager) and the BIT_NO_PAGER env var override the automatic behavior. in the
+ * automatic case, output that already fits on the screen is printed directly (no pager).
  */
-export function shouldUsePager(command: Command, flags: Flags): boolean {
+export function shouldUsePager(command: Command, flags: Flags, output: string): boolean {
   if (!command.pager) return false; // command didn't opt-in to paging
   if (flags.json) return false; // json is for machine consumption, never page it
   if (flags['no-pager'] || process.env.BIT_NO_PAGER) return false;
-  if (flags.pager) return true; // explicit force-on, even when non-interactive
-  return isInteractiveTerminal();
+  if (flags.pager) return true; // explicit force-on, even when non-interactive / fits on screen
+  if (!isInteractiveTerminal()) return false;
+  return !fitsOnScreen(output); // only page when the output is longer than one screen
 }
 
 /**
@@ -41,9 +67,9 @@ export function shouldUsePager(command: Command, flags: Flags): boolean {
  * caller must write the data directly so nothing is lost.
  *
  * the pager binary is taken from BIT_PAGER, then PAGER, defaulting to `less`. for `less` we set
- * `LESS=FRX` (unless already set): quit if the output fits one screen (-F), keep ansi colors
- * (-R), and don't clear the screen on exit (-X). this means short output behaves exactly as it
- * did before (printed and back to the prompt, no full-screen pager).
+ * `LESS=FRX` (unless already set): keep ansi colors (-R) and don't clear the screen on exit (-X).
+ * short output never reaches here (shouldUsePager filters it out via fitsOnScreen), so the pager
+ * only ever receives output that genuinely exceeds one screen.
  */
 export function writeToPager(data: string): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
