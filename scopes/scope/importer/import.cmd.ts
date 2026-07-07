@@ -297,8 +297,11 @@ without arguments, fetches all workspace components' latest versions from their 
     if (override && merge) {
       throw new BitError('--override and --merge cannot be used together');
     }
-    if (override && writeToEmptyDir) {
-      throw new BitError('--override and --write-to-empty-dir cannot be used together');
+    if (writeToEmptyDir) {
+      // --override deletes the occupied dir to write in place, and --path targets one specific directory; both
+      // contradict --write-to-empty-dir, which relocates elsewhere when the target dir is occupied.
+      if (override) throw new BitError('--override and --write-to-empty-dir cannot be used together');
+      if (path) throw new BitError('--path and --write-to-empty-dir cannot be used together');
     }
     if (!ids.length && dependencies) {
       throw new BitError('you have to specify ids to use "--dependencies" flag');

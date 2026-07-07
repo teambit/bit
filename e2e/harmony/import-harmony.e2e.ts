@@ -192,6 +192,13 @@ describe('import functionality on Harmony', function () {
         );
       });
     });
+    describe('combined with --path', () => {
+      it('should throw an error that the two flags cannot be used together', () => {
+        expect(() =>
+          helper.command.importComponentWithoutInstall('comp1', '--write-to-empty-dir --path some-dir')
+        ).to.throw('--path and --write-to-empty-dir cannot be used together');
+      });
+    });
     describe('with --write-to-empty-dir flag', () => {
       let output: string;
       before(() => {
