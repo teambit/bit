@@ -309,7 +309,7 @@ export class PreviewMain {
   }
 
   private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
-    if (this.envs.isUsingCoreEnv(component)) {
+    if (this.isUsingCoreOrLegacyCoreEnv(component)) {
       return true;
     }
     const envComponent = await this.envs.getEnvComponent(component);
@@ -317,11 +317,22 @@ export class PreviewMain {
   }
 
   private async calculateUseNameParam(component: Component): Promise<boolean> {
-    if (this.envs.isUsingCoreEnv(component)) {
+    if (this.isUsingCoreOrLegacyCoreEnv(component)) {
       return true;
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvUseNameParam(envComponent);
+  }
+
+  /**
+   * envs that used to be core aspects keep their core preview behavior. also, they may not be
+   * installed yet, in which case fetching their env component (getEnvComponent) throws - and this
+   * runs during component load.
+   */
+  private isUsingCoreOrLegacyCoreEnv(component: Component): boolean {
+    if (this.envs.isUsingCoreEnv(component)) return true;
+    const envId = this.envs.getEnvId(component);
+    return this.envs.isLegacyCoreEnv(envId.split('@')[0]);
   }
 
   async generateComponentPreview(
