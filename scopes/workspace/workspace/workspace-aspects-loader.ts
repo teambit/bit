@@ -123,7 +123,13 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     }
     // break circular env chains - if an aspect is already in the process of loading (a parent
     // call in the current chain), don't try to load it again.
-    notLoadedIds = notLoadedIds.filter((id) => !this.workspace.inFlightAspectsLoads.has(id.split('@')[0]));
+    const [inFlightIds, idsToLoad] = partition(notLoadedIds, (id) =>
+      this.workspace.inFlightAspectsLoads.has(id.split('@')[0])
+    );
+    if (inFlightIds.length) {
+      this.logger.debug(`${loggerPrefix} skipping aspects that are already loading: ${inFlightIds.join(', ')}`);
+    }
+    notLoadedIds = idsToLoad;
     if (!notLoadedIds.length) {
       span.setAttribute('alreadyLoaded', true);
       return [];

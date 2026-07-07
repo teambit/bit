@@ -1180,8 +1180,9 @@ if needed, use "bit env set" command to align the env id`;
   public isEnvRegistered(id: string) {
     if (this.envSlot.get(id)) return true;
     // old components use envs that used to be core without a version, while these envs are
-    // registered to the slot with a version once loaded as regular envs.
-    return Boolean(this.getLegacyCoreEnvFromSlot(id));
+    // registered to the slot with a version once loaded as regular envs. these envs are
+    // single-instance, so match ignoring the version (the given id may be versioned as well).
+    return Boolean(this.getLegacyCoreEnvFromSlot(id.split('@')[0]));
   }
 
   isUsingAspectEnv(component: Component): boolean {
