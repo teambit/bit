@@ -185,6 +185,13 @@ describe('import functionality on Harmony', function () {
         expect(() => helper.command.importComponentWithoutInstall('comp1')).to.throw('the directory is not empty');
       });
     });
+    describe('combined with --override', () => {
+      it('should throw an error that the two flags cannot be used together', () => {
+        expect(() => helper.command.importComponentWithoutInstall('comp1', '--write-to-empty-dir --override')).to.throw(
+          '--override and --write-to-empty-dir cannot be used together'
+        );
+      });
+    });
     describe('with --write-to-empty-dir flag', () => {
       let output: string;
       before(() => {

@@ -297,6 +297,9 @@ without arguments, fetches all workspace components' latest versions from their 
     if (override && merge) {
       throw new BitError('--override and --merge cannot be used together');
     }
+    if (override && writeToEmptyDir) {
+      throw new BitError('--override and --write-to-empty-dir cannot be used together');
+    }
     if (!ids.length && dependencies) {
       throw new BitError('you have to specify ids to use "--dependencies" flag');
     }

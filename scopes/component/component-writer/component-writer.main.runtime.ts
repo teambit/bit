@@ -16,7 +16,7 @@ import * as path from 'path';
 import type { MoverMain } from '@teambit/mover';
 import { MoverAspect } from '@teambit/mover';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import type { PathLinuxRelative, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
@@ -318,22 +318,25 @@ to move all component files to a different directory, run bit remove and then bi
    * target directory already belongs to this exact component (so overriding it in place is safe).
    */
   private shouldSkipDirConflictCheck(
+    componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
   ): boolean {
     if (opts.skipWritingToFs) return true;
+    if (!componentMap) return false;
     // no writeToPath: it goes to the default directory. an existing componentMap means the component is not new.
-    if (!opts.writeToPath && componentMap) return true;
-    // writeToPath specified and that directory is already used for that component.
-    return Boolean(opts.writeToPath && componentMap && componentMap.rootDir === opts.writeToPath);
+    if (!opts.writeToPath) return true;
+    // writeToPath specified and that directory is already used for that component. compare against the
+    // normalized componentDirRelative (not the raw opts.writeToPath, which may be absolute/OS-specific).
+    return componentMap.rootDir === componentDirRelative;
   }
 
   private throwErrorWhenDirectoryNotEmpty(
-    componentDirRelative: PathOsBasedAbsolute,
+    componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
   ) {
-    if (this.shouldSkipDirConflictCheck(componentMap, opts)) return;
+    if (this.shouldSkipDirConflictCheck(componentDirRelative, componentMap, opts)) return;
 
     const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
     if (!fs.pathExistsSync(componentDir)) return;
@@ -370,35 +373,43 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     opts: ManyComponentsWriterParams
   ): PathLinuxRelative {
     // when writing is skipped or the dir already belongs to this component, no need to relocate.
-    if (this.shouldSkipDirConflictCheck(componentMap, opts)) return componentDirRelative;
-    if (this.isDirAvailableForImport(componentDirRelative, componentMap)) return componentDirRelative;
+    if (this.shouldSkipDirConflictCheck(componentDirRelative, componentMap, opts)) return componentDirRelative;
+    const unavailableReason = this.getDirUnavailableReason(componentDirRelative, componentMap);
+    if (!unavailableReason) return componentDirRelative;
 
     const existingRootDirs = this.workspace.bitMap.getAllRootDirs();
     let num = 1;
     let candidate = `${componentDirRelative}_${num}`;
-    while (existingRootDirs.includes(candidate) || !this.isDirAvailableForImport(candidate, componentMap)) {
+    while (existingRootDirs.includes(candidate) || this.getDirUnavailableReason(candidate, componentMap)) {
       num += 1;
       candidate = `${componentDirRelative}_${num}`;
     }
     this.logger.consoleWarning(
-      `the directory "${componentDirRelative}" is not empty, importing into "${candidate}" instead`
+      `unable to import into "${componentDirRelative}" (${unavailableReason}), importing into "${candidate}" instead`
     );
     return candidate;
   }
 
   /**
-   * a directory is available for import when it doesn't exist yet, or it's an empty directory that is not already
+   * returns a human-readable reason why the given directory can't be used for import, or undefined when it's
+   * available. a directory is available when it doesn't exist yet, or it's an empty directory that is not already
    * used by another component in the .bitmap file.
    */
-  private isDirAvailableForImport(
+  private getDirUnavailableReason(
     componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined
-  ): boolean {
+  ): string | undefined {
+    // a rootDir may be claimed in .bitmap even when its directory was deleted from the filesystem, so check
+    // .bitmap ownership regardless of whether the directory currently exists on disk.
+    if (!componentMap) {
+      const usedByComponent = this.consumer.bitMap.getComponentIdByRootPath(componentDirRelative);
+      if (usedByComponent) return `it is already used by ${usedByComponent.toString()}`;
+    }
     const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
-    if (!fs.pathExistsSync(componentDir)) return true;
-    if (!componentMap && this.consumer.bitMap.getComponentIdByRootPath(componentDirRelative)) return false;
-    if (!isDir(componentDir)) return false;
-    return isDirEmptySync(componentDir);
+    if (!fs.pathExistsSync(componentDir)) return undefined;
+    if (!isDir(componentDir)) return 'it is a file';
+    if (!isDirEmptySync(componentDir)) return 'the directory is not empty';
+    return undefined;
   }
 
   static slots = [];
