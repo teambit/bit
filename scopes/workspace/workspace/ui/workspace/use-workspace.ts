@@ -8,6 +8,10 @@ import { ComponentID } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';
 
+type UseWorkspaceResult = Omit<ReturnType<typeof useDataQuery>, 'data' | 'previousData'> & {
+  workspace: Workspace | undefined;
+};
+
 type UseWorkspaceOptions = {
   onComponentAdded?: (component: ComponentModel[]) => void;
   onComponentUpdated?: (component: ComponentModel[]) => void;
@@ -186,10 +190,18 @@ function componentKey(id: ComponentIdObj): string {
   return `${id.scope}/${id.name}@${id.version}`;
 }
 
-export function useWorkspace(options: UseWorkspaceOptions = {}) {
+export function useWorkspace(options: UseWorkspaceOptions = {}): UseWorkspaceResult {
   // Light query drives first paint. cache-and-network so a revisit paints instantly from cache,
   // then refreshes in the background (the workspace host otherwise defaults to network-only).
-  const { data, subscribeToMore, loading, ...rest } = useDataQuery(WORKSPACE_LIGHT, {
+  // `previousData` is destructured out (not spread into `...rest`) so the returned shape matches
+  // UseWorkspaceResult, which omits it (along with `data`, replaced by `workspace`).
+  const {
+    data,
+    previousData: _previousData,
+    subscribeToMore,
+    loading,
+    ...rest
+  } = useDataQuery(WORKSPACE_LIGHT, {
     fetchPolicy: 'cache-and-network',
   });
 
