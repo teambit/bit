@@ -400,10 +400,11 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     componentMap: ComponentMap | null | undefined
   ): string | undefined {
     // a rootDir may be claimed in .bitmap even when its directory was deleted from the filesystem, so check
-    // .bitmap ownership regardless of whether the directory currently exists on disk.
-    if (!componentMap) {
-      const usedByComponent = this.consumer.bitMap.getComponentIdByRootPath(componentDirRelative);
-      if (usedByComponent) return `it is already used by ${usedByComponent.toString()}`;
+    // .bitmap ownership regardless of whether the directory currently exists on disk. it's only ok to reuse the
+    // rootDir when it's claimed by the same component we're importing (comparing without version).
+    const usedByComponent = this.consumer.bitMap.getComponentIdByRootPath(componentDirRelative);
+    if (usedByComponent && !(componentMap && usedByComponent.isEqualWithoutVersion(componentMap.id))) {
+      return `it is already used by ${usedByComponent.toString()}`;
     }
     const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
     if (!fs.pathExistsSync(componentDir)) return undefined;
