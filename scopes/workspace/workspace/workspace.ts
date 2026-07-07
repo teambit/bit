@@ -2457,7 +2457,10 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     // latest version (they are configured without a version), which is not the pinned version
     // bit loads, and the env-check may fail on it as its own env is not loaded.
     const isLegacyCoreEnv = this.envs.isLegacyCoreEnv(envId.toStringWithoutVersion());
-    if (verifyEnv && !isLegacyCoreEnv) {
+    // registered envs (e.g. core envs such as the empty env) are known to be envs. fetching their
+    // component here may even fail, e.g. a core env that was never exported.
+    const isRegisteredEnv = this.envs.isEnvRegistered(envId.toStringWithoutVersion());
+    if (verifyEnv && !isLegacyCoreEnv && !isRegisteredEnv) {
       const envComp = await this.get(ComponentID.fromString(envStrWithPossiblyVersion));
       const isEnv = this.envs.isEnv(envComp);
       if (!isEnv) throw new BitError(`the component ${envComp.id.toString()} is not an env`);
