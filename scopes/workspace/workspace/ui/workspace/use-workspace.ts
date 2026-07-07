@@ -8,6 +8,10 @@ import { ComponentID } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';
 
+type UseWorkspaceResult = Omit<ReturnType<typeof useDataQuery>, 'data' | 'previousData'> & {
+  workspace: Workspace | undefined;
+};
+
 type UseWorkspaceOptions = {
   onComponentAdded?: (component: ComponentModel[]) => void;
   onComponentUpdated?: (component: ComponentModel[]) => void;
@@ -127,8 +131,10 @@ const COMPONENT_SERVER_STARTED = gql`
   }
 `;
 
-export function useWorkspace(options: UseWorkspaceOptions = {}) {
-  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
+export function useWorkspace(options: UseWorkspaceOptions = {}): UseWorkspaceResult {
+  // `previousData` is destructured out (not spread into `...rest`) so the returned shape matches
+  // UseWorkspaceResult, which omits it (along with `data`, replaced by `workspace`).
+  const { data, previousData: _previousData, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
   const optionsRef = useLatest(options);
 
   useEffect(() => {
