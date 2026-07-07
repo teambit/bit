@@ -562,16 +562,19 @@ export class DependencyResolverMain {
     const selfRootDir = getRelativeRootComponentDir(
       options.isInWorkspace ? component.id.toStringWithoutVersion() : component.id.toString()
     );
+    // the returned paths are relative to the workspace root, so anchor all the existence checks
+    // to the workspace path rather than relying on process.cwd
+    const existsInWorkspace = (relativeDir: string) => fs.pathExistsSync(join(options.workspacePath, relativeDir));
     // In case the component is it's own root we want to load it from it's own root folder
-    if (fs.pathExistsSync(selfRootDir)) {
+    if (existsInWorkspace(selfRootDir)) {
       const innerDir = join(selfRootDir, 'node_modules', pkgName);
-      if (fs.pathExistsSync(innerDir)) {
+      if (existsInWorkspace(innerDir)) {
         // the roots instance may contain only the source files (e.g. when installed as a file:
         // dependency of another component), while requiring the module needs the compiled dist.
         // prefer the workspace module dir when it has dists and the roots instance doesn't.
-        if (fs.pathExistsSync(join(innerDir, DEFAULT_DIST_DIRNAME))) return innerDir;
+        if (existsInWorkspace(join(innerDir, DEFAULT_DIST_DIRNAME))) return innerDir;
         const rootModulePath = this.getModulePath(component);
-        if (fs.pathExistsSync(join(rootModulePath, DEFAULT_DIST_DIRNAME))) return rootModulePath;
+        if (existsInWorkspace(join(rootModulePath, DEFAULT_DIST_DIRNAME))) return rootModulePath;
         return innerDir;
       }
       // sometime for the env itself we don't have the env package in the env root dir, because it was hoisted
@@ -588,7 +591,7 @@ export class DependencyResolverMain {
         `getRuntimeModulePath: failed getting the env root dir of ${component.id.toString()} (pkg: ${pkgName}), falling back to the root node_modules. error: ${err.message}`
       );
     }
-    if (dirInEnvRoot && fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
+    if (dirInEnvRoot && existsInWorkspace(dirInEnvRoot)) return dirInEnvRoot;
     return this.getModulePath(component);
   }
 
