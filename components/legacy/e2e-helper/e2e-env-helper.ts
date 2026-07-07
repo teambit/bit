@@ -32,6 +32,14 @@ const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
  */
 const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1042';
 
+/**
+ * the env configured on old-format aspect-style env fixtures (see setBabelWithTsHarmony). it used
+ * to be a core aspect, now its package must be installed for the fixture env to be loaded.
+ * the node env is a runtime dependency of the aspect env and must be installed at the root as
+ * well for the aspect env to load.
+ */
+const ASPECT_ENV_PACKAGES = ['@teambit/aspect@1.0.1042', '@teambit/node@1.0.1042'];
+
 export const ENV_POLICY = {
   peers: [
     {
@@ -157,7 +165,7 @@ export default class EnvHelper {
         },
       },
     });
-    this.command.install();
+    this.command.install([...ASPECT_ENV_PACKAGES, ...this.getFixtureEnvBasePackages(EXTENSIONS_BASE_FOLDER)].join(' '));
     this.command.compile();
     return EXTENSIONS_BASE_FOLDER;
   }

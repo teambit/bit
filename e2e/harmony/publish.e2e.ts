@@ -22,6 +22,7 @@ describe('publish functionality', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
+      helper.env.setNodeEnv();
       appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
