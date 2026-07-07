@@ -419,9 +419,12 @@ export class InstallMain {
     const prevManifests = new Set<string>();
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
-    const linkedDependencies = {
-      [this.workspace.path]: linkedRootDeps,
-    };
+    // pnpm's hoisted resolver traverses the link: entries together with the real dependency graph,
+    // which explodes the memory when a big dependency tree is installed alongside them (e.g. an
+    // env that used to be a core aspect). don't pass the links to the resolution - they are
+    // re-created right after each install instead (see restoreLinkedRootDepsAfterHoistedInstall).
+    const isHoistedLinker = this.dependencyResolver.nodeLinker() === 'hoisted';
+    const linkedDependencies = isHoistedLinker ? {} : { [this.workspace.path]: linkedRootDeps };
     const compDirMap = await this.getComponentsDirectory([]);
     let installCycle = 0;
     let hasMissingLocalComponents = true;
@@ -455,6 +458,15 @@ export class InstallMain {
         throw this.enrichUnpublishedSnapDepError(err, current.componentDirectoryMap.components);
       }
       const { dependenciesChanged } = installResult;
+      if (isHoistedLinker) {
+        // the hoisted install got no link: entries (see above), so pnpm may have pruned the
+        // core-aspect links or installed published copies over them. restore the links before
+        // anything (e.g. compilation) requires the linked packages.
+        await createLinks(this.workspace.path, linkedRootDeps, {
+          avoidHardLink: true,
+          skipIfSymlinkValid: true,
+        });
+      }
       this.workspace.inInstallAfterPmContext = true;
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
