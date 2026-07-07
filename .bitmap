@@ -1519,7 +1519,13 @@
         "scope": "teambit.workspace",
         "version": "0.0.264",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/scripts"
+        "rootDir": "scopes/workspace/scripts",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.1.7": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "sidebar": {
         "name": "sidebar",
