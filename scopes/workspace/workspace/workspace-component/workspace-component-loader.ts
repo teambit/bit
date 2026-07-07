@@ -270,6 +270,17 @@ export class WorkspaceComponentLoader {
           nameOnlyLegacyEnvExtensions.add(ext.stringId);
         }
       });
+      // the env may be configured only via the envs config (`teambit.envs/envs: { env: ... }`)
+      // without an extension entry of its own (e.g. generated env templates). the cached envId is
+      // computed only when extensions are loaded, so fall back to the raw envs config. collect it
+      // as well, so it gets loaded before the components that use it.
+      const envIdFromEnvsConfig = fromCache.extensions.findCoreExtension(EnvsAspect.id)?.config?.env as
+        | string
+        | undefined;
+      const envIdFromCache = fromCache.envId || envIdFromEnvsConfig;
+      if (envIdFromCache && !envIdFromCache.includes('@') && this.envs.isLegacyCoreEnv(envIdFromCache)) {
+        nameOnlyLegacyEnvExtensions.add(envIdFromCache);
+      }
     });
     await Promise.all(
       Array.from(nameOnlyLegacyEnvExtensions).map(async (envIdStr) => {
