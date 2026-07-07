@@ -815,20 +815,19 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 
-    if (generator)
-      generator.registerComponentTemplate(() => [
-        componentGeneratorTemplate,
-        componentGeneratorTemplateStandalone,
-        starterTemplate,
-        starterTemplateStandalone,
-      ]);
-    generator.registerWorkspaceTemplate(() => [BasicWorkspaceStarter]);
-
-    // templates and starters for creating aspects and harmony workspaces (used to be registered
-    // by teambit.harmony/aspect when it was a core aspect).
+    // the slot is keyed by the registering aspect, so all generator-own templates must be
+    // registered in a single call - a second call would overwrite the first.
+    // the builtin templates/starters used to be registered by teambit.harmony/aspect when it was
+    // a core aspect.
     const envContext = new EnvContext(ComponentID.fromString(GeneratorAspect.id), loggerMain, workerMain, harmony);
-    generator.registerComponentTemplate(() => getBuiltinTemplates(envContext));
-    generator.registerWorkspaceTemplate(() => getBuiltinStarters(envContext));
+    generator.registerComponentTemplate(() => [
+      componentGeneratorTemplate,
+      componentGeneratorTemplateStandalone,
+      starterTemplate,
+      starterTemplateStandalone,
+      ...getBuiltinTemplates(envContext),
+    ]);
+    generator.registerWorkspaceTemplate(() => [BasicWorkspaceStarter, ...getBuiltinStarters(envContext)]);
 
     return generator;
   }
