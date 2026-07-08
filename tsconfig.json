@@ -5,6 +5,18 @@
     "emitDecoratorMetadata": true,
     "strict": true,
     "moduleResolution": "node",
+    // TS6 flags classic `node` (node10) resolution as a deprecation error (TS5107).
+    // Silence it to keep this repo-wide `tsc --noEmit` check on the resolution semantics
+    // it has always used (resolve to `main`/`types` = dist, ignoring `exports` maps).
+    // Switching to `bundler`/`nodenext` here would honor `exports` and surface
+    // source-vs-dist duplicate-identity noise across installed @teambit packages.
+    // node10 keeps functioning through TS6; revisit before TS7 removes it.
+    "ignoreDeprecations": "6.0",
+    // TS6 no longer auto-includes node_modules/@types. `@types/node` still loads
+    // program-wide because node builtins are imported across the repo, but `jest`
+    // globals are only ever used ambiently (never imported), so pin the two ambient
+    // type packages this repo-wide check needs.
+    "types": ["node", "jest"],
     "module": "commonjs",
     "target": "es2015",
     "skipLibCheck": true,
@@ -19,7 +31,8 @@
   "include": [
     "scopes",
     "e2e",
-    "components"
+    "components",
+    "ts-ambient.d.ts"
   ],
   "exclude": [
     "node_modules",
