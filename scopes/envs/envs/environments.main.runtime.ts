@@ -288,12 +288,26 @@ export class EnvsMain {
   /**
    * find an env in the slot by matching the id while ignoring the version.
    * needed for legacy core envs: old components use them without a version, but once loaded (as
-   * regular envs) they are registered to the slot with a version, so exact lookups fail.
+   * regular envs) they are registered to the slot with a version, so exact lookups fail. also
+   * used for regular envs referenced without a version (e.g. workspace envs in envs-config).
+   * multiple versions of the same env may be registered - pick the highest one deterministically
+   * (rather than relying on registration order) and warn, so ambiguity is visible.
    */
   private getEnvFromSlotIgnoreVersion(envIdWithoutVersion: string): EnvDefinition | undefined {
-    const found = this.envSlot.toArray().find(([envId]) => envId.split('@')[0] === envIdWithoutVersion);
-    if (!found) return undefined;
-    const [envId, env] = found;
+    const matches = this.envSlot.toArray().filter(([envId]) => envId.split('@')[0] === envIdWithoutVersion);
+    if (!matches.length) return undefined;
+    if (matches.length > 1) {
+      // sort descending by the version part so the pick is deterministic
+      matches.sort(([a], [b]) =>
+        (b.split('@')[1] || '').localeCompare(a.split('@')[1] || '', undefined, { numeric: true })
+      );
+      this.logger.warn(
+        `multiple versions of env "${envIdWithoutVersion}" are registered (${matches
+          .map(([id]) => id)
+          .join(', ')}), a versionless reference resolves to "${matches[0][0]}"`
+      );
+    }
+    const [envId, env] = matches[0];
     return new EnvDefinition(envId, env);
   }
 
@@ -536,9 +550,9 @@ export class EnvsMain {
 
     // the env may be registered to the slot with a version while the component references it
     // without one and without an extension entry holding the version (e.g. a config coming from
-    // a lane merge). envs are single-instance per process, so match ignoring the version.
-    const versionlessSlotMatch = this.envSlot.toArray().find(([envId]) => envId.split('@')[0] === envIdFromEnvData);
-    if (versionlessSlotMatch) return versionlessSlotMatch[0];
+    // a lane merge). match ignoring the version.
+    const versionlessSlotMatch = this.getEnvFromSlotIgnoreVersion(envIdFromEnvData);
+    if (versionlessSlotMatch) return versionlessSlotMatch.id;
 
     if (!withVersion) throw new EnvNotConfiguredForComponent(envIdFromEnvData, component.id.toString());
     return withVersion.toString();
@@ -1179,9 +1193,9 @@ if needed, use "bit env set" command to align the env id`;
       // the env may be registered to the slot with a version (envs loaded as components register
       // versioned) while the config references it without one (the standard form for workspace
       // envs). envs are single-instance per process, so match ignoring the version.
-      const found = this.envSlot.toArray().find(([id]) => id.split('@')[0] === envId);
+      const found = this.getEnvFromSlotIgnoreVersion(envId);
       if (found) {
-        return new EnvDefinition(found[0], found[1] as Environment);
+        return found;
       }
     }
     return undefined;
