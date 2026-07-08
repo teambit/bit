@@ -224,8 +224,13 @@ commands:
     steps:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      - run: bvm upgrade
-      # - run: bvm install 1.13.240
+      # TEMP(exports-regression experiment): pin bbit to the known-broken 2.0.10 instead of
+      # `bvm upgrade` (which installs the latest, already-fixed release). Goal: verify whether the
+      # existing e2e suite, run against the released binary, catches the exports.types->source
+      # regression. Revert this block (restore `bvm upgrade`) once the experiment concludes.
+      - run: bvm install 2.0.10
+      - run: bvm use 2.0.10
+      # - run: bvm upgrade
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -846,7 +851,7 @@ jobs:
       - install_bvm
       - bvm_upgrade
       - e2e_test_cmd:
-         bit_bin: "--bin_bit=bbit"
+         bit_bin: "--bit_bin=bbit"
 
   # setup job: creates cleaned bit bundle and persists to workspace (runs once)
   setup_bundle_simulation:
@@ -898,7 +903,7 @@ jobs:
           name: verify cleaned binary works
           command: source $BASH_ENV && bit-cleaned --version
       - e2e_test_cmd:
-          bit_bin: "--bin_bit=bit-cleaned"
+          bit_bin: "--bit_bin=bit-cleaned"
 
   # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
   # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
@@ -1375,6 +1380,15 @@ workflows:
       - e2e_test:
           requires:
             - setup_harmony
+      # TEMP(exports-regression experiment): run the full e2e suite against the released binary
+      # (bbit, pinned to 2.0.10 in bvm_upgrade) on this PR branch, to see whether it catches the
+      # exports.types->source regression. Not run on master. Remove after the experiment.
+      - e2e_test_bbit:
+          requires:
+            - setup_harmony
+          filters:
+            branches:
+              ignore: master
       - setup_bundle_simulation:
           filters:
             branches:
