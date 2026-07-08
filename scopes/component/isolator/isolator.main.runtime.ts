@@ -1500,6 +1500,7 @@ export class IsolatorMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
     }
+    // @ts-ignore capsule build can resolve two copies of @teambit/component.sources (peer variant), yielding a spurious TS2345 on PackageJsonFile; not reproducible in local tsc
     await PackageJsonTransformer.applyTransformers(component, packageJson);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
