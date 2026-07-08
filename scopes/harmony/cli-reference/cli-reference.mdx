@@ -1204,6 +1204,7 @@ without arguments, fetches all workspace components' latest versions from their 
 | `--include-deprecated`           |                  | when importing with patterns, include deprecated components (default to exclude them)                                                                                               |
 | `--lane-only`                    |                  | when using wildcards on a lane, only import components that exist on the lane (never from main)                                                                                     |
 | `--owner`                        |                  | treat the argument as an owner name and import all components from all scopes of that owner                                                                                         |
+| `--write-to-empty-dir`           |                  | when the target directory is not empty, import into an available empty directory (e.g. "foo" => "foo_1") instead of failing                                                         |
 
 ---
 
