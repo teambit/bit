@@ -47,15 +47,18 @@ describe('tsconfig env mismatch between check-types and build', function () {
           compilerOptions: {
             lib: ['es2019', 'DOM', 'ES6', 'DOM.Iterable'],
             target: 'es2015',
-            module: 'commonjs',
             jsx: 'react',
             declaration: true,
             sourceMap: true,
             skipLibCheck: true,
-            moduleResolution: 'node',
+            // `node` (node10) is a hard TS5107 deprecation error since typescript-compiler 3.x / TS6,
+            // and `bundler` with a CJS module is rejected by TS5 readers (TS5095). NodeNext works on both.
+            module: 'nodenext',
+            moduleResolution: 'nodenext',
             esModuleInterop: true,
             outDir: './dist',
-            // No strict mode - permissive
+            // explicit false: TS6 defaults `strict` to true, so "no strict" must be opted out
+            strict: false,
           },
           exclude: ['artifacts', 'public', 'dist', 'node_modules'],
         },
@@ -69,12 +72,14 @@ describe('tsconfig env mismatch between check-types and build', function () {
           compilerOptions: {
             lib: ['es2019', 'DOM', 'ES6', 'DOM.Iterable'],
             target: 'es2015',
-            module: 'commonjs',
             jsx: 'react',
             declaration: true,
             sourceMap: true,
             skipLibCheck: true,
-            moduleResolution: 'node',
+            // `node` (node10) is a hard TS5107 deprecation error since typescript-compiler 3.x / TS6,
+            // and `bundler` with a CJS module is rejected by TS5 readers (TS5095). NodeNext works on both.
+            module: 'nodenext',
+            moduleResolution: 'nodenext',
             esModuleInterop: true,
             outDir: './dist',
             strict: true, // Strict mode enabled
