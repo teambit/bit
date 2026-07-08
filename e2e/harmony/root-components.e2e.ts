@@ -3,7 +3,7 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting, NODE_ENV_HOISTED_PEERS } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 
 chai.use(chaiFs);
@@ -907,7 +907,9 @@ module.exports.default = {
         },
       });
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
-      helper.command.install('@teambit/node@1.0.1042');
+      // yarn doesn't auto-install the peers of the env package (NODE_ENV_HOISTED_PEERS), so
+      // install them explicitly, otherwise the env fails to load
+      helper.command.install(`@teambit/node@1.0.1042 ${NODE_ENV_HOISTED_PEERS}`);
       // second install to apply the env dependency policies (see the comment in the pnpm variant)
       helper.command.install();
     });

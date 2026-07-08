@@ -1,6 +1,12 @@
 import chai, { expect } from 'chai';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import {
+  Helper,
+  DEFAULT_OWNER,
+  NpmCiRegistry,
+  supportNpmCiRegistryTesting,
+  NODE_ENV_HOISTED_PEERS,
+} from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
@@ -22,7 +28,8 @@ describe('publish functionality', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
-      helper.env.setNodeEnv();
+      // yarn doesn't auto-install the peers of the env package, so install them explicitly
+      helper.env.setNodeEnv('*', NODE_ENV_HOISTED_PEERS);
       appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();

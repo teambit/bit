@@ -33,6 +33,13 @@ const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
 const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1042';
 
 /**
+ * peers required by the published legacy env packages (via @teambit/cloud UI hooks) that yarn's
+ * hoisted linker doesn't auto-install (pnpm auto-installs peers). without them the env fails to
+ * load under yarn with "Cannot find module '@apollo/client'".
+ */
+export const NODE_ENV_HOISTED_PEERS = '@apollo/client@3.14.1';
+
+/**
  * the env configured on old-format aspect-style env fixtures (see setBabelWithTsHarmony). it used
  * to be a core aspect, now its package must be installed for the fixture env to be loaded.
  * the node env is a runtime dependency of the aspect env and must be installed at the root as
@@ -188,10 +195,12 @@ export default new EmptyEnv();
    * set the legacy `teambit.harmony/node` env on the given variant and install its package.
    * this env used to be a core aspect so no installation was needed, now it must be installed
    * (with the version pinned in legacy-core-envs.ts, see FIXTURE_ENV_BASE_PACKAGES).
+   * `extraPackages` is for peers the env package needs but the package manager doesn't
+   * auto-install (see NODE_ENV_HOISTED_PEERS for yarn).
    */
-  setNodeEnv(variantPattern = '*') {
+  setNodeEnv(variantPattern = '*', extraPackages = '') {
     this.extensions.addExtensionToVariant(variantPattern, 'teambit.harmony/node', {});
-    this.command.install(FIXTURE_ENV_BASE_PACKAGES['@teambit/node']);
+    this.command.install(`${FIXTURE_ENV_BASE_PACKAGES['@teambit/node']} ${extraPackages}`.trim());
     // the env is loaded only at the end of the first install. run a second install so its
     // dependency policies (e.g. @types/jest as a dev dep) are applied to the components - the
     // standard flow for old-style envs (see the "run bit install again" suggestion).

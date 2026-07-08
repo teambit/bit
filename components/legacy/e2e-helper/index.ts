@@ -43,5 +43,5 @@ export {
 };
 
 export { Helper, FileStatusWithoutChalk } from './e2e-helper';
-export { ENV_POLICY } from './e2e-env-helper';
+export { ENV_POLICY, NODE_ENV_HOISTED_PEERS } from './e2e-env-helper';
 export { NpmCiRegistry, supportNpmCiRegistryTesting } from './npm-ci-registry';
