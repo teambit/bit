@@ -33,7 +33,9 @@ export function isInteractiveTerminal(): boolean {
 export function fitsOnScreen(output: string): boolean {
   const { rows, columns } = process.stdout;
   if (!rows || !columns) return false;
-  const lines = output.replace(/\n$/, '').split('\n');
+  // split at most rows+1 lines — enough to prove overflow — so the array never scales with the
+  // full (potentially huge) output; the loop below also early-exits once one screen is exceeded.
+  const lines = output.replace(/\n$/, '').split('\n', rows + 1);
   let usedRows = 0;
   for (const line of lines) {
     const width = (removeChalkCharacters(line) || '').length;
@@ -81,10 +83,13 @@ function parsePagerCommand(pager: string): string[] {
  */
 export function writeToPager(data: string): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
-    const configuredPager = process.env.BIT_PAGER || process.env.PAGER;
-    const [cmd, ...args] = parsePagerCommand(configuredPager || 'less');
+    // BIT_PAGER wins over PAGER; default to `less` only when neither is set. use `??` (not `||`)
+    // so an explicit empty string is preserved rather than treated as unset — that lets
+    // BIT_PAGER="" disable paging.
+    const configuredPager = process.env.BIT_PAGER ?? process.env.PAGER ?? 'less';
+    const [cmd, ...args] = parsePagerCommand(configuredPager);
     if (!cmd || cmd === 'cat') {
-      resolve(false); // paging effectively disabled by the user (empty / "cat" pager)
+      resolve(false); // paging disabled by the user (empty / "cat" pager)
       return;
     }
     const env = { ...process.env };
