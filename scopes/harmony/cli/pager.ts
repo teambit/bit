@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import { basename } from 'path';
 import { logger } from '@teambit/legacy.logger';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import type { Command, Flags } from './command';
@@ -109,7 +110,8 @@ export function writeToPager(data: string, force = false): Promise<boolean> {
     }
     const [cmd, ...args] = disabled ? ['less'] : tokens;
     const env = { ...process.env };
-    if (!env.LESS) env.LESS = 'FRX';
+    // LESS=FRX only makes sense for `less` itself; don't leak it into other pagers or wrapper scripts.
+    if (/^less(\.exe)?$/i.test(basename(cmd)) && !env.LESS) env.LESS = 'FRX';
 
     try {
       const child = spawn(cmd, args, { stdio: ['pipe', 'inherit', 'inherit'], env });
