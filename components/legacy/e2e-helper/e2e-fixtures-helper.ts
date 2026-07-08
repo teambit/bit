@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import { capitalize } from 'lodash';
 import * as path from 'path';
-import tar from 'tar';
+import * as tar from 'tar';
 
 import * as fixtures from './fixtures';
 import type CommandHelper from './e2e-command-helper';
