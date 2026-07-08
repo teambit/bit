@@ -504,14 +504,14 @@ export class InstallMain {
 
       if (!oldNonLoadedEnvs.length) break;
       prevManifests.add(manifestsHash(current.manifests));
-      // If we run compile we do the clear cache before the compilation so no need to clean it again (it's an expensive
-      // operation)
-      if (!cacheCleared && shouldClearCacheOnInstall) {
-        // We need to clear cache before creating the new component manifests.
-        // this.workspace.consumer.componentLoader.clearComponentsCache();
-        // We don't want to clear the failed to load envs because we want to show the warning at the end
-        await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
-      }
+      // the components' dependencies data was calculated when their envs were not loaded yet, so
+      // the env dependency policies are missing from the (filesystem) dependencies cache. delete
+      // it, and clear the in-memory cache as well - even when it was cleared before the compile
+      // phase, the compilation re-populated it from the then-stale filesystem cache. the next
+      // manifests calculation then re-computes the dependencies with the now-loaded envs.
+      await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
+      // We don't want to clear the failed to load envs because we want to show the warning at the end
+      await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
@@ -1018,10 +1018,12 @@ export class InstallMain {
     // re-calculates the component manifests with their dependency policies once they are loadable.
     const nonLoadedLegacyEnvs = envsWithoutManifest.filter((envId) => {
       const envIdWithoutVersion = envId.split('@')[0];
-      // ignore legacy envs with no pinned version (removed from the core long ago, nothing to
-      // install) - suggesting another install for them would never converge.
-      if (!getPinnedLegacyCoreEnvVersion(envIdWithoutVersion)) return false;
-      return !this.envs.isEnvRegistered(envId);
+      if (this.envs.isEnvRegistered(envId)) return false;
+      if (getPinnedLegacyCoreEnvVersion(envIdWithoutVersion)) return true;
+      // old-style (no env.jsonc) envs that are workspace components fail to load quietly as well
+      // during install (missing-module errors are suppressed in the install context). count them
+      // so the manifests are re-calculated with their dependency policies once they are loadable.
+      return this.workspace.listIds().some((id) => id.toStringWithoutVersion() === envIdWithoutVersion);
     });
     const oldNonLoadedEnvs = intersection([...nonLoadedEnvs, ...nonLoadedLegacyEnvs], envsWithoutManifest);
     this.oldNonLoadedEnvs = oldNonLoadedEnvs;
