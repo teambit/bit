@@ -842,6 +842,8 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # gate for released-binary-only e2e tests (see e2e/harmony/released-bit-core-exports.e2e.ts)
+      E2E_RELEASED_BINARY: "true"
     parallelism: 32
     steps:
       - attach_workspace:
@@ -850,6 +852,13 @@ jobs:
       - restore_common_caches
       - install_bvm
       - bvm_upgrade
+      # Fail fast if the released bundle ships any @teambit package whose exports.types points at
+      # source (.ts) instead of dist/*.d.ts — that breaks clients whose envs type-check it.
+      - run:
+          name: verify released bundle has no source-pointing exports.types
+          command: |
+            BV=$(bbit --version | tr -d '[:space:]')
+            node bit/scripts/verify-released-exports.js "$HOME/.bvm/versions/$BV/bit-$BV/node_modules/@teambit"
       - e2e_test_cmd:
          bit_bin: "--bit_bin=bbit"
 
