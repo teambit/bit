@@ -29,7 +29,8 @@ const LEGACY_CORE_ENVS_IDS = [...Object.keys(LEGACY_CORE_ENVS_VERSIONS), ...OLDE
 const LEGACY_CORE_ENVS_IDS_SET = new Set(LEGACY_CORE_ENVS_IDS);
 
 export function getLegacyCoreEnvsIds(): string[] {
-  return LEGACY_CORE_ENVS_IDS;
+  // return a copy so callers can't mutate the module-level list
+  return [...LEGACY_CORE_ENVS_IDS];
 }
 
 export function isLegacyCoreEnv(envIdWithoutVersion: string): boolean {
