@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { compact } from 'lodash';
-import tar from 'tar';
+import * as tar from 'tar';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { defaultErrorHandler } from '@teambit/cli';
