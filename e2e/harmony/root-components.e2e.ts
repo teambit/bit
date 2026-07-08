@@ -1426,7 +1426,13 @@ module.exports.default = {
         },
       },
     });
-    helper.command.install('react@16.6.3');
+    // the aspect env used to be a core aspect, now its package (and its env chain) must be
+    // installed for the env to load and provide its peers policy. install it before tagging so
+    // the tagged models capture the env peers (the scope-capsule installs below rely on them).
+    helper.command.install('react@16.6.3 @teambit/aspect@1.0.1042 @teambit/react@1.0.1042 @teambit/node@1.0.1042');
+    // the env is loaded only at the end of the first install; run another install so its
+    // dependency policies are applied to the components before the tag.
+    helper.command.install();
     helper.command.tagAllComponents();
     helper.command.export();
 
