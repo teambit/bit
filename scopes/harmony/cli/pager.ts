@@ -11,6 +11,13 @@ import type { Command, Flags } from './command';
 const AI_AGENT_ENV_VARS = ['CLAUDECODE', 'CLAUDE_CODE', 'CURSOR_AGENT'];
 
 /**
+ * an env var counts as "set" when it's present at all, even if its value is an empty string. the
+ * vars we gate on (CI, ai-agent markers, BIT_NO_PAGER) are opt-outs, so presence — not truthiness —
+ * is what disables paging; this also matches automation runners that inject empty-string values.
+ */
+const isEnvSet = (name: string): boolean => process.env[name] !== undefined;
+
+/**
  * detect whether the output is going to an interactive human terminal.
  * anything non-interactive (piped output, CI, ai-agents, bit-cli-server) gets the full output
  * with no pager.
@@ -18,9 +25,8 @@ const AI_AGENT_ENV_VARS = ['CLAUDECODE', 'CLAUDE_CODE', 'CURSOR_AGENT'];
 export function isInteractiveTerminal(): boolean {
   if (!process.stdout.isTTY) return false;
   if (logger.isDaemon) return false; // bit-cli-server: output travels over IPC, not a terminal
-  if (process.env.CI) return false;
-  // presence-based, not truthiness: an agent that sets one of these to "" should still disable paging.
-  if (AI_AGENT_ENV_VARS.some((name) => process.env[name] !== undefined)) return false;
+  if (isEnvSet('CI')) return false;
+  if (AI_AGENT_ENV_VARS.some(isEnvSet)) return false;
   return true;
 }
 
@@ -59,7 +65,7 @@ export function shouldUsePager(command: Command, flags: Flags, output: string): 
   // single invocation even when the user exports BIT_NO_PAGER globally.
   if (flags['no-pager']) return false;
   if (flags.pager) return true; // explicit force-on, even when non-interactive / fits on screen
-  if (process.env.BIT_NO_PAGER) return false; // env opt-out (overridable by --pager above)
+  if (isEnvSet('BIT_NO_PAGER')) return false; // env opt-out (overridable by --pager above)
   if (!isInteractiveTerminal()) return false;
   return !fitsOnScreen(output); // only page when the output is longer than one screen
 }
