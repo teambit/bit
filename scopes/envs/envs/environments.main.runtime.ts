@@ -1110,6 +1110,9 @@ if needed, use "bit env set" command to align the env id`;
     const envId = await pLocate(ids, async (id) => {
       const idWithoutVersion = id.split('@')[0];
       if (isLegacyCoreEnvId(idWithoutVersion)) return true;
+      // core envs (e.g. the default empty-env) are core aspects too - recognize them as envs
+      // before the core-aspect skip below.
+      if (this.isCoreEnv(idWithoutVersion)) return true;
       if (this.isCoreAspect(idWithoutVersion)) return false;
       const envDef = this.getEnvDefinitionByStringId(id);
       if (envDef) return true;
