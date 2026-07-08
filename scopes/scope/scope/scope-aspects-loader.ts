@@ -120,7 +120,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts: {
       packageManagerConfigRootDir?: string;
       workspaceName?: string;
-      loadCustomEnvs?: string;
+      loadCustomEnvs?: boolean;
     } = {}
   ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
@@ -159,7 +159,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts: {
       packageManagerConfigRootDir?: string;
       workspaceName?: string;
-      loadCustomEnvs?: string;
+      loadCustomEnvs?: boolean;
     } = {}
   ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     const optsWithDefaults = { loadCustomEnvs: false, ...opts };
