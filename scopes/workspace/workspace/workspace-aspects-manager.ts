@@ -30,7 +30,7 @@ export class WorkspaceAspectsManager {
       return this.workspace.idsByPattern(pattern);
     };
     const componentIds = await getIds();
-    const results = {};
+    const results: { [component: string]: AspectSource[] } = {};
     await Promise.all(
       componentIds.map(async (id) => {
         const aspectSources = await this.getAspectNamesForComponent(id);
