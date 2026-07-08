@@ -718,12 +718,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
 
   /**
    * the compiled main file of the component inside `localPath`, if it exists.
-   * (e.g. `<localPath>/dist/index.js` for an `index.ts` main file).
+   * (e.g. `<localPath>/dist/index.js` for an `index.ts` main file). best effort - a miss just
+   * means the caller keeps the original require error.
    */
   private getDistMain(component: Component, localPath: string): string | undefined {
     const mainFile = component.state._consumer.mainFile;
     if (!mainFile) return undefined;
-    const distMain = join(localPath, 'dist', mainFile.replace(/\.(ts|tsx)$/, '.js'));
+    const distMain = join(localPath, 'dist', mainFile.replace(/\.(ts|tsx|mts|cts|jsx)$/, '.js'));
     return fs.pathExistsSync(distMain) ? distMain : undefined;
   }
 
