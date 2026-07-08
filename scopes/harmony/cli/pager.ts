@@ -54,8 +54,11 @@ export function fitsOnScreen(output: string): boolean {
 export function shouldUsePager(command: Command, flags: Flags, output: string): boolean {
   if (!command.pager) return false; // command didn't opt-in to paging
   if (flags.json) return false; // json is for machine consumption, never page it
-  if (flags['no-pager'] || process.env.BIT_NO_PAGER) return false;
+  // explicit CLI flags win over the BIT_NO_PAGER env var, so `--pager` can force paging for a
+  // single invocation even when the user exports BIT_NO_PAGER globally.
+  if (flags['no-pager']) return false;
   if (flags.pager) return true; // explicit force-on, even when non-interactive / fits on screen
+  if (process.env.BIT_NO_PAGER) return false; // env opt-out (overridable by --pager above)
   if (!isInteractiveTerminal()) return false;
   return !fitsOnScreen(output); // only page when the output is longer than one screen
 }
