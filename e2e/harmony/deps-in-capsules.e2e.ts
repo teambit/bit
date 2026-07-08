@@ -20,7 +20,6 @@ chai.use(chaiString);
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setWorkspaceWithRemoteScope();
-    helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
     npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -28,6 +27,9 @@ chai.use(chaiString);
     envId1 = `${helper.scopes.remote}/${envName1}`;
     envName2 = helper.env.setCustomEnv('node-env-2');
     envId2 = `${helper.scopes.remote}/${envName2}`;
+    // set yarn only after setCustomEnv - installing the legacy env chain under yarn materializes
+    // the scope-aspect capsules as full copies (no store/hardlinks) and gets OOM-killed on CI
+    helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
     helper.command.install('lodash.get lodash.flatten');
     helper.command.compile();
     helper.command.tagAllComponents();

@@ -23,8 +23,10 @@ describe('dev files', function () {
     const COMP_NAME = 'custom-dev-files';
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       envName = helper.env.setCustomEnv(ENV_NAME);
+      // set yarn only after setCustomEnv - installing the legacy env chain under yarn materializes
+      // the scope-aspect capsules as full copies (no store/hardlinks) and gets OOM-killed on CI
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       envId = `${helper.scopes.remote}/${envName}`;
       // helper.fixtures.createComponentBarFoo();
       helper.fixtures.copyFixtureComponents(COMP_NAME);
