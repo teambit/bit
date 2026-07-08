@@ -123,9 +123,15 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       notLoadedIds = nonLocalAspects.filter((id) => !this.isAspectLoadedInclLegacyEnvs(id));
     }
     // break circular env chains - if an aspect is already in the process of loading (a parent
-    // call in the current chain), don't try to load it again.
+    // call in the current chain), don't try to load it again. legacy core envs are single-instance
+    // so any version of them matches; other aspects are keyed with their version - a nested chain
+    // may legitimately need a different version of an already-loading aspect.
+    const inFlightKey = (id: string) => {
+      const idWithoutVersion = id.split('@')[0];
+      return this.envs.isLegacyCoreEnv(idWithoutVersion) ? idWithoutVersion : id;
+    };
     const [inFlightIds, idsToLoad] = partition(notLoadedIds, (id) =>
-      this.workspace.inFlightAspectsLoads.has(id.split('@')[0])
+      this.workspace.inFlightAspectsLoads.has(inFlightKey(id))
     );
     if (inFlightIds.length) {
       this.logger.debug(`${loggerPrefix} skipping aspects that are already loading: ${inFlightIds.join(', ')}`);
@@ -135,7 +141,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       span.setAttribute('alreadyLoaded', true);
       return [];
     }
-    const inFlightAdded = notLoadedIds.map((id) => id.split('@')[0]);
+    const inFlightAdded = notLoadedIds.map(inFlightKey);
     inFlightAdded.forEach((id) => this.workspace.inFlightAspectsLoads.add(id));
     try {
       return await this.loadAspectsAfterInFlightCheck(notLoadedIds, span, neededFor, mergedOpts, loggerPrefix);

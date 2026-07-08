@@ -129,9 +129,15 @@ needed-for: ${neededFor || '<unknown>'}`);
     // break re-entrant load cycles: an aspect's manifest deps (or its env) may lead back to an
     // aspect that a parent call in the current chain is already loading - the nested calls start
     // with a fresh `visited` list, so without this guard such cycles never converge (same
-    // approach as the workspace-side inFlightAspectsLoads).
+    // approach as the workspace-side inFlightAspectsLoads). legacy core envs are single-instance
+    // so any version of them matches; other aspects are keyed with their version - a nested chain
+    // may legitimately need a different version of an already-loading aspect.
+    const inFlightKey = (id: string) => {
+      const idWithoutVersion = id.split('@')[0];
+      return this.envs.isLegacyCoreEnv(idWithoutVersion) ? idWithoutVersion : id;
+    };
     const [inFlightIds, idsToLoad] = partition(nonVisitedId, (id) =>
-      this.scope.inFlightAspectLoads.has(id.split('@')[0])
+      this.scope.inFlightAspectLoads.has(inFlightKey(id))
     );
     if (inFlightIds.length) {
       this.logger.debug(
@@ -142,7 +148,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (!nonVisitedId.length) {
       return { manifests: [], potentialPluginsIds: [] };
     }
-    const inFlightAdded = nonVisitedId.map((id) => id.split('@')[0]);
+    const inFlightAdded = nonVisitedId.map(inFlightKey);
     inFlightAdded.forEach((id) => this.scope.inFlightAspectLoads.add(id));
     try {
       return await this.getManifestsGraphAfterInFlightCheck(nonVisitedId, visited, throwOnError, lane, opts);
