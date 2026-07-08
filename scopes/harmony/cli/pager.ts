@@ -86,9 +86,10 @@ function parsePagerCommand(pager: string): string[] {
 }
 
 /**
- * pipe the given output through a pager (`less` by default). resolves to `true` once the data
- * was handed off to the pager, or `false` when no pager could be launched - in which case the
- * caller must write the data directly so nothing is lost.
+ * pipe the given output through a pager (`less` by default). resolves to `true` only after the
+ * pager process has exited cleanly — the caller must await this before exiting the process so the
+ * pager isn't cut off. resolves to `false` when paging is disabled, the pager couldn't launch, or
+ * it exited with an error, in which case the caller must write the data directly so nothing is lost.
  *
  * the pager binary is taken from BIT_PAGER, then PAGER, defaulting to `less`. an empty or `cat`
  * pager means the user disabled paging via the env — honored unless `force` is set (the `--pager`
