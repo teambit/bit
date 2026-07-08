@@ -881,34 +881,40 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         this.resolvedInstalledAspects.set(aspectStringId, localPath);
         return localPath;
       }
-      // use inEdges to get the immediate parent. don't use graph.predecessors() as it returns all
-      // the recursive predecessors, which may throw "Maximum call stack size exceeded" on big graphs
-      const parentEdge = graph.inEdges(aspectStringId)[0];
-      const parent = parentEdge ? graph.node(parentEdge.sourceId) : undefined;
-      if (!parent) return undefined;
-      const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph, opts, visiting);
-      if (!parentPath) {
-        this.resolvedInstalledAspects.set(aspectStringId, null);
-        return undefined;
-      }
+      // use inEdges to get the immediate parents. don't use graph.predecessors() as it returns
+      // all the recursive predecessors, which may throw "Maximum call stack size exceeded" on big
+      // graphs. multiple aspects may depend on this aspect and the package may be resolvable only
+      // from some of them - try each parent chain until one resolves, and memoize a failure only
+      // after all of them were attempted.
+      const parentEdges = graph.inEdges(aspectStringId);
+      if (!parentEdges.length) return undefined;
       const packageName = this.dependencyResolver.getPackageName(aspectComponent);
-      try {
-        const resolvedPath = resolveFrom(parentPath, [packageName]);
-        const localPath = findRoot(resolvedPath);
-        this.resolvedInstalledAspects.set(aspectStringId, localPath);
-        return localPath;
-      } catch (error: any) {
-        this.resolvedInstalledAspects.set(aspectStringId, null);
-        if (opts.throwOnError) {
-          throw error;
+      let lastError: Error | undefined;
+      for (const parentEdge of parentEdges) {
+        const parent = graph.node(parentEdge.sourceId);
+        if (!parent) continue;
+        // eslint-disable-next-line no-await-in-loop
+        const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph, opts, visiting);
+        if (!parentPath) continue;
+        try {
+          const resolvedPath = resolveFrom(parentPath, [packageName]);
+          const localPath = findRoot(resolvedPath);
+          this.resolvedInstalledAspects.set(aspectStringId, localPath);
+          return localPath;
+        } catch (error: any) {
+          lastError = error;
         }
-        this.logger.consoleWarning(
-          `failed resolving aspect ${aspectStringId} from ${parentPath}, error: ${error.message}`
-        );
-        // record the swallowed failure on the active load-trace so it surfaces as a component issue
-        reportLoadFailure({ failedId: aspectStringId, phase: 'resolve-installed-aspect', error: error.message });
-        return undefined;
       }
+      this.resolvedInstalledAspects.set(aspectStringId, null);
+      if (lastError) {
+        if (opts.throwOnError) {
+          throw lastError;
+        }
+        this.logger.consoleWarning(`failed resolving aspect ${aspectStringId}, error: ${lastError.message}`);
+        // record the swallowed failure on the active load-trace so it surfaces as a component issue
+        reportLoadFailure({ failedId: aspectStringId, phase: 'resolve-installed-aspect', error: lastError.message });
+      }
+      return undefined;
     } finally {
       visiting.delete(aspectStringId);
     }
