@@ -224,13 +224,7 @@ commands:
     steps:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      # TEMP(exports-regression experiment): pin bbit to the known-broken 2.0.10 instead of
-      # `bvm upgrade` (which installs the latest, already-fixed release). Goal: verify whether the
-      # existing e2e suite, run against the released binary, catches the exports.types->source
-      # regression. Revert this block (restore `bvm upgrade`) once the experiment concludes.
-      - run: bvm install 2.0.10
-      - run: bvm use 2.0.10
-      # - run: bvm upgrade
+      - run: bvm upgrade
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -1389,15 +1383,6 @@ workflows:
       - e2e_test:
           requires:
             - setup_harmony
-      # TEMP(exports-regression experiment): run the full e2e suite against the released binary
-      # (bbit, pinned to 2.0.10 in bvm_upgrade) on this PR branch, to see whether it catches the
-      # exports.types->source regression. Not run on master. Remove after the experiment.
-      - e2e_test_bbit:
-          requires:
-            - setup_harmony
-          filters:
-            branches:
-              ignore: master
       - setup_bundle_simulation:
           filters:
             branches:
