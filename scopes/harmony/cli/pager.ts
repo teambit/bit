@@ -25,7 +25,9 @@ const isEnvSet = (name: string): boolean => process.env[name] !== undefined;
  */
 export function isInteractiveTerminal(): boolean {
   if (!process.stdout.isTTY) return false;
-  if (logger.isDaemon) return false; // bit-cli-server: output travels over IPC, not a terminal
+  // daemon contexts don't page: the bit-cli-server (output travels over IPC, no terminal) and the
+  // experimental `bit cli` REPL (a pager would fight its readline interface over the TTY).
+  if (logger.isDaemon) return false;
   if (isEnvSet('CI')) return false;
   if (AI_AGENT_ENV_VARS.some(isEnvSet)) return false;
   return true;
