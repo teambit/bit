@@ -872,8 +872,10 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       // a workspace component may reach here as a dependency of another aspect. resolve it from
       // the workspace (where its dists are) rather than from a copy nested in the parent's
       // node_modules, which may contain only its sources (e.g. a file: instance of the package
-      // manager) and fail to require.
-      if (this.workspace.hasId(aspectComponent.id)) {
+      // manager) and fail to require. ignore the version - the graph may provide a versioned id
+      // while the bitmap stores it versionless (or at another version), and the workspace has a
+      // single instance of the component either way.
+      if (this.workspace.hasId(aspectComponent.id, { ignoreVersion: true })) {
         const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
         this.resolvedInstalledAspects.set(aspectStringId, localPath);
         return localPath;
