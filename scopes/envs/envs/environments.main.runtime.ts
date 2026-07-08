@@ -534,6 +534,12 @@ export class EnvsMain {
     // same way it was returned when these envs were core aspects.
     if (isLegacyCoreEnvId(envIdFromEnvData)) return envIdFromEnvData;
 
+    // the env may be registered to the slot with a version while the component references it
+    // without one and without an extension entry holding the version (e.g. a config coming from
+    // a lane merge). envs are single-instance per process, so match ignoring the version.
+    const versionlessSlotMatch = this.envSlot.toArray().find(([envId]) => envId.split('@')[0] === envIdFromEnvData);
+    if (versionlessSlotMatch) return versionlessSlotMatch[0];
+
     if (!withVersion) throw new EnvNotConfiguredForComponent(envIdFromEnvData, component.id.toString());
     return withVersion.toString();
   }
@@ -1165,6 +1171,15 @@ if needed, use "bit env set" command to align the env id`;
     const env = this.envSlot.get(envId);
     if (env) {
       return new EnvDefinition(envId, env as Environment);
+    }
+    if (!envId.includes('@')) {
+      // the env may be registered to the slot with a version (envs loaded as components register
+      // versioned) while the config references it without one (the standard form for workspace
+      // envs). envs are single-instance per process, so match ignoring the version.
+      const found = this.envSlot.toArray().find(([id]) => id.split('@')[0] === envId);
+      if (found) {
+        return new EnvDefinition(found[0], found[1] as Environment);
+      }
     }
     return undefined;
   }
