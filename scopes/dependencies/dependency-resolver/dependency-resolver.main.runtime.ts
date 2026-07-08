@@ -607,7 +607,9 @@ export class DependencyResolverMain {
     const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
     const rootComponentDirWithVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envId);
     const rootComponentDirWithoutVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envIdWithoutVersion);
-    if (fs.pathExistsSync(rootComponentDirWithoutVersion)) {
+    // the returned path is relative to the workspace root - anchor the existence check to the
+    // workspace path rather than relying on process.cwd
+    if (fs.pathExistsSync(join(options.workspacePath, rootComponentDirWithoutVersion))) {
       return rootComponentDirWithoutVersion;
     }
     return rootComponentDirWithVersion;
