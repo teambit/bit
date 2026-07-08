@@ -1,12 +1,6 @@
 import chai, { expect } from 'chai';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import {
-  Helper,
-  DEFAULT_OWNER,
-  NpmCiRegistry,
-  supportNpmCiRegistryTesting,
-  NODE_ENV_HOISTED_PEERS,
-} from '@teambit/legacy.e2e-helper';
+import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
@@ -26,10 +20,13 @@ describe('publish functionality', function () {
     let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
+      // pnpm is used (rather than yarn) since the node env package (a legacy core env that now
+      // must be installed) fails to load under yarn's hoisted layout - yarn doesn't auto-install
+      // the env's peers (e.g. @apollo/client, required via @teambit/cloud UI hooks). publishing
+      // itself is package-manager agnostic.
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
-      // yarn doesn't auto-install the peers of the env package, so install them explicitly
-      helper.env.setNodeEnv('*', NODE_ENV_HOISTED_PEERS);
+      helper.env.setNodeEnv();
       appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
