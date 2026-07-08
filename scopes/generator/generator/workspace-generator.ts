@@ -94,6 +94,12 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnRoot: true,
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
+        // the generated components' envs (e.g. an env template whose own env is teambit.envs/env)
+        // are loaded only during this install, so the first manifests calculation misses their
+        // dependency policies (e.g. the env.jsonc policy packages). let the install re-calculate
+        // the manifests and run another cycle once the envs are loaded, so the new workspace is
+        // ready without requiring the user to run another "bit install".
+        recurringInstall: true,
         // This is not needed anymore since PR:
         // keep it here for a while to make sure it doesn't break anything
         // skip pruning here to prevent cases which it caused an error about
