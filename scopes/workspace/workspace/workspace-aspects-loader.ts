@@ -865,7 +865,11 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     if (visiting.has(aspectStringId)) return undefined;
     visiting.add(aspectStringId);
     try {
-      if (rootIds.includes(aspectStringId)) {
+      // match roots ignoring the version - rootIds coming from configured aspects (workspace.jsonc
+      // keys) are typically versionless while the graph provides versioned ids, and the resolved
+      // path (the package dir in the workspace node_modules) is version-agnostic anyway.
+      const aspectIdWithoutVersion = aspectComponent.id.toStringWithoutVersion();
+      if (rootIds.some((rootId) => rootId === aspectStringId || rootId.split('@')[0] === aspectIdWithoutVersion)) {
         const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
         this.resolvedInstalledAspects.set(aspectStringId, localPath);
         return localPath;

@@ -451,6 +451,15 @@ export class InstallMain {
           pmInstallOptions
         );
       } catch (err: any) {
+        if (isHoistedLinker) {
+          // the failed install may have already pruned the core-aspect links or installed
+          // published copies over them (the links are not part of the resolution - see above).
+          // restore them best-effort so the workspace stays usable, without masking the error.
+          await createLinks(this.workspace.path, linkedRootDeps, {
+            avoidHardLink: true,
+            skipIfSymlinkValid: true,
+          }).catch(() => {});
+        }
         // when the package manager can't find a version, the culprit is usually a component dependency that
         // resolves to a snap which was never published (e.g. a hidden lane update-dependent whose Ripple build
         // failed or hasn't completed). replace the cryptic "No matching version found" with an actionable
