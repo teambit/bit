@@ -226,7 +226,10 @@ export default createMounter(MyReactProvider) as any;`
       expect(output).to.not.have.string('failed');
     });
     it('bit lint should not show an error', () => {
-      const output = helper.command.lint();
+      // lint only the component using the empty env. the env component itself is linted by its
+      // own env (teambit.envs/env, a published package), whose linter setup is not the concern
+      // of this test.
+      const output = helper.command.lint('comp1');
       expect(output).to.not.have.string('failed');
     });
     it('bit test should not show an error', () => {
