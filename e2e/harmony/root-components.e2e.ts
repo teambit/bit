@@ -1385,7 +1385,7 @@ module.exports.default = {
   });
 });
 
-(supportNpmCiRegistryTesting ? describe.only : describe.skip)('root components for scope aspect capsules', function () {
+(supportNpmCiRegistryTesting ? describe : describe.skip)('root components for scope aspect capsules', function () {
   this.timeout(0);
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;
