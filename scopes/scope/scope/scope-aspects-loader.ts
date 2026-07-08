@@ -12,7 +12,7 @@ import {
 import type { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import type { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
-import { compact, uniq, difference, groupBy, defaultsDeep } from 'lodash';
+import { compact, uniq, difference, groupBy, defaultsDeep, partition } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { ExtensionManifest, Aspect } from '@teambit/harmony';
@@ -124,12 +124,45 @@ needed-for: ${neededFor || '<unknown>'}`);
     } = {}
   ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
-    const optsWithDefaults = { loadCustomEnvs: false, ...opts };
     this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
-    const nonVisitedId = ids.filter((id) => !visited.includes(id));
+    let nonVisitedId = ids.filter((id) => !visited.includes(id));
+    // break re-entrant load cycles: an aspect's manifest deps (or its env) may lead back to an
+    // aspect that a parent call in the current chain is already loading - the nested calls start
+    // with a fresh `visited` list, so without this guard such cycles never converge (same
+    // approach as the workspace-side inFlightAspectsLoads).
+    const [inFlightIds, idsToLoad] = partition(nonVisitedId, (id) =>
+      this.scope.inFlightAspectLoads.has(id.split('@')[0])
+    );
+    if (inFlightIds.length) {
+      this.logger.debug(
+        `getManifestsGraphRecursively, skipping aspects that are already loading: ${inFlightIds.join(', ')}`
+      );
+    }
+    nonVisitedId = idsToLoad;
     if (!nonVisitedId.length) {
       return { manifests: [], potentialPluginsIds: [] };
     }
+    const inFlightAdded = nonVisitedId.map((id) => id.split('@')[0]);
+    inFlightAdded.forEach((id) => this.scope.inFlightAspectLoads.add(id));
+    try {
+      return await this.getManifestsGraphAfterInFlightCheck(nonVisitedId, visited, throwOnError, lane, opts);
+    } finally {
+      inFlightAdded.forEach((id) => this.scope.inFlightAspectLoads.delete(id));
+    }
+  }
+
+  private async getManifestsGraphAfterInFlightCheck(
+    nonVisitedId: string[],
+    visited: string[],
+    throwOnError: boolean,
+    lane?: Lane,
+    opts: {
+      packageManagerConfigRootDir?: string;
+      workspaceName?: string;
+      loadCustomEnvs?: string;
+    } = {}
+  ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
+    const optsWithDefaults = { loadCustomEnvs: false, ...opts };
     const components = await this.getNonLoadedAspects(nonVisitedId, lane);
     // This is usually not required, right now it required when signing aspects with custom envs.
     // if you see another case where it's required, please consult @Gilad before passing it as true
