@@ -80,21 +80,27 @@ function parsePagerCommand(pager: string): string[] {
  * was handed off to the pager, or `false` when no pager could be launched - in which case the
  * caller must write the data directly so nothing is lost.
  *
- * the pager binary is taken from BIT_PAGER, then PAGER, defaulting to `less`. for `less` we set
+ * the pager binary is taken from BIT_PAGER, then PAGER, defaulting to `less`. an empty or `cat`
+ * pager means the user disabled paging via the env — honored unless `force` is set (the `--pager`
+ * flag), which falls back to a real pager so the flag is a true override. for `less` we set
  * `LESS=FRX` (unless already set, matching git's default): keep ansi colors (-R), don't clear the
  * screen on exit (-X), and quit if the output fits one screen (-F).
  */
-export function writeToPager(data: string): Promise<boolean> {
+export function writeToPager(data: string, force = false): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
     // BIT_PAGER wins over PAGER; default to `less` only when neither is set. use `??` (not `||`)
     // so an explicit empty string is preserved rather than treated as unset — that lets
     // BIT_PAGER="" disable paging.
     const configuredPager = process.env.BIT_PAGER ?? process.env.PAGER ?? 'less';
-    const [cmd, ...args] = parsePagerCommand(configuredPager);
-    if (!cmd || cmd === 'cat') {
-      resolve(false); // paging disabled by the user (empty / "cat" pager)
+    const tokens = parsePagerCommand(configuredPager);
+    // an empty / "cat" pager means the user disabled paging. honor that, unless `--pager` forces
+    // paging on, in which case fall back to a real pager so the flag is a true override.
+    const disabled = !tokens[0] || tokens[0] === 'cat';
+    if (disabled && !force) {
+      resolve(false);
       return;
     }
+    const [cmd, ...args] = disabled ? ['less'] : tokens;
     const env = { ...process.env };
     if (!env.LESS) env.LESS = 'FRX';
 

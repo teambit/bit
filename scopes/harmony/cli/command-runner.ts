@@ -144,7 +144,7 @@ export class CommandRunner {
 
   private async writeAndExit(data: string, exitCode: number) {
     if (shouldUsePager(this.command, this.flags, data)) {
-      const paged = await writeToPager(data);
+      const paged = await writeToPager(data, Boolean(this.flags.pager));
       // if the pager couldn't launch, fall through to a direct write so output is never lost.
       if (paged) return logger.exitAfterFlush(exitCode, this.commandName, data);
     }
