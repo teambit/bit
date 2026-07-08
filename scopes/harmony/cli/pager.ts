@@ -19,7 +19,8 @@ export function isInteractiveTerminal(): boolean {
   if (!process.stdout.isTTY) return false;
   if (logger.isDaemon) return false; // bit-cli-server: output travels over IPC, not a terminal
   if (process.env.CI) return false;
-  if (AI_AGENT_ENV_VARS.some((name) => process.env[name])) return false;
+  // presence-based, not truthiness: an agent that sets one of these to "" should still disable paging.
+  if (AI_AGENT_ENV_VARS.some((name) => process.env[name] !== undefined)) return false;
   return true;
 }
 
