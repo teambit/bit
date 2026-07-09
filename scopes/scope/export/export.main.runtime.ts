@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
@@ -678,7 +679,16 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
 
   async pushToRemotesCarefully(manyObjectsPerRemote: ObjectsPerRemote[], resumeExportId?: string) {
     const remotes = manyObjectsPerRemote.map((o) => o.remote);
-    const clientId = resumeExportId || Date.now().toString();
+    // The clientId is both the pending-dir name AND the cross-client export lock: `export-validate`'s
+    // waitIfNeeded queue sorts pending-dir names and lets only the first proceed to validate+persist.
+    // A pure `Date.now()` is not collision-safe — two exports to the same remote within the same
+    // millisecond (e.g. concurrent CI runners pushing the same lane) get the same clientId, share one
+    // pending-dir, collapse the queue to a single entry, and both validate against the pre-persist
+    // state, silently losing one runner's update. A random suffix keeps the timestamp prefix (so the
+    // sorted queue still roughly preserves arrival order) while making a same-millisecond collision
+    // vanishingly unlikely (64 bits of randomness). Use node's built-in `crypto` rather than a
+    // component helper so this core aspect doesn't gain a new component dependency.
+    const clientId = resumeExportId || `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
     // Intentionally no cleanup on `persistRemotes` failure: pending dirs are the substrate for
