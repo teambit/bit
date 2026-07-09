@@ -3,5 +3,7 @@
 // root `tsc --noEmit` check under classic `moduleResolution: node` (node10). The
 // component builds resolve them fine via `moduleResolution: bundler`; these stubs only
 // satisfy the root type-check, which imports these packages purely for their side effects.
-declare module 'reset-css';
-declare module '@mdx-js/loader';
+// Empty module bodies (not bare `declare module 'x';`) keep these side-effect-only:
+// `import 'reset-css'` is valid, but an accidental value import is a type error.
+declare module 'reset-css' {}
+declare module '@mdx-js/loader' {}
