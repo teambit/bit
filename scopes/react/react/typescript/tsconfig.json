@@ -10,7 +10,7 @@
     "sourceMap": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "allowJs": true,
