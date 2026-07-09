@@ -293,7 +293,8 @@ export class EnvsMain {
    * multiple versions of the same env may be registered - pick the highest one deterministically
    * (rather than relying on registration order) and warn, so ambiguity is visible.
    */
-  private getEnvFromSlotIgnoreVersion(envIdWithoutVersion: string): EnvDefinition | undefined {
+  private getEnvFromSlotIgnoreVersion(envIdMaybeVersioned: string): EnvDefinition | undefined {
+    const envIdWithoutVersion = envIdMaybeVersioned.split('@')[0];
     const matches = this.envSlot.toArray().filter(([envId]) => envId.split('@')[0] === envIdWithoutVersion);
     if (!matches.length) return undefined;
     if (matches.length > 1) {
@@ -315,9 +316,9 @@ export class EnvsMain {
    * for an env that used to be a core aspect and appears without a version (in old components),
    * get its EnvDefinition from the slot by matching the id ignoring the version.
    */
-  private getLegacyCoreEnvFromSlot(envIdWithoutVersion: string): EnvDefinition | undefined {
-    if (!isLegacyCoreEnvId(envIdWithoutVersion)) return undefined;
-    return this.getEnvFromSlotIgnoreVersion(envIdWithoutVersion);
+  private getLegacyCoreEnvFromSlot(envIdMaybeVersioned: string): EnvDefinition | undefined {
+    if (!isLegacyCoreEnvId(envIdMaybeVersioned.split('@')[0])) return undefined;
+    return this.getEnvFromSlotIgnoreVersion(envIdMaybeVersioned);
   }
 
   /**
@@ -518,7 +519,15 @@ export class EnvsMain {
       // env from the config.
       const envIdFromConfig = this.getEnvIdFromEnvsConfig(component);
       if (envIdFromConfig) {
-        envIdFromEnvData = ComponentID.fromString(envIdFromConfig).toStringWithoutVersion();
+        const configEnvId = ComponentID.fromString(envIdFromConfig);
+        const configEnvIdWithoutVersion = configEnvId.toStringWithoutVersion();
+        // prefer the version from the component's own aspect entry (resolveEnv below anchors to
+        // it, and it stays up to date during tagging). when no such entry exists, keep an
+        // explicitly configured version rather than dropping it and matching an arbitrary loaded
+        // version of the env.
+        envIdFromEnvData = this.resolveEnv(component, configEnvIdWithoutVersion)
+          ? configEnvIdWithoutVersion
+          : configEnvId.toString();
       }
     }
     if (!envIdFromEnvData) {
@@ -546,7 +555,7 @@ export class EnvsMain {
     if (legacyCoreEnvMatch) return legacyCoreEnvMatch.id;
     // the legacy core env was not loaded (probably not installed yet). return the id as-is, the
     // same way it was returned when these envs were core aspects.
-    if (isLegacyCoreEnvId(envIdFromEnvData)) return envIdFromEnvData;
+    if (isLegacyCoreEnvId(envIdFromEnvData.split('@')[0])) return envIdFromEnvData;
 
     // the env may be registered to the slot with a version while the component references it
     // without one and without an extension entry holding the version (e.g. a config coming from
