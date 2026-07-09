@@ -39,7 +39,9 @@ for (const dir of fs.readdirSync(base)) {
   let packageJson;
   try {
     packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  } catch {
+  } catch (err) {
+    // a corrupt/unreadable manifest in a published bundle is itself a problem — fail, don't skip it.
+    offenders.push(`${dir} -> unreadable package.json (${err.message})`);
     continue;
   }
   if (!packageJson.exports) continue;
@@ -53,7 +55,7 @@ for (const dir of fs.readdirSync(base)) {
 
 if (offenders.length) {
   console.error(
-    `✖ ${offenders.length} published @teambit package(s) point exports.types at SOURCE (.ts) instead of dist/*.d.ts:`
+    `ERROR: ${offenders.length} published @teambit package(s) failed the exports.types check (must be dist/*.d.ts, not .ts source):`
   );
   offenders.slice(0, 50).forEach((offender) => console.error(`  ${offender}`));
   if (offenders.length > 50) console.error(`  ...and ${offenders.length - 50} more`);
@@ -64,4 +66,4 @@ if (offenders.length) {
   process.exit(1);
 }
 
-console.log(`✔ all @teambit packages under ${base} point exports.types at declarations (.d.ts).`);
+console.log(`OK: all @teambit packages under ${base} point exports.types at declarations (.d.ts).`);

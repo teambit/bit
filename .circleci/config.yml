@@ -851,6 +851,10 @@ jobs:
       - run:
           name: verify released bundle has no source-pointing exports.types
           command: |
+            # the released bundle is identical across parallel nodes; scan once on node 0.
+            if [ "${CIRCLE_NODE_INDEX:-0}" != "0" ]; then
+              echo "skipping released-exports scan on node ${CIRCLE_NODE_INDEX}"; exit 0;
+            fi
             BV=$(bbit --version | tr -d '[:space:]')
             node bit/scripts/verify-released-exports.js "$HOME/.bvm/versions/$BV/bit-$BV/node_modules/@teambit"
       - e2e_test_cmd:
