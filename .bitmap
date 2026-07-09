@@ -2044,9 +2044,8 @@
     },
     "ui/inline-code-compare": {
         "name": "ui/inline-code-compare",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.code",
+        "scope": "teambit.code",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-code-compare"
     },
