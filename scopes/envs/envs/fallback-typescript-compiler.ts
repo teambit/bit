@@ -14,7 +14,7 @@ export function getFallbackTypescriptCompiler() {
       'the fallback compiler requires the "typescript" package, which is not installed. run "bit install" to install the component env'
     );
   }
-  const supportedExtensions = ['.ts', '.tsx', '.jsx'];
+  const supportedExtensions = ['.ts', '.tsx', '.jsx', '.mts', '.cts'];
   const compilerOptions = {
     module: ts.ModuleKind.CommonJS,
     target: ts.ScriptTarget.ES2019,
@@ -22,7 +22,7 @@ export function getFallbackTypescriptCompiler() {
     esModuleInterop: true,
     sourceMap: false,
   };
-  const replaceFileExtToJs = (filePath: string): string => filePath.replace(/\.(ts|tsx|jsx)$/, '.js');
+  const replaceFileExtToJs = (filePath: string): string => filePath.replace(/\.(ts|tsx|jsx|mts|cts)$/, '.js');
   return {
     id: 'teambit.envs/envs/fallback-typescript-compiler',
     displayName: 'Fallback TypeScript',
@@ -31,7 +31,8 @@ export function getFallbackTypescriptCompiler() {
     displayConfig: () => JSON.stringify(compilerOptions, null, 2),
     version: () => ts.version as string,
     isFileSupported: (filePath: string) =>
-      supportedExtensions.some((ext) => filePath.endsWith(ext)) && !filePath.endsWith('.d.ts'),
+      supportedExtensions.some((ext) => filePath.endsWith(ext)) &&
+      !['.d.ts', '.d.mts', '.d.cts'].some((ext) => filePath.endsWith(ext)),
     getDistPathBySrcPath: (srcPath: string) => `dist/${replaceFileExtToJs(srcPath)}`,
     transpileFile: (fileContent: string, options: { componentDir: string; filePath: string }) => {
       const result = ts.transpileModule(fileContent, {
