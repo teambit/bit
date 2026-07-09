@@ -61,7 +61,7 @@ import type { IssuesMain } from '@teambit/issues';
 import { IssuesAspect } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
 import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
-import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import hash from 'object-hash';
 import type { BundlerMain } from '@teambit/bundler';
 import { BundlerAspect } from '@teambit/bundler';
@@ -991,12 +991,31 @@ export class InstallMain {
   ): Promise<Record<string, ProjectManifest>> {
     const nonRootManifests = Object.values(manifests).filter(({ name }) => name !== 'workspace');
     const workspaceDeps = this.dependencyResolver.getWorkspaceDepsOfBitRoots(nonRootManifests);
-    const envManifests = await this._getEnvManifests(workspaceDeps);
-    const appManifests = await this._getAppManifests(manifests, workspaceDeps);
+    // Bit's own core aspects (e.g. `@teambit/builder`) are provided by the running Bit runtime,
+    // not declared as env dependencies. In a workspace that *authors* those core aspects (the Bit
+    // repo itself), `getWorkspaceDepsOfBitRoots` would otherwise inject them as `workspace:*` — i.e.
+    // the uncompiled source component, which has no `dist` at install time (before `bit compile`).
+    // An env loaded from roots then crashes on its eager `require('@teambit/builder')`. Strip them
+    // here and instead link Bit's own compiled copies into each root (see `_linkAllComponentsToBitRoots`),
+    // exactly as scope-aspects capsules already do. This is a no-op for normal user workspaces, which
+    // never author core aspects, so the filtered set is empty.
+    const workspaceDepsWithoutCoreAspects = this._omitCoreAspects(workspaceDeps);
+    const envManifests = await this._getEnvManifests(workspaceDepsWithoutCoreAspects);
+    const appManifests = await this._getAppManifests(manifests, workspaceDepsWithoutCoreAspects);
     return {
       ...envManifests,
       ...appManifests,
     };
+  }
+
+  /** Package names of Bit's core aspects (e.g. `@teambit/builder`), provided by the Bit runtime. */
+  private _coreAspectPackageNames(): Set<string> {
+    return new Set(this.aspectLoader.getCoreAspectIds().map((id) => getCoreAspectPackageName(id)));
+  }
+
+  private _omitCoreAspects(deps: Record<string, string>): Record<string, string> {
+    const coreAspectPackageNames = this._coreAspectPackageNames();
+    return Object.fromEntries(Object.entries(deps).filter(([pkgName]) => !coreAspectPackageNames.has(pkgName)));
   }
 
   private async _getEnvManifests(workspaceDeps: Record<string, string>): Promise<Record<string, ProjectManifest>> {
@@ -1326,18 +1345,53 @@ export class InstallMain {
   private async _linkAllComponentsToBitRoots(compDirMap: ComponentMap<string>) {
     const envs = await this._getAllUsedEnvIds();
     const apps = (await this.app.listAppsComponents()).map((component) => component.id);
+    const rootIds = [...envs, ...apps];
     await Promise.all(
-      [...envs, ...apps].map(async (id) => {
+      rootIds.map(async (id) => {
         const dir = await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, id);
         await fs.mkdirp(dir);
       })
+    );
+    const coreAspectPackageNames = this._coreAspectPackageNames();
+    const workspacePkgNames = compDirMap.components.map((component) =>
+      this.dependencyResolver.getPackageName(component)
     );
     await linkPkgsToRootComponents(
       {
         rootComponentsPath: this.workspace.rootComponentsPath,
         workspacePath: this.workspace.path,
       },
-      compDirMap.components.map((component) => this.dependencyResolver.getPackageName(component))
+      // Skip Bit's own core aspects: they must be linked from Bit's compiled install, not the
+      // (uncompiled) workspace source. See `_linkCoreAspectsToBitRoots`.
+      workspacePkgNames.filter((pkgName) => !coreAspectPackageNames.has(pkgName))
+    );
+    // Only relevant when the workspace authors Bit's core aspects (the Bit repo). Everywhere else
+    // this set is empty and nothing runs.
+    if (workspacePkgNames.some((pkgName) => coreAspectPackageNames.has(pkgName))) {
+      await this._linkCoreAspectsToBitRoots(rootIds);
+    }
+  }
+
+  /**
+   * Link Bit's own compiled core aspects into each bit-root, mirroring what scope-aspects capsules
+   * do (`IsolatorMain.relinkCoreAspectsInCapsuleDir`). Needed only in a workspace that authors the
+   * core aspects (the Bit repo), where the workspace copies aren't compiled at install time. The
+   * linker resolves each core aspect to Bit's own compiled copy because a bit-root dir is not the
+   * Bit repo workspace (`isBitRepoWorkspace` is false there).
+   */
+  private async _linkCoreAspectsToBitRoots(rootIds: ComponentID[]): Promise<void> {
+    const linkingOptions = { linkTeambitBit: true, linkCoreAspects: true };
+    await Promise.all(
+      rootIds.map(async (id) => {
+        const dir = await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, id);
+        const linker = this.dependencyResolver.getLinker({
+          rootDir: dir,
+          linkingOptions,
+          linkingContext: { inCapsule: true },
+        });
+        const { linkedRootDeps } = await linker.calculateLinkedDeps(dir, ComponentMap.create([]), linkingOptions);
+        await createLinks(dir, linkedRootDeps, { skipIfSymlinkValid: false });
+      })
     );
   }
 
