@@ -2053,7 +2053,7 @@
         "name": "ui/inline-config-compare",
         "scope": "",
         "version": "",
-        "defaultScope": "teambit.review",
+        "defaultScope": "teambit.code",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-config-compare"
     },
@@ -2061,7 +2061,7 @@
         "name": "ui/inline-deps-compare",
         "scope": "",
         "version": "",
-        "defaultScope": "teambit.review",
+        "defaultScope": "teambit.code",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-deps-compare"
     },
@@ -2090,7 +2090,7 @@
         "name": "ui/inline-tests-compare",
         "scope": "",
         "version": "",
-        "defaultScope": "teambit.review",
+        "defaultScope": "teambit.code",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-tests-compare"
     },
