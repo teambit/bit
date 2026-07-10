@@ -129,23 +129,29 @@ export class GraphFromFsBuilder {
    */
   private async importObjects(components: Component[]) {
     const workspaceIds = this.workspace.listIds();
-    const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
 
     // when shouldLoadItsDeps is provided, use lazy import: only import filtered deps without their flattened
     const useLazyImport = Boolean(this.shouldLoadItsDeps);
-    const getDepsFunc = useLazyImport
-      ? (c: Component) => this.getAllDepsFiltered(c)
-      : (c: Component) => this.getAllDepsUnfiltered(c);
+    // in lazy mode the components were imported without their flattened dependencies
+    // (preferDependencyGraph), so deps of scope components are not guaranteed to exist locally.
+    // batch-import the direct deps of ALL this-level components in one round-trip. don't list
+    // them via getAllDepsFiltered - the filter itself loads every dep (workspace.get), which
+    // fetches each missing dep individually: a network round-trip per graph node.
+    const compsToImportDepsFor = useLazyImport
+      ? components
+      : components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
 
-    const allDeps = (await Promise.all(compOnWorkspaceOnly.map(getDepsFunc))).flat();
+    const allDeps = (await Promise.all(compsToImportDepsFor.map((c) => this.getAllDepsUnfiltered(c)))).flat();
     const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));
     const exportedDeps = allDepsNotImported.map((id) => id).filter((dep) => this.workspace.isExported(dep));
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
       ids: ComponentIdList.uniqFromArray(exportedDeps),
       preferDependencyGraph: useLazyImport,
-      throwForDependencyNotFound: this.shouldThrowOnMissingDep,
-      throwForSeederNotFound: this.shouldThrowOnMissingDep,
+      // in lazy mode this is a best-effort batch prefetch of an unfiltered dep list - deps that
+      // fail to import are handled later by loadManyComponents (warn/throw per shouldThrowOnMissingDep)
+      throwForDependencyNotFound: useLazyImport ? false : this.shouldThrowOnMissingDep,
+      throwForSeederNotFound: useLazyImport ? false : this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
       lane: this.currentLane,
       reason: useLazyImport
