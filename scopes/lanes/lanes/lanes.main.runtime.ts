@@ -230,11 +230,26 @@ export class LanesMain {
     private remove: RemoveMain,
     readonly checkout: CheckoutMain,
     private install: InstallMain
-  ) {
-    this.loadSnapsDistanceMemoFromDisk();
-    this.loadApiDiffMemoFromDisk();
-    this.loadChangeTypesMemoFromDisk();
-    this.loadDiffStatusMemoFromDisk();
+  ) {}
+
+  private persistedMemosLoad?: Promise<void>;
+
+  /**
+   * Lazily load all disk-persisted lane-diff memos, exactly once. Best-effort cache warming: each
+   * loader self-catches, so failure yields a cold-but-correct cache. Awaited at the lane-diff entry
+   * points rather than run in the constructor — construction stays synchronous and side-effect-free,
+   * and commands that never diff lanes (status, tag, export, …) pay nothing.
+   */
+  private ensureMemosLoaded(): Promise<void> {
+    if (!this.persistedMemosLoad) {
+      this.persistedMemosLoad = Promise.all([
+        this.loadSnapsDistanceMemoFromDisk(),
+        this.loadApiDiffMemoFromDisk(),
+        this.loadChangeTypesMemoFromDisk(),
+        this.loadDiffStatusMemoFromDisk(),
+      ]).then(() => {});
+    }
+    return this.persistedMemosLoad;
   }
 
   /**
@@ -1315,6 +1330,7 @@ please create a new lane instead, which will include all components of this lane
     targetLaneId?: LaneId,
     options?: LaneDiffStatusOptions
   ): Promise<LaneDiffStatus> {
+    await this.ensureMemosLoaded();
     this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
 
     const sourceLane = sourceLaneId.isDefault()
@@ -1605,6 +1621,8 @@ please create a new lane instead, which will include all components of this lane
     if (status.changes) return status.changes;
     const context = status.changesContext;
     if (!context || context.skipped) return undefined;
+
+    await this.ensureMemosLoaded();
 
     // top-level memo on the final ChangeType[] — short-circuits BEFORE compare()/getAPIDiff() run.
     // Persisted to disk, keyed on immutable hashes, so a cold server start with a populated cache
