@@ -7,13 +7,25 @@ import rightpad from 'pad-right';
 import type { Helper } from '@teambit/legacy.e2e-helper';
 
 const HTTP_TIMEOUT_FOR_MSG = 120000; // 2 min
+const DEFAULT_HTTP_PORT = 3000;
+const PORT_FREE_TIMEOUT = 30000; // 30 sec
 
 const HTTP_SERVER_READY_MSG = 'UI server of teambit.scope/scope is listening to port';
 
 export class HttpHelper {
   httpProcess: ChildProcess;
-  constructor(private helper: Helper) {}
-  start(): Promise<void> {
+  constructor(
+    private helper: Helper,
+    private port = DEFAULT_HTTP_PORT
+  ) {}
+  async start(): Promise<void> {
+    // a `bit start` server from an earlier describe-block in the same file shares this port (and the
+    // same remote-scope dir), and may still be shutting down when we get here — especially with a
+    // released `bbit` binary, whose server tears down more slowly than a dev build. wait for the port
+    // to be free (force-killing any leftover holder) so the client talks to *this* freshly-started
+    // server over the freshly-reinitialized scope, and not a lingering one serving stale/wiped state
+    // (which surfaced as OutdatedIndexJson / MergeConflictOnRemote in the bbit nightly).
+    await this.waitForPortToBeFree();
     return new Promise((resolve, reject) => {
       const cmd = `${this.helper.command.bitBin} start --verbose --log`;
       const cwd = this.helper.scopes.remotePath;
@@ -55,17 +67,66 @@ export class HttpHelper {
       });
     });
   }
-  killHttp() {
-    const isWin = process.platform === 'win32';
-    if (isWin) {
-      if (!this.httpProcess.pid) throw new Error(`httpProcess.pid is undefined`);
-      childProcess.execSync(`taskkill /pid ${this.httpProcess.pid.toString()} /f /t`);
-    } else {
-      this.httpProcess.kill('SIGINT');
+  async killHttp(): Promise<void> {
+    const proc = this.httpProcess;
+    if (process.platform === 'win32') {
+      if (!proc?.pid) throw new Error(`httpProcess.pid is undefined`);
+      childProcess.execSync(`taskkill /pid ${proc.pid.toString()} /f /t`);
+      return;
+    }
+    if (proc?.pid) {
+      // ask the server to shut down gracefully, then give it a moment to release the port.
+      const exited = new Promise<void>((resolve) => proc.once('exit', () => resolve()));
+      try {
+        proc.kill('SIGINT');
+      } catch {
+        // process may already be gone
+      }
+      await Promise.race([exited, delay(5000)]);
+    }
+    // `bit start` spawns child processes that a SIGINT to the parent doesn't always reap; with a
+    // released `bbit` binary they can linger and keep the port. block until the port is actually
+    // free (force-killing whatever still holds it) so the next server in this file starts clean.
+    await this.waitForPortToBeFree();
+  }
+  /**
+   * pids of any process currently listening on the http port. interface-agnostic (unlike a plain
+   * connect check) so it catches server children that escaped the parent's process group.
+   */
+  private portHolders(): number[] {
+    if (process.platform === 'win32') return [];
+    try {
+      const out = childProcess.execSync(`lsof -ti tcp:${this.port} 2>/dev/null || true`, { encoding: 'utf8' });
+      return out
+        .split('\n')
+        .map((pid) => pid.trim())
+        .filter(Boolean)
+        .map(Number);
+    } catch {
+      // lsof missing or nothing listening
+      return [];
+    }
+  }
+  private async waitForPortToBeFree(timeoutMs = PORT_FREE_TIMEOUT): Promise<void> {
+    const startTime = Date.now();
+    while (this.portHolders().length > 0) {
+      if (Date.now() - startTime > timeoutMs) return; // give up; the next bind will surface a clear error
+      this.portHolders().forEach((pid) => {
+        try {
+          process.kill(pid, 'SIGKILL');
+        } catch {
+          // already dead
+        }
+      });
+      await delay(300);
     }
   }
   shouldIgnoreHttpError(data: string): boolean {
     const msgToIgnore = ['@rollup/plugin-replace'];
     return msgToIgnore.some((str) => data.startsWith(str));
   }
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
