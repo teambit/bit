@@ -15,9 +15,9 @@ import { ComponentCompareChangelog } from '@teambit/component.ui.component-compa
 import { ComponentCompareAspects } from '@teambit/component.ui.component-compare.compare-aspects.compare-aspects';
 import { InlineCodeCompare } from '@teambit/code.ui.inline-code-compare';
 import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare';
-import { InlineDepsCompare } from '@teambit/review.ui.inline-deps-compare';
-import { InlineTestsCompare } from '@teambit/review.ui.inline-tests-compare';
-import { InlineConfigCompare } from '@teambit/review.ui.inline-config-compare';
+import { InlineDepsCompare } from '@teambit/code.ui.inline-deps-compare';
+import { InlineTestsCompare } from '@teambit/code.ui.inline-tests-compare';
+import { InlineConfigCompare } from '@teambit/code.ui.inline-config-compare';
 import type { ApiDiffInsight } from '@teambit/semantics.ui.api-diff-view';
 import { AspectsCompareSection } from './component-compare-aspects.section';
 import { ComponentCompareAspect } from './component-compare.aspect';
