@@ -1,5 +1,8 @@
 import type { Group } from './command-groups';
 
+// no-op change to force a rebuild of teambit.harmony/cli and its dependents in `bit ci pr`,
+// isolating whether the capsule test failures stem from the rebuild scope (not any behavior change).
+
 type CommandOption = [string, string, string];
 export type CommandOptions = Array<CommandOption>;
 
