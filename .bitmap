@@ -2060,7 +2060,13 @@
         "scope": "teambit.code",
         "version": "0.0.348",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/code-compare"
+        "rootDir": "components/ui/code-compare",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/code-editor": {
         "name": "ui/code-editor",
@@ -2095,7 +2101,13 @@
         "scope": "teambit.component",
         "version": "0.0.266",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/component-compare"
+        "rootDir": "components/ui/component-compare/component-compare",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/component-compare/context": {
         "name": "ui/component-compare/context",
@@ -2109,7 +2121,13 @@
         "scope": "teambit.component",
         "version": "0.0.129",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/models/component-compare-props"
+        "rootDir": "components/ui/component-compare/models/component-compare-props",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/component-compare/utils/lazy-loading": {
         "name": "ui/component-compare/utils/lazy-loading",
@@ -2347,7 +2365,13 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.526",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/react-router/slot-router"
+        "rootDir": "components/ui/react-router/slot-router",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/rendering/html": {
         "name": "ui/rendering/html",
@@ -2361,7 +2385,13 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.939",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/side-bar"
+        "rootDir": "components/ui/side-bar",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/test-compare": {
         "name": "ui/test-compare",
