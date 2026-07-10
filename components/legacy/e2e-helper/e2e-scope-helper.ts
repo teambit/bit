@@ -142,15 +142,19 @@ export default class ScopeHelper {
   }
 
   /**
-   * read the `remotes` map from the workspace scope.json (`<cwd>/.bit/scope.json`). the map is
+   * read the `remotes` map from the scope.json of the scope at `cwd`. the map is
    * `{ [scopeName]: host }` (see ScopeJson.addRemote), and for e2e file remotes the scope name is
-   * the remote directory's basename.
+   * the remote directory's basename. scope.json lives under `.bit/` for a workspace but at the root
+   * for a bare scope (`bit init --bare`), and `bit remote add` can target either — so check both.
    */
   private readWorkspaceRemotes(cwd: string): Record<string, string> {
-    const scopeJsonPath = path.join(cwd, '.bit', 'scope.json');
-    if (!fs.existsSync(scopeJsonPath)) return {};
-    const scopeJson = fs.readJsonSync(scopeJsonPath, { throws: false });
-    return (scopeJson && scopeJson.remotes) || {};
+    const candidatePaths = [path.join(cwd, '.bit', 'scope.json'), path.join(cwd, 'scope.json')];
+    for (const scopeJsonPath of candidatePaths) {
+      if (!fs.existsSync(scopeJsonPath)) continue;
+      const scopeJson = fs.readJsonSync(scopeJsonPath, { throws: false });
+      if (scopeJson && scopeJson.remotes) return scopeJson.remotes;
+    }
+    return {};
   }
 
   private isRemoteRegistered(remoteScopePath: string, cwd: string): boolean {
