@@ -299,7 +299,7 @@ function SplitDiffTable({
   highlightedFeedbackId?: string;
   selectedLine?: number;
 }) {
-  const { rows, hunkHeaders: _hunkHeaders } = buildSplitRows(hunks);
+  const { rows } = buildSplitRows(hunks);
   if (hunks.length === 0) {
     return (
       <table className={styles.diffTable}>
