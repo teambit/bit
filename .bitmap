@@ -2067,9 +2067,8 @@
     },
     "ui/inline-diff-viewer": {
         "name": "ui/inline-diff-viewer",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.code",
+        "scope": "teambit.code",
+        "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-diff-viewer"
     },

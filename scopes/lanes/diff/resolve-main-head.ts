@@ -50,10 +50,20 @@ export async function importMainHeads(scope: ScopeMain, componentIds: ComponentI
     )
   );
   if (!missing.length) return;
-  await scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(missing), {
-    cache: false,
-    includeVersionHistory: true,
-    ignoreMissingHead: true,
-    reason: 'to resolve the base on main for components absent from the local scope',
-  });
+  try {
+    await scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(missing), {
+      cache: false,
+      includeVersionHistory: true,
+      ignoreMissingHead: true,
+      reason: 'to resolve the base on main for components absent from the local scope',
+    });
+  } catch (err: any) {
+    // best-effort pre-fetch: a base on main may be genuinely unavailable on the remote (its object was
+    // deleted, or the remote otherwise can't serve it). that must not abort the whole diff/merge - fall
+    // back to whatever resolves locally. `getHeadOnMain` still returns a head ref when there is one, and
+    // the per-component diff reports a base it can't load as missing ("was not found on the filesystem")
+    // instead of throwing. `ignoreMissingHead` already covers truly-new components; this covers the
+    // head-exists-but-object-unfetchable case.
+    scope.logger.debug(`importMainHeads: best-effort import of main bases failed, continuing: ${err?.message || err}`);
+  }
 }
