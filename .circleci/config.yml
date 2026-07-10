@@ -499,6 +499,9 @@ commands:
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
+          # some suites install published env chains in before-hooks, which can be silent for more
+          # than the default 10m (mocha buffers child output) — don't kill slow-but-healthy nodes
+          no_output_timeout: 40m
       - store_test_results:
           path: bit/junit
       - store_artifacts:
