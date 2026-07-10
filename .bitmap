@@ -2070,7 +2070,13 @@
         "scope": "teambit.code",
         "version": "0.0.3",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-diff-viewer"
+        "rootDir": "components/ui/inline-diff-viewer",
+        "config": {
+            "teambit.react/react-env@1.3.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/inline-preview-compare": {
         "name": "ui/inline-preview-compare",
