@@ -1500,7 +1500,11 @@ export class IsolatorMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
     }
-    await PackageJsonTransformer.applyTransformers(component, packageJson);
+    // "as any" is needed when compiling in a capsule: this file gets PackageJsonFile from the
+    // capsule-source of component.sources, while node-modules-linker's d.ts references the
+    // installed dist copy. they're identical, but protected members make TS treat them as
+    // incompatible nominal types.
+    await PackageJsonTransformer.applyTransformers(component, packageJson as any);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
     if (populateArtifactsFromComps && !opts?.populateArtifactsIgnorePkgJson) {
