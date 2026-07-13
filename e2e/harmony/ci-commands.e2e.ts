@@ -1293,8 +1293,8 @@ module.exports = { isPositive };`
       });
     });
 
-    after(() => {
-      httpHelper.killHttp();
+    after(async () => {
+      await httpHelper.killHttp();
     });
   });
 
@@ -1466,8 +1466,8 @@ module.exports = { isPositive };`
         });
       });
 
-      after(() => {
-        httpHelper.killHttp();
+      after(async () => {
+        await httpHelper.killHttp();
       });
     }
   );
@@ -1612,8 +1612,8 @@ module.exports = { isPositive };`
         });
       });
 
-      after(() => {
-        httpHelper.killHttp();
+      after(async () => {
+        await httpHelper.killHttp();
       });
     }
   );
