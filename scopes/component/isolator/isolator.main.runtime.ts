@@ -518,8 +518,9 @@ export class IsolatorMain {
     const host = opts.host || this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
     const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
-    // the graph only spans the seeders and their dependencies, so any cycle in it is a cycle a
-    // seeder participates in. Pass includeDeps=true so detection doesn't rely on matching the
+    // the graph spans the seeders and their dependency closure, so cycles here are either cycles a
+    // seeder participates in, or cycles purely among dependencies (only the former need isolating -
+    // see the members filter below). Pass includeDeps=true so detection doesn't rely on matching the
     // (possibly versionless) seeder ids against the graph's versioned node ids — otherwise a
     // seeder-involving cycle can be missed and its members get installed from the registry again.
     const cycles = graph.findCycles(undefined, true);
@@ -529,13 +530,30 @@ export class IsolatorMain {
       const id = graph.node(idStr)?.attr;
       return id?.version != null && isSnap(id.version);
     };
+    // seeders compared without version — the seeder ids may be versionless while graph nodes are
+    // versioned (same reason findCycles is called with includeDeps=true above). Keyed off the
+    // `seeders` argument directly (not `alreadyIsolated`) so it doesn't rely on them being equal.
+    const seederIdsNoVer = new Set(seeders.map((id) => id.toStringWithoutVersion()));
+    const cycleInvolvesSeeder = (cycle: string[]): boolean =>
+      cycle.some((idStr) => {
+        const attr = graph.node(idStr)?.attr;
+        return attr ? seederIdsNoVer.has(attr.toStringWithoutVersion()) : false;
+      });
     const idsToAddStr = new Set<string>();
     const cyclicMemberIds = new Set<string>();
     for (const cycle of cycles) {
+      const involvesSeeder = cycleInvolvesSeeder(cycle);
       // the members this cycle would contribute as new capsules. In onlySnaps mode a published-tag
       // member stays a registry install, so it neither gets pulled in nor groups the cycle.
       const newMembers = cycle.filter((idStr) => !alreadyIsolatedIds.has(idStr));
-      const membersToAdd = onlySnaps ? newMembers.filter(isSnapId) : newMembers;
+      // A member is only worth isolating if the registry can't serve it: it's an unpublished snap, or
+      // it's in a cycle *with a seeder* (whose own package is unpublished, so a registry install of the
+      // member would try to fetch the seeder and fail). A published-tag, dependency-only cycle installs
+      // fine from the registry — pulling it in would needlessly isolate a dependency we don't build here
+      // and force-load its (possibly deprecated/unavailable) env, so leave it out.
+      const membersToAdd = onlySnaps
+        ? newMembers.filter(isSnapId)
+        : newMembers.filter((idStr) => involvesSeeder || isSnapId(idStr));
       if (membersToAdd.length === 0) continue;
       membersToAdd.forEach((idStr) => idsToAddStr.add(idStr));
       // group the whole cycle (the just-added members plus the already-isolated seeders in it) so
