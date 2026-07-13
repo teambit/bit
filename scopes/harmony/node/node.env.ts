@@ -48,12 +48,13 @@ export type VitestModule = {
 };
 
 /**
- * A slim, ESM-first Node environment.
+ * A slim Node environment.
  *
  * Unlike the legacy implementation (which delegated its whole toolchain to the heavy
  * `@teambit/react` aspect — webpack + jest + eslint), this env uses the modern
  * `EnvHandler`-based toolchain: the typescript-compiler, vitest tester, oxlint linter and an
- * rspack-based preview.
+ * rspack-based preview. Output stays CommonJS (no `esm`/`type: module`) so it remains a drop-in
+ * for the default env and its many consumers; only the toolchain was slimmed.
  *
  * It is authored in the OLD (aspect) env model so it can be registered by the core
  * `teambit.harmony/node` aspect, but each service method delegates to the new `EnvHandler`
@@ -171,7 +172,6 @@ export class NodeEnv
 
   getCompiler(): Compiler {
     return TypescriptCompiler.from({
-      esm: true,
       tsconfig: this.tsconfigPath,
       types: this.types,
     })(this.envContext);
@@ -231,7 +231,6 @@ export class NodeEnv
       packageJson: {
         main: 'dist/{main}.js',
         types: '{main}.ts',
-        type: 'module',
       },
     })(this.envContext);
   }
