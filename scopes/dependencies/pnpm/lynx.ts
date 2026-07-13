@@ -220,6 +220,7 @@ export async function install(
     | 'publicHoistPattern'
     | 'hoistPattern'
     | 'lockfileOnly'
+    | 'frozenLockfile'
     | 'nodeVersion'
     | 'enableModulesDir'
     | 'engineStrict'
@@ -292,6 +293,7 @@ export async function install(
     dir: rootDir,
     storeController: storeController.ctrl,
     preferFrozenLockfile: true,
+    frozenLockfile: options.frozenLockfile,
     pruneLockfileImporters: true,
     lockfileOnly: options.lockfileOnly ?? false,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.

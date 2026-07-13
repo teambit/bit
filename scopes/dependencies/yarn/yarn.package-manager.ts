@@ -172,8 +172,11 @@ export class YarnPackageManager implements PackageManager {
           persistProject: false,
           cache,
           report,
+          immutable: installOptions.frozenLockfile,
         });
-        await project.persistLockfile();
+        if (!installOptions.frozenLockfile) {
+          await project.persistLockfile();
+        }
         await removeExternalLinksFromYarnLockfile(rootDir);
       }
     );
