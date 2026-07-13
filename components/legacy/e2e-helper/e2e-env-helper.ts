@@ -40,6 +40,15 @@ const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1042';
 export const NODE_ENV_HOISTED_PEERS = '@apollo/client@3.14.1';
 
 /**
+ * a modern env.jsonc-based node env, pinned so upstream releases don't change test behavior.
+ * see setBitdevNodeEnv.
+ */
+const BITDEV_NODE_ENV = 'bitdev.node/node-env';
+const BITDEV_NODE_ENV_VERSION = '6.0.16';
+const BITDEV_NODE_ENV_PACKAGE = `@bitdev/node.node-env@${BITDEV_NODE_ENV_VERSION}`;
+export const BITDEV_NODE_ENV_ID = `${BITDEV_NODE_ENV}@${BITDEV_NODE_ENV_VERSION}`;
+
+/**
  * the env configured on old-format aspect-style env fixtures (see setBabelWithTsHarmony). it used
  * to be a core aspect, now its package must be installed for the fixture env to be loaded.
  * the node env is a runtime dependency of the aspect env and must be installed at the root as
@@ -213,6 +222,23 @@ export default new EmptyEnv();
    */
   installAspectEnv() {
     this.command.install(ASPECT_ENV_PACKAGES.join(' '));
+  }
+
+  /**
+   * set the modern `bitdev.node/node-env` env (env.jsonc based) on the given variant and install
+   * its package. much lighter and faster to install than the legacy `teambit.harmony/node` chain
+   * (a single install, no scope-aspect capsules) - prefer it for suites that just need an env
+   * with a typescript compiler and don't test the legacy-env surface itself.
+   * caveats: its build pipeline (tag/snap with --build) compiles with moduleResolution nodenext,
+   * so relative imports in fixture files must include the `.js` extension; its tester is vitest
+   * (not jest) and its linter is oxlint (not eslint).
+   */
+  setBitdevNodeEnv(variantPattern = '*') {
+    this.extensions.addExtensionToVariant(variantPattern, `${BITDEV_NODE_ENV}@${BITDEV_NODE_ENV_VERSION}`, {});
+    this.extensions.addExtensionToVariant(variantPattern, 'teambit.envs/envs', {
+      env: BITDEV_NODE_ENV,
+    });
+    this.command.install(BITDEV_NODE_ENV_PACKAGE);
   }
 
   setCustomEnv(extensionsBaseFolder = 'node-env', options: SetCustomEnvOpts = {}): string {

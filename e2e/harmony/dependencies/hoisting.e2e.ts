@@ -15,7 +15,7 @@ describe('pnpm with hoisted node linker, when there is a dependency that has the
     helper.fixtures.populateComponents(1);
     // the test relies on the local component having a dist folder (to distinguish it from the
     // registry package). the default env (empty env) has no compiler, so set the node env.
-    helper.env.setNodeEnv();
+    helper.env.setBitdevNodeEnv();
     helper.extensions.addExtensionToVariant('comp1', 'teambit.pkg/pkg', {
       packageJson: {
         name: 'once',

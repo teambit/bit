@@ -23,7 +23,7 @@ chai.use(chaiFs);
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.env.setNodeEnv();
+      helper.env.setBitdevNodeEnv();
     });
     describe('run bit watch', () => {
       let watchRunner: WatchRunner;
@@ -113,7 +113,7 @@ chai.use(chaiFs);
       before(async () => {
         helper.scopeHelper.setWorkspaceWithRemoteScope({ initGit });
         helper.fixtures.populateComponentsTS();
-        helper.env.setNodeEnv();
+        helper.env.setBitdevNodeEnv();
         watchRunner = new WatchRunner(helper, true);
         await watchRunner.watch();
         allOutput = '';

@@ -20,7 +20,7 @@ describe('importing internal files flow (component imports from a non-index file
       // the non-main-file issue is reported only for compiled dependencies (with a dist folder).
       // the default env (empty env) has no compiler, so set the node env (it used to be the
       // default when it was a core aspect) and compile.
-      helper.env.setNodeEnv();
+      helper.env.setBitdevNodeEnv();
       helper.command.compile();
       helper.fs.outputFile('comp2/non-main.js', 'export function nonMain(){}');
       helper.fs.outputFile('comp1/index.js', `import { nonMain } from '@${helper.scopes.remote}/comp2/non-main';`);

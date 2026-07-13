@@ -41,7 +41,7 @@ describe('bit scope command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      helper.env.setNodeEnv();
+      helper.env.setBitdevNodeEnv();
       helper.command.renameScope(helper.scopes.remote, 'new-scope');
     });
     it('should rename the scope', () => {
@@ -119,7 +119,7 @@ describe('bit scope command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.addDefaultScope('old-org.my-scope');
       helper.fixtures.populateComponents(2);
-      helper.env.setNodeEnv();
+      helper.env.setBitdevNodeEnv();
       helper.command.setScope('old-org.my-scope1', 'comp1');
       helper.command.setScope('old-org.my-scope2', 'comp2');
 

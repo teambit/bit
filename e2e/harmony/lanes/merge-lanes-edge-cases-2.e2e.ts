@@ -418,8 +418,8 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       // the merge below runs --build and expects the test to fail. the default env has no
-      // tester, so configure the node env (jest) and install it
-      helper.env.setNodeEnv();
+      // tester, so configure a node env (vitest tester) and install it
+      helper.env.setBitdevNodeEnv();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
@@ -452,7 +452,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
         expect(stripAnsi(mergeOutput)).to.have.string('Total Snapped: 1');
       });
       it('should indicate that the test failed', () => {
-        expect(mergeOutput).to.include('task "teambit.defender/tester:JestTest" has failed');
+        expect(mergeOutput).to.include('task "teambit.defender/tester:VitestTest" has failed');
       });
     });
   });

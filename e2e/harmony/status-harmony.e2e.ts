@@ -1,7 +1,7 @@
 import { IssuesClasses, MISSING_DEPS_SPACE } from '@teambit/component-issues';
 import { expect } from 'chai';
 import { statusFailureMsg } from '@teambit/legacy.constants';
-import { Helper } from '@teambit/legacy.e2e-helper';
+import { BITDEV_NODE_ENV_ID, Helper } from '@teambit/legacy.e2e-helper';
 
 describe('status command on Harmony', function () {
   this.timeout(0);
@@ -29,14 +29,14 @@ describe('status command on Harmony', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(1);
-      // the default env (empty env) has no compiler hence no dists. set the node env so the
-      // components have dists (it used to be the default when it was a core aspect)
-      helper.env.setNodeEnv();
+      // the default env (empty env) has no compiler hence no dists. set a node env so the
+      // components have dists
+      helper.env.setBitdevNodeEnv();
       helper.command.status(); // to populate the cache
       // as an intermediate step, make sure the missing-dist is not an issue.
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingDists.name);
       const distDir = 'node_modules/@my-scope/comp1/dist';
-      const distDirInBitRoots = 'node_modules/.bit_roots/teambit.harmony_node/node_modules/@my-scope/comp1/dist';
+      const distDirInBitRoots = `node_modules/.bit_roots/${BITDEV_NODE_ENV_ID.replace('/', '_')}/node_modules/@my-scope/comp1/dist`;
       helper.fs.deletePath(distDir);
       helper.fs.deletePath(distDirInBitRoots);
     });

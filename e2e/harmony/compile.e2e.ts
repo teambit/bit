@@ -21,7 +21,7 @@ describe('compile extension', function () {
     let appOutput: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.env.setNodeEnv();
+      helper.env.setBitdevNodeEnv();
       appOutput = helper.fixtures.populateComponentsTS(3);
       scopeBeforeTag = helper.scopeHelper.cloneWorkspace();
     });
@@ -144,7 +144,7 @@ describe('compile extension', function () {
   describe('component with unsupported compiler files', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.env.setNodeEnv();
+      helper.env.setBitdevNodeEnv();
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/style.css', 'h1{}');
       helper.fs.outputFile('comp1/types.d.ts', 'export const myField: number');
@@ -180,7 +180,7 @@ describe('compile extension', function () {
   describe('component with nested directories', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
-      helper.env.setNodeEnv();
+      helper.env.setBitdevNodeEnv();
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/nested/foo.ts');
       helper.command.compile();
@@ -196,7 +196,7 @@ describe('compile extension', function () {
   describe('compile by directory path', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.env.setNodeEnv();
+      helper.env.setBitdevNodeEnv();
       helper.fixtures.populateComponentsTS(3);
       helper.command.move('comp1', 'nested/comp1');
       helper.command.move('comp2', 'nested/comp2');
