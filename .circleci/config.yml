@@ -225,7 +225,6 @@ commands:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
       - run: bvm upgrade
-      # - run: bvm install 1.13.240
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -837,6 +836,8 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # gate for released-binary-only e2e tests (see e2e/harmony/released-bit-core-exports.e2e.ts)
+      E2E_RELEASED_BINARY: "true"
     parallelism: 32
     steps:
       - attach_workspace:
@@ -845,8 +846,19 @@ jobs:
       - restore_common_caches
       - install_bvm
       - bvm_upgrade
+      # Fail fast if the released bundle ships any @teambit package whose exports.types points at
+      # source (.ts) instead of dist/*.d.ts — that breaks clients whose envs type-check it.
+      - run:
+          name: verify released bundle has no source-pointing exports.types
+          command: |
+            # the released bundle is identical across parallel nodes; scan once on node 0.
+            if [ "${CIRCLE_NODE_INDEX:-0}" != "0" ]; then
+              echo "skipping released-exports scan on node ${CIRCLE_NODE_INDEX}"; exit 0;
+            fi
+            BV=$(bbit --version | tr -d '[:space:]')
+            node bit/scripts/verify-released-exports.js "$HOME/.bvm/versions/$BV/bit-$BV/node_modules/@teambit"
       - e2e_test_cmd:
-         bit_bin: "--bin_bit=bbit"
+         bit_bin: "--bit_bin=bbit"
 
   # setup job: creates cleaned bit bundle and persists to workspace (runs once)
   setup_bundle_simulation:
@@ -898,7 +910,7 @@ jobs:
           name: verify cleaned binary works
           command: source $BASH_ENV && bit-cleaned --version
       - e2e_test_cmd:
-          bit_bin: "--bin_bit=bit-cleaned"
+          bit_bin: "--bit_bin=bit-cleaned"
 
   # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
   # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
