@@ -19,7 +19,7 @@ function mockComponent(id: string, scope: string, namespace?: string): Component
     id: {
       scope,
       fullName,
-      toString: () => fullId,
+      toString: (_opts?: { ignoreVersion?: boolean }) => fullId,
       toStringWithoutVersion: () => fullId,
       toObject: () => ({ scope, name: fullName }),
     },
