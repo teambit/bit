@@ -1,0 +1,26 @@
+/**
+ * @see https://bit.dev/reference/typescript/typescript-config
+ */
+{
+  "compilerOptions": {
+    "declaration": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "lib": ["esnext", "dom", "dom.Iterable"],
+    "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "preserveConstEnums": true,
+    "types": ["vitest/globals", "node"],
+    "target": "es2020",
+    "outDir": "./dist",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["**/*", "**/*.json"],
+  "exclude": ["artifacts", "public", "dist", "node_modules", "package.json"]
+}

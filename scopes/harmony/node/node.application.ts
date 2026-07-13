@@ -1,7 +1,6 @@
 import { execFile } from 'child_process';
 import { parse, join } from 'path';
 import type { Logger } from '@teambit/logger';
-import type { ReactEnv } from '@teambit/react';
 import type { Application, DeployFn, AppBuildContext, AppContext, ApplicationInstance } from '@teambit/application';
 import { Port } from '@teambit/toolbox.network.get-port';
 import type { NodeEnv } from './node.env';
@@ -12,7 +11,7 @@ export class NodeApp implements Application {
     readonly name: string,
     readonly entry: string,
     readonly portRange: number[],
-    readonly nodeEnv: NodeEnv & ReactEnv,
+    readonly nodeEnv: NodeEnv,
     readonly logger: Logger,
     readonly deploy?: DeployFn
   ) {}

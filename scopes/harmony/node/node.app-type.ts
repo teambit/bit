@@ -1,6 +1,5 @@
 import type { Logger } from '@teambit/logger';
 import type { ApplicationType } from '@teambit/application';
-import type { ReactEnv } from '@teambit/react';
 import type { NodeEnv } from './node.env';
 import { NodeApp } from './node.application';
 import type { NodeAppOptions } from './node-app-options';
@@ -8,7 +7,7 @@ import type { NodeAppOptions } from './node-app-options';
 export class NodeAppType implements ApplicationType<NodeAppOptions> {
   constructor(
     readonly name: string,
-    private nodeEnv: NodeEnv & ReactEnv,
+    private nodeEnv: NodeEnv,
     private logger: Logger
   ) {}
 

@@ -1,27 +1,21 @@
 import type { Harmony } from '@teambit/harmony';
 import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
-import type { TsConfigSourceFile } from 'typescript';
-import type { TsCompilerOptionsWithoutTsConfig, TypescriptMain } from '@teambit/typescript';
-import { TypescriptAspect } from '@teambit/typescript';
-import type { ApplicationMain } from '@teambit/application';
-import { ApplicationAspect } from '@teambit/application';
 import { merge } from 'lodash';
 import type { LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import { MainRuntime } from '@teambit/cli';
 import type { GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
-import type { BuildTask } from '@teambit/builder';
 import { ComponentID } from '@teambit/component-id';
 import type { WorkerMain } from '@teambit/worker';
 import { WorkerAspect } from '@teambit/worker';
-import type { Compiler } from '@teambit/compiler';
-import type { PackageJsonProps } from '@teambit/pkg';
-import type { EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
+import type { EnvsMain, Environment, EnvTransformer } from '@teambit/envs';
 import { EnvsAspect, EnvContext } from '@teambit/envs';
-import type { ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react';
-import { ReactAspect } from '@teambit/react';
+import esmLoader from '@teambit/node.utils.esm-loader';
 import { NodeAspect } from './node.aspect';
+import type { VitestModule } from './node.env';
 import { NodeEnv } from './node.env';
 import { getTemplates } from './node.templates';
 import { getStarters } from './node.starters';
@@ -29,115 +23,13 @@ import { NodeAppType } from './node.app-type';
 
 export class NodeMain {
   constructor(
-    private react: ReactMain,
-
-    private tsAspect: TypescriptMain,
-
     readonly nodeEnv: NodeEnv,
-
     private envs: EnvsMain
   ) {}
 
   icon() {
     return 'https://static.bit.dev/extensions-icons/nodejs.svg';
   }
-
-  /**
-   * @deprecated use useTypescript()
-   * override the TS config of the environment.
-   */
-  overrideTsConfig: (
-    tsconfig: TsConfigSourceFile,
-    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>,
-    tsModule?: any
-  ) => EnvTransformer = this.react.overrideTsConfig.bind(this.react);
-
-  /**
-   * override the jest config of the environment.
-   */
-  overrideJestConfig = this.react.overrideJestConfig.bind(this.react);
-
-  /**
-   * override the env build pipeline.
-   */
-  overrideBuildPipe: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideBuildPipe.bind(this.react);
-
-  /**
-   * override the env compilers list.
-   */
-  overrideCompiler: (compiler: Compiler) => EnvTransformer = this.react.overrideCompiler.bind(this.react);
-
-  /**
-   * override the env compilers tasks in the build pipe.
-   */
-  overrideCompilerTasks: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideCompilerTasks.bind(this.react);
-
-  /**
-   * @deprecated use useTypescript()
-   * override the build ts config.
-   */
-  overrideBuildTsConfig: (
-    tsconfig: any,
-    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>
-  ) => EnvTransformer = this.react.overrideBuildTsConfig.bind(this.react);
-
-  /**
-   * override package json properties.
-   */
-  overridePackageJsonProps: (props: PackageJsonProps) => EnvTransformer = this.react.overridePackageJsonProps.bind(
-    this.react
-  );
-
-  /**
-   * @deprecated - use useWebpack
-   * override the preview config in the env.
-   */
-  overridePreviewConfig = this.react.overridePreviewConfig.bind(this.react);
-
-  /**
-   * @deprecated - use useWebpack
-   * override the dev server configuration.
-   */
-  overrideDevServerConfig = this.react.overrideDevServerConfig.bind(this.react);
-
-  /**
-   * override the env's typescript config for both dev and build time.
-   * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
-   */
-  useTypescript(modifiers?: UseTypescriptModifiers, tsModule?: any) {
-    const overrides: any = {};
-    const devTransformers = modifiers?.devConfig;
-    if (devTransformers) {
-      overrides.getCompiler = () => this.nodeEnv.getCompiler(devTransformers, tsModule);
-    }
-    const buildTransformers = modifiers?.buildConfig;
-    if (buildTransformers) {
-      const buildPipeModifiers = {
-        tsModifier: {
-          transformers: buildTransformers,
-          module: tsModule,
-        },
-      };
-      overrides.getBuildPipe = () => this.nodeEnv.getBuildPipe(buildPipeModifiers);
-    }
-    return this.envs.override(overrides);
-  }
-
-  /**
-   * override the env's dev server and preview webpack configurations.
-   * Replaces both overrideDevServerConfig and overridePreviewConfig
-   */
-  useWebpack = this.react.useWebpack.bind(this.react);
-
-  /**
-   * An API to mutate the prettier config
-   */
-  usePrettier = this.react.usePrettier.bind(this.react);
-
-  /**
-   * An API to mutate the eslint config
-   */
-  useEslint = this.react.useEslint.bind(this.react);
 
   /**
    * override the dependency configuration of the component environment.
@@ -148,8 +40,6 @@ export class NodeMain {
     });
   }
 
-  overrideMounter = this.react.overrideMounter.bind(this.react);
-
   /**
    * create a new composition of the node environment.
    */
@@ -158,41 +48,40 @@ export class NodeMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [
-    LoggerAspect,
-    EnvsAspect,
-    ApplicationAspect,
-    ReactAspect,
-    GeneratorAspect,
-    TypescriptAspect,
-    WorkerAspect,
-  ];
+
+  static dependencies = [LoggerAspect, EnvsAspect, ApplicationAspect, GeneratorAspect, WorkerAspect];
 
   static async provider(
-    [loggerAspect, envs, application, react, generator, tsAspect, workerMain]: [
+    [loggerAspect, envs, application, generator, workerMain]: [
       LoggerMain,
       EnvsMain,
       ApplicationMain,
-      ReactMain,
       GeneratorMain,
-      TypescriptMain,
       WorkerMain,
     ],
-    config,
-    slots,
+    _config,
+    _slots,
     harmony: Harmony
   ) {
     const logger = loggerAspect.createLogger(NodeAspect.id);
-    const nodeEnv = envs.merge<NodeEnv, ReactEnv>(new NodeEnv(tsAspect, react), react.reactEnv);
+    const envContext = new EnvContext(ComponentID.fromString(NodeAspect.id), loggerAspect, workerMain, harmony);
+
+    // `@teambit/vite.vitest-tester` is ESM-only; pre-load it here (in the async provider) via the
+    // esm loader so the CJS core aspect can hand the tester/task classes to the env synchronously.
+    const vitest = (await esmLoader(require.resolve('@teambit/vite.vitest-tester'), true)) as VitestModule;
+
+    const nodeEnv = new NodeEnv(envContext, vitest);
     envs.registerEnv(nodeEnv);
+
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
+
     if (generator) {
-      const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
       generator.registerComponentTemplate(() => getTemplates(envContext));
       generator.registerWorkspaceTemplate(() => getStarters(envContext));
     }
-    return new NodeMain(react, tsAspect, nodeEnv, envs);
+
+    return new NodeMain(nodeEnv, envs);
   }
 }
 
