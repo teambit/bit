@@ -95,12 +95,17 @@ describe('build command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
+      // the default env (empty env) has no compiler hence no dist artifact. set a node env so
+      // the tag produces one
+      helper.env.setBitdevNodeEnv();
       helper.command.tagAllComponents();
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
+      // install the env of the imported component so the build below runs with it
+      helper.command.install();
 
       const artifacts = helper.command.getArtifacts(`${helper.scopes.remote}/comp1`);
       const artifactDist = artifacts.find((a) => a.name === 'dist');
@@ -125,6 +130,11 @@ describe('build command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
+      // these envs used to be core aspects, now their packages must be installed for the envs
+      // to load
+      helper.command.install(
+        '@teambit/aspect@1.0.1042 @teambit/react@1.0.1042 @teambit/node@1.0.1042 @teambit/env@1.0.1042'
+      );
       helper.command.setEnv('comp1', 'teambit.harmony/aspect');
       helper.command.setEnv('comp2', 'teambit.react/react');
       helper.command.setEnv('comp3', 'teambit.harmony/node');
@@ -142,11 +152,13 @@ describe('build command', function () {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
+        // the default env (empty env) has no tester. set a node env (vitest tester)
+        helper.env.setBitdevNodeEnv();
         helper.fs.outputFile('comp1/comp1.spec.ts', specFileFailingFixture());
       });
       it('bit build --loose should not throw and show the failing test but indicate build success', () => {
         const output = helper.command.build(undefined, '--loose', true);
-        expect(output).to.have.string('task "teambit.defender/tester:JestTest" has failed'); // Should still show the failing task
+        expect(output).to.have.string('task "teambit.defender/tester:VitestTest" has failed'); // Should still show the failing task
         expect(output).to.have.string('should fail'); // Should still show the failing test
         expect(output).to.have.string('build succeeded'); // But build should succeed
       });
@@ -155,6 +167,8 @@ describe('build command', function () {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
+        // the default env (empty env) has no compiler. set a node env so compilation runs
+        helper.env.setBitdevNodeEnv();
         // Create a TypeScript file with a compilation error
         helper.fs.outputFile('comp1/comp1.ts', 'export function invalidFunction(): string { return 123; }');
         helper.fs.outputFile('comp1/index.ts', 'export { invalidFunction } from "./comp1";');
@@ -258,14 +272,17 @@ describe('build command', function () {
     it('should only include modified component (comp3) in build, not its dependents through non-workspace components', () => {
       const output = helper.command.build();
 
-      // Should include comp3 since it was modified
-      expect(output).to.have.string('comp3');
-
-      // Should NOT include comp1, even though comp1 depends on comp2 which depends on comp3,
-      // because comp2 is not in the workspace (it's an external dependency)
-      expect(output).to.not.have.string('comp1');
-
       expect(output).to.have.string('Total 1 components to build');
+
+      // comp3 was modified, so it should have a build capsule.
+      // (the default env has no compiler task, so the build output doesn't list component ids -
+      // assert on the created capsules instead)
+      const comp3Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp3@0.0.1`);
+      expect(comp3Capsule).to.be.a.directory();
+
+      // comp1 should NOT be built, even though comp1 depends on comp2 which depends on comp3,
+      // because comp2 is not in the workspace (it's an external dependency)
+      expect(() => helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp1@0.0.1`)).to.throw();
     });
   });
 
@@ -281,22 +298,27 @@ describe('build command', function () {
     it('should only build the specified component when using --unmodified with a component pattern', () => {
       const output = helper.command.build('comp1 --unmodified');
 
-      // Should include comp1 since it was specified
-      expect(output).to.have.string('comp1');
-
-      // Should NOT include comp2, even with --unmodified flag
-      expect(output).to.not.have.string('comp2');
-
       expect(output).to.have.string('Total 1 components to build');
+
+      // comp1 was specified, so it should have a build capsule.
+      // (the default env has no compiler task, so the build output doesn't list component ids -
+      // assert on the created capsules instead)
+      const comp1Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+      expect(comp1Capsule).to.be.a.directory();
+
+      // comp2 should NOT be built, even with --unmodified flag
+      expect(() => helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp2@0.0.1`)).to.throw();
     });
     it('should build both components when using --unmodified without a pattern', () => {
       const output = helper.command.build('--unmodified');
 
-      // Should include both components
-      expect(output).to.have.string('comp1');
-      expect(output).to.have.string('comp2');
-
       expect(output).to.have.string('Total 2 components to build');
+
+      // both components should have build capsules
+      const comp1Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+      expect(comp1Capsule).to.be.a.directory();
+      const comp2Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp2@0.0.1`);
+      expect(comp2Capsule).to.be.a.directory();
     });
   });
 

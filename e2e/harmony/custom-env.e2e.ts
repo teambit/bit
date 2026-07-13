@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import stripAnsi from 'strip-ansi';
 import chai, { expect } from 'chai';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -49,11 +50,11 @@ describe('custom env', function () {
       const componentShowParsed = helper.command.showComponentParsedHarmonyByTitle('comp1', 'env');
       expect(componentShowParsed).to.equal(envId);
       const regularShowOutput = helper.command.showComponent('comp1');
-      expect(regularShowOutput).to.contain(`${envId} (not loaded)`);
+      expect(stripAnsi(regularShowOutput)).to.contain(`${envId} (not loaded)`);
     });
     it('should show the correct env in bit envs (with no loaded indication)', () => {
       const envsOutput = helper.command.envs();
-      expect(envsOutput).to.contain(`${envId} (not loaded)`);
+      expect(stripAnsi(envsOutput)).to.contain(`${envId} (not loaded)`);
     });
     it('should show a component issue in bit status', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.NonLoadedEnv.name);
@@ -405,6 +406,11 @@ describe('custom env', function () {
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
+        // the mdx env used to be a core aspect, now its package (and its chain) must be
+        // installed for the env to load
+        helper.command.install(
+          '@teambit/mdx@1.0.1043 @teambit/react@1.0.1042 @teambit/node@1.0.1042 @teambit/aspect@1.0.1042'
+        );
         helper.command.setEnv('comp1', 'teambit.mdx/mdx');
         helper.command.tagAllWithoutBuild();
         // it's important to have here a non-core env. otherwise, the issue won't be shown.

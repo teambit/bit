@@ -1149,7 +1149,15 @@ if needed, use "bit env set" command to align the env id`;
       const hasManifest = this.hasEnvManifest(envComponent);
       if (hasManifest) return true;
       const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
-      return !!isUsingEnvEnv;
+      if (isUsingEnvEnv) return true;
+      // when teambit.envs/env is not loaded (it is no longer a core aspect), the env component's
+      // env data falls back to the default env and its type is not 'env'. recognize the env by
+      // its configuration identity instead - old-style envs are configured with teambit.envs/env.
+      const envOfEnvFromConfig = this.getEnvIdFromEnvsConfig(envComponent);
+      if (envOfEnvFromConfig?.split('@')[0] === 'teambit.envs/env') return true;
+      return envComponent.state.aspects.entries.some(
+        (entry) => entry.id.toStringWithoutVersion() === 'teambit.envs/env'
+      );
     });
     let finalEnvId;
     if (envId) {

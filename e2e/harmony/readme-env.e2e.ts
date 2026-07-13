@@ -20,6 +20,11 @@ describe('readme env', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.docs.mdx');
+      // the readme/mdx envs used to be core aspects, now their packages (and their chain) must
+      // be installed for the envs to load
+      helper.command.install(
+        '@teambit/readme@1.0.1043 @teambit/mdx@1.0.1043 @teambit/react@1.0.1042 @teambit/node@1.0.1042 @teambit/aspect@1.0.1042'
+      );
       helper.command.setEnv('comp1', 'teambit.mdx/readme');
       helper.command.tagAllWithoutBuild();
       const status = helper.command.showComponentParsed('comp1');
