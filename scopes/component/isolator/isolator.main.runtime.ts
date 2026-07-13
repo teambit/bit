@@ -530,9 +530,10 @@ export class IsolatorMain {
       const id = graph.node(idStr)?.attr;
       return id?.version != null && isSnap(id.version);
     };
-    // seeders compared without version — the seeder ids passed in may be versionless while graph nodes
-    // are versioned (same reason findCycles is called with includeDeps=true above).
-    const seederIdsNoVer = new Set(alreadyIsolated.map((comp) => comp.id.toStringWithoutVersion()));
+    // seeders compared without version — the seeder ids may be versionless while graph nodes are
+    // versioned (same reason findCycles is called with includeDeps=true above). Keyed off the
+    // `seeders` argument directly (not `alreadyIsolated`) so it doesn't rely on them being equal.
+    const seederIdsNoVer = new Set(seeders.map((id) => id.toStringWithoutVersion()));
     const cycleInvolvesSeeder = (cycle: string[]): boolean =>
       cycle.some((idStr) => {
         const attr = graph.node(idStr)?.attr;
