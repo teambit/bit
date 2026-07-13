@@ -145,10 +145,18 @@ export class GraphFromFsBuilder {
     const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));
     const exportedDeps = allDepsNotImported.map((id) => id).filter((dep) => this.workspace.isExported(dep));
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
+    let uniqDeps: ComponentID[] = ComponentIdList.uniqFromArray(exportedDeps);
+    if (useLazyImport) {
+      // in lazy mode, only import deps whose objects are missing locally. importMany is not free
+      // even when nothing needs fetching (it materializes VersionDependencies for every id), and
+      // graph builds run repeatedly per command (envs loading, isolation, compilation) - passing
+      // hundreds of already-local ids each time OOMs constrained machines (e.g. CI containers).
+      const defs = await this.consumer.scope.sources.getMany(uniqDeps);
+      uniqDeps = defs.filter((def) => !def.component).map((def) => def.id);
+    }
     // import in bounded chunks: one big importMany holds all the fetched objects and their
-    // VersionDependencies in memory at once, which OOMs constrained machines (e.g. CI) on big
-    // graphs. chunking keeps the round-trips low while letting each batch be GC'ed.
-    const uniqDeps = ComponentIdList.uniqFromArray(exportedDeps);
+    // VersionDependencies in memory at once, which OOMs constrained machines on big graphs.
+    // chunking keeps the round-trips low while letting each batch be GC'ed.
     const chunks: ComponentID[][] = [];
     const CHUNK_SIZE = 50;
     for (let i = 0; i < uniqDeps.length; i += CHUNK_SIZE) chunks.push(uniqDeps.slice(i, i + CHUNK_SIZE));
