@@ -598,12 +598,15 @@ export class DependencyLinker {
    * Bridge that gap by linking bit's own (always compiled) copies into pnpm's hoisted store. That
    * directory is on the module resolution path of packages inside the virtual store - the published
    * envs - and not on the resolution path of the workspace's own components, so the envs bootstrap
-   * against the running bit while the workspace still builds and loads its own core aspects. The
-   * links are removed again once the source components have been compiled.
+   * against the running bit while the workspace still builds and loads its own core aspects.
+   *
+   * This is a reconciler - each core aspect converges to "link present iff its source is still
+   * uncompiled", so the same call both creates the links during bootstrap and removes them once the
+   * source components have been compiled.
    *
    * Only reached from a workspace with `linkCoreAspects` off, i.e. one that authors them.
    */
-  async linkUncompiledCoreAspectsForEnvs(rootDir: string, componentIds: ComponentID[]): Promise<void> {
+  async syncCoreAspectLinksForEnvs(rootDir: string, componentIds: ComponentID[]): Promise<void> {
     const idsInWorkspace = componentIds.map((id) => id.toString({ ignoreVersion: true }));
     const authoredCoreAspects = this.aspectLoader.getCoreAspectIds().filter((aspectId) => {
       if (aspectId === this.aspectLoader.mainAspect?.id) return false;
@@ -614,48 +617,63 @@ export class DependencyLinker {
     if (!authoredCoreAspects.length) return;
 
     const hoistedStoreDir = path.join(rootDir, 'node_modules', '.pnpm');
+    // the hoisted store only exists in a pnpm-managed workspace. anywhere else this directory is on
+    // no resolution path, so there is nothing to bridge - and it must not be fabricated here.
+    if (!fs.pathExistsSync(hoistedStoreDir)) return;
+
     const links: Record<string, string> = {};
-    await Promise.all(
-      authoredCoreAspects.map(async (aspectId) => {
-        const packageName = getCoreAspectPackageName(aspectId);
-        const fromDir = this._getPkgPathFromCurrentBitDir(packageName);
-        if (this.hasCompiledMain(path.join(rootDir, 'node_modules', packageName))) {
-          await this.removeUncompiledCoreAspectLink(path.join(hoistedStoreDir, 'node_modules', packageName), fromDir);
-          return;
-        }
-        if (fromDir) links[packageName] = `link:${fromDir}`;
-      })
-    );
-    if (!Object.keys(links).length) return;
-    this.logger.debug(
-      `linkUncompiledCoreAspectsForEnvs: linking ${Object.keys(links).join(', ')} from ${this._currentBitDir}`
-    );
-    await createLinks(hoistedStoreDir, links, { skipIfSymlinkValid: true });
+    for (const aspectId of authoredCoreAspects) {
+      const packageName = getCoreAspectPackageName(aspectId);
+      const linkPath = path.join(hoistedStoreDir, 'node_modules', packageName);
+      if (this.hasCompiledMain(path.join(rootDir, 'node_modules', packageName))) {
+        await this.removeCoreAspectBootstrapLink(linkPath, rootDir);
+        continue;
+      }
+      const fromDir = this._getPkgPathFromCurrentBitDir(packageName);
+      if (fromDir && fs.pathExistsSync(fromDir)) links[packageName] = `link:${fromDir}`;
+    }
+    const packagesToLink = Object.keys(links);
+    if (!packagesToLink.length) return;
+    this.logger.debug(`syncCoreAspectLinksForEnvs: linking ${packagesToLink.join(', ')} from ${this._currentBitDir}`);
+    try {
+      await createLinks(hoistedStoreDir, links, { skipIfSymlinkValid: true });
+    } catch (err: any) {
+      // the bridge is best-effort. without it the envs may fail to load during install, which the
+      // install flow already tolerates - a broken bridge must not turn that into a fatal error.
+      this.logger.warn(
+        `syncCoreAspectLinksForEnvs: failed linking core aspects into the hoisted store. ${err.message}`
+      );
+    }
   }
 
   private hasCompiledMain(pkgDir: string): boolean {
     try {
       const { main } = fs.readJsonSync(path.join(pkgDir, 'package.json'));
-      return fs.pathExistsSync(path.join(pkgDir, main ?? 'index.js'));
+      return fs.pathExistsSync(path.join(pkgDir, main || 'index.js'));
     } catch {
       return false;
     }
   }
 
   /**
-   * only removes links created by linkUncompiledCoreAspectsForEnvs, identified by resolving to the
-   * very package it would have linked. anything else in the hoisted store is pnpm's, and is left
-   * alone. compares real paths because the bit installation is itself reached through a symlink.
+   * only removes links created by syncCoreAspectLinksForEnvs. at this location+name nothing else
+   * creates links that resolve outside the workspace - pnpm's own hoisted entries always point back
+   * into the virtual store. matching the exact bit installation instead would be too strict: a link
+   * leaked by an interrupted install may point at a bit version that was since upgraded or removed
+   * (dangling), and it must still be cleaned up or it would shadow the workspace's copy forever.
    */
-  private async removeUncompiledCoreAspectLink(target: string, fromDir?: string): Promise<void> {
-    if (!fromDir) return;
+  private async removeCoreAspectBootstrapLink(linkPath: string, workspaceDir: string): Promise<void> {
     try {
-      if (!fs.lstatSync(target).isSymbolicLink()) return;
-      if (fs.realpathSync(target) !== fs.realpathSync(fromDir)) return;
+      if (!fs.lstatSync(linkPath).isSymbolicLink()) return;
     } catch {
-      return;
+      return; // nothing at this path
     }
-    await fs.remove(target);
+    try {
+      if (fs.realpathSync(linkPath).startsWith(fs.realpathSync(workspaceDir) + path.sep)) return;
+    } catch {
+      // dangling link - fall through and remove it
+    }
+    await fs.remove(linkPath);
   }
 
   private isBitRepoWorkspace(dir: string) {

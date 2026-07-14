@@ -457,7 +457,7 @@ export class InstallMain {
       this.workspace.inInstallAfterPmContext = true;
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
-      await this.linkUncompiledCoreAspectsForEnvs(compDirMap);
+      await this.syncCoreAspectLinksForEnvs(compDirMap);
       const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
       await this.reloadMovedEnvs();
       await this.reloadNonLoadedEnvs();
@@ -505,7 +505,7 @@ export class InstallMain {
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
     // the core aspects are compiled by now, so drop the links added above and let the envs resolve
     // them from the workspace again.
-    await this.linkUncompiledCoreAspectsForEnvs(compDirMap);
+    await this.syncCoreAspectLinksForEnvs(compDirMap);
     if (!options?.lockfileOnly && !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
@@ -1314,17 +1314,17 @@ export class InstallMain {
   }
 
   /**
-   * see DependencyLinker.linkUncompiledCoreAspectsForEnvs.
+   * see DependencyLinker.syncCoreAspectLinksForEnvs.
    *
    * `linkCoreAspects` is only turned off by a workspace that authors the core aspects, since it must
    * use the ones it builds rather than the running bit's. That opt-out is also exactly what leaves
    * the envs' phantom require unsatisfied until those sources are compiled, so there is nothing to
    * bridge in any other workspace - where this returns on the config read alone.
    */
-  private async linkUncompiledCoreAspectsForEnvs(compDirMap: ComponentMap<string>) {
+  private async syncCoreAspectLinksForEnvs(compDirMap: ComponentMap<string>) {
     if (this.dependencyResolver.linkCoreAspects()) return;
     const linker = this.dependencyResolver.getLinker({ rootDir: this.workspace.path });
-    await linker.linkUncompiledCoreAspectsForEnvs(
+    await linker.syncCoreAspectLinksForEnvs(
       this.workspace.path,
       compDirMap.toArray().map(([component]) => component.id)
     );
