@@ -63,10 +63,10 @@ describe('install command', function () {
         output = helper.command.install();
       });
       it('should show a warning that the workspace has old env without env.jsonc so another install might be required', async () => {
-        // the custom env's own env (teambit.envs/env, used to be a core aspect) is the non-loaded
-        // env detected on the first install - the custom env itself resolves to the default env
-        // until its env is loadable.
-        const msg = stripAnsi(getAnotherInstallRequiredOutput(false, ['teambit.envs/env']));
+        // both the custom env (recognized as an env by its teambit.envs/env configuration even
+        // when teambit.envs/env is not loaded) and its own env (teambit.envs/env, used to be a
+        // core aspect) are non-loaded old envs on the first install.
+        const msg = stripAnsi(getAnotherInstallRequiredOutput(false, [envId, 'teambit.envs/env']));
         expect(stripAnsi(output)).to.have.string(msg);
       });
       it('should not install deps that were configured in the env in first install', async () => {
