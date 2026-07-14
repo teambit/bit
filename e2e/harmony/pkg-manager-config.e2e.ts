@@ -22,11 +22,13 @@ chai.use(chaiString);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
+      // the node-env-1 fixture is a minimal old-style env, deliberately not based on any
+      // non-core env (see the fixture) - basing it on a real env would pull the entire env chain
+      // into the scope-aspects capsules, which gets OOM-killed under yarn on CI (materialized as
+      // full copies, no store/hardlinks). the seed workspace uses the default pnpm - the yarn
+      // coverage is in the describe block below, where the scope-aspects capsules are installed.
       envName1 = helper.env.setCustomEnv('node-env-1');
       envId1 = `${helper.scopes.remote}/${envName1}`;
-      // set yarn only after setCustomEnv - installing the legacy env chain under yarn materializes
-      // the scope-aspect capsules as full copies (no store/hardlinks) and gets OOM-killed on CI
-      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.command.install('lodash.get lodash.flatten');
       helper.command.compile();
       helper.command.tagAllComponents();

@@ -33,11 +33,12 @@ const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
 const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1042';
 
 /**
- * peers required by the published legacy env packages (via @teambit/cloud UI hooks) that yarn's
- * hoisted linker doesn't auto-install (pnpm auto-installs peers). without them the env fails to
- * load under yarn with "Cannot find module '@apollo/client'".
+ * peers required by the published legacy env packages (via @teambit/cloud UI hooks and
+ * graphql-request) that yarn's hoisted linker doesn't auto-install (pnpm auto-installs peers).
+ * without them the env fails to load under yarn with "Cannot find module '@apollo/client'" (or
+ * 'graphql').
  */
-export const NODE_ENV_HOISTED_PEERS = '@apollo/client@3.14.1';
+export const NODE_ENV_HOISTED_PEERS = '@apollo/client@3.14.1 graphql@14.7.0';
 
 /**
  * a modern env.jsonc-based node env, pinned so upstream releases don't change test behavior.
