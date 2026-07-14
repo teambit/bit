@@ -43,12 +43,18 @@ describe('aspect', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
       helper.command.create('bit-aspect', 'my-aspect');
+      // previously the aspect failed loading because @teambit/harmony was never installed. now that
+      // the aspect env is not a core aspect, creating an aspect installs the env, which also links
+      // @teambit/harmony - so a freshly created aspect loads fine. fail the load explicitly with a
+      // require of a missing package.
+      helper.fs.prependFile('my-scope/my-aspect/my-aspect.main.runtime.ts', "require('non-exist-pkg-for-testing');\n");
+      helper.command.compile();
       helper.workspaceJsonc.addKeyVal('my-scope/my-aspect', {});
     });
     it('commands with loaders should show a descriptive error', () => {
       const output = helper.command.status();
       expect(output).to.have.string(
-        UNABLE_TO_LOAD_EXTENSION('my-scope/my-aspect', "Cannot find module '@teambit/harmony'")
+        UNABLE_TO_LOAD_EXTENSION('my-scope/my-aspect', "Cannot find module 'non-exist-pkg-for-testing'")
       );
     });
     it('commands without loaders should not show the entire stacktrace', () => {
