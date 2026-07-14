@@ -37,6 +37,7 @@ use various format options for compact or detailed views of version history.`;
   ] as CommandOptions;
   remoteOp = true; // should support log against remote
   skipWorkspace = true;
+  pager = true;
   arguments = [{ name: 'id', description: 'component-id or component-name' }];
 
   constructor(private componentLog: ComponentLogMain) {}

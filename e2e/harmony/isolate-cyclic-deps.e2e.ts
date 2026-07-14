@@ -34,6 +34,36 @@ describe('isolating cyclic dependencies', function () {
     });
   });
 
+  // Regression for the reverse case: when the seeder is NOT part of a cycle, a cycle that exists
+  // purely among its dependencies (published tags) must stay out of the isolation and be installed
+  // as packages from the registry. Pulling such a dependency-only cycle in needlessly isolates
+  // components we don't build here and force-loads each one's env — which fails `bit build`/`bit sign`
+  // when a dependency carries an old/deprecated env that can't be loaded. Only cyclic deps the
+  // registry can't serve (unpublished snaps, or cycles that include a seeder) should be isolated.
+  describe('a dependency-only cycle, seeder not part of the cycle, isolated seeders-only', () => {
+    let capsuleIds: string[];
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // comp1 <-> comp2 form a cycle among the dependencies. comp3 (the seeder) depends on comp1 but
+      // is not itself part of the cycle.
+      helper.fs.outputFile('comp1/index.js', `require('@${helper.scopes.remote}/comp2');`);
+      helper.fs.outputFile('comp2/index.js', `require('@${helper.scopes.remote}/comp1');`);
+      helper.fs.outputFile('comp3/index.js', `require('@${helper.scopes.remote}/comp1');`);
+      helper.command.addComponent('comp1');
+      helper.command.addComponent('comp2');
+      helper.command.addComponent('comp3');
+      helper.command.install();
+      helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
+      const output = helper.command.runCmd('bit capsule create comp3 --seeders-only -j');
+      capsuleIds = JSON.parse(output).map((capsule: { id: string }) => capsule.id.split('@')[0]);
+    });
+    it('should isolate only the seeder, not the dependency-only cycle members', () => {
+      expect(capsuleIds).to.include(`${helper.scopes.remote}/comp3`);
+      expect(capsuleIds).to.not.include(`${helper.scopes.remote}/comp1`);
+      expect(capsuleIds).to.not.include(`${helper.scopes.remote}/comp2`);
+    });
+  });
+
   // Regression for the Ripple failure that persisted after the seeders-only fix above: it happens
   // in the ASPECT-loading isolation path, not the sign path. A custom env built on a lane together
   // with a component it cycles with (the env's mounter imports the component; the component uses
