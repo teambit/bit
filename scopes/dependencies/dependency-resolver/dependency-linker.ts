@@ -629,12 +629,12 @@ export class DependencyLinker {
         await this.removeCoreAspectBootstrapLink(linkPath, rootDir);
         continue;
       }
-      const fromDir = this._getPkgPathFromCurrentBitDir(packageName);
-      if (fromDir && fs.pathExistsSync(fromDir)) links[packageName] = `link:${fromDir}`;
+      const fromDir = this._getCoreAspectSourceDir(aspectId, packageName);
+      if (fromDir) links[packageName] = `link:${fromDir}`;
     }
     const packagesToLink = Object.keys(links);
     if (!packagesToLink.length) return;
-    this.logger.debug(`syncCoreAspectLinksForEnvs: linking ${packagesToLink.join(', ')} from ${this._currentBitDir}`);
+    this.logger.debug(`syncCoreAspectLinksForEnvs: linking ${packagesToLink.join(', ')}`);
     try {
       await createLinks(hoistedStoreDir, links, { skipIfSymlinkValid: true });
     } catch (err: any) {
@@ -653,6 +653,24 @@ export class DependencyLinker {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * the directory to bridge a core aspect from: the running bit installation's copy. bvm is where a
+   * released bit runs from; when bit runs from elsewhere (e.g. installed through a package manager),
+   * fall back to the module-resolution strategy aspect-loader uses to locate core aspects. either
+   * way the copy is only usable as a bridge source if its own compiled main exists.
+   */
+  private _getCoreAspectSourceDir(aspectId: string, packageName: string): string | undefined {
+    const fromBvmDir = this._getPkgPathFromCurrentBitDir(packageName);
+    if (fromBvmDir && this.hasCompiledMain(fromBvmDir)) return fromBvmDir;
+    try {
+      const fromRunningBit = getAspectDir(aspectId);
+      if (this.hasCompiledMain(fromRunningBit)) return fromRunningBit;
+    } catch {
+      // not resolvable from the running installation either
+    }
+    return undefined;
   }
 
   /**
