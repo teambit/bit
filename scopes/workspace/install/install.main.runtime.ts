@@ -457,6 +457,7 @@ export class InstallMain {
       this.workspace.inInstallAfterPmContext = true;
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
+      await this.linkUncompiledCoreAspectsForEnvs(compDirMap);
       const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
       await this.reloadMovedEnvs();
       await this.reloadNonLoadedEnvs();
@@ -502,6 +503,9 @@ export class InstallMain {
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    // the core aspects are compiled by now, so drop the links added above and let the envs resolve
+    // them from the workspace again.
+    await this.linkUncompiledCoreAspectsForEnvs(compDirMap);
     if (!options?.lockfileOnly && !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
@@ -1307,6 +1311,18 @@ export class InstallMain {
       await this._linkAllComponentsToBitRoots(compDirMap);
     }
     return { linkResults: res, linkedRootDeps };
+  }
+
+  /**
+   * see DependencyLinker.linkUncompiledCoreAspectsForEnvs. relevant only to a workspace that authors
+   * bit's core aspects, a no-op in any other.
+   */
+  private async linkUncompiledCoreAspectsForEnvs(compDirMap: ComponentMap<string>) {
+    const linker = this.dependencyResolver.getLinker({ rootDir: this.workspace.path });
+    await linker.linkUncompiledCoreAspectsForEnvs(
+      this.workspace.path,
+      compDirMap.toArray().map(([component]) => component.id)
+    );
   }
 
   async linkCodemods(compDirMap: ComponentMap<string>, options?: { rewire?: boolean }) {

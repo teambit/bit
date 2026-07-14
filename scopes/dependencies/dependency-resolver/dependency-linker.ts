@@ -9,6 +9,7 @@ import type { ComponentMap, Component, ComponentID, ComponentMain } from '@teamb
 import type { Logger } from '@teambit/logger';
 import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import { BitError } from '@teambit/bit-error';
 import type { EnvsMain } from '@teambit/envs';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -580,6 +581,81 @@ export class DependencyLinker {
 
     const results = filtered.map((id) => this.linkCoreAspect(id, opts));
     return compact(results);
+  }
+
+  /**
+   * The core aspects are phantom dependencies of the published envs - an env requires
+   * `@teambit/builder` (and `@teambit/ui`, `@teambit/pkg`...) without declaring it, and relies on the
+   * running bit installation to provide it. `linkCoreAspectsAndLegacy` is what normally satisfies
+   * that, by linking bit's own copies into the workspace's root node_modules.
+   *
+   * A workspace that authors the core aspects has them as source components instead, so they're
+   * excluded from that linking - such a workspace must build and load its own. That leaves the envs'
+   * phantom require resolving to a source component, which has no `main` until it's been compiled,
+   * so an env resolved from the root (see `resolveEnvsFromRoots`) fails to load during install -
+   * before the compile step that would have made it resolvable.
+   *
+   * Bridge that gap by linking bit's own (always compiled) copies into pnpm's hoisted store. That
+   * directory is on the module resolution path of packages inside the virtual store - the published
+   * envs - and not on the resolution path of the workspace's own components, so the envs bootstrap
+   * against the running bit while the workspace still builds and loads its own core aspects. The
+   * links are removed again once the source components have been compiled.
+   *
+   * A no-op in a workspace that doesn't author core aspects, i.e. everywhere but the bit repo.
+   */
+  async linkUncompiledCoreAspectsForEnvs(rootDir: string, componentIds: ComponentID[]): Promise<void> {
+    const idsInWorkspace = componentIds.map((id) => id.toString({ ignoreVersion: true }));
+    const authoredCoreAspects = this.aspectLoader.getCoreAspectIds().filter((aspectId) => {
+      if (aspectId === this.aspectLoader.mainAspect?.id) return false;
+      // the same naive comparison done by linkNonExistingCoreAspects, whose filter this inverts
+      const name = getCoreAspectName(aspectId);
+      return idsInWorkspace.some((id) => id === name || id === aspectId);
+    });
+    if (!authoredCoreAspects.length) return;
+
+    const hoistedStoreDir = path.join(rootDir, 'node_modules', '.pnpm');
+    const links: Record<string, string> = {};
+    await Promise.all(
+      authoredCoreAspects.map(async (aspectId) => {
+        const packageName = getCoreAspectPackageName(aspectId);
+        const fromDir = this._getPkgPathFromCurrentBitDir(packageName);
+        if (this.hasCompiledMain(path.join(rootDir, 'node_modules', packageName))) {
+          await this.removeUncompiledCoreAspectLink(path.join(hoistedStoreDir, 'node_modules', packageName), fromDir);
+          return;
+        }
+        if (fromDir) links[packageName] = `link:${fromDir}`;
+      })
+    );
+    if (!Object.keys(links).length) return;
+    this.logger.debug(
+      `linkUncompiledCoreAspectsForEnvs: linking ${Object.keys(links).join(', ')} from ${this._currentBitDir}`
+    );
+    await createLinks(hoistedStoreDir, links, { skipIfSymlinkValid: true });
+  }
+
+  private hasCompiledMain(pkgDir: string): boolean {
+    try {
+      const { main } = fs.readJsonSync(path.join(pkgDir, 'package.json'));
+      return fs.pathExistsSync(path.join(pkgDir, main ?? 'index.js'));
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * only removes links created by linkUncompiledCoreAspectsForEnvs, identified by resolving to the
+   * very package it would have linked. anything else in the hoisted store is pnpm's, and is left
+   * alone. compares real paths because the bit installation is itself reached through a symlink.
+   */
+  private async removeUncompiledCoreAspectLink(target: string, fromDir?: string): Promise<void> {
+    if (!fromDir) return;
+    try {
+      if (!fs.lstatSync(target).isSymbolicLink()) return;
+      if (fs.realpathSync(target) !== fs.realpathSync(fromDir)) return;
+    } catch {
+      return;
+    }
+    await fs.remove(target);
   }
 
   private isBitRepoWorkspace(dir: string) {
