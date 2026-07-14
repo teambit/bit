@@ -61,3 +61,92 @@ export function getLegacyCoreEnvPackageName(envIdWithoutVersion: string): string
   const [, ...name] = envIdWithoutVersion.split('/');
   return `@teambit/${name.join('.')}`;
 }
+
+/**
+ * structurally compatible with the dependency-resolver's EnvPolicyConfigObject (not imported to
+ * avoid a dependency from envs on dependency-resolver).
+ */
+export type LegacyCoreEnvPolicy = {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  peers?: Array<{ name: string; version: string; supportedRange: string }>;
+};
+
+const REACT_ENV_POLICY: LegacyCoreEnvPolicy = {
+  dependencies: { react: '-', 'react-dom': '-', 'core-js': '^3.0.0' },
+  devDependencies: {
+    react: '-',
+    'react-dom': '-',
+    '@types/mocha': '-',
+    '@types/node': '12.20.4',
+    '@types/react': '^19.0.0',
+    '@types/react-dom': '^19.0.0',
+    '@types/jest': '^26.0.0',
+    '@babel/runtime': '7.20.0',
+    '@types/testing-library__jest-dom': '5.9.5',
+  },
+  peerDependencies: {
+    react: '^17.0.0 || ^18.0.0 || ^19.0.0',
+    'react-dom': '^17.0.0 || ^18.0.0 || ^19.0.0',
+  },
+};
+
+// like react, but @babel/runtime is a runtime dependency (aspects are compiled by babel)
+const ASPECT_ENV_POLICY: LegacyCoreEnvPolicy = {
+  dependencies: { react: '-', 'react-dom': '-', 'core-js': '^3.0.0', '@babel/runtime': '7.20.0' },
+  devDependencies: {
+    react: '-',
+    'react-dom': '-',
+    '@types/mocha': '-',
+    '@types/node': '12.20.4',
+    '@types/react': '^19.0.0',
+    '@types/react-dom': '^19.0.0',
+    '@types/jest': '^26.0.0',
+    '@types/testing-library__jest-dom': '5.9.5',
+  },
+  peerDependencies: {
+    react: '^17.0.0 || ^18.0.0 || ^19.0.0',
+    'react-dom': '^17.0.0 || ^18.0.0 || ^19.0.0',
+  },
+};
+
+const NODE_ENV_POLICY: LegacyCoreEnvPolicy = {
+  devDependencies: { '@types/jest': '26.0.20', '@types/node': '22.10.5' },
+  peers: [
+    { name: 'react', version: '^19.0.0', supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0' },
+    { name: 'react-dom', version: '^19.0.0', supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0' },
+  ],
+};
+
+const MDX_ENV_POLICY: LegacyCoreEnvPolicy = {
+  ...REACT_ENV_POLICY,
+  dependencies: {
+    ...REACT_ENV_POLICY.dependencies,
+    '@teambit/mdx.ui.mdx-scope-context': '1.0.0',
+    '@mdx-js/react': '^3.1.1',
+  },
+};
+
+/**
+ * the dependency policies (getDependencies) of the legacy core envs at their pinned versions.
+ * these envs cannot always be loaded (their package is not necessarily installed, e.g. when
+ * computing manifests for scope-aspects capsules), but since the pinned versions are immutable
+ * their policies are known and embedded here (verified against the published packages).
+ * the env env composes the aspect env and the readme env composes the mdx env, neither overrides
+ * getDependencies - hence the shared objects.
+ * react-native and html were removed from the core long before the other envs, their pinned
+ * versions were built from older code - their policies are not embedded.
+ */
+const LEGACY_CORE_ENVS_POLICIES: Record<string, LegacyCoreEnvPolicy> = {
+  'teambit.harmony/node': NODE_ENV_POLICY,
+  'teambit.react/react': REACT_ENV_POLICY,
+  'teambit.harmony/aspect': ASPECT_ENV_POLICY,
+  'teambit.envs/env': ASPECT_ENV_POLICY,
+  'teambit.mdx/mdx': MDX_ENV_POLICY,
+  'teambit.mdx/readme': MDX_ENV_POLICY,
+};
+
+export function getLegacyCoreEnvPolicy(envIdWithoutVersion: string): LegacyCoreEnvPolicy | undefined {
+  return LEGACY_CORE_ENVS_POLICIES[envIdWithoutVersion];
+}

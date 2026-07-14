@@ -1172,6 +1172,20 @@ export class DependencyResolverMain {
     if (fromFile) return fromFile;
 
     this.envsWithoutManifest.add(envId.toString());
+    // envs that used to be core aspects cannot always be loaded - their package is not
+    // necessarily installed (e.g. when computing manifests for scope-aspects capsules). their
+    // pinned versions are immutable, so their policies are known - use the embedded policy
+    // rather than the default-env fallback which has no policy at all.
+    if (this.envs.isLegacyCoreEnv(envIdWithoutVersion) && !this.envs.isEnvRegistered(envId.toString())) {
+      const legacyCoreEnvPolicy = this.envs.getLegacyCoreEnvPolicy(envIdWithoutVersion);
+      if (legacyCoreEnvPolicy) {
+        return EnvPolicy.fromConfigObject(
+          legacyCoreEnvPolicy,
+          { includeLegacyPeersInSelfPolicy: true },
+          envIdWithoutVersion
+        );
+      }
+    }
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env, { envId: envIdWithoutVersion });
   }

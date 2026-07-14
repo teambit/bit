@@ -38,8 +38,10 @@ import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 import { EnvPlugin } from './env.plugin';
 import { EnvJsoncDetector } from './env-jsonc.detector';
+import type { LegacyCoreEnvPolicy } from './legacy-core-envs';
 import {
   getLegacyCoreEnvsIds as getLegacyCoreEnvsIdsList,
+  getLegacyCoreEnvPolicy,
   isLegacyCoreEnv as isLegacyCoreEnvId,
   resolveLegacyCoreEnvId,
 } from './legacy-core-envs';
@@ -283,6 +285,14 @@ export class EnvsMain {
    */
   isLegacyCoreEnvWithoutVersion(envId: string): boolean {
     return !envId.includes('@') && isLegacyCoreEnvId(envId);
+  }
+
+  /**
+   * the embedded dependency policy of a legacy core env at its pinned (immutable) version.
+   * used when the env cannot be loaded, e.g. its package is not installed.
+   */
+  getLegacyCoreEnvPolicy(envIdWithoutVersion: string): LegacyCoreEnvPolicy | undefined {
+    return getLegacyCoreEnvPolicy(envIdWithoutVersion);
   }
 
   /**
