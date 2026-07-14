@@ -629,7 +629,7 @@ export class DependencyLinker {
         await this.removeCoreAspectBootstrapLink(linkPath, rootDir);
         continue;
       }
-      const fromDir = this._getCoreAspectSourceDir(aspectId, packageName);
+      const fromDir = this._getCoreAspectSourceDir(aspectId, packageName, rootDir);
       if (fromDir) links[packageName] = `link:${fromDir}`;
     }
     const packagesToLink = Object.keys(links);
@@ -658,26 +658,38 @@ export class DependencyLinker {
   /**
    * the directory to bridge a core aspect from: the running bit installation's copy. bvm is where a
    * released bit runs from; when bit runs from elsewhere (e.g. installed through a package manager),
-   * fall back to the module-resolution strategy aspect-loader uses to locate core aspects. either
-   * way the copy is only usable as a bridge source if its own compiled main exists.
+   * fall back to the module-resolution strategy aspect-loader uses to locate core aspects.
+   *
+   * a copy is only usable as a bridge source if its own compiled main exists AND it lives outside
+   * the workspace. the second condition is what lets removeCoreAspectBootstrapLink identify this
+   * method's links: a workspace-internal source (e.g. a published bit installed as a workspace
+   * dependency) would produce a link the cleanup can never tell apart from pnpm's own hoisted
+   * entries, shadowing the workspace's compiled sources forever.
    */
-  private _getCoreAspectSourceDir(aspectId: string, packageName: string): string | undefined {
+  private _getCoreAspectSourceDir(aspectId: string, packageName: string, workspaceDir: string): string | undefined {
+    const isUsableSource = (dir: string) => this.hasCompiledMain(dir) && !this._realpathIsInside(dir, workspaceDir);
     const fromBvmDir = this._getPkgPathFromCurrentBitDir(packageName);
-    if (fromBvmDir && this.hasCompiledMain(fromBvmDir)) return fromBvmDir;
+    if (fromBvmDir && isUsableSource(fromBvmDir)) return fromBvmDir;
     try {
       const fromRunningBit = getAspectDir(aspectId);
-      if (this.hasCompiledMain(fromRunningBit)) return fromRunningBit;
+      if (isUsableSource(fromRunningBit)) return fromRunningBit;
     } catch {
       // not resolvable from the running installation either
     }
     return undefined;
   }
 
+  /** both paths must exist. compares real paths, as either side may be reached through a symlink. */
+  private _realpathIsInside(target: string, dir: string): boolean {
+    return fs.realpathSync(target).startsWith(fs.realpathSync(dir) + path.sep);
+  }
+
   /**
-   * only removes links created by syncCoreAspectLinksForEnvs. at this location+name nothing else
-   * creates links that resolve outside the workspace - pnpm's own hoisted entries always point back
-   * into the virtual store. matching the exact bit installation instead would be too strict: a link
-   * leaked by an interrupted install may point at a bit version that was since upgraded or removed
+   * only removes links created by syncCoreAspectLinksForEnvs, identified by resolving OUTSIDE the
+   * workspace - an invariant _getCoreAspectSourceDir enforces on every link source, and one nothing
+   * else at this location+name violates: pnpm's own hoisted entries always point back into the
+   * virtual store. matching the exact bit installation instead would be too strict: a link leaked
+   * by an interrupted install may point at a bit version that was since upgraded or removed
    * (dangling), and it must still be cleaned up or it would shadow the workspace's copy forever.
    */
   private async removeCoreAspectBootstrapLink(linkPath: string, workspaceDir: string): Promise<void> {
@@ -687,7 +699,7 @@ export class DependencyLinker {
       return; // nothing at this path
     }
     try {
-      if (fs.realpathSync(linkPath).startsWith(fs.realpathSync(workspaceDir) + path.sep)) return;
+      if (this._realpathIsInside(linkPath, workspaceDir)) return;
     } catch {
       // dangling link - fall through and remove it
     }
