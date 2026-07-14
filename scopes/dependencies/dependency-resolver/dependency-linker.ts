@@ -601,7 +601,7 @@ export class DependencyLinker {
    * against the running bit while the workspace still builds and loads its own core aspects. The
    * links are removed again once the source components have been compiled.
    *
-   * A no-op in a workspace that doesn't author core aspects, i.e. everywhere but the bit repo.
+   * Only reached from a workspace with `linkCoreAspects` off, i.e. one that authors them.
    */
   async linkUncompiledCoreAspectsForEnvs(rootDir: string, componentIds: ComponentID[]): Promise<void> {
     const idsInWorkspace = componentIds.map((id) => id.toString({ ignoreVersion: true }));

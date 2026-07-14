@@ -1314,10 +1314,15 @@ export class InstallMain {
   }
 
   /**
-   * see DependencyLinker.linkUncompiledCoreAspectsForEnvs. relevant only to a workspace that authors
-   * bit's core aspects, a no-op in any other.
+   * see DependencyLinker.linkUncompiledCoreAspectsForEnvs.
+   *
+   * `linkCoreAspects` is only turned off by a workspace that authors the core aspects, since it must
+   * use the ones it builds rather than the running bit's. That opt-out is also exactly what leaves
+   * the envs' phantom require unsatisfied until those sources are compiled, so there is nothing to
+   * bridge in any other workspace - where this returns on the config read alone.
    */
   private async linkUncompiledCoreAspectsForEnvs(compDirMap: ComponentMap<string>) {
+    if (this.dependencyResolver.linkCoreAspects()) return;
     const linker = this.dependencyResolver.getLinker({ rootDir: this.workspace.path });
     await linker.linkUncompiledCoreAspectsForEnvs(
       this.workspace.path,
