@@ -437,6 +437,23 @@ describe('tag components on Harmony', function () {
       expect(result).to.have.string('invalid auto-tag-increment level "nope"');
     });
   });
+  // the --prerelease-id is relevant for the dependents too, so a pre-release --auto-tag-increment
+  // should be enough to justify it, even when the modified components get a plain major.
+  describe('--auto-tag-increment with a pre-release level and --prerelease-id', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.fs.appendFile('comp3/index.js');
+      helper.command.tagAllWithoutBuild('--major --auto-tag-increment prerelease --prerelease-id dev');
+    });
+    it('should use the prerelease identifier for the auto-tagged dependents', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp3.version).to.equal('1.0.0');
+      expect(bitMap.comp2.version).to.equal('0.0.2-dev.0');
+      expect(bitMap.comp1.version).to.equal('0.0.2-dev.0');
+    });
+  });
   describe('invalid pre-release after normal tag', () => {
     let result: string;
     before(() => {

@@ -26,6 +26,11 @@ export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
+const PRE_RELEASE_TYPES = ['prepatch', 'prerelease', 'preminor', 'premajor'];
+
+function isPreReleaseType(releaseType?: ReleaseType): boolean {
+  return Boolean(releaseType && PRE_RELEASE_TYPES.includes(releaseType));
+}
 
 export const tagCmdOptions = [
   ['m', 'message <message>', 'a log message describing latest changes'],
@@ -233,9 +238,11 @@ To undo local tag use the "bit reset" command.`
 
 export function validateOptions(options: TagParams) {
   const { patch, minor, major, preRelease, increment, autoTagIncrement, prereleaseId, skipAutoTag } = options;
-  if (prereleaseId && (!increment || increment === 'major' || increment === 'minor' || increment === 'patch')) {
+  // the prerelease-id is relevant for the dependents as well, so --auto-tag-increment alone is
+  // enough to justify it, even when the modified components get a non-prerelease bump.
+  if (prereleaseId && !isPreReleaseType(increment) && !isPreReleaseType(autoTagIncrement)) {
     throw new BitError(
-      `--prerelease-id should be entered along with --increment flag, while --increment must be one of the following: [prepatch, prerelease, preminor, premajor]`
+      `--prerelease-id should be entered along with --increment or --auto-tag-increment flag, while the increment must be one of the following: [${PRE_RELEASE_TYPES.join(', ')}]`
     );
   }
 
