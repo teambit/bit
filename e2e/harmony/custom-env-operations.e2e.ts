@@ -21,7 +21,9 @@ describe('custom env (config and versioning scenarios)', function () {
     before(() => {
       // important! don't disable the preview.
       helper.scopeHelper.setWorkspaceWithRemoteScope({ disablePreview: false });
-      const envName = helper.env.setCustomEnv();
+      // node-env-1 is a minimal old-format env fixture - it preserves the custom-env mechanics
+      // without installing the full legacy node-env dependency chain
+      const envName = helper.env.setCustomEnv('node-env-1');
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.extensions.addExtensionToWorkspace(envId);
       helper.command.tagAllWithoutBuild();
@@ -36,7 +38,7 @@ describe('custom env (config and versioning scenarios)', function () {
     let envId: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      const envName = helper.env.setCustomEnv();
+      const envName = helper.env.setCustomEnv('node-env-1');
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -55,7 +57,7 @@ describe('custom env (config and versioning scenarios)', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      const envName = helper.env.setCustomEnv();
+      const envName = helper.env.setCustomEnv('node-env-1');
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.setEnv('comp1', envId);
       helper.command.tagAllWithoutBuild();
@@ -84,7 +86,7 @@ describe('custom env (config and versioning scenarios)', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      const envName = helper.env.setCustomEnv();
+      const envName = helper.env.setCustomEnv('node-env-1');
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.command.setEnv('comp1', envId);
       helper.command.rename(envName, 'new-env');
@@ -98,7 +100,7 @@ describe('custom env (config and versioning scenarios)', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      const envName = helper.env.setCustomEnv();
+      const envName = helper.env.setCustomEnv('node-env-1');
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.command.setEnv('comp1', envId);
       helper.command.tagAllWithoutBuild();
@@ -185,17 +187,17 @@ export default createMounter(MyReactProvider) as any;`
   describe('ejecting conf when current env exists locally', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.env.setCustomEnv();
+      helper.env.setCustomEnv('node-env-1');
       helper.fixtures.populateComponents(1, false);
-      helper.command.setEnv('comp1', 'node-env');
+      helper.command.setEnv('comp1', 'node-env-1');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.ejectConf('comp1');
     });
     it('should write the env aspect without a version to the component.json file', () => {
       const compJson = helper.componentJson.read('comp1');
-      expect(compJson.extensions).to.have.property(`${helper.scopes.remote}/node-env`);
-      expect(compJson.extensions).to.not.have.property(`${helper.scopes.remote}/node-env@0.0.1`);
+      expect(compJson.extensions).to.have.property(`${helper.scopes.remote}/node-env-1`);
+      expect(compJson.extensions).to.not.have.property(`${helper.scopes.remote}/node-env-1@0.0.1`);
     });
   });
   describe('an empty env. nothing is configured, not even a compiler', () => {
@@ -267,14 +269,14 @@ export default createMounter(MyReactProvider) as any;`
   describe('custom env with invalid env.jsonc', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      const envName = helper.env.setCustomEnv();
+      const envName = helper.env.setCustomEnv('node-env-1');
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1);
       helper.command.setEnv('comp1', envId);
     });
     it('should throw a descriptive error when a policy entry is not an object', () => {
       helper.fs.outputFile(
-        'node-env/env.jsonc',
+        'node-env-1/env.jsonc',
         `{
   "policy": {
     "dev": [
@@ -290,7 +292,7 @@ export default createMounter(MyReactProvider) as any;`
     });
     it('should throw a descriptive error when a policy entry object has no "version" field', () => {
       helper.fs.outputFile(
-        'node-env/env.jsonc',
+        'node-env-1/env.jsonc',
         `{
   "policy": {
     "dev": [
