@@ -330,9 +330,11 @@ export class PreviewMain {
    * runs during component load.
    */
   private isUsingCoreOrLegacyCoreEnv(component: Component): boolean {
-    if (this.envs.isUsingCoreEnv(component)) return true;
-    const envId = this.envs.getEnvId(component);
-    return this.envs.isLegacyCoreEnv(envId.split('@')[0]);
+    return this.envs.isUsingCoreEnv(component) || this.isUsingLegacyCoreEnv(component);
+  }
+
+  private isUsingLegacyCoreEnv(component: Component): boolean {
+    return this.envs.isLegacyCoreEnv(this.envs.getEnvId(component));
   }
 
   async generateComponentPreview(
@@ -570,7 +572,7 @@ export class PreviewMain {
     // envs that used to be core aspects may not be installed yet, in which case getEnvComponent
     // below throws - and this runs during component load. their pinned versions all support
     // scaling. (core envs are handled separately below.)
-    if (!this.envs.isUsingCoreEnv(component) && this.isUsingCoreOrLegacyCoreEnv(component)) {
+    if (this.isUsingLegacyCoreEnv(component)) {
       return true;
     }
     const isBundledWithEnv = await this.calcIsBundledWithEnv(component);

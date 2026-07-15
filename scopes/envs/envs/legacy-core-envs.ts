@@ -33,12 +33,13 @@ export function getLegacyCoreEnvsIds(): string[] {
   return [...LEGACY_CORE_ENVS_IDS];
 }
 
-export function isLegacyCoreEnv(envIdWithoutVersion: string): boolean {
-  return LEGACY_CORE_ENVS_IDS_SET.has(envIdWithoutVersion);
+export function isLegacyCoreEnv(envId: string): boolean {
+  // the id may carry a version (e.g. when coming from component config), strip it
+  return LEGACY_CORE_ENVS_IDS_SET.has(envId.split('@')[0]);
 }
 
-export function getPinnedLegacyCoreEnvVersion(envIdWithoutVersion: string): string | undefined {
-  return LEGACY_CORE_ENVS_VERSIONS[envIdWithoutVersion];
+export function getPinnedLegacyCoreEnvVersion(envId: string): string | undefined {
+  return LEGACY_CORE_ENVS_VERSIONS[envId.split('@')[0]];
 }
 
 /**
@@ -54,11 +55,22 @@ export function resolveLegacyCoreEnvId(envId: string): string {
 }
 
 /**
+ * key for tracking in-flight (currently loading) aspects, used to break circular load chains.
+ * legacy core envs are single-instance so any version of them matches; other aspects are keyed
+ * with their version - a nested chain may legitimately need a different version of an
+ * already-loading aspect.
+ */
+export function aspectLoadInFlightKey(id: string): string {
+  const idWithoutVersion = id.split('@')[0];
+  return isLegacyCoreEnv(idWithoutVersion) ? idWithoutVersion : id;
+}
+
+/**
  * legacy core envs were published with the core-aspects package-name convention.
  * e.g. 'teambit.react/react' => '@teambit/react', 'teambit.harmony/node' => '@teambit/node'.
  */
-export function getLegacyCoreEnvPackageName(envIdWithoutVersion: string): string {
-  const [, ...name] = envIdWithoutVersion.split('/');
+export function getLegacyCoreEnvPackageName(envId: string): string {
+  const [, ...name] = envId.split('@')[0].split('/');
   return `@teambit/${name.join('.')}`;
 }
 
@@ -147,6 +159,6 @@ const LEGACY_CORE_ENVS_POLICIES: Record<string, LegacyCoreEnvPolicy> = {
   'teambit.mdx/readme': MDX_ENV_POLICY,
 };
 
-export function getLegacyCoreEnvPolicy(envIdWithoutVersion: string): LegacyCoreEnvPolicy | undefined {
-  return LEGACY_CORE_ENVS_POLICIES[envIdWithoutVersion];
+export function getLegacyCoreEnvPolicy(envId: string): LegacyCoreEnvPolicy | undefined {
+  return LEGACY_CORE_ENVS_POLICIES[envId.split('@')[0]];
 }

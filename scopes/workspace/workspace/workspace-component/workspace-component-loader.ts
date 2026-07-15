@@ -288,7 +288,7 @@ export class WorkspaceComponentLoader {
         // when the env is a workspace component (e.g. in the bit repo itself), use the workspace
         // version. resolving to the pinned version would load a second copy of the component at a
         // version that may not exist in the local scope.
-        const workspaceId = this.workspace.listIds().find((wsId) => wsId.toStringWithoutVersion() === envIdStr);
+        const workspaceId = this.workspace.listIds().searchStrWithoutVersion(envIdStr);
         if (workspaceId) {
           allExtIds.set(envIdStr, workspaceId);
           return;

@@ -12,14 +12,14 @@ import {
 import type { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import type { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
-import { compact, uniq, difference, groupBy, defaultsDeep, partition } from 'lodash';
+import { compact, uniq, groupBy, defaultsDeep, partition } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { ExtensionManifest, Aspect } from '@teambit/harmony';
 import type { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
 import type { EnvsMain } from '@teambit/envs';
-import { resolveLegacyCoreEnvId } from '@teambit/envs';
+import { aspectLoadInFlightKey, resolveLegacyCoreEnvId } from '@teambit/envs';
 import type { NodeLinker } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import type { ScopeMain } from './scope.main.runtime';
@@ -129,15 +129,9 @@ needed-for: ${neededFor || '<unknown>'}`);
     // break re-entrant load cycles: an aspect's manifest deps (or its env) may lead back to an
     // aspect that a parent call in the current chain is already loading - the nested calls start
     // with a fresh `visited` list, so without this guard such cycles never converge (same
-    // approach as the workspace-side inFlightAspectsLoads). legacy core envs are single-instance
-    // so any version of them matches; other aspects are keyed with their version - a nested chain
-    // may legitimately need a different version of an already-loading aspect.
-    const inFlightKey = (id: string) => {
-      const idWithoutVersion = id.split('@')[0];
-      return this.envs.isLegacyCoreEnv(idWithoutVersion) ? idWithoutVersion : id;
-    };
+    // approach as the workspace-side inFlightAspectsLoads).
     const [inFlightIds, idsToLoad] = partition(nonVisitedId, (id) =>
-      this.scope.inFlightAspectLoads.has(inFlightKey(id))
+      this.scope.inFlightAspectLoads.has(aspectLoadInFlightKey(id))
     );
     if (inFlightIds.length) {
       this.logger.debug(
@@ -148,7 +142,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (!nonVisitedId.length) {
       return { manifests: [], potentialPluginsIds: [] };
     }
-    const inFlightAdded = nonVisitedId.map(inFlightKey);
+    const inFlightAdded = nonVisitedId.map(aspectLoadInFlightKey);
     inFlightAdded.forEach((id) => this.scope.inFlightAspectLoads.add(id));
     try {
       return await this.getManifestsGraphAfterInFlightCheck(nonVisitedId, visited, throwOnError, lane, opts);
@@ -224,7 +218,7 @@ needed-for: ${neededFor || '<unknown>'}`);
         const idWithoutVersion = id.split('@')[0];
         if (!this.envs.isLegacyCoreEnv(idWithoutVersion)) return id;
         if (this.aspectLoader.isAspectLoadedIgnoringVersion(idWithoutVersion)) return undefined;
-        return id.includes('@') ? id : resolveLegacyCoreEnvId(id);
+        return resolveLegacyCoreEnvId(id);
       })
     );
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
@@ -232,9 +226,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     // filter out core aspects also when they are requested with a version (e.g. when they are
     // dependencies of a loaded aspect, the version is the component version)
-    const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds).filter(
-      (id) => !coreAspectsStringIds.includes(id.split('@')[0])
-    );
+    const idsWithoutCore: string[] = notLoadedIds.filter((id) => !coreAspectsStringIds.includes(id.split('@')[0]));
     const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
     // TODO: use diff instead of filter twice
     const localAspects = notLoadedIds.filter((id) => id.startsWith('file://'));

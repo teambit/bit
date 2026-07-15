@@ -23,7 +23,7 @@ import type { ScopeMain } from '@teambit/scope';
 import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import type { EnvsMain } from '@teambit/envs';
-import { resolveLegacyCoreEnvId } from '@teambit/envs';
+import { aspectLoadInFlightKey, resolveLegacyCoreEnvId } from '@teambit/envs';
 import type { ConfigMain } from '@teambit/config';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ShouldLoadFunc } from './build-graph-from-fs';
@@ -123,15 +123,9 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       notLoadedIds = nonLocalAspects.filter((id) => !this.isAspectLoadedInclLegacyEnvs(id));
     }
     // break circular env chains - if an aspect is already in the process of loading (a parent
-    // call in the current chain), don't try to load it again. legacy core envs are single-instance
-    // so any version of them matches; other aspects are keyed with their version - a nested chain
-    // may legitimately need a different version of an already-loading aspect.
-    const inFlightKey = (id: string) => {
-      const idWithoutVersion = id.split('@')[0];
-      return this.envs.isLegacyCoreEnv(idWithoutVersion) ? idWithoutVersion : id;
-    };
+    // call in the current chain), don't try to load it again.
     const [inFlightIds, idsToLoad] = partition(notLoadedIds, (id) =>
-      this.workspace.inFlightAspectsLoads.has(inFlightKey(id))
+      this.workspace.inFlightAspectsLoads.has(aspectLoadInFlightKey(id))
     );
     if (inFlightIds.length) {
       this.logger.debug(`${loggerPrefix} skipping aspects that are already loading: ${inFlightIds.join(', ')}`);
@@ -141,7 +135,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       span.setAttribute('alreadyLoaded', true);
       return [];
     }
-    const inFlightAdded = notLoadedIds.map(inFlightKey);
+    const inFlightAdded = notLoadedIds.map(aspectLoadInFlightKey);
     inFlightAdded.forEach((id) => this.workspace.inFlightAspectsLoads.add(id));
     try {
       return await this.loadAspectsAfterInFlightCheck(notLoadedIds, span, neededFor, mergedOpts, loggerPrefix);
@@ -157,14 +151,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     mergedOpts: Required<WorkspaceLoadAspectsOptions>,
     loggerPrefix: string
   ): Promise<string[]> {
-    const throwOnError = mergedOpts.throwOnError;
-    const opts = mergedOpts;
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     // filter out core aspects also when they are requested with a version (e.g. when they are
     // dependencies of a loaded aspect, the version is the component version)
-    const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds).filter(
-      (id) => !coreAspectsStringIds.includes(id.split('@')[0])
-    );
+    const idsWithoutCore: string[] = notLoadedIds.filter((id) => !coreAspectsStringIds.includes(id.split('@')[0]));
 
     let componentIds = await this.workspace.resolveMultipleComponentIds(idsWithoutCore);
     componentIds = this.resolveLegacyCoreEnvsVersions(componentIds);
@@ -188,7 +178,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     if (mergedOpts.useScopeAspectsCapsule) {
       idsToLoadFromWs = workspaceIds;
-      scopeAspectIds = await this.loadFromScopeAspectsCapsule(nonWorkspaceIds, throwOnError, neededFor);
+      scopeAspectIds = await this.loadFromScopeAspectsCapsule(nonWorkspaceIds, mergedOpts.throwOnError, neededFor);
     }
 
     const aspectsDefs = await this.resolveAspects(undefined, idsToLoadFromWs, {
@@ -225,10 +215,12 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // Do the require again now that the plugins defs already registered
     const pluginsManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
       pluginsRequireableComponents,
-      throwOnError,
-      opts.runSubscribers
+      mergedOpts.throwOnError,
+      mergedOpts.runSubscribers
     );
-    await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
+    await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, {
+      throwOnError: mergedOpts.throwOnError,
+    });
     const manifestIds = manifests.map((manifest) => manifest.id);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return compact(manifestIds.concat(scopeAspectIds));
@@ -247,9 +239,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // a legacy core env should have a single instance regardless of the requested version. old
     // components request it without a version while a workspace/pinned copy is loaded with one.
     // a second instance of the same env would register duplicate build tasks.
-    return this.harmony.extensionsIds.some(
-      (extId) => extId.split('@')[0] === idWithoutVersion && this.harmony.extensions.get(extId)?.loaded
-    );
+    return this.aspectLoader.isAspectLoadedIgnoringVersion(idWithoutVersion);
   }
 
   /**

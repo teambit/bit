@@ -1723,7 +1723,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     if (!envId) return;
     if (this.envs.getCoreEnvsIds().includes(envId)) return;
     // envs that used to be core aspects are old-style envs, they are not of type env by design
-    if (this.envs.isLegacyCoreEnv(envId.split('@')[0])) return;
+    if (this.envs.isLegacyCoreEnv(envId)) return;
     if (this.warnedAboutMisconfiguredEnvs.includes(envId)) return;
     let env: Component;
     try {

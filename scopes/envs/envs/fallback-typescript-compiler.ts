@@ -5,7 +5,16 @@
  * it transpiles typescript files without type-checking, which is enough for generating
  * requirable dists.
  */
+let cachedCompiler: ReturnType<typeof buildFallbackTypescriptCompiler> | undefined;
+
 export function getFallbackTypescriptCompiler() {
+  // the compiler is stateless and its config is static - build it once. it may be requested per
+  // component (e.g. when computing component issues) on every command.
+  cachedCompiler ??= buildFallbackTypescriptCompiler();
+  return cachedCompiler;
+}
+
+function buildFallbackTypescriptCompiler() {
   let ts;
   try {
     ts = require('typescript');

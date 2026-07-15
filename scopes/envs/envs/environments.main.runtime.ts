@@ -41,7 +41,6 @@ import { EnvPlugin } from './env.plugin';
 import { EnvJsoncDetector } from './env-jsonc.detector';
 import type { LegacyCoreEnvPolicy } from './legacy-core-envs';
 import {
-  getLegacyCoreEnvsIds as getLegacyCoreEnvsIdsList,
   getLegacyCoreEnvPolicy,
   isLegacyCoreEnv as isLegacyCoreEnvId,
   resolveLegacyCoreEnvId,
@@ -239,6 +238,8 @@ export class EnvsMain {
   }
 
   private fallbackDefaultEnv: Environment | undefined;
+
+  private warnedMultiVersionEnvs = new Set<string>();
   /**
    * a bare-minimum env used for components whose env failed to load (e.g. an env that used to be
    * a core aspect and was not installed yet, or a custom env that failed loading). it provides a
@@ -259,26 +260,18 @@ export class EnvsMain {
   /**
    * ids of the envs that are core aspects (bundled with the bit binary and saved in components
    * models without a version). most envs that used to be core were removed to keep bit slim, see
-   * getLegacyCoreEnvsIds() for those.
+   * legacy-core-envs.ts for those.
    */
   getCoreEnvsIds(): string[] {
     return [DEFAULT_ENV];
   }
 
   /**
-   * ids of envs that used to be core aspects and were removed from the core.
-   * old components may have them in their models without a version.
-   */
-  getLegacyCoreEnvsIds(): string[] {
-    return getLegacyCoreEnvsIdsList();
-  }
-
-  /**
    * whether this env used to be a core aspect (in which case old components may use it without
-   * a version).
+   * a version). the id may carry a version - it is ignored.
    */
-  isLegacyCoreEnv(envIdWithoutVersion: string): boolean {
-    return isLegacyCoreEnvId(envIdWithoutVersion);
+  isLegacyCoreEnv(envId: string): boolean {
+    return isLegacyCoreEnvId(envId);
   }
 
   /**
@@ -292,8 +285,8 @@ export class EnvsMain {
    * the embedded dependency policy of a legacy core env at its pinned (immutable) version.
    * used when the env cannot be loaded, e.g. its package is not installed.
    */
-  getLegacyCoreEnvPolicy(envIdWithoutVersion: string): LegacyCoreEnvPolicy | undefined {
-    return getLegacyCoreEnvPolicy(envIdWithoutVersion);
+  getLegacyCoreEnvPolicy(envId: string): LegacyCoreEnvPolicy | undefined {
+    return getLegacyCoreEnvPolicy(envId);
   }
 
   /**
@@ -318,11 +311,15 @@ export class EnvsMain {
         if (semver.valid(aVersion) && semver.valid(bVersion)) return semver.rcompare(aVersion, bVersion);
         return bVersion.localeCompare(aVersion, undefined, { numeric: true });
       });
-      this.logger.warn(
-        `multiple versions of env "${envIdWithoutVersion}" are registered (${matches
-          .map(([id]) => id)
-          .join(', ')}), a versionless reference resolves to "${matches[0][0]}"`
-      );
+      // this helper runs multiple times per component load - warn only once per env
+      if (!this.warnedMultiVersionEnvs.has(envIdWithoutVersion)) {
+        this.warnedMultiVersionEnvs.add(envIdWithoutVersion);
+        this.logger.warn(
+          `multiple versions of env "${envIdWithoutVersion}" are registered (${matches
+            .map(([id]) => id)
+            .join(', ')}), a versionless reference resolves to "${matches[0][0]}"`
+        );
+      }
     }
     const [envId, env] = matches[0];
     return new EnvDefinition(envId, env);
@@ -333,7 +330,7 @@ export class EnvsMain {
    * get its EnvDefinition from the slot by matching the id ignoring the version.
    */
   private getLegacyCoreEnvFromSlot(envIdMaybeVersioned: string): EnvDefinition | undefined {
-    if (!isLegacyCoreEnvId(envIdMaybeVersioned.split('@')[0])) return undefined;
+    if (!isLegacyCoreEnvId(envIdMaybeVersioned)) return undefined;
     return this.getEnvFromSlotIgnoreVersion(envIdMaybeVersioned);
   }
 
@@ -565,19 +562,15 @@ export class EnvsMain {
     const exactMatchId = exactMatch?.[0];
     if (exactMatchId) return exactMatchId;
 
-    // envs that used to be core are saved in old components without a version. once loaded (as
-    // regular envs) they are registered to the slot with a version, so match ignoring the version.
-    const legacyCoreEnvMatch = this.getLegacyCoreEnvFromSlot(envIdFromEnvData);
-    if (legacyCoreEnvMatch) return legacyCoreEnvMatch.id;
-    // the legacy core env was not loaded (probably not installed yet). return the id as-is, the
-    // same way it was returned when these envs were core aspects.
-    if (isLegacyCoreEnvId(envIdFromEnvData.split('@')[0])) return envIdFromEnvData;
-
     // the env may be registered to the slot with a version while the component references it
-    // without one and without an extension entry holding the version (e.g. a config coming from
-    // a lane merge). match ignoring the version.
+    // without one - e.g. legacy core envs saved in old components without a version, or a config
+    // coming from a lane merge without an extension entry holding the version. match ignoring
+    // the version.
     const versionlessSlotMatch = this.getEnvFromSlotIgnoreVersion(envIdFromEnvData);
     if (versionlessSlotMatch) return versionlessSlotMatch.id;
+    // a legacy core env that was not loaded (probably not installed yet). return the id as-is,
+    // the same way it was returned when these envs were core aspects.
+    if (isLegacyCoreEnvId(envIdFromEnvData)) return envIdFromEnvData;
 
     if (!withVersion) throw new EnvNotConfiguredForComponent(envIdFromEnvData, component.id.toString());
     return withVersion.toString();
@@ -614,13 +607,11 @@ export class EnvsMain {
       }
     }
     if (this.isLegacyCoreEnvWithoutVersion(id)) {
-      // the env may be loaded and registered to the slot with a version (e.g. as a workspace
-      // component or with its pinned version).
-      const fromSlot = this.getLegacyCoreEnvFromSlot(id);
-      if (fromSlot) return fromSlot;
       // envs that used to be core aspects are used by old components without a version. if such an
       // env was not loaded (e.g. "bit install" was not running yet), return a minimal env
       // definition so basic commands can still function (a warning/issue is shown separately).
+      // (a loaded one would have been found above - getEnvDefinitionByStringId matches versionless
+      // ids ignoring the version.)
       return new EnvDefinition(id, this.getFallbackDefaultEnv());
     }
     // Do not allow a non existing env
@@ -853,13 +844,6 @@ export class EnvsMain {
         this.envIds.add(envDef.id);
         return envDef;
       }
-      // envs that used to be core are configured on old components without a version, but once
-      // loaded (as regular envs) they are registered to the slot with a version.
-      const legacyCoreEnvDef = this.getLegacyCoreEnvFromSlot(envIdFromEnvsConfigWithoutVersion);
-      if (legacyCoreEnvDef) {
-        this.envIds.add(legacyCoreEnvDef.id);
-        return legacyCoreEnvDef;
-      }
     }
 
     // in some cases we have the id configured in the teambit.envs/envs but without the version
@@ -968,12 +952,7 @@ export class EnvsMain {
       return undefined;
     }
     const envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
-    const envDef =
-      this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion) ||
-      // envs that used to be core are configured on old components without a version, but once
-      // loaded (as regular envs) they are registered to the slot with a version.
-      this.getLegacyCoreEnvFromSlot(envIdFromEnvsConfigWithoutVersion);
-    return envDef;
+    return this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
   }
 
   /**
@@ -1075,13 +1054,6 @@ if needed, use "bit env set" command to align the env id`;
         this.envIds.add(envDef.id);
         return envDef;
       }
-      // envs that used to be core are configured on old components without a version, but once
-      // loaded (as regular envs) they are registered to the slot with a version.
-      const legacyCoreEnvDef = this.getLegacyCoreEnvFromSlot(envIdFromEnvsConfigWithoutVersion);
-      if (legacyCoreEnvDef) {
-        this.envIds.add(legacyCoreEnvDef.id);
-        return legacyCoreEnvDef;
-      }
     }
 
     // in some cases we have the id configured in the teambit.envs/envs but without the version
@@ -1128,9 +1100,10 @@ if needed, use "bit env set" command to align the env id`;
     const envId = await this.findFirstEnv(ids);
     let envDef = envId ? this.getEnvDefinitionByStringId(envId) : undefined;
     if (!envDef && envId) {
-      // envs that used to be core are configured (e.g. via variants) without a version, but once
-      // loaded (as regular envs) they are registered to the slot with a version.
-      envDef = this.getLegacyCoreEnvFromSlot(envId.split('@')[0]);
+      // envs that used to be core may appear here versioned (e.g. from an aspect entry) while
+      // registered to the slot with a different version. they are single-instance, so match
+      // ignoring the version.
+      envDef = this.getLegacyCoreEnvFromSlot(envId);
     }
 
     return envDef || this.getDefaultEnv();
@@ -1207,16 +1180,10 @@ if needed, use "bit env set" command to align the env id`;
   }
 
   getEnvDefinitionById(id: ComponentID): EnvDefinition | undefined {
-    const envDef =
+    return (
       this.getEnvDefinitionByStringId(id.toString()) ||
-      this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }));
-    if (envDef) return envDef;
-    // envs that used to be core are configured on old components without a version (e.g. via a
-    // variant), but once loaded (as regular envs) they are registered to the slot with a version.
-    if (isLegacyCoreEnvId(id.toString({ ignoreVersion: true }))) {
-      return this.getLegacyCoreEnvFromSlot(id.toString({ ignoreVersion: true }));
-    }
-    return undefined;
+      this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }))
+    );
   }
 
   public getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {
@@ -1247,7 +1214,7 @@ if needed, use "bit env set" command to align the env id`;
    * which case it's registered to the slot with a version).
    */
   getEnvsEnvDefinition(): EnvDefinition | undefined {
-    return this.getEnvDefinitionByStringId('teambit.envs/env') || this.getEnvFromSlotIgnoreVersion('teambit.envs/env');
+    return this.getEnvDefinitionByStringId('teambit.envs/env');
   }
 
   private printWarningIfFirstTime(envId: string, message: string) {
@@ -1270,7 +1237,7 @@ if needed, use "bit env set" command to align the env id`;
     // old components use envs that used to be core without a version, while these envs are
     // registered to the slot with a version once loaded as regular envs. these envs are
     // single-instance, so match ignoring the version (the given id may be versioned as well).
-    return Boolean(this.getLegacyCoreEnvFromSlot(idWithoutVersion));
+    return Boolean(this.getLegacyCoreEnvFromSlot(id));
   }
 
   isUsingAspectEnv(component: Component): boolean {

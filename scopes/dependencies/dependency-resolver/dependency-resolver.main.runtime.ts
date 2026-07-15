@@ -1254,7 +1254,7 @@ export class DependencyResolverMain {
     if (isCoreEnv) return undefined;
     // envs that used to be core aspects are old-style envs (no env.jsonc). avoid fetching the
     // env component just to find out it has no env.jsonc file.
-    if (this.envs.isLegacyCoreEnv(envId.split('@')[0])) return undefined;
+    if (this.envs.isLegacyCoreEnv(envId)) return undefined;
     if (legacyFiles) {
       const envJsonc = legacyFiles.find((file) => file.basename === 'env.jsonc');
       if (envJsonc) {

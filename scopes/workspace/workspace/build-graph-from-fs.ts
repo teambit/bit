@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import { flatten } from 'lodash';
+import { chunk, flatten } from 'lodash';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { Component, ComponentID } from '@teambit/component';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -17,20 +17,22 @@ export type ShouldLoadFunc = (id: ComponentID) => Promise<boolean>;
 
 export class GraphFromFsBuilder {
   private graph = new Graph<Component, string>();
-  private completed: string[] = [];
+  private completed = new Set<string>();
   private depth = 1;
   private consumer: Consumer;
-  private importedIds: string[] = [];
+  private importedIds = new Set<string>();
   private currentLane: Lane | undefined;
+  private ignoreIds: Set<string>;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
     private dependencyResolver: DependencyResolverMain,
-    private ignoreIds: string[] = [],
+    ignoreIds: string[] = [],
     private shouldLoadItsDeps?: ShouldLoadFunc,
     private shouldThrowOnMissingDep = true
   ) {
     this.consumer = this.workspace.consumer;
+    this.ignoreIds = new Set(ignoreIds);
   }
 
   /**
@@ -89,7 +91,7 @@ export class GraphFromFsBuilder {
     const deps = await this.dependencyResolver.getComponentDependencies(component);
     const depsIds = deps.map((dep) => dep.componentId);
 
-    return depsIds.filter((depId) => !this.ignoreIds.includes(depId.toString()));
+    return depsIds.filter((depId) => !this.ignoreIds.has(depId.toString()));
   }
 
   private async getAllDepsFiltered(component: Component): Promise<ComponentID[]> {
@@ -98,7 +100,7 @@ export class GraphFromFsBuilder {
     if (!shouldLoadFunc) return depsWithoutIgnore;
     const deps = await mapSeries(depsWithoutIgnore, async (depId) => {
       const shouldLoad = await shouldLoadFunc(depId);
-      if (!shouldLoad) this.ignoreIds.push(depId.toString());
+      if (!shouldLoad) this.ignoreIds.add(depId.toString());
       return shouldLoad ? depId : null;
     });
     return compact(deps);
@@ -142,7 +144,7 @@ export class GraphFromFsBuilder {
       : components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
 
     const allDeps = (await Promise.all(compsToImportDepsFor.map((c) => this.getAllDepsUnfiltered(c)))).flat();
-    const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));
+    const allDepsNotImported = allDeps.filter((d) => !this.importedIds.has(d.toString()));
     const exportedDeps = allDepsNotImported.map((id) => id).filter((dep) => this.workspace.isExported(dep));
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     let uniqDeps: ComponentID[] = ComponentIdList.uniqFromArray(exportedDeps);
@@ -157,12 +159,10 @@ export class GraphFromFsBuilder {
     // import in bounded chunks: one big importMany holds all the fetched objects and their
     // VersionDependencies in memory at once, which OOMs constrained machines on big graphs.
     // chunking keeps the round-trips low while letting each batch be GC'ed.
-    const chunks: ComponentID[][] = [];
-    const CHUNK_SIZE = 50;
-    for (let i = 0; i < uniqDeps.length; i += CHUNK_SIZE) chunks.push(uniqDeps.slice(i, i + CHUNK_SIZE));
-    await mapSeries(chunks, (chunk) =>
+    const chunks = chunk(uniqDeps, 50);
+    await mapSeries(chunks, (depsChunk) =>
       scopeComponentsImporter.importMany({
-        ids: ComponentIdList.fromArray(chunk),
+        ids: ComponentIdList.fromArray(depsChunk),
         preferDependencyGraph: useLazyImport,
         // in lazy mode this is a best-effort batch prefetch of an unfiltered dep list - deps that
         // fail to import are handled later by loadManyComponents (warn/throw per shouldThrowOnMissingDep)
@@ -175,19 +175,19 @@ export class GraphFromFsBuilder {
           : 'for building a graph from the workspace',
       })
     );
-    allDepsNotImported.map((id) => this.importedIds.push(id.toString()));
+    allDepsNotImported.forEach((id) => this.importedIds.add(id.toString()));
   }
 
   private async processOneComponent(component: Component) {
     const idStr = component.id.toString();
-    if (this.completed.includes(idStr)) return [];
+    if (this.completed.has(idStr)) return [];
     const allIds = await this.getAllDepsFiltered(component);
 
     const allDependenciesComps = await this.loadManyComponents(allIds, idStr);
     const deps = await this.dependencyResolver.getComponentDependencies(component);
     deps.forEach((dep) => {
       const depId = dep.componentId;
-      if (this.ignoreIds.includes(depId.toString())) return;
+      if (this.ignoreIds.has(depId.toString())) return;
       if (!this.graph.hasNode(depId.toString())) {
         if (this.shouldThrowOnMissingDep) {
           throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
@@ -198,7 +198,7 @@ export class GraphFromFsBuilder {
       this.graph.setEdge(new Edge(idStr, depId.toString(), dep.lifecycle));
     });
 
-    this.completed.push(idStr);
+    this.completed.add(idStr);
     return allDependenciesComps;
   }
 

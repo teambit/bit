@@ -15,6 +15,7 @@ export {
   getPinnedLegacyCoreEnvVersion,
   resolveLegacyCoreEnvId,
   getLegacyCoreEnvPackageName,
+  aspectLoadInFlightKey,
 } from './legacy-core-envs';
 export * from './environment';
 export { ExecutionContext } from './context';
