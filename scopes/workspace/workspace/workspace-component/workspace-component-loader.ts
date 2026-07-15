@@ -542,9 +542,16 @@ export class WorkspaceComponentLoader {
       // env-data, as when their own env was not loaded yet, the env-data is calculated with a
       // fallback env.
       const isLegacyCoreEnv = this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion());
+      // a component with an env.jsonc manifest is an env by definition. same as above, the
+      // env-data type can't be relied on when the env's own env was not loaded yet.
+      const hasEnvManifest = Boolean(this.envs.hasEnvManifest(component));
       if (
         opts.loadEnvs &&
-        (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env' || isLegacyCoreEnv)
+        (envsData?.data?.services ||
+          envsData?.data?.self ||
+          envsData?.data?.type === 'env' ||
+          isLegacyCoreEnv ||
+          hasEnvManifest)
       ) {
         aspectIds.push(idStr);
         this.componentLoadedSelfAsAspects.set(idStr, true);

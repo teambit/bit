@@ -1261,7 +1261,11 @@ if needed, use "bit env set" command to align the env id`;
     return (
       this.isUsingEnvEnv(component) ||
       this.isEnvRegistered(component.id.toString()) ||
-      this.isEnvRegistered(component.id.toStringWithoutVersion())
+      this.isEnvRegistered(component.id.toStringWithoutVersion()) ||
+      // an env.jsonc file is an env manifest - the component is an env by definition. this is
+      // also the only reliable signal when the env was not loaded yet (e.g. "bit env-set" to a
+      // just-created env whose own env is not installed, so its env data has no 'env' type).
+      Boolean(this.hasEnvManifest(component))
     );
   }
 

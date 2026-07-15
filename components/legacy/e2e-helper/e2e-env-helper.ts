@@ -191,6 +191,30 @@ export default class EnvHelper {
     return EXTENSIONS_BASE_FOLDER;
   }
 
+  /**
+   * create a minimal env component with zero dependencies - like the core empty-env, just under
+   * a different name. the env plugin file is plain .js, so it needs no compilation (the env
+   * component itself stays on the default env) and no package installation at all.
+   * use it for suites that just need "an env" (or two envs, to switch between) and don't
+   * exercise any actual env functionality (compiler/tester/etc).
+   */
+  setSimpleEnv(name = 'simple-env'): string {
+    this.fs.outputFile(
+      `${name}/${name}.bit-env.js`,
+      `class SimpleEnv {
+  name = '${name}';
+}
+module.exports.default = new SimpleEnv();
+`
+    );
+    // the env manifest is what marks the component as an env before it was ever loaded
+    this.fs.outputFile(`${name}/env.jsonc`, `{}`);
+    this.fs.outputFile(`${name}/index.js`, `module.exports = require('./${name}.bit-env');\n`);
+    this.command.addComponent(name);
+    this.command.link();
+    return name;
+  }
+
   setEmptyEnv() {
     this.fs.outputFile(
       'empty-env/empty-env.bit-env.ts',
