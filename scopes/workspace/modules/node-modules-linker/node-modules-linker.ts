@@ -244,6 +244,17 @@ export default class NodeModuleLinker {
       packageJson.packageJsonObject.version = snapToSemver(packageJson.packageJsonObject.version);
     }
 
+    // never persist a source file as the package main. the transformers above normally set the
+    // compiled main, but when they have no env data (e.g. the early linking step of "bit install"
+    // runs before components are loaded), the main stays the component's source main-file.
+    // requiring such a package crashes on node 22 (require(esm) of a .ts entry with extensionless
+    // relative imports), breaking every subsequent component load. point it at the compiled dist
+    // location instead.
+    const mainFile = packageJson.packageJsonObject.main;
+    if (typeof mainFile === 'string' && /\.(ts|tsx|jsx|mts|cts)$/.test(mainFile) && !mainFile.endsWith('.d.ts')) {
+      packageJson.packageJsonObject.main = `dist/${mainFile.replace(/\.(ts|tsx|jsx|mts|cts)$/, '.js')}`;
+    }
+
     // indicate that this component exists locally and it is symlinked into the workspace. not a normal package.
     packageJson.packageJsonObject._bit_local = true;
     packageJson.packageJsonObject.source = component.mainFile.relative;
