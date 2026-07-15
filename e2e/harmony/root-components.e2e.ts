@@ -3,7 +3,7 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting, NODE_ENV_HOISTED_PEERS } from '@teambit/legacy.e2e-helper';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting, BITDEV_NODE_ENV_ID } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 
 chai.use(chaiFs);
@@ -859,11 +859,12 @@ module.exports.default = {
         `const React = require("react");const comp2 = require("@${helper.scopes.remote}/comp2");`
       );
       helper.fs.outputFile(
-        `comp3/comp3.node-app.js`,
+        `comp3/comp3.bit-app.js`,
         `const React = require("react");
 module.exports.default = {
   name: 'comp3',
   entry: require.resolve('./index.js'),
+  run: async () => undefined,
 }`
       );
       helper.fs.outputFile(
@@ -871,11 +872,12 @@ module.exports.default = {
         `const React = require("react");const comp2 = require("@${helper.scopes.remote}/comp2");`
       );
       helper.fs.outputFile(
-        `comp4/comp4.node-app.js`,
+        `comp4/comp4.bit-app.js`,
         `const React = require("react");
 module.exports.default = {
   name: 'comp4',
   entry: require.resolve('./index.js'),
+  run: async () => undefined,
 }`
       );
       helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
@@ -906,19 +908,18 @@ module.exports.default = {
           },
         },
       });
-      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
-      // yarn doesn't auto-install the peers of the env package (NODE_ENV_HOISTED_PEERS), so
-      // install them explicitly, otherwise the env fails to load
-      helper.command.install(`@teambit/node@1.0.1042 ${NODE_ENV_HOISTED_PEERS}`);
-      // second install to apply the env dependency policies (see the comment in the pnpm variant)
-      helper.command.install();
+      // the apps are declared via the core *.bit-app.* plugin (env-independent), so the env is
+      // only needed as a compiler for the compilation/build parts of this suite. the bitdev node
+      // env is a single light install (installing the legacy node-env chain with yarn used to
+      // get OOM-killed on CI here)
+      helper.env.setBitdevNodeEnv();
     });
     after(() => {
       helper.scopeHelper.destroy();
     });
     it('should install root components', () => {
-      expect(helper.env.rootCompDirDep('teambit.harmony/node', 'comp3')).to.be.a.path();
-      expect(helper.env.rootCompDirDep('teambit.harmony/node', 'comp4')).to.be.a.path();
+      expect(helper.env.rootCompDirDep(BITDEV_NODE_ENV_ID, 'comp3')).to.be.a.path();
+      expect(helper.env.rootCompDirDep(BITDEV_NODE_ENV_ID, 'comp4')).to.be.a.path();
     });
     it('should install the dependencies of the root component that has react 17 in the dependencies with react 17', () => {
       expect(
@@ -1194,7 +1195,7 @@ module.exports.default = {
         expect(
           path.join(
             workspaceCapsulesRootDir,
-            `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/types/asset.d.ts`
+            `${helper.scopes.remote}_comp4/node_modules/@${helper.scopes.remote}/comp2/dist/index.js.map`
           )
         ).to.be.a.path();
       });

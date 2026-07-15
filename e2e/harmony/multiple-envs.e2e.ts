@@ -37,21 +37,22 @@ describe('multiple envs', function () {
     });
   });
   describe('env in the variants global (*) and env in the variants more specific', () => {
+    let envId: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      const reactEnv = 'teambit.react/react';
-      helper.extensions.addExtensionToVariant('*', reactEnv);
-      helper.extensions.addExtensionToVariant('comp1', 'teambit.harmony/aspect');
-      // the react and aspect envs are not core aspects anymore, install them so both envs load
-      // and the multiple-envs issue is detected (rather than a non-loaded-env issue)
-      helper.command.install('@teambit/react@1.0.1042 @teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
+      // any two envs trigger the multiple-envs issue - use the core empty-env and a zero-dep
+      // local env to avoid installing real env packages
+      const envName = helper.env.setSimpleEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/empty-env');
+      helper.extensions.addExtensionToVariant('comp1', envId);
     });
     it('bit status should show it as an issue', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MultipleEnvs.name);
     });
     it('bit env set should fix the issue', () => {
-      helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+      helper.command.setEnv('comp1', envId);
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
     });
   });

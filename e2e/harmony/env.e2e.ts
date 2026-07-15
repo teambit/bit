@@ -18,12 +18,19 @@ describe('env command', function () {
   });
   describe('bit env set', () => {
     describe('run bit env set and then tag when the variants points to another env', () => {
+      // the scenario is env-agnostic (env-set wins over variant config) - zero-dep local envs
+      // avoid installing the real env packages
+      let envBId: string;
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
-        helper.extensions.addExtensionToVariant('*', 'teambit.react/react', undefined, true);
+        const envAName = helper.env.setSimpleEnv('simple-env-a');
+        const envBName = helper.env.setSimpleEnv('simple-env-b');
+        envBId = `${helper.scopes.remote}/${envBName}`;
         helper.fixtures.populateComponents(1);
-        helper.command.setEnv('comp1', 'teambit.harmony/aspect');
-        helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042 @teambit/react@1.0.1042');
+        helper.extensions.addExtensionToVariant('comp1', 'teambit.envs/envs', {
+          env: `${helper.scopes.remote}/${envAName}`,
+        });
+        helper.command.setEnv('comp1', envBId);
         helper.command.tagAllWithoutBuild();
       });
       it('should not be modified', () => {
@@ -32,7 +39,7 @@ describe('env command', function () {
       });
       it('should not change the env to the variants one', () => {
         const env = helper.env.getComponentEnv('comp1');
-        expect(env).to.equal('teambit.harmony/aspect');
+        expect(env).to.contain(envBId);
       });
       it('ejecting the conf to component.json should not write internal fields', () => {
         helper.command.ejectConf('comp1');
@@ -89,8 +96,9 @@ describe('env command', function () {
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
-        helper.command.setEnv('comp1', 'teambit.harmony/aspect');
-        helper.env.installAspectEnv();
+        // any env works here - the test only checks the env config was absorbed by the tag
+        const envName = helper.env.setSimpleEnv();
+        helper.command.setEnv('comp1', `${helper.scopes.remote}/${envName}`);
         helper.command.tagAllWithoutBuild();
       });
       it('should indicate that there was no env config in .bitmap to remove', () => {

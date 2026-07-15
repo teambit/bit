@@ -113,7 +113,8 @@ chai.use(chaiFs);
       before(async () => {
         helper.scopeHelper.setWorkspaceWithRemoteScope({ initGit });
         helper.fixtures.populateComponentsTS();
-        helper.env.setBitdevNodeEnv();
+        // no env needed: these tests assert watcher-level messages only (changed paths, IPC
+        // events), which are printed regardless of any compiler
         watchRunner = new WatchRunner(helper, true);
         await watchRunner.watch();
         allOutput = '';

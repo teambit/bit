@@ -20,13 +20,11 @@ describe('publish functionality', function () {
     let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      // pnpm is used (rather than yarn) since the node env package (a legacy core env that now
-      // must be installed) fails to load under yarn's hoisted layout - yarn doesn't auto-install
-      // the env's peers (e.g. @apollo/client, required via @teambit/cloud UI hooks). publishing
-      // itself is package-manager agnostic.
-      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
-      helper.env.setNodeEnv();
+      // a compiling env is needed so the published packages have dists (the consumer runs them
+      // with node). the bitdev node env is a single light install
+      helper.env.setBitdevNodeEnv();
       appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();

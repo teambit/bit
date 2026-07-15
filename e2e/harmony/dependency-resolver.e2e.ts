@@ -336,8 +336,9 @@ describe('dependency-resolver extension', function () {
       helper.fixtures.populateComponents(1);
       // comp1 is a dependency (peer) of the env below, whose build compiles with typescript. the
       // default env provides no compiler, so comp1's capsule would get no tsconfig.json and the
-      // env's ts solution-build would fail referencing it. give comp1 a compiling env.
-      helper.env.setNodeEnv('comp1');
+      // env's ts solution-build would fail referencing it. give comp1 a compiling env (the
+      // bitdev node env is a single light install).
+      helper.env.setBitdevNodeEnv('comp1');
       helper.command.tagAllComponents();
       helper.env.setEmptyEnv();
       helper.fs.outputFile(
@@ -412,8 +413,9 @@ describe('dependency-resolver extension', function () {
       helper.fixtures.populateComponents(2);
       // comp2 is a dependency of comp1, whose env (empty-env below) compiles with typescript. the
       // default env provides no compiler, so comp2's capsule would get no tsconfig.json and the
-      // ts solution-build of comp1 would fail referencing it. give comp2 a compiling env.
-      helper.env.setNodeEnv('comp2');
+      // ts solution-build of comp1 would fail referencing it. give comp2 a compiling env (the
+      // bitdev node env is a single light install).
+      helper.env.setBitdevNodeEnv('comp2');
       helper.env.setEmptyEnv();
       helper.fs.outputFile(
         'empty-env/env.jsonc',

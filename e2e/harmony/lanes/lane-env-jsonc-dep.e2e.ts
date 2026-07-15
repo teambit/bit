@@ -33,20 +33,8 @@ describe('env with workspace component as peer dep in env.jsonc on lane', functi
       helper.fs.outputFile('comp1/index.ts', 'export const comp1 = "v1";');
       helper.command.addComponent('comp1');
 
-      // Create an env manually
-      envName = 'my-env';
-      helper.fs.outputFile(
-        `${envName}/${envName}.bit-env.ts`,
-        `export class MyEnv {}
-export default new MyEnv();
-`
-      );
-      helper.fs.outputFile(`${envName}/index.ts`, `export { MyEnv } from './${envName}.bit-env';`);
-      helper.command.addComponent(envName);
-      helper.extensions.addExtensionToVariant(envName, 'teambit.envs/env');
-      // teambit.envs/env is no longer a core aspect - install it so my-env loads and is
-      // recognized as an env when setting it on components below
-      helper.command.install('@teambit/env@1.0.1042');
+      // Create an env - a zero-dep env is enough, the test only exercises env.jsonc peer policy
+      envName = helper.env.setSimpleEnv('my-env');
 
       // Create comp2 that uses the env
       helper.fs.outputFile('comp2/index.ts', 'export const comp2 = "v1";');
