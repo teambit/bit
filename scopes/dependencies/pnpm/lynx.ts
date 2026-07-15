@@ -1,21 +1,22 @@
+import { join } from 'path';
+import { promises as fs } from 'fs';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
-import { initDefaultReporter } from '@pnpm/default-reporter';
+import { initDefaultReporter } from '@pnpm/cli.default-reporter';
 import { streamParser } from '@pnpm/logger';
-import type { StoreController, WantedDependency } from '@pnpm/package-store';
 import { TRUSTED_PACKAGE_NAMES } from '@pnpm/plugin-trusted-deps';
-import { rebuild } from '@pnpm/plugin-commands-rebuild';
-import type { CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
-import { createOrConnectStoreController } from '@pnpm/store-connection-manager';
-import { sortPackages } from '@pnpm/sort-packages';
 import type {
   PackageManifest,
   ProjectManifest,
   ReadPackageHook,
   PeerDependencyRules,
-  ProjectRootDir,
+  DependencyManifest,
   DepPath,
 } from '@pnpm/types';
+import * as nodeApi from '@pnpm/napi';
+import type { PeerDependencyIssuesByProjects } from '@pnpm/napi';
+import { DEFAULT_REGISTRY_SCOPE } from '@pnpm/types';
+import { getNetworkConfigs, getDefaultCreds } from '@pnpm/config.reader';
 import type { Registries } from '@teambit/pkg.entities.registry';
 import { getAuthConfig } from '@teambit/pkg.config.auth';
 import type {
@@ -25,14 +26,7 @@ import type {
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
-import type { MutatedProject, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
-import { mutateModules } from '@pnpm/core';
-import * as pnpm from '@pnpm/core';
-import type { ClientOptions } from '@pnpm/client';
-import { createClient } from '@pnpm/client';
-import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
-import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
-import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
+import type * as LockfileFs from '@pnpm/lockfile.fs';
 import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types';
 import type { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
@@ -48,52 +42,121 @@ import { readConfig } from './read-config';
 const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-js-pure', 'core-js'];
 
 const installsRunning: Record<string, Promise<any>> = {};
-const cafsLocker = new Map<string, number>();
+let peerDependencyIssuesUnimplementedWarned = false;
+type LockfileFsModule = typeof LockfileFs;
+let lockfileFsPromise: Promise<LockfileFsModule> | undefined;
 
-async function createStoreController(
-  options: {
-    rootDir: string;
-    storeDir?: string;
-    cacheDir: string;
-    registries: Registries;
-    proxyConfig: PackageManagerProxyConfig;
-    networkConfig: PackageManagerNetworkConfig;
-  } & Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>
-): Promise<{ ctrl: StoreController; dir: string }> {
-  const authConfig = getAuthConfig(options.registries);
-  const opts: CreateStoreControllerOptions = {
-    dir: options.rootDir,
-    cacheDir: options.cacheDir,
-    cafsLocker,
-    storeDir: options.storeDir,
-    rawConfig: authConfig,
-    verifyStoreIntegrity: true,
-    httpProxy: options.proxyConfig?.httpProxy,
-    httpsProxy: options.proxyConfig?.httpsProxy,
-    ca: options.networkConfig?.ca,
-    cert: options.networkConfig?.cert,
-    key: options.networkConfig?.key,
-    localAddress: options.networkConfig?.localAddress,
-    noProxy: options.proxyConfig?.noProxy,
-    strictSsl: options.networkConfig.strictSSL,
-    maxSockets: options.networkConfig.maxSockets,
-    networkConcurrency: options.networkConfig.networkConcurrency,
-    packageImportMethod: options.packageImportMethod,
-    preferOffline: options.preferOffline,
-    resolveSymlinksInInjectedDirs: true,
-    pnpmHomeDir: options.pnpmHomeDir,
-    userAgent: options.networkConfig.userAgent,
-    fetchRetries: options.networkConfig.fetchRetries,
-    fetchRetryFactor: options.networkConfig.fetchRetryFactor,
-    fetchRetryMaxtimeout: options.networkConfig.fetchRetryMaxtimeout,
-    fetchRetryMintimeout: options.networkConfig.fetchRetryMintimeout,
-    fetchTimeout: options.networkConfig.fetchTimeout,
-    virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
-    registries: options.registries.toMap(),
-    fetchWarnTimeoutMs: options.networkConfig.fetchWarnTimeoutMs,
-    fetchMinSpeedKiBps: options.networkConfig.fetchMinSpeedKiBps,
+function loadLockfileFs(): Promise<LockfileFsModule> {
+  lockfileFsPromise ??= (async () => {
+    const { loadEsm } = require('./load-pnpm-esm.cjs') as {
+      loadEsm: () => Promise<{ lockfileFs: LockfileFsModule }>;
+    };
+    const { lockfileFs } = await loadEsm();
+    return lockfileFs;
+  })();
+  return lockfileFsPromise;
+}
+
+/**
+ * Minimal structural signature of the `resolve` function returned by
+ * `generateResolverAndFetcher`. It mirrors what the old
+ * `@pnpm/installing.client` `ResolveFunction` exposed, but is backed by
+ * `@pnpm/napi`'s `resolveDependency`.
+ */
+type ResolveOpts = {
+  lockfileDir?: string;
+  projectDir?: string;
+  preferredVersions?: Record<string, unknown>;
+  registry?: string;
+};
+type ResolveFunction = (
+  wantedDependency: nodeApi.WantedDependency,
+  opts: ResolveOpts
+) => Promise<nodeApi.ResolveResult>;
+
+function toNodeApiProxyConfig(proxyConfig: PackageManagerProxyConfig): nodeApi.ProxyConfig {
+  return {
+    httpProxy: proxyConfig.httpProxy,
+    httpsProxy: proxyConfig.httpsProxy,
+    noProxy: proxyConfig.noProxy,
   };
-  return createOrConnectStoreController(opts);
+}
+
+function toNodeApiNetworkConfig(networkConfig: PackageManagerNetworkConfig): nodeApi.NetworkConfig {
+  return {
+    ca: networkConfig.ca,
+    cert: networkConfig.cert,
+    key: networkConfig.key,
+    localAddress: networkConfig.localAddress,
+    strictSsl: networkConfig.strictSSL,
+    maxSockets: networkConfig.maxSockets,
+    networkConcurrency: networkConfig.networkConcurrency,
+    fetchRetries: networkConfig.fetchRetries,
+    fetchRetryFactor: networkConfig.fetchRetryFactor,
+    fetchRetryMintimeout: networkConfig.fetchRetryMintimeout,
+    fetchRetryMaxtimeout: networkConfig.fetchRetryMaxtimeout,
+    fetchTimeout: networkConfig.fetchTimeout,
+    userAgent: networkConfig.userAgent,
+  };
+}
+
+/**
+ * Turn one registry's parsed credentials into an `Authorization` header value.
+ * `_authToken` becomes `Bearer <token>`; `_auth` (parsed into username/password)
+ * becomes `Basic <base64(user:pass)>`. Token helpers are not supported.
+ */
+function credsToAuthHeader(
+  creds: { authToken?: string; basicAuth?: { username: string; password: string } } | undefined
+): string | undefined {
+  if (!creds) return undefined;
+  if (creds.authToken) return `Bearer ${creds.authToken}`;
+  if (creds.basicAuth) {
+    const { username, password } = creds.basicAuth;
+    return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+  }
+  return undefined;
+}
+
+/**
+ * Resolve the raw nerf-darted `.npmrc`-style `authConfig` into pre-computed
+ * `Authorization` headers keyed by nerf-darted registry URI (plus `''` for the
+ * default registry) — the shape `@pnpm/napi` applies directly. The npmrc
+ * auth parsing (`_authToken` / `_auth` / `username`+`_password`) is done here
+ * with the kept `@pnpm/config.reader`, so the Rust engine never reparses it.
+ */
+function buildAuthHeaderByUri(authConfig: Record<string, unknown>): Record<string, string> {
+  const result: Record<string, string> = {};
+  const { configByUri } = getNetworkConfigs(authConfig);
+  for (const [uri, config] of Object.entries(configByUri ?? {})) {
+    const header = credsToAuthHeader((config as Record<string, any>)[DEFAULT_REGISTRY_SCOPE]);
+    if (header) result[uri] = header;
+  }
+  const defaultHeader = credsToAuthHeader(getDefaultCreds(authConfig));
+  if (defaultHeader) result[''] = defaultHeader;
+  return result;
+}
+
+/**
+ * Compose the list of read-package hooks into a single synchronous transform.
+ * The Bit hooks are all synchronous, so the accumulator stays synchronous even
+ * though the pnpm `ReadPackageHook` type allows returning a promise.
+ */
+function applyReadPackageHooks(
+  hooks: ReadPackageHook[],
+  manifest: PackageManifest,
+  workspaceDir?: string
+): PackageManifest {
+  return hooks.reduce<PackageManifest>((m, hook) => hook(m, workspaceDir) as PackageManifest, manifest);
+}
+
+/**
+ * Feed a wire-compatible pnpm log event into the default reporter. The engine
+ * emits bunyan-shaped events; the reporter subscribes to `streamParser` via
+ * `.on('data', ...)`, so emitting a `data` event on the underlying stream
+ * delivers the event straight to the reporter.
+ */
+function emitLogEvent(event: Record<string, unknown>): void {
+  (streamParser as unknown as NodeJS.EventEmitter).emit('data', event);
 }
 
 export async function generateResolverAndFetcher({
@@ -108,38 +171,23 @@ export async function generateResolverAndFetcher({
   proxyConfig?: PackageManagerProxyConfig;
   networkConfig?: PackageManagerNetworkConfig;
   fullMetadata?: boolean;
-}) {
+}): Promise<{ resolve: ResolveFunction }> {
   const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
-  proxyConfig ??= {};
-  networkConfig ??= {};
-  const opts: ClientOptions = {
-    authConfig: Object.assign({}, pnpmConfig.config.rawConfig, authConfig),
-    cacheDir,
-    httpProxy: proxyConfig?.httpProxy,
-    httpsProxy: proxyConfig?.httpsProxy,
-    ca: networkConfig?.ca,
-    cert: networkConfig?.cert,
-    key: networkConfig?.key,
-    localAddress: networkConfig?.localAddress,
-    noProxy: proxyConfig?.noProxy,
-    strictSsl: networkConfig.strictSSL,
-    timeout: networkConfig.fetchTimeout,
-    rawConfig: pnpmConfig.config.rawConfig,
-    userAgent: networkConfig.userAgent,
-    retry: {
-      factor: networkConfig.fetchRetryFactor,
-      maxTimeout: networkConfig.fetchRetryMaxtimeout,
-      minTimeout: networkConfig.fetchRetryMintimeout,
-      retries: networkConfig.fetchRetries,
-    },
-    registries: registries.toMap(),
-    fullMetadata,
-    fetchWarnTimeoutMs: networkConfig?.fetchWarnTimeoutMs,
-    fetchMinSpeedKiBps: networkConfig?.fetchMinSpeedKiBps,
-  };
-  const result = createClient(opts);
-  return result;
+  const mergedAuthConfig = Object.assign({}, pnpmConfig.config.authConfig, authConfig) as Record<string, unknown>;
+  const authHeaderByUri = buildAuthHeaderByUri(mergedAuthConfig);
+  const registriesMap = registries.toMap();
+  const resolve: ResolveFunction = (wantedDep, resolveOpts) =>
+    nodeApi.resolveDependency(wantedDep, {
+      dir: resolveOpts.projectDir || resolveOpts.lockfileDir || process.cwd(),
+      cacheDir,
+      registries: registriesMap,
+      authHeaderByUri,
+      proxyConfig: proxyConfig ? toNodeApiProxyConfig(proxyConfig) : undefined,
+      networkConfig: networkConfig ? toNodeApiNetworkConfig(networkConfig) : undefined,
+      fullMetadata,
+    });
+  return { resolve };
 }
 
 export async function getPeerDependencyIssues(
@@ -152,30 +200,48 @@ export async function getPeerDependencyIssues(
     proxyConfig: PackageManagerProxyConfig;
     networkConfig: PackageManagerNetworkConfig;
     overrides?: Record<string, string>;
-  } & Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir'>
-): Promise<PeerDependencyIssuesByProjects> {
-  const projects: ProjectOptions[] = [];
-  for (const [rootDir, manifest] of Object.entries(manifestsByPaths)) {
-    projects.push({
-      buildIndex: 0, // this is not used while searching for peer issues anyway
-      manifest,
-      rootDir: rootDir as ProjectRootDir,
-    });
+    packageImportMethod?: 'auto' | 'hardlink' | 'copy' | 'clone';
+    pnpmHomeDir?: string;
   }
-  const storeController = await createStoreController({
-    ...opts,
-    rootDir: opts.rootDir,
-  });
-  return pnpm.getPeerDependencyIssues(projects, {
-    autoInstallPeers: false,
-    excludeLinksFromLockfile: true,
-    storeController: storeController.ctrl,
-    storeDir: storeController.dir,
-    overrides: opts.overrides,
-    peersSuffixMaxLength: 1000,
-    registries: opts.registries.toMap(),
-    virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
-  });
+): Promise<PeerDependencyIssuesByProjects> {
+  const projects: nodeApi.NodeApiProject[] = Object.entries(manifestsByPaths).map(([rootDir, manifest]) => ({
+    rootDir,
+    manifest: manifest as nodeApi.PackageManifest,
+  }));
+  try {
+    return await nodeApi.getPeerDependencyIssues({
+      dir: opts.rootDir,
+      projects,
+      storeDir: opts.storeDir,
+      cacheDir: opts.cacheDir,
+      overrides: opts.overrides,
+      peersSuffixMaxLength: 1000,
+      registries: opts.registries.toMap(),
+      virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    });
+  } catch (err: any) {
+    if (err?.code === 'ERR_PNPM_NAPI_UNIMPLEMENTED') {
+      // TODO: getPeerDependencyIssues not yet implemented in the Rust engine.
+      // Returning an empty, expected shape keeps installs working until the
+      // binding lands it, while still surfacing that peer detection is absent.
+      if (!peerDependencyIssuesUnimplementedWarned) {
+        peerDependencyIssuesUnimplementedWarned = true;
+        process.emitWarning(
+          'pnpm N-API peer-dependency issue detection is not implemented; missing peer dependencies cannot be calculated.',
+          { code: 'BIT_PNPM_PEER_ISSUES_UNIMPLEMENTED' }
+        );
+      }
+      return {
+        '.': {
+          missing: {},
+          bad: {},
+          conflicts: [],
+          intersections: {},
+        },
+      };
+    }
+    throw pnpmErrorToBitError(err);
+  }
 }
 
 export type RebuildFn = (opts: { pending?: boolean; skipIfHasSideEffectsCache?: boolean }) => Promise<void>;
@@ -214,29 +280,32 @@ export async function install(
     forcedHarmonyVersion?: string;
     allowScripts?: Record<string, boolean | 'warn'>;
     dangerouslyAllowAllScripts?: boolean;
-  } & Pick<
-    InstallOptions,
-    | 'autoInstallPeers'
-    | 'publicHoistPattern'
-    | 'hoistPattern'
-    | 'lockfileOnly'
-    | 'nodeVersion'
-    | 'enableModulesDir'
-    | 'engineStrict'
-    | 'excludeLinksFromLockfile'
-    | 'minimumReleaseAge'
-    | 'minimumReleaseAgeExclude'
-    | 'neverBuiltDependencies'
-    | 'ignorePackageManifest'
-    | 'hoistWorkspacePackages'
-    | 'returnListOfDepsRequiringBuild'
-  > &
-    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    neverBuiltDependencies?: string[];
+    autoInstallPeers?: boolean;
+    publicHoistPattern?: string[];
+    hoistPattern?: string[];
+    lockfileOnly?: boolean;
+    nodeVersion?: string;
+    enableModulesDir?: boolean;
+    engineStrict?: boolean;
+    excludeLinksFromLockfile?: boolean;
+    minimumReleaseAge?: number;
+    minimumReleaseAgeExclude?: string[];
+    ignorePackageManifest?: boolean;
+    hoistWorkspacePackages?: boolean;
+    returnListOfDepsRequiringBuild?: boolean;
+    packageImportMethod?: 'auto' | 'hardlink' | 'copy' | 'clone';
+    pnpmHomeDir?: string;
+    preferOffline?: boolean;
+    // Accepted for backward-compatibility with the previous pnpm engine, but the
+    // Rust engine manages the side-effects cache internally.
+    sideEffectsCacheRead?: boolean;
+    sideEffectsCacheWrite?: boolean;
+  },
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string; depsRequiringBuild?: DepPath[] }> {
   const externalDependencies = new Set<string>();
-  const readPackage = createReadPackageHooks(options);
+  const hooks = createReadPackageHooks(options);
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
     for (const [dir, { name }] of Object.entries(manifestsByPaths)) {
       if (dir !== rootDir && name) {
@@ -261,81 +330,120 @@ export async function install(
       },
     };
   }
-  const { allProjects, packagesToBuild } = groupPkgs(manifestsByPaths, {
-    update: options?.updateAll,
-  });
-  const authConfig = getAuthConfig(registries);
-  const storeController = await createStoreController({
-    rootDir,
-    storeDir,
-    cacheDir,
-    registries,
-    preferOffline: options?.preferOffline,
-    proxyConfig,
-    networkConfig,
-    packageImportMethod: options?.packageImportMethod,
-    pnpmHomeDir: options?.pnpmHomeDir,
-  });
   const hoistPattern = options.hoistPattern ?? ['*'];
   if (hoistPattern.length > 0 && externalDependencies.size > 0 && !options.hoistInjectedDependencies) {
     for (const pkgName of externalDependencies) {
       hoistPattern.push(`!${pkgName}`);
     }
   }
-  const opts: InstallOptions = {
-    allProjects,
-    autoInstallPeers: options.autoInstallPeers,
-    autoInstallPeersFromHighestMatch: options.autoInstallPeers,
-    confirmModulesPurge: false,
-    storeDir: storeController.dir,
-    dedupePeerDependents: true,
+  const scriptPolicies = resolveScriptPolicies({
+    allowScripts: options.allowScripts,
+    dangerouslyAllowAllScripts: options.dangerouslyAllowAllScripts,
+    neverBuiltDependencies: options.neverBuiltDependencies,
+  });
+
+  // The in-memory importer manifests are transformed up front (with each
+  // importer's own directory as workspaceDir). The dependency manifests are
+  // transformed lazily by the engine through the readPackageHook (which has no
+  // workspaceDir).
+  const projects: nodeApi.NodeApiProject[] = Object.entries(manifestsByPaths).map(([dir, manifest]) => ({
+    rootDir: dir,
+    manifest: applyReadPackageHooks(
+      hooks,
+      manifest as unknown as PackageManifest,
+      dir
+    ) as unknown as nodeApi.PackageManifest,
+  }));
+  // When the engine resolves a workspace project as a dependency (an injected
+  // "file:" instance), it hands the hook that project's importer manifest —
+  // which the up-front transform above already stripped of workspace-sibling
+  // deps. The instance must keep those deps (they become the component's graph
+  // edges), so substitute the project's raw manifest, identified by the
+  // lockfile-root-relative directory the engine passes for directory
+  // resolutions. pnpm's TS engine reaches the same split by keeping raw
+  // project manifests and applying the hook chain contextually.
+  const readPackageHookForDeps = (manifest: nodeApi.PackageManifest, resolvedDir?: string): nodeApi.PackageManifest => {
+    const rawManifest = resolvedDir ? manifestsByPaths[join(rootDir, resolvedDir)] : undefined;
+    const resolvedManifest = applyReadPackageHooks(
+      hooks,
+      (rawManifest ?? manifest) as unknown as PackageManifest
+    ) as unknown as nodeApi.PackageManifest;
+    return removeScriptsFromNeverBuiltPackages(resolvedManifest, scriptPolicies.neverBuildPackageNames);
+  };
+
+  const onLog: nodeApi.LogListener = (event) => {
+    emitLogEvent(event);
+  };
+
+  const installOptions: nodeApi.InstallOptions = {
     dir: rootDir,
-    storeController: storeController.ctrl,
-    preferFrozenLockfile: true,
-    pruneLockfileImporters: true,
-    lockfileOnly: options.lockfileOnly ?? false,
-    modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
+    projects,
+    storeDir,
+    cacheDir,
     registries: registries.toMap(),
-    resolutionMode: 'highest',
-    rawConfig: authConfig,
-    hooks: { readPackage },
-    externalDependencies,
-    strictPeerDependencies: false,
-    peersSuffixMaxLength: 1000,
-    resolveSymlinksInInjectedDirs: true,
-    resolvePeersFromWorkspaceRoot: true,
-    dedupeDirectDeps: true,
-    include: {
-      dependencies: true,
-      devDependencies: true,
-      optionalDependencies: options?.includeOptionalDeps !== false,
-    },
-    userAgent: networkConfig.userAgent,
-    ...options,
-    injectWorkspacePackages: true,
-    ...resolveScriptPolicies({
-      allowScripts: options.allowScripts,
-      neverBuiltDependencies: options.neverBuiltDependencies,
-      dangerouslyAllowAllScripts: options.dangerouslyAllowAllScripts,
-    }),
-    returnListOfDepsRequiringBuild: true,
-    excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
-    depth: options.updateAll ? Infinity : 0,
-    disableRelinkLocalDirDeps: true,
-    hoistPattern,
-    virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    authHeaderByUri: buildAuthHeaderByUri(getAuthConfig(registries) as Record<string, unknown>),
+    proxyConfig: toNodeApiProxyConfig(proxyConfig),
+    networkConfig: toNodeApiNetworkConfig(networkConfig),
     overrides,
+    nodeLinker: options.nodeLinker,
+    // Resolve bare-semver deps on workspace components (incl. auto-installed
+    // peers naming a sibling component) from the workspace instead of the
+    // registry — otherwise an unpublished component peer 404s. `'deep'` so
+    // transitive component deps link locally too.
+    linkWorkspacePackages: 'deep',
+    hoistPattern,
+    publicHoistPattern: options.publicHoistPattern,
+    externalDependencies: [...externalDependencies],
+    allowBuilds: scriptPolicies.allowBuilds as Record<string, boolean>,
+    dangerouslyAllowAllBuilds: scriptPolicies.dangerouslyAllowAllBuilds,
+    // `neverBuiltDependencies` is already folded into `allowBuilds` above by
+    // `resolveScriptPolicies`; the binding rejects a non-empty pass-through.
+    autoInstallPeers: options.autoInstallPeers,
+    excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
+    lockfileOnly: options.lockfileOnly ?? false,
+    packageImportMethod: options.packageImportMethod,
+    preferOffline: options.preferOffline,
+    virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    peersSuffixMaxLength: 1000,
+    dedupePeerDependents: true,
+    dedupeDirectDeps: true,
+    dedupeInjectedDeps: options.dedupeInjectedDeps,
+    injectWorkspacePackages: true,
+    includeOptionalDeps: options.includeOptionalDeps !== false,
+    // `update` re-resolves the whole graph; the binding ignores `depth` (there
+    // are no package selectors), but pass a finite full-depth value for parity
+    // with the old engine's `depth: Infinity` update-all call.
+    update: options.updateAll,
+    depth: options.updateAll ? 1000 : undefined,
+    nodeVersion: options.nodeVersion,
+    engineStrict: options.engineStrict,
+    minimumReleaseAge: options.minimumReleaseAge,
+    minimumReleaseAgeExclude: options.minimumReleaseAgeExclude,
+    ignorePackageManifest: options.ignorePackageManifest,
+    hoistWorkspacePackages: options.hoistWorkspacePackages,
+    enableModulesDir: options.enableModulesDir,
+    resolvePeersFromWorkspaceRoot: true,
+    frozenLockfile: options.updateAll ? false : undefined,
+    preferFrozenLockfile: !options.updateAll,
+    // Suppress peer-dependency warnings by default (allow any version, ignore
+    // missing), letting the workspace's own rules override.
     peerDependencyRules: {
       allowAny: ['*'],
       ignoreMissing: ['*'],
       ...options.reportOptions?.peerDependencyRules,
-    },
+    } as nodeApi.PeerDependencyRules,
+    // Bit reports the deps requiring a build in the lockfile instead of failing.
+    strictDepBuilds: false,
+    pnpmHomeDir: options.pnpmHomeDir,
   };
 
   let dependenciesChanged = false;
   let depsRequiringBuild: DepPath[] | undefined;
+  let resolvedStoreDir = storeDir;
   if (!options.dryRun) {
     let stopReporting: Function | undefined;
+    let installPromise: Promise<nodeApi.InstallResult> | undefined;
+    let restoreWantedLockfile: (() => Promise<void>) | undefined;
     if (!options.hidePackageManagerOutput) {
       stopReporting = initReporter({
         ...options.reportOptions,
@@ -344,104 +452,147 @@ export async function install(
     }
     try {
       await installsRunning[rootDir];
-      await restartWorkerPool();
-      installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
-      const installResult = await installsRunning[rootDir];
-      depsRequiringBuild = installResult.depsRequiringBuild?.sort();
-      if (depsRequiringBuild != null) {
-        await addDepsRequiringBuildToLockfile(rootDir, depsRequiringBuild);
+      // The engine rewrites pnpm-lock.yaml from its typed model, which
+      // does not round-trip Bit's `bit:` extension block (the v11 TS
+      // engine mutated the loaded object in place, so the block
+      // survived). Capture it up front and re-assert it after the
+      // install alongside `depsRequiringBuild`.
+      const preInstallBitAttrs = await readBitLockfileAttrs(rootDir);
+      restoreWantedLockfile = await removeWantedLockfileForUpdate(rootDir, options.updateAll);
+      // The extra `resolvedDir` param lands in `@pnpm/napi`'s ReadPackageHook
+      // type in the release that ships the directory-resolution context; the
+      // cast bridges the older published typing.
+      installPromise = nodeApi.install(
+        installOptions,
+        onLog,
+        readPackageHookForDeps as unknown as nodeApi.ReadPackageHook
+      );
+      installsRunning[rootDir] = installPromise;
+      const installResult: nodeApi.InstallResult = await installPromise;
+      resolvedStoreDir = installResult.storeDir;
+      const sortedDepsRequiringBuild = [...(installResult.depsRequiringBuild ?? [])].sort();
+      if (sortedDepsRequiringBuild.length > 0 || preInstallBitAttrs != null) {
+        await addBitAttributesToLockfile(rootDir, {
+          ...preInstallBitAttrs,
+          depsRequiringBuild: sortedDepsRequiringBuild,
+        });
+      }
+      if (sortedDepsRequiringBuild.length > 0) {
+        depsRequiringBuild = sortedDepsRequiringBuild as unknown as DepPath[];
       }
       dependenciesChanged =
         installResult.stats.added + installResult.stats.removed + installResult.stats.linkedToRoot > 0;
-      delete installsRunning[rootDir];
     } catch (err: any) {
+      await restoreWantedLockfile?.();
       if (logger) {
-        logger.warn('got an error from pnpm mutateModules function', err);
+        logger.warn('got an error from the pnpm install function', err);
       }
       throw pnpmErrorToBitError(err);
     } finally {
+      if (installPromise && installsRunning[rootDir] === installPromise) {
+        delete installsRunning[rootDir];
+      }
       stopReporting?.();
-      await finishWorkers();
     }
   }
   return {
     dependenciesChanged,
-    rebuild: async (rebuildOpts) => {
+    // The Rust engine's rebuild rebuilds every build-needing package and does not
+    // support the pending / skipIfHasSideEffectsCache selectors of the old engine.
+    rebuild: async () => {
       let stopReporting: Function | undefined;
-      const _opts = {
-        ...opts,
-        ...rebuildOpts,
-        cacheDir,
-      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (!_opts.hidePackageManagerOutput) {
+      if (!options.hidePackageManagerOutput) {
         stopReporting = initReporter({
           appendOnly: true,
           hideLifecycleOutput: true,
         });
       }
       try {
-        await rebuild.handler(_opts, []);
+        await nodeApi.rebuild({ ...installOptions, storeDir: resolvedStoreDir }, onLog, undefined);
       } finally {
         stopReporting?.();
       }
     },
-    storeDir: storeController.dir,
+    storeDir: resolvedStoreDir ?? '',
     depsRequiringBuild,
+  };
+}
+
+async function removeWantedLockfileForUpdate(
+  rootDir: string,
+  updateAll?: boolean
+): Promise<(() => Promise<void>) | undefined> {
+  if (!updateAll) return undefined;
+  const lockfilePath = join(rootDir, 'pnpm-lock.yaml');
+  let lockfileContent: Buffer;
+  try {
+    lockfileContent = await fs.readFile(lockfilePath);
+  } catch (err: any) {
+    if (err?.code === 'ENOENT') return undefined;
+    throw err;
+  }
+  await fs.unlink(lockfilePath);
+  return async () => {
+    await fs.writeFile(lockfilePath, lockfileContent);
   };
 }
 
 type ScriptPolicyConfig = {
   allowScripts?: Record<string, boolean | 'warn'>;
-  neverBuiltDependencies?: string[];
   dangerouslyAllowAllScripts?: boolean;
+  neverBuiltDependencies?: string[];
 };
 
-function resolveScriptPolicies({
+export function resolveScriptPolicies({
   allowScripts,
-  neverBuiltDependencies,
   dangerouslyAllowAllScripts,
-}: ScriptPolicyConfig) {
-  let resolvedNeverBuilt = neverBuiltDependencies;
-  let onlyBuiltDependencies: string[] | undefined;
-  let ignoredBuiltDependencies: string[] | undefined;
+  neverBuiltDependencies,
+}: ScriptPolicyConfig): {
+  allowBuilds: Record<string, boolean | string>;
+  dangerouslyAllowAllBuilds?: boolean;
+  neverBuildPackageNames?: string[];
+} {
+  const allowBuilds: Record<string, boolean | string> = {};
   if (dangerouslyAllowAllScripts) {
-    if (resolvedNeverBuilt == null) {
-      // If neverBuiltDependencies is not explicitly set, use a default list
-      // we tell pnpm to allow all scripts to be executed, except the packages listed below.
-      resolvedNeverBuilt = ['core-js'];
+    if (!neverBuiltDependencies?.length) {
+      return { allowBuilds, dangerouslyAllowAllBuilds: true };
     }
-  } else {
-    onlyBuiltDependencies = [];
-    ignoredBuiltDependencies = [];
-    for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
-      switch (allowedScript) {
-        case true:
-          onlyBuiltDependencies.push(packageDescriptor);
-          break;
-        case false:
-          ignoredBuiltDependencies.push(packageDescriptor);
-          break;
-        default:
-          // Ignore any non-boolean values. String values are placeholders that the user
-          // should replace with booleans.
-          // pnpm will print a warning about these during installation.
-          break;
-      }
+    for (const pkg of neverBuiltDependencies) {
+      allowBuilds[pkg] = false;
     }
-    for (const trustedPkgName of TRUSTED_PACKAGE_NAMES) {
-      if (allowScripts?.[trustedPkgName] == null) {
-        onlyBuiltDependencies.push(trustedPkgName);
-      }
+    return { allowBuilds, neverBuildPackageNames: neverBuiltDependencies };
+  }
+  for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
+    if (allowedScript === true || allowedScript === false) {
+      allowBuilds[packageDescriptor] = allowedScript;
     }
-    // Add untrusted packages to ignoredBuiltDependencies unless the user explicitly allows them
-    for (const untrustedPkgName of UNTRUSTED_PACKAGE_NAMES) {
-      if (allowScripts?.[untrustedPkgName] !== true) {
-        ignoredBuiltDependencies.push(untrustedPkgName);
-      }
+    // String values (e.g. 'warn') are placeholders — ignore them; pnpm warns about these.
+  }
+  for (const trustedPkgName of TRUSTED_PACKAGE_NAMES) {
+    if (allowScripts?.[trustedPkgName] == null) {
+      allowBuilds[trustedPkgName] = true;
     }
   }
+  for (const untrustedPkgName of UNTRUSTED_PACKAGE_NAMES) {
+    if (allowScripts?.[untrustedPkgName] !== true) {
+      allowBuilds[untrustedPkgName] = false;
+    }
+  }
+  for (const pkg of neverBuiltDependencies ?? []) {
+    allowBuilds[pkg] = false;
+  }
+  return { allowBuilds };
+}
 
-  return { neverBuiltDependencies: resolvedNeverBuilt, onlyBuiltDependencies, ignoredBuiltDependencies };
+function removeScriptsFromNeverBuiltPackages(
+  manifest: nodeApi.PackageManifest,
+  neverBuildPackageNames?: string[]
+): nodeApi.PackageManifest {
+  if (!manifest.name || !manifest.scripts || !neverBuildPackageNames?.includes(manifest.name)) return manifest;
+  return {
+    ...manifest,
+    scripts: undefined,
+  };
 }
 
 function initReporter(opts?: ReportOptions) {
@@ -583,46 +734,6 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
   };
 }
 
-function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { update?: boolean }) {
-  const pkgs = Object.entries(manifestsByPaths).map(([rootDir, manifest]) => ({
-    rootDir: rootDir as ProjectRootDir,
-    manifest,
-  }));
-  const { graph } = createPkgGraph(pkgs);
-  const chunks = sortPackages(graph as any);
-
-  // This will create local link by pnpm to a component exists in the ws.
-  // it will later deleted by the link process
-  // we keep it here to better support case like this:
-  // compA@1.0.0 uses compB@1.0.0
-  // I have compB@2.0.0 in my workspace
-  // now I install compA@1.0.0
-  // compA is hoisted to the root and install B@1.0.0 hoisted to the root as well
-  // now we will make link to B@2.0.0 and A will break
-  // with this we will have a link to the local B by pnpm so it will install B@1.0.0 inside A
-  // then when overriding the link, A will still works
-  // This is the rational behind not deleting this completely, but need further check that it really works
-  const packagesToBuild: MutatedProject[] = []; // @pnpm/core will use this to install the packages
-  const allProjects: ProjectOptions[] = [];
-
-  chunks.forEach((dirs, buildIndex) => {
-    for (const rootDir of dirs) {
-      const manifest = manifestsByPaths[rootDir];
-      allProjects.push({
-        buildIndex,
-        manifest,
-        rootDir,
-      });
-      packagesToBuild.push({
-        rootDir,
-        mutation: 'install',
-        update: opts.update,
-      });
-    }
-  });
-  return { packagesToBuild, allProjects };
-}
-
 export async function resolveRemoteVersion(
   packageName: string,
   {
@@ -656,31 +767,34 @@ export async function resolveRemoteVersion(
   };
   try {
     const parsedPackage = parsePackageName(packageName);
-    const wantedDep: WantedDependency = {
+    const wantedDep: nodeApi.WantedDependency = {
       alias: parsedPackage.name,
-      bareSpecifier: parsedPackage.version,
+      // parse-package-name returns an empty string when no version is present,
+      // but the engine resolves only undefined (or an explicit range) as "latest".
+      bareSpecifier: parsedPackage.version || undefined,
     };
     const val = await resolve(wantedDep, resolveOpts);
     if (!val.manifest) {
       throw new BitError('The resolved package has no manifest');
     }
+    const manifest = val.manifest as unknown as DependencyManifest;
     const wantedRange =
       parsedPackage.version && semver.validRange(parsedPackage.version) ? parsedPackage.version : undefined;
 
     return {
-      packageName: val.manifest.name,
-      version: val.manifest.version,
+      packageName: manifest.name,
+      version: manifest.version,
       wantedRange,
       isSemver: true,
       resolvedVia: val.resolvedVia,
-      manifest: val.manifest,
+      manifest,
     };
   } catch (e: any) {
     if (!e.message?.includes('is not a valid string')) {
       throw pnpmErrorToBitError(e);
     }
     // The provided package is probably a git url or path to a folder
-    const wantedDep: WantedDependency = {
+    const wantedDep: nodeApi.WantedDependency = {
       alias: undefined,
       bareSpecifier: packageName,
     };
@@ -691,24 +805,46 @@ export async function resolveRemoteVersion(
     if (!val.normalizedBareSpecifier) {
       throw new BitError('The resolved package has no version');
     }
+    const manifest = val.manifest as unknown as DependencyManifest;
     return {
-      packageName: val.manifest.name,
+      packageName: manifest.name,
       version: val.normalizedBareSpecifier,
       isSemver: false,
       resolvedVia: val.resolvedVia,
-      manifest: val.manifest,
+      manifest,
     };
   }
 }
 
-async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBuild: string[]) {
+/**
+ * Read the `bit:` extension block of the workspace's wanted lockfile,
+ * or undefined when there is no lockfile or no block.
+ */
+async function readBitLockfileAttrs(rootDir: string): Promise<Partial<BitLockfileAttributes> | undefined> {
+  try {
+    const { readWantedLockfile } = await loadLockfileFs();
+    const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true })) as BitLockfile | null;
+    return lockfile?.bit;
+  } catch {
+    // A malformed lockfile fails the install itself later with a proper
+    // error; there is nothing to preserve here.
+    return undefined;
+  }
+}
+
+/**
+ * Re-assert Bit's `bit:` extension block on the wanted lockfile after
+ * an engine install rewrote it. Merges over whatever the file has, so
+ * an attribute captured before the install (e.g. `restoredFromModel`)
+ * survives the rewrite.
+ */
+async function addBitAttributesToLockfile(rootDir: string, attrs: Partial<BitLockfileAttributes>) {
+  const { readWantedLockfile, writeWantedLockfile } = await loadLockfileFs();
   const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true })) as BitLockfile;
   if (lockfile == null) return;
-  if (isEqual(lockfile.bit?.depsRequiringBuild, depsRequiringBuild)) return;
-  lockfile.bit = {
-    ...lockfile.bit,
-    depsRequiringBuild,
-  };
+  const merged = { ...lockfile.bit, ...attrs };
+  if (isEqual(lockfile.bit, merged)) return;
+  lockfile.bit = merged as BitLockfileAttributes;
   await writeWantedLockfile(rootDir, lockfile);
 }
 
@@ -722,4 +858,5 @@ export interface BitLockfileFile extends LockfileFile {
 
 export interface BitLockfileAttributes {
   depsRequiringBuild: string[];
+  restoredFromModel?: boolean;
 }

@@ -1,8 +1,8 @@
 import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
-import { type ResolveFunction } from '@pnpm/client';
-import * as dp from '@pnpm/dependency-path';
+import type * as Dp from '@pnpm/deps.path';
+import type { getLockfileImporterId as GetLockfileImporterId } from '@pnpm/lockfile.fs';
 import { pick, partition } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -18,9 +18,38 @@ import {
   type CalcDepsGraphForComponentOptions,
   type ComponentIdByPkgName,
 } from '@teambit/dependency-resolver';
-import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 import normalizePath from 'normalize-path';
 import { type BitLockfileFile } from './lynx';
+
+/**
+ * Minimal structural signature of the `resolve` function returned by
+ * `generateResolverAndFetcher` in `./lynx` (backed by `@pnpm/napi`'s
+ * `resolveDependency`). Only the parts this module consumes are typed.
+ */
+type ResolveFunction = (
+  wantedDependency: { alias?: string; bareSpecifier?: string },
+  opts: { lockfileDir?: string; projectDir?: string; preferredVersions?: Record<string, unknown> }
+) => Promise<{ resolution?: Record<string, unknown> }>;
+
+// @pnpm/deps.path and @pnpm/lockfile.fs are ESM-only; load them through a .cjs
+// shim so the require() chain in the build capsule's mocha runner doesn't trip
+// on the transitive ESM import. Call `init()` once before invoking the public
+// converters; helpers reach for these module-level slots synchronously.
+let dp!: typeof Dp;
+let getLockfileImporterId!: typeof GetLockfileImporterId;
+let loading: Promise<void> | undefined;
+
+export function init(): Promise<void> {
+  loading ??= (async () => {
+    const { loadEsm } = require('./load-pnpm-esm.cjs') as {
+      loadEsm: () => Promise<{ dp: typeof Dp; getLockfileImporterId: typeof GetLockfileImporterId }>;
+    };
+    const m = await loadEsm();
+    dp = m.dp;
+    getLockfileImporterId = m.getLockfileImporterId;
+  })();
+  return loading;
+}
 
 function convertLockfileToGraphFromCapsule(
   lockfile: BitLockfileFile,
@@ -350,8 +379,8 @@ export async function convertGraphToLockfile(
               bareSpecifier: pkgToResolve.version,
             },
             {
-              lockfileDir: '',
-              projectDir: '',
+              lockfileDir: rootDir,
+              projectDir: rootDir,
               preferredVersions: {},
             }
           );
@@ -374,9 +403,9 @@ export async function convertGraphToLockfile(
           throw err;
         }
         const { resolution } = resolveResult;
-        if ('integrity' in resolution && resolution.integrity) {
+        if (resolution != null && 'integrity' in resolution && resolution.integrity) {
           lockfile.packages[pkgToResolve.pkgId].resolution = {
-            integrity: resolution.integrity,
+            integrity: resolution.integrity as string,
           };
         }
       }
@@ -407,6 +436,7 @@ export async function convertGraphToLockfile(
   if (failedWorkspaceComponentPkgs.size > 0) {
     scrubPkgsFromLockfile(lockfile, failedWorkspaceComponentPkgs);
   }
+  dropUnreachableLockfileEntries(lockfile);
   // Validate the generated lockfile
   for (const [depPath, pkg] of Object.entries(lockfile.packages)) {
     if (pkg.resolution == null || Object.keys(pkg.resolution).length === 0) {
@@ -464,7 +494,48 @@ function getPkgsToResolve(lockfile: BitLockfileFile, manifests: Record<string, P
   return pkgsToResolve;
 }
 
-function depPathToRef(depPath: dp.DependencyPath): string {
+function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
+  const reachablePackages = new Set<string>();
+  const reachableSnapshots = new Set<string>();
+  const visit = (depPath: string) => {
+    if (reachableSnapshots.has(depPath)) return;
+    reachableSnapshots.add(depPath);
+    reachablePackages.add(dp.removeSuffix(depPath));
+    const snapshot = lockfile.snapshots?.[depPath];
+    if (!snapshot) return;
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      for (const [name, ref] of Object.entries(snapshot[depType] ?? {})) {
+        if (ref.startsWith('link:') || ref.startsWith('file:')) continue;
+        visit(`${name}@${ref}`);
+      }
+    }
+  };
+  for (const importer of Object.values(lockfile.importers ?? {})) {
+    for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
+      for (const [name, { version }] of Object.entries(importer[depType] ?? {})) {
+        if (version.startsWith('link:') || version.startsWith('file:')) continue;
+        visit(`${name}@${version}`);
+      }
+    }
+  }
+  for (const pkgId of Object.keys(lockfile.packages ?? {})) {
+    if (!reachablePackages.has(pkgId)) {
+      delete lockfile.packages![pkgId];
+    }
+  }
+  for (const depPath of Object.keys(lockfile.snapshots ?? {})) {
+    if (!reachableSnapshots.has(depPath)) {
+      delete lockfile.snapshots![depPath];
+    }
+  }
+  if (lockfile.bit?.depsRequiringBuild) {
+    lockfile.bit.depsRequiringBuild = lockfile.bit.depsRequiringBuild.filter((depPath) =>
+      reachablePackages.has(dp.removeSuffix(depPath))
+    );
+  }
+}
+
+function depPathToRef(depPath: Dp.DependencyPath): string {
   return `${depPath.version}${depPath.patchHash ?? ''}${depPath.peerDepGraphHash ?? ''}`;
 }
 

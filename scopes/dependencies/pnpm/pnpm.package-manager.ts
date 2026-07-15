@@ -17,24 +17,24 @@ import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
-import type { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import type { PeerDependencyIssuesByProjects } from '@pnpm/napi';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
-import type { Config } from '@pnpm/config';
+import type { Config } from '@pnpm/config.reader';
 import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
-import type { Modules } from '@pnpm/modules-yaml';
-import { readModulesManifest } from '@pnpm/modules-yaml';
-import type { ImporterInfo } from '@pnpm/reviewing.dependencies-hierarchy';
-import { buildDependentsTree } from '@pnpm/reviewing.dependencies-hierarchy';
-import { renderDependentsTree } from '@pnpm/list';
-import {
-  readWantedLockfile,
-  writeLockfileFile,
-  convertToLockfileFile as convertLockfileObjectToLockfileFile,
-} from '@pnpm/lockfile.fs';
+import type * as LockfileFs from '@pnpm/lockfile.fs';
+import type { Modules } from '@pnpm/installing.modules-yaml';
+import type * as ModulesYaml from '@pnpm/installing.modules-yaml';
+import type { ImporterInfo } from '@pnpm/deps.inspection.tree-builder';
+import { buildDependentsTree } from '@pnpm/deps.inspection.tree-builder';
+import { renderDependentsTree } from '@pnpm/deps.inspection.list';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
-import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
+import {
+  convertLockfileToGraph,
+  convertGraphToLockfile,
+  init as initLockfileDepsGraphConverter,
+} from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
@@ -51,6 +51,20 @@ export interface InstallResult {
 }
 
 type ReadConfigResult = Promise<{ config: Config; warnings: string[] }>;
+type LockfileFsModule = typeof LockfileFs;
+type ModulesYamlModule = typeof ModulesYaml;
+let pnpmEsmPromise: Promise<{ lockfileFs: LockfileFsModule; modulesYaml: ModulesYamlModule }> | undefined;
+
+function loadPnpmEsm(): Promise<{ lockfileFs: LockfileFsModule; modulesYaml: ModulesYamlModule }> {
+  pnpmEsmPromise ??= (async () => {
+    const { loadEsm } = require('./load-pnpm-esm.cjs') as {
+      loadEsm: () => Promise<{ lockfileFs: LockfileFsModule; modulesYaml: ModulesYamlModule }>;
+    };
+    const { lockfileFs, modulesYaml } = await loadEsm();
+    return { lockfileFs, modulesYaml };
+  })();
+  return pnpmEsmPromise;
+}
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
@@ -86,6 +100,7 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig?: PackageManagerNetworkConfig;
     }
   ) {
+    await initLockfileDepsGraphConverter();
     const registries = opts.registries ?? new Registries(new Registry('https://node-registry.bit.cloud', false), {});
     const { resolve } = await generateResolverAndFetcher({
       ...opts,
@@ -95,6 +110,9 @@ export class PnpmPackageManager implements PackageManager {
       ...opts,
       resolve,
     });
+    const {
+      lockfileFs: { readWantedLockfile, writeLockfileFile, convertToLockfileFile: convertLockfileObjectToLockfileFile },
+    } = await loadPnpmEsm();
     // Merge the graph-derived subset into any existing wanted lockfile rather than
     // overwriting. Only the importers, packages, and snapshots referenced by the
     // imported components' subgraph are re-stated here; every other workspace dep's
@@ -173,6 +191,7 @@ export class PnpmPackageManager implements PackageManager {
       });
     }
     this.modulesManifestCache.delete(rootDir);
+    const hoistPattern = resolveHoistPattern(installOptions.hoistPatterns, config.hoistPattern);
     const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
       rootDir,
       manifests,
@@ -200,7 +219,7 @@ export class PnpmPackageManager implements PackageManager {
         dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
         dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
         overrides: installOptions.overrides,
-        hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
+        hoistPattern,
         publicHoistPattern: config.shamefullyHoist
           ? ['*']
           : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
@@ -294,31 +313,29 @@ export class PnpmPackageManager implements PackageManager {
     if (!this.username) {
       this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
     }
-    // We need to use config.rawConfig as it will only contain the settings defined by the user.
-    // config contains default values of the settings when they are not defined by the user.
     const result: PackageManagerNetworkConfig = {
       userAgent: `bit user/${this.username}`,
     };
-    if (config.rawConfig['max-sockets'] != null) {
-      result.maxSockets = config.rawConfig['max-sockets'];
+    if (config.maxSockets != null) {
+      result.maxSockets = config.maxSockets;
     }
-    if (config.rawConfig['network-concurrency'] != null) {
-      result.networkConcurrency = config.rawConfig['network-concurrency'];
+    if (config.networkConcurrency != null) {
+      result.networkConcurrency = config.networkConcurrency;
     }
-    if (config.rawConfig['fetch-retries'] != null) {
-      result.fetchRetries = config.rawConfig['fetch-retries'];
+    if (config.fetchRetries != null) {
+      result.fetchRetries = config.fetchRetries;
     }
-    if (config.rawConfig['fetch-timeout'] != null) {
-      result.fetchTimeout = config.rawConfig['fetch-timeout'];
+    if (config.fetchTimeout != null) {
+      result.fetchTimeout = config.fetchTimeout;
     }
-    if (config.rawConfig['fetch-retry-maxtimeout'] != null) {
-      result.fetchRetryMaxtimeout = config.rawConfig['fetch-retry-maxtimeout'];
+    if (config.fetchRetryMaxtimeout != null) {
+      result.fetchRetryMaxtimeout = config.fetchRetryMaxtimeout;
     }
-    if (config.rawConfig['fetch-retry-mintimeout'] != null) {
-      result.fetchRetryMintimeout = config.rawConfig['fetch-retry-mintimeout'];
+    if (config.fetchRetryMintimeout != null) {
+      result.fetchRetryMintimeout = config.fetchRetryMintimeout;
     }
-    if (config.rawConfig['strict-ssl'] != null) {
-      result.strictSSL = config.rawConfig['strict-ssl'];
+    if (config.strictSsl != null) {
+      result.strictSSL = config.strictSsl;
     }
     if (config.ca != null) {
       result.ca = config.ca;
@@ -377,6 +394,9 @@ export class PnpmPackageManager implements PackageManager {
     if (this.modulesManifestCache.has(lockfileDir)) {
       return this.modulesManifestCache.get(lockfileDir);
     }
+    const {
+      modulesYaml: { readModulesManifest },
+    } = await loadPnpmEsm();
     const modulesManifest = await readModulesManifest(join(lockfileDir, 'node_modules'));
     if (modulesManifest) {
       this.modulesManifestCache.set(lockfileDir, modulesManifest);
@@ -393,6 +413,9 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async findUsages(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string> {
+    const {
+      lockfileFs: { readWantedLockfile },
+    } = await loadPnpmEsm();
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
     if (!lockfile) return '';
     const importerIds = Object.keys(lockfile.importers ?? {}).filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`));
@@ -435,6 +458,10 @@ export class PnpmPackageManager implements PackageManager {
    * Calculating the dependencies graph of a given component using the lockfile.
    */
   async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<void> {
+    await initLockfileDepsGraphConverter();
+    const {
+      lockfileFs: { readWantedLockfile, convertToLockfileFile: convertLockfileObjectToLockfileFile },
+    } = await loadPnpmEsm();
     const originalLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
     if (!originalLockfile) {
       return;
@@ -468,17 +495,31 @@ export class PnpmPackageManager implements PackageManager {
         importers: { ...originalLockfile.importers, ...clonedImporters },
       };
       for (const importerId of filterByImporterIds) {
-        for (const depType of [
-          'dependencies',
-          'devDependencies',
-          'optionalDependencies',
-          'specifiers',
-          'dependenciesMeta',
-        ]) {
-          for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
-            if (workspacePkgName !== pkgName) {
-              delete lockfile.importers[importerId]?.[depType]?.[workspacePkgName];
-            }
+        const importer = lockfile.importers[importerId];
+        if (importer == null) continue;
+        for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
+          if (workspacePkgName === pkgName) continue;
+          // In the component's own importer, an injected sibling (a "file:"
+          // ref) is a real direct dependency of this component — the graph
+          // converter rewrites it to the component's semver id. Entries in
+          // any other importer (e.g. the capsule/workspace root) merely
+          // wire the workspace together and must not leak into this
+          // component's graph.
+          if (importerId === componentImporterId) {
+            const ref =
+              importer.dependencies?.[workspacePkgName] ??
+              importer.devDependencies?.[workspacePkgName] ??
+              importer.optionalDependencies?.[workspacePkgName];
+            if (typeof ref === 'string' && ref.startsWith('file:')) continue;
+          }
+          for (const depType of [
+            'dependencies',
+            'devDependencies',
+            'optionalDependencies',
+            'specifiers',
+            'dependenciesMeta',
+          ]) {
+            delete importer[depType]?.[workspacePkgName];
           }
         }
       }
@@ -503,6 +544,22 @@ export class PnpmPackageManager implements PackageManager {
       component.state._consumer.dependenciesGraph = graph;
     }
   }
+}
+
+function resolveHoistPattern(hoistPatternsFromBitConfig?: string[], hoistPatternFromPnpmConfig?: string[]): string[] {
+  if (hoistPatternsFromBitConfig == null) return hoistPatternFromPnpmConfig ?? ['*'];
+  if (
+    isDefaultHoistPattern(hoistPatternsFromBitConfig) &&
+    hoistPatternFromPnpmConfig &&
+    !isDefaultHoistPattern(hoistPatternFromPnpmConfig)
+  ) {
+    return hoistPatternFromPnpmConfig;
+  }
+  return hoistPatternsFromBitConfig;
+}
+
+function isDefaultHoistPattern(hoistPattern: string[]): boolean {
+  return hoistPattern.length === 1 && hoistPattern[0] === '*';
 }
 
 function tryReadPackageJson(pkgDir: string) {
@@ -565,6 +622,7 @@ function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileF
       depsRequiringBuild: mergedDepsRequiringBuild,
     };
   }
+  pruneUnreachableLockfileEntries(merged);
   return merged;
 }
 
@@ -580,4 +638,54 @@ function mergeEntryRecords<T extends object>(
     merged[key] = existingEntry ? ({ ...existingEntry, ...graphEntry } as T) : graphEntry;
   }
   return merged;
+}
+
+function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
+  const reachablePackages = new Set<string>();
+  const reachableSnapshots = new Set<string>();
+  const visit = (depPath: string) => {
+    if (reachableSnapshots.has(depPath)) return;
+    reachableSnapshots.add(depPath);
+    reachablePackages.add(removePeerSuffix(depPath));
+    const snapshot = lockfile.snapshots?.[depPath];
+    if (!snapshot) return;
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      for (const [name, ref] of Object.entries(snapshot[depType] ?? {}) as Array<[string, string]>) {
+        if (ref.startsWith('link:') || ref.startsWith('file:')) continue;
+        visit(`${name}@${ref}`);
+      }
+    }
+  };
+  for (const importer of Object.values(lockfile.importers ?? {})) {
+    for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
+      for (const [name, dep] of Object.entries(importer[depType] ?? {}) as Array<
+        [string, { version?: string } | string]
+      >) {
+        const version = typeof dep === 'string' ? dep : dep.version;
+        if (!version || version.startsWith('link:') || version.startsWith('file:')) continue;
+        visit(`${name}@${version}`);
+      }
+    }
+  }
+  for (const pkgId of Object.keys(lockfile.packages ?? {})) {
+    if (!reachablePackages.has(pkgId)) {
+      delete lockfile.packages![pkgId];
+    }
+  }
+  for (const depPath of Object.keys(lockfile.snapshots ?? {})) {
+    if (!reachableSnapshots.has(depPath)) {
+      delete lockfile.snapshots![depPath];
+    }
+  }
+  const bitAttrs = (lockfile as LockfileFile & { bit?: { depsRequiringBuild?: string[] } }).bit;
+  if (bitAttrs?.depsRequiringBuild) {
+    bitAttrs.depsRequiringBuild = bitAttrs.depsRequiringBuild.filter((depPath) =>
+      reachablePackages.has(removePeerSuffix(depPath))
+    );
+  }
+}
+
+function removePeerSuffix(depPath: string): string {
+  const suffixStart = depPath.indexOf('(');
+  return suffixStart === -1 ? depPath : depPath.slice(0, suffixStart);
 }

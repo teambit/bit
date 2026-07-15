@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import ssri from 'ssri';
 import _ from 'lodash';
-import { pack } from '@pnpm/plugin-commands-publishing';
+import * as nodeApi from '@pnpm/napi';
 import type { ComponentFactory } from '@teambit/component';
 import type { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import type { Capsule, IsolatorMain } from '@teambit/isolator';
@@ -133,13 +133,12 @@ export class Packer {
         warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
         return { warnings, startTime, endTime: Date.now() };
       }
-      const { tarballPath: tgzName } = await pack.api({
-        argv: { original: [] },
-        dir: cwd,
-        rawConfig: {},
-      });
+      const packResult = await nodeApi.pack({ dir: cwd });
+      const tgzName = path.basename(packResult.tarballPath);
       this.logger.debug(`successfully packed tarball at ${cwd}`);
-      const tgzOriginPath = path.join(cwd, tgzName);
+      const tgzOriginPath = path.isAbsolute(packResult.tarballPath)
+        ? packResult.tarballPath
+        : path.join(cwd, packResult.tarballPath);
       let tarPath = path.join(outputPath, tgzName);
       if (isRelative(tarPath)) {
         tarPath = path.join(cwd, tarPath);
