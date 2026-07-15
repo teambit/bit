@@ -154,7 +154,7 @@ Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-
 Tags and exports new semantic versions after merging a PR to main.
 
 By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.
-Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push, --no-bitmap-commit
+Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --auto-tag-increment <level>, --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push, --no-bitmap-commit
 
 ## bit clear-cache
 
@@ -939,7 +939,7 @@ similar to linux "tail -f" command
 create immutable component snapshots with semantic version tags
 
 creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable. by default tags all new and modified components. supports version specification per pattern using "@" (e.g. foo@1.0.0, bar@minor). use for official releases. for development versions, use 'bit snap' instead.
-Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --no-lock-deps, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
+Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --auto-tag-increment <level>, --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --no-lock-deps, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
 
 ## bit templates
 
