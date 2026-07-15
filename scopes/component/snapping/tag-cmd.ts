@@ -51,7 +51,8 @@ export const tagCmdOptions = [
   [
     '',
     'auto-tag-increment <level>',
-    `the increment level to use for auto-tagged dependents. options are: [${RELEASE_TYPES.join(', ')}], default to patch.
+    `the increment level to use for auto-tagged dependents. options are: [${RELEASE_TYPES.join(', ')}].
+by default, dependents are bumped by a patch, unless --increment is one of [${PRE_RELEASE_TYPES.join(', ')}], which they follow.
 note that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level`,
   ],
   ['', 'snapped', 'tag only components whose head is a snap (not a tag)'],

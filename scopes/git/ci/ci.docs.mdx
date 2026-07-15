@@ -95,19 +95,28 @@ bit ci merge [--message <string>] [--build] [--increment <level>] [--patch|--min
 | `--pre-release`        |           | Shortcut for `--increment prerelease` with optional identifier.                                                     |
 | `--prerelease-id`      |           | Prerelease identifier (e.g. "dev" to get "1.0.0-dev.1").                                                            |
 | `--increment-by`       |           | Increment by more than 1 (e.g. `--increment-by 2` with patch: 0.0.1 → 0.0.3).                                       |
-| `--auto-tag-increment` |           | Version bump level for auto-tagged dependents (default: `patch`). See below.                                        |
+| `--auto-tag-increment` |           | Version bump level for auto-tagged dependents. See below.                                                           |
 
 ### Bumping Dependents
 
 The version flags above apply only to the components that actually changed. Dependents that are
-picked up by auto-tag are always bumped by a `patch`, regardless of `--major`/`--minor`:
+picked up by auto-tag are bumped by a `patch`, regardless of `--major`/`--minor`:
 
 ```bash
 # button 1.0.0 -> 2.0.0, but its dependent lib 1.0.0 -> 1.0.1
 bit ci merge --major
 ```
 
-Use `--auto-tag-increment` to bump the dependents by a different level:
+The one exception is a pre-release `--increment` (`prepatch`, `prerelease`, `preminor`,
+`premajor`), which the dependents do follow:
+
+```bash
+# button 1.0.0 -> 1.0.1-0, and its dependent lib 1.0.0 -> 1.0.1-0 too
+bit ci merge --increment prerelease
+```
+
+Use `--auto-tag-increment` to bump the dependents by an explicit level instead. It overrides both
+defaults above:
 
 ```bash
 # button 1.0.0 -> 2.0.0, and its dependent lib 1.0.0 -> 2.0.0 as well

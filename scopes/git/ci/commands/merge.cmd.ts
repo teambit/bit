@@ -51,7 +51,8 @@ export class CiMergeCmd implements Command {
     [
       '',
       'auto-tag-increment <level>',
-      `the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease], default to patch.
+      `the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease].
+by default, dependents are bumped by a patch, unless --increment is one of [prepatch, prerelease, preminor, premajor], which they follow.
 note that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level`,
     ],
     [

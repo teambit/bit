@@ -3488,7 +3488,7 @@
       [
         "",
         "auto-tag-increment <level>",
-        "the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease], default to patch.\nnote that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level"
+        "the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease].\nby default, dependents are bumped by a patch, unless --increment is one of [prepatch, prerelease, preminor, premajor], which they follow.\nnote that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level"
       ],
       [
         "",
@@ -5072,7 +5072,7 @@
           [
             "",
             "auto-tag-increment <level>",
-            "the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease], default to patch.\nnote that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level"
+            "the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease].\nby default, dependents are bumped by a patch, unless --increment is one of [prepatch, prerelease, preminor, premajor], which they follow.\nnote that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level"
           ],
           [
             "",
