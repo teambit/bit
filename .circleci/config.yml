@@ -476,6 +476,11 @@ commands:
           key: bitsrc-registry10
       - restore_cache:
           key: core-aspect-env-v1.0.0-v1
+      # package-manager cache pre-warmed with the published legacy core env chains (saved in
+      # setup_harmony). without it, every node pays the full npm download of those chains in its
+      # first env-using suite (~10 minutes per node).
+      - restore_cache:
+          key: e2e-pm-cache-v1-{{ checksum "bit/scopes/envs/envs/legacy-core-envs.ts" }}
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -589,6 +594,26 @@ jobs:
           key: core-aspect-env-v1.0.0-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
+      # pre-warm the package-manager cache with the published legacy core env chains, so e2e
+      # nodes (which restore this cache) don't each pay the full npm download in their first
+      # env-using suite (~10 minutes per node). restore-first makes re-runs a fast no-op:
+      # save_cache skips when the key already exists. the warm install runs with the repo's own
+      # bit binary - the same one the e2e tests use - so the pnpm store layout matches exactly.
+      - restore_cache:
+          key: e2e-pm-cache-v1-{{ checksum "bit/scopes/envs/envs/legacy-core-envs.ts" }}
+      - run:
+          name: warm package-manager cache with legacy core env chains
+          command: |
+            LEGACY_ENV_PACKAGES=$(node bit/scripts/print-legacy-env-packages.js)
+            BIT_JS=/home/circleci/bit/bit/bin/bit.js
+            node $BIT_JS config set package-manager.cache /home/circleci/package-manager-cache
+            mkdir -p /home/circleci/warm-envs && cd /home/circleci/warm-envs
+            node $BIT_JS init
+            node $BIT_JS install $LEGACY_ENV_PACKAGES
+      - save_cache:
+          key: e2e-pm-cache-v1-{{ checksum "bit/scopes/envs/envs/legacy-core-envs.ts" }}
+          paths:
+            - /home/circleci/package-manager-cache
       # - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
