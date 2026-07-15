@@ -73,4 +73,14 @@ describe('init command on Harmony', function () {
       expect(() => helper.command.init()).to.not.throw();
     });
   });
+  describe('init with an invalid default-scope', () => {
+    before(() => {
+      helper.scopeHelper.cleanWorkspace();
+    });
+    // previously, the workspace was created and then every command was throwing InvalidScopeName
+    it('should throw a descriptive error and should not create the workspace', () => {
+      expect(() => helper.command.init('--default-scope my.invalid.scope')).to.throw('is invalid');
+      expect(path.join(helper.scopes.localPath, 'workspace.jsonc')).to.not.be.a.path();
+    });
+  });
 });
