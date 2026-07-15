@@ -12,7 +12,7 @@ The `ComponentTree` is the main export of the `side-bar` component. It renders a
 ```tsx
 import { ComponentTree } from '@teambit/ui-foundation.ui.side-bar';
 
-<ComponentTree components={myComponents} />;
+<ComponentTree components={myComponents} />
 ```
 
 ## With lanes
@@ -23,7 +23,7 @@ Pass a `LanesModel` to enable lane-aware navigation. The tree will highlight com
 import { ComponentTree } from '@teambit/ui-foundation.ui.side-bar';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
-<ComponentTree components={myComponents} lanesModel={lanesModel} />;
+<ComponentTree components={myComponents} lanesModel={lanesModel} />
 ```
 
 ## Custom tree node renderer
@@ -42,7 +42,7 @@ function MyTreeNode(props: TreeNodeProps<PayloadType>) {
   return <em>{node.id}</em>;
 }
 
-<ComponentTree components={myComponents} TreeNode={MyTreeNode} />;
+<ComponentTree components={myComponents} TreeNode={MyTreeNode} />
 ```
 
 ## Collapsed state
@@ -69,11 +69,11 @@ Use `transformTree` to modify the inflated tree before it is rendered. This is u
 
 ## Sub-components
 
-| Export              | Purpose                                                  |
-| ------------------- | -------------------------------------------------------- | ------------ | --------- | ---------- |
-| `ComponentTree`     | Main entry point — renders the full hierarchical tree    |
-| `ComponentView`     | Renders a single component leaf node as a navigable link |
-| `ScopeTreeNode`     | Collapsible node representing a Bit scope                |
+| Export | Purpose |
+|---|---|
+| `ComponentTree` | Main entry point — renders the full hierarchical tree |
+| `ComponentView` | Renders a single component leaf node as a navigable link |
+| `ScopeTreeNode` | Collapsible node representing a Bit scope |
 | `NamespaceTreeNode` | Collapsible node representing a namespace within a scope |
-| `ScopePayload`      | Marker class attached to scope nodes in the payload map  |
-| `PayloadType`       | Union type: `ComponentModel                              | ScopePayload | LaneModel | undefined` |
+| `ScopePayload` | Marker class attached to scope nodes in the payload map |
+| `PayloadType` | Union type: `ComponentModel | ScopePayload | LaneModel | undefined` |

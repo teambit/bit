@@ -43,10 +43,10 @@ Subcommands: list, get, set, unset, replace, update
 scope <sub-command> - manage component scope names and assignments
 Subcommands: set, trust, rename, rename-owner, fork
 eject-conf <pattern> - create component.json configuration files for components
-aspect <sub-command> - manage component aspects and their configurations
-Subcommands: list, list-core, get, set, unset, update
 local-only <sub-command> - manage components that exist only in the workspace
 Subcommands: set, unset, list
+aspect <sub-command> - manage component aspects and their configurations
+Subcommands: list, list-core, get, set, unset, update
 
 Collaboration & Remote
 remote - manage remote scopes for self-hosted environments
