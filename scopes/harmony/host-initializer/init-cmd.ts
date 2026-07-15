@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import * as pathlib from 'path';
 import { BitError } from '@teambit/bit-error';
 import { getConfig } from '@teambit/config-store';
+import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { initScope } from '@teambit/legacy.scope-api';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
 import type { WorkspaceExtensionProps } from '@teambit/config';
@@ -162,6 +163,13 @@ supports various reset options to recover from corrupted state or restart from s
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
 
+    const defaultScopeToUse = defaultScope || getConfig(CFG_INIT_DEFAULT_SCOPE);
+    // validate before creating any file, otherwise, the workspace is created with an invalid
+    // default-scope and every subsequent command fails to load it.
+    if (defaultScopeToUse && !isValidScopeName(defaultScopeToUse)) {
+      throw new InvalidScopeName(defaultScopeToUse);
+    }
+
     const projectPath = path || process.cwd();
     const interactiveConfig = await this.handleInteractiveMode(projectPath, flags);
 
@@ -170,7 +178,7 @@ supports various reset options to recover from corrupted state or restart from s
         interactiveConfig?.defaultDirectory ||
         (externalPackageManager ? 'bit-components/{scope}/{name}' : defaultDirectory) ||
         getConfig(CFG_INIT_DEFAULT_DIRECTORY),
-      defaultScope: defaultScope || getConfig(CFG_INIT_DEFAULT_SCOPE),
+      defaultScope: defaultScopeToUse,
       name,
       externalPackageManager: interactiveConfig?.externalPackageManager || externalPackageManager,
     };
