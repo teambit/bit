@@ -811,6 +811,63 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     });
   });
 
+  /**
+   * by default, dependents that are picked up by auto-tag are bumped by a patch, regardless of the
+   * release-type given to the modified components. --auto-tag-increment overrides that.
+   */
+  describe('bit ci merge with --auto-tag-increment', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit(3);
+
+      helper.command.runCmd('git checkout -b feature/auto-tag-increment');
+      // modify only comp3. so then comp2 (direct) and comp1 (transitive) are auto-tag pending
+      helper.fs.appendFile('comp3/index.js');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: update comp3"');
+
+      // simulate a PR merge scenario by going back to the default branch
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/auto-tag-increment');
+
+      mergeOutput = helper.command.runCmd(
+        'bit ci merge --major --auto-tag-increment major --message "test auto-tag-increment"'
+      );
+    });
+    it('should complete successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+    });
+    // guards against the dependents being tagged as "modified" (which would get them the --major
+    // directly and make the assertions below pass for the wrong reason)
+    it('should reach the dependents via auto-tag rather than as modified components', () => {
+      const output = removeChalkCharacters(mergeOutput);
+      expect(output).to.include('changed components (1)'); // only comp3 is modified
+      expect(output).to.include('auto-tagged dependents:');
+    });
+    it('should bump the modified component and its auto-tagged dependents by major', () => {
+      const list = helper.command.listParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      const comp2 = list.find((comp) => comp.id.includes('comp2'));
+      const comp3 = list.find((comp) => comp.id.includes('comp3'));
+
+      expect(comp3?.currentVersion).to.equal('1.0.0'); // the modified one
+      expect(comp2?.currentVersion).to.equal('1.0.0'); // direct dependent, would be 0.0.2 without the flag
+      expect(comp1?.currentVersion).to.equal('1.0.0'); // transitive dependent
+    });
+    it('should export the majored components to the remote', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      const comp2 = list.find((comp) => comp.id.includes('comp2'));
+      const comp3 = list.find((comp) => comp.id.includes('comp3'));
+
+      expect(comp3?.localVersion).to.equal('1.0.0');
+      expect(comp2?.localVersion).to.equal('1.0.0');
+      expect(comp1?.localVersion).to.equal('1.0.0');
+    });
+  });
+
   describe('bit ci merge when checked out to a lane', () => {
     let mergeOutput: string;
     before(() => {

@@ -43,6 +43,12 @@ export const tagCmdOptions = [
   ['', 'minor', 'syntactic sugar for "--increment minor"'],
   ['', 'major', 'syntactic sugar for "--increment major"'],
   ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`'],
+  [
+    '',
+    'auto-tag-increment <level>',
+    `the increment level to use for auto-tagged dependents. options are: [${RELEASE_TYPES.join(', ')}], default to patch.
+note that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level`,
+  ],
   ['', 'snapped', 'tag only components whose head is a snap (not a tag)'],
   ['', 'unmerged', 'complete a merge process by tagging the unmerged components'],
   ['', 'skip-tests', 'skip running component tests during tag process'],
@@ -98,6 +104,7 @@ export type TagParams = {
   minor?: boolean;
   major?: boolean;
   increment?: ReleaseType;
+  autoTagIncrement?: ReleaseType;
   preRelease?: string;
   prereleaseId?: string;
   ignoreUnresolvedDependencies?: boolean;
@@ -167,7 +174,7 @@ use for official releases. for development versions, use 'bit snap' instead.`;
         `--message will be mandatory in the next few releases. make sure to add a message with your tag`
       );
     }
-    const { releaseType, preReleaseId } = validateOptions(options);
+    const { releaseType, autoTagReleaseType, preReleaseId } = validateOptions(options);
 
     const disableTagAndSnapPipelines = disableTagPipeline;
     let build = options.build;
@@ -196,6 +203,7 @@ To undo local tag use the "bit reset" command.`
       versionsFile,
       message,
       releaseType,
+      autoTagReleaseType,
       preReleaseId,
       ignoreIssues,
       ignoreNewestVersion,
@@ -224,7 +232,7 @@ To undo local tag use the "bit reset" command.`
 }
 
 export function validateOptions(options: TagParams) {
-  const { patch, minor, major, preRelease, increment, prereleaseId } = options;
+  const { patch, minor, major, preRelease, increment, autoTagIncrement, prereleaseId, skipAutoTag } = options;
   if (prereleaseId && (!increment || increment === 'major' || increment === 'minor' || increment === 'patch')) {
     throw new BitError(
       `--prerelease-id should be entered along with --increment flag, while --increment must be one of the following: [prepatch, prerelease, preminor, premajor]`
@@ -234,6 +242,10 @@ export function validateOptions(options: TagParams) {
   const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
   if (releaseFlags.length > 1) {
     throw new BitError('you can use only one of the following - patch, minor, major, pre-release');
+  }
+
+  if (autoTagIncrement && skipAutoTag) {
+    throw new BitError('you can use either --auto-tag-increment or --skip-auto-tag, but not both');
   }
 
   const getReleaseType = (): ReleaseType => {
@@ -250,6 +262,14 @@ semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
     if (preRelease) return 'prerelease';
     return DEFAULT_BIT_RELEASE_TYPE;
   };
+  const getAutoTagReleaseType = (): ReleaseType | undefined => {
+    if (!autoTagIncrement) return undefined;
+    if (!RELEASE_TYPES.includes(autoTagIncrement)) {
+      throw new BitError(`invalid auto-tag-increment level "${autoTagIncrement}".
+semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
+    }
+    return autoTagIncrement;
+  };
   const getPreReleaseId = (): string | undefined => {
     if (prereleaseId) {
       return prereleaseId;
@@ -262,6 +282,7 @@ semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
 
   return {
     releaseType: getReleaseType(),
+    autoTagReleaseType: getAutoTagReleaseType(),
     preReleaseId: getPreReleaseId(),
   };
 }

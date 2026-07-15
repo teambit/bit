@@ -64,6 +64,7 @@ export type VersionMakerParams = {
   copyLogFromPreviousSnap?: boolean;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
+  autoTagReleaseType?: ReleaseType;
   incrementBy?: number;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
@@ -492,7 +493,8 @@ export class VersionMaker {
   }
 
   private async setFutureVersions(autoTagIds: ComponentIdList): Promise<void> {
-    const { releaseType, tagDataPerComp, incrementBy, persist, soft, exactVersion, preReleaseId } = this.params;
+    const { releaseType, autoTagReleaseType, tagDataPerComp, incrementBy, persist, soft, exactVersion, preReleaseId } =
+      this.params;
     const isPreReleaseLike = releaseType
       ? ['prerelease', 'premajor', 'preminor', 'prepatch'].includes(releaseType)
       : false;
@@ -525,6 +527,12 @@ export class VersionMaker {
             );
           }
           if (isAutoTag) {
+            // when set, it overrides the default patch bump (and the pre-release propagation below)
+            if (autoTagReleaseType) {
+              return soft
+                ? autoTagReleaseType
+                : modelComponent.getVersionToAdd(autoTagReleaseType, undefined, incrementBy, preReleaseId);
+            }
             // auto-tag always bumped as patch unless it's pre-release
             if (isPreReleaseLike) {
               return soft
