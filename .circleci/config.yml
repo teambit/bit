@@ -472,12 +472,6 @@ commands:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
-      # pnpm store pre-warmed with the published legacy core env chains (saved in setup_harmony).
-      # without it, every node pays the full npm download of those chains in its first env-using
-      # suite. the ~/.npmrc lines pin the store/cache to the same location the warm job used
-      # (pnpm ignores bit's `package-manager.cache` config - that one is yarn-only).
-      - restore_cache:
-          key: e2e-pm-cache-v2-{{ checksum "bit/scopes/envs/envs/legacy-core-envs.ts" }}
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -486,7 +480,6 @@ commands:
       # - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
-      - run: "echo 'store-dir=/home/circleci/pnpm-store' >> ~/.npmrc && echo 'cache-dir=/home/circleci/pnpm-cache' >> ~/.npmrc"
       # Make sure when we run bit from e2e tests we run it from the global not from here
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
@@ -501,9 +494,6 @@ commands:
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
-          # some suites install published env chains in before-hooks, which can be silent for more
-          # than the default 10m (mocha buffers child output) — don't kill slow-but-healthy nodes
-          no_output_timeout: 40m
       - store_test_results:
           path: bit/junit
       - store_artifacts:
@@ -588,30 +578,6 @@ jobs:
       - run:
           name: bbit install
           command: cd bit && bbit install
-      # pre-warm the pnpm store with the published legacy core env chains, so e2e nodes (which
-      # restore this cache) don't each pay the full npm download in their first env-using suite.
-      # note: bit's `package-manager.cache` config is honored only by the yarn package manager -
-      # pnpm resolves its store/cache from the standard npmrc chain, so the location is pinned
-      # explicitly in ~/.npmrc here and on the e2e nodes (same lines) to make them match.
-      # restore-first makes re-runs a fast no-op: save_cache skips when the key already exists.
-      # the warm install runs with the repo's own bit binary - the same one the e2e tests use.
-      - restore_cache:
-          key: e2e-pm-cache-v2-{{ checksum "bit/scopes/envs/envs/legacy-core-envs.ts" }}
-      - run:
-          name: warm pnpm store with legacy core env chains
-          command: |
-            echo 'store-dir=/home/circleci/pnpm-store' >> ~/.npmrc
-            echo 'cache-dir=/home/circleci/pnpm-cache' >> ~/.npmrc
-            LEGACY_ENV_PACKAGES=$(node bit/scripts/print-legacy-env-packages.js)
-            BIT_JS=/home/circleci/bit/bit/bin/bit.js
-            mkdir -p /home/circleci/warm-envs && cd /home/circleci/warm-envs
-            node $BIT_JS init
-            node $BIT_JS install $LEGACY_ENV_PACKAGES
-      - save_cache:
-          key: e2e-pm-cache-v2-{{ checksum "bit/scopes/envs/envs/legacy-core-envs.ts" }}
-          paths:
-            - /home/circleci/pnpm-store
-            - /home/circleci/pnpm-cache
       # - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
