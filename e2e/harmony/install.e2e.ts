@@ -1,6 +1,7 @@
 import stripAnsi from 'strip-ansi';
 import path from 'path';
 import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import { addDistTag } from '@pnpm/registry-mock';
 import { IssuesClasses } from '@teambit/component-issues';
 import { getAnotherInstallRequiredOutput } from '@teambit/install';
@@ -156,6 +157,7 @@ describe('install generator configured envs', function () {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
@@ -178,8 +180,15 @@ describe('install generator configured envs', function () {
       expect(manifest.version).to.eq('100.1.0');
     });
     it('should update subdependency inside existing range', async () => {
-      const dirs = fs.readdirSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm'));
-      expect(dirs).to.include('@pnpm.e2e+pkg-with-1-dep@100.1.0');
+      const lockfile = yaml.load(
+        fs.readFileSync(path.join(helper.fixtures.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')
+      ) as any;
+      expect(lockfile.packages).to.have.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
+      expect(
+        lockfile.snapshots?.['@pnpm.e2e/parent-of-pkg-with-1-dep@1.0.0']?.dependencies?.[
+          '@pnpm.e2e/pkg-with-1-dep'
+        ]
+      ).to.eq('100.1.0');
     });
   });
 });

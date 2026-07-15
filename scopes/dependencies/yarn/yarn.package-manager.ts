@@ -31,7 +31,7 @@ import { npath } from '@yarnpkg/fslib';
 import type { Resolution } from '@yarnpkg/parsers';
 import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
-import { parseOverrides } from '@pnpm/parse-overrides';
+import { parseOverrides } from '@pnpm/config.parse-overrides';
 import type { ProjectManifest } from '@pnpm/types';
 import { omit, mapValues, pickBy } from 'lodash';
 import { homedir } from 'os';

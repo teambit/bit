@@ -548,15 +548,18 @@ export class InstallMain {
    * while no longer tracked there. The scan reads already-loaded in-memory dep data (no fetch).
    */
   private enrichUnpublishedSnapDepError(err: Error, components: Component[]): Error {
-    // only act on the package manager's "no matching version" failure. other codes (auth, network, FETCH_404,
-    // registry outages) can mention the same package but signal a real problem we must not mask. the repo treats
-    // only ERR_PNPM_NO_MATCHING_VERSION as the "unpublished snap" signal (see lockfile-deps-graph-converter).
-    // pnpm errors are wrapped by pnpmErrorToBitError, which keeps the original error (with its code) on `cause`.
+    // only act on package manager failures that can be produced by an unpublished snap package. other codes
+    // (auth, network, FETCH_404, registry outages) can mention the same package but signal a real problem we must
+    // not mask. pnpm errors are wrapped by pnpmErrorToBitError, which keeps the original error on `cause`.
+    // `@pnpm/napi` can report the old TS engine's "No matching version found" path as
+    // SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER for snap-versioned Bit package specs.
     const pnpmCode = (err as any)?.cause?.code ?? (err as any)?.code;
     const errMessage = err.message || '';
-    const isNoMatchingVersion =
-      pnpmCode === 'ERR_PNPM_NO_MATCHING_VERSION' || (!pnpmCode && errMessage.includes('No matching version found'));
-    if (!isNoMatchingVersion) return err;
+    const isUnpublishedSnapCandidate =
+      pnpmCode === 'ERR_PNPM_NO_MATCHING_VERSION' ||
+      pnpmCode === 'SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER' ||
+      (!pnpmCode && errMessage.includes('No matching version found'));
+    if (!isUnpublishedSnapCandidate) return err;
 
     // checked-out components are linked from source, so they're never fetched from the registry.
     const workspaceIds = this.workspace.listIds();

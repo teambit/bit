@@ -181,6 +181,7 @@ chai.use(chaiFs);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
       npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -213,6 +214,7 @@ chai.use(chaiFs);
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.fs.createFile('foo', 'foo.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('foo');
       helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env@0.0.1`, {});
@@ -223,6 +225,7 @@ chai.use(chaiFs);
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
     });
     let lockfile: any;

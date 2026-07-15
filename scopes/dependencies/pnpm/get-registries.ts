@@ -1,7 +1,7 @@
 import getCredentialsByURI from 'credentials-by-uri';
 import type { RegistriesMap } from '@teambit/dependency-resolver';
 import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
-import type { Config } from '@pnpm/config';
+import type { Config } from '@pnpm/config.reader';
 import { isEmpty } from 'lodash';
 import toNerfDart from 'nerf-dart';
 
@@ -12,14 +12,15 @@ type OriginalAuthConfig = {
 
 export function getRegistries(config: Config): RegistriesMap {
   const registriesMap: RegistriesMap = {};
+  const defaultRegistryUri = config.registries.default;
 
   Object.keys(config.registries).forEach((regName) => {
     const uri = config.registries[regName];
-    let credentials = getCredentialsByURI(config.rawConfig, uri);
-    let originalAuthConfig = getOriginalAuthConfigByUri(config.rawConfig, uri);
+    let credentials = getCredentialsByURI(config.authConfig, uri);
+    let originalAuthConfig = getOriginalAuthConfigByUri(config.authConfig, uri, defaultRegistryUri);
     if (isEmpty(credentials)) {
-      credentials = getCredentialsByURI(config.rawConfig, switchTrailingSlash(uri));
-      originalAuthConfig = getOriginalAuthConfigByUri(config.rawConfig, switchTrailingSlash(uri));
+      credentials = getCredentialsByURI(config.authConfig, switchTrailingSlash(uri));
+      originalAuthConfig = getOriginalAuthConfigByUri(config.authConfig, switchTrailingSlash(uri), defaultRegistryUri);
     }
     registriesMap[regName] = {
       uri,
@@ -32,9 +33,13 @@ export function getRegistries(config: Config): RegistriesMap {
 }
 
 // based on https://github.com/pnpm/credentials-by-uri/blob/master/index.js
-function getOriginalAuthConfigByUri(config: Record<string, any>, uri: string): OriginalAuthConfig {
+function getOriginalAuthConfigByUri(
+  config: Record<string, any>,
+  uri: string,
+  defaultRegistryUri: string
+): OriginalAuthConfig {
   const nerfed = toNerfDart(uri);
-  const defnerf = toNerfDart(config.registry);
+  const defnerf = toNerfDart(defaultRegistryUri);
 
   const creds = getScopedCredentials(nerfed, `${nerfed}:`, config);
   if (nerfed !== defnerf) return creds;

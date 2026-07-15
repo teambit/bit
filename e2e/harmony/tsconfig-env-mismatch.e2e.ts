@@ -40,6 +40,7 @@ describe('tsconfig env mismatch between check-types and build', function () {
   describe('component with permissive tsconfig imported by env with strict tsconfig', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.install('@teambit/typescript.typescript-compiler@3.0.0 @teambit/compiler @teambit/builder');
 
       // Create permissive tsconfig (no strict mode)
       const permissiveTsconfig = JSON.stringify(
@@ -196,7 +197,6 @@ export function getDefaultTheme() {
       helper.command.setEnv('consumer', 'strict-env');
 
       helper.command.link();
-      helper.command.install('@teambit/typescript.typescript-compiler @teambit/builder');
       helper.command.compile();
     });
 
@@ -208,7 +208,7 @@ export function getDefaultTheme() {
       expect(output).to.not.have.string("possibly 'null'");
     });
 
-    it('bit build should pass without strict mode errors (each component uses its own tsconfig)', () => {
+    it('bit build should pass with each component using its own tsconfig', () => {
       // This test verifies the fix: each component should be compiled with its own env's tsconfig.
       // Theme component uses permissive-env (no strict), consumer uses strict-env (strict).
       // With proper project references, TypeScript respects each component's tsconfig settings.
@@ -219,12 +219,7 @@ export function getDefaultTheme() {
       //
       // After the fix (typescript-compiler using graphCapsules):
       // - Build passes because theme uses its own permissive-env's tsconfig
-      const output = helper.general.runWithTryCatch('bit build');
-      // Should NOT have any strict mode errors
-      expect(output).to.not.have.string('TS18047');
-      expect(output).to.not.have.string('TS2531');
-      expect(output).to.not.have.string('TS7053');
-      expect(output).to.not.have.string("possibly 'null'");
+      expect(() => helper.command.build()).to.not.throw();
     });
   });
 });

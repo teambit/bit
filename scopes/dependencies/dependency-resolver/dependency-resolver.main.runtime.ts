@@ -41,7 +41,6 @@ import fs from 'fs-extra';
 import { assign, parse } from 'comment-json';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
-import { parseBareSpecifier } from '@pnpm/npm-resolver';
 import type { SourceFile } from '@teambit/component.sources';
 import type { ProjectManifest, DependencyManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
@@ -1474,14 +1473,16 @@ as an alternative, you can use "+" to keep the same version installed in the wor
    *   E.g.: https://registry.npmjs.org/is-odd/-/is-odd-0.1.0.tgz)
    */
   isValidVersionSpecifier(spec: string): boolean {
-    return (
-      parseBareSpecifier(
-        spec,
-        'pkgname', // This argument is the package but we don't need it
-        'latest',
-        'https://registry.npmjs.org/'
-      ) != null
-    );
+    const trimmedSpec = spec.trim();
+    if (!trimmedSpec) return false;
+    if (semver.valid(trimmedSpec) || semver.validRange(trimmedSpec)) return true;
+    if (/^(?:workspace|file|link|git|git\+https?|ssh):/.test(trimmedSpec)) return true;
+    if (/^https?:\/\/registry\.npmjs\.org\/.+\/-.+\.tgz(?:[#?].*)?$/.test(trimmedSpec)) return true;
+    if (trimmedSpec.startsWith('npm:')) {
+      const versionStart = trimmedSpec.lastIndexOf('@');
+      return versionStart > 'npm:'.length && this.isValidVersionSpecifier(trimmedSpec.slice(versionStart + 1));
+    }
+    return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(trimmedSpec);
   }
 
   /**

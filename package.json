@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "private": true,
   "engines": {
-    "node": ">=12.22.0"
+    "node": ">=22.13.0"
   },
   "lint-staged": {
     "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings",
