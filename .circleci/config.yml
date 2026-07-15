@@ -391,8 +391,6 @@ commands:
     steps:
       - restore_cache:
           key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v1.0.0-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -474,8 +472,6 @@ commands:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v1.0.0-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -582,10 +578,6 @@ jobs:
       - run:
           name: bbit install
           command: cd bit && bbit install
-      - save_cache:
-          key: core-aspect-env-v1.0.0-v1
-          paths:
-            - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
@@ -632,21 +624,16 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v1.0.0-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
 
-  check_env_cache_sync:
+  check_version_sync:
     <<: *defaults
     steps:
-      # Only needs .bitmap, workspace.jsonc and .circleci/config.yml from a plain
-      # checkout, so it runs (and fails) in seconds without waiting for setup_harmony.
+      # Only needs a plain checkout, so it runs (and fails) in seconds without
+      # waiting for setup_harmony.
       - checkout
-      - run:
-          name: 'check env cache synchronization'
-          command: './scripts/check-env-cache-sync.sh'
       - run:
           name: 'check @teambit/harmony version synchronization'
           command: './scripts/check-harmony-version-sync.sh'
@@ -1370,7 +1357,7 @@ workflows:
       - check_circular_dependencies:
           requires:
             - setup_harmony
-      - check_env_cache_sync
+      - check_version_sync
       - generate_and_check_types:
           requires:
             - setup_harmony
