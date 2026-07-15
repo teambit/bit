@@ -12,8 +12,11 @@
  *      overdetermined system, solved here with non-negative least squares (coordinate descent),
  *      lightly regularized toward a hook-count-based prior for files the data can't separate.
  *
- * Usage: node scripts/generate-e2e-timings.js [--jobs=N] [--prior=hooks|manifest]
+ * Usage: node scripts/generate-e2e-timings.js [--jobs=N] [--prior=hooks|manifest] [--branch=NAME]
  *   --jobs=N           how many recent successful e2e_test jobs to learn from (default 30)
+ *   --branch=NAME      learn only from pipelines of this branch. use when a branch changes the
+ *                      cost profile of many suites (weights averaged with other branches' runs
+ *                      would under-predict them, unbalancing the split on that branch).
  *   --prior=manifest   regularize toward the existing manifest instead of hook counts.
  *                      Preferred for routine refreshes (e.g. the scheduled CI job): combined with
  *                      a small --jobs window it updates weights from recent runs only, so stale
@@ -33,6 +36,7 @@ const cliFlag = (name, def) => {
 };
 const MAX_JOBS = parseInt(cliFlag('jobs', '30'), 10);
 const PRIOR_MODE = cliFlag('prior', 'hooks');
+const BRANCH = cliFlag('branch', '');
 const RIDGE_LAMBDA = 1; // weight of the prior relative to one node observation
 const ITERATIONS = 300;
 
@@ -46,7 +50,10 @@ async function findRecentE2eJobs() {
   const jobs = [];
   let pageToken;
   for (let page = 0; page < 4 && jobs.length < MAX_JOBS; page += 1) {
-    const url = `https://circleci.com/api/v2/project/${PROJECT}/pipeline${pageToken ? `?page-token=${pageToken}` : ''}`;
+    const params = [BRANCH ? `branch=${encodeURIComponent(BRANCH)}` : '', pageToken ? `page-token=${pageToken}` : '']
+      .filter(Boolean)
+      .join('&');
+    const url = `https://circleci.com/api/v2/project/${PROJECT}/pipeline${params ? `?${params}` : ''}`;
     const data = await getJson(url);
     pageToken = data.next_page_token;
     for (const pipeline of data.items) {
@@ -156,7 +163,11 @@ async function main() {
     observations.push(...nodes);
     console.error(`  job ${jobNumber}: ${nodes.length} nodes`);
   }
-  if (observations.length < 50) {
+  // with a manifest prior the solve is regularized, so even a single job's worth of nodes is
+  // usable (the prior fills what the observations can't separate) - common with --branch on a
+  // branch that has few green runs
+  const minObservations = PRIOR_MODE === 'manifest' ? 30 : 50;
+  if (observations.length < minObservations) {
     throw new Error(`only ${observations.length} node observations collected - not enough to solve reliably`);
   }
   const files = [...new Set(observations.flatMap((o) => o.files))].sort();
