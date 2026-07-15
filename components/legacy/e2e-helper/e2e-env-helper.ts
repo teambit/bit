@@ -24,6 +24,10 @@ const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
   '@teambit/node': '@teambit/node@1.0.1042',
   '@teambit/react': '@teambit/react@1.0.1042',
   '@teambit/mdx': '@teambit/mdx@1.0.1043',
+  // not env bases - the tiny runtime deps of the minimal fixture envs (node-env-1/node-env-2),
+  // listed here so setCustomEnv installs them and the fixtures load without MissingPackages
+  'lodash.get': 'lodash.get@4.4.2',
+  'lodash.flatten': 'lodash.flatten@4.4.0',
 };
 
 /**
@@ -281,7 +285,12 @@ export default new EmptyEnv();
     envJsoncOptions: GenerateEnvJsoncOptions = { policy: ENV_POLICY },
     runInstall = true,
     targetFolder?: string,
-    id?: string
+    id?: string,
+    // the env of the generated env itself. defaults to the legacy teambit.envs/env. pass the
+    // real-world envs-of-envs (e.g. `bitdev.general/envs/bit-env@x.y.z`, what `bit create
+    // react-env` produces) to exercise the regular-external-env loading path - remember to
+    // include its package in basePackages so it gets installed.
+    envsEnv = 'teambit.envs/env'
   ): string {
     const addOptions = id ? { i: id } : {};
     // Pin the base react-env to a React 18 version, but only for envs that actually pull in react-env.
@@ -307,8 +316,8 @@ export default new EmptyEnv();
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder, undefined, targetFolder);
     this.command.addComponent(targetFolder || extensionsBaseFolder, addOptions);
     this.fixtures.generateEnvJsoncFile(targetFolder || extensionsBaseFolder, envJsoncOptions);
-    this.extensions.addExtensionToVariant(targetFolder || extensionsBaseFolder, 'teambit.envs/env');
-    this.command.setEnv(id || extensionsBaseFolder, 'teambit.envs/env');
+    this.extensions.addExtensionToVariant(targetFolder || extensionsBaseFolder, envsEnv);
+    this.command.setEnv(id || extensionsBaseFolder, envsEnv);
     this.command.link();
     if (runInstall) {
       this.command.install(basePackages.join(' '));

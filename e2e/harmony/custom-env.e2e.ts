@@ -39,7 +39,9 @@ describe('custom env', function () {
     before(async () => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-      envName = helper.env.setCustomEnv(undefined, { skipCompile: true, skipInstall: true });
+      // the node-env-1 fixture is a minimal old-format env (not based on any non-core env), so
+      // the suite doesn't pay the full published env-chain installs - see the fixture itself
+      envName = helper.env.setCustomEnv('node-env-1', { skipCompile: true, skipInstall: true });
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1, undefined, undefined, false);
       helper.extensions.addExtensionToVariant('*', envId);
@@ -66,7 +68,7 @@ describe('custom env', function () {
     let envName;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      envName = helper.env.setCustomEnv();
+      envName = helper.env.setCustomEnv('node-env-1');
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
       helper.extensions.addExtensionToVariant('*', envId);
@@ -120,7 +122,7 @@ describe('custom env', function () {
   describe('change an env after tag', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      const envName = helper.env.setCustomEnv();
+      const envName = helper.env.setCustomEnv('node-env-1');
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
       helper.extensions.addExtensionToVariant('*', envId);
@@ -137,7 +139,7 @@ describe('custom env', function () {
     let envId;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      const envName = helper.env.setCustomEnv();
+      const envName = helper.env.setCustomEnv('node-env-1');
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(1, false);
       helper.command.setEnv('comp1', envId);
@@ -231,7 +233,10 @@ describe('custom env', function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
-      envName = helper.env.setCustomEnv();
+      // see the comment about the node-env-1 fixture in the 'non loaded env' describe. crucial
+      // here: each sub-describe re-inits a workspace and loads this env from the scope into a
+      // scope-aspects capsule - a full-chain env would pay that chain per sub-describe.
+      envName = helper.env.setCustomEnv('node-env-1');
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.compile();
       helper.command.tagAllComponents();
