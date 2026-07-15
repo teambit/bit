@@ -9,6 +9,7 @@ import type { ComponentMap, Component, ComponentID, ComponentMain } from '@teamb
 import type { Logger } from '@teambit/logger';
 import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import { BitError } from '@teambit/bit-error';
 import type { EnvsMain } from '@teambit/envs';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -580,6 +581,129 @@ export class DependencyLinker {
 
     const results = filtered.map((id) => this.linkCoreAspect(id, opts));
     return compact(results);
+  }
+
+  /**
+   * The core aspects are phantom dependencies of the published envs - an env requires
+   * `@teambit/builder` (and `@teambit/ui`, `@teambit/pkg`...) without declaring it, and relies on the
+   * running bit installation to provide it. `linkCoreAspectsAndLegacy` is what normally satisfies
+   * that, by linking bit's own copies into the workspace's root node_modules.
+   *
+   * A workspace that authors the core aspects has them as source components instead, so they're
+   * excluded from that linking - such a workspace must build and load its own. That leaves the envs'
+   * phantom require resolving to a source component, which has no `main` until it's been compiled,
+   * so an env resolved from the root (see `resolveEnvsFromRoots`) fails to load during install -
+   * before the compile step that would have made it resolvable.
+   *
+   * Bridge that gap by linking bit's own (always compiled) copies into pnpm's hoisted store. That
+   * directory is on the module resolution path of packages inside the virtual store - the published
+   * envs - and not on the resolution path of the workspace's own components, so the envs bootstrap
+   * against the running bit while the workspace still builds and loads its own core aspects.
+   *
+   * This is a reconciler - each core aspect converges to "link present iff its source is still
+   * uncompiled", so the same call both creates the links during bootstrap and removes them once the
+   * source components have been compiled.
+   *
+   * Only reached from a workspace with `linkCoreAspects` off, i.e. one that authors them.
+   */
+  async syncCoreAspectLinksForEnvs(rootDir: string, componentIds: ComponentID[]): Promise<void> {
+    const idsInWorkspace = componentIds.map((id) => id.toString({ ignoreVersion: true }));
+    const authoredCoreAspects = this.aspectLoader.getCoreAspectIds().filter((aspectId) => {
+      if (aspectId === this.aspectLoader.mainAspect?.id) return false;
+      // the same naive comparison done by linkNonExistingCoreAspects, whose filter this inverts
+      const name = getCoreAspectName(aspectId);
+      return idsInWorkspace.some((id) => id === name || id === aspectId);
+    });
+    if (!authoredCoreAspects.length) return;
+
+    const hoistedStoreDir = path.join(rootDir, 'node_modules', '.pnpm');
+    // the hoisted store only exists in a pnpm-managed workspace. anywhere else this directory is on
+    // no resolution path, so there is nothing to bridge - and it must not be fabricated here.
+    if (!fs.pathExistsSync(hoistedStoreDir)) return;
+
+    const links: Record<string, string> = {};
+    for (const aspectId of authoredCoreAspects) {
+      const packageName = getCoreAspectPackageName(aspectId);
+      const linkPath = path.join(hoistedStoreDir, 'node_modules', packageName);
+      if (this.hasCompiledMain(path.join(rootDir, 'node_modules', packageName))) {
+        await this.removeCoreAspectBootstrapLink(linkPath, rootDir);
+        continue;
+      }
+      const fromDir = this._getCoreAspectSourceDir(aspectId, packageName, rootDir);
+      if (fromDir) links[packageName] = `link:${fromDir}`;
+    }
+    const packagesToLink = Object.keys(links);
+    if (!packagesToLink.length) return;
+    this.logger.debug(`syncCoreAspectLinksForEnvs: linking ${packagesToLink.join(', ')}`);
+    try {
+      await createLinks(hoistedStoreDir, links, { skipIfSymlinkValid: true });
+    } catch (err: any) {
+      // the bridge is best-effort. without it the envs may fail to load during install, which the
+      // install flow already tolerates - a broken bridge must not turn that into a fatal error.
+      this.logger.warn(
+        `syncCoreAspectLinksForEnvs: failed linking core aspects into the hoisted store. ${err.message}`
+      );
+    }
+  }
+
+  private hasCompiledMain(pkgDir: string): boolean {
+    try {
+      const { main } = fs.readJsonSync(path.join(pkgDir, 'package.json'));
+      return fs.pathExistsSync(path.join(pkgDir, main || 'index.js'));
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * the directory to bridge a core aspect from: the running bit installation's copy. bvm is where a
+   * released bit runs from; when bit runs from elsewhere (e.g. installed through a package manager),
+   * fall back to the module-resolution strategy aspect-loader uses to locate core aspects.
+   *
+   * a copy is only usable as a bridge source if its own compiled main exists AND it lives outside
+   * the workspace. the second condition is what lets removeCoreAspectBootstrapLink identify this
+   * method's links: a workspace-internal source (e.g. a published bit installed as a workspace
+   * dependency) would produce a link the cleanup can never tell apart from pnpm's own hoisted
+   * entries, shadowing the workspace's compiled sources forever.
+   */
+  private _getCoreAspectSourceDir(aspectId: string, packageName: string, workspaceDir: string): string | undefined {
+    const isUsableSource = (dir: string) => this.hasCompiledMain(dir) && !this._realpathIsInside(dir, workspaceDir);
+    const fromBvmDir = this._getPkgPathFromCurrentBitDir(packageName);
+    if (fromBvmDir && isUsableSource(fromBvmDir)) return fromBvmDir;
+    try {
+      const fromRunningBit = getAspectDir(aspectId);
+      if (isUsableSource(fromRunningBit)) return fromRunningBit;
+    } catch {
+      // not resolvable from the running installation either
+    }
+    return undefined;
+  }
+
+  /** both paths must exist. compares real paths, as either side may be reached through a symlink. */
+  private _realpathIsInside(target: string, dir: string): boolean {
+    return fs.realpathSync(target).startsWith(fs.realpathSync(dir) + path.sep);
+  }
+
+  /**
+   * only removes links created by syncCoreAspectLinksForEnvs, identified by resolving OUTSIDE the
+   * workspace - an invariant _getCoreAspectSourceDir enforces on every link source, and one nothing
+   * else at this location+name violates: pnpm's own hoisted entries always point back into the
+   * virtual store. matching the exact bit installation instead would be too strict: a link leaked
+   * by an interrupted install may point at a bit version that was since upgraded or removed
+   * (dangling), and it must still be cleaned up or it would shadow the workspace's copy forever.
+   */
+  private async removeCoreAspectBootstrapLink(linkPath: string, workspaceDir: string): Promise<void> {
+    try {
+      if (!fs.lstatSync(linkPath).isSymbolicLink()) return;
+    } catch {
+      return; // nothing at this path
+    }
+    try {
+      if (this._realpathIsInside(linkPath, workspaceDir)) return;
+    } catch {
+      // dangling link - fall through and remove it
+    }
+    await fs.remove(linkPath);
   }
 
   private isBitRepoWorkspace(dir: string) {
