@@ -1,5 +1,6 @@
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import pLocate from 'p-locate';
+import semver from 'semver';
 import { parse } from 'comment-json';
 import type { SourceFile } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
@@ -308,10 +309,15 @@ export class EnvsMain {
     const matches = this.envSlot.toArray().filter(([envId]) => envId.split('@')[0] === envIdWithoutVersion);
     if (!matches.length) return undefined;
     if (matches.length > 1) {
-      // sort descending by the version part so the pick is deterministic
-      matches.sort(([a], [b]) =>
-        (b.split('@')[1] || '').localeCompare(a.split('@')[1] || '', undefined, { numeric: true })
-      );
+      // sort descending by the version part so the pick is deterministic. use semver precedence
+      // when possible (string collation misorders prereleases, e.g. rc.10 vs rc.2), fall back to
+      // string comparison for non-semver versions (snap hashes)
+      matches.sort(([a], [b]) => {
+        const aVersion = a.split('@')[1] || '';
+        const bVersion = b.split('@')[1] || '';
+        if (semver.valid(aVersion) && semver.valid(bVersion)) return semver.rcompare(aVersion, bVersion);
+        return bVersion.localeCompare(aVersion, undefined, { numeric: true });
+      });
       this.logger.warn(
         `multiple versions of env "${envIdWithoutVersion}" are registered (${matches
           .map(([id]) => id)
@@ -583,7 +589,9 @@ export class EnvsMain {
   }
 
   isCoreEnv(envId: string): boolean {
-    return this.getCoreEnvsIds().includes(envId);
+    // the id may carry a version (e.g. recorded on a component tagged when the env was a regular
+    // exported env before becoming a core aspect) - core envs are registered without a version.
+    return this.getCoreEnvsIds().includes(envId.split('@')[0]);
   }
 
   /**
