@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import path from 'path';
 import os from 'os';
-import { Helper } from '@teambit/legacy.e2e-helper';
+import { Helper, BITDEV_NODE_ENV_ID } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
@@ -167,15 +167,13 @@ describe('create extension', function () {
   describe('with env defined inside the aspect-template different than the variants', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
-      // the react env is not a core aspect anymore, install it so it's recognized as the env
-      helper.command.install('@teambit/react@1.0.1042');
+      helper.env.setBitdevNodeEnv();
       helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
     it('should set the env according to the variant', () => {
       const show = helper.command.showComponentParsedHarmony('my-aspect');
       const env = show.find((item) => item.title === 'env');
-      expect(env.json).to.equal('teambit.react/react');
+      expect(env.json).to.equal(BITDEV_NODE_ENV_ID);
     });
   });
   describe('with env defined inside the aspect-template when there is no variant', () => {
