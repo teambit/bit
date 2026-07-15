@@ -197,9 +197,7 @@ linkModules('${prefix}', {
   },
   isSplitComponentBundle: ${isSplitComponentBundle},
   componentMap: {
-${componentLinks
-  .map((cl) => `    "${cl.componentIdentifier}": [${cl.modules.map((m) => m.varName).join(', ')}]`)
-  .join(',\n')}
+${generateComponentMapEntries(componentLinks)}
   }
 });
 }
@@ -210,6 +208,37 @@ ${runtimeBootstrap}
 
 function moduleVarName(componentIdx: number, fileIdx: number) {
   return `file_${componentIdx}_${fileIdx}`;
+}
+
+/**
+ * The componentMap is keyed by the component fullName, which carries no scope.
+ * Components from different scopes sharing a fullName (e.g. several scopes each
+ * exposing a "readme" component, all served by one deduped dev server) would
+ * emit duplicate object keys — the last entry silently wins, and since
+ * non-active components resolve to a null-rendering Placeholder (see
+ * getComponentImports), every other same-named component's preview renders
+ * blank with no error. For colliding names, select the active component's
+ * modules at runtime via __bitShouldSurfaceFor, falling back to the last entry
+ * (which preserves the previous behavior when no component id is active, e.g.
+ * in isolated builds).
+ */
+function generateComponentMapEntries(componentLinks: ComponentLink[] = []): string {
+  const byIdentifier = new Map<string, ComponentLink[]>();
+  componentLinks.forEach((cl) => {
+    const links = byIdentifier.get(cl.componentIdentifier) || [];
+    links.push(cl);
+    byIdentifier.set(cl.componentIdentifier, links);
+  });
+  const moduleArr = (cl: ComponentLink) => `[${cl.modules.map((m) => m.varName).join(', ')}]`;
+  return Array.from(byIdentifier.entries())
+    .map(([identifier, links]) => {
+      if (links.length === 1) return `    "${identifier}": ${moduleArr(links[0])}`;
+      const conditionals = links
+        .map((cl) => `__bitShouldSurfaceFor("${cl.componentIdString}") ? ${moduleArr(cl)} : `)
+        .join('');
+      return `    "${identifier}": ${conditionals}${moduleArr(links[links.length - 1])}`;
+    })
+    .join(',\n');
 }
 
 function getEnvVarName(envId: string) {
