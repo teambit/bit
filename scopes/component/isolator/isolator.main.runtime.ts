@@ -1703,11 +1703,18 @@ export class IsolatorMain {
 
     const filtered: Component[] = [];
 
+    // Precompute version-normalized ID sets so membership is O(1) per component instead of a linear scan.
+    // `toStringWithoutVersion()` is the string equivalent of `isEqual(id, { ignoreVersion: true })`.
+    const seederIdsNoVersion = new Set(seederIds.map((id) => id.toStringWithoutVersion()));
+    const originalSeederIdsNoVersion = originalSeeders
+      ? new Set(originalSeeders.map((id) => id.toStringWithoutVersion()))
+      : undefined;
+
     for (const component of components) {
       const componentIdStr = component.id.toString();
-      const isSeeder = seederIds.some((seederId) => component.id.isEqual(seederId, { ignoreVersion: true }));
+      const componentIdNoVersion = component.id.toStringWithoutVersion();
 
-      if (isSeeder) {
+      if (seederIdsNoVersion.has(componentIdNoVersion)) {
         // Always include seeders (modified components and their dependents)
         filtered.push(component);
         continue;
@@ -1718,10 +1725,7 @@ export class IsolatorMain {
       // build work (the capsule is created regardless), and we break project-references for its dependents, which
       // then have to resolve it as an installed package instead of referencing the freshly-built capsule.
       // Keep it so the graph stays consistent across `bit build` and `bit tag` (both include it as a capsule).
-      const isOriginalSeeder = originalSeeders?.some((seederId) =>
-        component.id.isEqual(seederId, { ignoreVersion: true })
-      );
-      if (isOriginalSeeder) {
+      if (originalSeederIdsNoVersion?.has(componentIdNoVersion)) {
         filtered.push(component);
         continue;
       }
