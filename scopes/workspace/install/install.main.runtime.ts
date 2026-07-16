@@ -730,16 +730,27 @@ export class InstallMain {
           }
           const plugins = this.aspectLoader.getPlugins(component, localPath);
           if (plugins.has()) {
-            return plugins.load(MainRuntime.name);
+            return { plugins: await plugins.load(MainRuntime.name), id: component.id };
           }
           return undefined;
         })
       )
     );
     await Promise.all(
-      loadedPlugins.map((plugin) => {
+      loadedPlugins.map(async ({ plugins: plugin, id }) => {
         const runtime = plugin.getRuntime(MainRuntime);
-        return runtime?.provider(undefined, undefined, undefined, this.harmony);
+        if (!runtime) return;
+        // the reload is best-effort (resolveAspects above runs with throwOnError: false). the
+        // provider requires the plugin files, which may not be requirable yet, e.g. an env in a
+        // fresh workspace whose dist was not compiled - it will be loaded later, once compiled.
+        // it must not fail the install.
+        try {
+          await runtime.provider(undefined, undefined, undefined, this.harmony);
+        } catch (err: any) {
+          this.logger.consoleWarning(
+            `unable to reload the env ${id.toString()}, it will be loaded once compiled. error: ${err.message}`
+          );
+        }
       })
     );
   }
