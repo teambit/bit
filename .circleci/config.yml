@@ -491,6 +491,10 @@ commands:
           # The timings manifest is derived from actual CI node run times; refresh it occasionally
           # with: node scripts/generate-e2e-timings.js
           command: 'cd bit && node scripts/split-e2e-tests.js | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          # several suites install env chains from the registry-mock in a single before-all hook,
+          # and mocha prints nothing until a test completes - such hooks can stay silent well over
+          # the default 10m.
+          no_output_timeout: 40m
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
