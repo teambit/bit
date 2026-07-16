@@ -503,7 +503,14 @@ export class WorkspaceComponentLoader {
         this.componentLoadedSelfAsAspects.set(idStr, true);
       }
       const envsData = component.state.aspects.get(EnvsAspect.id);
-      if (opts.loadEnvs && (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env')) {
+      // a component with an env plugin file (*.bit-env.*) is an env by definition. the env-data
+      // type can't be relied on when the env's own env was not loaded yet (e.g. a just-created
+      // env whose env-of-env is not installed) - the env-data falls back to the default env.
+      const hasEnvPluginFile = this.envs.hasEnvPluginFile(component);
+      if (
+        opts.loadEnvs &&
+        (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env' || hasEnvPluginFile)
+      ) {
         aspectIds.push(idStr);
         this.componentLoadedSelfAsAspects.set(idStr, true);
       }

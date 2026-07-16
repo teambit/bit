@@ -103,6 +103,37 @@ describe('env command', function () {
       });
     });
   });
+  describe('env defined only by a .bit-env plugin file, before it was ever loaded', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile(
+        'my-env/my-env.bit-env.ts',
+        `export class MyEnv {
+  name = 'my-env';
+}
+export default new MyEnv();
+`
+      );
+      helper.fs.outputFile('my-env/index.ts', `export { MyEnv } from './my-env.bit-env';`);
+      helper.command.addComponent('my-env');
+      helper.command.compile();
+    });
+    // previously, a component was recognized as an env only after it was loaded as an aspect,
+    // which happened only once its own env (env-of-env, e.g. teambit.envs/env or
+    // bitdev.general/envs/bit-env) was configured and loadable. a just-created env with no
+    // env-of-env failed "bit env set" with "the component <id> is not an env", although the
+    // *.bit-env.* plugin file is what defines the env instance and identifies it as an env.
+    it('bit env set should recognize it as an env', () => {
+      expect(() => helper.command.setEnv('comp1', 'my-env')).to.not.throw();
+    });
+    it('the env should be loaded as an aspect and set as the component env', () => {
+      expect(helper.env.getComponentEnv('comp1')).to.have.string('my-env');
+    });
+    it('bit snap should work', () => {
+      expect(() => helper.command.snapAllComponentsWithoutBuild()).to.not.throw();
+    });
+  });
   describe('bit env replace', () => {
     describe('replacing a failed-loaded env', () => {
       before(() => {
