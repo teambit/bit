@@ -7,6 +7,7 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
+import { logger as legacyLogger } from '@teambit/legacy.logger';
 import type { PathOsBasedRelative, PathOsBasedAbsolute, PathLinuxRelative } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { AddCmd } from './add-cmd';
@@ -89,7 +90,36 @@ export class TrackerMain {
     const addResults = await addComponents.add();
     await this.workspace.consumer.onDestroy('add');
 
+    await this.warnAboutRemoteIdCollisions(addResults.addedComponents.map((added) => added.id));
+
     return addResults;
+  }
+
+  /**
+   * best-effort early warning: if any of the just-added/created components share an id with a
+   * component that already exists on the remote scope, let the user know now — before they invest
+   * work and hit a wall at export. fully non-blocking: the remote check swallows offline / no-access
+   * / scope-not-found errors, and the whole method is wrapped so it can never fail an add/create.
+   */
+  async warnAboutRemoteIdCollisions(ids: ComponentID[]): Promise<void> {
+    if (!ids.length || legacyLogger.isJsonFormat) return;
+    try {
+      const idsOnRemote = (
+        await Promise.all(
+          ids.map(async (id) => ((await this.workspace.scope.isComponentExistsOnRemote(id)) ? id : undefined))
+        )
+      ).filter((id): id is ComponentID => Boolean(id));
+      if (!idsOnRemote.length) return;
+      const list = idsOnRemote.map((id) => `  - ${id.toStringWithoutVersion()}`).join('\n');
+      const example = idsOnRemote[0];
+      this.logger
+        .consoleWarning(`the following newly added component(s) already exist on the remote scope with the same id:
+${list}
+if you meant to work on the existing component, remove your local one and run "bit import ${example.toStringWithoutVersion()}".
+if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bit rename ${example.fullName} <new-name>" (or "bit rename ${example.fullName} ${example.fullName} --scope <other-scope>" to change only the scope).`);
+    } catch {
+      // never let an early-warning break "bit add" / "bit create".
+    }
   }
 
   async addEnvToConfig(env: string, config: { [aspectName: string]: any }) {

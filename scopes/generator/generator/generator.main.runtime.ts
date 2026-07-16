@@ -462,7 +462,9 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       installOptions,
       promptResults
     );
-    return componentGenerator.generate(options.force);
+    const generateResults = await componentGenerator.generate(options.force);
+    await this.tracker.warnAboutRemoteIdCollisions(generateResults.map((result) => result.id));
+    return generateResults;
   }
 
   private async getEnvIdFromTemplateWithId(templateWithId: ComponentTemplateWithId): Promise<ComponentID | undefined> {
