@@ -36,7 +36,7 @@ import { EnvServiceList } from './env-service-list';
 import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
-import { EnvPlugin } from './env.plugin';
+import { EnvPlugin, BIT_ENV_PATTERN } from './env.plugin';
 import { EnvJsoncDetector } from './env-jsonc.detector';
 
 export type EnvJsonc = {
@@ -310,6 +310,16 @@ export class EnvsMain {
 
     if (!envJson) return false;
     return true;
+  }
+
+  /**
+   * whether the component has an env plugin file (`*.bit-env.*`). this file is what defines the
+   * env instance (the EnvPlugin loads it when the component is loaded as an aspect), so its
+   * presence identifies the component as an env even before it was ever loaded - symmetric to
+   * how apps are detected by their `*.bit-app.*` files.
+   */
+  hasEnvPluginFile(component: Component): boolean {
+    return component.filesystem.byGlob([BIT_ENV_PATTERN]).length > 0;
   }
 
   getEnvManifest(envComponent: Component): ResolvedEnvJsonc | undefined {
@@ -1045,7 +1055,11 @@ if needed, use "bit env set" command to align the env id`;
     return (
       this.isUsingEnvEnv(component) ||
       this.isEnvRegistered(component.id.toString()) ||
-      this.isEnvRegistered(component.id.toStringWithoutVersion())
+      this.isEnvRegistered(component.id.toStringWithoutVersion()) ||
+      // the env plugin file defines the env instance - the component is an env by definition.
+      // this is also the only reliable signal when the env was not loaded yet (e.g. "bit env-set"
+      // to a just-created env whose own env is not installed, so its env data has no 'env' type).
+      this.hasEnvPluginFile(component)
     );
   }
 
