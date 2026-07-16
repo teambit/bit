@@ -249,9 +249,17 @@ export default class NodeModuleLinker {
     // runs before components are loaded), the main stays the component's source main-file.
     // requiring such a package crashes on node 22 (require(esm) of a .ts entry with extensionless
     // relative imports), breaking every subsequent component load. point it at the compiled dist
-    // location instead.
+    // location instead. the exception is the default empty-env - it has no compiler by design, so
+    // its components are used as-source and the source main is the correct one.
+    const envId = legacyComp.extensions.findCoreExtension('teambit.envs/envs')?.data?.id;
+    const isCompilerLessEnv = envId?.split('@')[0] === 'teambit.harmony/empty-env';
     const mainFile = packageJson.packageJsonObject.main;
-    if (typeof mainFile === 'string' && /\.(ts|tsx|jsx|mts|cts)$/.test(mainFile) && !mainFile.endsWith('.d.ts')) {
+    if (
+      !isCompilerLessEnv &&
+      typeof mainFile === 'string' &&
+      /\.(ts|tsx|jsx|mts|cts)$/.test(mainFile) &&
+      !mainFile.endsWith('.d.ts')
+    ) {
       packageJson.packageJsonObject.main = `dist/${mainFile.replace(/\.(ts|tsx|jsx|mts|cts)$/, '.js')}`;
     }
 

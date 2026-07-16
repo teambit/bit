@@ -6,7 +6,7 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
-import type { EnvsMain } from '@teambit/envs';
+import type { EnvsMain, Environment } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -136,13 +136,13 @@ export class SchemaMain {
   }
 
   private getSchemaExtractorFromEnv(
-    env: any,
+    env: Environment,
     tsserverPath?: string,
     contextPath?: string,
     schemaTransformers?: SchemaTransformer[],
     apiTransformers?: SchemaNodeTransformer[]
   ): SchemaExtractor {
-    if (typeof env.getSchemaExtractor !== 'undefined') {
+    if (env.getSchemaExtractor) {
       return env.getSchemaExtractor(undefined, tsserverPath, contextPath, schemaTransformers, apiTransformers);
     }
     if (this.fallbackExtractorFactory) {

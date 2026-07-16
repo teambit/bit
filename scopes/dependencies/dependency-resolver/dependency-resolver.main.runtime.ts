@@ -1978,7 +1978,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       }
       const depResolverExt = extensionDataList.findCoreExtension(DependencyResolverAspect.id);
       if (depResolverExt) {
-        const result = dependencyResolver.validateAspectData(depResolverExt.data as any);
+        const result = dependencyResolver.validateAspectData(depResolverExt.data as DependencyResolverComponentData);
         if (result) return result;
       }
       return undefined;
