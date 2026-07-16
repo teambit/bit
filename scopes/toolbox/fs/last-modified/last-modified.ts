@@ -1,5 +1,5 @@
 import globby from 'globby';
-import type { Stats } from 'fs-extra';
+import type { Stats, Dirent } from 'fs-extra';
 import fs from 'fs-extra';
 import { compact } from 'lodash';
 
@@ -21,14 +21,30 @@ async function getLastModifiedDirTimestampMs(rootDir: string): Promise<number> {
     ignore: ['**/node_modules/**'],
   });
   sourceDirs.push(rootDir);
-  // node_modules/@scope dirs (catch a scoped dep changing within an already-existing scope). a *bare*
-  // `node_modules` glob would recurse the whole symlinked tree, so its own dir mtime is taken via the
-  // direct stat in getLastModifiedPathsTimestampMs below, not globbed.
-  const scopeDirs = await globby(`${rootDir}/node_modules/@*`, {
-    onlyDirectories: true,
-    followSymbolicLinks: false,
-  });
+  // node_modules/@scope dirs (catch a scoped dep changing within an already-existing scope). the
+  // `node_modules` dir itself is stat'd directly rather than globbed — a bare `node_modules` glob would
+  // recurse the whole symlinked tree.
+  const scopeDirs = await getNodeModulesScopeDirs(rootDir);
   return getLastModifiedPathsTimestampMs([...sourceDirs, ...scopeDirs, `${rootDir}/node_modules`]);
+}
+
+/**
+ * the top-level `@scope` entries directly under a component's `node_modules`. a shallow `readdir` is
+ * used (not globby) so a scope that happens to be a symlink is still included — globby's
+ * `onlyDirectories` would drop it, missing relinks that happen within that scope.
+ */
+async function getNodeModulesScopeDirs(rootDir: string): Promise<string[]> {
+  const nodeModulesPath = `${rootDir}/node_modules`;
+  let entries: Dirent[];
+  try {
+    entries = await fs.readdir(nodeModulesPath, { withFileTypes: true });
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return [];
+    throw err;
+  }
+  return entries
+    .filter((entry) => entry.name.startsWith('@') && (entry.isDirectory() || entry.isSymbolicLink()))
+    .map((entry) => `${nodeModulesPath}/${entry.name}`);
 }
 
 export async function getLastModifiedPathsTimestampMs(paths: string[]): Promise<number> {
