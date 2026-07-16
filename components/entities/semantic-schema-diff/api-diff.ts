@@ -8,24 +8,26 @@ import { worstImpact } from './impact-assessor';
 import {
   buildExportMap,
   buildInternalMap,
+  collectUnresolvedInternalNames,
   getSchemaTypeName,
   getDisplayName,
   getExportName,
+  isExtractionPlaceholder,
   unwrapExport,
   toComparableObject,
 } from './utils';
 
 /**
- * Names of exports the extractor couldn't resolve on a side — it produced an `UnImplementedSchema`
- * placeholder (no signature, no structure) rather than a real schema node. These are extraction gaps,
- * not API surface, and must never be diffed as added/removed/modified. We collect them so the diff can
- * (a) suppress the phantom add/remove they'd otherwise cause and (b) surface them as a distinct
- * "couldn't analyze" state instead of a meaningful change.
+ * Names of exports the extractor couldn't resolve on a side — it produced a placeholder node
+ * (`UnImplementedSchema`/`UnresolvedSchema`: no signature, no structure) rather than a real schema
+ * node. These are extraction gaps, not API surface, and must never be diffed as added/removed/
+ * modified. We collect them so the diff can (a) suppress the phantom add/remove they'd otherwise
+ * cause and (b) surface them as a distinct "couldn't analyze" state instead of a meaningful change.
  */
 function collectUnresolvedNames(exports: SchemaNode[]): Set<string> {
   const names = new Set<string>();
   for (const exp of exports) {
-    if (getSchemaTypeName(unwrapExport(exp)) === 'UnImplementedSchema') {
+    if (isExtractionPlaceholder(unwrapExport(exp))) {
       const name = getExportName(exp);
       if (name) names.add(name);
     }
@@ -347,7 +349,14 @@ export function computeAPIDiff(
     ...visibilityChanges,
     ...diffExports(baseExports, compareExports, 'public', assessor, unresolved),
   ];
-  const internalChanges = diffExports(baseInternals, compareInternals, 'internal', assessor);
+  // Internal extraction gaps get the same phantom-add/remove suppression, but their names are
+  // discarded (throwaway `out`) — `unresolvedExports` reports public API only.
+  const internalUnresolved = {
+    base: collectUnresolvedInternalNames(base.internals || []),
+    compare: collectUnresolvedInternalNames(compare.internals || []),
+    out: new Set<string>(),
+  };
+  const internalChanges = diffExports(baseInternals, compareInternals, 'internal', assessor, internalUnresolved);
 
   // Names unresolved on BOTH sides that never surfaced as a resolved export — the export exists but is
   // opaque to extraction in both versions. (Names resolved on at least one side are not "unresolved".)

@@ -129,6 +129,48 @@ function isModified(changeType?: ChangeType, changes: ChangeType[] = []): boolea
   return changes.some((ch) => ch !== ChangeType.NONE) || (changeType != null && changeType !== ChangeType.NONE);
 }
 
+// ── Blank state ─────────────────────────────────────────────────────────────
+
+/**
+ * full-page state for a comparison with no changes at all. rendering the regular compare chrome
+ * (toolbar, tab counts, group-by, sidebar) around an empty pane reads as a broken page, so the
+ * whole body collapses into this single hero instead. `released` distinguishes "the target already
+ * contains everything on this lane" (it moved ahead by absorbing it) from two identical lanes.
+ */
+function LaneCompareBlankState({
+  sourceLane,
+  targetLane,
+  componentCount,
+  released,
+}: {
+  sourceLane: string;
+  targetLane: string;
+  componentCount: number;
+  released: boolean;
+}) {
+  const title = released ? `This lane has been released to ${targetLane}` : 'No changes to compare';
+  const subtitle =
+    componentCount === 0
+      ? 'Both lanes point to the same components.'
+      : released
+        ? `${targetLane} already includes all ${componentCount} components from ${sourceLane} — there's nothing left to compare.`
+        : `${sourceLane} and ${targetLane} point to the same versions across ${componentCount} components.`;
+  return (
+    <div className={styles.blankState} role="status">
+      <div className={styles.blankStateIcon} aria-hidden="true">
+        ✓
+      </div>
+      <div className={styles.blankStateTitle}>{title}</div>
+      <div className={styles.blankStateSubtitle}>{subtitle}</div>
+      {componentCount > 0 && (
+        <div className={styles.blankStateMeta}>
+          {componentCount} component{componentCount !== 1 ? 's' : ''} · up to date with {targetLane}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Component ──────────────────────────────────────────────────────────
 
 function LaneCompareInline({
@@ -545,6 +587,25 @@ function LaneCompareInline({
     }
   }, [counts, viewMode, loadingLaneDiff]);
 
+  // No component changed at all (every change list is NONE, or there are no pairs) — the compare has
+  // nothing to show in ANY view, so the whole body renders as a single blank state (below) instead of
+  // empty chrome. NEW/DELETED components count as changes, so their presence keeps the full view.
+  const noChanges = useMemo(
+    () => !loadingLaneDiff && allComponents.every((c) => !isModified(c.changeType, c.changes)),
+    [loadingLaneDiff, allComponents]
+  );
+
+  // with zero changes, a pair that is not up-to-date means the target moved ahead while already
+  // containing the lane's snaps — i.e. the lane was released/merged into the target.
+  const targetContainsLane = useMemo(() => {
+    if (!noChanges) return false;
+    let ahead = false;
+    laneComponentDiffByCompId.forEach((diff: any) => {
+      if (diff?.upToDate === false && !diff?.unrelated) ahead = true;
+    });
+    return ahead;
+  }, [noChanges, laneComponentDiffByCompId]);
+
   if (loadingLaneDiff) {
     return (
       <div className={classnames(styles.rootLaneCompare, className)}>
@@ -555,6 +616,19 @@ function LaneCompareInline({
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (noChanges) {
+    return (
+      <div {...rest} className={classnames(styles.rootLaneCompare, className)}>
+        <LaneCompareBlankState
+          sourceLane={compare?.id?.name || 'this lane'}
+          targetLane={_base?.id?.name || 'main'}
+          componentCount={allComponents.length}
+          released={targetContainsLane}
+        />
       </div>
     );
   }

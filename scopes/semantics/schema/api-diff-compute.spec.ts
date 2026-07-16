@@ -8,6 +8,8 @@ import {
   TypeRefSchema,
   ExportSchema,
   UnImplementedSchema,
+  UnresolvedSchema,
+  DocSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import { ComponentID } from '@teambit/component-id';
 import { computeAPIDiff, ImpactAssessor, DEFAULT_IMPACT_RULES } from '@teambit/semantics.entities.semantic-schema-diff';
@@ -180,6 +182,54 @@ describe('computeAPIDiff unresolved exports (extraction gaps)', () => {
   });
 });
 
+describe('computeAPIDiff UnresolvedSchema placeholders (degraded extraction)', () => {
+  // Repro of a real false positive: one side's extraction degraded every re-export to an
+  // `UnresolvedSchema` placeholder (no structure, no doc) while the other side came from a healthy
+  // build. The diff reported every documented export as MODIFIED "documentation removed" labeled
+  // "Unresolved" instead of routing the name to `unresolvedExports`.
+  const docs = new DocSchema(loc, '/** backend server interface. */', 'backend server interface.');
+  const documentedVar = (name: string) =>
+    new VariableLikeSchema(loc, name, `${name}: string`, new KeywordTypeSchema(loc, 'string'), false, docs);
+
+  it('should not diff a documented export against an UnresolvedSchema placeholder on the compare side', () => {
+    const base = makeSchema([documentedVar('BackendServer')]);
+    const compare = makeSchema([new UnresolvedSchema(loc, 'BackendServer')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.modified).to.equal(0);
+    expect(result.removed).to.equal(0);
+    expect(result.hasChanges).to.equal(false);
+    expect(result.unresolvedExports).to.include('BackendServer');
+  });
+
+  it('should not diff an UnresolvedSchema placeholder on the base side against a real export', () => {
+    const base = makeSchema([new UnresolvedSchema(loc, 'BackendServer')]);
+    const compare = makeSchema([documentedVar('BackendServer')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.modified).to.equal(0);
+    expect(result.added).to.equal(0);
+    expect(result.hasChanges).to.equal(false);
+    expect(result.unresolvedExports).to.include('BackendServer');
+  });
+
+  it('should handle an export-wrapped UnresolvedSchema like a bare one', () => {
+    const base = makeSchema([documentedVar('Middleware')]);
+    const compare = makeSchema([new ExportSchema(loc, 'Middleware', new UnresolvedSchema(loc, 'Middleware'))]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.hasChanges).to.equal(false);
+    expect(result.unresolvedExports).to.include('Middleware');
+  });
+
+  it('should suppress internal placeholder-vs-real pairs without surfacing them as unresolved exports', () => {
+    const base = makeSchema([], [documentedVar('helper')]);
+    const compare = makeSchema([], [new UnresolvedSchema(loc, 'helper')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+    expect(result.internalChanges).to.have.lengthOf(0);
+    expect(result.hasChanges).to.equal(false);
+    // internal extraction gaps are suppressed, not reported as unresolved *exports*
+    expect(result.unresolvedExports).to.have.lengthOf(0);
+  });
+});
+
 describe('computeAPIDiff visibility moves', () => {
   it('should report a public→internal move as a public BREAKING change (drives impact, not internalImpact)', () => {
     const base = makeSchema([makeVar('foo', 'string')], []);
@@ -280,5 +330,136 @@ describe('SchemaMain.getSchemaWithAvailability reason mapping', () => {
     } catch (err: any) {
       expect(err.message).to.equal('boom');
     }
+  });
+
+  it('should flag a live-extracted schema so version-keyed consumers do not persist it', async () => {
+    const env = {
+      name: 'stub-env',
+      getSchemaExtractor: () => ({
+        extract: async () => makeSchema([makeVar('Foo', 'string')]),
+        dispose: () => {},
+      }),
+    };
+    const schemaMain = makeSchemaMain({ env });
+    const { availability } = await schemaMain.getSchemaWithAvailability(makeComponent());
+    expect(availability.available).to.equal(true);
+    expect(availability.live).to.equal(true);
+  });
+});
+
+describe('SchemaMain.computeAPIDiff schema sourcing', () => {
+  const loggerStub = { warn: () => {}, debug: () => {}, error: () => {}, info: () => {} } as any;
+
+  function makeDiffSchemaMain({ workspace, env, artifacts }: { workspace: any; env: any; artifacts: any[] }) {
+    const envs = { getEnv: () => ({ env }) } as any;
+    const builder = { getArtifactsVinylByAspectAndTaskName: async () => artifacts } as any;
+    const config = { defaultParser: 'typescript', disabled: false } as any;
+    const impactRuleSlot = { values: () => [] } as any;
+    return new SchemaMain(
+      undefined as any,
+      impactRuleSlot,
+      envs,
+      config,
+      builder,
+      workspace,
+      loggerStub,
+      new ImpactAssessor()
+    );
+  }
+
+  const makeComp = (idStr: string) => ({ id: ComponentID.fromString(idStr), buildStatus: 'pending' }) as any;
+  const artifactOf = (schema: APISchema) => [{ contents: Buffer.from(JSON.stringify(schema.toObject())) }];
+
+  it('should read the built artifact — not live-extract — for an unmodified checkout, and memoize', async () => {
+    // repro: a checked-out CI-built snap reports buildStatus "pending", which used to force a
+    // tsserver extraction pass per component per diff (minutes on a cold lane-compare) whose
+    // degraded output was then cached under the immutable snap pair.
+    let extracted = 0;
+    const env = {
+      name: 'stub-env',
+      getSchemaExtractor: () => ({
+        extract: async () => {
+          extracted += 1;
+          return makeSchema([]);
+        },
+        dispose: () => {},
+      }),
+    };
+    const workspace = { getIdIfExist: (id: ComponentID) => id, isModified: async () => false } as any;
+    const schemaMain = makeDiffSchemaMain({ workspace, env, artifacts: artifactOf(makeSchema([])) });
+
+    const result = await schemaMain.computeAPIDiff(
+      makeComp('org.scope/button@0.0.1'),
+      makeComp('org.scope/button@0.0.2')
+    );
+    expect(result?.status).to.equal('COMPUTED');
+    expect(extracted).to.equal(0);
+    expect(result?.base.live).to.equal(undefined);
+
+    // artifact-derived result is immutable even with buildStatus "pending" — memoized
+    const again = await schemaMain.computeAPIDiff(
+      makeComp('org.scope/button@0.0.1'),
+      makeComp('org.scope/button@0.0.2')
+    );
+    expect(again).to.equal(result);
+  });
+
+  it('should live-extract for a modified checkout and never memoize that result', async () => {
+    let extracted = 0;
+    const env = {
+      name: 'stub-env',
+      getSchemaExtractor: () => ({
+        extract: async () => {
+          extracted += 1;
+          return makeSchema([makeVar('Foo', 'string')]);
+        },
+        dispose: () => {},
+      }),
+    };
+    const workspace = { getIdIfExist: (id: ComponentID) => id, isModified: async () => true } as any;
+    const schemaMain = makeDiffSchemaMain({ workspace, env, artifacts: artifactOf(makeSchema([])) });
+
+    const result = await schemaMain.computeAPIDiff(
+      makeComp('org.scope/button@0.0.1'),
+      makeComp('org.scope/button@0.0.2')
+    );
+    expect(result?.status).to.equal('COMPUTED');
+    expect(extracted).to.equal(2); // both sides extracted live, artifact bypassed
+    expect(result?.base.live).to.equal(true);
+    expect(result?.compare.live).to.equal(true);
+
+    const again = await schemaMain.computeAPIDiff(
+      makeComp('org.scope/button@0.0.1'),
+      makeComp('org.scope/button@0.0.2')
+    );
+    expect(again).to.not.equal(result); // live results are recomputed, never served from memo
+    expect(extracted).to.equal(4);
+  });
+
+  it('should read the artifact for a version that is not checked out in the workspace', async () => {
+    let extracted = 0;
+    const env = {
+      name: 'stub-env',
+      getSchemaExtractor: () => ({
+        extract: async () => {
+          extracted += 1;
+          return makeSchema([]);
+        },
+        dispose: () => {},
+      }),
+    };
+    // checked out at a different version than either diff side
+    const workspace = {
+      getIdIfExist: (id: ComponentID) => id.changeVersion('9.9.9'),
+      isModified: async () => true,
+    } as any;
+    const schemaMain = makeDiffSchemaMain({ workspace, env, artifacts: artifactOf(makeSchema([])) });
+
+    const result = await schemaMain.computeAPIDiff(
+      makeComp('org.scope/button@0.0.1'),
+      makeComp('org.scope/button@0.0.2')
+    );
+    expect(result?.status).to.equal('COMPUTED');
+    expect(extracted).to.equal(0);
   });
 });

@@ -215,7 +215,9 @@ export class SchemaMain {
         });
         if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
 
-        return { schema: result, availability: { available: true } };
+        // `live`: extracted from source at call time, not read from the version's built artifact —
+        // consumers that key results by version (API diff memo/cache) must not persist it.
+        return { schema: result, availability: { available: true, live: true } };
       } catch (err) {
         if (alwaysRunExtractor) throw err;
         extractionFailure = extractionFailure || 'FAILED';
@@ -228,13 +230,9 @@ export class SchemaMain {
     }
 
     // on scope get schema from builder api
-    const schemaArtifact = await this.builder.getArtifactsVinylByAspectAndTaskName(
-      component,
-      SchemaAspect.id,
-      SCHEMA_TASK_NAME
-    );
+    const fromArtifact = await this.readSchemaFromArtifact(component);
 
-    if (schemaArtifact.length === 0) {
+    if (!fromArtifact) {
       this.logger.debug(`no schema found for ${component.id.toString()}`);
 
       /**
@@ -248,11 +246,26 @@ export class SchemaMain {
       };
     }
 
-    const schemaJsonStr = schemaArtifact[0].contents.toString('utf-8');
+    return { schema: fromArtifact, availability: { available: true } };
+  }
 
+  /**
+   * read the schema.json artifact the schema build task produced for this exact version.
+   * returns null when the version has no such artifact (never built, or built before API
+   * extraction existed). throws on a corrupt artifact.
+   */
+  private async readSchemaFromArtifact(component: Component): Promise<APISchema | null> {
+    const schemaArtifact = await this.builder.getArtifactsVinylByAspectAndTaskName(
+      component,
+      SchemaAspect.id,
+      SCHEMA_TASK_NAME
+    );
+    if (schemaArtifact.length === 0) return null;
+
+    const schemaJsonStr = schemaArtifact[0].contents.toString('utf-8');
     try {
       const schemaJson = JSON.parse(schemaJsonStr);
-      return { schema: this.getSchemaFromObject(schemaJson), availability: { available: true } };
+      return this.getSchemaFromObject(schemaJson);
     } catch (e) {
       if (e instanceof SyntaxError) {
         this.logger.error(e.message);
@@ -347,7 +360,13 @@ export class SchemaMain {
         const transient =
           !result ||
           (result.status !== 'COMPUTED' && (result.base.reason === 'FAILED' || result.compare.reason === 'FAILED'));
-        if (!transient && immutable) {
+        // artifact-derived sides are immutable even when the local buildStatus says otherwise (a
+        // checked-out component reports "pending" for a CI-built snap), so a COMPUTED result whose
+        // sides are not live-extracted is safe to memoize regardless of buildStatus. a live side
+        // reflects the working tree and must never be memoized under the version pair.
+        const live = Boolean(result && (result.base.live || result.compare.live));
+        const memoizable = !transient && !live && (immutable || result!.status === 'COMPUTED');
+        if (memoizable) {
           if (this.apiDiffMemo.size >= SchemaMain.API_DIFF_MEMO_MAX) {
             const firstKey = this.apiDiffMemo.keys().next().value;
             if (firstKey) this.apiDiffMemo.delete(firstKey);
@@ -363,12 +382,41 @@ export class SchemaMain {
     return promise;
   }
 
+  /**
+   * is this component the version currently checked out in the workspace, with local modifications
+   * on top? that's the one case where the live source — not the version's built artifact — is the
+   * authoritative API surface for a diff side. errs toward true when modification state can't be
+   * determined, so local changes are never masked by a stale artifact.
+   */
+  private async isModifiedCheckoutOf(component: Component): Promise<boolean> {
+    if (!this.workspace) return false;
+    const checkedOut = this.workspace.getIdIfExist(component.id);
+    if (!checkedOut) return false;
+    if (component.id.version && checkedOut.version !== component.id.version) return false;
+    try {
+      return await this.workspace.isModified(component);
+    } catch {
+      return true;
+    }
+  }
+
   private async doComputeAPIDiff(baseComp: Component, compareComp: Component): Promise<APIDiffResult | null> {
     try {
       // a side whose schema retrieval throws is reported as FAILED availability rather than
       // failing the whole diff — the result then carries an explicit status instead of null.
       const getSide = async (comp: Component) => {
         try {
+          // both sides are pinned versions, so the snap's built schema artifact is authoritative and
+          // cheap to read. `getSchemaWithAvailability` instead runs the live extractor for any
+          // checked-out component whose local buildStatus isn't "succeed" (which a plain checkout of
+          // a CI-built snap reports) — a tsserver pass per component, reflecting the working tree
+          // rather than the snap; a degraded workspace then fabricates placeholder schemas that get
+          // diffed and cached under the immutable pair. the working tree is only authoritative for a
+          // *modified* checkout of the exact version; everything else prefers the artifact.
+          if (!(await this.isModifiedCheckoutOf(comp))) {
+            const fromArtifact = await this.readSchemaFromArtifact(comp);
+            if (fromArtifact) return { schema: fromArtifact, availability: { available: true } };
+          }
           return await this.getSchemaWithAvailability(comp);
         } catch (err: any) {
           this.logger.warn(`failed getting schema for ${comp.id.toString()}: ${err.message}`);

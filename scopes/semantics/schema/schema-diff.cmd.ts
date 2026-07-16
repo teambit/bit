@@ -3,7 +3,7 @@ import type { Command, CommandOptions, CLIArgs } from '@teambit/cli';
 import { formatWarningSummary, formatTitle } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
-import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
+import { APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
 import type {
   APIDiffResult,
   APIDiffChange,
@@ -67,18 +67,12 @@ examples:
 
     this.logger.debug(`computing API diff: ${baseId.toString()} -> ${compareId.toString()}`);
 
-    // availability-aware: a version without a schema (NOT_BUILT/NO_EXTRACTOR/DISABLED/FAILED)
-    // must short-circuit with an explicit status — never be diffed as an empty API.
-    const [base, compare] = await Promise.all([
-      this.schema.getSchemaWithAvailability(baseComponent),
-      this.schema.getSchemaWithAvailability(compareComponent),
-    ]);
-
-    const assessor = this.schema.getImpactAssessor();
-    const diff = computeAPIDiff(base.schema, compare.schema, assessor, {
-      base: base.availability,
-      compare: compare.availability,
-    });
+    // availability-aware and artifact-first (see SchemaMain.computeAPIDiff): a version without a
+    // schema (NOT_BUILT/NO_EXTRACTOR/DISABLED/FAILED) short-circuits with an explicit status —
+    // never diffed as an empty API — and built versions read their schema artifact instead of
+    // running a live extraction pass.
+    const diff = await this.schema.computeAPIDiff(baseComponent, compareComponent);
+    if (!diff) throw new Error(`failed computing API diff for ${componentId.toString()}`);
     return { diff, componentId: componentId.toStringWithoutVersion() };
   }
 

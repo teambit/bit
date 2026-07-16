@@ -23,6 +23,13 @@ export type SchemaUnavailableReason = 'NOT_BUILT' | 'NO_EXTRACTOR' | 'DISABLED' 
 export type SchemaAvailability = {
   available: boolean;
   reason?: SchemaUnavailableReason;
+  /**
+   * the schema was extracted live from source files at call time rather than read from the
+   * version's built artifact. such a schema reflects the current working tree — it is mutable and
+   * can be degraded (placeholder nodes when the workspace is unhealthy) — so diff results carrying
+   * it must never be memoized or persisted under the immutable version pair.
+   */
+  live?: boolean;
 };
 
 /**
@@ -59,9 +66,9 @@ export type APIDiffResult = {
   internalChanges: APIDiffChange[];
   changes: APIDiffChange[];
   /**
-   * exports the extractor couldn't resolve on one or both sides (an `UnImplementedSchema` placeholder).
-   * these are NOT diffed as add/remove/modify — extraction gaps, surfaced separately as "couldn't
-   * analyze" so a real change list stays meaningful.
+   * exports the extractor couldn't resolve on one or both sides (an `UnImplementedSchema` or
+   * `UnresolvedSchema` placeholder). these are NOT diffed as add/remove/modify — extraction gaps,
+   * surfaced separately as "couldn't analyze" so a real change list stays meaningful.
    */
   unresolvedExports: string[];
   added: number;

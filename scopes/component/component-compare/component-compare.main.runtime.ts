@@ -256,6 +256,9 @@ export class ComponentCompareMain {
   }
 
   private static isApiDiffCacheable(result: Record<string, any>): boolean {
+    // a live-extracted side reflects the current working tree, not the snap the cache key names —
+    // persisting it would serve a stale (possibly degraded) diff for that pair forever.
+    if (result.base?.live || result.compare?.live) return false;
     if (result.status === 'COMPUTED') return true;
     // A non-COMPUTED result is only safe to persist (disk cache, keyed on the immutable snap pair, no
     // TTL) when it can never change for that pair. FAILED is transient. NOT_BUILT is *pending*: the snap
