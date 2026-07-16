@@ -3,7 +3,7 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting, BITDEV_NODE_ENV_ID } from '@teambit/legacy.e2e-helper';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 
 chai.use(chaiFs);
@@ -909,17 +909,18 @@ module.exports.default = {
         },
       });
       // the apps are declared via the core *.bit-app.* plugin (env-independent), so the env is
-      // only needed as a compiler for the compilation/build parts of this suite. the bitdev node
-      // env is a single light install (installing the legacy node-env chain with yarn used to
-      // get OOM-killed on CI here)
-      helper.env.setBitdevNodeEnv();
+      // only needed as a compiler for the compilation/build parts of this suite. the ts-env is
+      // a workspace component, so nothing gets installed for it (installing the legacy node-env
+      // chain with yarn used to get OOM-killed on CI here)
+      helper.env.setTsEnv();
+      helper.command.install();
     });
     after(() => {
       helper.scopeHelper.destroy();
     });
     it('should install root components', () => {
-      expect(helper.env.rootCompDirDep(BITDEV_NODE_ENV_ID, 'comp3')).to.be.a.path();
-      expect(helper.env.rootCompDirDep(BITDEV_NODE_ENV_ID, 'comp4')).to.be.a.path();
+      expect(helper.env.rootCompDirDep(`${helper.scopes.remote}/ts-env`, 'comp3')).to.be.a.path();
+      expect(helper.env.rootCompDirDep(`${helper.scopes.remote}/ts-env`, 'comp4')).to.be.a.path();
     });
     it('should install the dependencies of the root component that has react 17 in the dependencies with react 17', () => {
       expect(

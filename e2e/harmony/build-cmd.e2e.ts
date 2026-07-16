@@ -95,17 +95,18 @@ describe('build command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      // the default env (empty env) has no compiler hence no dist artifact. set a node env so
-      // the tag produces one
-      helper.env.setBitdevNodeEnv();
+      // the default env (empty env) has no compiler hence no dist artifact. set a compiling env
+      // so the tag produces one
+      helper.env.setTsEnv();
       helper.command.tagAllComponents();
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
-      // install the env of the imported component so the build below runs with it
-      helper.command.install();
+      // import the env of the imported component so the build below runs with it. it must be
+      // imported (not installed) - the env is a scope component, not a published npm package
+      helper.command.importComponent('ts-env');
 
       const artifacts = helper.command.getArtifacts(`${helper.scopes.remote}/comp1`);
       const artifactDist = artifacts.find((a) => a.name === 'dist');
@@ -167,8 +168,8 @@ describe('build command', function () {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
-        // the default env (empty env) has no compiler. set a node env so compilation runs
-        helper.env.setBitdevNodeEnv();
+        // the default env (empty env) has no compiler. set a compiling env so compilation runs
+        helper.env.setTsEnv();
         // Create a TypeScript file with a compilation error
         helper.fs.outputFile('comp1/comp1.ts', 'export function invalidFunction(): string { return 123; }');
         helper.fs.outputFile('comp1/index.ts', 'export { invalidFunction } from "./comp1";');

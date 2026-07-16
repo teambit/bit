@@ -59,8 +59,8 @@ describe('tag components on Harmony', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       // the default env (empty env) has no compiler hence no dist artifacts. set a compiling env
-      // so the build generates artifacts (the bitdev node env is a single light install)
-      helper.env.setBitdevNodeEnv();
+      // so the build generates artifacts
+      helper.env.setTsEnv();
       helper.command.tagAllComponents();
       helper.command.export();
       helper.command.tagIncludeUnmodified('0.0.2');

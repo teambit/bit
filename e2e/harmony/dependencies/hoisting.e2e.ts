@@ -14,8 +14,8 @@ describe('pnpm with hoisted node linker, when there is a dependency that has the
     helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
     helper.fixtures.populateComponents(1);
     // the test relies on the local component having a dist folder (to distinguish it from the
-    // registry package). the default env (empty env) has no compiler, so set the node env.
-    helper.env.setBitdevNodeEnv();
+    // registry package). the default env (empty env) has no compiler, so set a compiling env.
+    helper.env.setTsEnv();
     helper.extensions.addExtensionToVariant('comp1', 'teambit.pkg/pkg', {
       packageJson: {
         name: 'once',

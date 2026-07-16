@@ -21,7 +21,7 @@ describe('compile extension', function () {
     let appOutput: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.env.setBitdevNodeEnv();
+      helper.env.setTsEnv();
       appOutput = helper.fixtures.populateComponentsTS(3);
       scopeBeforeTag = helper.scopeHelper.cloneWorkspace();
     });
@@ -128,7 +128,8 @@ describe('compile extension', function () {
       });
       // a guard for Flows bug that exits unexpectedly
       it('should be able to tag', () => {
-        expect(output).to.have.string('4 component(s) tagged');
+        // comp1-3, bar and the ts-env
+        expect(output).to.have.string('5 component(s) tagged');
       });
       it('should still save the dists on the component with the compiler', () => {
         const catComp = helper.command.catComponent('comp3@latest');
@@ -144,7 +145,7 @@ describe('compile extension', function () {
   describe('component with unsupported compiler files', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.env.setBitdevNodeEnv();
+      helper.env.setTsEnv();
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/style.css', 'h1{}');
       helper.fs.outputFile('comp1/types.d.ts', 'export const myField: number');
@@ -180,7 +181,7 @@ describe('compile extension', function () {
   describe('component with nested directories', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
-      helper.env.setBitdevNodeEnv();
+      helper.env.setTsEnv();
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/nested/foo.ts');
       helper.command.compile();
@@ -196,7 +197,7 @@ describe('compile extension', function () {
   describe('compile by directory path', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.env.setBitdevNodeEnv();
+      helper.env.setTsEnv();
       helper.fixtures.populateComponentsTS(3);
       helper.command.move('comp1', 'nested/comp1');
       helper.command.move('comp2', 'nested/comp2');

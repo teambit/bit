@@ -41,6 +41,9 @@ describe('bit scope command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
+      // an external env must be used here (not a workspace env like setTsEnv): the rename does
+      // not rewrite variant-configured env ids in workspace.jsonc, so a renamed workspace env
+      // ref goes stale and the compile-after-rename below produces no dists
       helper.env.setBitdevNodeEnv();
       helper.command.renameScope(helper.scopes.remote, 'new-scope');
     });
@@ -119,6 +122,8 @@ describe('bit scope command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.addDefaultScope('old-org.my-scope');
       helper.fixtures.populateComponents(2);
+      // an external env must be used here (not a workspace env like setTsEnv), so the exact-ids
+      // assertions below stay stable and the variant env ref survives the owner rename
       helper.env.setBitdevNodeEnv();
       helper.command.setScope('old-org.my-scope1', 'comp1');
       helper.command.setScope('old-org.my-scope2', 'comp2');

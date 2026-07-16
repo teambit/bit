@@ -215,6 +215,86 @@ module.exports.default = new SimpleEnv();
     return name;
   }
 
+  /**
+   * create a minimal env component that provides only a typescript compiler (workspace compile
+   * and build pipeline), taken from the core teambit.typescript/typescript aspect at runtime -
+   * so like setSimpleEnv, it needs NO package installation and no compilation of the env itself
+   * (the plugin file is plain .js). by default it is configured on all components via variants
+   * (like setBitdevNodeEnv), pass variantPattern=undefined to only create the env component.
+   * use it for suites that need components to actually compile (dists) but don't exercise any
+   * other env functionality (tester/linter/etc). it is much faster than installing an env like
+   * the legacy teambit.harmony/node chain or even the modern node env.
+   */
+  setTsEnv(variantPattern: string | undefined = '*', name = 'ts-env'): string {
+    this.fs.outputFile(
+      `${name}/${name}.bit-env.js`,
+      `class TsEnv {
+  name = '${name}';
+  createTsCompiler(context) {
+    // the env context exposes core aspects. the typescript aspect is a core aspect, so no
+    // installation is needed.
+    const typescript = context.getAspect('teambit.typescript/typescript');
+    return typescript.createCjsCompiler({
+      tsconfig: {
+        compilerOptions: {
+          lib: ['es2019'],
+          target: 'es2019',
+          module: 'commonjs',
+          declaration: true,
+          sourceMap: true,
+          allowJs: true,
+        },
+      },
+      types: [],
+      // compile all capsules in one ts program instead of project-references. it is faster, and
+      // more importantly, project-references require every dependency capsule to have a
+      // tsconfig.json, which the capsule of this env itself (compiler-less, on the default env)
+      // does not have.
+      singleProgramCompilation: true,
+    });
+  }
+  compiler() {
+    return (context) => this.createTsCompiler(context);
+  }
+  package() {
+    // the pkg service only duck-types the PackageGenerator class. without it, the package.json
+    // main of the components points to the source file instead of the dist
+    return () => ({
+      packageJsonProps: { main: 'dist/{main}.js', types: '{main}.ts' },
+      npmIgnore: [],
+    });
+  }
+  build() {
+    // the builder service only duck-types the Pipeline class (an object with compute() returning
+    // the build tasks), so there is no need to import @teambit/builder for Pipeline.from()
+    return {
+      compute: (context) => {
+        const compilerAspect = context.getAspect('teambit.compilation/compiler');
+        return [compilerAspect.createTask('TSCompiler', this.createTsCompiler(context))];
+      },
+    };
+  }
+}
+module.exports.default = new TsEnv();
+`
+    );
+    // the env manifest marks the component as an env before it was ever loaded
+    this.fs.outputFile(`${name}/env.jsonc`, `{}`);
+    this.fs.outputFile(`${name}/index.js`, `module.exports = require('./${name}.bit-env');\n`);
+    this.command.addComponent(name);
+    if (variantPattern) {
+      // the env component gets the workspace default-scope, which is not necessarily the remote
+      // scope (e.g. when the workspace was set up with addRemoteScopeAsDefaultScope: false)
+      const envId = `${this.extensions.workspaceJsonc.getDefaultScope()}/${name}`;
+      this.extensions.addExtensionToVariant(variantPattern, envId, {});
+      this.extensions.addExtensionToVariant(variantPattern, 'teambit.envs/envs', { env: envId });
+      // the env component itself must not get the variant config (an env can't be its own env)
+      this.extensions.workspaceJsonc.addToVariant(name, 'propagate', false);
+    }
+    this.command.link();
+    return name;
+  }
+
   setEmptyEnv() {
     this.fs.outputFile(
       'empty-env/empty-env.bit-env.ts',

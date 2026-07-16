@@ -23,7 +23,7 @@ chai.use(chaiFs);
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.env.setBitdevNodeEnv();
+      helper.env.setTsEnv();
     });
     describe('run bit watch', () => {
       let watchRunner: WatchRunner;
