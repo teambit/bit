@@ -2686,6 +2686,11 @@
         "",
         "owner",
         "treat the argument as an owner name and import all components from all scopes of that owner"
+      ],
+      [
+        "",
+        "write-to-empty-dir",
+        "when the target directory is not empty, import into an available empty directory (e.g. \"foo\" => \"foo_1\") instead of failing"
       ]
     ],
     "description": "bring components from remote scopes into your workspace",
@@ -3479,6 +3484,11 @@
         "",
         "pre-release [identifier]",
         "syntactic sugar for \"--increment prerelease\" and `--prerelease-id <identifier>`"
+      ],
+      [
+        "",
+        "auto-tag-increment <level>",
+        "the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease].\nby default, dependents are bumped by a patch, unless --increment is one of [prepatch, prerelease, preminor, premajor], which they follow.\nnote that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level"
       ],
       [
         "",
@@ -4998,10 +5008,15 @@
             "",
             "skip-cleanup",
             "Skip restoring the workspace (switching back to main) after export. Use when the workspace is discarded right after, e.g. an ephemeral CI container"
+          ],
+          [
+            "",
+            "skip-tasks <tasks>",
+            "Comma-separated list of build/publish task names (or aspect-ids) to skip during snap, e.g. \"ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents\". Speeds up PR builds by trading optional artifacts (schema/preview) and publishing for build time; they are produced on the final export to main"
           ]
         ],
         "description": "Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.",
-        "extendedDescription": "Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. By default it then restores the workspace by switching back to main; pass --skip-cleanup to skip that restore when the workspace is about to be discarded (e.g. an ephemeral CI container). Use in pull-request CI pipelines after tests and before deploy.",
+        "extendedDescription": "Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. By default it then restores the workspace by switching back to main; pass --skip-cleanup to skip that restore when the workspace is about to be discarded (e.g. an ephemeral CI container). PR builds run the full pipeline by default; to trade specific tasks for speed on a given PR, add a [skip-tasks: ...] token to the commit message (e.g. [skip-tasks: GeneratePreview,ExtractSchema]), which merges with any --skip-tasks flag. Use in pull-request CI pipelines after tests and before deploy.",
         "group": "collaborate",
         "private": false
       },
@@ -5053,6 +5068,11 @@
             "",
             "pre-release [identifier]",
             "syntactic sugar for \"--increment prerelease\" and `--prerelease-id <identifier>`"
+          ],
+          [
+            "",
+            "auto-tag-increment <level>",
+            "the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease].\nby default, dependents are bumped by a patch, unless --increment is one of [prepatch, prerelease, preminor, premajor], which they follow.\nnote that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level"
           ],
           [
             "",

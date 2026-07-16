@@ -26,13 +26,16 @@ import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentID } from '@teambit/component-id';
-import { isEqual } from 'lodash';
+import { compact, isEqual } from 'lodash';
 import type { Version, LaneComponent, Lane } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
 import type { LaneId } from '@teambit/lane-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { SourceBranchDetector } from './source-branch-detector';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
 // LANE_HASH_MISMATCH fires when both runners called `Lane.create` (the lane didn't exist on
@@ -384,26 +387,101 @@ export class CiMain {
 
     this.logger.console(chalk.blue(`Syncing config changes from ${mainLaneId.toString()} into ${laneId.toString()}`));
 
+    // Resolve each lane component's head on main once, keeping only those that are on main and whose
+    // lane head differs from it (the rest have nothing to sync). This single pass feeds both the
+    // pre-fetch below and the merge loop, so we never load the same ModelComponent twice.
+    const componentsToSync = compact(
+      await Promise.all(
+        currentLane.components.map(async (laneComp) => {
+          try {
+            const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
+            const mainHead = modelComponent?.head; // the component's head on main
+            if (!modelComponent || !mainHead || mainHead.isEqual(laneComp.head)) return undefined;
+            return { laneComp, modelComponent, mainHead };
+          } catch (e: any) {
+            // Best-effort per component (same contract as the merge loop below): one component's
+            // load failure shouldn't reject Promise.all and abort the whole config sync.
+            this.logger.console(
+              chalk.yellow(
+                `  ${laneComp.id.toStringWithoutVersion()}: skipping config sync from main (${e?.message || e})`
+              )
+            );
+            return undefined;
+          }
+        })
+      )
+    );
+
+    // The lane import (switchToLane) brought each component's lane history plus the lightweight
+    // version-history (the parent graph) — that's enough for the diverge check below to see that
+    // main is ahead — but NOT the full Version object for main's head wherever main advanced past
+    // the lane's fork point. Those objects live only on main and were never fetched. Without them
+    // `loadVersion(mainHead)` throws VersionNotFoundOnFS, the per-component catch swallows it as
+    // "skipping config sync from main", and the sync silently degrades to a no-op for every
+    // diverged component. Pre-fetch main's head objects in one batched remote call (mirroring the
+    // lane-merge flows — see merge-status-provider / merge-lanes). Pass the *specific* main-head
+    // version so `cache: true` still fetches it: the component already exists locally at its lane
+    // version, so a version-less id would look satisfied and skip the remote.
+    const mainHeadIds = componentsToSync.map(({ laneComp, mainHead }) =>
+      laneComp.id.changeVersion(mainHead.toString())
+    );
+    await this.prefetchFromMainForConfigSync(mainHeadIds, 'head objects');
+
+    // Resolve each component's diverge state up front — before the merge loop — so we can also
+    // pre-fetch the common-ancestor objects below. getDivergeData only walks the parent graph,
+    // which is already local (switchToLane brings the version-history, and the head pre-fetch above
+    // reinforced it), so no full Version object is needed yet. Keep only components where main is
+    // actually ahead or diverged; the rest have nothing to bring in from main. Bound the fan-out
+    // (getDivergeData traverses each component's version graph) so a lane with many components
+    // doesn't spawn one unbounded burst of concurrent graph walks.
+    const componentsToMerge = compact(
+      await pMapPool(
+        componentsToSync,
+        async (item) => {
+          try {
+            const divergeData = await getDivergeData({
+              repo,
+              modelComponent: item.modelComponent,
+              sourceHead: item.laneComp.head,
+              targetHead: item.mainHead,
+              throws: false,
+            });
+            if (!divergeData.isTargetAhead() && !divergeData.isDiverged()) return undefined;
+            return { ...item, divergeData };
+          } catch (e: any) {
+            // Best-effort per component (same contract as the merge loop below).
+            this.logger.console(
+              chalk.yellow(
+                `  ${item.laneComp.id.toStringWithoutVersion()}: skipping config sync from main (${e?.message || e})`
+              )
+            );
+            return undefined;
+          }
+        },
+        { concurrency: concurrentComponentsLimit() }
+      )
+    );
+
+    // The head pre-fetch above brought main's head Version plus the version-history (parent graph),
+    // but NOT the full Version object of the common ancestor (the lane's fork point) for components
+    // where the lane and main have BOTH snapped since the fork. The 3-way config merge below loads
+    // that base Version (`baseVersion.extensions`); without it, `loadVersion(baseSnap)` throws
+    // VersionNotFoundOnFS, the per-component catch swallows it as "skipping config sync from main",
+    // and the sync silently no-ops for every diverged component. The fork point lives on main and,
+    // like the head, was never fetched (includeVersionHistory carries the graph, not each ancestor's
+    // Version). Batch-fetch the bases in one call — same best-effort contract as the head pre-fetch.
+    const baseIds = compact(
+      componentsToMerge.map(({ laneComp, divergeData }) => {
+        const baseSnap = divergeData.commonSnapBeforeDiverge;
+        return baseSnap ? laneComp.id.changeVersion(baseSnap.toString()) : undefined;
+      })
+    );
+    await this.prefetchFromMainForConfigSync(baseIds, 'common-ancestor objects');
+
     const syncedIds: ComponentID[] = [];
-    for (const laneComp of currentLane.components) {
+    for (const { laneComp, modelComponent, mainHead, divergeData } of componentsToMerge) {
       try {
-        const modelComponent = await legacyScope.getModelComponent(laneComp.id);
-        const mainHead = modelComponent.head; // the component's head on main
-        if (!mainHead) continue; // component isn't on main — nothing to sync from there
         const laneHead = laneComp.head;
-        if (mainHead.isEqual(laneHead)) continue; // lane already points at main's head
-
-        const divergeData = await getDivergeData({
-          repo,
-          modelComponent,
-          sourceHead: laneHead,
-          targetHead: mainHead,
-          throws: false,
-        });
-        // Only sync when main has snaps the lane doesn't (target ahead, or diverged). If the lane
-        // is ahead-only / equal there's nothing on main to bring in.
-        if (!divergeData.isTargetAhead() && !divergeData.isDiverged()) continue;
-
         const currentVersion = await modelComponent.loadVersion(laneHead.toString(), repo);
         const otherVersion = await modelComponent.loadVersion(mainHead.toString(), repo);
         // base = common ancestor. When the lane is strictly behind main (no divergence) the common
@@ -467,6 +545,23 @@ export class CiMain {
     // the aspects-merger folds in the synced `mergedConfig`.
     this.workspace.clearAllComponentsCache();
     this.logger.console(chalk.green(`Synced config from main for ${syncedIds.length} component(s)`));
+  }
+
+  /**
+   * Batch-fetch main-side Version objects the config merge needs (heads, then common ancestors),
+   * mirroring the lane-merge flows (merge-status-provider / merge-lanes). Best-effort: a fetch
+   * hiccup shouldn't abort `bit ci pr` — the merge loop still runs and any component whose object is
+   * still missing just logs the existing per-component skip. `label` names which objects for the log.
+   */
+  private async prefetchFromMainForConfigSync(ids: ComponentID[], label: string) {
+    if (!ids.length) return;
+    try {
+      await this.importer.importObjectsFromMainIfExist(ids, { cache: true });
+    } catch (e: any) {
+      this.logger.console(
+        chalk.yellow(`Could not pre-fetch main's ${label} for config sync (continuing): ${e?.message || e}`)
+      );
+    }
   }
 
   /**
@@ -548,6 +643,7 @@ export class CiMain {
     dryRun,
     keepLane,
     skipCleanup,
+    skipTasks,
   }: {
     laneIdStr: string;
     message: string;
@@ -556,6 +652,7 @@ export class CiMain {
     dryRun?: boolean;
     keepLane?: boolean;
     skipCleanup?: boolean;
+    skipTasks?: string;
   }) {
     // The post-export cleanup switches the workspace back to main, which re-checks-out main's HEAD
     // and re-imports every workspace component — pointless when the workspace is about to be
@@ -563,6 +660,25 @@ export class CiMain {
     // auto-detected from `process.env.CI`: other CI contexts *reuse* the workspace after `bit ci pr`
     // (e.g. the e2e suite, which then tags/asserts on main), and must keep restoring it.
     const resolvedSkipCleanup = Boolean(skipCleanup);
+
+    // Skipping build/publish tasks is OPT-IN per PR: the build runs the full pipeline by default, and
+    // a developer adds a `[skip-tasks: <names>]` token to the commit message to trade specific tasks
+    // for speed on that PR (e.g. `[skip-tasks: GeneratePreview,ExtractSchema]`) without touching CI
+    // config. The token merges with any explicit `--skip-tasks` flag, and is stripped from the message
+    // so it doesn't leak into the snap message.
+    const { skipTasks: messageSkipTasks, message: resolvedMessage } = extractSkipTasksFromMessage(message);
+    const cliSkipTasks = skipTasks
+      ? skipTasks
+          .split(',')
+          .map((task) => task.trim())
+          .filter(Boolean)
+      : [];
+    const mergedSkipTasks = [...new Set([...cliSkipTasks, ...messageSkipTasks])];
+    const resolvedSkipTasks = mergedSkipTasks.length ? mergedSkipTasks.join(',') : undefined;
+    if (messageSkipTasks.length) {
+      this.logger.console(chalk.blue(`Skipping tasks from commit message: ${messageSkipTasks.join(', ')}`));
+    }
+
     this.logger.console(chalk.blue(`Lane name: ${laneIdStr}`));
 
     const originalLane = await this.lanes.getCurrentLane();
@@ -591,19 +707,21 @@ export class CiMain {
       return this.snapAndExportReusingLane({
         laneId,
         originalLane,
-        message,
+        message: resolvedMessage,
         build,
         dryRun,
         skipCleanup: resolvedSkipCleanup,
+        skipTasks: resolvedSkipTasks,
       });
     }
     return this.snapAndExportWithTempLane({
       laneId,
       originalLane,
-      message,
+      message: resolvedMessage,
       build,
       dryRun,
       skipCleanup: resolvedSkipCleanup,
+      skipTasks: resolvedSkipTasks,
     });
   }
 
@@ -664,6 +782,7 @@ export class CiMain {
     build,
     dryRun,
     skipCleanup,
+    skipTasks,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
@@ -671,6 +790,7 @@ export class CiMain {
     build: boolean | undefined;
     dryRun?: boolean;
     skipCleanup: boolean;
+    skipTasks?: string;
   }) {
     // Query the remote (by name, to avoid fetching all lanes) so we know whether to reuse or create
     const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
@@ -819,6 +939,7 @@ export class CiMain {
         message,
         build,
         exitOnFirstFailedTask: true,
+        skipTasks,
       });
 
       if (!results) {
@@ -864,6 +985,7 @@ export class CiMain {
     build,
     dryRun,
     skipCleanup,
+    skipTasks,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
@@ -871,6 +993,7 @@ export class CiMain {
     build: boolean | undefined;
     dryRun?: boolean;
     skipCleanup: boolean;
+    skipTasks?: string;
   }) {
     // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
     const tempLaneName = `${laneId.name}-${generateRandomStr(5)}`;
@@ -901,6 +1024,7 @@ export class CiMain {
         message,
         build,
         exitOnFirstFailedTask: true,
+        skipTasks,
       });
 
       if (!results) {
@@ -1191,6 +1315,7 @@ export class CiMain {
     build,
     strict,
     releaseType,
+    autoTagReleaseType,
     preReleaseId,
     incrementBy,
     explicitVersionBump,
@@ -1206,6 +1331,7 @@ export class CiMain {
     build?: boolean;
     strict?: boolean;
     releaseType: ReleaseType;
+    autoTagReleaseType?: ReleaseType;
     preReleaseId?: string;
     incrementBy?: number;
     explicitVersionBump?: boolean;
@@ -1341,6 +1467,7 @@ export class CiMain {
       failFast: true,
       persist: hasSoftTaggedComponents,
       releaseType: finalReleaseType,
+      autoTagReleaseType,
       preReleaseId,
       incrementBy,
       versionsFile,

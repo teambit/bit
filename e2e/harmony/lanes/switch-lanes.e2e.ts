@@ -346,6 +346,37 @@ describe('bit lane command', function () {
       expect(bitmap.comp1.version).to.equal('0.0.1');
     });
   });
+  // the lane lives on a different scope than the component. as a result, the lane snaps are exported
+  // to the lane's scope only, and the component's original scope never gets them. when switching to
+  // main, the ids must be fetched by "latest" from the original scope. otherwise, the original scope
+  // is asked for a snap-hash it doesn't have, it drops it from the response silently, the local head
+  // on main is left stale, and the switch checks out an old version of main.
+  describe('switch to main when main has updates on the remote and the lane is on another scope', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      const laneScope = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev', `--scope ${laneScope}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      const beforeUpdatingMain = helper.scopeHelper.cloneWorkspace();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedWorkspace(beforeUpdatingMain);
+    });
+    it('should fetch and switch to the head of main', () => {
+      helper.command.switchLocalLane('main', '-x');
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.2');
+    });
+  });
   describe('switch to a lane when it has updates on the remote', () => {
     let beforeSwitch: string;
     let firstSnap: string;

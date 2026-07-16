@@ -78,6 +78,7 @@ if both "version" and "to-version" are provided, compare those two versions dire
     { cmd: 'diff foo --json', description: 'return the diff result as json for programmatic consumption' },
   ];
   loader = true;
+  pager = true;
 
   constructor(private componentCompareMain: ComponentCompareMain) {}
 

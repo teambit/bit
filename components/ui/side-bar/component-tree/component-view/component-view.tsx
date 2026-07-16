@@ -271,7 +271,13 @@ export function ComponentView(props: ComponentViewProps) {
         )}
         {/* {isInternal && <Icon of="Internal" className={styles.componentIcon} />} */}
         {treeNodeSlot &&
-          treeNodeSlot.toArray().map(([id, treeNode]) => <treeNode.widget key={id} component={component} />)}
+          treeNodeSlot.toArray().map(([id, treeNode]) => {
+            // treeNode.widget's JSX-usability can't be verified across capsule boundaries in isolated
+            // builds (its type is resolved via @teambit/component-tree's own react types), so annotate
+            // it explicitly against this file's react import instead of letting JSX infer it.
+            const Widget = treeNode.widget as unknown as React.ComponentType<{ component: ComponentModel }>;
+            return <Widget key={id} component={component} />;
+          })}
       </div>
     </Link>
   );
