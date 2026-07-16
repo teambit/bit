@@ -1315,6 +1315,7 @@ export class CiMain {
     build,
     strict,
     releaseType,
+    autoTagReleaseType,
     preReleaseId,
     incrementBy,
     explicitVersionBump,
@@ -1330,6 +1331,7 @@ export class CiMain {
     build?: boolean;
     strict?: boolean;
     releaseType: ReleaseType;
+    autoTagReleaseType?: ReleaseType;
     preReleaseId?: string;
     incrementBy?: number;
     explicitVersionBump?: boolean;
@@ -1465,6 +1467,7 @@ export class CiMain {
       failFast: true,
       persist: hasSoftTaggedComponents,
       releaseType: finalReleaseType,
+      autoTagReleaseType,
       preReleaseId,
       incrementBy,
       versionsFile,

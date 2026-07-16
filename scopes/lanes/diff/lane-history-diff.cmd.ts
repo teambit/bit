@@ -26,6 +26,7 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
     ],
   ] as CommandOptions;
   loader = true;
+  pager = true;
 
   constructor(
     private lanes: LanesMain,
