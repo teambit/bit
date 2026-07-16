@@ -46,7 +46,7 @@ export class CreateCmd implements Command {
     {
       cmd: 'bit create mdx docs/create-components --aspect teambit.mdx/mdx-env --scope my-org.my-scope',
       description:
-        "creates an mdx component named 'docs/create-components' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`.",
+        "creates an mdx component named 'docs/create-components' and sets its scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`.",
     },
     {
       cmd: 'bit create react my-org.my-scope/hooks/use-session',

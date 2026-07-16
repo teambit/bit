@@ -219,6 +219,12 @@
             "name": "component-name",
             "description": "the 'component name' or 'component id' of the component whose env you'd like to inspect"
           }
+        ],
+        "examples": [
+          {
+            "cmd": "get ui/button",
+            "description": "show config information from the env configured for ui/button"
+          }
         ]
       },
       {
@@ -255,7 +261,7 @@
         "name": "unset <component-pattern>",
         "options": [],
         "description": "un-sets an env from components that were previously set by \"bit env set\" or by a component template",
-        "extendedDescription": "keep in mind that this doesn't remove envs that are set via variants.\nin only removes envs that appear in the .bitmap file, which were previously configured via \"bit env set\".\nthe purpose of this command is to reset previously assigned envs to either allow variants configure the env or use the base node env.\nyou can use a `<pattern>` for multiple component ids, such as `bit env unset \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+        "extendedDescription": "keep in mind that this doesn't remove envs that are set via variants.\nit only removes envs that appear in the .bitmap file, which were previously configured via \"bit env set\".\nthe purpose of this command is to reset previously assigned envs to either allow variants to configure the env or use the base node env.\nyou can use a `<pattern>` for multiple component ids, such as `bit env unset \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
         "group": "component-config",
         "arguments": [
           {
@@ -532,7 +538,7 @@
       [
         "v",
         "verbose",
-        "show verbose output for inspection and prints stack trace"
+        "show verbose output for inspection and print stack trace"
       ],
       [
         "n",
@@ -597,7 +603,7 @@
       [
         "",
         "layout <name>",
-        "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
+        "Graphviz layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
       ],
       [
         "",
@@ -644,7 +650,7 @@
         "name": "set <scope-name> [component-pattern]",
         "options": [],
         "description": "Sets the scope for specified component/s. If no component is specified, sets the default scope of the workspace",
-        "extendedDescription": "default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc.\na component is set with a scope (as oppose to default scope) only once it is versioned.'\n\nyou can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+        "extendedDescription": "default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc.\na component is set with a scope (as opposed to default scope) only once it is versioned.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
         "group": "component-config",
         "arguments": [
           {
@@ -690,7 +696,7 @@
           [
             "",
             "deprecate",
-            "for exported components, instead of deleting the original components, deprecating them"
+            "for exported components, instead of deleting the original components, deprecate them"
           ],
           [
             "x",
@@ -863,12 +869,12 @@
       [
         "p",
         "propagate",
-        "mark propagate true in the config file, so that component.json configs will be merge with workspace configs"
+        "mark propagate true in the config file, so that component.json configs will be merged with workspace configs"
       ],
       [
         "o",
         "override",
-        "override file if exist"
+        "override the file if it exists"
       ]
     ],
     "description": "create component.json configuration files for components",
@@ -1241,7 +1247,7 @@
       [
         "",
         "suppress-browser-launch",
-        "DEPRECATE. use --no-browser instead"
+        "DEPRECATED. use --no-browser instead"
       ]
     ],
     "description": "authenticate with Bit Cloud for component publishing and collaboration",
@@ -1883,7 +1889,7 @@
       },
       {
         "cmd": "bit create mdx docs/create-components --aspect teambit.mdx/mdx-env --scope my-org.my-scope",
-        "description": "creates an mdx component named 'docs/create-components' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`."
+        "description": "creates an mdx component named 'docs/create-components' and sets its scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`."
       },
       {
         "cmd": "bit create react my-org.my-scope/hooks/use-session",
@@ -1962,7 +1968,7 @@
       [
         "",
         "load-from <path-to-template>",
-        "local path to the workspace containing the template. Helpful during a development of a workspace-template"
+        "local path to the workspace containing the template. Helpful during the development of a workspace-template"
       ],
       [
         "c",
@@ -2388,7 +2394,7 @@
       [
         "",
         "skip-unavailable",
-        "when adding missing dependencies, skip those that are not found in the regisry"
+        "when adding missing dependencies, skip those that are not found in the registry"
       ],
       [
         "",
@@ -2635,7 +2641,7 @@
       [
         "",
         "dependents-dry-run",
-        "DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them"
+        "DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and waits for confirmation before importing them"
       ],
       [
         "",
@@ -2660,7 +2666,7 @@
       [
         "",
         "fetch-deps",
-        "fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data"
+        "fetch dependencies (bit components) objects to the local scope, but don't add to the workspace. Useful to resolve errors about missing dependency data"
       ],
       [
         "",
@@ -2816,7 +2822,7 @@
       [
         "f",
         "force",
-        "relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt"
+        "relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will be corrupted"
       ],
       [
         "",
@@ -3589,7 +3595,7 @@
     "arguments": [
       {
         "name": "component-patterns...",
-        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.. By default, all new and modified are tagged."
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.. By default, all new and modified components are tagged."
       }
     ],
     "examples": [
@@ -4171,7 +4177,7 @@
           [
             "n",
             "alias <string>",
-            "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote"
+            "relevant when the specified lane is a remote lane. create a local alias for the lane (doesn't affect the lane's name on the remote)"
           ],
           [
             "",
@@ -4565,7 +4571,7 @@
           ]
         ],
         "description": "revert to a previous history of the current lane. see also \"bit lane checkout\"",
-        "extendedDescription": "revert is similar to \"lane checkout\", but it keeps the versions and only change the files.\nchoose one or the other based on your needs.\nif you want to continue working on this lane and needs the changes from the history to be the head, then use \"lane revert\".\nif you want to fork the lane from a certain point in history, use \"lane checkout\" and create a new lane from it.",
+        "extendedDescription": "revert is similar to \"lane checkout\", but it keeps the versions and only changes the files.\nchoose one or the other based on your needs.\nif you want to continue working on this lane and need the changes from the history to be the head, then use \"lane revert\".\nif you want to fork the lane from a certain point in history, use \"lane checkout\" and create a new lane from it.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
@@ -4667,7 +4673,7 @@
           [
             "",
             "skip-fetch",
-            "use the local state of target-lane if exits locally, without updating it from the remote"
+            "use the local state of target-lane if exists locally, without updating it from the remote"
           ],
           [
             "",
@@ -4696,7 +4702,7 @@
           ]
         ],
         "description": "merge a local or a remote lane to the current lane",
-        "extendedDescription": "by default, the provided lane will be fetched from the remote before merging.\nto merge the lane from the local scope without updating it first, use \"--skip-fetch\" flag.\n\nwhen the current and merge candidate lanes are diverged in history and the files could be merged with no conflicts,\nthese components will be snap-merged to complete the merge. use \"no-auto-snap\" to opt-out, or \"tag\" to tag instead.\n\nwhen the components are not diverged in history, and the current lane is behind the merge candidate, the merge will\nsimply update the components and the heads according to the merge candidate.\nto opt-out, use \"--no-snap\", the components will be written as the merge candidate, and will be left as modified.\n\nin case a component in both ends don't share history (no snap is found in common), the merge will require \"--resolve-unrelated\" flag.\nthis flag keeps the history of one end and saves a reference to the other end. the decision of which end to keep is determined by the following:\n1. if the component exists on main, then the history linked to main will be kept.\nin this case, the strategy of \"--resolve-unrelated\" only determines which source-code to keep. it's not about the history.\n2. if the component doesn't exist on main, then by default, the history of the current lane will be kept.\nunless \"--resolve-unrelated\" is set to \"theirs\", in which case the history of the other lane will be kept.\n2. a. an edge case: if the component is deleted on the current lane, the strategy will always be \"theirs\".\nso then the history (and the source-code) of the other lane will be kept.\n",
+        "extendedDescription": "by default, the provided lane will be fetched from the remote before merging.\nto merge the lane from the local scope without updating it first, use \"--skip-fetch\" flag.\n\nwhen the current and merge candidate lanes are diverged in history and the files could be merged with no conflicts,\nthese components will be snap-merged to complete the merge. use \"no-auto-snap\" to opt-out, or \"tag\" to tag instead.\n\nwhen the components are not diverged in history, and the current lane is behind the merge candidate, the merge will\nsimply update the components and the heads according to the merge candidate.\nto opt-out, use \"--no-snap\", the components will be written as the merge candidate, and will be left as modified.\n\nin case a component on both ends doesn't share history (no snap is found in common), the merge will require \"--resolve-unrelated\" flag.\nthis flag keeps the history of one end and saves a reference to the other end. the decision of which end to keep is determined by the following:\n1. if the component exists on main, then the history linked to main will be kept.\nin this case, the strategy of \"--resolve-unrelated\" only determines which source-code to keep. it's not about the history.\n2. if the component doesn't exist on main, then by default, the history of the current lane will be kept.\nunless \"--resolve-unrelated\" is set to \"theirs\", in which case the history of the other lane will be kept.\n2. a. an edge case: if the component is deleted on the current lane, the strategy will always be \"theirs\".\nso then the history (and the source-code) of the other lane will be kept.\n",
         "private": true,
         "remoteOp": true,
         "arguments": [
@@ -4746,7 +4752,7 @@
           ]
         ],
         "description": "EXPERIMENT. move the current merge state into a new lane. the current lane will be reset",
-        "extendedDescription": "this command is useful when you got a messy merge state that from one hand you don't want\nto loose the changes, but on the other hand, you want to keep your lane without those changes.\nthis command does the following:\n1. create a new lane with the current merge state. including all the filesystem changes. (in practice, it leaves the fs intact)\n2. reset the current lane to the state before the merge. so then once done with the new lane, you can switch to the current lane and it'll be clean.",
+        "extendedDescription": "this command is useful when you got a messy merge state that on one hand you don't want\nto lose the changes, but on the other hand, you want to keep your lane without those changes.\nthis command does the following:\n1. create a new lane with the current merge state. including all the filesystem changes. (in practice, it leaves the fs intact)\n2. reset the current lane to the state before the merge. so then once done with the new lane, you can switch to the current lane and it'll be clean.",
         "remoteOp": true
       }
     ]
@@ -4803,7 +4809,7 @@
       [
         "n",
         "alias <string>",
-        "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote"
+        "relevant when the specified lane is a remote lane. create a local alias for the lane (doesn't affect the lane's name on the remote)"
       ],
       [
         "",
@@ -5328,7 +5334,7 @@
       [
         "",
         "reset-lane-new",
-        "same as reset-new, but it only resets components belong to lanes. main components are left intact"
+        "same as reset-new, but it only resets components belonging to lanes. main components are left intact"
       ],
       [
         "",
@@ -5418,7 +5424,7 @@
           [
             "l",
             "layout <name>",
-            "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
+            "Graphviz layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
           ],
           [
             "",
@@ -5839,7 +5845,7 @@
       [
         "",
         "deprecate",
-        "instead of deleting the original component, deprecating it"
+        "instead of deleting the original component, deprecate it"
       ],
       [
         "p",
@@ -6051,7 +6057,7 @@
           [
             "m",
             "merge",
-            "merge with an existing config if exits. (by default, it replaces overlapping existing configs)"
+            "merge with an existing config if exists. (by default, it replaces overlapping existing configs)"
           ]
         ],
         "description": "set components with an aspect to extend their development tools, metadata and (possibly) artifacts",

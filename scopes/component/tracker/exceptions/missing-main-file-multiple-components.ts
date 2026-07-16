@@ -9,7 +9,7 @@ export default class MissingMainFileMultipleComponents extends BitError {
     super(
       `error: the components ${chalk.bold(
         componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at ${BASE_DOCS_DOMAIN} components/component-main-file`
+      )} do not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at ${BASE_DOCS_DOMAIN}components/component-main-file`
     );
     this.componentIds = componentIds;
   }

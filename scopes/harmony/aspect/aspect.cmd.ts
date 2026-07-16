@@ -82,7 +82,7 @@ export class SetAspectCmd implements Command {
     },
   ];
   options = [
-    ['m', 'merge', 'merge with an existing config if exits. (by default, it replaces overlapping existing configs)'],
+    ['m', 'merge', 'merge with an existing config if exists. (by default, it replaces overlapping existing configs)'],
   ] as CommandOptions;
   group = 'component-config';
 

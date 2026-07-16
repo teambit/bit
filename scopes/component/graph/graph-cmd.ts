@@ -31,7 +31,7 @@ by default shows only workspace components; use --include-dependencies for full 
     [
       '',
       'layout <name>',
-      'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
+      'Graphviz layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
     ['', 'png', 'save the graph as a png file instead of svg. requires "graphviz" to be installed'],
     ['', 'cycles', 'generate a graph of cycles only'],

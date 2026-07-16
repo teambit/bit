@@ -132,7 +132,7 @@ use for official releases. for development versions, use 'bit snap' instead.`;
   arguments = [
     {
       name: 'component-patterns...',
-      description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified are tagged.`,
+      description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified components are tagged.`,
     },
   ];
   helpUrl = 'reference/components/snaps#create-a-tag-(release-version)';

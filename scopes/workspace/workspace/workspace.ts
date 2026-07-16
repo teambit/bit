@@ -284,7 +284,7 @@ export class Workspace implements ComponentFactory {
     if (this.consumer.isLegacy) return;
     if (isEmpty(this.config))
       throw new BitError(
-        `fatal: workspace config is empty. probably one of bit files is missing. please run "bit init" to rewrite them`
+        `fatal: workspace config is empty. probably one of the bit files is missing. please run "bit init" to rewrite them`
       );
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
@@ -1210,7 +1210,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       return envIdFromConfig === env;
     });
     if (!foundComps.length && throwIfNotFound) {
-      throw new BitError(`unable to find components that using "${env}" env.
+      throw new BitError(`unable to find components that use "${env}" env.
 the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}`);
     }
     return foundComps;
