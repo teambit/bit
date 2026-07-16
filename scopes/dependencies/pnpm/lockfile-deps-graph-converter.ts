@@ -411,7 +411,7 @@ export async function convertGraphToLockfile(
   for (const [depPath, pkg] of Object.entries(lockfile.packages)) {
     if (pkg.resolution == null || Object.keys(pkg.resolution).length === 0) {
       throw new BitError(
-        `Failed to generate a valid lockfile. The "packages['${depPath}'] entry doesn't have a "resolution" field.`
+        `Failed to generate a valid lockfile. The "packages['${depPath}']" entry doesn't have a "resolution" field.`
       );
     }
   }

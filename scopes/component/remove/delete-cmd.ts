@@ -46,7 +46,7 @@ to remove components from your local workspace only, use "bit remove" instead.`;
     [
       'f',
       'force',
-      'relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt',
+      'relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will be corrupted',
     ],
     ['', 'snaps <string>', 'comma-separated list of snap hashes to mark as deleted (e.g. --snaps "hash1,hash2,hash3")'],
   ] as CommandOptions;
