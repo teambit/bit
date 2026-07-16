@@ -60,7 +60,7 @@ automatically imports components, compiles components, links to node_modules, an
     ['', 'skip-compile', 'do not compile components'],
     ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
     ['a', 'add-missing-deps', 'install all missing dependencies'],
-    ['', 'skip-unavailable', 'when adding missing dependencies, skip those that are not found in the regisry'],
+    ['', 'skip-unavailable', 'when adding missing dependencies, skip those that are not found in the registry'],
     ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
       '',
@@ -69,8 +69,16 @@ automatically imports components, compiles components, links to node_modules, an
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
     ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
-    ['', 'allow-scripts [pkgNames]', 'a comma separated list of package names that are allowed to run installation scripts'],
-    ['', 'disallow-scripts [pkgNames]', 'a comma separated list of package names that are NOT allowed to run installation scripts'],
+    [
+      '',
+      'allow-scripts [pkgNames]',
+      'a comma separated list of package names that are allowed to run installation scripts',
+    ],
+    [
+      '',
+      'disallow-scripts [pkgNames]',
+      'a comma separated list of package names that are NOT allowed to run installation scripts',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -168,7 +176,7 @@ automatically imports components, compiles components, links to node_modules, an
     return allowScripts;
   }
 
-  private * _parseCommaSeparatedPkgList(pkgList: string): IterableIterator<string> {
+  private *_parseCommaSeparatedPkgList(pkgList: string): IterableIterator<string> {
     for (const pkgName of pkgList.split(',')) {
       const trimmed = pkgName.trim();
       if (trimmed) {

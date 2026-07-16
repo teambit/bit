@@ -31,7 +31,7 @@ ${chalk.yellow('━'.repeat(80))}
 ${chalk.yellow.bold('IGNORING ISSUES (Emergency Use Only)')}
 ${chalk.yellow('━'.repeat(80))}
 
-${chalk.bold('While highly not recommended')}, it is possible to ignore issues in two ways:
+${chalk.bold('While strongly discouraged')}, it is possible to ignore issues in two ways:
 
 ${chalk.bold('1. Temporarily ignore for a single command:')}
    Use the --ignore-issues flag with tag/snap/build commands:

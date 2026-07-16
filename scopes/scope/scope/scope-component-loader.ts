@@ -86,7 +86,7 @@ export class ScopeComponentLoader {
     const versionOriginId = version.originId;
     if (versionOriginId && !versionOriginId.isEqualWithoutVersion(id)) {
       throw new BitError(
-        `version "${versionStr}" seem to be originated from "${versionOriginId.toString()}", not from "${id.toStringWithoutVersion()}"`
+        `version "${versionStr}" seems to have originated from "${versionOriginId.toString()}", not from "${id.toStringWithoutVersion()}"`
       );
     }
     const snap = await this.getHeadSnap(modelComponent);

@@ -26,9 +26,9 @@ ${PATTERN_HELP('eject-conf')}`;
     [
       'p',
       'propagate',
-      'mark propagate true in the config file, so that component.json configs will be merge with workspace configs',
+      'mark propagate true in the config file, so that component.json configs will be merged with workspace configs',
     ],
-    ['o', 'override', 'override file if exist'],
+    ['o', 'override', 'override the file if it exists'],
   ] as CommandOptions;
 
   constructor(private workspace: Workspace) {}
