@@ -9,6 +9,12 @@ import { ServiceHandlerContext as EnvContext } from './services/service-handler-
 import type { Env } from './env-interface';
 import type { EnvsRegistry, ServicesRegistry } from './environments.main.runtime';
 
+/**
+ * the file that defines the env instance. a component containing such a file is an env by
+ * definition (symmetric to how apps are detected by their `*.bit-app.*` files).
+ */
+export const BIT_ENV_PATTERN = '*.bit-env.*';
+
 export class EnvPlugin implements PluginDefinition {
   constructor(
     private envSlot: EnvsRegistry,
@@ -18,7 +24,7 @@ export class EnvPlugin implements PluginDefinition {
     private harmony: Harmony
   ) {}
 
-  pattern = '*.bit-env.*';
+  pattern = BIT_ENV_PATTERN;
 
   runtimes = [MainRuntime.name];
 
