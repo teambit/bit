@@ -202,9 +202,7 @@ export class BitMap {
     const allVersions = Object.keys(config).filter((id) => id.startsWith(`${aspectId.toStringWithoutVersion()}@`));
     if (allVersions.length > 1) {
       throw new BitError(
-        `error: the same aspect ${
-          aspectId.toStringWithoutVersion
-        } configured multiple times for "${componentId.toString()}"\n${allVersions.join('\n')}`
+        `error: the same aspect ${aspectId.toStringWithoutVersion()} configured multiple times for "${componentId.toString()}"\n${allVersions.join('\n')}`
       );
     }
     return allVersions.length === 1 ? allVersions[0] : undefined;

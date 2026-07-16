@@ -49,7 +49,7 @@ ${COMPONENT_PATTERN_HELP}`,
     [
       'n',
       'alias <string>',
-      "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote",
+      "relevant when the specified lane is a remote lane. create a local alias for the lane (doesn't affect the lane's name on the remote)",
     ],
     ['', 'verbose', 'display detailed information about components that legitimately were not switched'],
     ['j', 'json', 'return the output as JSON'],

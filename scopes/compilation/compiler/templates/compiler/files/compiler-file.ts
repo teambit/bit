@@ -18,7 +18,7 @@ export class ${namePascalCase} implements Compiler {
     constructor(readonly id: string, readonly distDir, private compiler: CompilerMain) {}
 
     /**
-     * Detemines whether unsupported files (such as assets)
+     * Determines whether unsupported files (such as assets)
      * should be copied by Compiler aspect into the 'dist' directory
      */
     shouldCopyNonSupportedFiles = true;
@@ -52,7 +52,7 @@ export class ${namePascalCase} implements Compiler {
     }
 
     /* This is optional but recommended.
-    Not using it will require consumers of your compiler to use two APIs and have two depndencies
+    Not using it will require consumers of your compiler to use two APIs and have two dependencies
     to their Envs - your compiler
     */
     createTask() {

@@ -3,7 +3,7 @@ export type GenerateExternalsOptions = {
 };
 
 /**
- * Get's a list of dependencies and create an externals object out of them
+ * Gets a list of dependencies and create an externals object out of them
  * @param dependencies
  * @param options
  * @returns

@@ -52,7 +52,7 @@ installs dependencies and configures the workspace for immediate development.`;
     [
       '',
       'load-from <path-to-template>',
-      'local path to the workspace containing the template. Helpful during a development of a workspace-template',
+      'local path to the workspace containing the template. Helpful during the development of a workspace-template',
     ],
     [
       'c',

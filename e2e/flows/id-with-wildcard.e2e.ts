@@ -31,7 +31,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard does not match any component', () => {
         it('should not tag any component', () => {
           const output = helper.general.runWithTryCatch('bit tag "none/*"');
-          expect(output).to.have.string('unable to find any matching for "none/*" pattern');
+          expect(output).to.have.string('unable to find any component matching the "none/*" pattern');
         });
       });
       describe('when wildcard match some of the components', () => {
