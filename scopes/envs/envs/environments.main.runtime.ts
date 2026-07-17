@@ -824,12 +824,6 @@ export class EnvsMain {
       });
 
       if (matchedEntry?.id) return matchedEntry?.id;
-
-      // the env is configured via teambit.envs/envs but has no matching aspect entry (e.g. it was
-      // not installed/loaded yet, so no versioned entry was recorded). return the configured id
-      // rather than falling back to the default env below, so callers - "bit show", NonLoadedEnv
-      // detection, install - see the actually-configured env. this mirrors getEnvId's fallback.
-      return ComponentID.fromString(envIdFromEnvsConfig as string);
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
