@@ -5,15 +5,15 @@
  * How it works: mocha's junit reports don't capture before/after-hook time (where ~85% of our
  * e2e wall-clock goes), so per-file durations can't be read from any report directly. Instead,
  * this script derives them from data CircleCI does have:
- *   1. For each recent successful `e2e_test` job, every parallel node's total run time, and the
- *      exact list of files that ran on it (printed in the node's mocha command line).
+ *   1. For each recent completed `e2e_test` job, every successful parallel node's total run time,
+ *      and the exact list of files that ran on it (printed in the node's mocha command line).
  *   2. Each node is one equation: node_wall_time = fixed_overhead + sum(duration of its files).
  *      File-to-node assignments vary across jobs/branches, so collecting many jobs yields an
  *      overdetermined system, solved here with non-negative least squares (coordinate descent),
  *      lightly regularized toward a hook-count-based prior for files the data can't separate.
  *
  * Usage: node scripts/generate-e2e-timings.js [--jobs=N] [--prior=hooks|manifest] [--branch=NAME]
- *   --jobs=N           how many recent successful e2e_test jobs to learn from (default 30)
+ *   --jobs=N           how many recent completed e2e_test jobs to learn from (default 30)
  *   --branch=NAME      learn only from pipelines of this branch. use when a branch changes the
  *                      cost profile of many suites (weights averaged with other branches' runs
  *                      would under-predict them, unbalancing the split on that branch).
@@ -61,7 +61,11 @@ async function findRecentE2eJobs() {
       const workflows = (await getJson(`https://circleci.com/api/v2/pipeline/${pipeline.id}/workflow`)).items;
       for (const workflow of workflows.filter((w) => w.name === 'build_and_test')) {
         const wfJobs = (await getJson(`https://circleci.com/api/v2/workflow/${workflow.id}/job`)).items;
-        const e2eJob = wfJobs.find((j) => j.name === 'e2e_test' && j.status === 'success' && j.job_number);
+        // failed jobs are usable too: fetchNodeObservations only reads nodes that succeeded,
+        // so a job where a single node flaked still contributes 39 valid equations
+        const e2eJob = wfJobs.find(
+          (j) => j.name === 'e2e_test' && (j.status === 'success' || j.status === 'failed') && j.job_number
+        );
         if (e2eJob) jobs.push(e2eJob.job_number);
       }
     }
@@ -154,7 +158,7 @@ function solve(observations, files) {
 }
 
 async function main() {
-  console.error('finding recent successful e2e_test jobs...');
+  console.error('finding recent completed e2e_test jobs...');
   const jobNumbers = await findRecentE2eJobs();
   console.error(`collecting node data from ${jobNumbers.length} jobs...`);
   const observations = [];
