@@ -90,6 +90,10 @@ export class CompilerMain {
    * find the compiler configured on the workspace and ask for the dist folder path.
    */
   getRelativeDistFolder(component: Component, environment?: Environment): string {
+    // `environment` is an optional pass-through of the component's already-resolved env (same value
+    // as getOrCalculateEnv below). callers that already have it - e.g. addMissingDistsIssue, which
+    // resolved it for the compiler check - pass it to avoid a second resolution and to keep both
+    // checks on the same env instance. it is not an env override.
     const env = environment || this.envs.getOrCalculateEnv(component).env;
     const compilerInstance: Compiler | undefined = env.getCompiler?.();
     if (!compilerInstance || !compilerInstance.getDistDir) return DEFAULT_DIST_DIRNAME;
