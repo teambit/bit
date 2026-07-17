@@ -20,6 +20,12 @@ import { TrackerAspect } from './tracker.aspect';
 export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };
 
 /**
+ * upper bound for the best-effort remote collision check. it's only an early warning, so it's
+ * better to skip it than to make the user wait on an unresponsive remote.
+ */
+const REMOTE_COLLISION_CHECK_TIMEOUT_MS = 5000;
+
+/**
  * this is for "bit add", where some data, such as "componentName" are not necessarily known
  */
 export type TrackData = {
@@ -101,21 +107,14 @@ export class TrackerMain {
    * best-effort early warning: if any of the just-added/created components share an id with a
    * component that already exists on the remote scope, let the user know now — before they invest
    * work and hit a wall at export. fully non-blocking: the remote check swallows offline / no-access
-   * / scope-not-found errors, and the whole method is wrapped so it can never fail an add/create.
+   * / scope-not-found errors, is bounded by a timeout so a stalled remote can't delay the command,
+   * and the whole method is wrapped so it can never fail an add/create.
    */
   async warnAboutRemoteIdCollisions(ids: ComponentID[]): Promise<void> {
     // `shouldWriteToConsole` (not `isJsonFormat`) is the signal that reflects the CLI "--json" flag.
     if (!ids.length || !legacyLogger.shouldWriteToConsole) return;
     try {
-      const idsOnRemote = (
-        await pMapPool(
-          ids,
-          async (id) => ((await this.workspace.scope.isComponentExistsOnRemote(id)) ? id : undefined),
-          {
-            concurrency: concurrentComponentsLimit(),
-          }
-        )
-      ).filter((id): id is ComponentID => Boolean(id));
+      const idsOnRemote = await this.getIdsExistingOnRemote(ids);
       if (!idsOnRemote.length) return;
       const list = idsOnRemote.map((id) => formatItem(id.toStringWithoutVersion())).join('\n');
       const example = idsOnRemote[0];
@@ -127,6 +126,26 @@ if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bi
     } catch {
       // never let an early-warning break "bit add" / "bit create".
     }
+  }
+
+  /**
+   * the remote calls have no request-level timeout of their own (and http retries for up to a
+   * minute), so a stalled remote would otherwise keep "bit add"/"bit create" waiting. race the
+   * checks against a timeout and simply skip the warning if the remote is too slow to answer.
+   */
+  private async getIdsExistingOnRemote(ids: ComponentID[]): Promise<ComponentID[]> {
+    const checkAll = pMapPool(
+      ids,
+      async (id) => ((await this.workspace.scope.isComponentExistsOnRemote(id)) ? id : undefined),
+      { concurrency: concurrentComponentsLimit() }
+    ).then((results) => results.filter((id): id is ComponentID => Boolean(id)));
+
+    const skipIfTooSlow = new Promise<ComponentID[]>((resolve) => {
+      const timer = setTimeout(() => resolve([]), REMOTE_COLLISION_CHECK_TIMEOUT_MS);
+      timer.unref(); // this timer should never keep the process alive on its own
+    });
+
+    return Promise.race([checkAll, skipIfTooSlow]);
   }
 
   async addEnvToConfig(env: string, config: { [aspectName: string]: any }) {
