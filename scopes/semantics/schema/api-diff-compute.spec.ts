@@ -10,6 +10,8 @@ import {
   UnImplementedSchema,
   UnresolvedSchema,
   DocSchema,
+  FunctionLikeSchema,
+  InferenceTypeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import { ComponentID } from '@teambit/component-id';
 import { computeAPIDiff, ImpactAssessor, DEFAULT_IMPACT_RULES } from '@teambit/semantics.entities.semantic-schema-diff';
@@ -461,5 +463,43 @@ describe('SchemaMain.computeAPIDiff schema sourcing', () => {
     );
     expect(result?.status).to.equal('COMPUTED');
     expect(extracted).to.equal(0);
+  });
+});
+
+describe('computeAPIDiff self-referential returnType (degraded extraction)', () => {
+  // Repro of a real artifact: a component fn `Checkbox` extracted while React types were unresolved.
+  // quickinfo (and thus the stored signature) said `…): any`, but the extractor's definition-hunt
+  // resolved the function's own name and stored returnType = TypeRefSchema('Checkbox'). The diff
+  // must trust the signature in that case — showing "React.JSX.Element → Checkbox" while the
+  // signature snippet right above it shows "…): any" reads as nonsense.
+  const makeFn = (returnType: SchemaNode, signatureReturn: string) =>
+    new FunctionLikeSchema(
+      loc,
+      'Checkbox',
+      [],
+      returnType,
+      `function Checkbox(props: CheckboxProps): ${signatureReturn}`,
+      []
+    );
+
+  it('should prefer the signature return annotation when the returnType node is a self-reference', () => {
+    const base = makeSchema([makeFn(new InferenceTypeSchema(loc, 'React.JSX.Element'), 'React.JSX.Element')]);
+    const compare = makeSchema([makeFn(new TypeRefSchema(loc, 'Checkbox'), 'any')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+
+    const fact = result.publicChanges[0]?.changes?.find((c) => c.changeKind === 'return-type-changed');
+    expect(fact, 'expected a return-type-changed fact').to.exist;
+    expect(fact?.from).to.equal('React.JSX.Element');
+    expect(fact?.to).to.equal('any');
+  });
+
+  it('should keep the node rendering when a self-named return type agrees with the signature', () => {
+    // legit pattern: function merged with a same-named interface, genuinely returning `Checkbox`.
+    const base = makeSchema([makeFn(new InferenceTypeSchema(loc, 'React.JSX.Element'), 'React.JSX.Element')]);
+    const compare = makeSchema([makeFn(new TypeRefSchema(loc, 'Checkbox'), 'Checkbox')]);
+    const result = computeAPIDiff(base, compare, makeAssessor());
+
+    const fact = result.publicChanges[0]?.changes?.find((c) => c.changeKind === 'return-type-changed');
+    expect(fact?.to).to.equal('Checkbox');
   });
 });

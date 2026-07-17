@@ -31,6 +31,23 @@ import { tagParser } from './transformers/utils/jsdoc-to-doc-schema';
 import { Identifier } from './identifier';
 import { ExportIdentifier } from './export-identifier';
 
+/** TS keyword/intrinsic types — an inferred type string that IS one of these has no definition to hunt for. */
+const KEYWORD_TYPE_STRINGS = new Set([
+  'any',
+  'unknown',
+  'never',
+  'void',
+  'undefined',
+  'null',
+  'boolean',
+  'string',
+  'number',
+  'bigint',
+  'symbol',
+  'object',
+  'this',
+]);
+
 export class SchemaExtractorContext {
   /**
    * list of all declared identifiers (exported and internal) by filename
@@ -614,6 +631,26 @@ export class SchemaExtractorContext {
   }
 
   /**
+   * whether the definition span falls inside the node's own source span — i.e. the "definition"
+   * tsserver found for the node is (part of) the node itself, so following it for type resolution
+   * would only produce a self-reference (e.g. a function's name resolving to the function).
+   */
+  private isDefWithinNode(node: Node, definition: protocol.FileSpanWithContext) {
+    if (definition.file !== node.getSourceFile().fileName) return false;
+    const sourceFile = node.getSourceFile();
+    const start = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+    const end = sourceFile.getLineAndCharacterOfPosition(node.getEnd());
+    // protocol locations are 1-based; getLineAndCharacterOfPosition is 0-based.
+    const afterStart =
+      definition.start.line > start.line + 1 ||
+      (definition.start.line === start.line + 1 && definition.start.offset >= start.character + 1);
+    const beforeEnd =
+      definition.end.line < end.line + 1 ||
+      (definition.end.line === end.line + 1 && definition.end.offset <= end.character + 1);
+    return afterStart && beforeEnd;
+  }
+
+  /**
    * resolve a type by a node and its identifier.
    */
   async resolveType(node: Node & { type?: TypeNode }, typeStr: string): Promise<SchemaNode> {
@@ -630,13 +667,24 @@ export class SchemaExtractorContext {
       return this.computeSchema(node.type);
     }
 
+    // a keyword inferred type can never be a named definition — skip the definition hunt below,
+    // which would resolve the DECLARATION's own name and mint a self-referential TypeRef. seen in
+    // the wild when inference degrades (unresolved React types): a component fn `Checkbox` whose
+    // quickinfo said `: any` got a returnType of `TypeRefSchema('Checkbox')` — i.e. "returns itself".
+    if (KEYWORD_TYPE_STRINGS.has(typeStr)) {
+      return this.unknownExactType(node, location, typeStr);
+    }
+
     const definition = await this.getDefinition(node);
 
     if (!definition) {
       return this.unknownExactType(node, location, typeStr);
     }
 
-    if (this.isDefInSameLocation(node, definition)) {
+    // same-location check catches the exact self-reference; the containment check catches the
+    // common miss where the definition span starts at the declaration's NAME while getLocation()
+    // points at the declaration start (e.g. after `export function `) — still a self-reference.
+    if (this.isDefInSameLocation(node, definition) || this.isDefWithinNode(node, definition)) {
       return this.unknownExactType(node, location, typeStr);
     }
 

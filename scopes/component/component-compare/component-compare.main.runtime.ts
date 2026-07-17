@@ -273,10 +273,11 @@ export class ComponentCompareMain {
     // never persist a result that can still change: `null` (snaps couldn't load), FAILED (schema
     // retrieval threw) and NOT_BUILT (snap not yet built) must recompute next call; NO_EXTRACTOR/
     // DISABLED are stable env properties and safe to cache (see `isApiDiffCacheable`).
-    // the `:v2` namespace keeps pre-availability-aware results from being served.
+    // the version namespace invalidates older computed results on engine changes:
+    // v2 — availability-aware results; v3 — self-referential-returnType display fix.
     return this.getOrCompute(
       this.apiDiffInflight,
-      `component-compare:api-diff:v2:${baseIdStr}|${compareIdStr}`,
+      `component-compare:api-diff:v3:${baseIdStr}|${compareIdStr}`,
       () => this.computeAPIDiff(baseIdStr, compareIdStr),
       (v) => v !== null && ComponentCompareMain.isApiDiffCacheable(v)
     );
