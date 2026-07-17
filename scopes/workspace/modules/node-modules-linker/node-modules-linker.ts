@@ -251,8 +251,15 @@ export default class NodeModuleLinker {
     // relative imports), breaking every subsequent component load. point it at the compiled dist
     // location instead. the exception is the default empty-env - it has no compiler by design, so
     // its components are used as-source and the source main is the correct one.
-    const envId = legacyComp.extensions.findCoreExtension('teambit.envs/envs')?.data?.id;
-    const isCompilerLessEnv = envId?.split('@')[0] === 'teambit.harmony/empty-env';
+    // careful though: the empty-env in the data may be just a fallback for a configured env that
+    // failed to load (validateEnvId of the envs aspect detects the same mismatch) - in that case
+    // the component does have a compiler and its main must not stay a source file.
+    const envsExt = legacyComp.extensions.findCoreExtension('teambit.envs/envs');
+    const envId = envsExt?.data?.id;
+    const configuredEnvId = envsExt?.config?.env?.split('@')[0];
+    const isCompilerLessEnv =
+      envId?.split('@')[0] === 'teambit.harmony/empty-env' &&
+      (!configuredEnvId || configuredEnvId === 'teambit.harmony/empty-env');
     const mainFile = packageJson.packageJsonObject.main;
     if (
       !isCompilerLessEnv &&
