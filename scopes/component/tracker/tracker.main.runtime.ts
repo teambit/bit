@@ -123,8 +123,9 @@ export class TrackerMain {
 ${list}
 if you meant to work on the existing component, remove your local one and run "bit import ${example.toStringWithoutVersion()}".
 if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bit rename ${example.fullName} <new-name>" (or "bit rename ${example.fullName} ${example.fullName} --scope <other-scope>" to change only the scope).`);
-    } catch {
-      // never let an early-warning break "bit add" / "bit create".
+    } catch (err) {
+      // never let an early-warning break "bit add" / "bit create", but keep it diagnosable.
+      this.logger.debug(`warnAboutRemoteIdCollisions: skipping the remote-collision check, got an error: ${err}`);
     }
   }
 
@@ -146,12 +147,18 @@ if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bi
       return results.filter((id): id is ComponentID => Boolean(id));
     })();
 
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const skipIfTooSlow = new Promise<ComponentID[]>((resolve) => {
-      const timer = setTimeout(() => resolve([]), REMOTE_COLLISION_CHECK_TIMEOUT_MS);
+      timer = setTimeout(() => resolve([]), REMOTE_COLLISION_CHECK_TIMEOUT_MS);
       timer.unref(); // this timer should never keep the process alive on its own
     });
 
-    return Promise.race([checkAll, skipIfTooSlow]);
+    try {
+      return await Promise.race([checkAll, skipIfTooSlow]);
+    } finally {
+      // clear the timer when the check wins the race, so no callback stays scheduled.
+      if (timer) clearTimeout(timer);
+    }
   }
 
   async addEnvToConfig(env: string, config: { [aspectName: string]: any }) {

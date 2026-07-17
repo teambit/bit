@@ -1208,8 +1208,10 @@ export class ScopeMain implements ComponentFactory {
       const remote = await resolvedRemotes.resolve(id.scope);
       const componentFromRemote = await remote.show(id.changeVersion(undefined));
       return Boolean(componentFromRemote);
-    } catch {
+    } catch (err) {
       // offline / scope-not-found / no-access / component-not-found — all mean "don't warn".
+      // trace at debug level so unexpected failures are still diagnosable via the debug.log.
+      this.logger.debug(`isComponentExistsOnRemote: skipping check for ${id.toString()}, got an error: ${err}`);
       return false;
     }
   }
