@@ -1,7 +1,7 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime, formatItem } from '@teambit/cli';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import path from 'path';
 import type { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
@@ -140,7 +140,8 @@ if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bi
       const results = await pMapPool(
         ids,
         async (id) => ((await this.workspace.scope.isComponentExistsOnRemote(id, remotes)) ? id : undefined),
-        { concurrency: concurrentComponentsLimit() }
+        // `remote.show()` is network I/O, so bound it by the fetch limit (not the component limit).
+        { concurrency: concurrentFetchLimit() }
       );
       return results.filter((id): id is ComponentID => Boolean(id));
     })();
