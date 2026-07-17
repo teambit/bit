@@ -62,9 +62,25 @@ type ViewMode = 'code' | 'preview' | 'docs' | 'dependencies' | 'tests' | 'config
 type GroupBy = 'scope' | 'namespace' | 'status' | 'none';
 
 function scrollInPane(pane: HTMLDivElement, el: Element) {
-  const elRect = el.getBoundingClientRect();
-  const paneRect = pane.getBoundingClientRect();
-  pane.scrollTo({ top: elRect.top - paneRect.top + pane.scrollTop, behavior: 'instant' });
+  const scrollOnce = () => {
+    const elRect = el.getBoundingClientRect();
+    const paneRect = pane.getBoundingClientRect();
+    const drift = elRect.top - paneRect.top;
+    pane.scrollTo({ top: drift + pane.scrollTop, behavior: 'instant' });
+    return Math.abs(drift);
+  };
+  scrollOnce();
+  // settle passes: sections use `content-visibility: auto`, so content above the target may have
+  // been laid out from intrinsic-size estimates on the first measure; scrolling forces real layout,
+  // shifting the target. Re-measure a few frames until it stops moving.
+  let passes = 0;
+  const settle = () => {
+    if (!pane.isConnected || !el.isConnected) return;
+    const drift = scrollOnce();
+    passes += 1;
+    if (drift > 2 && passes < 4) requestAnimationFrame(settle);
+  };
+  requestAnimationFrame(settle);
 }
 
 function waitForElementInPane(pane: HTMLDivElement, selector: string, timeoutMs = 5000): Promise<Element | null> {
@@ -149,12 +165,12 @@ function LaneCompareBlankState({
   released: boolean;
 }) {
   const title = released ? `This lane has been released to ${targetLane}` : 'No changes to compare';
-  const subtitle =
-    componentCount === 0
-      ? 'Both lanes point to the same components.'
-      : released
-        ? `${targetLane} already includes all ${componentCount} components from ${sourceLane} — there's nothing left to compare.`
-        : `${sourceLane} and ${targetLane} point to the same versions across ${componentCount} components.`;
+  let subtitle = 'Both lanes point to the same components.';
+  if (componentCount > 0) {
+    subtitle = released
+      ? `${targetLane} already includes all ${componentCount} components from ${sourceLane} — there's nothing left to compare.`
+      : `${sourceLane} and ${targetLane} point to the same versions across ${componentCount} components.`;
+  }
   return (
     <div className={styles.blankState} role="status">
       <div className={styles.blankStateIcon} aria-hidden="true">

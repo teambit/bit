@@ -75,6 +75,13 @@ export function useBulkPagedQuery<TItem>({
     variables: { pairs: stablePairs, offset: 0, limit: pageSize, host },
     skip,
     notifyOnNetworkStatusChange: true,
+    // the workspace UI's Apollo client defaults watchQuery to `network-only` (live workspace data must
+    // not go stale), which would replay page 1 AND the whole fetchMore chain on every remount of the
+    // provider (tab navigation, parent remounts) — for a large lane that's the full bulk payload again.
+    // this query is safe to cache: the pairs pin exact snap hashes, so a cached result can never be
+    // stale. `nextFetchPolicy` keeps it cache-first after the first resolution too.
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
   const results: Array<TItem | null> = data?.getHost?.[resultField] ?? EMPTY_RESULTS;

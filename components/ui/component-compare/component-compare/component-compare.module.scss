@@ -158,6 +158,14 @@ $inline-code-font: 'JetBrains Mono', ui-monospace, monospace;
   margin-bottom: 2px;
   --component-header-height: 44px;
 
+  // let the browser skip layout+paint of offscreen sections entirely — with dozens of mounted diff
+  // panels the pane's DOM is enormous, and without this every scroll frame pays for all of it.
+  // `auto` intrinsic-size remembers each section's real height once rendered, so the scrollbar
+  // stays stable; 220px is only the pre-first-render estimate. Geometry queries (the sidebar's
+  // scroll-to-component) force on-demand layout of a skipped section, so anchors keep working.
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -275,24 +283,36 @@ $inline-code-font: 'JetBrains Mono', ui-monospace, monospace;
   gap: 8px;
 }
 
+// placeholder for a not-yet-mounted component section: min-height ≈ the section's
+// contain-intrinsic-size estimate minus the header, so the skeleton→content swap barely shifts
+// layout and the first viewport holds only a handful of sections (each queues a staggered mount).
+.sectionPlaceholder {
+  min-height: 176px;
+  justify-content: center;
+}
+
+// shimmer rides a transform-animated pseudo-element over a static background: `transform` runs on
+// the compositor, so hundreds of bars animate without any per-frame main-thread paint — animating
+// `background-position` instead repaints every bar every frame and visibly drops the page framerate.
 .skeletonBar {
+  position: relative;
+  overflow: hidden;
   height: 12px;
-  background: linear-gradient(
-    90deg,
-    var(--surface-neutral-color, #f0f2f5) 25%,
-    #{$inline-border-color} 50%,
-    var(--surface-neutral-color, #f0f2f5) 75%
-  );
-  background-size: 200% 100%;
-  animation: inline-shimmer 1.5s ease-in-out infinite;
+  background: var(--surface-neutral-color, #f0f2f5);
   border-radius: 4px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, #{$inline-border-color}, transparent);
+    transform: translateX(-100%);
+    animation: inline-shimmer 1.5s ease-in-out infinite;
+  }
 }
 
 @keyframes inline-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
   100% {
-    background-position: -200% 0;
+    transform: translateX(100%);
   }
 }

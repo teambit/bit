@@ -1243,9 +1243,14 @@ please create a new lane instead, which will include all components of this lane
 
     const laneComponents = lane.components;
     const workspace = this.workspace;
-    const bitIdsFromBitmap = workspace ? workspace.consumer.bitMap.getAllBitIdsFromAllLanes() : [];
+    // the bitmap filter only makes sense for the lane currently checked out — it keeps that view
+    // aligned with what's actually in the workspace. any OTHER lane lives only in the local scope:
+    // its components are never in the bitmap, so filtering by it empties the lane (a fully-fetched
+    // lane renders as "no components" in the overview) even though every object is available.
+    const isCurrentLane = Boolean(workspace && this.getCurrentLaneId()?.isEqual(lane.id));
+    const bitIdsFromBitmap = workspace && isCurrentLane ? workspace.consumer.bitMap.getAllBitIdsFromAllLanes() : [];
 
-    const filteredComponentIds = workspace
+    const filteredComponentIds = isCurrentLane
       ? laneComponents.filter((laneComponent) =>
           bitIdsFromBitmap.some((bitmapComponentId) => bitmapComponentId.isEqualWithoutVersion(laneComponent.id))
         )

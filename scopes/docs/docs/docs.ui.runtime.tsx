@@ -125,6 +125,9 @@ export class DocsUI {
       // pair overflows. `docsCompareContainStyles.contain` hard-caps the width and forces the two panes
       // to share it (see the scss for details) — external component, so we target its panes by class.
       element: <div className={docsCompareContainStyles.contain}>{docs.getDocsCompare()}</div>,
+      // lazy: OverviewCompare mounts base+compare docs iframes, each loading the full env overview
+      // bundle on mount (even under `display: none`) — deferred until the panel is actually visible.
+      lazy: true,
     });
     docs.registerPreviewSandbox((manager, componentModel) => {
       if (componentModel?.host === 'teambit.scope/scope') {

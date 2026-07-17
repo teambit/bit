@@ -71,14 +71,12 @@ function ComponentApiDiffContainer({
   baseId,
   compareId,
   selectedExport,
-  onApiEntries,
 }: {
   entry: ComponentDiffEntry;
   /** versioned ids precomputed by the parent (see `ApiDiffEntry`) so they aren't re-derived per render. */
   baseId?: string;
   compareId?: string;
   selectedExport?: string;
-  onApiEntries?: (componentId: string, entries: ApiEntry[]) => void;
 }) {
   const componentIdStr = entry.componentId.toStringWithoutVersion();
 
@@ -88,20 +86,6 @@ function ComponentApiDiffContainer({
   const providerLoading = apiData?.loading ?? true;
   const result = compareId ? apiData?.apiDiffFor(compareId) : undefined;
   const loading = result === undefined && providerLoading;
-
-  // feed changed public exports to the host's sidebar tree (nested under the component, exactly like
-  // files in code mode). the sidebar's scroll-sync then targets the `data-file-id="<componentId>:
-  // <exportName>"` anchors rendered by ApiChangeBlock. once a pair's result is known we always register
-  // — the changed exports when there are any, otherwise an empty list — so the host can tell "analyzed,
-  // no API changes" (hide it, like code does) from "still analyzing" (unregistered).
-  React.useEffect(() => {
-    if (!onApiEntries || loading) return;
-    const entries =
-      result && result.status === 'COMPUTED'
-        ? result.publicChanges.map((c) => ({ name: c.exportName, status: REGISTRY_STATUS[c.status] || 'MODIFIED' }))
-        : [];
-    onApiEntries(componentIdStr, entries);
-  }, [result, loading, componentIdStr, onApiEntries]);
 
   return (
     <ComponentApiDiffSection
@@ -217,7 +201,7 @@ function useApiDiffAggregate(entries: ApiDiffEntry[], queried: ApiDiffEntry[]) {
     [apiDiffFor]
   );
 
-  return { totals, loadedCount, allLoaded, analyzedCount, stable, isVisible };
+  return { totals, loadedCount, allLoaded, analyzedCount, stable, isVisible, apiDiffFor };
 }
 
 /** pure rendering of the lane API view — runs under `ApiDiffDataProvider`, reads derived data from `useApiDiffAggregate`. */
@@ -234,7 +218,32 @@ function ApiDiffLaneBody({
   selectedExport?: string;
   onApiEntries?: (componentId: string, entries: ApiEntry[]) => void;
 }) {
-  const { totals, loadedCount, allLoaded, analyzedCount, stable, isVisible } = useApiDiffAggregate(entries, queried);
+  const { totals, loadedCount, allLoaded, analyzedCount, stable, isVisible, apiDiffFor } = useApiDiffAggregate(
+    entries,
+    queried
+  );
+
+  // feed each analyzed component's changed public exports to the host's sidebar tree (nested under the
+  // component, exactly like files in code mode); the sidebar's scroll-sync then targets the
+  // `data-file-id="<componentId>:<exportName>"` anchors rendered by ApiChangeBlock. Once a pair's
+  // result is known we always register — the changed exports when there are any, otherwise an empty
+  // list — so the host can tell "analyzed, no API changes" (hide it, like code does) from "still
+  // analyzing" (unregistered). This must live HERE, not in ComponentApiDiffContainer: a pair that
+  // resolves with no public changes (or fails) flips `isVisible` false on the very render its result
+  // arrives, unmounting the container before a container-local effect could ever report the empty
+  // list — leaving the component stuck in the sidebar with no scroll anchor in the pane.
+  React.useEffect(() => {
+    if (!onApiEntries) return;
+    queried.forEach((e) => {
+      const r = e.compareId ? apiDiffFor?.(e.compareId) : undefined;
+      if (r === undefined) return; // still analyzing — leave unregistered
+      const registered =
+        r && r.status === 'COMPUTED'
+          ? r.publicChanges.map((c) => ({ name: c.exportName, status: REGISTRY_STATUS[c.status] || 'MODIFIED' }))
+          : [];
+      onApiEntries(e.entry.componentId.toStringWithoutVersion(), registered);
+    });
+  }, [queried, apiDiffFor, onApiEntries]);
 
   return (
     <div className={styles.fullView}>
@@ -305,7 +314,6 @@ function ApiDiffLaneBody({
             baseId={e.baseId}
             compareId={e.compareId}
             selectedExport={selectedId === idStr ? selectedExport : undefined}
-            onApiEntries={onApiEntries}
           />
         );
       })}

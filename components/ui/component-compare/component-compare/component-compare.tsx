@@ -558,6 +558,33 @@ export type InlineComponentCompareProps = {
 };
 
 /**
+ * Grants queued lazy mounts one animation frame each. Lazy sections/tabs that enter the viewport in
+ * the same frame would otherwise all mount in a single React commit — and each mount runs real work
+ * (full diff computation, syntax tokenizing, iframe attachment), so a burst of N becomes one
+ * N×-long main-thread task and a visible frame drop. Spreading them one-per-frame keeps every task
+ * short; the skeletons cover the (few-hundred-ms worst case) gap, so it reads as smooth streaming.
+ * Returns a cancel function — callers MUST invoke it on unmount so a queued mount can't fire after.
+ */
+const mountQueue: Array<() => void> = [];
+let mountDrainScheduled = false;
+function scheduleStaggeredMount(fn: () => void): () => void {
+  mountQueue.push(fn);
+  if (!mountDrainScheduled) {
+    mountDrainScheduled = true;
+    requestAnimationFrame(function drain() {
+      const next = mountQueue.shift();
+      if (next) next();
+      if (mountQueue.length > 0) requestAnimationFrame(drain);
+      else mountDrainScheduled = false;
+    });
+  }
+  return () => {
+    const i = mountQueue.indexOf(fn);
+    if (i !== -1) mountQueue.splice(i, 1);
+  };
+}
+
+/**
  * forwardRef + React.memo. Without memo, every parent re-render (e.g. `setViewMode` in lane-compare)
  * re-renders all 10 mounted panels and all their nested tab subtrees — which was the source of the
  * "view-mode switching is slow" feedback. With memo + stable props (lane-compare's `allTabs` array
@@ -604,17 +631,23 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
     useEffect(() => {
       const el = sectionRef.current;
       if (!el) return undefined;
+      let cancelQueuedMount: (() => void) | undefined;
       const observer = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) {
-            setHasBeenVisible(true);
             observer.disconnect();
+            // several sections enter the viewport in the same frame (initial paint, fast scroll);
+            // mounting them all in one commit is a single long task that drops frames. stagger instead.
+            cancelQueuedMount = scheduleStaggeredMount(() => setHasBeenVisible(true));
           }
         },
         { rootMargin: '400px 0px' }
       );
       observer.observe(el);
-      return () => observer.disconnect();
+      return () => {
+        observer.disconnect();
+        cancelQueuedMount?.();
+      };
     }, []);
 
     const headerStyle = accentColor ? ({ '--component-accent': accentColor } as React.CSSProperties) : undefined;
@@ -640,7 +673,10 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
 
         {!baseId && !!compareId && <NewComponentFileRegistrar compareId={compareId} />}
 
-        {!hasBeenVisible && <InlineSkeleton lines={1} />}
+        {/* sized to roughly match the section's contain-intrinsic-size estimate (220px incl. header)
+            so mounting real content produces minimal layout shift, and fewer sections crowd into the
+            first viewport (each one queues a staggered mount). */}
+        {!hasBeenVisible && <InlineSkeleton lines={4} className={styles.sectionPlaceholder} />}
 
         {hasBeenVisible && (
           <InlineContextProvider
@@ -652,7 +688,7 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
           >
             {allTabs
               ? allTabs.map((tab) => (
-                  <DeferredTab key={tab.id} tabId={tab.id}>
+                  <DeferredTab key={tab.id} tabId={tab.id} lazy={tab.lazy}>
                     {tab.element}
                   </DeferredTab>
                 ))
@@ -667,16 +703,54 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
 export const InlineComponentCompare = React.memo(InlineComponentCompareInner);
 
 /**
- * Tab wrapper that just stamps a `data-tab-id` for CSS-driven visibility (rules live in
- * `lane-compare.module.scss`, scoped by `data-view-mode`). Previously gated children on
- * `el.offsetParent !== null` to defer mounting until visible — that turned each view-mode switch
- * into a fresh data-fetch storm because the lazily-mounted panel re-fired all its queries. We now
- * mount all tabs eagerly and rely on Apollo's per-query cache (warmed by the lane-compare
- * pre-fetch) to keep first paint cheap. The `data-tab-id` attribute remains so CSS can hide
- * non-active tabs.
+ * Tab wrapper that stamps a `data-tab-id` for CSS-driven visibility (rules live in
+ * `lane-compare.module.scss`, scoped by `data-view-mode`).
+ *
+ * Non-lazy tabs mount eagerly: an earlier version gated children on `el.offsetParent !== null`,
+ * which UNMOUNTED hidden panels and turned each view-mode switch into a fresh data-fetch storm as
+ * remounted panels re-fired their queries. Eager mounting + Apollo's per-query cache keeps those
+ * cheap.
+ *
+ * `lazy` tabs are the exception — panels whose mounting itself is expensive regardless of CSS
+ * visibility (iframe-based preview/docs load full env preview bundles the moment the iframe hits
+ * the DOM; `display: none` does NOT stop an iframe from loading). Their children mount only when
+ * the wrapper first intersects the viewport. A hidden (`display: none`) wrapper never intersects,
+ * so inactive views mount nothing; activating the view mounts only the panels near the viewport,
+ * and scrolling mounts the rest incrementally. Once mounted, children are never unmounted, so
+ * switching views back is instant and never refetches.
  */
-export function DeferredTab({ tabId, children }: { tabId: string; children: ReactNode }) {
-  return <div data-tab-id={tabId}>{children}</div>;
+export function DeferredTab({ tabId, children, lazy }: { tabId: string; children: ReactNode; lazy?: boolean }) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(!lazy);
+
+  useEffect(() => {
+    if (mounted) return undefined;
+    const el = wrapperRef.current;
+    if (!el) return undefined;
+    let cancelQueuedMount: (() => void) | undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          observer.disconnect();
+          // stagger like sections do: a view switch reveals many lazy panels at once, and mounting
+          // them in one commit is one long task (iframes, in particular, are expensive to attach).
+          cancelQueuedMount = scheduleStaggeredMount(() => setMounted(true));
+        }
+      },
+      { rootMargin: '600px 0px' }
+    );
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      cancelQueuedMount?.();
+    };
+  }, [mounted]);
+
+  return (
+    <div ref={wrapperRef} data-tab-id={tabId}>
+      {mounted ? children : <InlineSkeleton lines={1} />}
+    </div>
+  );
 }
 
 // the inline compare context has no per-version logs; share one empty map rather than allocating a new
@@ -910,9 +984,9 @@ export function ComponentCompareHeader({
   );
 }
 
-function InlineSkeleton({ lines = 3 }: { lines?: number }) {
+function InlineSkeleton({ lines = 3, className }: { lines?: number; className?: string }) {
   return (
-    <div className={styles.skeleton}>
+    <div className={classnames(styles.skeleton, className)}>
       {Array.from({ length: lines }).map((_, i) => (
         <div key={i} className={styles.skeletonBar} style={{ width: `${40 + (i % 3) * 20}%` }} />
       ))}

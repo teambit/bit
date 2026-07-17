@@ -49,6 +49,9 @@ const EXTENSION_TO_LANG: Record<string, string> = {
   graphql: 'graphql',
   gql: 'graphql',
   sql: 'sql',
+  // jest snapshots (`x.spec.ts.snap` / `.snap`) are JS modules (exports[`...`] = `...`), and
+  // `split('.').pop()` reduces every variant to the same `snap` extension.
+  snap: 'javascript',
 };
 
 export function langFromFileName(fileName?: string): string | undefined {

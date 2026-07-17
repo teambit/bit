@@ -37,9 +37,20 @@ export type ComponentCompareNavSlot = SlotRegistry<ComponentCompareNav>;
  */
 const FALLBACK_COMPARE_TABS: TabItem[] = [
   { id: 'inline-code', order: 1, displayName: 'Code', element: React.createElement(InlineCodeCompare) },
-  { id: 'inline-preview', order: 2, displayName: 'Preview', element: React.createElement(InlinePreviewCompare) },
+  // lazy: the preview panel mounts base+compare composition iframes, each pulling the full env
+  // preview bundle the moment it hits the DOM (even under `display: none`) — in a large lane
+  // compare that's hundreds of MB of hidden-iframe traffic starving the visible view.
+  {
+    id: 'inline-preview',
+    order: 2,
+    displayName: 'Preview',
+    element: React.createElement(InlinePreviewCompare),
+    lazy: true,
+  },
   { id: 'inline-deps', order: 4, displayName: 'Dependencies', element: React.createElement(InlineDepsCompare) },
-  { id: 'inline-tests', order: 5, displayName: 'Tests', element: React.createElement(InlineTestsCompare) },
+  // lazy: the tests view isn't even enabled in the lane-compare toolbar today — mounting it per
+  // component only fires its data queries for panels nobody can see.
+  { id: 'inline-tests', order: 5, displayName: 'Tests', element: React.createElement(InlineTestsCompare), lazy: true },
   { id: 'inline-config', order: 6, displayName: 'Configuration', element: React.createElement(InlineConfigCompare) },
 ];
 

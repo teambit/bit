@@ -311,8 +311,18 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
           }));
         },
         id: async (host: ComponentFactory, _args, _context, info) => {
-          const extensionId = info.variableValues.extensionId;
-          return extensionId ? `${host.name}/${extensionId}` : host.name;
+          // suffix the id with the requested host id so data fetched from different hosts (e.g. the
+          // workspace vs the scope during local-vs-scope compare, #9549) normalizes into distinct
+          // Apollo cache entities. A child field resolver can't see its parent's args, so the
+          // requested host is read from the operation's variables — and queries pass it under TWO
+          // names: `$extensionId` (file/artifact/lane-component queries) and `$host` (bulk
+          // compare/api-diff queries). Honoring both keeps the entity id consistent across the
+          // conventions. When this depended on `$extensionId` alone, the same host normalized into
+          // two different entities depending on which query fetched it; every response re-pointed
+          // the `getHost` root ref at its own flavor, orphaning the other's cached fields — which
+          // forced cache-first consumers (the bulk compare pager) into endless refetch loops.
+          const hostId = info.variableValues.extensionId ?? info.variableValues.host;
+          return hostId ? `${host.name}/${hostId}` : host.name;
         },
         name: async (host: ComponentFactory) => {
           return host.name;

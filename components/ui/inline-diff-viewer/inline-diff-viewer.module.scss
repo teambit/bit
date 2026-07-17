@@ -380,23 +380,27 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
   align-items: center;
 }
 
+// shimmer rides a transform-animated pseudo-element over a static background: `transform` runs on
+// the compositor, so many bars animate without any per-frame main-thread paint (animating
+// `background-position` repaints every bar every frame and drops the page framerate).
 .skeleton {
+  position: relative;
+  overflow: hidden;
   border-radius: 4px;
-  background: linear-gradient(
-    90deg,
-    var(--surface-neutral-color, #f0f2f5) 25%,
-    var(--border-medium-color, #e8ecf0) 50%,
-    var(--surface-neutral-color, #f0f2f5) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  background: var(--surface-neutral-color, #f0f2f5);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--border-medium-color, #e8ecf0), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
   100% {
-    background-position: -200% 0;
+    transform: translateX(100%);
   }
 }

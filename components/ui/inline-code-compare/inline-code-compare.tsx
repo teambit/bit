@@ -3,13 +3,7 @@ import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.c
 import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { DiffLoadingSkeleton } from '@teambit/code.ui.inline-diff-viewer';
-import {
-  DiffViewer,
-  computeDiffLines,
-  statsFromItems,
-  type DiffViewMode,
-  type DiffFileStatus,
-} from '@teambit/code.ui.diff-viewer';
+import { DiffViewer, type DiffViewMode, type DiffFileStatus } from '@teambit/code.ui.diff-viewer';
 
 type FileCompareData = { status: string; baseContent?: string; compareContent?: string };
 
@@ -26,7 +20,15 @@ function toDiffStatus(status: string): DiffFileStatus {
 // item in a `minmax(0, ...)` track cannot be widened by its (wide) content, so a long code line can
 // only scroll inside the diff body — it can never push the row, pane, or page horizontally wider.
 const GRID_WRAP: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)' };
-const CELL_WRAP: React.CSSProperties = { minWidth: 0 };
+// `content-visibility: auto` lets the browser skip layout+paint of offscreen file diffs — the rows
+// render fully expanded (no windowing), so a big multi-file section would otherwise pay layout for
+// every line on every scroll frame. `auto` intrinsic-size remembers each file's real height once
+// rendered; 280px is only the pre-first-render estimate.
+const CELL_WRAP: React.CSSProperties = {
+  minWidth: 0,
+  contentVisibility: 'auto',
+  containIntrinsicSize: 'auto 280px',
+};
 
 export function InlineCodeCompare() {
   const diffMode = useDiffMode();
@@ -54,9 +56,11 @@ export function InlineCodeCompare() {
       }
       const oldContent = fileData.baseContent || '';
       const newContent = fileData.compareContent || '';
-      // drop no-op entries (identical content) so only real changes render — matches prior behavior.
-      const stats = statsFromItems(computeDiffLines(oldContent, newContent));
-      if (stats.additions === 0 && stats.deletions === 0) continue;
+      // drop no-op entries so only real changes render. plain string equality, NOT a diff: a full
+      // computeDiffLines() here yields zero additions+deletions exactly when the contents are equal,
+      // but costs a second whole-file diff per file (DiffViewer recomputes internally) — which made
+      // mounting a section a visibly long task.
+      if (oldContent === newContent) continue;
       ready.push({ fileName, status: toDiffStatus(fileData.status), oldContent, newContent });
     }
     return { files: ready, newFiles: pending };
