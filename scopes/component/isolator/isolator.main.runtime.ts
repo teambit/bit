@@ -381,7 +381,10 @@ export class IsolatorMain {
     const host = opts.host || this.componentAspect.getHost();
     this.logger.debug(
       `isolateComponents, ${seeders.join(', ')}. opts: ${JSON.stringify(
-        Object.assign({}, opts, { host: opts.host?.name })
+        // `host` and `originalSeeders` are replaced with a compact representation on purpose: this stringify runs
+        // eagerly (even when debug output is discarded), so serializing them in full would cost CPU on every
+        // isolation and flood the log with a huge line.
+        Object.assign({}, opts, { host: opts.host?.name, originalSeeders: opts.originalSeeders?.length })
       )}`
     );
     const createGraphOpts = pick(opts, ['includeFromNestedHosts', 'host', 'originalSeeders']);
