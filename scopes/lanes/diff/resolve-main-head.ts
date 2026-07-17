@@ -15,12 +15,12 @@ import { compact } from 'lodash';
  * genuinely has no version on main (a real NEW component), never merely because it isn't local.
  */
 export async function getHeadOnMain(scope: ScopeMain, componentId: ComponentID): Promise<string | undefined> {
-  const legacyScope = scope.legacyScope;
-  const modelComponent = await legacyScope.getModelComponentIfExist(componentId);
+  const modelComponent = await scope.getBitObjectModelComponent(componentId);
   if (modelComponent?.head) return modelComponent.head.toString();
-  const scopeName = modelComponent?.scope || componentId.scope;
-  if (!scopeName) return undefined;
-  const remoteRef = await legacyScope.objects.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, scopeName), componentId);
+  const remoteRef = await scope.legacyScope.objects.remoteLanes.getRef(
+    LaneId.from(DEFAULT_LANE, componentId.scope),
+    componentId
+  );
   return remoteRef?.toString() || undefined;
 }
 

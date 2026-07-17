@@ -51,7 +51,17 @@ const FALLBACK_COMPARE_TABS: TabItem[] = [
   // lazy: the tests view isn't even enabled in the lane-compare toolbar today — mounting it per
   // component only fires its data queries for panels nobody can see.
   { id: 'inline-tests', order: 5, displayName: 'Tests', element: React.createElement(InlineTestsCompare), lazy: true },
-  { id: 'inline-config', order: 6, displayName: 'Configuration', element: React.createElement(InlineConfigCompare) },
+  // lazy: the config panel fires two `no-cache` aspect queries per component the moment it mounts —
+  // eager-mounted (CSS-hidden) panels turned that into avoidable network work for users who never
+  // open the Configuration view. The config sidebar tree is unaffected: it's fed centrally from the
+  // bulk compare data (RegistryFeeder), not by this panel.
+  {
+    id: 'inline-config',
+    order: 6,
+    displayName: 'Configuration',
+    element: React.createElement(InlineConfigCompare),
+    lazy: true,
+  },
 ];
 
 export type ComponentCompareTabSlot = SlotRegistry<TabItem | TabItem[]>;

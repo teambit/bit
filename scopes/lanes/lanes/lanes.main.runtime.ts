@@ -14,16 +14,16 @@ import { OutsideWorkspaceError, WorkspaceAspect } from '@teambit/workspace';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
 import {
+  LaneDiffCache,
   LaneDiffCmd,
   LaneDiffGenerator,
   LaneHistoryDiffCmd,
+  classifyVersionChanges,
   getHeadOnMain,
   importMainHeads,
 } from '@teambit/lanes.modules.diff';
 import type { Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
 import { NoCommonSnap } from '@teambit/legacy.scope';
-import { CACHE_ROOT } from '@teambit/legacy.constants';
-import path from 'path';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -179,26 +179,6 @@ export type LaneDiffStatusOptions = {
   prewarmCaches?: boolean;
 };
 
-type SerializedSnapsDistance = {
-  unrelated?: boolean;
-  isUpToDate: boolean;
-  commonSnapHash?: string;
-  snapsOnSourceHashes: string[];
-  snapsOnTargetHashes: string[];
-};
-
-type SerializedComponentStatus = {
-  componentIdStr: string;
-  sourceHead: string;
-  targetHead?: string;
-  baseSource?: DiffBaseSource;
-  changes?: ChangeType[];
-  changeType?: ChangeType;
-  upToDate?: boolean;
-  unrelated?: boolean;
-  snapsDistance?: SnapsDistanceObj;
-};
-
 export type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 
 export type LaneDiffStatus = {
@@ -232,47 +212,16 @@ export class LanesMain {
     private install: InstallMain
   ) {}
 
-  private persistedMemosLoad?: Promise<void>;
-
   /**
-   * Lazily load all disk-persisted lane-diff memos, exactly once. Best-effort cache warming: each
-   * loader self-catches, so failure yields a cold-but-correct cache. Awaited at the lane-diff entry
-   * points rather than run in the constructor — construction stays synchronous and side-effect-free,
-   * and commands that never diff lanes (status, tag, export, …) pay nothing.
+   * disk-persisted memo layer for the lane-diff computation (snaps-distance, change-types and the
+   * top-level result). extracted to its own class — see `LaneDiffCache` in lanes/diff.
    */
-  private ensureMemosLoaded(): Promise<void> {
-    if (!this.persistedMemosLoad) {
-      this.persistedMemosLoad = Promise.all([
-        this.loadSnapsDistanceMemoFromDisk(),
-        this.loadApiDiffMemoFromDisk(),
-        this.loadChangeTypesMemoFromDisk(),
-        this.loadDiffStatusMemoFromDisk(),
-      ]).then(() => {});
-    }
-    return this.persistedMemosLoad;
+  private _laneDiffCache?: LaneDiffCache;
+  private get laneDiffCache(): LaneDiffCache {
+    if (!this._laneDiffCache) this._laneDiffCache = new LaneDiffCache(this.logger);
+    return this._laneDiffCache;
   }
 
-  /**
-   * Snap distance is purely a function of (componentId, sourceHead, targetHead) — all immutable
-   * hashes — so it's safe to memoize indefinitely. Persisted to disk so the *first* lane-diff call
-   * after a server start hits a warm cache (cold compute is the dominant latency: ~1.1s for 30
-   * components walking the snap graph + cold imports). LRU-bounded to keep the file small.
-   */
-  private snapsDistanceMemo = new Map<string, SerializedSnapsDistance>();
-  private snapsDistanceMemoDirty = false;
-  private snapsDistanceMemoSaveTimer: NodeJS.Timeout | undefined;
-  private static SNAPS_DISTANCE_MEMO_MAX = 5000;
-  private static SNAPS_DISTANCE_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-snaps-distance.json');
-
-  /**
-   * Memo for API-diff `hasChanges` per `(baseId, compareId)` pair. Schema extraction is the single
-   * most expensive per-component step (cold ~5–15s per component) — but its `hasChanges` result is
-   * deterministic on the immutable hashes, so we persist it to disk like the snaps-distance memo.
-   * On the wire we only consume `apiDiff?.hasChanges`, so caching just that boolean keeps the file
-   * tiny and makes the disk-warm path constant-time.
-   */
-  private apiDiffMemo = new Map<string, boolean>();
-  private apiDiffInflight = new Map<string, Promise<boolean>>();
   /**
    * Bound the parallelism of `deriveChangeTypes` across all in-flight requests. graphql-js resolves
    * list fields in parallel via `Promise.all`, so an uncapped derivation fires one `compare()` per
@@ -282,195 +231,20 @@ export class LanesMain {
    */
   private deriveChangesLimit = pLimit(concurrentComponentsLimit());
 
-  /**
-   * Disk-persisted memo for the final `ChangeType[]` array per `(componentId, sourceHead, commonSnapHash)`.
-   * Keyed on immutable hashes — deterministic forever. With this populated, a cold server start can
-   * answer `lanes.diffStatus` without ever invoking `componentCompare.compare` or `getAPIDiff` —
-   * the per-component schema-extraction cost goes from seconds to a Map.get().
-   */
-  private changeTypesMemo = new Map<string, ChangeType[]>();
+  /** single-flight for concurrent `deriveComponentChanges` calls on the same memo key. */
   private changeTypesInflight = new Map<string, Promise<ChangeType[] | undefined>>();
-  private changeTypesMemoDirty = false;
-  private changeTypesMemoSaveTimer: NodeJS.Timeout | undefined;
-  private static CHANGE_TYPES_MEMO_MAX = 5000;
-  private static CHANGE_TYPES_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-change-types.json');
-
-  /**
-   * bumped when the meaning of the memoized `ChangeType[]` changes. keyed only on immutable hashes,
-   * so without a version tag a stale entry (e.g. one written before the classification logic changed)
-   * would be served verbatim across an upgrade. bump this whenever `deriveChangeTypes` semantics change.
-   */
-  private static CHANGE_TYPES_MEMO_VERSION = 1;
-
-  private async loadChangeTypesMemoFromDisk() {
-    try {
-      const raw = await fs.readFile(LanesMain.CHANGE_TYPES_MEMO_FILE, 'utf8');
-      const parsed = JSON.parse(raw) as { v?: number; entries?: Record<string, ChangeType[]> };
-      // legacy unversioned format (a plain key->ChangeType[] map) or an older version: discard.
-      if (parsed.v !== LanesMain.CHANGE_TYPES_MEMO_VERSION || !parsed.entries) return;
-      for (const [k, v] of Object.entries(parsed.entries)) this.changeTypesMemo.set(k, v);
-      this.logger?.debug(`[lane-diff memo] loaded ${this.changeTypesMemo.size} change-types entries`);
-    } catch {
-      // first run / corrupted file.
-    }
-  }
-
-  private scheduleChangeTypesMemoSave() {
-    this.changeTypesMemoDirty = true;
-    if (this.changeTypesMemoSaveTimer) return;
-    this.changeTypesMemoSaveTimer = setTimeout(() => {
-      this.changeTypesMemoSaveTimer = undefined;
-      if (!this.changeTypesMemoDirty) return;
-      this.changeTypesMemoDirty = false;
-      const entries: Record<string, ChangeType[]> = {};
-      for (const [k, v] of this.changeTypesMemo) entries[k] = v;
-      fs.outputFile(
-        LanesMain.CHANGE_TYPES_MEMO_FILE,
-        JSON.stringify({ v: LanesMain.CHANGE_TYPES_MEMO_VERSION, entries })
-      ).catch(() => {});
-    }, 500);
-  }
-
-  private memoStoreChangeTypes(key: string, changes: ChangeType[]) {
-    if (!this.changeTypesMemo.has(key) && this.changeTypesMemo.size >= LanesMain.CHANGE_TYPES_MEMO_MAX) {
-      const firstKey = this.changeTypesMemo.keys().next().value;
-      if (firstKey) this.changeTypesMemo.delete(firstKey);
-    }
-    this.changeTypesMemo.set(key, changes);
-    this.scheduleChangeTypesMemoSave();
-  }
-
-  private changeTypesMemoKey(componentId: ComponentID, sourceHead: string, commonHash: string | null | undefined) {
-    return `${componentId.toStringWithoutVersion()}|${sourceHead}|${commonHash ?? ''}`;
-  }
-
-  /**
-   * Top-level result memo: the entire `LaneDiffStatus.componentsStatus` array keyed on the lane
-   * head hashes + relevant options. With this populated, a cold server start that receives a
-   * lane-diff request for an unchanged pair of lanes answers from disk in a single `Map.get()`,
-   * skipping `importObjectsFromMainIfExist`, per-component object loads, and all derivation.
-   * Invalidated implicitly when either lane head moves — the key embeds both hashes.
-   */
-  private diffStatusResultMemo = new Map<string, SerializedComponentStatus[]>();
-  private diffStatusMemoDirty = false;
-  private diffStatusMemoSaveTimer: NodeJS.Timeout | undefined;
-  private static DIFF_STATUS_MEMO_MAX = 200;
-  private static DIFF_STATUS_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-results.json');
-
-  /**
-   * bumped when the shape/meaning of a serialized status changes (it embeds the `changes`/`changeType`
-   * produced by `deriveChangeTypes`). without a version tag a stale entry keyed on immutable hashes
-   * would survive an upgrade and serve an outdated classification.
-   */
-  private static DIFF_STATUS_MEMO_VERSION = 1;
-
-  private async loadDiffStatusMemoFromDisk() {
-    try {
-      const raw = await fs.readFile(LanesMain.DIFF_STATUS_MEMO_FILE, 'utf8');
-      const parsed = JSON.parse(raw) as { v?: number; entries?: Record<string, SerializedComponentStatus[]> };
-      // legacy unversioned format (a plain key->statuses map) or an older version: discard.
-      if (parsed.v !== LanesMain.DIFF_STATUS_MEMO_VERSION || !parsed.entries) return;
-      for (const [k, v] of Object.entries(parsed.entries)) this.diffStatusResultMemo.set(k, v);
-      this.logger?.debug(`[lane-diff memo] loaded ${this.diffStatusResultMemo.size} diff-status entries`);
-    } catch {
-      // first run / corrupted file.
-    }
-  }
-
-  private scheduleDiffStatusMemoSave() {
-    this.diffStatusMemoDirty = true;
-    if (this.diffStatusMemoSaveTimer) return;
-    this.diffStatusMemoSaveTimer = setTimeout(() => {
-      this.diffStatusMemoSaveTimer = undefined;
-      if (!this.diffStatusMemoDirty) return;
-      this.diffStatusMemoDirty = false;
-      const entries: Record<string, SerializedComponentStatus[]> = {};
-      for (const [k, v] of this.diffStatusResultMemo) entries[k] = v;
-      fs.outputFile(
-        LanesMain.DIFF_STATUS_MEMO_FILE,
-        JSON.stringify({ v: LanesMain.DIFF_STATUS_MEMO_VERSION, entries })
-      ).catch(() => {});
-    }, 500);
-  }
-
-  private memoStoreDiffStatus(key: string, statuses: LaneComponentDiffStatus[]) {
-    if (!this.diffStatusResultMemo.has(key) && this.diffStatusResultMemo.size >= LanesMain.DIFF_STATUS_MEMO_MAX) {
-      const firstKey = this.diffStatusResultMemo.keys().next().value;
-      if (firstKey) this.diffStatusResultMemo.delete(firstKey);
-    }
-    this.diffStatusResultMemo.set(
-      key,
-      statuses.map((s) => ({
-        componentIdStr: s.componentId.toString(),
-        sourceHead: s.sourceHead,
-        targetHead: s.targetHead,
-        baseSource: s.baseSource,
-        changes: s.changes,
-        changeType: s.changeType,
-        upToDate: s.upToDate,
-        unrelated: s.unrelated,
-        snapsDistance: s.snapsDistance,
-      }))
-    );
-    this.scheduleDiffStatusMemoSave();
-  }
-
-  private diffStatusFromMemo(serialized: SerializedComponentStatus[]): LaneComponentDiffStatus[] {
-    return serialized.map((s) => ({
-      componentId: ComponentID.fromString(s.componentIdStr),
-      sourceHead: s.sourceHead,
-      targetHead: s.targetHead,
-      baseSource: s.baseSource,
-      changes: s.changes,
-      changeType: s.changeType,
-      upToDate: s.upToDate,
-      unrelated: s.unrelated,
-      snapsDistance: s.snapsDistance,
-    }));
-  }
-
-  /**
-   * Build the top-level result memo key. Key on the lane head hashes — they move with every snap, so
-   * it invalidates when the lane composition changes. Empty string ⇒ don't cache (incomplete state).
-   */
-  private diffStatusResultMemoKey(
-    sourceLaneId: LaneId,
-    sourceLane: any,
-    targetLaneId: LaneId | undefined,
-    targetLane: any,
-    options?: LaneDiffStatusOptions,
-    targetMainHeads?: Array<{ toString(): string }>
-  ): string {
-    // `Lane.hash` is a METHOD — `.hash.toString()` returns its source (constant) and freezes the key,
-    // serving stale results forever. Use the raw `_hash` for Lane objects.
-    const laneHash = (l: any) => (typeof l?.hash === 'function' ? l._hash : (l?.hash?.toString?.() ?? l?.hash)) ?? '';
-    const sourceHeadHash = laneHash(sourceLane);
-    if (!sourceHeadHash) return '';
-    // main target has no single lane hash → fingerprint the resolved per-component main heads instead.
-    let targetHeadHash: string;
-    if (targetLane) {
-      targetHeadHash = laneHash(targetLane);
-    } else {
-      const heads = (targetMainHeads || []).map((id) => id.toString()).sort();
-      if (!heads.length) return '';
-      targetHeadHash = heads.join(',');
-    }
-    const optionsKey = `${options?.skipChanges ? '1' : '0'}${options?.skipUpToDate ? '1' : '0'}`;
-    return `${sourceLaneId.toString()}@${sourceHeadHash}|${targetLaneId?.toString() ?? 'default'}@${targetHeadHash}|${optionsKey}`;
-  }
 
   private tryDiffStatusResultMemo(
     resultMemoKey: string,
     sourceLaneId: LaneId,
     targetLaneId: LaneId | undefined
   ): LaneDiffStatus | undefined {
-    if (!resultMemoKey) return undefined;
-    const cached = this.diffStatusResultMemo.get(resultMemoKey);
+    const cached = this.laneDiffCache.getDiffStatus(resultMemoKey);
     if (!cached) return undefined;
     return {
       source: sourceLaneId,
       target: targetLaneId || this.getDefaultLaneId(),
-      componentsStatus: this.diffStatusFromMemo(cached),
+      componentsStatus: cached,
     };
   }
 
@@ -538,124 +312,10 @@ export class LanesMain {
         // Version-load failure). persisting it under the immutable lane-pair key would serve that gap
         // forever; it recomputes and persists on a later request once the objects are available.
         const anyFailed = results.some((s) => s.changes === undefined && !s.changesContext?.skipped);
-        if (!anyFailed) this.memoStoreDiffStatus(resultMemoKey, results);
+        if (!anyFailed) this.laneDiffCache.storeDiffStatus(resultMemoKey, results);
       })
       .catch(() => {});
   }
-  private apiDiffMemoDirty = false;
-  private apiDiffMemoSaveTimer: NodeJS.Timeout | undefined;
-  private static API_DIFF_MEMO_MAX = 5000;
-  private static API_DIFF_MEMO_FILE = path.join(CACHE_ROOT, 'lane-diff-api-diff.json');
-
-  /**
-   * bumped when the meaning of the memoized booleans changes. v2: booleans derived from
-   * availability-aware diffs — pre-v2 entries came from fabricated diffs (a missing schema
-   * was diffed as an empty API) and must be discarded.
-   */
-  private static API_DIFF_MEMO_VERSION = 2;
-
-  private async loadApiDiffMemoFromDisk() {
-    try {
-      const raw = await fs.readFile(LanesMain.API_DIFF_MEMO_FILE, 'utf8');
-      const parsed = JSON.parse(raw) as { v?: number; entries?: Record<string, boolean> };
-      // legacy unversioned format (a plain key->boolean map) or an older version: discard.
-      if (parsed.v !== LanesMain.API_DIFF_MEMO_VERSION || !parsed.entries) return;
-      for (const [k, v] of Object.entries(parsed.entries)) this.apiDiffMemo.set(k, v);
-      this.logger?.debug(`[lane-diff memo] loaded ${this.apiDiffMemo.size} api-diff entries`);
-    } catch {
-      // first run / corrupted file.
-    }
-  }
-
-  private scheduleApiDiffMemoSave() {
-    this.apiDiffMemoDirty = true;
-    if (this.apiDiffMemoSaveTimer) return;
-    this.apiDiffMemoSaveTimer = setTimeout(() => {
-      this.apiDiffMemoSaveTimer = undefined;
-      if (!this.apiDiffMemoDirty) return;
-      this.apiDiffMemoDirty = false;
-      const entries: Record<string, boolean> = {};
-      for (const [k, v] of this.apiDiffMemo) entries[k] = v;
-      fs.outputFile(
-        LanesMain.API_DIFF_MEMO_FILE,
-        JSON.stringify({ v: LanesMain.API_DIFF_MEMO_VERSION, entries })
-      ).catch(() => {});
-    }, 500);
-  }
-
-  private memoStoreApiDiff(key: string, hasChanges: boolean) {
-    if (!this.apiDiffMemo.has(key) && this.apiDiffMemo.size >= LanesMain.API_DIFF_MEMO_MAX) {
-      const firstKey = this.apiDiffMemo.keys().next().value;
-      if (firstKey) this.apiDiffMemo.delete(firstKey);
-    }
-    this.apiDiffMemo.set(key, hasChanges);
-    this.scheduleApiDiffMemoSave();
-  }
-
-  private snapsDistanceMemoKey(componentId: ComponentID, sourceHead: string, targetHead?: string) {
-    return `${componentId.toStringWithoutVersion()}|${sourceHead}|${targetHead || ''}`;
-  }
-
-  private async loadSnapsDistanceMemoFromDisk() {
-    try {
-      const raw = await fs.readFile(LanesMain.SNAPS_DISTANCE_MEMO_FILE, 'utf8');
-      const parsed = JSON.parse(raw) as Record<string, SerializedSnapsDistance>;
-      for (const [k, v] of Object.entries(parsed)) {
-        this.snapsDistanceMemo.set(k, v);
-      }
-      this.logger?.debug(
-        `[lane-diff memo] loaded ${this.snapsDistanceMemo.size} entries from ${LanesMain.SNAPS_DISTANCE_MEMO_FILE}`
-      );
-    } catch {
-      // first run / corrupted file: start empty.
-    }
-  }
-
-  private scheduleSnapsDistanceMemoSave() {
-    this.snapsDistanceMemoDirty = true;
-    if (this.snapsDistanceMemoSaveTimer) return;
-    this.snapsDistanceMemoSaveTimer = setTimeout(() => {
-      this.snapsDistanceMemoSaveTimer = undefined;
-      if (!this.snapsDistanceMemoDirty) return;
-      this.snapsDistanceMemoDirty = false;
-      const serialized: Record<string, SerializedSnapsDistance> = {};
-      for (const [k, v] of this.snapsDistanceMemo) serialized[k] = v;
-      fs.outputFile(LanesMain.SNAPS_DISTANCE_MEMO_FILE, JSON.stringify(serialized)).catch(() => {
-        // best-effort cache; log nothing — disk failure shouldn't be user-visible noise.
-      });
-    }, 500);
-  }
-
-  private memoStoreSnapsDistance(key: string, snapsDistance: SnapsDistance) {
-    if (!this.snapsDistanceMemo.has(key) && this.snapsDistanceMemo.size >= LanesMain.SNAPS_DISTANCE_MEMO_MAX) {
-      const firstKey = this.snapsDistanceMemo.keys().next().value;
-      if (firstKey) this.snapsDistanceMemo.delete(firstKey);
-    }
-    this.snapsDistanceMemo.set(key, {
-      unrelated: snapsDistance.err instanceof NoCommonSnap,
-      isUpToDate: !!snapsDistance.isUpToDate?.(),
-      commonSnapHash: snapsDistance.commonSnapBeforeDiverge?.hash,
-      snapsOnSourceHashes: (snapsDistance.snapsOnSourceOnly ?? []).map((s) => s.hash),
-      snapsOnTargetHashes: (snapsDistance.snapsOnTargetOnly ?? []).map((s) => s.hash),
-    });
-    this.scheduleSnapsDistanceMemoSave();
-  }
-
-  /**
-   * Reconstruct a duck-typed SnapsDistance from the serialized form for downstream consumers.
-   * Consumers only touch `.err`, `.isUpToDate()`, `.commonSnapBeforeDiverge.hash`,
-   * `.snapsOnSourceOnly.[].hash`, `.snapsOnTargetOnly.[].hash` — so a plain object suffices.
-   */
-  private snapsDistanceFromMemo(s: SerializedSnapsDistance, componentIdStr: string): SnapsDistance {
-    return {
-      err: s.unrelated ? new NoCommonSnap(componentIdStr) : undefined,
-      isUpToDate: () => s.isUpToDate,
-      commonSnapBeforeDiverge: s.commonSnapHash ? { hash: s.commonSnapHash } : null,
-      snapsOnSourceOnly: s.snapsOnSourceHashes.map((h) => ({ hash: h })),
-      snapsOnTargetOnly: s.snapsOnTargetHashes.map((h) => ({ hash: h })),
-    } as unknown as SnapsDistance;
-  }
-
   /**
    * return the lane data without the deleted components.
    * the deleted components are filtered out in legacyScope.lanes.getLanesData()
@@ -1335,7 +995,7 @@ please create a new lane instead, which will include all components of this lane
     targetLaneId?: LaneId,
     options?: LaneDiffStatusOptions
   ): Promise<LaneDiffStatus> {
-    await this.ensureMemosLoaded();
+    await this.laneDiffCache.ensureLoaded();
     this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
 
     const sourceLane = sourceLaneId.isDefault()
@@ -1383,11 +1043,11 @@ please create a new lane instead, which will include all components of this lane
         )
       : [];
 
-    const resultMemoKey = this.diffStatusResultMemoKey(
+    const resultMemoKey = this.laneDiffCache.diffStatusKey(
       sourceLaneId,
-      sourceLane,
+      sourceLane ?? undefined,
       targetLaneId,
-      targetLane,
+      targetLane ?? undefined,
       options,
       targetMainHeads
     );
@@ -1449,18 +1109,18 @@ please create a new lane instead, which will include all components of this lane
     await pMap(
       diffProps,
       async ({ componentId, sourceHead, targetHead }) => {
-        const memoKey = this.snapsDistanceMemoKey(componentId, sourceHead, targetHead);
-        const cached = this.snapsDistanceMemo.get(memoKey);
+        const memoKey = this.laneDiffCache.snapsDistanceKey(componentId, sourceHead, targetHead);
+        const cached = this.laneDiffCache.getSnapsDistance(memoKey, componentId.toString());
         let snapsDistance: SnapsDistance | undefined;
         if (cached) {
           memoHits += 1;
-          snapsDistance = this.snapsDistanceFromMemo(cached, componentId.toString());
+          snapsDistance = cached;
         } else {
           const computed = await this.scope.getSnapsDistanceBetweenTwoSnaps(componentId, sourceHead, targetHead, false);
           if (computed) {
             // cache success + the deterministic "unrelated" outcome. transient errors stay uncached.
             if (!computed.err || computed.err instanceof NoCommonSnap) {
-              this.memoStoreSnapsDistance(memoKey, computed);
+              this.laneDiffCache.storeSnapsDistance(memoKey, computed);
             }
             snapsDistance = computed;
           }
@@ -1627,13 +1287,17 @@ please create a new lane instead, which will include all components of this lane
     const context = status.changesContext;
     if (!context || context.skipped) return undefined;
 
-    await this.ensureMemosLoaded();
+    await this.laneDiffCache.ensureLoaded();
 
     // top-level memo on the final ChangeType[] — short-circuits BEFORE compare()/getAPIDiff() run.
     // Persisted to disk, keyed on immutable hashes, so a cold server start with a populated cache
     // answers the entire derivation from a Map.get().
-    const memoKey = this.changeTypesMemoKey(status.componentId, status.sourceHead, context.commonSnap?.hash ?? null);
-    const cached = this.changeTypesMemo.get(memoKey);
+    const memoKey = this.laneDiffCache.changeTypesKey(
+      status.componentId,
+      status.sourceHead,
+      context.commonSnap?.hash ?? null
+    );
+    const cached = this.laneDiffCache.getChangeTypes(memoKey);
     if (cached) return cached;
 
     // single-flight concurrent requests for the same (componentId, sourceHead, commonSnap) tuple.
@@ -1645,7 +1309,7 @@ please create a new lane instead, which will include all components of this lane
         .then((result) => {
           // `undefined` means the derivation couldn't load a Version object (transient) — don't persist
           // it under the immutable-hash key; let it recompute on a later request once the object exists.
-          if (result) this.memoStoreChangeTypes(memoKey, result);
+          if (result) this.laneDiffCache.storeChangeTypes(memoKey, result);
           return result;
         })
         .finally(() => {
@@ -1704,63 +1368,11 @@ please create a new lane instead, which will include all components of this lane
     // immutable-hash-keyed memo, or the component would be reported with no change types forever.
     if (!baseVersion || !compareVersion) return undefined;
 
-    const baseObj = baseVersion.toObject();
-    const compareObj = compareVersion.toObject();
-    const differs = (a: unknown, b: unknown) => JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
-
-    // dependency lists and config maps are semantically unordered — two snaps can store the same
-    // set in a different order (deps aren't sorted at snap time). compare them order-insensitively so
-    // a pure reorder isn't misclassified as a DEPENDENCY/ASPECTS change. `canonical` recursively sorts
-    // object keys and sorts array elements by their serialized form, yielding a stable set signature.
-    const canonical = (value: unknown): string => {
-      const norm = (v: any): any => {
-        if (Array.isArray(v)) return v.map(norm).sort((x, y) => (JSON.stringify(x) < JSON.stringify(y) ? -1 : 1));
-        if (v && typeof v === 'object') {
-          return Object.keys(v)
-            .sort()
-            .reduce<Record<string, any>>((acc, k) => {
-              acc[k] = norm(v[k]);
-              return acc;
-            }, {});
-        }
-        return v;
-      };
-      return JSON.stringify(norm(value) ?? null);
-    };
-    const differsUnordered = (a: unknown, b: unknown) => canonical(a) !== canonical(b);
-
-    // `files` is a set keyed by path+hash; `Version.toObject()` emits it unsorted, so compare it
-    // order-insensitively too — a pure reorder must not read as a SOURCE_CODE change. `mainFile` is a
-    // single value, so ordered compare is fine.
-    const hasCodeChanges =
-      differsUnordered(baseObj.files, compareObj.files) || differs(baseObj.mainFile, compareObj.mainFile);
-    // DEPENDENCY mirrors compare()'s deps fields: dependencies, devDependencies, extensionDependencies
-    // (the last carries aspect/env-provided deps — present as model deps, not in the plain toObject()).
-    const hasDepChanges =
-      differsUnordered(baseObj.dependencies, compareObj.dependencies) ||
-      differsUnordered(baseObj.devDependencies, compareObj.devDependencies) ||
-      differsUnordered(
-        baseVersion.extensionDependencies.cloneAsString(),
-        compareVersion.extensionDependencies.cloneAsString()
-      );
-    const hasFieldChanges =
-      hasDepChanges ||
-      differsUnordered(baseObj.extensions, compareObj.extensions) ||
-      differsUnordered(baseObj.overrides, compareObj.overrides) ||
-      differsUnordered(baseObj.packageDependencies, compareObj.packageDependencies) ||
-      differsUnordered(baseObj.devPackageDependencies, compareObj.devPackageDependencies) ||
-      differsUnordered(baseObj.peerPackageDependencies, compareObj.peerPackageDependencies);
-
-    if (!hasFieldChanges && !hasCodeChanges) {
-      return [ChangeType.NONE];
-    }
-
-    const changed: ChangeType[] = [];
-    if (hasCodeChanges) changed.push(ChangeType.SOURCE_CODE);
-    if (hasFieldChanges) changed.push(ChangeType.ASPECTS);
-    if (hasDepChanges) changed.push(ChangeType.DEPENDENCY);
-
-    return changed;
+    // pure classification of the two raw Version shapes — extracted & unit-tested in lanes/diff.
+    return classifyVersionChanges(
+      { obj: baseVersion.toObject(), extensionDependencies: baseVersion.extensionDependencies.cloneAsString() },
+      { obj: compareVersion.toObject(), extensionDependencies: compareVersion.extensionDependencies.cloneAsString() }
+    );
   }
 
   private async recreateNewLaneIfDeleted() {
