@@ -137,6 +137,14 @@ type CreateGraphOptions = {
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
+
+  /**
+   * the seeders of the *original* (top-level) network, before it was split per-env.
+   * a component listed here is going to be built as a capsule regardless of the current env's graph, so the
+   * `filterUnmodifiedExportedDependencies` optimization must not exclude it: excluding a component we build anyway
+   * gains nothing (the capsule is created either way) and loses the project-references speedup for its dependents.
+   */
+  originalSeeders?: ComponentID[];
 };
 
 export type IsolateComponentsOptions = CreateGraphOptions & {
@@ -373,10 +381,13 @@ export class IsolatorMain {
     const host = opts.host || this.componentAspect.getHost();
     this.logger.debug(
       `isolateComponents, ${seeders.join(', ')}. opts: ${JSON.stringify(
-        Object.assign({}, opts, { host: opts.host?.name })
+        // `host` and `originalSeeders` are replaced with a compact representation on purpose: this stringify runs
+        // eagerly (even when debug output is discarded), so serializing them in full would cost CPU on every
+        // isolation and flood the log with a huge line.
+        Object.assign({}, opts, { host: opts.host?.name, originalSeeders: opts.originalSeeders?.length })
       )}`
     );
-    const createGraphOpts = pick(opts, ['includeFromNestedHosts', 'host']);
+    const createGraphOpts = pick(opts, ['includeFromNestedHosts', 'host', 'originalSeeders']);
     let componentsToIsolate = opts.seedersOnly
       ? await host.getMany(seeders)
       : await this.createGraph(seeders, createGraphOpts);
@@ -468,7 +479,12 @@ export class IsolatorMain {
 
     // Optimization: exclude unmodified exported dependencies from capsule creation
     if (!isFeatureEnabled(DISABLE_CAPSULE_OPTIMIZATION)) {
-      filteredComps = await this.filterUnmodifiedExportedDependencies(filteredComps, seeders, host);
+      filteredComps = await this.filterUnmodifiedExportedDependencies(
+        filteredComps,
+        seeders,
+        host,
+        opts.originalSeeders
+      );
       this.logger.debug(
         `[OPTIMIZATION] Before filtering: ${componentsToInclude.length}. After filtering: ${filteredComps.length} components remaining`
       );
@@ -1679,7 +1695,8 @@ export class IsolatorMain {
   private async filterUnmodifiedExportedDependencies(
     components: Component[],
     seederIds: ComponentID[],
-    host: ComponentFactory
+    host: ComponentFactory,
+    originalSeeders?: ComponentID[]
   ): Promise<Component[]> {
     this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${components.length} components`);
 
@@ -1689,12 +1706,29 @@ export class IsolatorMain {
 
     const filtered: Component[] = [];
 
+    // Precompute version-normalized ID sets so membership is O(1) per component instead of a linear scan.
+    // `toStringWithoutVersion()` is the string equivalent of `isEqual(id, { ignoreVersion: true })`.
+    const seederIdsNoVersion = new Set(seederIds.map((id) => id.toStringWithoutVersion()));
+    const originalSeederIdsNoVersion = originalSeeders
+      ? new Set(originalSeeders.map((id) => id.toStringWithoutVersion()))
+      : undefined;
+
     for (const component of components) {
       const componentIdStr = component.id.toString();
-      const isSeeder = seederIds.some((seederId) => component.id.isEqual(seederId, { ignoreVersion: true }));
+      const componentIdNoVersion = component.id.toStringWithoutVersion();
 
-      if (isSeeder) {
+      if (seederIdsNoVersion.has(componentIdNoVersion)) {
         // Always include seeders (modified components and their dependents)
+        filtered.push(component);
+        continue;
+      }
+
+      // A dependency of *this* env's graph may still be a seeder of the original (top-level) network - i.e. it is
+      // built as a capsule anyway by another env. In that case, excluding it here is pure loss: we don't save any
+      // build work (the capsule is created regardless), and we break project-references for its dependents, which
+      // then have to resolve it as an installed package instead of referencing the freshly-built capsule.
+      // Keep it so the graph stays consistent across `bit build` and `bit tag` (both include it as a capsule).
+      if (originalSeederIdsNoVersion?.has(componentIdNoVersion)) {
         filtered.push(component);
         continue;
       }
