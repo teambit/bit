@@ -117,17 +117,19 @@ describe('env command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
+      // the plugin file is plain .js on purpose: the default env (empty env) has no compiler,
+      // so a .ts plugin would never get a dist and the env would fail to load
       helper.fs.outputFile(
-        'my-env/my-env.bit-env.ts',
-        `export class MyEnv {
+        'my-env/my-env.bit-env.js',
+        `class MyEnv {
   name = 'my-env';
 }
-export default new MyEnv();
+module.exports.default = new MyEnv();
 `
       );
-      helper.fs.outputFile('my-env/index.ts', `export { MyEnv } from './my-env.bit-env';`);
+      helper.fs.outputFile('my-env/index.js', `module.exports = require('./my-env.bit-env');\n`);
       helper.command.addComponent('my-env');
-      helper.command.compile();
+      helper.command.link();
     });
     // previously, a component was recognized as an env only after it was loaded as an aspect,
     // which happened only once its own env (env-of-env, e.g. teambit.envs/env or
