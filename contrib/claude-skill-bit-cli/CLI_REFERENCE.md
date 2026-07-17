@@ -350,7 +350,7 @@ Assigns one or more components a development environment (env)
 
 un-sets an env from components that were previously set by "bit env set" or by a component template
 
-keep in mind that this doesn't remove envs that are set via variants. in only removes envs that appear in the .bitmap file, which were previously configured via "bit env set". the purpose of this command is to reset previously assigned envs to either allow variants configure the env or use the base node env. you can use a `<pattern>` for multiple component ids, such as `bit env unset "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
+keep in mind that this doesn't remove envs that are set via variants. it only removes envs that appear in the .bitmap file, which were previously configured via "bit env set". the purpose of this command is to reset previously assigned envs to either allow variants to configure the env or use the base node env. you can use a `<pattern>` for multiple component ids, such as `bit env unset "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 
 ## bit envs replace <current-env> <new-env>
 
@@ -547,14 +547,14 @@ Flags: --skip-dependency-installation
 
 revert to a previous history of the current lane. see also "bit lane checkout"
 
-revert is similar to "lane checkout", but it keeps the versions and only change the files. choose one or the other based on your needs. if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert". if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.
+revert is similar to "lane checkout", but it keeps the versions and only changes the files. choose one or the other based on your needs. if you want to continue working on this lane and need the changes from the history to be the head, then use "lane revert". if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.
 Flags: --skip-dependency-installation, --restore-deleted-components, --json
 
 ## bit lane merge-move <new-lane-name>
 
 EXPERIMENT. move the current merge state into a new lane. the current lane will be reset
 
-this command is useful when you got a messy merge state that from one hand you don't want to loose the changes, but on the other hand, you want to keep your lane without those changes. this command does the following: 1. create a new lane with the current merge state. including all the filesystem changes. (in practice, it leaves the fs intact) 2. reset the current lane to the state before the merge. so then once done with the new lane, you can switch to the current lane and it'll be clean.
+this command is useful when you got a messy merge state that on one hand you don't want to lose the changes, but on the other hand, you want to keep your lane without those changes. this command does the following: 1. create a new lane with the current merge state. including all the filesystem changes. (in practice, it leaves the fs intact) 2. reset the current lane to the state before the merge. so then once done with the new lane, you can switch to the current lane and it'll be clean.
 Flags: --scope <scope-name>
 
 ## bit link [component-names...]
@@ -615,7 +615,7 @@ Flags: --one-line
 authenticate with Bit Cloud for component publishing and collaboration
 
 opens browser to authenticate with Bit Cloud (bit.cloud) and obtain access token for publishing components. automatically updates .npmrc file with registry configuration and authentication token for seamless package publishing. supports custom cloud domains, CI/machine authentication, and manual token refresh options.
-Flags: --skip-config-update, --refresh-token, --cloud-domain <domain>, --default-cloud-domain, --port <port>, --no-browser, --machine-name <name>, --suppress-browser-launch
+Flags: --skip-config-update, --refresh-token, --cloud-domain <domain>, --default-cloud-domain, --port <port>, --no-browser, --machine-name <name>
 
 ## bit logout
 
@@ -822,7 +822,7 @@ configure scope assignments for components including setting default scopes and 
 
 Sets the scope for specified component/s. If no component is specified, sets the default scope of the workspace
 
-default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc. a component is set with a scope (as oppose to default scope) only once it is versioned.' you can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
+default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc. a component is set with a scope (as opposed to default scope) only once it is versioned. you can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 
 ## bit scope trust [action] [pattern]
 

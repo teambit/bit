@@ -39,7 +39,7 @@ export class GetEnvCmd implements Command {
       description: "the 'component name' or 'component id' of the component whose env you'd like to inspect",
     },
   ];
-  examples: [{ cmd: 'get ui/button'; description: 'show config information from the env configured for ui/button' }];
+  examples = [{ cmd: 'get ui/button', description: 'show config information from the env configured for ui/button' }];
   options = [
     [
       '',
