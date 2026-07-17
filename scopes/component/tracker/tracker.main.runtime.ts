@@ -113,8 +113,12 @@ export class TrackerMain {
   async warnAboutRemoteIdCollisions(ids: ComponentID[]): Promise<void> {
     // `shouldWriteToConsole` (not `isJsonFormat`) is the signal that reflects the CLI "--json" flag.
     if (!ids.length || !legacyLogger.shouldWriteToConsole) return;
+    // only brand-new components can "collide" with the remote. skip already-exported ones (e.g. a
+    // re-tracked imported/exported component), where remote existence is expected, not a conflict.
+    const newIds = ids.filter((id) => !this.workspace.isExported(id));
+    if (!newIds.length) return;
     try {
-      const idsOnRemote = await this.getIdsExistingOnRemote(ids);
+      const idsOnRemote = await this.getIdsExistingOnRemote(newIds);
       if (!idsOnRemote.length) return;
       const list = idsOnRemote.map((id) => formatItem(id.toStringWithoutVersion())).join('\n');
       const example = idsOnRemote[0];

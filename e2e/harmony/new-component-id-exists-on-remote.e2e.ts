@@ -49,4 +49,19 @@ describe('creating a new component whose id already exists on the remote', funct
       expect(output).to.not.have.string('already exist on the remote scope');
     });
   });
+  describe('re-adding a component that was already exported (remote existence is expected)', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      // re-track the same (already exported) component - its id legitimately exists on the remote.
+      helper.fs.outputFile('comp1/index.js', "module.exports = () => 'comp1 v2';");
+      output = helper.command.add('comp1');
+    });
+    it('should not warn about a remote collision for an already-exported component', () => {
+      expect(output).to.not.have.string('already exist on the remote scope');
+    });
+  });
 });
