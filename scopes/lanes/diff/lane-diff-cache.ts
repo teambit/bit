@@ -90,7 +90,9 @@ export class LaneDiffCache {
   constructor(
     private logger?: Logger,
     /** overridable for tests — production always persists under the global bit cache root. */
-    private persistDir: string = CACHE_ROOT
+    private persistDir: string = CACHE_ROOT,
+    /** debounce window before a dirty memo is flushed to disk; overridable for tests. */
+    private flushDelayMs: number = 500
   ) {}
 
   private loadPromise?: Promise<void>;
@@ -313,9 +315,11 @@ export class LaneDiffCache {
   // ── persistence ───────────────────────────────────────────────────────────
 
   /**
-   * debounce a burst of stores into one write per memo, 500ms after the last store. fire-and-forget
-   * (disk failure yields a cold-but-correct next start); timers are unref'd so a pending flush never
-   * keeps a CLI process alive.
+   * debounce a burst of stores into ONE write per memo, `flushDelayMs` after the LAST store. the
+   * timer is reset on every call — a store during a lane diff (once per component for a large lane)
+   * pushes the flush out rather than letting an early write fire mid-burst, so the whole burst
+   * collapses to a single serialization. fire-and-forget (disk failure yields a cold-but-correct
+   * next start); timers are unref'd so a pending flush never keeps a CLI process alive.
    */
   private scheduleSave(memo: 'snapsDistance' | 'changeTypes' | 'diffStatus') {
     const specs = {
@@ -364,13 +368,16 @@ export class LaneDiffCache {
     }[memo];
 
     specs.setDirty(true);
-    if (specs.getTimer()) return;
+    // reset the debounce: clear any pending flush and re-arm, so the write lands `flushDelayMs`
+    // after the LAST store, not the first (the difference between debounce and throttle).
+    const existing = specs.getTimer();
+    if (existing) clearTimeout(existing);
     const timer = setTimeout(() => {
       specs.setTimer(undefined);
       if (!specs.getDirty()) return;
       specs.setDirty(false);
       specs.write().catch(() => {});
-    }, 500);
+    }, this.flushDelayMs);
     timer.unref?.();
     specs.setTimer(timer);
   }

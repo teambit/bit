@@ -1,10 +1,13 @@
 import os from 'os';
 import path from 'path';
+import fs from 'fs-extra';
 import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { LaneDiffCache, laneCompositionFingerprint } from './lane-diff-cache';
 import type { LaneLike } from './lane-diff-cache';
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const sourceLaneId = LaneId.from('my-lane', 'org.scope');
 const targetLaneId = LaneId.from('other-lane', 'org.scope');
@@ -128,5 +131,60 @@ describe('LaneDiffCache diff-status store/get round trip', () => {
       { componentId: ComponentID.fromString('org.scope/button@aaa111'), sourceHead: 'aaa111' },
     ]);
     expect(cache.getDiffStatus('')).to.equal(undefined);
+  });
+});
+
+describe('LaneDiffCache persistence debounce', () => {
+  // count writes by monkeypatching the shared fs-extra `outputFile` the cache calls (no sinon dep):
+  // the module does `import fs from 'fs-extra'` and calls `fs.outputFile`, so both reference this
+  // same object.
+  let writeCount: number;
+  let lastWritten: string | undefined;
+  let originalOutputFile: typeof fs.outputFile;
+
+  beforeEach(() => {
+    writeCount = 0;
+    lastWritten = undefined;
+    originalOutputFile = fs.outputFile;
+    (fs as any).outputFile = async (_file: string, data: string) => {
+      writeCount += 1;
+      lastWritten = data;
+    };
+  });
+
+  afterEach(() => {
+    (fs as any).outputFile = originalOutputFile;
+  });
+
+  it('should collapse a burst of stores into a single write (debounce, not throttle)', async () => {
+    // 20ms flush window; the burst spans well past it (10 stores × 8ms = ~80ms) — a throttle would
+    // fire multiple times across that span, a debounce exactly once after the last store settles.
+    const cache = new LaneDiffCache(undefined, path.join(os.tmpdir(), `lane-diff-debounce-${process.pid}`), 20);
+    for (let i = 0; i < 10; i += 1) {
+      cache.storeSnapsDistance(`org.scope/c${i}|src|tgt`, {
+        err: undefined,
+        isUpToDate: () => false,
+        commonSnapBeforeDiverge: null,
+        snapsOnSourceOnly: [],
+        snapsOnTargetOnly: [],
+      } as any);
+      // eslint-disable-next-line no-await-in-loop
+      await delay(8);
+    }
+    expect(writeCount, 'no write should fire mid-burst').to.equal(0);
+    await delay(40); // let the debounce settle past the last store
+    expect(writeCount, 'exactly one write after the burst settles').to.equal(1);
+    // and it captured the whole burst, not a partial mid-burst snapshot.
+    const parsed = JSON.parse(lastWritten as string);
+    expect(Object.keys(parsed)).to.have.lengthOf(10);
+  });
+
+  it('should write once per memo, keyed independently', async () => {
+    const cache = new LaneDiffCache(undefined, path.join(os.tmpdir(), `lane-diff-debounce2-${process.pid}`), 20);
+    cache.storeChangeTypes('a|b|c', []);
+    cache.storeDiffStatus('key', [{ componentId: ComponentID.fromString('org.scope/x@h'), sourceHead: 'h' }]);
+    await delay(40);
+    // two distinct memos each flush once — not coalesced together, not fired repeatedly.
+    expect(writeCount).to.equal(2);
   });
 });
