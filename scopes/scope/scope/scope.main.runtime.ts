@@ -1192,6 +1192,30 @@ export class ScopeMain implements ComponentFactory {
     return results.map(({ id }) => id);
   }
 
+  /**
+   * best-effort check whether a component-id already exists on its remote scope.
+   * intended as an early-warning helper (e.g. during "bit add"/"bit create"), not as a source of
+   * truth. it never throws: if the workspace is offline, the scope can't be resolved, the user has
+   * no access, or the remote lacks the component, it resolves to `false` so callers can safely skip.
+   *
+   * pass a pre-resolved `remotes` when checking many ids to avoid reloading the global-remotes file
+   * from disk on every call.
+   */
+  async isComponentExistsOnRemote(id: ComponentID, remotes?: Remotes): Promise<boolean> {
+    if (!id.scope) return false;
+    try {
+      const resolvedRemotes = remotes || (await this.getRemoteScopes());
+      const remote = await resolvedRemotes.resolve(id.scope);
+      const componentFromRemote = await remote.show(id.changeVersion(undefined));
+      return Boolean(componentFromRemote);
+    } catch (err) {
+      // offline / scope-not-found / no-access / component-not-found — all mean "don't warn".
+      // trace at debug level so unexpected failures are still diagnosable via the debug.log.
+      this.logger.debug(`isComponentExistsOnRemote: skipping check for ${id.toString()}, got an error: ${err}`);
+      return false;
+    }
+  }
+
   async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {
     try {
       return await this.legacyScope.getConsumerComponent(id);
