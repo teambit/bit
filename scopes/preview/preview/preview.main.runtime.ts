@@ -599,6 +599,11 @@ export class PreviewMain {
    * this calculation is based on the env of the component and if the env of the component support it.
    */
   async doesScaling(component: Component): Promise<boolean> {
+    // envs that used to be core aspects may not be installed yet, in which case getEnvComponent
+    // below throws. their pinned versions all support scaling (matches calcDoesScalingForComponent).
+    if (this.isUsingLegacyCoreEnv(component)) {
+      return true;
+    }
     const inWorkspace = await this.workspace?.hasId(component.id);
     // Support case when we have the dev server for the env, in that case we calc the data of the env as we can't rely on the env data from the scope
     // since we bundle it for the dev server again
@@ -645,7 +650,9 @@ export class PreviewMain {
 
   async isSupportSkipIncludes(component: Component) {
     if (!this.config.onlyOverview && !isFeatureEnabled(ONLY_OVERVIEW)) return false;
-    const isCore = this.envs.isUsingCoreEnv(component);
+    // include legacy former-core envs: they may not be installed yet, and getEnvComponent below
+    // throws for them. treat them like core envs (no skip-includes).
+    const isCore = this.isUsingCoreOrLegacyCoreEnv(component);
     if (isCore) return false;
 
     const envComponent = await this.envs.getEnvComponent(component);
