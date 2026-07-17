@@ -1,5 +1,7 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime, formatItem } from '@teambit/cli';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import path from 'path';
 import type { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
@@ -102,15 +104,20 @@ export class TrackerMain {
    * / scope-not-found errors, and the whole method is wrapped so it can never fail an add/create.
    */
   async warnAboutRemoteIdCollisions(ids: ComponentID[]): Promise<void> {
-    if (!ids.length || legacyLogger.isJsonFormat) return;
+    // `shouldWriteToConsole` (not `isJsonFormat`) is the signal that reflects the CLI "--json" flag.
+    if (!ids.length || !legacyLogger.shouldWriteToConsole) return;
     try {
       const idsOnRemote = (
-        await Promise.all(
-          ids.map(async (id) => ((await this.workspace.scope.isComponentExistsOnRemote(id)) ? id : undefined))
+        await pMapPool(
+          ids,
+          async (id) => ((await this.workspace.scope.isComponentExistsOnRemote(id)) ? id : undefined),
+          {
+            concurrency: concurrentComponentsLimit(),
+          }
         )
       ).filter((id): id is ComponentID => Boolean(id));
       if (!idsOnRemote.length) return;
-      const list = idsOnRemote.map((id) => `  - ${id.toStringWithoutVersion()}`).join('\n');
+      const list = idsOnRemote.map((id) => formatItem(id.toStringWithoutVersion())).join('\n');
       const example = idsOnRemote[0];
       this.logger
         .consoleWarning(`the following newly added component(s) already exist on the remote scope with the same id:
