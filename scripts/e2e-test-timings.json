@@ -146,6 +146,7 @@
   "e2e/harmony/lanes/switch-lanes.e2e.ts": 465,
   "e2e/harmony/lanes/unrelated-and-removed.e2e.ts": 25,
   "e2e/harmony/lanes/update-dependents-cascade.e2e.ts": 415,
+  "e2e/harmony/legacy-core-env-back-compat.e2e.ts": 270,
   "e2e/harmony/link.e2e.ts": 15,
   "e2e/harmony/load-bit.e2e.ts": 70,
   "e2e/harmony/load-extensions.e2e.ts": 316,
