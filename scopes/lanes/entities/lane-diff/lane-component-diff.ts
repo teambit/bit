@@ -13,42 +13,55 @@ export type PlainLaneComponentDiff = {
   sourceHead: string;
   targetHead?: string;
   baseSource?: DiffBaseSource;
-  changes: ChangeType[];
+  /** `null` = the server couldn't classify (transient version-load failure) — NOT "no changes". */
+  changes: ChangeType[] | null;
   upToDate: boolean;
 };
 
 export class LaneComponentDiff {
   constructor(
     readonly componentId: ComponentID,
-    readonly changes: ChangeType[],
+    /** `null` = unclassified (see {@link classified}) — distinct from `[ChangeType.NONE]`. */
+    readonly changes: ChangeType[] | null,
     readonly upToDate: boolean,
     readonly sourceHead: string,
     readonly targetHead?: string,
     readonly baseSource?: DiffBaseSource
   ) {}
 
+  /**
+   * whether the server managed to classify this component's changes. `false` (changes = null) means
+   * a transient derivation failure — an UNKNOWN state that consumers must not render as "no changes"
+   * (hiding a possibly-changed component, or triggering an all-clear blank state).
+   */
+  get classified() {
+    return this.changes !== null;
+  }
+
   get new() {
-    return this.changes.includes(ChangeType.NEW);
+    return Boolean(this.changes?.includes(ChangeType.NEW));
   }
 
   get changed() {
+    if (!this.changes) return false;
     return this.changes.length > 0 && !this.changes.includes(ChangeType.NEW) && !this.changes.includes(ChangeType.NONE);
   }
 
   get dependencyChanged() {
-    return this.changes.includes(ChangeType.DEPENDENCY);
+    return Boolean(this.changes?.includes(ChangeType.DEPENDENCY));
   }
 
   get sourceCodeChanged() {
-    return this.changes.includes(ChangeType.SOURCE_CODE);
+    return Boolean(this.changes?.includes(ChangeType.SOURCE_CODE));
   }
 
-  get changeType() {
-    // an empty `changes` list means the server couldn't classify this component — the derivation
-    // returned null (skipped / a transient version-load failure), collapsed to `[]` on the way in.
-    // it does NOT mean an aspects change: `deriveChangeTypes` never emits `[]` for a real change
-    // (ASPECTS is always pushed explicitly). so treat empty as NONE rather than falling through to
-    // the ASPECTS fallback below, which would fabricate a change and mark the component modified.
+  get changeType(): ChangeType | undefined {
+    // unclassified (see `classified`): the server couldn't derive change types. surface `undefined`
+    // rather than NONE so consumers can tell "unknown" apart from a verified no-op — the previous
+    // NONE mapping made a transient derivation failure read as "no changes" (and hid the component).
+    if (!this.changes) return undefined;
+    // an empty list shouldn't occur (`deriveChangeTypes` always emits at least [NONE]) — map it to
+    // NONE rather than falling through to the ASPECTS fallback, which would fabricate a change.
     if (this.changes.length === 0) return ChangeType.NONE;
     if (this.changes.length === 1) return this.changes[0];
     if (this.sourceCodeChanged) return ChangeType.SOURCE_CODE;

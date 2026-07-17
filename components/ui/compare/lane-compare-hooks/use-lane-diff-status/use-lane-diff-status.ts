@@ -11,7 +11,8 @@ export type LaneDiffStatusQueryResponse = {
       upToDate: boolean;
       componentsStatus: Array<{
         componentId: ComponentIdObj;
-        changes: ChangeType[];
+        /** absent when the server couldn't classify (transient) — see the mapping below. */
+        changes?: ChangeType[] | null;
         upToDate: boolean;
         sourceHead: string;
         targetHead?: string;
@@ -86,7 +87,10 @@ export const useLaneDiffStatus: UseLaneDiffStatus = ({ baseId, compareId, option
     targetLane: LaneId.from(data.lanes.diffStatus.target.name, data.lanes.diffStatus.target.scope).toString(),
     diff: data.lanes.diffStatus.componentsStatus.map((c) => ({
       ...c,
-      changes: c.changes || [],
+      // preserve the server's tri-state: missing `changes` means "couldn't classify" (transient) and
+      // must stay distinguishable from a verified no-op — coercing to [] here made the UI render
+      // unclassified components as "no changes" (hiding them / triggering the blank state).
+      changes: c.changes ?? null,
       componentId: ComponentID.fromObject(c.componentId).toString(),
     })),
   };

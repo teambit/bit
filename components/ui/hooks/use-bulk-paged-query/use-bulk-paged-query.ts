@@ -63,11 +63,18 @@ export function useBulkPagedQuery<TItem>({
   skip: skipProp,
 }: UseBulkPagedQueryOptions): UseBulkPagedQueryResult<TItem> {
   // stabilize by content: a new array reference with the same pairs must not restart the query.
-  const pairsKey = JSON.stringify(pairs);
+  // memoized on the reference so the O(n) stringify doesn't re-run on every provider re-render
+  // (which happens per page arrival) — only when the caller actually hands us a new array.
+  const pairsKey = useMemo(() => JSON.stringify(pairs), [pairs]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stablePairs = useMemo(() => pairs, [pairsKey]);
 
   const skip = Boolean(skipProp) || stablePairs.length === 0;
+
+  // the full paging identity: everything that makes this a distinct paging session. `pairsKey` alone
+  // isn't enough — a host switch (or skip toggle) with an identical pairs list must also start a
+  // clean session rather than inherit the previous session's termination state.
+  const sessionKey = `${host ?? ''}|${resultField}|${pageSize}|${pairsKey}`;
 
   // raw `useQuery` (not the app's `useDataQuery` wrapper) on purpose: the wrapper pops an error toast on
   // failure, which would fire on every transient page error this hook is designed to silently retry.
@@ -96,16 +103,16 @@ export function useBulkPagedQuery<TItem>({
   useEffect(() => {
     setStoppedShort(false);
     setErrorRetries(0);
-  }, [pairsKey]);
+  }, [sessionKey, skip]);
 
-  // the pairs set this hook is currently paging — a fetchMore started for an earlier set can still
-  // resolve/reject after `pairs` changed, so its callbacks check this before terminating the new loop.
-  // updated synchronously during render (not in an effect): passive effects flush after paint, so an
-  // in-flight fetchMore from the previous session can resolve in the gap between commit and that flush;
-  // if the ref lagged behind it would still pass `stillActive()` and mutate the new session's paging
-  // state. Assigning here makes `pairsKeyRef.current` reflect the latest key the instant `pairs` change.
-  const pairsKeyRef = useRef(pairsKey);
-  pairsKeyRef.current = pairsKey;
+  // the session this hook is currently paging — a fetchMore started for an earlier session can still
+  // resolve/reject after the inputs changed, so its callbacks check this before terminating the new
+  // loop. updated synchronously during render (not in an effect): passive effects flush after paint,
+  // so an in-flight fetchMore from the previous session can resolve in the gap between commit and that
+  // flush; if the ref lagged behind it would still pass `stillActive()` and mutate the new session's
+  // paging state. Assigning here makes the ref reflect the latest session the instant inputs change.
+  const sessionKeyRef = useRef(sessionKey);
+  sessionKeyRef.current = sessionKey;
 
   // every page loaded, paging stopped at a short page, or transient retries exhausted: no more requests.
   // NB: a transient error alone does NOT make us `done` — the loop retries it (up to MAX_PAGE_RETRIES),
@@ -115,33 +122,38 @@ export function useBulkPagedQuery<TItem>({
   // sequential background paging: whenever a page settles and pairs remain, request the next page.
   useEffect(() => {
     if (skip || loading || done) return;
-    // guard the async terminations below to this page's pairs set: an in-flight fetchMore from a
-    // previous pairsKey must not terminate the paging loop of a newer one (rapid target switches).
-    const activeKey = pairsKey;
-    const stillActive = () => pairsKeyRef.current === activeKey;
+    // guard the async terminations below to this session: an in-flight fetchMore from a previous
+    // session must not terminate the paging loop of a newer one (rapid target switches).
+    const activeKey = sessionKey;
+    const stillActive = () => sessionKeyRef.current === activeKey;
     fetchMore({
       variables: { pairs: stablePairs, offset: results.length, limit: pageSize, host },
       updateQuery: (prev: any, { fetchMoreResult }: any) => {
-        const prevHost = prev.getHost;
-        if (!fetchMoreResult || !prevHost) {
-          // nothing came back, or the accumulated result has no host (getHost: null) to page against →
-          // can't fetch further; stop so the effect stops re-issuing fetchMore and loading settles.
-          if (stillActive()) setStoppedShort(true);
-          return prev;
-        }
-        // a fetchMore issued for a previous pairs set can resolve after `pairs` changed; discard its
+        // a fetchMore issued for a previous session can resolve after the inputs changed; discard its
         // page rather than merging it into the current session's results (which would corrupt the new
         // set) or terminating the new loop.
         if (!stillActive()) return prev;
-        const newItems = fetchMoreResult.getHost?.[resultField] ?? [];
+        const prevHost = prev?.getHost;
+        const nextHost = fetchMoreResult?.getHost;
+        if (!nextHost) {
+          // nothing came back, or the host resolved to null → can't page further; stop so the effect
+          // stops re-issuing fetchMore and loading settles.
+          setStoppedShort(true);
+          return prev;
+        }
+        const newItems = nextHost[resultField] ?? [];
         // a short page is the real end of the data; a full page means a successful fetch, so clear any
         // transient-error budget spent recovering earlier pages.
         if (newItems.length === 0) setStoppedShort(true);
         else setErrorRetries(0);
+        // recover when the ACCUMULATED result has no host (e.g. the initial page transiently returned
+        // `getHost: null`) but this page does: initialize from the fresh response instead of discarding
+        // a perfectly good page and terminating — which made a one-off transient failure permanent.
+        if (!prevHost) return { getHost: nextHost };
         return {
           getHost: {
             ...prevHost,
-            [resultField]: [...prevHost[resultField], ...newItems],
+            [resultField]: [...(prevHost[resultField] ?? []), ...newItems],
           },
         };
       },
@@ -157,7 +169,7 @@ export function useBulkPagedQuery<TItem>({
     results.length,
     stablePairs,
     fetchMore,
-    pairsKey,
+    sessionKey,
     host,
     pageSize,
     resultField,

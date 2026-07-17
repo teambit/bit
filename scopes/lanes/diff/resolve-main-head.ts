@@ -37,15 +37,25 @@ export async function importMainHeads(scope: ScopeMain, componentIds: ComponentI
   const missing = compact(
     await Promise.all(
       componentIds.map(async (id) => {
-        if (!scope.isExported(id)) return undefined; // no remote to ask
-        const head = await getHeadOnMain(scope, id);
-        // skip only when the base is fully available locally: a resolvable head whose object is present.
-        // otherwise import — the head may be unresolvable simply because the default-lane ref was never
-        // fetched (the remote can still have a main version), or it resolves to an object not present
-        // locally. `ignoreMissingHead` in the import keeps a genuinely-new component (no main version on
-        // the remote) a real NEW after the fetch finds nothing.
-        if (head && (await scope.legacyScope.objects.has(Ref.from(head)))) return undefined;
-        return id.changeVersion(undefined);
+        try {
+          if (!scope.isExported(id)) return undefined; // no remote to ask
+          const head = await getHeadOnMain(scope, id);
+          // skip only when the base is fully available locally: a resolvable head whose object is present.
+          // otherwise import — the head may be unresolvable simply because the default-lane ref was never
+          // fetched (the remote can still have a main version), or it resolves to an object not present
+          // locally. `ignoreMissingHead` in the import keeps a genuinely-new component (no main version on
+          // the remote) a real NEW after the fetch finds nothing.
+          if (head && (await scope.legacyScope.objects.has(Ref.from(head)))) return undefined;
+          return id.changeVersion(undefined);
+        } catch (err: any) {
+          // the whole function is a best-effort prefetch — a failed local head/object lookup for ONE
+          // component (corrupt ref, fs hiccup) must not reject the Promise.all and abort the entire
+          // lane diff. treat the component as missing so the import below still gets a chance.
+          scope.logger.debug(
+            `importMainHeads: resolving local main head of ${id.toString()} failed, treating as missing: ${err?.message || err}`
+          );
+          return id.changeVersion(undefined);
+        }
       })
     )
   );

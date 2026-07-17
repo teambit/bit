@@ -57,6 +57,13 @@ type ConfigDiff = {
   aspects?: Record<string, any>;
 };
 
+/**
+ * expiry for persisted compare/api-diff results. the results themselves are immutable (keyed on snap
+ * hashes), but the payloads are heavy — full per-file contents per pair — so without a TTL the cache
+ * directory grows with every pair ever viewed. two weeks comfortably covers a review cycle.
+ */
+const PERSISTENT_CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+
 export class ComponentCompareMain {
   constructor(
     private componentAspect: ComponentMain,
@@ -104,7 +111,10 @@ export class ComponentCompareMain {
     }
     const promise = compute()
       .then((result) => {
-        if (!skipPersistentCache && cacheable(result)) void this.cache.set(cacheKey, result);
+        // TTL keeps the cache bounded: compare payloads embed full per-file contents for every pair,
+        // so without an expiry every pair ever viewed stays on disk forever. entries are cheap to
+        // recompute after expiry (sources still cached in the scope), so a stale-eviction is harmless.
+        if (!skipPersistentCache && cacheable(result)) void this.cache.set(cacheKey, result, PERSISTENT_CACHE_TTL_MS);
         return result;
       })
       .finally(() => inflight.delete(cacheKey));
@@ -137,16 +147,26 @@ export class ComponentCompareMain {
   private comparesLiveWorkspace(baseIdStr: string, compareIdStr: string): boolean {
     if (!this.workspace) return false; // scope/remote host: every compare is an immutable snap-to-snap pair
     if (baseIdStr === compareIdStr) return true; // the "local changes" view: checked-out snap vs on-disk files
-    let compareId: ComponentID;
+    return this.isLiveCheckout(compareIdStr);
+  }
+
+  /**
+   * whether this id refers to the component version currently checked out on disk — the one case
+   * where "the same versioned id" can produce different data over time (the user edits files). errs
+   * toward `true` when the id cannot be classified, so a stale cached result is never served.
+   */
+  private isLiveCheckout(idStr: string): boolean {
+    if (!this.workspace) return false;
+    let id: ComponentID;
     try {
-      compareId = ComponentID.fromString(compareIdStr);
+      id = ComponentID.fromString(idStr);
     } catch {
       return true; // unclassifiable id → assume live so a stale cached diff is never returned
     }
-    const checkedOut = this.workspace.getIdIfExist(compareId);
-    if (!checkedOut) return false; // compare side isn't checked out → two stored snaps, safe to cache
-    // live only when the compare side is the exact version currently checked out on disk.
-    return !compareId.hasVersion() || checkedOut.version === compareId.version;
+    const checkedOut = this.workspace.getIdIfExist(id);
+    if (!checkedOut) return false; // not checked out → a stored snap, safe to cache
+    // live only when this side is the exact version currently checked out on disk.
+    return !id.hasVersion() || checkedOut.version === id.version;
   }
 
   /** The original `compare()` body — moved here so the public method can wrap with memo + single-flight. */
@@ -275,11 +295,17 @@ export class ComponentCompareMain {
     // DISABLED are stable env properties and safe to cache (see `isApiDiffCacheable`).
     // the version namespace invalidates older computed results on engine changes:
     // v2 — availability-aware results; v3 — self-referential-returnType display fix.
+    // skip the persistent cache when EITHER side is the live checkout: SchemaMain live-extracts the
+    // schema of a modified checkout of the exact same versioned id, so a snap-to-snap result cached
+    // under this key in a prior (unmodified) run would mask the user's on-disk API changes. both
+    // sides are checked (unlike `compare()`, where only the compare side can be live) because the
+    // checked-out version can appear on either side of an API diff pair.
     return this.getOrCompute(
       this.apiDiffInflight,
       `component-compare:api-diff:v3:${baseIdStr}|${compareIdStr}`,
       () => this.computeAPIDiff(baseIdStr, compareIdStr),
-      (v) => v !== null && ComponentCompareMain.isApiDiffCacheable(v)
+      (v) => v !== null && ComponentCompareMain.isApiDiffCacheable(v),
+      this.isLiveCheckout(baseIdStr) || this.isLiveCheckout(compareIdStr)
     );
   }
 

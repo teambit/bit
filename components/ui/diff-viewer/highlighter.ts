@@ -76,6 +76,11 @@ function getHighlighter(): Promise<HighlighterCore> {
     langs: [],
     // forgiving: don't throw on grammar patterns the JS engine can't compile — skip them instead.
     engine: createJavaScriptRegexEngine({ forgiving: true }),
+  }).catch((err) => {
+    // don't memoize a rejection: a transient init failure would otherwise permanently disable
+    // highlighting for the whole session (every later call would get the same rejected promise).
+    highlighterPromise = undefined;
+    throw err;
   });
   highlighterPromise = created;
   return created;

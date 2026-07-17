@@ -322,8 +322,12 @@ function LaneCompareInline({
       (componentsToDiff || []).map(([baseId, compareId]) => {
         const idStr = compareId?.toStringWithoutVersion() || baseId?.toStringWithoutVersion() || '';
         const diff = laneComponentDiffByCompId.get(idStr);
-        const changes: ChangeType[] = (diff as any)?.changes || [];
-        const changeType: ChangeType = (diff as any)?.changeType;
+        const rawChanges: ChangeType[] | null | undefined = (diff as any)?.changes;
+        const changes: ChangeType[] = rawChanges || [];
+        const changeType: ChangeType | undefined = (diff as any)?.changeType;
+        // diff arrived but the server couldn't classify (changes = null, a transient failure). an
+        // UNKNOWN state — the component must stay visible and must never count toward "no changes".
+        const unclassified = Boolean(diff) && rawChanges == null;
         const baseSource: 'workspace' | 'scope' | undefined = (diff as any)?.baseSource;
         return {
           idStr,
@@ -339,6 +343,7 @@ function LaneCompareInline({
             : undefined,
           changes,
           changeType,
+          unclassified,
           scope: (compareId || baseId)?.scope || '',
           namespace: (compareId || baseId)?.namespace || '',
         };
@@ -379,7 +384,9 @@ function LaneCompareInline({
     (c: (typeof allComponents)[number]) => {
       if (c.changeType === ChangeType.NEW || c.changes.some((ch) => ch === ChangeType.NEW)) return true;
       const files = fileRegistry?.getFiles(c.idStr);
-      if (files === undefined) return c.changes.some((ch) => ch === ChangeType.SOURCE_CODE);
+      // unclassified (server couldn't derive change types): keep visible until the real file list
+      // settles the question — hiding on an unknown would silently drop a possibly-changed component.
+      if (files === undefined) return c.changes.some((ch) => ch === ChangeType.SOURCE_CODE) || c.unclassified;
       return files.length > 0;
     },
     // getVersion() advances on every registration, so this recomputes as bulk file data streams in.
@@ -396,8 +403,9 @@ function LaneCompareInline({
   const hasApiChanges = useCallback(
     (c: (typeof allComponents)[number]) => {
       const entries = fileRegistry?.getApiEntries(c.idStr);
+      // unclassified components stay visible until the API analysis itself settles the question.
       if (entries === undefined)
-        return c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.DEPENDENCY);
+        return c.changes.some((ch) => ch === ChangeType.SOURCE_CODE || ch === ChangeType.DEPENDENCY) || c.unclassified;
       return entries.length > 0;
     },
     // getVersion() advances on every registration, so this recomputes as API results stream in.
@@ -413,15 +421,15 @@ function LaneCompareInline({
         case 'api':
           return hasApiChanges(c);
         case 'preview':
-          // a modified component that actually has compositions to preview.
-          return isModified(c.changeType, c.changes) && compositionsMap.get(c.idStr) !== false;
+          // a modified (or unclassified — err toward showing) component that has compositions.
+          return (isModified(c.changeType, c.changes) || c.unclassified) && compositionsMap.get(c.idStr) !== false;
         case 'docs':
-          // docs have no dedicated diff signal, so show every modified component.
-          return isModified(c.changeType, c.changes);
+          // docs have no dedicated diff signal, so show every modified (or unclassified) component.
+          return isModified(c.changeType, c.changes) || c.unclassified;
         case 'dependencies':
-          return c.changes.some((ch) => ch === ChangeType.DEPENDENCY);
+          return c.changes.some((ch) => ch === ChangeType.DEPENDENCY) || c.unclassified;
         case 'config':
-          return c.changes.some((ch) => ch === ChangeType.ASPECTS);
+          return c.changes.some((ch) => ch === ChangeType.ASPECTS) || c.unclassified;
         default:
           // tests show every component.
           return true;
@@ -444,13 +452,14 @@ function LaneCompareInline({
     const map = new Map<string, Record<string, string>>();
     allComponents.forEach((c) => {
       const attrs: Record<string, string> = {};
-      const modified = isModified(c.changeType, c.changes);
+      // unclassified counts as modified everywhere: an unknown state must never hide a component.
+      const modified = isModified(c.changeType, c.changes) || c.unclassified;
       if (hasCodeChanges(c)) attrs['data-has-code'] = '';
       // docs and preview only surface modified components (preview additionally needs compositions).
       if (modified) attrs['data-has-docs'] = '';
       if (modified && compositionsMap.get(c.idStr) !== false) attrs['data-has-preview'] = '';
-      if (c.changes.some((ch) => ch === ChangeType.DEPENDENCY)) attrs['data-has-deps'] = '';
-      if (c.changes.some((ch) => ch === ChangeType.ASPECTS)) attrs['data-has-config'] = '';
+      if (c.changes.some((ch) => ch === ChangeType.DEPENDENCY) || c.unclassified) attrs['data-has-deps'] = '';
+      if (c.changes.some((ch) => ch === ChangeType.ASPECTS) || c.unclassified) attrs['data-has-config'] = '';
       map.set(c.idStr, attrs);
     });
     return map;
@@ -499,12 +508,13 @@ function LaneCompareInline({
       // docs and preview show only modified components (they have no per-view diff signal); the count
       // must match so the tab badge and the auto-view-switch reflect what actually renders.
       preview: allComponents.filter(
-        (c) => isModified(c.changeType, c.changes) && compositionsMap.get(c.idStr) !== false
+        (c) => (isModified(c.changeType, c.changes) || c.unclassified) && compositionsMap.get(c.idStr) !== false
       ).length,
-      docs: allComponents.filter((c) => isModified(c.changeType, c.changes)).length,
-      dependencies: allComponents.filter((c) => c.changes.some((ch) => ch === ChangeType.DEPENDENCY)).length,
+      docs: allComponents.filter((c) => isModified(c.changeType, c.changes) || c.unclassified).length,
+      dependencies: allComponents.filter((c) => c.changes.some((ch) => ch === ChangeType.DEPENDENCY) || c.unclassified)
+        .length,
       tests: allComponents.length,
-      config: allComponents.filter((c) => c.changes.some((ch) => ch === ChangeType.ASPECTS)).length,
+      config: allComponents.filter((c) => c.changes.some((ch) => ch === ChangeType.ASPECTS) || c.unclassified).length,
       // API tab count stays the full component set on purpose: a mode with count 0 is hidden by the
       // toolbar, and the API view must stay reachable even when nothing changed (to show its own
       // "stable"/"nothing to compare" states) — the sidebar and pane filter to real diffs via
@@ -606,8 +616,10 @@ function LaneCompareInline({
   // No component changed at all (every change list is NONE, or there are no pairs) — the compare has
   // nothing to show in ANY view, so the whole body renders as a single blank state (below) instead of
   // empty chrome. NEW/DELETED components count as changes, so their presence keeps the full view.
+  // an unclassified component (the server couldn't derive its change types — transient) blocks the
+  // blank state: "unknown" must never be presented as a verified all-clear.
   const noChanges = useMemo(
-    () => !loadingLaneDiff && allComponents.every((c) => !isModified(c.changeType, c.changes)),
+    () => !loadingLaneDiff && allComponents.every((c) => !c.unclassified && !isModified(c.changeType, c.changes)),
     [loadingLaneDiff, allComponents]
   );
 
@@ -751,7 +763,7 @@ function LaneCompareInline({
                           compareUrl={c.compareUrl}
                           envIcon={envIconsMap.get(c.idStr)}
                           allTabs={resolvedTabs}
-                          accentColor={ACCENT_COLORS[c.changeType] || undefined}
+                          accentColor={(c.changeType && ACCENT_COLORS[c.changeType]) || undefined}
                           host={host}
                           dataAttributes={componentDataAttrs.get(c.idStr)}
                         />
