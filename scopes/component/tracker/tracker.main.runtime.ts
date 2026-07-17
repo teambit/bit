@@ -134,11 +134,16 @@ if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bi
    * checks against a timeout and simply skip the warning if the remote is too slow to answer.
    */
   private async getIdsExistingOnRemote(ids: ComponentID[]): Promise<ComponentID[]> {
-    const checkAll = pMapPool(
-      ids,
-      async (id) => ((await this.workspace.scope.isComponentExistsOnRemote(id)) ? id : undefined),
-      { concurrency: concurrentComponentsLimit() }
-    ).then((results) => results.filter((id): id is ComponentID => Boolean(id)));
+    const checkAll = (async () => {
+      // resolve the remotes once (it reads the global-remotes file from disk) and reuse for all ids.
+      const remotes = await this.workspace.scope.getRemoteScopes();
+      const results = await pMapPool(
+        ids,
+        async (id) => ((await this.workspace.scope.isComponentExistsOnRemote(id, remotes)) ? id : undefined),
+        { concurrency: concurrentComponentsLimit() }
+      );
+      return results.filter((id): id is ComponentID => Boolean(id));
+    })();
 
     const skipIfTooSlow = new Promise<ComponentID[]>((resolve) => {
       const timer = setTimeout(() => resolve([]), REMOTE_COLLISION_CHECK_TIMEOUT_MS);

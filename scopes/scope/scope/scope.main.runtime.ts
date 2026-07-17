@@ -1197,12 +1197,15 @@ export class ScopeMain implements ComponentFactory {
    * intended as an early-warning helper (e.g. during "bit add"/"bit create"), not as a source of
    * truth. it never throws: if the workspace is offline, the scope can't be resolved, the user has
    * no access, or the remote lacks the component, it resolves to `false` so callers can safely skip.
+   *
+   * pass a pre-resolved `remotes` when checking many ids to avoid reloading the global-remotes file
+   * from disk on every call.
    */
-  async isComponentExistsOnRemote(id: ComponentID): Promise<boolean> {
+  async isComponentExistsOnRemote(id: ComponentID, remotes?: Remotes): Promise<boolean> {
     if (!id.scope) return false;
     try {
-      const remotes = await this.getRemoteScopes();
-      const remote = await remotes.resolve(id.scope);
+      const resolvedRemotes = remotes || (await this.getRemoteScopes());
+      const remote = await resolvedRemotes.resolve(id.scope);
       const componentFromRemote = await remote.show(id.changeVersion(undefined));
       return Boolean(componentFromRemote);
     } catch {
