@@ -2,7 +2,7 @@
 /* eslint-disable react/require-default-props */
 /* eslint-disable @typescript-eslint/no-use-before-define */ // hoisted function components used before their definition
 import type { HTMLAttributes, ReactNode } from 'react';
-import React, { useContext, useEffect, useMemo, useRef, useState, forwardRef } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState, forwardRef, startTransition } from 'react';
 import classnames from 'classnames';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID as ComponentIdValue } from '@teambit/component-id';
@@ -573,7 +573,10 @@ function scheduleStaggeredMount(fn: () => void): () => void {
     mountDrainScheduled = true;
     requestAnimationFrame(function drain() {
       const next = mountQueue.shift();
-      if (next) next();
+      // run the mount as a transition: React time-slices the (heavy) render and lets urgent input —
+      // a view-mode click, typing in search — preempt it. Without this, each mount render is a
+      // blocking task and the page reads as frozen while diffs stream in.
+      if (next) startTransition(next);
       if (mountQueue.length > 0) requestAnimationFrame(drain);
       else mountDrainScheduled = false;
     });

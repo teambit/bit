@@ -124,14 +124,26 @@ function tokenize(content: string, lang: string): HlLines | null {
 }
 
 /**
+ * files at or below this size tokenize synchronously during render (a few ms, no unhighlighted
+ * flash); larger files tokenize in an idle callback AFTER the plain-text diff has painted. A big
+ * file's whole-file tokenize is one non-interruptible chunk — doing it inside the mount render
+ * blocked the main thread while diffs streamed in, which froze view-mode clicks.
+ */
+const SYNC_TOKENIZE_LIMIT = 20_000;
+
+type DeferredTokens = { content: string; lang: string; lines: HlLines | null };
+
+/**
  * Highlight a whole file's content into per-line tokens. The full file is tokenized at once (not
  * line-by-line) so multi-line constructs — template strings, block comments, JSX — stay correct.
  * While the grammar loads (or if the language is unsupported) returns `null`; callers should fall
- * back to rendering plain text, then re-render when tokens arrive.
+ * back to rendering plain text, then re-render when tokens arrive. Files over SYNC_TOKENIZE_LIMIT
+ * also return `null` first and deliver their tokens from an idle slot.
  */
 export function useHighlightedLines(content: string | undefined, lang: string | undefined): HlLines | null {
   // bumped once the grammar finishes loading, to trigger a single re-tokenize when it's ready.
   const [version, setVersion] = useState(0);
+  const [deferred, setDeferred] = useState<DeferredTokens | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,9 +162,36 @@ export function useHighlightedLines(content: string | undefined, lang: string | 
     };
   }, [content, lang]);
 
-  // memoized so re-renders from view/expand state don't re-tokenize the whole file.
-  return useMemo(() => {
-    if (!lang || content === undefined) return null;
+  const isLarge = (content?.length ?? 0) > SYNC_TOKENIZE_LIMIT;
+
+  // small files: memoized so re-renders from view/expand state don't re-tokenize the whole file.
+  const syncLines = useMemo(() => {
+    if (!lang || content === undefined || isLarge) return null;
     return tokenize(content, lang);
-  }, [content, lang, version]);
+  }, [content, lang, isLarge, version]);
+
+  // large files: tokenize off the render, in an idle slot. `version` re-runs this once the grammar
+  // finishes loading (tokenize() returns null until then, same as the sync path).
+  useEffect(() => {
+    if (!lang || content === undefined || !isLarge) return undefined;
+    if (!loadedLangs.has(lang) || !highlighterInstance) return undefined;
+    let cancelled = false;
+    const idle: (cb: () => void) => unknown =
+      typeof requestIdleCallback === 'function' ? requestIdleCallback : (cb) => setTimeout(cb, 0);
+    const cancelIdle: (handle: any) => void =
+      typeof cancelIdleCallback === 'function' ? cancelIdleCallback : clearTimeout;
+    const handle = idle(() => {
+      if (cancelled) return;
+      const lines = tokenize(content, lang);
+      if (!cancelled) setDeferred({ content, lang, lines });
+    });
+    return () => {
+      cancelled = true;
+      cancelIdle(handle);
+    };
+  }, [content, lang, isLarge, version]);
+
+  if (!isLarge) return syncLines;
+  // guard against serving a previous file's tokens while the current one is still queued.
+  return deferred && deferred.content === content && deferred.lang === lang ? deferred.lines : null;
 }

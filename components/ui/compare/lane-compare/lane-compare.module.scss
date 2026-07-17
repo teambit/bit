@@ -307,7 +307,10 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
 
 // A group with no panels visible in the active view. Hidden via a class (not removed from the tree)
 // so its panels stay mounted and a later view switch is still a pure CSS flip.
-.groupHidden {
+// compound selector on purpose: the bare `.groupHidden { display: none }` was silently defeated by
+// `.laneCompareGroup { display: grid }` below — same specificity, later in the file wins — so groups
+// with zero visible components rendered as stray headers with a "0" badge.
+.laneCompareGroup.groupHidden {
   display: none;
 }
 
