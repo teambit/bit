@@ -250,46 +250,28 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     });
   });
 
+  // a plain .bit-env.js plugin env carrying only the peers policy in its env.jsonc. the
+  // react-env-based fixture used before pulled the whole react toolchain from npm, which
+  // got the yarn-hoisted install OOM-killed on CI; the peers policy is all this test needs.
+  function createPeerEnv(id: string, peer: { name: string; supportedRange: string; version: string }) {
+    const name = id.split('/').pop();
+    helper.fs.outputFile(
+      `${id}/${name}.bit-env.js`,
+      `class PeerEnv {\n  name = '${name}';\n}\nmodule.exports.default = new PeerEnv();\n`
+    );
+    helper.fs.outputFile(`${id}/index.js`, `module.exports = require('./${name}.bit-env');\n`);
+    helper.fixtures.generateEnvJsoncFile(id, { policy: { peers: [peer] } });
+    helper.command.addComponent(id, { i: id });
+    helper.command.setEnv(id, 'teambit.envs/env');
+    helper.command.link();
+  }
+
   function prepare(pm: 'yarn' | 'pnpm') {
     helper = new Helper();
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/${pm}`);
-    helper.env.setCustomNewEnv(
-      undefined,
-      undefined,
-      {
-        policy: {
-          peers: [
-            {
-              name: 'react',
-              supportedRange: '^16.8.0',
-              version: '16.14.0',
-            },
-          ],
-        },
-      },
-      false,
-      'custom-react/env1',
-      'custom-react/env1'
-    );
-    helper.env.setCustomNewEnv(
-      undefined,
-      undefined,
-      {
-        policy: {
-          peers: [
-            {
-              name: 'react',
-              supportedRange: '^18.0.0',
-              version: '18.0.0',
-            },
-          ],
-        },
-      },
-      true,
-      'custom-react/env2',
-      'custom-react/env2'
-    );
+    createPeerEnv('custom-react/env1', { name: 'react', supportedRange: '^16.8.0', version: '16.14.0' });
+    createPeerEnv('custom-react/env2', { name: 'react', supportedRange: '^18.0.0', version: '18.0.0' });
 
     helper.fixtures.populateComponents(2);
     helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
