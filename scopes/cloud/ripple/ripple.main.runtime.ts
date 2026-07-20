@@ -314,10 +314,12 @@ export class RippleMain {
    * to the end, so the whole error block is shown starting at where it began.
    */
   extractErrorsFromLog(messages: string[]): string[] {
-    // markers that denote the start of a real error section, matched case-insensitively.
-    // word boundaries around "error:" avoid false hits on serialized props such as
-    // "isUserError: true" (a common tail of a stringified error object) — matching that
-    // would slice from the very end and drop the real error printed above it.
+    // markers that denote the start of a real error section. most are matched
+    // case-insensitively; the named-Error marker is intentionally case-sensitive so it
+    // catches "TypeError:" / "ReferenceError:" at line start or after whitespace without
+    // matching serialized props such as "isUserError: true" (a common tail of a stringified
+    // error object) — matching that would slice from the very end and drop the real error
+    // printed above it.
     const markers: RegExp[] = [
       /errors were found/i,
       /failed task/i,
@@ -325,7 +327,8 @@ export class RippleMain {
       /responded with the following error/i,
       /unable to find object/i,
       /\berror:/i,
-      /FAIL/,
+      /(^|\s)[A-Z]\w*Error:/,
+      /\bfail\b/i,
     ];
     // pick the earliest line matching any marker (not the first marker in the list) so an
     // incidental late match can't truncate the error that appeared earlier in the log.
