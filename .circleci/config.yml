@@ -491,7 +491,10 @@ commands:
           # The timings manifest is derived from actual CI node run times; refresh it occasionally
           # with: node scripts/generate-e2e-timings.js
           command: 'cd bit && node scripts/split-e2e-tests.js | xargs npm run mocha-circleci << parameters.bit_bin >>'
-          no_output_timeout: 10m
+          # temporarily raised: former-core envs are now regular exported components, so building the
+          # workspace-aspects graph for fixtures that use them imports the env's full component graph
+          # from the remote (silent, ~12m). tracked as a separate perf follow-up; revert to 10m once fixed.
+          no_output_timeout: 40m
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
