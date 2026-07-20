@@ -1,7 +1,7 @@
 import type { UiUI } from '@teambit/ui';
 import { UIAspect, UIRuntime } from '@teambit/ui';
 import type { ReactNode } from 'react';
-import React, { useReducer } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { v1 } from 'uuid';
 
 import { NotificationContext } from '@teambit/ui-foundation.ui.notifications.notification-context';
@@ -89,6 +89,12 @@ export default class NotificationUI implements NotificationsStore {
     const isMinimal = searchParams.get('minimal-mode') === 'true';
     this.dispatch = dispatch;
     this.isMinimal = isMinimal;
+
+    // drop any queued messages when entering minimal mode, so toggling minimal
+    // mode back off later doesn't resurrect stale notifications.
+    useEffect(() => {
+      if (isMinimal) dispatch({ type: 'clear' });
+    }, [isMinimal]);
 
     if (isMinimal) return null;
 
