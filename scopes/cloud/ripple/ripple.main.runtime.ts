@@ -310,15 +310,34 @@ export class RippleMain {
 
   /**
    * extract the error section from container log messages.
-   * looks for common error patterns in the build output.
+   * looks for common error markers in the build output and returns from the *earliest* one
+   * to the end, so the whole error block is shown starting at where it began.
    */
   extractErrorsFromLog(messages: string[]): string[] {
-    const patterns = ['errors were found', 'Failed task', 'threw an error', 'Error:', 'FAIL'];
-    for (const pattern of patterns) {
-      const idx = messages.findIndex((m) => stripAnsi(m).includes(pattern));
-      if (idx >= 0) {
-        return messages.slice(idx);
-      }
+    // markers that denote the start of a real error section. most are matched
+    // case-insensitively; the named-Error marker is intentionally case-sensitive so it
+    // catches "TypeError:" / "ReferenceError:" at line start or after whitespace without
+    // matching serialized props such as "isUserError: true" (a common tail of a stringified
+    // error object) — matching that would slice from the very end and drop the real error
+    // printed above it.
+    const markers: RegExp[] = [
+      /errors were found/i,
+      /failed task/i,
+      /threw an error/i,
+      /responded with the following error/i,
+      /unable to find object/i,
+      /\berror:/i,
+      /(^|\s)[A-Z]\w*Error:/,
+      /\bfail\b/i,
+    ];
+    // pick the earliest line matching any marker (not the first marker in the list) so an
+    // incidental late match can't truncate the error that appeared earlier in the log.
+    const startIdx = messages.findIndex((m) => {
+      const clean = stripAnsi(m);
+      return markers.some((re) => re.test(clean));
+    });
+    if (startIdx >= 0) {
+      return messages.slice(startIdx);
     }
     // last resort: grab the last 30 lines if the log has content
     if (messages.length > 0) {
