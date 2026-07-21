@@ -4,7 +4,7 @@ This document provides guidelines for writing consistent and effective release n
 
 ## File Structure
 
-Release-note files in `releases-docs/releases/` contain **section content only** — they start directly with the first `###` section header (see `v2.0.0.md` and later). This is the current convention and matches the `generate-release-notes` skill, which instructs saving the release content without any metadata header.
+Release-note files in `releases-docs/releases/` contain **section content only** — they start directly with the release content's first heading, with no metadata header (see `v2.0.0.md` and later). This is the current convention and matches the `generate-release-notes` skill, which instructs saving the release content without any metadata header. For the heading level to use, see [Section Headers](#section-headers) below (`###` preferred; `##` also acceptable, as in `v2.0.0.md`).
 
 > **Legacy metadata header (optional):** Some older release files (e.g. `v1.10.0.md`) begin with a metadata block followed by a `--` separator. It is no longer required, and new files should omit it:
 >
