@@ -4,22 +4,24 @@ This document provides guidelines for writing consistent and effective release n
 
 ## File Structure
 
-Each release note file follows this structure:
+Release-note files in `releases-docs/releases/` contain **section content only** — they start directly with the release content's first heading, with no metadata header (see `v2.0.0.md` and later). This is the current convention and matches the `generate-release-notes` skill, which instructs saving the release content without any metadata header. For the heading level to use, see [Section Headers](#section-headers) below (`###` preferred; `##` also acceptable, as in `v2.0.0.md`).
 
-```
-title: v{VERSION}
-tag: v{VERSION}
-draft: false
-prerelease: false
-immutable: false
-author: {AUTHOR_GITHUB_USERNAME}
-created: {ISO_DATE}
-published: {ISO_DATE}
-url: https://github.com/teambit/bit/releases/tag/v{VERSION}
---
-
-{RELEASE_CONTENT}
-```
+> **Legacy metadata header (optional):** Some older release files (e.g. `v1.10.0.md`) begin with a metadata block followed by a `--` separator. It is no longer required, and new files should omit it:
+>
+> ```
+> title: v{VERSION}
+> tag: v{VERSION}
+> draft: false
+> prerelease: false
+> immutable: false
+> author: {AUTHOR_GITHUB_USERNAME}
+> created: {ISO_DATE}
+> published: {ISO_DATE}
+> url: https://github.com/teambit/bit/releases/tag/v{VERSION}
+> --
+>
+> {RELEASE_CONTENT}
+> ```
 
 ## Section Order
 
