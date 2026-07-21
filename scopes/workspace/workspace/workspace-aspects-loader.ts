@@ -1,11 +1,17 @@
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import type { Graph } from '@teambit/graph.cleargraph';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
-import type { AspectDefinition, AspectLoaderMain, AspectResolver, ResolvedAspect } from '@teambit/aspect-loader';
+import type {
+  AspectDefinition,
+  AspectDefinitionProps,
+  AspectLoaderMain,
+  AspectResolver,
+  ResolvedAspect,
+} from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
@@ -320,12 +326,20 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       throwOnError,
       runSubscribers
     );
+    // installed legacy-core env closure aspects are resolved from node_modules as id-only defs (no
+    // Component), so aspectDefsToRequireableComponents skips them. require their manifests directly
+    // from their installed package + runtime path so harmony can instantiate their providers.
+    const closureDefs = aspectsDefs.filter(
+      (def) => !def.component && def.getId && !this.aspectLoader.isCoreAspect(def.getId)
+    );
+    const closureManifests = await this.requireClosureManifestsFromNodeModules(closureDefs);
+    const allManifests = [...manifests, ...closureManifests];
     await this.aspectLoader.loadExtensionsByManifests(
-      manifests,
+      allManifests,
       { seeders, neededFor },
       { throwOnError, hideMissingModuleError, ignoreErrorFunc }
     );
-    return { manifests, requireableComponents };
+    return { manifests: allManifests, requireableComponents };
   }
 
   async resolveAspects(
@@ -547,6 +561,21 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         )
       : [];
 
+    // installed legacy-core envs were leafed in the aspects-graph (their model closure was NOT
+    // imported from the remote - see build-graph-from-fs.ts). resolve the env's runtime aspect
+    // closure from the workspace node_modules instead, so harmony can load them and the env's
+    // provider gets its deps (e.g. node's react env). without this, harmony NOOPs the deps' runtimes.
+    const resolvedNonCoreIds = new Set(
+      [...wsAspectDefs, ...scopeAspectsDefs, ...installedAspectsDefs]
+        .map((def) => def.getId?.split('@')[0])
+        .filter((id): id is string => Boolean(id))
+    );
+    const legacyEnvClosureDefs = await this.resolveLegacyEnvsClosureFromNodeModules(
+      aspectsComponents,
+      runtimeName,
+      resolvedNonCoreIds
+    );
+
     let coreAspectDefs = await Promise.all(
       coreAspectsIds.map(async (coreId) => {
         const rawDef = await getAspectDef(coreId, runtimeName);
@@ -564,7 +593,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       Object.keys(this.workspace.localAspects),
       runtimeName
     );
-    const allDefsExceptLocal = [...wsAspectDefs, ...coreAspectDefs, ...scopeAspectsDefs, ...installedAspectsDefs];
+    const allDefsExceptLocal = [
+      ...wsAspectDefs,
+      ...coreAspectDefs,
+      ...scopeAspectsDefs,
+      ...installedAspectsDefs,
+      ...legacyEnvClosureDefs,
+    ];
     const withoutLocalAspects = allDefsExceptLocal.filter((aspectId) => {
       return !localResolved.find((localAspect) => {
         return localAspect.id === aspectId.component?.id?.toStringWithoutVersion();
@@ -918,6 +953,142 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     } finally {
       visiting.delete(aspectStringId);
     }
+  }
+
+  /**
+   * resolve the aspect closure of installed legacy-core envs directly from the workspace node_modules.
+   * the graph builder intentionally leafs these envs (see build-graph-from-fs.ts) so their model
+   * closure is NOT imported from the remote - very slow (hundreds of comps, incl. UI/docs) and
+   * unnecessary since the env and all its runtime aspect deps are installed as packages. we build the
+   * aspect definitions by walking the installed package.json dependency tree and reading each bit
+   * component package's dist dir. without this, harmony NOOPs the deps' runtimes and the env's
+   * provider gets null deps (e.g. node's react env).
+   */
+  private async resolveLegacyEnvsClosureFromNodeModules(
+    aspectsComponents: Component[],
+    runtimeName: string | undefined,
+    alreadyResolvedIds: Set<string>
+  ): Promise<AspectDefinition[]> {
+    const coreAspectsIds = new Set(this.aspectLoader.getCoreAspectIds());
+    const envPaths: string[] = [];
+    await Promise.all(
+      aspectsComponents.map(async (component) => {
+        if (!this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion())) return;
+        // a legacy-core env authored in this workspace is resolved from the workspace, not installed.
+        if (this.workspace.hasId(component.id, { ignoreVersion: true })) return;
+        const pkgPath = await this.workspace.getComponentPackagePath(component);
+        if (await fs.pathExists(pkgPath)) envPaths.push(pkgPath);
+      })
+    );
+    if (!envPaths.length) return [];
+
+    const visitedDirs = new Set<string>();
+    const rawDefsById = new Map<string, AspectDefinitionProps>();
+    const queue = [...envPaths];
+    while (queue.length) {
+      const pkgPath = queue.pop() as string;
+      if (visitedDirs.has(pkgPath)) continue;
+      visitedDirs.add(pkgPath);
+      // eslint-disable-next-line no-await-in-loop
+      const pkgJson = await fs.readJson(join(pkgPath, 'package.json')).catch(() => undefined);
+      const componentId = pkgJson?.componentId;
+      if (!componentId) continue; // only bit components participate in the aspect graph
+      const idWithoutVersion = `${componentId.scope}/${componentId.name}`;
+      // core aspects are loaded separately (bundled); don't emit or walk into them.
+      if (coreAspectsIds.has(idWithoutVersion)) continue;
+      if (!alreadyResolvedIds.has(idWithoutVersion) && !rawDefsById.has(idWithoutVersion)) {
+        // the workspace-aspects load uses runtimeName=undefined; the runtime we need for these
+        // installed aspects is always the main runtime.
+        // eslint-disable-next-line no-await-in-loop
+        const rawDef = await this.buildInstalledAspectDefFromPackage(
+          pkgPath,
+          pkgJson,
+          idWithoutVersion,
+          runtimeName || MainRuntime.name
+        );
+        if (rawDef) rawDefsById.set(idWithoutVersion, rawDef);
+      }
+      // recurse into the installed runtime deps (published packages only list runtime deps here, so
+      // dev/peer deps that aren't needed to run the env are naturally excluded).
+      for (const depName of Object.keys(pkgJson.dependencies || {})) {
+        let depDir: string | undefined;
+        try {
+          depDir = findRoot(resolveFrom(pkgPath, [depName]));
+        } catch {
+          continue; // unresolvable (e.g. an optional/peer dep not installed) - skip
+        }
+        if (depDir && !visitedDirs.has(depDir)) queue.push(depDir);
+      }
+    }
+    const defs = [...rawDefsById.values()].map((props) => this.aspectLoader.loadDefinition(props));
+    if (defs.length) {
+      this.logger.debug(
+        `resolveAspects, resolved ${defs.length} legacy-core env closure aspect(s) from node_modules (no remote import)`
+      );
+    }
+    return defs;
+  }
+
+  /**
+   * build an aspect definition for an installed bit component package by reading its dist dir for the
+   * `.aspect.js` and `.<runtime>.runtime.js` files (same shape as core-aspects' getAspectDef, but for
+   * a known package path). returns undefined when the package is not an aspect (no aspect/runtime file).
+   */
+  private async buildInstalledAspectDefFromPackage(
+    pkgPath: string,
+    pkgJson: Record<string, any>,
+    id: string,
+    runtimeName?: string
+  ): Promise<AspectDefinitionProps | undefined> {
+    const distSubDir = typeof pkgJson.main === 'string' ? dirname(pkgJson.main) : 'dist';
+    const distDir = join(pkgPath, distSubDir);
+    if (!(await fs.pathExists(distDir))) return undefined;
+    const files = await fs.readdir(distDir);
+    const aspectFile = files.find((file) => file.endsWith('.aspect.js'));
+    const runtimeFile = runtimeName ? files.find((file) => file.endsWith(`.${runtimeName}.runtime.js`)) : undefined;
+    if (!aspectFile && !runtimeFile) return undefined; // not an aspect (a plain component dependency)
+    return {
+      id,
+      aspectPath: pkgPath,
+      aspectFilePath: aspectFile ? join(distDir, aspectFile) : null,
+      runtimePath: runtimeFile ? join(distDir, runtimeFile) : null,
+    };
+  }
+
+  /**
+   * require the aspect + runtime of id-only closure defs (the installed legacy-core env closure
+   * resolved from node_modules) directly, producing their manifests. mirrors aspect-loader.doRequire
+   * but for defs with no Component (which can't go through the requireable-components path). requiring
+   * the runtime module registers the aspect's provider with harmony so loadExtensionsByManifests can
+   * instantiate it and inject it into the env's provider (e.g. node's react).
+   */
+  private async requireClosureManifestsFromNodeModules(
+    defs: AspectDefinition[]
+  ): Promise<Array<Aspect | ExtensionManifest>> {
+    const manifests: Array<Aspect | ExtensionManifest> = [];
+    await pMapSeries(defs, async (def) => {
+      const localPath = def.aspectPath;
+      try {
+        const isModule = await this.aspectLoader.isEsmModule(localPath);
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const aspectModule = isModule ? await this.aspectLoader.loadEsm(localPath) : require(localPath);
+        const manifest = aspectModule?.default || aspectModule;
+        if (!manifest) return;
+        if (def.runtimePath) {
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          if (isModule) await this.aspectLoader.loadEsm(def.runtimePath);
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          else require(def.runtimePath);
+        }
+        // a published aspect module already declares its correct id; keep it to avoid mutating a
+        // shared object's id. only fill it in when missing.
+        if (!manifest.id && def.getId) manifest.id = def.getId;
+        manifests.push(manifest);
+      } catch (err: any) {
+        this.logger.warn(`failed requiring installed closure aspect ${def.getId} from ${localPath}`, err);
+      }
+    });
+    return manifests;
   }
 
   /**
