@@ -18,7 +18,6 @@ export {
 } from './core-aspects';
 export type { PluginDefinition } from './plugin-definition';
 export { AspectDefinition } from './aspect-definition';
-export type { AspectDefinitionProps } from './aspect-definition';
 export { UNABLE_TO_LOAD_EXTENSION } from './constants';
 export { AspectLoaderAspect };
 export default AspectLoaderAspect;
