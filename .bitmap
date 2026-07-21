@@ -44,13 +44,6 @@
         "mainFile": "find-duplications.ts",
         "rootDir": "scopes/toolbox/array/duplications-finder"
     },
-    "aspect": {
-        "name": "aspect",
-        "scope": "teambit.harmony",
-        "version": "1.0.1065",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/aspect"
-    },
     "aspect-docs/babel": {
         "name": "aspect-docs/babel",
         "scope": "teambit.compilation",
@@ -618,13 +611,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/entities/semantic-schema-diff"
     },
-    "env": {
-        "name": "env",
-        "scope": "teambit.envs",
-        "version": "1.0.1065",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/envs/env"
-    },
     "envs": {
         "name": "envs",
         "scope": "teambit.envs",
@@ -953,13 +939,6 @@
         "version": "0.0.13",
         "mainFile": "index.ts",
         "rootDir": "components/mcp/mcp-config-writer"
-    },
-    "mdx": {
-        "name": "mdx",
-        "scope": "teambit.mdx",
-        "version": "1.0.1066",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/mdx"
     },
     "merge-lanes": {
         "name": "merge-lanes",
@@ -1304,13 +1283,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/new-component-helper"
     },
-    "node": {
-        "name": "node",
-        "scope": "teambit.harmony",
-        "version": "1.0.1065",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/node"
-    },
     "notifications": {
         "name": "notifications",
         "scope": "teambit.ui-foundation",
@@ -1437,26 +1409,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/pubsub"
     },
-    "react": {
-        "name": "react",
-        "scope": "teambit.react",
-        "version": "1.0.1065",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/react"
-    },
     "react-router": {
         "name": "react-router",
         "scope": "teambit.ui-foundation",
         "version": "1.0.1065",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
-    },
-    "readme": {
-        "name": "readme",
-        "scope": "teambit.mdx",
-        "version": "1.0.1066",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/readme"
     },
     "refactoring": {
         "name": "refactoring",

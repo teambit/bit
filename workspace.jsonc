@@ -23,6 +23,11 @@
     },
     "policy": {
       "dependencies": {
+        "@teambit/node": "1.0.1042",
+        "@teambit/aspect": "1.0.1042",
+        "@teambit/env": "1.0.1042",
+        "@teambit/mdx": "1.0.1043",
+        "@teambit/readme": "1.0.1043",
         "@babel/core": "7.28.3",
         "@babel/plugin-proposal-decorators": "7.28.0",
         "@babel/plugin-transform-class-properties": "7.27.1",
