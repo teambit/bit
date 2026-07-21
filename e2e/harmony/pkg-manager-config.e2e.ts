@@ -1,15 +1,20 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import { readModulesManifest } from '@pnpm/modules-yaml';
 import chaiString from 'chai-string';
-
-import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
+import type { Modules } from '@pnpm/installing.modules-yaml';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+
 chai.use(chaiFs);
 chai.use(chaiString);
 
+async function readModulesManifest(modulesDir: string): Promise<Modules | null> {
+  const m = await import('@pnpm/installing.modules-yaml');
+  return m.readModulesManifest(modulesDir);
+}
+
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
-  'package manager rc file is read from the workspace directory when installation is in a capsule',
+  'workspace package-manager config is read when installation is in a capsule',
   function () {
     this.timeout(0);
     let helper: Helper;
@@ -67,26 +72,27 @@ chai.use(chaiString);
       });
     });
     describe('using pnpm', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace({
-          npmrcConfig: {
-            'hoist-pattern[]': 'foo',
-          },
-        });
+      let modulesState: Modules | null;
+      before(async () => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fs.outputFile('pnpm-workspace.yaml', 'hoistPattern:\n  - capsule-hoist-pattern\n');
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
+        helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
+        helper.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', false);
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
         helper.capsules.removeScopeAspectCapsules();
         helper.command.status(); // populate capsules.
-      });
-      it('workspace .npmrc is taken into account when running install in the capsule', async () => {
+
         const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const modulesState = await readModulesManifest(
+        modulesState = await readModulesManifest(
           path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules`)
         );
-        expect(modulesState?.hoistPattern?.[0]).to.eq('foo');
+      });
+      it('workspace pnpm config is taken into account when running install in the capsule', () => {
+        expect(modulesState?.hoistPattern).to.include('capsule-hoist-pattern');
       });
     });
     after(() => {

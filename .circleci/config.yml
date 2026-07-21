@@ -105,6 +105,7 @@ commands:
             cd <<parameters.directory>> &&
             pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
+            echo "package-import-method=copy" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
@@ -132,6 +133,7 @@ commands:
             cd <<parameters.directory>> &&
             pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
+            echo "package-import-method=copy" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             echo "prefer-symlinked-executables=false" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
@@ -144,6 +146,54 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
             pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
             pnpm add @teambit/bit --os=win32 --cpu=<<parameters.cpu>>
+
+  verify_pnpm_napi_bundle:
+    parameters:
+      package:
+        type: string
+      directory:
+        type: string
+        default: "bit-${BIT_VERSION}"
+    steps:
+      - run:
+          name: verify @pnpm/<<parameters.package>> native binary
+          command: |
+            cd <<parameters.directory>>
+            PNPM_NAPI_PACKAGE="<<parameters.package>>" node \<<'NODE'
+            const fs = require('fs');
+            const path = require('path');
+
+            const packageName = process.env.PNPM_NAPI_PACKAGE;
+            const candidates = [
+              path.join(process.cwd(), 'node_modules', '@pnpm', packageName, 'pnpm-napi.node'),
+              path.join(process.cwd(), 'node_modules', '.pnpm', 'node_modules', '@pnpm', packageName, 'pnpm-napi.node'),
+            ];
+            const found = candidates.find((candidate) => fs.existsSync(candidate));
+            if (found) {
+              console.log(`Found @pnpm/${packageName} native binary at ${path.relative(process.cwd(), found)}`);
+              process.exit(0);
+            }
+
+            const installedPackages = [];
+            for (const baseDir of [
+              path.join(process.cwd(), 'node_modules', '@pnpm'),
+              path.join(process.cwd(), 'node_modules', '.pnpm', 'node_modules', '@pnpm'),
+            ]) {
+              if (!fs.existsSync(baseDir)) continue;
+              for (const entry of fs.readdirSync(baseDir)) {
+                if (entry.startsWith('napi.')) installedPackages.push(path.relative(process.cwd(), path.join(baseDir, entry)));
+              }
+            }
+
+            console.error(`Missing @pnpm/${packageName}/pnpm-napi.node in Bit CLI bundle`);
+            console.error(`Checked:\n${candidates.map((candidate) => `  - ${path.relative(process.cwd(), candidate)}`).join('\n')}`);
+            console.error(
+              installedPackages.length
+                ? `Installed @pnpm/napi platform packages:\n${installedPackages.map((pkg) => `  - ${pkg}`).join('\n')}`
+                : 'No @pnpm/napi platform packages were found'
+            );
+            process.exit(1);
+            NODE
 
   # Bit configuration
   bit_config:
@@ -305,6 +355,7 @@ commands:
             --exclude=bit-${BIT_VERSION}/.npmrc
             --exclude=bit-${BIT_VERSION}/package.json
             --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
+            --exclude=bit-${BIT_VERSION}/pnpm-workspace.yaml
             bit-${BIT_VERSION}
 
   # Docker commands
@@ -491,6 +542,7 @@ commands:
           # The timings manifest is derived from actual CI node run times; refresh it occasionally
           # with: node scripts/generate-e2e-timings.js
           command: 'cd bit && node scripts/split-e2e-tests.js | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          no_output_timeout: '50m'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
@@ -962,6 +1014,8 @@ jobs:
       - setup_bit_version
       - setup_pnpm
       - install_bit_bundle
+      - verify_pnpm_napi_bundle:
+          package: "napi.linux-x64"
       - optimize_node_modules
       - run:
           name: copy lockfile
@@ -971,10 +1025,12 @@ jobs:
           name: move to linux folder
           command: mkdir linux && mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: install bit for Linux arm64
-          command: >
-            cd bit-${BIT_VERSION} &&
-            pnpm install --os=linux --cpu=arm64
+          name: reset bundle directory for Linux arm64
+          command: rm -rf bit-${BIT_VERSION} && mkdir bit-${BIT_VERSION}
+      - install_bit_bundle:
+          cpu: "arm64"
+      - verify_pnpm_napi_bundle:
+          package: "napi.linux-arm64"
       - optimize_node_modules:
           platform: arm64
       - compress_bit
@@ -1007,16 +1063,21 @@ jobs:
       - setup_pnpm
       - install_bit_bundle:
           os: "darwin"
+      - verify_pnpm_napi_bundle:
+          package: "napi.darwin-x64"
       - optimize_node_modules
       - compress_bit
       - run:
           name: move to macos folder
           command: mkdir macos && mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: install bit for macOS arm64
-          command: >
-            cd bit-${BIT_VERSION} &&
-            pnpm install --os=darwin --cpu=arm64
+          name: reset bundle directory for macOS arm64
+          command: rm -rf bit-${BIT_VERSION} && mkdir bit-${BIT_VERSION}
+      - install_bit_bundle:
+          os: "darwin"
+          cpu: "arm64"
+      - verify_pnpm_napi_bundle:
+          package: "napi.darwin-arm64"
       - optimize_node_modules:
           platform: arm64
       - compress_bit
@@ -1045,6 +1106,8 @@ jobs:
       - setup_bit_version
       - setup_pnpm
       - install_bit_bundle_windows
+      - verify_pnpm_napi_bundle:
+          package: "napi.win32-x64"
       - optimize_node_modules
       - compress_bit
       - run:

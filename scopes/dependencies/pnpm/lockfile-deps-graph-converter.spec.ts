@@ -1,9 +1,17 @@
 import path from 'path';
 import { ComponentID } from '@teambit/component';
 import { DependenciesGraph, type PackagesMap, type DependencyEdge } from '@teambit/objects';
-import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
+import {
+  convertLockfileToGraph,
+  convertGraphToLockfile,
+  init as initLockfileDepsGraphConverter,
+} from './lockfile-deps-graph-converter';
 import { type BitLockfileFile } from './lynx';
 import { expect } from 'chai';
+
+before(async () => {
+  await initLockfileDepsGraphConverter();
+});
 
 describe('convertLockfileToGraph simple case', () => {
   const lockfile: BitLockfileFile = {
@@ -108,14 +116,17 @@ describe('convertLockfileToGraph simple case', () => {
       },
     },
   };
-  const graph = convertLockfileToGraph(lockfile, {
-    pkgName: 'comp1',
-    componentRelativeDir: 'comps/comp1',
-    componentRootDir: 'node_modules/.bit_roots/env',
-    componentIdByPkgName: new Map([
-      ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
-      ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
-    ]),
+  let graph: DependenciesGraph;
+  before(() => {
+    graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+      ]),
+    });
   });
   const expected = {
     schemaVersion: '2.0',
@@ -793,6 +804,70 @@ describe('convertGraphToLockfile on invalid graph', () => {
     expect(Object.keys(lockfile.packages!).sort()).to.eql(['bar@2.0.0', 'foo@1.0.0']);
   });
 
+  it('should merge peer providers to the highest compatible version', async () => {
+    const peerDependencies = { 'peer-a': '^1.0.0' };
+    const graph = new DependenciesGraph({
+      packages: new Map([
+        ['abc@1.0.0', { resolution: { integrity: 'sha512-abc1' }, peerDependencies } as any],
+        ['peer-a@1.0.1', { resolution: { integrity: 'sha512-peer101' } } as any],
+      ]),
+      edges: [
+        {
+          id: DependenciesGraph.ROOT_EDGE_ID,
+          neighbours: [
+            {
+              id: 'abc@1.0.0(peer-a@1.0.1)',
+              name: 'abc',
+              specifier: '*',
+              lifecycle: 'runtime',
+            },
+          ],
+        },
+        {
+          id: 'abc@1.0.0(peer-a@1.0.1)',
+          attr: { pkgId: 'abc@1.0.0' },
+          neighbours: [{ id: 'peer-a@1.0.1', optional: false }],
+        },
+      ],
+    });
+    graph.merge(
+      new DependenciesGraph({
+        packages: new Map([
+          ['abc@2.0.0', { resolution: { integrity: 'sha512-abc2' }, peerDependencies } as any],
+          ['peer-a@1.0.0', { resolution: { integrity: 'sha512-peer100' } } as any],
+        ]),
+        edges: [
+          {
+            id: DependenciesGraph.ROOT_EDGE_ID,
+            neighbours: [
+              {
+                id: 'abc@2.0.0(peer-a@1.0.0)',
+                name: 'abc',
+                specifier: '*',
+                lifecycle: 'runtime',
+              },
+            ],
+          },
+          {
+            id: 'abc@2.0.0(peer-a@1.0.0)',
+            attr: { pkgId: 'abc@2.0.0' },
+            neighbours: [{ id: 'peer-a@1.0.0', optional: false }],
+          },
+        ],
+      })
+    );
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph(graph), {
+      manifests: {
+        [path.resolve('comps/comp1')]: { dependencies: { abc: '*' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+    });
+    expect(Object.keys(lockfile.packages!).sort()).to.eql(['abc@2.0.0', 'peer-a@1.0.1']);
+    expect(lockfile.importers!['comps/comp1'].dependencies!.abc.version).to.eql('2.0.0(peer-a@1.0.1)');
+    expect(lockfile.snapshots!['abc@2.0.0(peer-a@1.0.1)']).to.eql({ dependencies: { 'peer-a': '1.0.1' } });
+  });
+
   // Saved by bits older than #10361: even when the workspace-component's snap
   // entry survives in the graph (with no resolution, since the directory type
   // was stripped at snap time), the registry lookup at install time fails
@@ -835,6 +910,55 @@ describe('convertGraphToLockfile on invalid graph', () => {
     expect(Object.keys(lockfile.packages!).sort()).to.eql(['foo@1.0.0']);
     expect(Object.keys(lockfile.snapshots!).sort()).to.eql(['foo@1.0.0']);
     expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
+  });
+
+  it('should keep workspace-component pkgs that already have a valid resolution', async () => {
+    const componentPkgId = '@my-org/my-scope.comp2@1.0.0';
+    const packages: PackagesMap = new Map([
+      [
+        componentPkgId,
+        {
+          component: { scope: 'my-org.my-scope', name: 'comp2' },
+          resolution: { integrity: 'sha512-comp2' },
+        } as any,
+      ],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [
+          {
+            id: componentPkgId,
+            name: '@my-org/my-scope.comp2',
+            specifier: '1.0.0',
+            lifecycle: 'runtime',
+          },
+        ],
+      },
+      {
+        id: componentPkgId,
+        neighbours: [],
+      },
+    ];
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph(new DependenciesGraph({ packages, edges })), {
+      manifests: {
+        [path.resolve('comps/comp1')]: { dependencies: { '@my-org/my-scope.comp2': '1.0.0' } },
+        [path.resolve('comps/comp2')]: {
+          name: '@my-org/my-scope.comp2',
+          version: '1.0.0',
+        },
+      },
+      rootDir: process.cwd(),
+      resolve: () => {
+        throw new Error('resolved workspace component should not be re-resolved');
+      },
+    });
+    expect(lockfile.importers!['comps/comp1'].dependencies!['@my-org/my-scope.comp2']).to.eql({
+      version: '1.0.0',
+      specifier: '1.0.0',
+    });
+    expect(lockfile.packages![componentPkgId]).to.eql({ resolution: { integrity: 'sha512-comp2' } });
+    expect(lockfile.snapshots![componentPkgId]).to.eql({});
   });
 
   // A workspace-component snap reaches lockfile validation with no resolution
