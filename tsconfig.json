@@ -19,7 +19,8 @@
   "include": [
     "scopes",
     "e2e",
-    "components"
+    "components",
+    "typings"
   ],
   "exclude": [
     "node_modules",
