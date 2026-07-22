@@ -278,9 +278,18 @@ export class CloudMain {
           if (code === 'EADDRINUSE') {
             // set up a new auth listener with new port
             this.logger.warn(`port: ${port} already in use for cloud auth listener, trying port ${port + 1}`);
+            // The entry for this port was added optimistically (before listen() ran). listen() just
+            // failed, so remove the stale, server-less entry — otherwise getLoginUrl/getLoginPort
+            // callers can resolve to a port that has no server behind it.
+            this.authListenerByPort.delete(port);
+            // Forward clientId/skipConfigUpdate/cloudDomain so the retried listener keeps the same
+            // identity and honors the original options (previously they were dropped on the bump).
             // eslint-disable-next-line promise/no-promise-in-callback
             this.setupAuthListener({
               port: port + 1,
+              clientId,
+              skipConfigUpdate,
+              cloudDomain,
             })
               .then(resolve)
               .catch(reject);
@@ -542,7 +551,7 @@ export class CloudMain {
         return;
       }
 
-      const promptLogin = async () => {
+      const promptLogin = async (authListener: CloudAuthListener | null) => {
         this.REDIRECT_URL = redirectUrl;
         this.registerOnSuccessLogin((loggedInParams) => {
           resolve({
@@ -556,7 +565,11 @@ export class CloudMain {
         const loginUrl = await this.getLoginUrl({
           machineName,
           cloudDomain,
-          port,
+          // Use the port the auth listener actually bound to. When the requested port is already
+          // in use, setupAuthListener falls back to the next free port (EADDRINUSE bump); building
+          // the URL from the requested port would tell the browser to POST the token to a port with
+          // no server behind it, so the token is never received and login hangs ("locked out").
+          port: authListener?.port !== undefined ? String(authListener.port) : port,
         });
         if (!loginUrl) {
           reject(new Error('Failed to get login url'));
