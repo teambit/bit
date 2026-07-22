@@ -1,3 +1,7 @@
+// @ts-nocheck
+// the e2e runs inside the bit repo, where core-aspect types (e.g. @teambit/envs) resolve to the
+// repo sources while the env tree in the capsule brings the published packages. the types are
+// structurally identical but nominally different - skip checking.
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { NodeMain, NodeAspect } from '@teambit/node';
 
