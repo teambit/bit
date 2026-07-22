@@ -467,8 +467,11 @@ export class CloudMain {
 
     if (!authListener) return null;
 
+    // Advertise the port the listener actually bound to, not the requested one — setupAuthListener
+    // falls back to the next free port when the requested port is taken. Pairing the requested port
+    // with the bound listener's clientId would hand out a url that points at nothing.
     return encodeURI(
-      `${loginUrl}?port=${port}&clientId=${authListener?.clientId}&responseType=token&deviceName=${
+      `${loginUrl}?port=${authListener.port}&clientId=${authListener.clientId}&responseType=token&deviceName=${
         machineName || os.hostname()
       }&os=${process.platform}`
     );
