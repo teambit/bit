@@ -1,6 +1,5 @@
 import { rspack, type Configuration } from '@rspack/core';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
-import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 import { RspackManifestPlugin } from 'rspack-manifest-plugin';
 import { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
 
@@ -28,7 +27,13 @@ const cssParser = {
   'css/module': { namedExports: false },
 } as const;
 
-export function createRspackConfig(outputDir: string, entryFile: string): Configuration {
+/**
+ * mdxOptions are the options of @teambit/mdx.modules.mdx-v3-options - an ESM-only package the
+ * caller must load with a native import() (a require here may be hijacked by a stale
+ * @babel/register hook, e.g. after the mocha tester ran in this process, which compiles the ESM
+ * source as CJS and crashes on the "export" token).
+ */
+export function createRspackConfig(outputDir: string, entryFile: string, mdxOptions: object): Configuration {
   const mode = process.env.BIT_DEBUG_PREVIEW_BUNDLE ? 'development' : 'production';
   const shouldUseSourceMap = mode === 'development' || process.env.GENERATE_SOURCEMAP === 'true';
 
