@@ -1807,7 +1807,13 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         if (this.envs.isLegacyCoreEnv(failedIdWithoutVersion)) {
           const envPackageName = getLegacyCoreEnvPackageName(failedIdWithoutVersion);
           const isEnvPackageInstalled = fs.existsSync(path.join(this.path, 'node_modules', envPackageName));
-          if (String(failure.error).includes(`Cannot find module '${envPackageName}`) && !isEnvPackageInstalled) {
+          // the missing module may be reported by its package name or by its absolute path in
+          // the workspace node_modules (when the require used a resolved path).
+          const errorStr = String(failure.error);
+          const isEnvModuleNotFound =
+            errorStr.includes('Cannot find module') &&
+            (errorStr.includes(`'${envPackageName}`) || errorStr.includes(`node_modules/${envPackageName}'`));
+          if (isEnvModuleNotFound && !isEnvPackageInstalled) {
             return;
           }
         }
