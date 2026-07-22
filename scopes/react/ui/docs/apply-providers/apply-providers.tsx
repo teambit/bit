@@ -6,11 +6,6 @@ import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 
 import type { RenderingContext } from '@teambit/preview';
 
-// the react env aspect-id. don't import it from @teambit/react - that would make the react env a
-// dependency of this component, creating a circular dependency (the env depends on this component
-// through its docs template).
-const ReactAspectId = 'teambit.react/react';
-
 export type ApplyProvidersProps = {
   renderingContext: RenderingContext;
   children: React.ReactNode;
@@ -20,7 +15,8 @@ export type ApplyProvidersProps = {
  * applies providers from rendering context, and error boundary
  */
 export function ApplyProviders({ renderingContext, children, ...rest }: ApplyProvidersProps) {
-  const { providers = [] } = renderingContext.get(ReactAspectId) || {};
+  // react env aspect id, inlined to avoid a source dependency on the react env package
+  const { providers = [] } = renderingContext.get('teambit.react/react') || {};
 
   return (
     <div {...rest}>
