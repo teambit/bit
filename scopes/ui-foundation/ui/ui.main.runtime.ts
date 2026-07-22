@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
 import type { ComponentType } from 'react';
-import type { AspectMain } from '@teambit/aspect';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { getAspectDirFromBvm } from '@teambit/aspect-loader';
 import type { CacheMain } from '@teambit/cache';
@@ -39,7 +38,7 @@ import createRspackSsrConfig from './rspack/rspack.ssr.config';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
 
-export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
+export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
