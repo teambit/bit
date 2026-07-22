@@ -543,6 +543,11 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
           componentsToResolveFromInstalled,
           this.getInstalledAspectResolver(graph, installedResolverRootIds, runtimeName, {
             throwOnError: opts?.throwOnError ?? false,
+            // a dependency aspect that fails to resolve must not abort the whole resolution - the
+            // requested aspects (e.g. the envs of many components) may be resolvable and loadable
+            // without it. throw only when the failed aspect was explicitly requested; dependency
+            // failures degrade to a skip and are reported via reportLoadFailure.
+            requestedIds: idsToResolve,
           })
         )
       : [];
@@ -817,12 +822,20 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     graph: Graph<Component, string>,
     rootIds: string[],
     runtimeName?: string,
-    opts: { throwOnError: boolean } = { throwOnError: false }
+    opts: { throwOnError: boolean; requestedIds?: string[] } = { throwOnError: false }
   ): AspectResolver {
+    const requestedIds = new Set(opts.requestedIds ?? []);
+    const requestedIdsWithoutVersion = new Set([...requestedIds].map((id) => id.split('@')[0]));
     const installedAspectsResolver = async (component: Component): Promise<ResolvedAspect | undefined> => {
       const compStringId = component.id.toString();
       // stringIds.push(compStringId);
-      const localPath = await this.resolveInstalledAspectRecursively(component, rootIds, graph, opts);
+      const isRequested =
+        !opts.requestedIds ||
+        requestedIds.has(compStringId) ||
+        requestedIdsWithoutVersion.has(component.id.toStringWithoutVersion());
+      const localPath = await this.resolveInstalledAspectRecursively(component, rootIds, graph, {
+        throwOnError: opts.throwOnError && isRequested,
+      });
       if (!localPath) return undefined;
 
       const runtimePath = runtimeName

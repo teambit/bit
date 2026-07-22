@@ -663,7 +663,21 @@ export class AspectLoaderMain {
         })
       : allDefs;
 
-    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    // multiple defs may share the same path - e.g. several versions of an env whose versioned
+    // env-root is missing all fall back to the same package dir in the root node_modules. keep
+    // the def whose identity matches a requested id, otherwise the requested version is silently
+    // dropped here and its env never registers (its components then get a NonLoadedEnv issue).
+    const requestedIdsStr = new Set(componentIds.map((id) => id.toString()));
+    const matchesRequested = (def: AspectDefinition) =>
+      (def.id && requestedIdsStr.has(def.id)) || (def.component && requestedIdsStr.has(def.component.id.toString()));
+    const defByPath = new Map<string, AspectDefinition>();
+    for (const def of afterExclusion) {
+      const key = `${def.aspectPath}-${def.runtimePath}`;
+      const existing = defByPath.get(key);
+      if (!existing) defByPath.set(key, def);
+      else if (!matchesRequested(existing) && matchesRequested(def)) defByPath.set(key, def);
+    }
+    const uniqDefs = Array.from(defByPath.values());
     let defs = uniqDefs;
     if (runtimeName && filterOpts.filterByRuntime) {
       defs = defs.filter((def) => def.runtimePath);
