@@ -3,22 +3,36 @@ import type { DependencyDetector, FileContext } from './detector-hook';
 /**
  * Regex pattern for matching import statements in md/mdx files.
  *
- * Matches two import patterns in an alternation (both require the `import` keyword prefix):
+ * Matches two import patterns in an alternation (both require a line to start with the `import`
+ * keyword, as MDX only treats block-level statements as ESM):
  * - `[type] <specifiers> from "module"` - default (x), named ({x}), namespace (* as x) or mixed
  *   specifiers, module path captured in group 1.
  * - `"module"` - side-effect only imports, module path captured in group 2.
- *
- * Limitations: may match imports inside comments or code blocks. acceptable for dependency
- * detection - the same trade-off the mdx aspect makes in its own regex fallback.
  */
 const IMPORT_STATEMENT_REGEX =
-  /import\s+(?:(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*\{[^}]*\}|\s*,\s*\w+)?\s+from\s+['"]([^'"]+)['"]|['"]([^'"]+)['"])/g;
+  /^import\s+(?:(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*\{[^}]*\}|\s*,\s*\w+)?\s+from\s+['"]([^'"]+)['"]|['"]([^'"]+)['"])/gm;
+
+/**
+ * imports shown inside fenced code blocks, inline code spans or comments are documentation
+ * examples, not real ESM imports - MDX doesn't execute them, so they must not become
+ * dependencies (a usage example importing the component's own package would otherwise produce a
+ * self-import issue).
+ */
+function stripNonEsmContent(source: string): string {
+  return source
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/~~~[\s\S]*?~~~/g, '')
+    .replace(/`[^`\n]*`/g, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+}
 
 export function detectMarkdownImports(source: string): string[] {
+  const strippedSource = stripNonEsmContent(source);
   const modules: string[] = [];
   let match: RegExpExecArray | null;
   IMPORT_STATEMENT_REGEX.lastIndex = 0;
-  while ((match = IMPORT_STATEMENT_REGEX.exec(source)) !== null) {
+  while ((match = IMPORT_STATEMENT_REGEX.exec(strippedSource)) !== null) {
     const moduleName = match[1] || match[2];
     if (moduleName) modules.push(moduleName);
   }
