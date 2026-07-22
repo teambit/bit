@@ -117,13 +117,6 @@ export type MainAspect = {
   id: string;
 };
 
-// TEMP DIAG (revert): interesting env ids to trace where they fall out of the load pipeline
-// when a legacy core env (@teambit/node) is uninstalled after removing its source from the ws.
-const DIAG_INTERESTING =
-  /(node-babel-mocha|node\/node|base-react-env|react\/react|harmony\/node|mdx-env|core-aspect-env|node-typescript-mocha)/;
-const diagPick = (ids: Array<string | undefined>): string[] =>
-  ids.filter((id): id is string => !!id && DIAG_INTERESTING.test(id));
-
 export class AspectLoaderMain {
   private inMemoryConfiguredAspects: string[] = [];
   private failedToLoadExt = new Set<string>();
@@ -488,11 +481,8 @@ export class AspectLoaderMain {
       const idStr = requireableExtension.component.id.toString();
       try {
         const requiredManifest = await this.doRequire(requireableExtension, runSubscribers);
-        if (DIAG_INTERESTING.test(idStr)) process.stderr.write(`[DIAG-LOAD] require OK: ${idStr}\n`);
         return requiredManifest;
       } catch (firstErr: any) {
-        if (DIAG_INTERESTING.test(idStr))
-          process.stderr.write(`[DIAG-LOAD] require FAILED: ${idStr} :: ${String(firstErr).split('\n')[0]}\n`);
         this.addFailure(idStr);
         this.logger.warn(`failed loading an aspect "${idStr}", will try to fix and reload`, firstErr);
         const isFixed = await this.triggerOnAspectLoadError(firstErr, requireableExtension.component);
@@ -792,23 +782,10 @@ export class AspectLoaderMain {
         return nodesUniq.map((n) => n.attr);
       };
       const relevantManifests = getOnlyDeclaredDependenciesManifests();
-      // TEMP DIAG (revert): what enters the batch harmony.load and what the seeder-filter dropped
-      const diagRelevant = diagPick(relevantManifests.map((m) => m.id));
-      const diagDropped = diagPick(preparedManifests.map((m) => m.id)).filter((id) => !diagRelevant.includes(id));
-      if (diagRelevant.length || diagDropped.length)
-        process.stderr.write(
-          `[DIAG-LOAD] batch harmony.load relevant=[${diagRelevant.join(',')}] droppedBySeeders=[${diagDropped.join(
-            ','
-          )}] neededFor=${neededFor ?? ''}\n`
-        );
       // @ts-ignore TODO: fix this
       await this.harmony.load(relevantManifests);
     } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
-      // TEMP DIAG (revert): did the batch load itself throw, and which interesting envs were in it
-      process.stderr.write(
-        `[DIAG-LOAD] batch harmony.load THREW (throwOnError=${mergedOptions.throwOnError}): ${String(e).split('\n')[0]} :: interestingInBatch=[${diagPick(ids).join(',')}]\n`
-      );
       if (mergedOptions.unifyErrorsByExtId) {
         const needToPrint = some(ids, (id) => !this.failedToLoadExt.has(id));
         if (!needToPrint) return;

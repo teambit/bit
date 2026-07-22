@@ -573,25 +573,6 @@ export class DependencyResolverMain {
     // the returned paths are relative to the workspace root, so anchor all the existence checks
     // to the workspace path rather than relying on process.cwd
     const existsInWorkspace = (relativeDir: string) => fs.pathExistsSync(join(options.workspacePath, relativeDir));
-    // TEMP DIAGNOSTIC (remove after): trace legacy-core-env resolution on CI.
-    if (this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion())) {
-      const versionlessDir = getRelativeRootComponentDir(component.id.toStringWithoutVersion());
-      const versionedDir = getRelativeRootComponentDir(component.id.toString());
-      const rootMod = this.getModulePath(component);
-      const bitRootsPath = join(options.workspacePath, 'node_modules', '.bit_roots');
-      const bitRoots = fs.existsSync(bitRootsPath) ? fs.readdirSync(bitRootsPath).join(',') : '<none>';
-      process.stderr.write(
-        `[DIAG-ENV] id=${component.id.toString()} pkg=${pkgName} isInWs=${options.isInWorkspace} ` +
-          `chosen=${selfRootDir}(exists=${existsInWorkspace(selfRootDir)}) ` +
-          `versionless=${versionlessDir}(dir=${existsInWorkspace(versionlessDir)},pkg=${existsInWorkspace(
-            join(versionlessDir, 'node_modules', pkgName)
-          )}) ` +
-          `versioned=${versionedDir}(dir=${existsInWorkspace(versionedDir)},pkg=${existsInWorkspace(
-            join(versionedDir, 'node_modules', pkgName)
-          )}) ` +
-          `root=${rootMod}(exists=${existsInWorkspace(rootMod)}) bitRoots=[${bitRoots}]\n`
-      );
-    }
     // In case the component is it's own root we want to load it from it's own root folder
     if (existsInWorkspace(selfRootDir)) {
       const innerDir = join(selfRootDir, 'node_modules', pkgName);
