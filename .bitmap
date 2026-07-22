@@ -1038,7 +1038,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/config-mutator",
         "config": {
-            "teambit.node/node@3.0.0": {}
+            "teambit.node/node@3.0.1": {}
         }
     },
     "modules/create-element-from-string": {
@@ -1118,7 +1118,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-style-loaders",
         "config": {
-            "teambit.node/node@3.0.0": {}
+            "teambit.node/node@3.0.1": {}
         }
     },
     "modules/get-basic-log": {
