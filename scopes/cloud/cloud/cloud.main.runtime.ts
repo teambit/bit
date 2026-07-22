@@ -459,22 +459,34 @@ export class CloudMain {
     }
     const authListenerForPort = this.authListenerByPort.get(port);
     if (authListenerForPort) {
-      return `${loginUrl}?port=${port}&clientId=${authListenerForPort.clientId}&responseType=token&deviceName=${
-        machineName || os.hostname()
-      }&os=${process.platform}`;
+      return this.buildLoginUrl(loginUrl, authListenerForPort, machineName);
     }
     const authListener = await this.setupAuthListener({ port });
 
     if (!authListener) return null;
 
-    // Advertise the port the listener actually bound to, not the requested one — setupAuthListener
-    // falls back to the next free port when the requested port is taken. Pairing the requested port
-    // with the bound listener's clientId would hand out a url that points at nothing.
-    return encodeURI(
-      `${loginUrl}?port=${authListener.port}&clientId=${authListener.clientId}&responseType=token&deviceName=${
-        machineName || os.hostname()
-      }&os=${process.platform}`
-    );
+    return this.buildLoginUrl(loginUrl, authListener, machineName);
+  }
+
+  /**
+   * Build the login url the browser is sent to. Always advertises the port the listener actually
+   * bound to — setupAuthListener falls back to the next free port when the requested one is taken,
+   * and advertising the requested port would point the browser at a port with no server behind it.
+   */
+  private buildLoginUrl(loginUrl: string, authListener: CloudAuthListener, machineName?: string): string {
+    // Percent-encode every value. deviceName comes from --machine-name or os.hostname(), either of
+    // which can contain spaces, '&', '#' or non-ascii characters. encodeURI() is not sufficient —
+    // it leaves '&', '#' and '+' intact, so a machine named `home & away #1` would truncate the
+    // query string and drop the params that follow it.
+    const params: [string, string][] = [
+      ['port', String(authListener.port)],
+      ['clientId', authListener.clientId ?? ''],
+      ['responseType', 'token'],
+      ['deviceName', machineName || os.hostname()],
+      ['os', process.platform],
+    ];
+    const query = params.map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+    return `${loginUrl}?${query}`;
   }
 
   async logout() {
