@@ -559,8 +559,15 @@ export class DependencyResolverMain {
     const pkgName = this.getPackageName(component);
     const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
     const getRelativeRootComponentDir = getRootComponentDir.bind(null, rootComponentsRelativePath ?? '');
+    // install names a legacy core env's root dir by its VERSIONLESS id (calculateEnvId returns the
+    // versionless id for these envs), so the pinned external package sits in .bit_roots/<versionless>.
+    // resolve it the same way even when the env is not in the workspace (i.e. its source was removed);
+    // otherwise the versioned lookup misses and we fall back to <root>/node_modules/<pkg>, which was
+    // the now-deleted source-component dir -> "Cannot find module".
+    const useVersionlessSelfRoot =
+      options.isInWorkspace || this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion());
     const selfRootDir = getRelativeRootComponentDir(
-      options.isInWorkspace ? component.id.toStringWithoutVersion() : component.id.toString()
+      useVersionlessSelfRoot ? component.id.toStringWithoutVersion() : component.id.toString()
     );
     // the returned paths are relative to the workspace root, so anchor all the existence checks
     // to the workspace path rather than relying on process.cwd
