@@ -534,6 +534,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/deprecation"
     },
+    "deps-detectors/detective-mdx": {
+        "name": "deps-detectors/detective-mdx",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.mdx",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/deps-detectors/detective-mdx",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@1.0.1": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-typescript-mocha"
+            }
+        }
+    },
     "dev-files": {
         "name": "dev-files",
         "scope": "teambit.component",
