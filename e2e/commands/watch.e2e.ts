@@ -109,7 +109,7 @@ chai.use(chaiFs);
     before(async () => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponentsTS();
-      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
+      helper.env.setTsEnv();
       // Simulate a missing parcel prebuild so the watcher must fall back to the
       // chokidar backend (the real prebuild is present locally/CI). The watch
       // process inherits this env via child_process.spawn.
