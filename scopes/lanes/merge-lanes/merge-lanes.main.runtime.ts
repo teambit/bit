@@ -314,21 +314,25 @@ export class MergeLanesMain {
     if (!otherLane) return;
     const legacyScope = this.scope.legacyScope;
     const missingHashes: string[] = [];
+    // one existence check per unique hash — the same snap appears in the flattened list of many heads
+    const checkedHashes = new Set<string>();
     await pMapSeries(ids, async (id) => {
       const modelComponent = await legacyScope.getModelComponentIfExist(id);
       const head = modelComponent?.head;
       if (!modelComponent || !head) return;
       const headVersion = await modelComponent.loadVersion(head.toString(), legacyScope.objects, false);
       if (!headVersion) return;
+      // flattened (not only direct) to mirror the remote-side check, which validates the flattened
+      // dependencies of every exported head (see throwForMissingLocalDependencies). cheap: only the
+      // heads are loaded and each unique hash is stat-ed once.
       await Promise.all(
-        // direct dependencies only — a stale cross-component reference is a direct dep, and the
-        // flattened list can be huge.
-        headVersion.getAllDependencies().map(async (dep) => {
-          const depId = dep.id;
+        headVersion.getAllFlattenedDependencies().map(async (depId) => {
           // only snaps can go missing this way — tags live on the home scope and are never squashed
           // off a lane. (a tag version is a semver string, not an object hash, so Ref.from would be
           // bogus for it anyway.)
           if (!depId.version || !isSnap(depId.version)) return;
+          if (checkedHashes.has(depId.version)) return;
+          checkedHashes.add(depId.version);
           const exists = await legacyScope.objects.has(Ref.from(depId.version));
           if (!exists) missingHashes.push(depId.version);
         })
@@ -341,7 +345,7 @@ export class MergeLanesMain {
     // fetch the raw objects only (by hash, from the lane scope). importManyObjects does not touch
     // component models/heads, so it can't leave a component pointing at a version whose object is
     // missing — unlike a component-level import.
-    await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: uniq(missingHashes) });
+    await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingHashes });
   }
 
   private validateMergeFlags(otherLaneId: LaneId, currentLaneId: LaneId, options: MergeLaneOptions) {
