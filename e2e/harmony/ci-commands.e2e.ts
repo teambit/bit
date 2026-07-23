@@ -449,6 +449,10 @@ describe('ci commands', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       setupGitRemote();
+      // a workspace env is used for the env-set below: it loads deterministically (unlike an
+      // external env that must be fetched and built in a capsule), and it is NOT the default env
+      // (the default env config is normalized away on tag, so it won't propagate).
+      helper.env.setEmptyEnv();
       const defaultBranch = setupComponentsAndInitialCommit();
 
       // First PR commit + ci pr — lane is created with comp1's original (default) env.
@@ -460,7 +464,7 @@ describe('ci commands', function () {
 
       // Main moves ahead: change comp1's env, tag, export, push.
       helper.command.runCmd(`git checkout ${defaultBranch}`);
-      helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+      helper.command.setEnv('comp1', 'empty-env');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.runCmd('git add .');
@@ -483,7 +487,7 @@ describe('ci commands', function () {
       expect(
         envData.config.env,
         `expected comp1's env to be updated from main, got: ${JSON.stringify(envData.config)}`
-      ).to.equal('teambit.harmony/aspect');
+      ).to.equal(`${helper.scopes.remote}/empty-env`);
     });
   });
 
@@ -921,11 +925,29 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       setupGitRemote();
+      // a workspace env is used for the env-set below: it loads deterministically (unlike an
+      // external env that must be fetched and built in a capsule), and it is NOT the default env
+      // (the default env config is normalized away on tag).
+      helper.env.setEmptyEnv();
       const defaultBranch = setupComponentsAndInitialCommit();
 
-      // Create lane and change env on comp1
+      // use the env on another component on main from the start, so the env is loaded (and
+      // registered) in every process. otherwise, during `bit ci merge` - which starts on main
+      // where no component uses this env - comp1 receives the env mid-process via the lane's
+      // merged config, when it's too late for the env to load, and the tag fails on an
+      // env data/config mismatch.
+      helper.command.setEnv('comp2', 'empty-env');
+      // skip the auto-tag so comp1 (a dependent of comp2) keeps its original version - the
+      // version assertions below expect the ci merge to create comp1's second version.
+      helper.command.tagAllWithoutBuild('--skip-auto-tag');
+      helper.command.export();
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "chore: use the workspace env on comp2"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // Create lane and change env on comp1.
       helper.command.createLane('config-lane');
-      helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+      helper.command.setEnv('comp1', 'empty-env');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -942,7 +964,7 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     });
     it('should preserve the env config from the lane', () => {
       const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
-      expect(envData.config.env).to.equal('teambit.harmony/aspect');
+      expect(envData.config.env).to.equal(`${helper.scopes.remote}/empty-env`);
     });
     it('should tag the component', () => {
       expect(mergeOutput).to.include('Merged PR');

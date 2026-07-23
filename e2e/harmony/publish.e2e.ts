@@ -22,6 +22,9 @@ describe('publish functionality', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
+      // a compiling env is needed so the published packages have dists (the consumer runs them
+      // with node)
+      helper.env.setTsEnv();
       appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();

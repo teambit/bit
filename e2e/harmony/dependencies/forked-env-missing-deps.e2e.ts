@@ -86,6 +86,10 @@ describe('forked env with "+" dependency markers (PR #10150 regression)', functi
       // dep-resolver config (including the "+" entry for is-positive) from
       // the tagged version into the new component's .bitmap.
       helper.command.fork(`${helper.scopes.remote}/${envName} my-forked-env`);
+      // the forked env loads only at the end of the install that fork runs. run another install
+      // so its env.jsonc policies feed the "+" resolution (standard flow for env.jsonc envs whose
+      // own env used to be a core aspect).
+      helper.command.install();
     });
 
     it('bit status should not have MissingManuallyConfiguredPackages issue for the forked env', () => {

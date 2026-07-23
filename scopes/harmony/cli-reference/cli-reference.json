@@ -1035,6 +1035,162 @@
     ]
   },
   {
+    "name": "aspect <sub-command>",
+    "alias": "",
+    "options": [],
+    "description": "manage component aspects and their configurations",
+    "extendedDescription": "aspects provide functionality and tools for components throughout their development lifecycle.\nprimarily useful for inspecting aspect assignments and configurations with \"bit aspect get\".\nrarely used for manual aspect management as most aspects are configured automatically.",
+    "group": "component-config",
+    "private": false,
+    "commands": [
+      {
+        "name": "list [pattern]",
+        "alias": "",
+        "options": [
+          [
+            "d",
+            "debug",
+            "show the origins where the aspects were taken from"
+          ]
+        ],
+        "description": "list all aspects configured on component(s)",
+        "extendedDescription": "",
+        "group": "info-analysis",
+        "private": false,
+        "arguments": [
+          {
+            "name": "pattern",
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      },
+      {
+        "name": "list-core",
+        "alias": "",
+        "options": [
+          [
+            "j",
+            "json",
+            "format as json"
+          ]
+        ],
+        "description": "list all core aspects",
+        "extendedDescription": "",
+        "group": "info-analysis",
+        "private": false,
+        "arguments": [
+          {
+            "name": "pattern",
+            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      },
+      {
+        "name": "get <component-name>",
+        "alias": "",
+        "options": [
+          [
+            "d",
+            "debug",
+            "show the origins where the aspects were taken from"
+          ],
+          [
+            "j",
+            "json",
+            "format as json"
+          ]
+        ],
+        "description": "list the aspects set on a component, as well as their configs and data",
+        "extendedDescription": "",
+        "group": "info-analysis",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-name",
+            "description": "the component name or component id to fetch aspects for"
+          }
+        ]
+      },
+      {
+        "name": "set <pattern> <aspect-id> [config]",
+        "alias": "",
+        "options": [
+          [
+            "m",
+            "merge",
+            "merge with an existing config if exists. (by default, it replaces overlapping existing configs)"
+          ]
+        ],
+        "description": "set components with an aspect to extend their development tools, metadata and (possibly) artifacts",
+        "extendedDescription": "",
+        "group": "component-config",
+        "private": false,
+        "arguments": [
+          {
+            "name": "pattern",
+            "description": "the components to extend. component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          },
+          {
+            "name": "aspect-id",
+            "description": "the aspect's component id"
+          },
+          {
+            "name": "config",
+            "description": "the aspect config. enter the config as a stringified JSON (e.g. `{\"foo\":\"bar\"}` ). when no config is provided, an aspect is set with an empty config ({})."
+          }
+        ]
+      },
+      {
+        "name": "unset <pattern> <aspect-id>",
+        "alias": "",
+        "options": [],
+        "description": "unset an aspect from component(s).",
+        "extendedDescription": "",
+        "group": "component-config",
+        "private": false,
+        "arguments": [
+          {
+            "name": "pattern",
+            "description": "the components to target. component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          },
+          {
+            "name": "aspect-id",
+            "description": "the aspect's component id"
+          }
+        ]
+      },
+      {
+        "name": "update <aspect-id> [pattern]",
+        "alias": "",
+        "options": [],
+        "description": "update a version of an aspect for all or specified components",
+        "extendedDescription": "",
+        "group": "component-config",
+        "private": false,
+        "arguments": [
+          {
+            "name": "aspect-id",
+            "description": "the aspect's component id. optionally, add a version (id@version), otherwise will use the latest version from the remote"
+          },
+          {
+            "name": "pattern",
+            "description": "the components to update (defaults to all components). component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ],
+        "examples": [
+          {
+            "cmd": "bit aspect update scope.org/aspect '**/ui/**'",
+            "description": "update all components with the \"ui\" namespace that use scope.org/aspect, to use its latest version"
+          },
+          {
+            "cmd": "bit aspect update scope.org/aspect@2.0.0",
+            "description": "update version of scope.org/aspect to version 2.0.0 for all components configured with that aspect."
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "use <component-id>",
     "alias": "",
     "options": [],
@@ -5970,162 +6126,6 @@
       {
         "name": "component-pattern",
         "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ]
-  },
-  {
-    "name": "aspect <sub-command>",
-    "alias": "",
-    "options": [],
-    "description": "manage component aspects and their configurations",
-    "extendedDescription": "aspects provide functionality and tools for components throughout their development lifecycle.\nprimarily useful for inspecting aspect assignments and configurations with \"bit aspect get\".\nrarely used for manual aspect management as most aspects are configured automatically.",
-    "group": "component-config",
-    "private": false,
-    "commands": [
-      {
-        "name": "list [pattern]",
-        "alias": "",
-        "options": [
-          [
-            "d",
-            "debug",
-            "show the origins where the aspects were taken from"
-          ]
-        ],
-        "description": "list all aspects configured on component(s)",
-        "extendedDescription": "",
-        "group": "info-analysis",
-        "private": false,
-        "arguments": [
-          {
-            "name": "pattern",
-            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          }
-        ]
-      },
-      {
-        "name": "list-core",
-        "alias": "",
-        "options": [
-          [
-            "j",
-            "json",
-            "format as json"
-          ]
-        ],
-        "description": "list all core aspects",
-        "extendedDescription": "",
-        "group": "info-analysis",
-        "private": false,
-        "arguments": [
-          {
-            "name": "pattern",
-            "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          }
-        ]
-      },
-      {
-        "name": "get <component-name>",
-        "alias": "",
-        "options": [
-          [
-            "d",
-            "debug",
-            "show the origins where the aspects were taken from"
-          ],
-          [
-            "j",
-            "json",
-            "format as json"
-          ]
-        ],
-        "description": "list the aspects set on a component, as well as their configs and data",
-        "extendedDescription": "",
-        "group": "info-analysis",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-name",
-            "description": "the component name or component id to fetch aspects for"
-          }
-        ]
-      },
-      {
-        "name": "set <pattern> <aspect-id> [config]",
-        "alias": "",
-        "options": [
-          [
-            "m",
-            "merge",
-            "merge with an existing config if exists. (by default, it replaces overlapping existing configs)"
-          ]
-        ],
-        "description": "set components with an aspect to extend their development tools, metadata and (possibly) artifacts",
-        "extendedDescription": "",
-        "group": "component-config",
-        "private": false,
-        "arguments": [
-          {
-            "name": "pattern",
-            "description": "the components to extend. component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          },
-          {
-            "name": "aspect-id",
-            "description": "the aspect's component id"
-          },
-          {
-            "name": "config",
-            "description": "the aspect config. enter the config as a stringified JSON (e.g. `{\"foo\":\"bar\"}` ). when no config is provided, an aspect is set with an empty config ({})."
-          }
-        ]
-      },
-      {
-        "name": "unset <pattern> <aspect-id>",
-        "alias": "",
-        "options": [],
-        "description": "unset an aspect from component(s).",
-        "extendedDescription": "",
-        "group": "component-config",
-        "private": false,
-        "arguments": [
-          {
-            "name": "pattern",
-            "description": "the components to target. component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          },
-          {
-            "name": "aspect-id",
-            "description": "the aspect's component id"
-          }
-        ]
-      },
-      {
-        "name": "update <aspect-id> [pattern]",
-        "alias": "",
-        "options": [],
-        "description": "update a version of an aspect for all or specified components",
-        "extendedDescription": "",
-        "group": "component-config",
-        "private": false,
-        "arguments": [
-          {
-            "name": "aspect-id",
-            "description": "the aspect's component id. optionally, add a version (id@version), otherwise will use the latest version from the remote"
-          },
-          {
-            "name": "pattern",
-            "description": "the components to update (defaults to all components). component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          }
-        ],
-        "examples": [
-          {
-            "cmd": "bit aspect update scope.org/aspect '**/ui/**'",
-            "description": "update all components with the \"ui\" namespace that use scope.org/aspect, to use its latest version"
-          },
-          {
-            "cmd": "bit aspect update scope.org/aspect@2.0.0",
-            "description": "update version of scope.org/aspect to version 2.0.0 for all components configured with that aspect."
-          }
-        ]
       }
     ]
   },

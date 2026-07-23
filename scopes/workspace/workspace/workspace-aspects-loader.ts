@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
@@ -15,13 +16,14 @@ import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-
 import { ComponentID } from '@teambit/component-id';
 import { ComponentNotFound } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
-import { difference, compact, groupBy, partition } from 'lodash';
+import { difference, compact, groupBy, partition, uniq } from 'lodash';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { Component, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import type { ScopeMain } from '@teambit/scope';
 import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import type { EnvsMain } from '@teambit/envs';
+import { aspectLoadInFlightKey, resolveLegacyCoreEnvId } from '@teambit/envs';
 import type { ConfigMain } from '@teambit/config';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ShouldLoadFunc } from './build-graph-from-fs';
@@ -118,16 +120,44 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     let notLoadedIds = nonLocalAspects;
     if (!mergedOpts.forceLoad) {
-      notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+      notLoadedIds = nonLocalAspects.filter((id) => !this.isAspectLoadedInclLegacyEnvs(id));
     }
+    // break circular env chains - if an aspect is already in the process of loading (a parent
+    // call in the current chain), don't try to load it again.
+    const [inFlightIds, idsToLoad] = partition(notLoadedIds, (id) =>
+      this.workspace.inFlightAspectsLoads.has(aspectLoadInFlightKey(id))
+    );
+    if (inFlightIds.length) {
+      this.logger.debug(`${loggerPrefix} skipping aspects that are already loading: ${inFlightIds.join(', ')}`);
+    }
+    notLoadedIds = idsToLoad;
     if (!notLoadedIds.length) {
       span.setAttribute('alreadyLoaded', true);
       return [];
     }
-    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
+    const inFlightAdded = notLoadedIds.map(aspectLoadInFlightKey);
+    inFlightAdded.forEach((id) => this.workspace.inFlightAspectsLoads.add(id));
+    try {
+      return await this.loadAspectsAfterInFlightCheck(notLoadedIds, span, neededFor, mergedOpts, loggerPrefix);
+    } finally {
+      inFlightAdded.forEach((id) => this.workspace.inFlightAspectsLoads.delete(id));
+    }
+  }
 
-    const componentIds = await this.workspace.resolveMultipleComponentIds(idsWithoutCore);
+  private async loadAspectsAfterInFlightCheck(
+    notLoadedIds: string[],
+    span: LoadSpan,
+    neededFor: string | undefined,
+    mergedOpts: Required<WorkspaceLoadAspectsOptions>,
+    loggerPrefix: string
+  ): Promise<string[]> {
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
+    // filter out core aspects also when they are requested with a version (e.g. when they are
+    // dependencies of a loaded aspect, the version is the component version)
+    const idsWithoutCore: string[] = notLoadedIds.filter((id) => !coreAspectsStringIds.includes(id.split('@')[0]));
+
+    let componentIds = await this.workspace.resolveMultipleComponentIds(idsWithoutCore);
+    componentIds = this.resolveLegacyCoreEnvsVersions(componentIds);
 
     const { workspaceIds, nonWorkspaceIds } = await this.groupIdsByWorkspaceExistence(
       componentIds,
@@ -148,7 +178,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
 
     if (mergedOpts.useScopeAspectsCapsule) {
       idsToLoadFromWs = workspaceIds;
-      scopeAspectIds = await this.loadFromScopeAspectsCapsule(nonWorkspaceIds, throwOnError, neededFor);
+      scopeAspectIds = await this.loadFromScopeAspectsCapsule(nonWorkspaceIds, mergedOpts.throwOnError, neededFor);
     }
 
     const aspectsDefs = await this.resolveAspects(undefined, idsToLoadFromWs, {
@@ -157,9 +187,13 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       ...mergedOpts,
     });
 
+    // use also the resolved component-ids (with versions) as seeders and not only the requested
+    // ids, as the requested ids may not have a version (e.g. envs that used to be core aspects),
+    // while the seeders are matched against the loaded manifests ids, which always have a version.
+    const seedersIds = uniq(componentIds.map((id) => id.toString()).concat(idsWithoutCore));
     const { manifests, requireableComponents } = await this.loadAspectDefsByOrder(
       aspectsDefs,
-      idsWithoutCore,
+      seedersIds,
       mergedOpts.throwOnError,
       mergedOpts.hideMissingModuleError,
       mergedOpts.ignoreErrorFunc,
@@ -181,13 +215,52 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     // Do the require again now that the plugins defs already registered
     const pluginsManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
       pluginsRequireableComponents,
-      throwOnError,
-      opts.runSubscribers
+      mergedOpts.throwOnError,
+      mergedOpts.runSubscribers
     );
-    await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
+    await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, {
+      throwOnError: mergedOpts.throwOnError,
+    });
     const manifestIds = manifests.map((manifest) => manifest.id);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return compact(manifestIds.concat(scopeAspectIds));
+  }
+
+  /**
+   * whether this aspect-id was already loaded into harmony. in case the id is an env that used
+   * to be a core aspect and is requested without a version (old components have them saved in
+   * the model without a version), match the loaded extensions while ignoring the version
+   * (they are loaded and registered to harmony with a version).
+   */
+  private isAspectLoadedInclLegacyEnvs(id: string): boolean {
+    if (this.aspectLoader.isAspectLoaded(id)) return true;
+    const idWithoutVersion = id.split('@')[0];
+    if (!this.envs.isLegacyCoreEnv(idWithoutVersion)) return false;
+    // a legacy core env should have a single instance regardless of the requested version. old
+    // components request it without a version while a workspace/pinned copy is loaded with one.
+    // a second instance of the same env would register duplicate build tasks.
+    return this.aspectLoader.isAspectLoadedIgnoringVersion(idWithoutVersion);
+  }
+
+  /**
+   * envs that used to be core aspects may be requested without a version (old components have
+   * them saved in the model without a version). when such an env is not a workspace component,
+   * resolve it to its pinned version so it can be imported and loaded as a regular external env.
+   */
+  private resolveLegacyCoreEnvsVersions(componentIds: ComponentID[]): ComponentID[] {
+    return componentIds.map((componentId) => {
+      if (componentId.hasVersion()) return componentId;
+      if (!this.envs.isLegacyCoreEnv(componentId.toStringWithoutVersion())) return componentId;
+      // when the env is a workspace component (e.g. in the bit repo itself), use the workspace id
+      // including its version. loading it versionless would create a second harmony instance of
+      // the same aspect (it is loaded with a version when loaded as a workspace component),
+      // causing duplicate build tasks.
+      const workspaceId = this.workspace.getIdIfExist(componentId);
+      if (workspaceId) return workspaceId;
+      const resolved = resolveLegacyCoreEnvId(componentId.toString());
+      if (resolved === componentId.toString()) return componentId;
+      return ComponentID.fromString(resolved);
+    });
   }
 
   private async loadFromScopeAspectsCapsule(ids: ComponentID[], throwOnError?: boolean, neededFor?: string) {
@@ -294,7 +367,8 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       ? nonLocalAspectsIds.filter((id) => !coreAspectsIds.includes(id.split('@')[0])).map((id) => id.toString())
       : difference(this.harmony.extensionsIds, coreAspectsIds);
     const rootAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
-    const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
+    let componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
+    componentIdsToResolve = this.resolveLegacyCoreEnvsVersions(componentIdsToResolve);
     const components = await this.importAndGetAspects(componentIdsToResolve, opts?.throwOnError);
     // Run the on load slot
     await this.runOnAspectsResolveFunctions(components);
@@ -322,13 +396,72 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const groupedByIsPlugin = groupBy(components, (component) => {
       return this.aspectLoader.hasPluginFiles(component);
     });
-    const graph = await this.getAspectsGraphWithoutCore(groupedByIsPlugin.false, this.isAspect.bind(this));
-    const aspectsComponents = graph.nodes.map((node) => node.attr).concat(groupedByIsPlugin.true || []);
+    // envs that used to be core aspects are expected to be installed into the workspace rather than
+    // isolated into scope capsules (which is very slow). when installed, keep them in the graph so
+    // their aspect dependencies (e.g. react for the node env) get resolved as well, but from their
+    // installed packages. when not installed yet, don't walk their dependencies graph at all - they
+    // are resolved directly, fail to load gracefully and the user gets a NonLoadedEnv issue
+    // suggesting to run "bit install".
+    let graphSeeders = groupedByIsPlugin.false || [];
+    const installedLegacyEnvs: Component[] = [];
+    const nonInstalledLegacyEnvs: Component[] = [];
+    if (mergedOpts.resolveEnvsFromRoots) {
+      const rest: Component[] = [];
+      await Promise.all(
+        graphSeeders.map(async (component) => {
+          const isNonWsLegacyEnv =
+            this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion()) &&
+            !(await this.workspace.hasId(component.id));
+          if (!isNonWsLegacyEnv) {
+            rest.push(component);
+            return;
+          }
+          const packagePath = await this.workspace.getComponentPackagePath(component);
+          if (await fs.pathExists(packagePath)) {
+            installedLegacyEnvs.push(component);
+            rest.push(component);
+          } else {
+            nonInstalledLegacyEnvs.push(component);
+          }
+        })
+      );
+      graphSeeders = rest;
+    }
+    const graph = await this.getAspectsGraphWithoutCore(graphSeeders, this.isAspect.bind(this));
+    const aspectsComponentsInclCore = graph.nodes
+      .map((node) => node.attr)
+      .concat(groupedByIsPlugin.true || [])
+      .concat(nonInstalledLegacyEnvs);
+    // remove core aspects from the list. the graph may include them (with a version) when they
+    // are dependencies of the given components
+    const aspectsComponents = aspectsComponentsInclCore.filter(
+      (component) => !coreAspectsIds.includes(component.id.toStringWithoutVersion())
+    );
     this.logger.debug(`${loggerPrefix} found ${aspectsComponents.length} aspects in the aspects-graph`);
-    const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(
+    let { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(
       aspectsComponents,
       mergedOpts.resolveEnvsFromRoots
     );
+    // legacy-core envs that got here only as dependencies of other (installed) legacy-core envs
+    // are not installed at the workspace root themselves. resolve them from the installed packages
+    // (below) rather than from the workspace root path, which doesn't exist for them.
+    if (installedLegacyEnvs.length) {
+      const seederLegacyIds = new Set([...installedLegacyEnvs, ...nonInstalledLegacyEnvs].map((c) => c.id.toString()));
+      const depLegacyEnvs: Component[] = [];
+      const properWorkspaceComps: Component[] = [];
+      await Promise.all(
+        workspaceComps.map(async (component) => {
+          const isDepLegacyEnv =
+            this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion()) &&
+            !seederLegacyIds.has(component.id.toString()) &&
+            !(await this.workspace.hasId(component.id));
+          if (isDepLegacyEnv) depLegacyEnvs.push(component);
+          else properWorkspaceComps.push(component);
+        })
+      );
+      workspaceComps = properWorkspaceComps;
+      nonWorkspaceComps = nonWorkspaceComps.concat(depLegacyEnvs);
+    }
 
     const workspaceCompsIds = workspaceComps.map((c) => c.id);
     const nonWorkspaceCompsIds = nonWorkspaceComps.map((c) => c.id);
@@ -357,6 +490,34 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       componentsToResolveFromScope = nonWorkspaceCompsGroups.true || [];
       componentsToResolveFromInstalled = nonWorkspaceCompsGroups.false || [];
     }
+    // runtime dependencies of installed legacy-core envs were installed along with them as
+    // packages. resolve them from the installed packages instead of isolating them into scope
+    // capsules. their dev dependencies are not needed to run the env - drop them, unless they are
+    // also reachable from other requested aspects.
+    if (installedLegacyEnvs.length && componentsToResolveFromScope.length) {
+      const legacyEnvIds = installedLegacyEnvs.map((c) => c.id.toString());
+      const legacyRuntimeClosure = this.getGraphDescendants(graph, legacyEnvIds, ['runtime']);
+      const otherSeederIds = graphSeeders.map((c) => c.id.toString()).filter((idStr) => !legacyEnvIds.includes(idStr));
+      const otherClosure = this.getGraphDescendants(graph, otherSeederIds);
+      otherSeederIds.forEach((idStr) => otherClosure.add(idStr));
+      const fromScope: Component[] = [];
+      const fromInstalled: Component[] = [];
+      const dropped: Component[] = [];
+      componentsToResolveFromScope.forEach((component) => {
+        const idStr = component.id.toString();
+        if (otherClosure.has(idStr)) fromScope.push(component);
+        else if (legacyRuntimeClosure.has(idStr)) fromInstalled.push(component);
+        else dropped.push(component);
+      });
+      if (dropped.length) {
+        this.logger.debug(
+          `resolveAspects, dropped ${dropped.length} dev/peer dependencies of installed legacy-core envs from aspects resolution:\n${dropped.map((c) => c.id.toString()).join('\n')}`
+        );
+      }
+      componentsToResolveFromInstalled = componentsToResolveFromInstalled.concat(fromInstalled);
+      componentsToResolveFromScope = fromScope;
+    }
+    const installedResolverRootIds = uniq(rootAspectsIds.concat(installedLegacyEnvs.map((c) => c.id.toString())));
 
     const scopeIds = componentsToResolveFromScope.map((c) => c.id);
     this.logger.debug(
@@ -380,8 +541,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const installedAspectsDefs: AspectDefinition[] = componentsToResolveFromInstalled.length
       ? await this.aspectLoader.resolveAspects(
           componentsToResolveFromInstalled,
-          this.getInstalledAspectResolver(graph, rootAspectsIds, runtimeName, {
+          this.getInstalledAspectResolver(graph, installedResolverRootIds, runtimeName, {
             throwOnError: opts?.throwOnError ?? false,
+            // a dependency aspect that fails to resolve must not abort the whole resolution - the
+            // requested aspects (e.g. the envs of many components) may be resolvable and loadable
+            // without it. throw only when the failed aspect was explicitly requested; dependency
+            // failures degrade to a skip and are reported via reportLoadFailure.
+            requestedIds: idsToResolve,
           })
         )
       : [];
@@ -512,11 +678,30 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
 
         const isModule = await this.aspectLoader.isEsmModule(localPath);
 
-        const aspect = !isModule
-          ? // eslint-disable-next-line global-require, import/no-dynamic-require
-            require(localPath)
-          : // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
-            await this.aspectLoader.loadEsm(localPath);
+        let aspect;
+        try {
+          aspect = !isModule
+            ? // eslint-disable-next-line global-require, import/no-dynamic-require
+              require(localPath)
+            : // : await this.aspectLoader.loadEsm(join(localPath, 'dist', 'index.js'));
+              await this.aspectLoader.loadEsm(localPath);
+        } catch (err: any) {
+          // the package.json of a workspace-component instance may point its "main" at the source
+          // file - it's generated from the component manifest, which is calculated before the
+          // component's env (hence its compiler) is loaded, e.g. on the first install cycle - and
+          // node refuses to load .ts sources from node_modules. the compiled dist is reliable
+          // when it exists, so require it directly, bypassing the stale "main".
+          const distMain =
+            err.code === 'ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING'
+              ? this.getDistMain(component, localPath)
+              : undefined;
+          if (!distMain) throw err;
+          this.logger.debug(
+            `aspectDefsToRequireableComponents: failed loading ${component.id.toString()} from ${localPath} (stale source "main"), falling back to ${distMain}`
+          );
+          // eslint-disable-next-line global-require, import/no-dynamic-require
+          aspect = isModule ? await this.aspectLoader.loadEsm(distMain) : require(distMain);
+        }
 
         // require aspect runtimes
         const runtimePath = await this.aspectLoader.getRuntimePath(component, localPath, MainRuntime.name);
@@ -530,6 +715,18 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       return new RequireableComponent(component, requireFunc);
     });
     return compact(requireableComponents);
+  }
+
+  /**
+   * the compiled main file of the component inside `localPath`, if it exists.
+   * (e.g. `<localPath>/dist/index.js` for an `index.ts` main file). best effort - a miss just
+   * means the caller keeps the original require error.
+   */
+  private getDistMain(component: Component, localPath: string): string | undefined {
+    const mainFile = component.state._consumer.mainFile;
+    if (!mainFile) return undefined;
+    const distMain = join(localPath, 'dist', mainFile.replace(/\.(ts|tsx|mts|cts|jsx)$/, '.js'));
+    return fs.pathExistsSync(distMain) ? distMain : undefined;
   }
 
   private async linkIfMissingWorkspaceAspects(aspects: AspectDefinition[]) {
@@ -625,12 +822,20 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     graph: Graph<Component, string>,
     rootIds: string[],
     runtimeName?: string,
-    opts: { throwOnError: boolean } = { throwOnError: false }
+    opts: { throwOnError: boolean; requestedIds?: string[] } = { throwOnError: false }
   ): AspectResolver {
+    const requestedIds = new Set(opts.requestedIds ?? []);
+    const requestedIdsWithoutVersion = new Set([...requestedIds].map((id) => id.split('@')[0]));
     const installedAspectsResolver = async (component: Component): Promise<ResolvedAspect | undefined> => {
       const compStringId = component.id.toString();
       // stringIds.push(compStringId);
-      const localPath = await this.resolveInstalledAspectRecursively(component, rootIds, graph, opts);
+      const isRequested =
+        !opts.requestedIds ||
+        requestedIds.has(compStringId) ||
+        requestedIdsWithoutVersion.has(component.id.toStringWithoutVersion());
+      const localPath = await this.resolveInstalledAspectRecursively(component, rootIds, graph, {
+        throwOnError: opts.throwOnError && isRequested,
+      });
       if (!localPath) return undefined;
 
       const runtimePath = runtimeName
@@ -655,42 +860,76 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     aspectComponent: Component,
     rootIds: string[],
     graph: Graph<Component, string>,
-    opts: { throwOnError: boolean } = { throwOnError: false }
+    opts: { throwOnError: boolean } = { throwOnError: false },
+    visiting = new Set<string>()
   ): Promise<string | null | undefined> {
     const aspectStringId = aspectComponent.id.toString();
     if (this.resolvedInstalledAspects.has(aspectStringId)) {
       const resolvedPath = this.resolvedInstalledAspects.get(aspectStringId);
       return resolvedPath;
     }
-    if (rootIds.includes(aspectStringId)) {
-      const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
-      this.resolvedInstalledAspects.set(aspectStringId, localPath);
-      return localPath;
-    }
-    const parent = graph.predecessors(aspectStringId)[0];
-    if (!parent) return undefined;
-    const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph);
-    if (!parentPath) {
-      this.resolvedInstalledAspects.set(aspectStringId, null);
-      return undefined;
-    }
-    const packageName = this.dependencyResolver.getPackageName(aspectComponent);
+    // guard against circular dependencies in the graph. the set acts as the active call stack -
+    // ids are removed when unwinding (finally below), so it never misclassifies reconverging
+    // (diamond) paths as cycles.
+    if (visiting.has(aspectStringId)) return undefined;
+    visiting.add(aspectStringId);
     try {
-      const resolvedPath = resolveFrom(parentPath, [packageName]);
-      const localPath = findRoot(resolvedPath);
-      this.resolvedInstalledAspects.set(aspectStringId, localPath);
-      return localPath;
-    } catch (error: any) {
-      this.resolvedInstalledAspects.set(aspectStringId, null);
-      if (opts.throwOnError) {
-        throw error;
+      // match roots ignoring the version - rootIds coming from configured aspects (workspace.jsonc
+      // keys) are typically versionless while the graph provides versioned ids, and the resolved
+      // path (the package dir in the workspace node_modules) is version-agnostic anyway.
+      const aspectIdWithoutVersion = aspectComponent.id.toStringWithoutVersion();
+      if (rootIds.some((rootId) => rootId === aspectStringId || rootId.split('@')[0] === aspectIdWithoutVersion)) {
+        const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
+        this.resolvedInstalledAspects.set(aspectStringId, localPath);
+        return localPath;
       }
-      this.logger.consoleWarning(
-        `failed resolving aspect ${aspectStringId} from ${parentPath}, error: ${error.message}`
-      );
-      // record the swallowed failure on the active load-trace so it surfaces as a component issue
-      reportLoadFailure({ failedId: aspectStringId, phase: 'resolve-installed-aspect', error: error.message });
+      // a workspace component may reach here as a dependency of another aspect. resolve it from
+      // the workspace (where its dists are) rather than from a copy nested in the parent's
+      // node_modules, which may contain only its sources (e.g. a file: instance of the package
+      // manager) and fail to require. ignore the version - the graph may provide a versioned id
+      // while the bitmap stores it versionless (or at another version), and the workspace has a
+      // single instance of the component either way.
+      if (this.workspace.hasId(aspectComponent.id, { ignoreVersion: true })) {
+        const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
+        this.resolvedInstalledAspects.set(aspectStringId, localPath);
+        return localPath;
+      }
+      // use inEdges to get the immediate parents. don't use graph.predecessors() as it returns
+      // all the recursive predecessors, which may throw "Maximum call stack size exceeded" on big
+      // graphs. multiple aspects may depend on this aspect and the package may be resolvable only
+      // from some of them - try each parent chain until one resolves, and memoize a failure only
+      // after all of them were attempted.
+      const parentEdges = graph.inEdges(aspectStringId);
+      if (!parentEdges.length) return undefined;
+      const packageName = this.dependencyResolver.getPackageName(aspectComponent);
+      let lastError: Error | undefined;
+      for (const parentEdge of parentEdges) {
+        const parent = graph.node(parentEdge.sourceId);
+        if (!parent) continue;
+        // eslint-disable-next-line no-await-in-loop
+        const parentPath = await this.resolveInstalledAspectRecursively(parent.attr, rootIds, graph, opts, visiting);
+        if (!parentPath) continue;
+        try {
+          const resolvedPath = resolveFrom(parentPath, [packageName]);
+          const localPath = findRoot(resolvedPath);
+          this.resolvedInstalledAspects.set(aspectStringId, localPath);
+          return localPath;
+        } catch (error: any) {
+          lastError = error;
+        }
+      }
+      this.resolvedInstalledAspects.set(aspectStringId, null);
+      if (lastError) {
+        if (opts.throwOnError) {
+          throw lastError;
+        }
+        this.logger.consoleWarning(`failed resolving aspect ${aspectStringId}, error: ${lastError.message}`);
+        // record the swallowed failure on the active load-trace so it surfaces as a component issue
+        reportLoadFailure({ failedId: aspectStringId, phase: 'resolve-installed-aspect', error: lastError.message });
+      }
       return undefined;
+    } finally {
+      visiting.delete(aspectStringId);
     }
   }
 
@@ -700,6 +939,29 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * @param isAspect
    * @returns
    */
+  /**
+   * collect all the ids reachable from the given source ids, excluding the sources themselves.
+   * optionally traverse only edges of the given lifecycle types (e.g. ['runtime']).
+   * iterative BFS to avoid stack overflow on big graphs.
+   */
+  private getGraphDescendants(graph: Graph<Component, string>, sourceIds: string[], edgeTypes?: string[]): Set<string> {
+    const visited = new Set<string>();
+    const queue = [...sourceIds];
+    let queueIndex = 0;
+    while (queueIndex < queue.length) {
+      const current = queue[queueIndex];
+      queueIndex += 1;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      graph.outEdges(current).forEach((edge) => {
+        if (edgeTypes && !edgeTypes.includes(edge.attr)) return;
+        queue.push(edge.targetId);
+      });
+    }
+    sourceIds.forEach((id) => visited.delete(id));
+    return visited;
+  }
+
   private async getAspectsGraphWithoutCore(
     components: Component[] = [],
     isAspect?: ShouldLoadFunc
@@ -767,12 +1029,20 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const loadedExtensions = harmonyExtensions.filter((extId) => {
       return this.harmony.extensions.get(extId)?.loaded;
     });
-    const extensionsToLoad = difference(extensionsIds, loadedExtensions);
+    const notLoaded = difference(extensionsIds, loadedExtensions);
+    // envs that used to be core aspects appear in old components without a version, while they
+    // are loaded and registered to harmony with a version. match them ignoring the version to
+    // avoid re-loading them over and over again.
+    const extensionsToLoad = notLoaded.filter((extId) => !this.isAspectLoadedInclLegacyEnvs(extId));
     if (!extensionsToLoad.length) return;
     await this.loadAspects(extensionsToLoad, undefined, originatedFrom?.toString(), mergedOpts);
   }
 
   private async isAspect(id: ComponentID) {
+    // envs that used to be core aspects are always aspects. this can't be determined by the
+    // component env-data, as when their own env was not loaded yet, the env-data is calculated
+    // with a fallback env, which is not an aspect env.
+    if (this.envs.isLegacyCoreEnv(id.toStringWithoutVersion())) return true;
     const component = await this.workspace.get(id);
     const isUsingAspectEnv = this.envs.isUsingAspectEnv(component);
     const isUsingEnvEnv = this.envs.isUsingEnvEnv(component);
@@ -864,6 +1134,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     // even if it's not there yet
     // in that case we will fail to load it, and the user will need to run bit install
     if (this.envs.hasEnvManifest(component)) {
+      return true;
+    }
+    // envs that used to be core aspects are expected to be installed into the workspace ("bit install"
+    // adds them to the root policy) rather than isolated into scope capsules, which is very slow.
+    // same as the env.jsonc case above - when not installed yet, loading fails gracefully and the
+    // user gets a NonLoadedEnv issue suggesting to run bit install.
+    if (this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion())) {
       return true;
     }
     return false;

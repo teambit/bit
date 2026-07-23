@@ -244,6 +244,32 @@ export default class NodeModuleLinker {
       packageJson.packageJsonObject.version = snapToSemver(packageJson.packageJsonObject.version);
     }
 
+    // never persist a source file as the package main. the transformers above normally set the
+    // compiled main, but when they have no env data (e.g. the early linking step of "bit install"
+    // runs before components are loaded), the main stays the component's source main-file.
+    // requiring such a package crashes on node 22 (require(esm) of a .ts entry with extensionless
+    // relative imports), breaking every subsequent component load. point it at the compiled dist
+    // location instead. the exception is the default empty-env - it has no compiler by design, so
+    // its components are used as-source and the source main is the correct one.
+    // careful though: the empty-env in the data may be just a fallback for a configured env that
+    // failed to load (validateEnvId of the envs aspect detects the same mismatch) - in that case
+    // the component does have a compiler and its main must not stay a source file.
+    const envsExt = legacyComp.extensions.findCoreExtension('teambit.envs/envs');
+    const envId = envsExt?.data?.id;
+    const configuredEnvId = envsExt?.config?.env?.split('@')[0];
+    const isCompilerLessEnv =
+      envId?.split('@')[0] === 'teambit.harmony/empty-env' &&
+      (!configuredEnvId || configuredEnvId === 'teambit.harmony/empty-env');
+    const mainFile = packageJson.packageJsonObject.main;
+    if (
+      !isCompilerLessEnv &&
+      typeof mainFile === 'string' &&
+      /\.(ts|tsx|jsx|mts|cts)$/.test(mainFile) &&
+      !mainFile.endsWith('.d.ts')
+    ) {
+      packageJson.packageJsonObject.main = `dist/${mainFile.replace(/\.(ts|tsx|jsx|mts|cts)$/, '.js')}`;
+    }
+
     // indicate that this component exists locally and it is symlinked into the workspace. not a normal package.
     packageJson.packageJsonObject._bit_local = true;
     packageJson.packageJsonObject.source = component.mainFile.relative;

@@ -7,6 +7,7 @@ import type { APIDiffResult } from '@teambit/semantics.entities.semantic-schema-
 import chaiSubset from 'chai-subset';
 import type { TrackerMain } from '@teambit/tracker';
 import { TrackerAspect } from '@teambit/tracker';
+import { TypescriptAspect } from '@teambit/typescript';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
@@ -40,7 +41,10 @@ describe('SchemaAspect', function () {
       const compDir = path.join(workspacePath, 'button');
       const src = path.join(getMockDir(), 'button');
       await fs.copy(src, compDir);
-      const harmony = await loadManyAspects([WorkspaceAspect, SchemaAspect, TrackerAspect], workspacePath);
+      const harmony = await loadManyAspects(
+        [WorkspaceAspect, SchemaAspect, TrackerAspect, TypescriptAspect],
+        workspacePath
+      );
       workspace = harmony.get<Workspace>(WorkspaceAspect.id);
       const tracker = harmony.get<TrackerMain>(TrackerAspect.id);
       await tracker.track({ rootDir: compDir, defaultScope: 'org.scope' });
@@ -91,7 +95,10 @@ describe('SchemaAspect', function () {
       const compDirV2 = path.join(workspacePath, 'button-v2');
       const srcV2 = path.join(getMockDir(), 'button-v2');
       await fs.copy(srcV2, compDirV2);
-      const harmony = await loadManyAspects([WorkspaceAspect, SchemaAspect, TrackerAspect], workspacePath);
+      const harmony = await loadManyAspects(
+        [WorkspaceAspect, SchemaAspect, TrackerAspect, TypescriptAspect],
+        workspacePath
+      );
       const ws = harmony.get<Workspace>(WorkspaceAspect.id);
       const tracker = harmony.get<TrackerMain>(TrackerAspect.id);
       await tracker.track({ rootDir: compDirV2, defaultScope: 'org.scope' });

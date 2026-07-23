@@ -6,7 +6,7 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
-import type { EnvsMain } from '@teambit/envs';
+import type { EnvsMain, Environment } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -115,11 +115,40 @@ export class SchemaMain {
 
   getSchemaExtractor(component: Component, tsserverPath?: string, contextPath?: string): SchemaExtractor {
     const env = this.envs.getEnv(component).env;
-    if (typeof env.getSchemaExtractor === 'undefined') {
-      throw new Error(`No SchemaExtractor defined for ${env.name}`);
-    }
+    return this.getSchemaExtractorFromEnv(env, tsserverPath, contextPath);
+  }
 
-    return env.getSchemaExtractor(undefined, tsserverPath, contextPath);
+  private fallbackExtractorFactory?: (
+    tsserverPath?: string,
+    contextPath?: string,
+    schemaTransformers?: SchemaTransformer[],
+    apiTransformers?: SchemaNodeTransformer[]
+  ) => SchemaExtractor;
+
+  /**
+   * register a fallback schema-extractor factory, used for components whose env does not provide
+   * a schema extractor (e.g. the default empty-env, which provides no dev tooling but its
+   * components should still get an api-schema, as extraction is a static analysis).
+   * registered by the typescript aspect.
+   */
+  registerFallbackExtractorFactory(factory: NonNullable<typeof this.fallbackExtractorFactory>) {
+    this.fallbackExtractorFactory = factory;
+  }
+
+  private getSchemaExtractorFromEnv(
+    env: Environment,
+    tsserverPath?: string,
+    contextPath?: string,
+    schemaTransformers?: SchemaTransformer[],
+    apiTransformers?: SchemaNodeTransformer[]
+  ): SchemaExtractor {
+    if (env.getSchemaExtractor) {
+      return env.getSchemaExtractor(undefined, tsserverPath, contextPath, schemaTransformers, apiTransformers);
+    }
+    if (this.fallbackExtractorFactory) {
+      return this.fallbackExtractorFactory(tsserverPath, contextPath, schemaTransformers, apiTransformers);
+    }
+    throw new Error(`No SchemaExtractor defined for ${env.name}`);
   }
 
   /**
@@ -155,11 +184,8 @@ export class SchemaMain {
             return config;
           },
         ]);
-        if (typeof env.getSchemaExtractor === 'undefined') {
-          throw new Error(`No SchemaExtractor defined for ${env.name}`);
-        }
-        const schemaExtractor: SchemaExtractor = env.getSchemaExtractor(
-          undefined,
+        const schemaExtractor: SchemaExtractor = this.getSchemaExtractorFromEnv(
+          env,
           tsserverPath,
           contextPath,
           schemaTransformers,

@@ -51,7 +51,7 @@ describe('custom aspects', function () {
 
       helper.command.install(`@ci/${helper.scopes.remoteWithoutOwner}.main-aspect`);
 
-      helper.command.create('react-env', 'my-env', '--path my-env');
+      helper.command.create('react-env', 'my-env', '--path my-env --env teambit.react/react');
       helper.fs.outputFile('my-env/my-env.main.runtime.ts', getEnvRuntimeMain(helper.scopes.remoteWithoutOwner));
       helper.fixtures.populateComponents(1);
 
@@ -59,7 +59,9 @@ describe('custom aspects', function () {
       helper.extensions.addExtensionToVariant(`my-env`, 'teambit.harmony/aspect');
 
       helper.command.compile();
-      helper.command.install();
+      // the aspect and react envs used to be core aspects, now their packages must be installed
+      // for the my-env fixture (which imports @teambit/react) to be compiled and loaded
+      helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042 @teambit/react@1.0.1042');
     });
     after(() => {
       npmCiRegistry.destroy();

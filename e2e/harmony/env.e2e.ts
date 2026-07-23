@@ -18,11 +18,19 @@ describe('env command', function () {
   });
   describe('bit env set', () => {
     describe('run bit env set and then tag when the variants points to another env', () => {
+      // the scenario is env-agnostic (env-set wins over variant config) - zero-dep local envs
+      // avoid installing the real env packages
+      let envBId: string;
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
-        helper.extensions.addExtensionToVariant('*', 'teambit.react/react', undefined, true);
+        const envAName = helper.env.setSimpleEnv('simple-env-a');
+        const envBName = helper.env.setSimpleEnv('simple-env-b');
+        envBId = `${helper.scopes.remote}/${envBName}`;
         helper.fixtures.populateComponents(1);
-        helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+        helper.extensions.addExtensionToVariant('comp1', 'teambit.envs/envs', {
+          env: `${helper.scopes.remote}/${envAName}`,
+        });
+        helper.command.setEnv('comp1', envBId);
         helper.command.tagAllWithoutBuild();
       });
       it('should not be modified', () => {
@@ -31,7 +39,7 @@ describe('env command', function () {
       });
       it('should not change the env to the variants one', () => {
         const env = helper.env.getComponentEnv('comp1');
-        expect(env).to.equal('teambit.harmony/aspect');
+        expect(env).to.contain(envBId);
       });
       it('ejecting the conf to component.json should not write internal fields', () => {
         helper.command.ejectConf('comp1');
@@ -88,7 +96,9 @@ describe('env command', function () {
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
-        helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+        // any env works here - the test only checks the env config was absorbed by the tag
+        const envName = helper.env.setSimpleEnv();
+        helper.command.setEnv('comp1', `${helper.scopes.remote}/${envName}`);
         helper.command.tagAllWithoutBuild();
       });
       it('should indicate that there was no env config in .bitmap to remove', () => {
@@ -107,17 +117,19 @@ describe('env command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
+      // the plugin file is plain .js on purpose: the default env (empty env) has no compiler,
+      // so a .ts plugin would never get a dist and the env would fail to load
       helper.fs.outputFile(
-        'my-env/my-env.bit-env.ts',
-        `export class MyEnv {
+        'my-env/my-env.bit-env.js',
+        `class MyEnv {
   name = 'my-env';
 }
-export default new MyEnv();
+module.exports.default = new MyEnv();
 `
       );
-      helper.fs.outputFile('my-env/index.ts', `export { MyEnv } from './my-env.bit-env';`);
+      helper.fs.outputFile('my-env/index.js', `module.exports = require('./my-env.bit-env');\n`);
       helper.command.addComponent('my-env');
-      helper.command.compile();
+      helper.command.link();
     });
     // previously, a component was recognized as an env only after it was loaded as an aspect,
     // which happened only once its own env (env-of-env, e.g. teambit.envs/env or

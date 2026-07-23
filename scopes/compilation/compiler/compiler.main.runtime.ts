@@ -13,7 +13,7 @@ import type { Component } from '@teambit/component';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import type { WatcherMain } from '@teambit/watcher';
 import { WatcherAspect } from '@teambit/watcher';
-import type { EnvsMain, ExecutionContext } from '@teambit/envs';
+import type { EnvsMain, ExecutionContext, Environment } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { ComponentID } from '@teambit/component-id';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -89,9 +89,13 @@ export class CompilerMain {
   /**
    * find the compiler configured on the workspace and ask for the dist folder path.
    */
-  getRelativeDistFolder(component: Component): string {
-    const environment = this.envs.getOrCalculateEnv(component).env;
-    const compilerInstance: Compiler | undefined = environment.getCompiler?.();
+  getRelativeDistFolder(component: Component, environment?: Environment): string {
+    // `environment` is an optional pass-through of the component's already-resolved env (same value
+    // as getOrCalculateEnv below). callers that already have it - e.g. addMissingDistsIssue, which
+    // resolved it for the compiler check - pass it to avoid a second resolution and to keep both
+    // checks on the same env instance. it is not an env override.
+    const env = environment || this.envs.getOrCalculateEnv(component).env;
+    const compilerInstance: Compiler | undefined = env.getCompiler?.();
     if (!compilerInstance || !compilerInstance.getDistDir) return DEFAULT_DIST_DIRNAME;
     return compilerInstance.getDistDir();
   }
@@ -101,9 +105,9 @@ export class CompilerMain {
    * @param component
    * @returns
    */
-  async isDistDirExists(component: Component): Promise<boolean> {
+  async isDistDirExists(component: Component, environment?: Environment): Promise<boolean> {
     const packageDir = await this.workspace.getComponentPackagePath(component);
-    const distDir = this.getRelativeDistFolder(component);
+    const distDir = this.getRelativeDistFolder(component, environment);
     const pathToCheck = path.join(packageDir, distDir);
     return fs.existsSync(pathToCheck);
   }
@@ -119,7 +123,11 @@ export class CompilerMain {
     if (issuesToIgnore.includes(IssuesClasses.MissingDists.name)) return;
     await Promise.all(
       components.map(async (component) => {
-        const exist = await this.isDistDirExists(component);
+        const environment = this.envs.getOrCalculateEnv(component).env;
+        // an env without a compiler (e.g. the default empty-env) has no dists, the component is
+        // used as-source. getCompiler may also be implemented but return undefined.
+        if (!environment.getCompiler?.()) return;
+        const exist = await this.isDistDirExists(component, environment);
         if (!exist) {
           component.state.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
         }

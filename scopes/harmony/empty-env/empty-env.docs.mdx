@@ -1,0 +1,27 @@
+---
+description: The default env for components that were not configured with any env
+labels: ['core aspect', 'env', 'environment', 'default']
+---
+
+## Overview
+
+The empty env is the default env for components that were not configured with any env. It
+intentionally provides nothing - no compiler, no tester, no preview and no dependency policy - so
+components are used as-source and Bit works fully out of the box, without fetching anything from a
+remote.
+
+It has no behavior on purpose: any behavior baked into a core env changes components' output when
+Bit itself changes, without any env-version bump.
+
+## Getting a development experience
+
+To get a development experience (compile, test, lint, docs), configure a real env on the
+component. For example:
+
+```bash
+bit env set my-component teambit.harmony/node
+```
+
+Envs that used to be core aspects (such as `teambit.harmony/node` and `teambit.react/react`) are
+regular envs now. When old components use them without a version, Bit installs them with a pinned
+version. Run `bit install` after configuring such an env.

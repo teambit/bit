@@ -19,10 +19,14 @@ chai.use(chaiString);
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
+      // the node-env-1 fixture is a minimal old-style env, deliberately not based on any
+      // non-core env (see the fixture) - basing it on a real env would pull the entire env chain
+      // into the scope-aspects capsules, which gets OOM-killed under yarn on CI (materialized as
+      // full copies, no store/hardlinks). the seed workspace uses the default pnpm - the yarn
+      // coverage is in the describe block below, where the scope-aspects capsules are installed.
       envName1 = helper.env.setCustomEnv('node-env-1');
       envId1 = `${helper.scopes.remote}/${envName1}`;
       helper.command.install('lodash.get lodash.flatten');

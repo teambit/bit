@@ -5,15 +5,18 @@
  * How it works: mocha's junit reports don't capture before/after-hook time (where ~85% of our
  * e2e wall-clock goes), so per-file durations can't be read from any report directly. Instead,
  * this script derives them from data CircleCI does have:
- *   1. For each recent successful `e2e_test` job, every parallel node's total run time, and the
- *      exact list of files that ran on it (printed in the node's mocha command line).
+ *   1. For each recent completed `e2e_test` job, every successful parallel node's total run time,
+ *      and the exact list of files that ran on it (printed in the node's mocha command line).
  *   2. Each node is one equation: node_wall_time = fixed_overhead + sum(duration of its files).
  *      File-to-node assignments vary across jobs/branches, so collecting many jobs yields an
  *      overdetermined system, solved here with non-negative least squares (coordinate descent),
  *      lightly regularized toward a hook-count-based prior for files the data can't separate.
  *
- * Usage: node scripts/generate-e2e-timings.js [--jobs=N] [--prior=hooks|manifest]
- *   --jobs=N           how many recent successful e2e_test jobs to learn from (default 30)
+ * Usage: node scripts/generate-e2e-timings.js [--jobs=N] [--prior=hooks|manifest] [--branch=NAME]
+ *   --jobs=N           how many recent completed e2e_test jobs to learn from (default 30)
+ *   --branch=NAME      learn only from pipelines of this branch. use when a branch changes the
+ *                      cost profile of many suites (weights averaged with other branches' runs
+ *                      would under-predict them, unbalancing the split on that branch).
  *   --prior=manifest   regularize toward the existing manifest instead of hook counts.
  *                      Preferred for routine refreshes (e.g. the scheduled CI job): combined with
  *                      a small --jobs window it updates weights from recent runs only, so stale
@@ -33,6 +36,7 @@ const cliFlag = (name, def) => {
 };
 const MAX_JOBS = parseInt(cliFlag('jobs', '30'), 10);
 const PRIOR_MODE = cliFlag('prior', 'hooks');
+const BRANCH = cliFlag('branch', '');
 const RIDGE_LAMBDA = 1; // weight of the prior relative to one node observation
 const ITERATIONS = 300;
 
@@ -46,7 +50,10 @@ async function findRecentE2eJobs() {
   const jobs = [];
   let pageToken;
   for (let page = 0; page < 4 && jobs.length < MAX_JOBS; page += 1) {
-    const url = `https://circleci.com/api/v2/project/${PROJECT}/pipeline${pageToken ? `?page-token=${pageToken}` : ''}`;
+    const params = [BRANCH ? `branch=${encodeURIComponent(BRANCH)}` : '', pageToken ? `page-token=${pageToken}` : '']
+      .filter(Boolean)
+      .join('&');
+    const url = `https://circleci.com/api/v2/project/${PROJECT}/pipeline${params ? `?${params}` : ''}`;
     const data = await getJson(url);
     pageToken = data.next_page_token;
     for (const pipeline of data.items) {
@@ -54,7 +61,11 @@ async function findRecentE2eJobs() {
       const workflows = (await getJson(`https://circleci.com/api/v2/pipeline/${pipeline.id}/workflow`)).items;
       for (const workflow of workflows.filter((w) => w.name === 'build_and_test')) {
         const wfJobs = (await getJson(`https://circleci.com/api/v2/workflow/${workflow.id}/job`)).items;
-        const e2eJob = wfJobs.find((j) => j.name === 'e2e_test' && j.status === 'success' && j.job_number);
+        // failed jobs are usable too: fetchNodeObservations only reads nodes that succeeded,
+        // so a job where a single node flaked still contributes 39 valid equations
+        const e2eJob = wfJobs.find(
+          (j) => j.name === 'e2e_test' && (j.status === 'success' || j.status === 'failed') && j.job_number
+        );
         if (e2eJob) jobs.push(e2eJob.job_number);
       }
     }
@@ -147,7 +158,7 @@ function solve(observations, files) {
 }
 
 async function main() {
-  console.error('finding recent successful e2e_test jobs...');
+  console.error('finding recent completed e2e_test jobs...');
   const jobNumbers = await findRecentE2eJobs();
   console.error(`collecting node data from ${jobNumbers.length} jobs...`);
   const observations = [];
@@ -156,7 +167,11 @@ async function main() {
     observations.push(...nodes);
     console.error(`  job ${jobNumber}: ${nodes.length} nodes`);
   }
-  if (observations.length < 50) {
+  // with a manifest prior the solve is regularized, so even a single job's worth of nodes is
+  // usable (the prior fills what the observations can't separate) - common with --branch on a
+  // branch that has few green runs
+  const minObservations = PRIOR_MODE === 'manifest' ? 30 : 50;
+  if (observations.length < minObservations) {
     throw new Error(`only ${observations.length} node observations collected - not enough to solve reliably`);
   }
   const files = [...new Set(observations.flatMap((o) => o.files))].sort();

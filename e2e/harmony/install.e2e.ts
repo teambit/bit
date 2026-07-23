@@ -63,8 +63,11 @@ describe('install command', function () {
         output = helper.command.install();
       });
       it('should show a warning that the workspace has old env without env.jsonc so another install might be required', async () => {
-        const msg = stripAnsi(getAnotherInstallRequiredOutput(false, [envId]));
-        expect(output).to.have.string(msg);
+        // both the custom env (recognized as an env by its teambit.envs/env configuration even
+        // when teambit.envs/env is not loaded) and its own env (teambit.envs/env, used to be a
+        // core aspect) are non-loaded old envs on the first install.
+        const msg = stripAnsi(getAnotherInstallRequiredOutput(false, [envId, 'teambit.envs/env']));
+        expect(stripAnsi(output)).to.have.string(msg);
       });
       it('should not install deps that were configured in the env in first install', async () => {
         expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/lodash.get')).to.not.be.a.path();
@@ -75,7 +78,7 @@ describe('install command', function () {
         });
         it('should not show a warning that the workspace has old env without env.jsonc so another install might be required', async () => {
           const msg = stripAnsi(getAnotherInstallRequiredOutput(false, [envId]));
-          expect(output).to.not.have.string(msg);
+          expect(stripAnsi(output)).to.not.have.string(msg);
         });
         it('should install deps that were configured in the env in second install', async () => {
           expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/lodash.get')).to.be.a.path();

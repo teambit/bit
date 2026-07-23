@@ -167,13 +167,13 @@ describe('create extension', function () {
   describe('with env defined inside the aspect-template different than the variants', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
+      helper.env.setTsEnv();
       helper.command.create('bit-aspect', 'my-aspect', `--scope ${helper.scopes.remote}`);
     });
     it('should set the env according to the variant', () => {
       const show = helper.command.showComponentParsedHarmony('my-aspect');
       const env = show.find((item) => item.title === 'env');
-      expect(env.json).to.equal('teambit.react/react');
+      expect(env.json).to.equal(`${helper.scopes.remote}/ts-env`);
     });
   });
   describe('with env defined inside the aspect-template when there is no variant', () => {
@@ -208,11 +208,13 @@ describe('create extension', function () {
       // create a new workspace that uses an external package manager
       helper.scopeHelper.cleanWorkspace();
       helper.command.init('--external-package-manager');
-      helper.command.create('module', 'simple');
+      // the node env is not a core aspect anymore, its template is loaded on demand via --env
+      helper.command.create('module', 'simple', '--env teambit.harmony/node');
       pkgJson = helper.fs.readJsonFile('package.json');
     });
     it('should write dependencies of the component to package.json', () => {
-      expect(pkgJson.dependencies['@bitdev/node.node-env'] != null).to.eq(true);
+      // the env set via --env is written as a dependency with its pinned version
+      expect(pkgJson.dependencies['@teambit/node'] != null).to.eq(true);
     });
     it('should not write dependencies of the env to package.json', () => {
       expect(pkgJson.dependencies.eslint == null).to.eq(true);

@@ -10,6 +10,7 @@ import {
   getIdentifiers,
 } from '@teambit/harmony.modules.harmony-root-generator';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import esmLoader from '@teambit/node.utils.esm-loader';
 import normalizePath from 'normalize-path';
 import { PreviewAspect } from './preview.aspect';
 import { clearConsole } from './pre-bundle-utils';
@@ -108,7 +109,11 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
     PreviewAspect.id,
     __dirname
   );
-  const config = createRspackConfig(outputDir, mainEntry);
+  // ESM-only package - must be loaded with a native import(). a require() may be hijacked by a
+  // stale @babel/register hook (left registered after the mocha tester ran in this process),
+  // which compiles the ESM source as CJS and crashes on the "export" token.
+  const { mdxOptions } = await esmLoader(require.resolve('@teambit/mdx.modules.mdx-v3-options'));
+  const config = createRspackConfig(outputDir, mainEntry, mdxOptions);
   const compiler = rspack(config as any);
   const compilerRun = promisify(compiler.run.bind(compiler));
   const results = await compilerRun();

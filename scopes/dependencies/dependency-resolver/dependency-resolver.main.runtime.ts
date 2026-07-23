@@ -13,7 +13,7 @@ import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, resolveLegacyCoreEnvId } from '@teambit/envs';
 import type { DependenciesEnv, EnvDefinition, EnvJsonc, EnvsMain } from '@teambit/envs';
 import type { SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
@@ -27,6 +27,7 @@ import {
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
+  DEFAULT_DIST_DIRNAME,
   DEFAULT_HARMONY_PACKAGE_MANAGER,
   getCloudDomain,
 } from '@teambit/legacy.constants';
@@ -558,19 +559,46 @@ export class DependencyResolverMain {
     const pkgName = this.getPackageName(component);
     const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
     const getRelativeRootComponentDir = getRootComponentDir.bind(null, rootComponentsRelativePath ?? '');
+    // install names a legacy core env's root dir by its VERSIONLESS id (calculateEnvId returns the
+    // versionless id for these envs), so the pinned external package sits in .bit_roots/<versionless>.
+    // resolve it the same way even when the env is not in the workspace (i.e. its source was removed);
+    // otherwise the versioned lookup misses and we fall back to <root>/node_modules/<pkg>, which was
+    // the now-deleted source-component dir -> "Cannot find module".
+    const useVersionlessSelfRoot =
+      options.isInWorkspace || this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion());
     const selfRootDir = getRelativeRootComponentDir(
-      options.isInWorkspace ? component.id.toStringWithoutVersion() : component.id.toString()
+      useVersionlessSelfRoot ? component.id.toStringWithoutVersion() : component.id.toString()
     );
+    // the returned paths are relative to the workspace root, so anchor all the existence checks
+    // to the workspace path rather than relying on process.cwd
+    const existsInWorkspace = (relativeDir: string) => fs.pathExistsSync(join(options.workspacePath, relativeDir));
     // In case the component is it's own root we want to load it from it's own root folder
-    if (fs.pathExistsSync(selfRootDir)) {
+    if (existsInWorkspace(selfRootDir)) {
       const innerDir = join(selfRootDir, 'node_modules', pkgName);
-      if (fs.pathExistsSync(innerDir)) return innerDir;
+      if (existsInWorkspace(innerDir)) {
+        // the roots instance may contain only the source files (e.g. when installed as a file:
+        // dependency of another component), while requiring the module needs the compiled dist.
+        // prefer the workspace module dir when it has dists and the roots instance doesn't.
+        if (existsInWorkspace(join(innerDir, DEFAULT_DIST_DIRNAME))) return innerDir;
+        const rootModulePath = this.getModulePath(component);
+        if (existsInWorkspace(join(rootModulePath, DEFAULT_DIST_DIRNAME))) return rootModulePath;
+        return innerDir;
+      }
       // sometime for the env itself we don't have the env package in the env root dir, because it was hoisted
       // in that case we return the dir from the root node_modules
       return this.getModulePath(component);
     }
-    const dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
-    if (fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
+    let dirInEnvRoot: string | undefined;
+    try {
+      dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
+    } catch (err: any) {
+      // the component env couldn't be determined (e.g. a component loaded from the scope before
+      // its extensions were calculated). fall back to the root node_modules.
+      this.logger.debug(
+        `getRuntimeModulePath: failed getting the env root dir of ${component.id.toString()} (pkg: ${pkgName}), falling back to the root node_modules. error: ${err.message}`
+      );
+    }
+    if (dirInEnvRoot && existsInWorkspace(dirInEnvRoot)) return dirInEnvRoot;
     return this.getModulePath(component);
   }
 
@@ -586,7 +614,9 @@ export class DependencyResolverMain {
     const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
     const rootComponentDirWithVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envId);
     const rootComponentDirWithoutVersion = getRootComponentDir(rootComponentsRelativePath ?? '', envIdWithoutVersion);
-    if (fs.pathExistsSync(rootComponentDirWithoutVersion)) {
+    // the returned path is relative to the workspace root - anchor the existence check to the
+    // workspace path rather than relying on process.cwd
+    if (fs.pathExistsSync(join(options.workspacePath, rootComponentDirWithoutVersion))) {
       return rootComponentDirWithoutVersion;
     }
     return rootComponentDirWithVersion;
@@ -1149,6 +1179,20 @@ export class DependencyResolverMain {
     if (fromFile) return fromFile;
 
     this.envsWithoutManifest.add(envId.toString());
+    // envs that used to be core aspects cannot always be loaded - their package is not
+    // necessarily installed (e.g. when computing manifests for scope-aspects capsules). their
+    // pinned versions are immutable, so their policies are known - use the embedded policy
+    // rather than the default-env fallback which has no policy at all.
+    if (this.envs.isLegacyCoreEnv(envIdWithoutVersion) && !this.envs.isEnvRegistered(envId.toString())) {
+      const legacyCoreEnvPolicy = this.envs.getLegacyCoreEnvPolicy(envIdWithoutVersion);
+      if (legacyCoreEnvPolicy) {
+        return EnvPolicy.fromConfigObject(
+          legacyCoreEnvPolicy,
+          { includeLegacyPeersInSelfPolicy: true },
+          envIdWithoutVersion
+        );
+      }
+    }
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env, { envId: envIdWithoutVersion });
   }
@@ -1171,7 +1215,10 @@ export class DependencyResolverMain {
     const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
       policy,
       {
-        includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
+        includeLegacyPeersInSelfPolicy:
+          envComponent &&
+          (this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()) ||
+            this.envs.isLegacyCoreEnv(envComponent.id.toStringWithoutVersion())),
       },
       envId
     );
@@ -1212,6 +1259,9 @@ export class DependencyResolverMain {
   ): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
+    // envs that used to be core aspects are old-style envs (no env.jsonc). avoid fetching the
+    // env component just to find out it has no env.jsonc file.
+    if (this.envs.isLegacyCoreEnv(envId)) return undefined;
     if (legacyFiles) {
       const envJsonc = legacyFiles.find((file) => file.basename === 'env.jsonc');
       if (envJsonc) {
@@ -1230,7 +1280,10 @@ export class DependencyResolverMain {
         const idWithoutVersion = options.envId.split('@')[0];
         const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
           policiesFromEnvConfig,
-          { includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion) },
+          {
+            includeLegacyPeersInSelfPolicy:
+              this.envs.isCoreEnv(idWithoutVersion) || this.envs.isLegacyCoreEnv(idWithoutVersion),
+          },
           idWithoutVersion
         );
         return allPoliciesFromEnv;
@@ -1391,6 +1444,22 @@ export class DependencyResolverMain {
         if (!dep.id) return;
         // In case of core aspect, do not update the version, as it's loaded to harmony without version
         if (this.aspectLoader.isCoreAspect(dep.id)) return;
+        // envs that used to be core aspects keep the old single-instance behavior: bind the
+        // dependency to the already-loaded instance (or the workspace component) instead of
+        // loading another copy of it from the dependency closure.
+        const depIdWithoutVersion = dep.id.split('@')[0];
+        if (this.envs.isLegacyCoreEnv(depIdWithoutVersion)) {
+          const canonicalId = this.getCanonicalLegacyCoreEnvId(depIdWithoutVersion);
+          if (canonicalId) {
+            dep.id = canonicalId;
+            return;
+          }
+          // neither loaded nor a workspace component (e.g. scope/global-scope context). the parent
+          // was built when this dep was still a core aspect, so it's not in the parent's model deps
+          // either. bind it to the pinned version - the same version the scope loader imports.
+          dep.id = resolveLegacyCoreEnvId(depIdWithoutVersion);
+          return;
+        }
         // Lazily get the parent component
         if (typeof parentComponent === 'string') {
           const parentComponentId = await this.componentAspect.getHost().resolveComponentId(parentComponent);
@@ -1428,6 +1497,20 @@ export class DependencyResolverMain {
     }
 
     return manifest;
+  }
+
+  /**
+   * for envs that used to be core aspects: the id of the single instance that should be used -
+   * the already-loaded one (any version) or the workspace component. undefined when neither exists.
+   */
+  private getCanonicalLegacyCoreEnvId(idWithoutVersion: string): string | undefined {
+    const loadedId = this.aspectLoader.getLoadedAspectIdIgnoringVersion(idWithoutVersion);
+    if (loadedId) return loadedId;
+    const host = this.componentAspect.getHost();
+    const hostWithGetIdIfExist = host as { getIdIfExist?: (id: ComponentID) => ComponentID | undefined };
+    if (!hostWithGetIdIfExist?.getIdIfExist) return undefined;
+    const workspaceId = hostWithGetIdIfExist.getIdIfExist(ComponentID.fromString(idWithoutVersion));
+    return workspaceId?.toString();
   }
 
   validateAspectData(data: DependencyResolverComponentData) {
@@ -1891,6 +1974,22 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       });
     };
     ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
+
+    // validate aspects data (env id, dependencies data) before persisting them into the model during snap/tag.
+    // (was registered by teambit.harmony/aspect before it was removed from the core aspects)
+    ExtensionDataList.validateBeforePersistHook = (extensionDataList: ExtensionDataList) => {
+      const envExt = extensionDataList.findCoreExtension(EnvsAspect.id);
+      if (envExt) {
+        const result = envs.validateEnvId(envExt);
+        if (result) return result;
+      }
+      const depResolverExt = extensionDataList.findCoreExtension(DependencyResolverAspect.id);
+      if (depResolverExt) {
+        const result = dependencyResolver.validateAspectData(depResolverExt.data as DependencyResolverComponentData);
+        if (result) return result;
+      }
+      return undefined;
+    };
     PackageJsonTransformer.registerPackageJsonTransformer(async (component, packageJsonObject) => {
       const deps = dependencyResolver.getDependencies(component);
       const { optionalDependencies, peerDependenciesMeta } = deps.toDependenciesManifest();

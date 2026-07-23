@@ -28,7 +28,7 @@ import type {
 } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
 import type { EnvsMain, EnvJsonc } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, getLegacyCoreEnvPackageName } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import type { Harmony } from '@teambit/harmony';
 import type { Logger } from '@teambit/logger';
@@ -207,6 +207,11 @@ export class Workspace implements ComponentFactory {
   private componentPathsRegExps: RegExp[] = [];
   private _componentList: ComponentsList;
   localAspects: Record<string, string> = {};
+  /**
+   * aspect-ids (without version) that are currently in the process of loading. used by
+   * WorkspaceAspectsLoader (which is instantiated per call) to break circular env chains.
+   */
+  readonly inFlightAspectsLoads = new Set<string>();
   filter: Filter;
   constructor(
     private config: WorkspaceExtConfig,
@@ -727,14 +732,30 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
    */
   async getDependentsIds(ids: ComponentID[], filterOutNowWorkspaceIds = true): Promise<ComponentID[]> {
     const graph = await this.getGraphIds();
-    const dependents = ids
-      .map((id) =>
-        graph.predecessors(id.toString(), {
-          nodeFilter: (node) => (filterOutNowWorkspaceIds ? this.hasId(node.attr) : true),
-        })
-      )
-      .flat()
-      .map((node) => node.attr);
+    // traverse the graph iteratively (and not via graph.predecessors which is recursive) to
+    // avoid "Maximum call stack size exceeded" on large/deep graphs
+    const queue = ids.map((id) => id.toString());
+    // seed with the input ids so that in cyclic graphs a seed is not re-discovered and returned
+    // as its own dependent
+    const visited = new Set<string>(queue);
+    const dependents: ComponentID[] = [];
+    let queueIndex = 0;
+    while (queueIndex < queue.length) {
+      const current = queue[queueIndex];
+      queueIndex += 1;
+      graph.inEdges(current).forEach((edge) => {
+        const predecessorId = edge.sourceId;
+        if (visited.has(predecessorId)) return;
+        visited.add(predecessorId);
+        const node = graph.node(predecessorId);
+        if (!node) return;
+        // when the node is filtered out, don't traverse through it (same semantics as
+        // graph.predecessors with a nodeFilter)
+        if (filterOutNowWorkspaceIds && !this.hasId(node.attr)) return;
+        dependents.push(node.attr);
+        queue.push(predecessorId);
+      });
+    }
     return ComponentIdList.uniqFromArray(dependents);
   }
 
@@ -1701,6 +1722,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   async warnAboutMisconfiguredEnv(envId: string) {
     if (!envId) return;
     if (this.envs.getCoreEnvsIds().includes(envId)) return;
+    // envs that used to be core aspects are old-style envs, they are not of type env by design
+    if (this.envs.isLegacyCoreEnv(envId)) return;
     if (this.warnedAboutMisconfiguredEnvs.includes(envId)) return;
     let env: Component;
     try {
@@ -1709,7 +1732,9 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     } catch {
       return; // unable to get the component for some reason. don't sweat it. forget about the warning
     }
-    if (!this.envs.isUsingEnvEnv(env)) {
+    // an env that declares itself via a *.bit-env.* plugin file is a valid env even without
+    // an env-of-env configured (same signal used by isEnv() to recognize envs)
+    if (!this.envs.isUsingEnvEnv(env) && !this.envs.hasEnvPluginFile(env)) {
       this.warnedAboutMisconfiguredEnvs.push(envId);
       this.logger.consoleWarning(
         `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} bitdev.general/envs/bit-env")`
@@ -1773,6 +1798,25 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     }
     if (includeNonBlocking) {
       this.aggregatedLoadFailures.forEach((failure) => {
+        // envs that used to be core aspects fail with module-not-found until "bit install"
+        // installs them. this is an expected state, already reported as a per-component
+        // NonLoadedEnv issue with a "bit install" remediation - don't repeat it as a scary
+        // workspace issue. suppress only when the env package is not installed yet, a missing
+        // module inside an already-installed env is a real failure worth surfacing.
+        const failedIdWithoutVersion = failure.failedId.split('@')[0];
+        if (this.envs.isLegacyCoreEnv(failedIdWithoutVersion)) {
+          const envPackageName = getLegacyCoreEnvPackageName(failedIdWithoutVersion);
+          const isEnvPackageInstalled = fs.existsSync(path.join(this.path, 'node_modules', envPackageName));
+          // the missing module may be reported by its package name or by its absolute path in
+          // the workspace node_modules (when the require used a resolved path).
+          const errorStr = String(failure.error);
+          const isEnvModuleNotFound =
+            errorStr.includes('Cannot find module') &&
+            (errorStr.includes(`'${envPackageName}`) || errorStr.includes(`node_modules/${envPackageName}'`));
+          if (isEnvModuleNotFound && !isEnvPackageInstalled) {
+            return;
+          }
+        }
         const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;
         errors.push(
           new Error(
@@ -2417,7 +2461,14 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    */
   async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[], verifyEnv = true) {
     const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
-    if (verifyEnv) {
+    // envs that used to be core aspects are known envs. verifying them here would fetch the
+    // latest version (they are configured without a version), which is not the pinned version
+    // bit loads, and the env-check may fail on it as its own env is not loaded.
+    const isLegacyCoreEnv = this.envs.isLegacyCoreEnv(envId.toStringWithoutVersion());
+    // registered envs (e.g. core envs such as the empty env) are known to be envs. fetching their
+    // component here may even fail, e.g. a core env that was never exported.
+    const isRegisteredEnv = this.envs.isEnvRegistered(envId.toStringWithoutVersion());
+    if (verifyEnv && !isLegacyCoreEnv && !isRegisteredEnv) {
       const envComp = await this.get(ComponentID.fromString(envStrWithPossiblyVersion));
       const isEnv = this.envs.isEnv(envComp);
       if (!isEnv) throw new BitError(`the component ${envComp.id.toString()} is not an env`);
@@ -2443,6 +2494,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     const existsOnWorkspace = await this.hasId(envId);
     if (isCore || existsOnWorkspace) {
       // the env needs to be without version
+      return envId.toStringWithoutVersion();
+    }
+    // envs that used to be core aspects are configured without a version, the same way they were
+    // configured when they were core. their version is resolved at install/load time from the
+    // pinned versions map (see legacy-core-envs.ts).
+    if (!envId.hasVersion() && this.envs.isLegacyCoreEnv(envId.toStringWithoutVersion())) {
       return envId.toStringWithoutVersion();
     }
     // the env must include a version

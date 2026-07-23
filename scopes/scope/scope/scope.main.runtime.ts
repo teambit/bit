@@ -203,6 +203,13 @@ export class ScopeMain implements ComponentFactory {
   localAspects: string[] = [];
 
   /**
+   * aspects currently being loaded (see ScopeAspectsLoader.getManifestsGraphRecursively). breaks
+   * re-entrant load cycles (e.g. loading an env whose manifest deps lead back to the env). lives
+   * here (and not on ScopeAspectsLoader) since the loader is instantiated per call.
+   */
+  readonly inFlightAspectLoads = new Set<string>();
+
+  /**
    * Optional hook called immediately before an aspect is `require()`d from a
    * scope-aspects capsule. Throws to refuse the load. The workspace aspect
    * registers this to enforce the per-workspace scope-trust list.

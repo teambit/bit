@@ -9,6 +9,14 @@ export type {
   ServiceTransformationMap,
 } from './services';
 export { DEFAULT_ENV } from './environments.main.runtime';
+export {
+  getLegacyCoreEnvsIds,
+  isLegacyCoreEnv,
+  getPinnedLegacyCoreEnvVersion,
+  resolveLegacyCoreEnvId,
+  getLegacyCoreEnvPackageName,
+  aspectLoadInFlightKey,
+} from './legacy-core-envs';
 export * from './environment';
 export { ExecutionContext } from './context';
 export type { EnvService, ConcreteService } from './services';

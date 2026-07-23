@@ -1,4 +1,3 @@
-import { AspectAspect } from '@teambit/aspect';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BuilderAspect } from '@teambit/builder';
 import { BundlerAspect } from '@teambit/bundler';
@@ -13,7 +12,7 @@ import { DeprecationAspect } from '@teambit/deprecation';
 import { InternalizeAspect } from '@teambit/internalize';
 import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/envs';
-import { EnvAspect } from '@teambit/env';
+import { EmptyEnvAspect } from '@teambit/empty-env';
 import { ExpressAspect } from '@teambit/express';
 import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
@@ -24,14 +23,12 @@ import { InsightsAspect } from '@teambit/insights';
 import { IsolatorAspect } from '@teambit/isolator';
 import { JestAspect } from '@teambit/jest';
 import { LoggerAspect } from '@teambit/logger';
-import { NodeAspect } from '@teambit/node';
 import { NotificationsAspect } from '@teambit/notifications';
 import { PanelUiAspect } from '@teambit/panels';
 import { PkgAspect } from '@teambit/pkg';
 import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
 import { ComponentSizerAspect } from '@teambit/component-sizer';
-import { ReactAspect } from '@teambit/react';
 import { VueAspect } from '@teambit/vue-aspect';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
@@ -62,8 +59,6 @@ import { PrettierAspect } from '@teambit/prettier';
 import { WorkerAspect } from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import { MultiCompilerAspect } from '@teambit/multi-compiler';
-import { MDXAspect } from '@teambit/mdx';
-import { ReadmeAspect } from '@teambit/readme';
 import { ApplicationAspect } from '@teambit/application';
 import { ExportAspect } from '@teambit/export';
 import { ImporterAspect } from '@teambit/importer';
@@ -131,8 +126,6 @@ export const manifestsMap = {
   [FormatterAspect.id]: FormatterAspect,
   [ValidatorAspect.id]: ValidatorAspect,
   [ComponentAspect.id]: ComponentAspect,
-  [MDXAspect.id]: MDXAspect,
-  [ReadmeAspect.id]: ReadmeAspect,
   [PreviewAspect.id]: PreviewAspect,
   [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,
@@ -145,7 +138,7 @@ export const manifestsMap = {
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
-  [EnvAspect.id]: EnvAspect,
+  [EmptyEnvAspect.id]: EmptyEnvAspect,
   [GraphAspect.id]: GraphAspect,
   [PubsubAspect.id]: PubsubAspect,
   [DependencyResolverAspect.id]: DependencyResolverAspect,
@@ -153,7 +146,6 @@ export const manifestsMap = {
   [IsolatorAspect.id]: IsolatorAspect,
   [LoggerAspect.id]: LoggerAspect,
   [PkgAspect.id]: PkgAspect,
-  [ReactAspect.id]: ReactAspect,
   [VueAspect.id]: VueAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
@@ -165,14 +157,12 @@ export const manifestsMap = {
   [DeprecationAspect.id]: DeprecationAspect,
   [InternalizeAspect.id]: InternalizeAspect,
   [ExpressAspect.id]: ExpressAspect,
-  [AspectAspect.id]: AspectAspect,
   [WebpackAspect.id]: WebpackAspect,
   [SchemaAspect.id]: SchemaAspect,
   [ReactRouterAspect.id]: ReactRouterAspect,
   [TypescriptAspect.id]: TypescriptAspect,
   [PanelUiAspect.id]: PanelUiAspect,
   [BabelAspect.id]: BabelAspect,
-  [NodeAspect.id]: NodeAspect,
   [NotificationsAspect.id]: NotificationsAspect,
   [BundlerAspect.id]: BundlerAspect,
   [JestAspect.id]: JestAspect,
