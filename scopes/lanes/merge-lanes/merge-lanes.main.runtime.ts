@@ -346,6 +346,25 @@ export class MergeLanesMain {
     // component models/heads, so it can't leave a component pointing at a version whose object is
     // missing — unlike a component-level import.
     await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingHashes });
+    // a Version object references other objects the export must ship along with it — the file
+    // sources and the flattened-edges/dependencies-graph. fetch the missing ones too. (parents are
+    // not needed — the export doesn't collect them for these versions. artifacts are not needed
+    // either — the export tolerates missing artifacts for such non-local versions.)
+    const missingRefsOfVersions: string[] = [];
+    await pMapSeries(missingHashes, async (hash) => {
+      const versionObject = (await legacyScope.objects.load(Ref.from(hash))) as Version | null;
+      if (!versionObject) return; // the hash could not be fetched after all
+      await Promise.all(
+        versionObject.refsWithOptions(false, false).map(async (ref) => {
+          if (checkedHashes.has(ref.toString())) return;
+          checkedHashes.add(ref.toString());
+          const exists = await legacyScope.objects.has(ref);
+          if (!exists) missingRefsOfVersions.push(ref.toString());
+        })
+      );
+    });
+    if (!missingRefsOfVersions.length) return;
+    await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingRefsOfVersions });
   }
 
   private validateMergeFlags(otherLaneId: LaneId, currentLaneId: LaneId, options: MergeLaneOptions) {

@@ -28,6 +28,8 @@ describe('merge lane to main when a component pins a non-head (squashed-out) sna
   /**
    * Builds a lean lane where comp1 pins comp2@snapA while comp2 advances to snapB (comp1 is not
    * re-snapped, thanks to --skip-auto-snap). Returns the lane scope name and comp2@snapA.
+   * comp2 gets real file changes on each snap, so snapA references file objects that exist in no
+   * other version — the merge must fetch them (not only the Version object) from the lane scope.
    */
   function setupLaneWithStaleRef(): { laneScopeName: string; laneScopePath: string; comp2SnapA: string } {
     helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -40,12 +42,14 @@ describe('merge lane to main when a component pins a non-head (squashed-out) sna
     helper.command.createLane();
     helper.command.changeLaneScope(laneScope.scopeName);
 
+    helper.fs.outputFile('comp2/index.js', `module.exports = () => 'comp2 snapA';`);
     helper.command.snapAllComponentsWithoutBuild('--unmodified'); // comp1 pins comp2@snapA
     const comp2SnapA = helper.command.getHeadOfLane('dev', 'comp2');
     helper.command.export();
 
     // comp2 advances to snapB without auto-snapping comp1, so comp1 keeps pinning comp2@snapA
-    helper.command.snapComponentWithoutBuild('comp2', '--unmodified --skip-auto-snap');
+    helper.fs.outputFile('comp2/index.js', `module.exports = () => 'comp2 snapB';`);
+    helper.command.snapComponentWithoutBuild('comp2', '--skip-auto-snap');
     helper.command.export();
 
     return { laneScopeName: laneScope.scopeName, laneScopePath: laneScope.scopePath, comp2SnapA };

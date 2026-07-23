@@ -481,6 +481,16 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
           if (!depRef) return;
           if (depComp.entry.refs.find((ref) => ref.isEqual(depRef))) return; // already included
           if (!(await scope.objects.has(depRef))) return; // can only ship what exists locally
+          // the objects this version references (file sources, flattened-edges) get collected along
+          // with it, so they must be present locally as well. if they're not, don't add the ref —
+          // exporting it would fail on the missing objects, and the remote may have this version
+          // already anyway (in which case the export succeeds without shipping it).
+          const depVersion = await depComp.entry.modelComponent.loadVersion(depRef.toString(), scope.objects, false);
+          if (!depVersion) return;
+          const subRefsExist = await Promise.all(
+            depVersion.refsWithOptions(false, false).map((ref) => scope.objects.has(ref))
+          );
+          if (subRefsExist.some((exists) => !exists)) return;
           depComp.entry.refs.push(depRef);
         });
       });
