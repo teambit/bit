@@ -35,7 +35,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import { writeLastExport } from './last-export';
-import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
+import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref, Version } from '@teambit/objects';
 import { ObjectList } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
@@ -438,52 +438,50 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     /**
      * a component head may reference — via its direct dependencies — a non-head snap of another
      * component in the same export set. this happens when a component keeps pinning an older snap of
-     * a dependency that has since advanced, and a squash (merge to main) dropped that snap from the
-     * dependency's own parent chain. no history traversal selects it (and a heads-only export selects
-     * only heads to begin with), so without it the remote dependency-integrity check
+     * a dependency that has since advanced (e.g. the component was soft-removed on the lane, so it
+     * never gets re-snapped), and the squash of a lane-merge dropped that snap from the dependency's
+     * own parent chain. no history traversal selects it (and a heads-only export selects only heads
+     * to begin with), so without it the remote dependency-integrity check
      * (throwForMissingLocalDependencies) rejects the export. add any such snap that exists locally so
      * it is shipped alongside the selected refs. snaps missing locally were fetched during the
      * lane-merge, see MergeLanesMain.importMissingReferencedDeps().
-     * only direct dependencies are considered (the remote check validates the heads' direct deps, and
-     * the flattened list can be huge), and only snaps — tags are never squashed out of history.
+     * this is cheap by design and a no-op for ordinary exports: only heads are inspected (the remote
+     * check validates only versions that are heads, and they're loaded later by the export anyway),
+     * only snaps are considered (tags are never squashed out of history), and a ref is added only
+     * when the dependency's head carries the `squashed` marker — i.e. only after a squashing
+     * lane-merge, the sole flow that removes snaps from a component's history.
      */
     const addReferencedSnapsIfPossible = async (
       refsPerComponent: Array<{ modelComponent: ModelComponent; refs: Ref[] }>
     ) => {
-      const entryByCompIdStr = new Map(
-        refsPerComponent.map((entry) => [entry.modelComponent.toComponentId().toStringWithoutVersion(), entry])
-      );
-      const includedHashesByCompIdStr = new Map(
-        refsPerComponent.map((entry) => [
-          entry.modelComponent.toComponentId().toStringWithoutVersion(),
-          new Set(entry.refs.map((ref) => ref.toString())),
-        ])
-      );
-      const referencedSnaps: Array<{ depCompIdStr: string; depRef: Ref }> = [];
-      await mapSeries(refsPerComponent, async ({ modelComponent, refs }) => {
-        await mapSeries(refs, async (ref) => {
-          const version = await modelComponent.loadVersion(ref.toString(), scope.objects, false);
-          if (!version) return;
-          version.getAllDependencies().forEach((dep) => {
-            if (!dep.id.version || !isSnap(dep.id.version)) return;
-            const depCompIdStr = dep.id.toStringWithoutVersion();
-            const depEntry = entryByCompIdStr.get(depCompIdStr);
-            if (!depEntry) return; // the referenced component is not part of this export set
-            const depRef = depEntry.modelComponent.getRef(dep.id.version);
-            if (!depRef) return;
-            if (includedHashesByCompIdStr.get(depCompIdStr)?.has(depRef.toString())) return;
-            referencedSnaps.push({ depCompIdStr, depRef });
-          });
-        });
+      const headPerCompIdStr = new Map<
+        string,
+        { entry: { modelComponent: ModelComponent; refs: Ref[] }; headVersion: Version }
+      >();
+      await mapSeries(refsPerComponent, async (entry) => {
+        const { modelComponent, refs } = entry;
+        const headRef =
+          laneObject?.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId()) || modelComponent.head;
+        if (!headRef) return;
+        if (!refs.find((ref) => ref.isEqual(headRef))) return; // the head is not part of this export
+        const headVersion = await modelComponent.loadVersion(headRef.toString(), scope.objects, false);
+        if (!headVersion) return;
+        headPerCompIdStr.set(modelComponent.toComponentId().toStringWithoutVersion(), { entry, headVersion });
       });
-      // deliberately a second pass over the original refs' findings only — the added snaps' own deps
-      // are not walked. the remote check validates heads only, so one level is enough.
-      await mapSeries(referencedSnaps, async ({ depCompIdStr, depRef }) => {
-        const includedHashes = includedHashesByCompIdStr.get(depCompIdStr) as Set<string>;
-        if (includedHashes.has(depRef.toString())) return; // referenced by multiple components
-        if (!(await scope.objects.has(depRef))) return; // can only ship what exists locally
-        includedHashes.add(depRef.toString());
-        entryByCompIdStr.get(depCompIdStr)?.refs.push(depRef);
+      const anySquashed = [...headPerCompIdStr.values()].some(({ headVersion }) => headVersion.squashed);
+      if (!anySquashed) return; // no squash in this export set — no snap could have been dropped
+      await mapSeries([...headPerCompIdStr.values()], async ({ headVersion }) => {
+        await mapSeries(headVersion.getAllDependencies(), async (dep) => {
+          if (!dep.id.version || !isSnap(dep.id.version)) return;
+          const depComp = headPerCompIdStr.get(dep.id.toStringWithoutVersion());
+          if (!depComp) return; // the referenced component is not part of this export set
+          if (!depComp.headVersion.squashed) return; // dep history is intact — the pinned snap is on-chain
+          const depRef = depComp.entry.modelComponent.getRef(dep.id.version);
+          if (!depRef) return;
+          if (depComp.entry.refs.find((ref) => ref.isEqual(depRef))) return; // already included
+          if (!(await scope.objects.has(depRef))) return; // can only ship what exists locally
+          depComp.entry.refs.push(depRef);
+        });
       });
     };
 
