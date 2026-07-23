@@ -607,15 +607,6 @@ export class EnvsMain {
     if (envDef) {
       return envDef;
     }
-    // the env may be recorded on the component with a version while it is registered to the slot
-    // without one - e.g. an env that is core now but was a regular exported env when the
-    // component was tagged (such as core-aspect-env on the envs/env pinned version).
-    if (id.includes('@')) {
-      const versionlessDef = this.getEnvDefinitionByStringId(id.split('@')[0]);
-      if (versionlessDef) {
-        return versionlessDef;
-      }
-    }
     if (this.isLegacyCoreEnvWithoutVersion(id)) {
       // envs that used to be core aspects are used by old components without a version. if such an
       // env was not loaded (e.g. "bit install" was not running yet), return a minimal env
