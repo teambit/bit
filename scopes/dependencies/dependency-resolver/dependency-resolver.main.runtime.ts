@@ -34,7 +34,6 @@ import {
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from './detector-hook';
-import { MarkdownImportDetector } from './markdown-import-detector';
 import type { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 import { Http } from '@teambit/scope.network';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
@@ -1925,9 +1924,6 @@ as an alternative, you can use "+" to keep the same version installed in the wor
 
     const envJsoncDetector = envs.getEnvJsoncDetector();
     dependencyResolver.registerDetector(envJsoncDetector);
-    // baseline md/mdx import detection. the mdx aspect (no longer a core aspect) registers a
-    // compile-based detector for these extensions when loaded, which takes precedence.
-    dependencyResolver.registerDetector(new MarkdownImportDetector());
 
     componentAspect.registerShowFragments([
       new DependenciesFragment(dependencyResolver),

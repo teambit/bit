@@ -26,13 +26,57 @@ import type { CheckTypes } from './check-types';
 import type { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 import type { Logger } from '@teambit/logger';
-import type { Event, Options as ParcelWatcherOptions } from '@parcel/watcher';
-import ParcelWatcher from '@parcel/watcher';
+import type { Event, Options as ParcelWatcherOptions, SubscribeCallback, AsyncSubscription } from '@parcel/watcher';
 import { spawnSync } from 'child_process';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 import { getOrCreateWatcherConnection } from './watcher-daemon';
 import type { WatcherDaemon, WatcherClient, WatcherError } from './watcher-daemon';
 import { formatFSEventsErrorMessage } from './fsevents-error';
+
+/** The subset of @parcel/watcher's API this module uses (it is lazy-required). */
+type ParcelWatcherApi = {
+  subscribe: (dir: string, fn: SubscribeCallback, opts?: ParcelWatcherOptions) => Promise<AsyncSubscription>;
+  writeSnapshot: (dir: string, snapshot: string, opts?: ParcelWatcherOptions) => Promise<string>;
+  getEventsSince: (dir: string, snapshot: string, opts?: ParcelWatcherOptions) => Promise<Event[]>;
+};
+
+/**
+ * Lazily load @parcel/watcher. Its index.js resolves the platform-specific native
+ * prebuild (e.g. @parcel/watcher-linux-x64-glibc) at require() time and throws
+ * "No prebuild or local build of @parcel/watcher found" when that optional
+ * dependency isn't installed. Deferring the require keeps this module loadable in
+ * that situation so the watcher can fall back to the chokidar backend at runtime
+ * (see Watcher.watch) instead of crashing the whole `bit watch` process.
+ */
+let parcelWatcherModule: ParcelWatcherApi | undefined;
+function getParcelWatcher(): ParcelWatcherApi {
+  // Test hook (mirrors BIT_WATCHER_USE_CHOKIDAR / BIT_WATCHER_NO_SHARED): force the
+  // "native binary missing" failure on any platform so the chokidar fallback is
+  // reproducible in CI/e2e where the real prebuild is present.
+  if (process.env.BIT_WATCHER_SIMULATE_PARCEL_UNAVAILABLE === 'true') {
+    throw new Error(
+      'No prebuild or local build of @parcel/watcher found. Tried @parcel/watcher (simulated via BIT_WATCHER_SIMULATE_PARCEL_UNAVAILABLE).'
+    );
+  }
+  if (!parcelWatcherModule) {
+    parcelWatcherModule = require('@parcel/watcher') as ParcelWatcherApi;
+  }
+  return parcelWatcherModule;
+}
+
+/**
+ * Whether an error means @parcel/watcher's native binding could not be loaded
+ * (missing platform prebuild) — as opposed to a genuine runtime watch failure,
+ * which must not be silently swallowed.
+ */
+export function isParcelWatcherUnavailable(err: unknown): boolean {
+  const message = (err as { message?: string } | null | undefined)?.message || '';
+  const code = (err as { code?: string } | null | undefined)?.code;
+  return (
+    message.includes('No prebuild or local build of @parcel/watcher') ||
+    (code === 'MODULE_NOT_FOUND' && message.includes('@parcel/watcher'))
+  );
+}
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
@@ -256,7 +300,35 @@ export class Watcher {
     const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, this.options);
     await this.watchScopeFiles();
+    if (this.watcherType === 'parcel' && !this.ensureParcelWatcherAvailable()) {
+      this.watcherType = 'chokidar';
+    }
     this.watcherType === 'parcel' ? await this.watchParcel() : await this.watchChokidar();
+  }
+
+  /**
+   * Probe that @parcel/watcher's native binding can be loaded. Returns false and
+   * logs a warning when the platform prebuild is missing, so watch() can fall back
+   * to the chokidar backend instead of crashing (the prebuild is an optional dep
+   * and is absent on some CI installs). Re-throws anything that isn't a
+   * missing-binary error.
+   */
+  private ensureParcelWatcherAvailable(): boolean {
+    try {
+      getParcelWatcher();
+      return true;
+    } catch (err: any) {
+      if (!isParcelWatcherUnavailable(err)) throw err;
+      // Use console() (stdout) rather than consoleWarning() (which routes through the
+      // loader to stderr) — a fatal stderr line would abort tooling that spawns
+      // `bit watch` and treats any stderr as failure (e.g. the e2e WatchRunner).
+      this.logger.console(
+        `Warning: @parcel/watcher native binary could not be loaded; falling back to the chokidar watcher backend (${
+          err.message.split('\n')[0]
+        })`
+      );
+      return false;
+    }
   }
 
   private async watchParcel() {
@@ -305,7 +377,11 @@ export class Watcher {
 
     // Original direct Parcel watcher logic (fallback)
     try {
-      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), this.getParcelWatcherOptions());
+      await getParcelWatcher().subscribe(
+        this.workspace.path,
+        this.onParcelWatch.bind(this),
+        this.getParcelWatcherOptions()
+      );
 
       // Write initial snapshot for FSEvents buffer overflow recovery
       await this.writeSnapshotIfNeeded();
@@ -332,7 +408,7 @@ export class Watcher {
         this.parcelSubscription = null;
       }
 
-      this.parcelSubscription = await ParcelWatcher.subscribe(
+      this.parcelSubscription = await getParcelWatcher().subscribe(
         this.workspace.path,
         this.onParcelWatchAsDaemon.bind(this),
         this.getParcelWatcherOptions()
@@ -954,7 +1030,7 @@ export class Watcher {
     }
 
     try {
-      await ParcelWatcher.writeSnapshot(this.workspace.path, this.snapshotPath, this.getParcelWatcherOptions());
+      await getParcelWatcher().writeSnapshot(this.workspace.path, this.snapshotPath, this.getParcelWatcherOptions());
       this.logger.debug('Watcher snapshot written successfully');
     } catch (err: any) {
       this.logger.debug(`Failed to write watcher snapshot: ${err.message}`);
@@ -1003,7 +1079,7 @@ export class Watcher {
       }
 
       // Get all events since last snapshot
-      const missedEvents = await ParcelWatcher.getEventsSince(
+      const missedEvents = await getParcelWatcher().getEventsSince(
         this.workspace.path,
         this.snapshotPath,
         this.getParcelWatcherOptions()
