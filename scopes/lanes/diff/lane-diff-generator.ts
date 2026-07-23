@@ -12,12 +12,15 @@ import type { ComponentCompareMain } from '@teambit/component-compare';
 import chalk from 'chalk';
 import pMap from 'p-map';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { getHeadOnMain, importMainHeads } from './resolve-main-head';
 
 type LaneData = {
   name: string;
   components: Array<{
     id: ComponentID;
-    head: Ref;
+    // undefined when the component has no version on the default lane / main — a genuinely-new
+    // component. downstream code guards on `!head` and reports these as "new".
+    head?: Ref;
   }>;
   remote: string | null;
 };
@@ -119,7 +122,7 @@ export class LaneDiffGenerator {
     });
 
     // Build an index of fromLaneData for O(1) lookups instead of repeated O(N) .find() calls.
-    const fromLaneIndex = new Map<string, Ref>();
+    const fromLaneIndex = new Map<string, Ref | undefined>();
     for (const comp of this.fromLaneData.components) {
       fromLaneIndex.set(comp.id.toStringWithoutVersion(), comp.head);
     }
@@ -296,7 +299,7 @@ export class LaneDiffGenerator {
 
   private async componentDiff(
     id: ComponentID,
-    toLaneHead: Ref | null,
+    toLaneHead: Ref | null | undefined,
     diffOptions: DiffOptions = {},
     compareToHeadIfEmpty = false,
     forkPoint?: Ref,
@@ -377,13 +380,19 @@ export class LaneDiffGenerator {
       components: [],
     };
 
+    // The base on main may live only on the remote scope (e.g. a component on the lane whose main
+    // version was never fetched locally). Resolve those heads from the remote on demand so the diff
+    // is real; components that genuinely have no main version resolve to no head and are reported as
+    // "new" by `componentDiff`, not as a spurious empty diff.
+    await importMainHeads(this.scope, ids);
+
     await Promise.all(
       ids.map(async (id) => {
-        const modelComponent = await this.scope.legacyScope.getModelComponent(id);
+        const headOnMain = await getHeadOnMain(this.scope, id);
         const laneComponent = {
           id,
-          head: modelComponent.head as Ref, // @todo: this is not true. it can be undefined
-          version: modelComponent.latestVersion(), // should this be latestVersion() or bitId.version.toString()
+          // undefined when the component has no version on main at all - handled as "new" downstream.
+          head: headOnMain ? Ref.from(headOnMain) : undefined,
         };
         laneData.components.push(laneComponent);
       })
@@ -399,7 +408,6 @@ export class LaneDiffGenerator {
       components: components.map((lc) => ({
         id: lc.id,
         head: lc.head,
-        version: lc.id.version?.toString(),
       })),
       remote: lane.toLaneId().toString(),
     };

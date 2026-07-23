@@ -1,0 +1,126 @@
+$border-color: var(--border-medium-color, #e8ecf0);
+$text-primary: var(--on-surface-color, #2b2b2b);
+$text-secondary: var(--on-surface-medium-color, #707279);
+$text-muted: var(--on-background-medium-color, #a0aec0);
+$code-font: 'JetBrains Mono', ui-monospace, monospace;
+
+.container {
+  overflow-x: auto;
+  width: 100%;
+}
+
+// within-value emphasis on a modified dependency's version — the table analog of the code view's
+// intra-line highlight. Bold + a faint tint of the cell's own status color (via currentColor), so the
+// part that moved stands out while inheriting green/blue/gray from the column. `<mark>`'s default
+// yellow is overridden.
+.verTok {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  color: inherit;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.empty {
+  padding: 16px;
+  text-align: center;
+  color: $text-muted;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: $text-primary;
+  text-align: left;
+  white-space: pre;
+}
+
+.headerRow {
+  th {
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    vertical-align: top;
+    border-bottom: 1px solid $border-color;
+  }
+}
+
+.row {
+  td {
+    padding: 12px;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-light-color, rgba(0, 0, 0, 0.04));
+  }
+
+  &:hover td {
+    background: var(--surface-neutral-hover-color, rgba(0, 0, 0, 0.015));
+  }
+}
+
+.statusCol {
+  width: 32px;
+  text-align: center;
+}
+
+.depCol {
+  // takes remaining space
+}
+
+.depId {
+  color: $text-primary;
+  font-size: 14px;
+}
+
+.depLifecycle {
+  margin-left: 8px;
+  font-size: 14px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--surface-neutral-color, #f4f5f6);
+  border: 1px solid var(--border-light-color, #ededed);
+  color: $text-secondary;
+}
+
+.versionCol {
+  font-size: 14px;
+  color: $text-secondary;
+  min-width: 100px;
+}
+
+.new {
+  color: var(--positive-color, #37b26c);
+}
+.deleted {
+  color: var(--negative-color, #e62e5c);
+}
+.modified {
+  color: var(--process-color, #0984e3);
+}
+
+.versionWithIcon {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.fixedWidthVersion {
+  display: inline-block;
+  min-width: 80px;
+}
+
+.compareUrl {
+  display: inline-flex;
+  text-decoration: none;
+}
+
+.compareIcon {
+  display: inline-flex;
+  margin-left: 12px;
+  vertical-align: middle;
+}

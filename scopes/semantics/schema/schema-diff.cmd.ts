@@ -1,9 +1,15 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions, CLIArgs } from '@teambit/cli';
+import { formatWarningSummary, formatTitle } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
-import { computeAPIDiff, APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
-import type { APIDiffResult, APIDiffChange, ImpactLevel } from '@teambit/semantics.entities.semantic-schema-diff';
+import { APIDiffStatus } from '@teambit/semantics.entities.semantic-schema-diff';
+import type {
+  APIDiffResult,
+  APIDiffChange,
+  ImpactLevel,
+  SchemaUnavailableReason,
+} from '@teambit/semantics.entities.semantic-schema-diff';
 import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaDiffCommand implements Command {
@@ -61,13 +67,12 @@ examples:
 
     this.logger.debug(`computing API diff: ${baseId.toString()} -> ${compareId.toString()}`);
 
-    const [baseSchema, compareSchema] = await Promise.all([
-      this.schema.getSchema(baseComponent),
-      this.schema.getSchema(compareComponent),
-    ]);
-
-    const assessor = this.schema.getImpactAssessor();
-    const diff = computeAPIDiff(baseSchema, compareSchema, assessor);
+    // availability-aware and artifact-first (see SchemaMain.computeAPIDiff): a version without a
+    // schema (NOT_BUILT/NO_EXTRACTOR/DISABLED/FAILED) short-circuits with an explicit status —
+    // never diffed as an empty API — and built versions read their schema artifact instead of
+    // running a live extraction pass.
+    const diff = await this.schema.computeAPIDiff(baseComponent, compareComponent);
+    if (!diff) throw new Error(`failed computing API diff for ${componentId.toString()}`);
     return { diff, componentId: componentId.toStringWithoutVersion() };
   }
 
@@ -102,8 +107,15 @@ examples:
       componentId,
       baseVersion,
       compareVersion,
+      status: diff.status,
+      base: diff.base,
+      compare: diff.compare,
       hasChanges: diff.hasChanges,
+      // `impact` is consumer-facing (public changes only); `internalImpact` covers non-exported changes,
+      // which still count toward `summary.breaking` — surface both so an internal-only breaking change
+      // isn't read as a PATCH from `impact` alone.
       impact: diff.impact,
+      internalImpact: diff.internalImpact,
       summary: {
         added: diff.added,
         removed: diff.removed,
@@ -117,7 +129,32 @@ examples:
     };
   }
 
+  private static REASON_TEXT: Record<SchemaUnavailableReason, string> = {
+    NOT_BUILT: 'was built before API extraction — no API snapshot exists',
+    NO_EXTRACTOR: "its env doesn't provide a schema extractor",
+    DISABLED: 'has schema extraction disabled',
+    FAILED: 'API data could not be loaded',
+  };
+
+  private formatUnavailable(diff: APIDiffResult, pattern: string): string {
+    const lines = ['', `  ${formatWarningSummary(`Unable to compute API diff for "${pattern}"`)}`, ''];
+    if (!diff.base.available) {
+      lines.push(`  base version ${SchemaDiffCommand.REASON_TEXT[diff.base.reason || 'FAILED']}`);
+    }
+    if (!diff.compare.available) {
+      lines.push(`  compare version ${SchemaDiffCommand.REASON_TEXT[diff.compare.reason || 'FAILED']}`);
+    }
+    lines.push('');
+    return lines.join('\n');
+  }
+
   private formatDiffResult(diff: APIDiffResult, pattern: string): string {
+    // a missing schema is not an empty API — report which side lacks data instead of
+    // pretending "no changes" (or worse, a fabricated full-surface diff).
+    if (diff.status !== 'COMPUTED') {
+      return this.formatUnavailable(diff, pattern);
+    }
+
     if (!diff.hasChanges) {
       return chalk.green(`\n  No API changes detected for ${pattern}\n`);
     }
@@ -138,15 +175,19 @@ examples:
     lines.push(`  ${parts.join(chalk.dim(' · '))}  ${chalk.dim('|')}  ${impactParts.join(chalk.dim(' · '))}`);
     lines.push('');
 
+    // the header badge above is the consumer-facing (public) impact. internal changes carry their own
+    // impact — show it on the internal section so an internal-only breaking change is visible and not
+    // masked by a PATCH header.
     this.formatSection(lines, 'Public API', diff.publicChanges);
-    this.formatSection(lines, 'Internal (non-exported)', diff.internalChanges);
+    this.formatSection(lines, 'Internal (non-exported)', diff.internalChanges, diff.internalImpact);
 
     return lines.join('\n');
   }
 
-  private formatSection(lines: string[], title: string, changes: APIDiffChange[]): void {
+  private formatSection(lines: string[], title: string, changes: APIDiffChange[], impact?: ImpactLevel): void {
     if (changes.length === 0) return;
-    lines.push(`  ${chalk.bold.underline(title)}`);
+    const badge = impact ? `  ${this.impactBadge(impact)}` : '';
+    lines.push(`  ${formatTitle(title)}${badge}`);
     lines.push('');
     for (const change of this.sortChanges(changes)) {
       lines.push(...this.formatChange(change));

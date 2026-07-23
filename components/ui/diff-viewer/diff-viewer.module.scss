@@ -1,0 +1,430 @@
+$code-font: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+$border: var(--border-medium-color, #ededed);
+$surface: var(--surface-color, #fff);
+$surface-1: var(--surface01-color, #fffbff);
+$surface-neutral: var(--surface-neutral-color, #f8f9fb);
+$text: var(--on-surface-color, #2b2b2b);
+$text-medium: var(--on-background-medium-color, #707279);
+$text-muted: var(--on-surface-medium-color, #9598a1);
+$accent: var(--bit-accent-color, #6c5ce7);
+$positive: var(--positive-color, #37b26c);
+$negative: var(--negative-color, #e62e5c);
+$add-tint: var(--positive-surface-color, #f3faf6);
+$del-tint: var(--negative-surface-color, #fdf2f5);
+
+.diffViewer {
+  border: 1px solid $border;
+  border-radius: 10px;
+  overflow: hidden;
+  background: $surface;
+  font-family: $code-font;
+  color: $text;
+  // CRITICAL containment: size the diff-viewer's width from its container only, ignoring its (wide)
+  // code content, AND stop that content from contributing to any ancestor's intrinsic width. Without
+  // this, a long code line makes the whole element — and the page — grow horizontally instead of the
+  // body scrolling internally. `contain: inline-size` pins the width to the parent regardless of how
+  // wide the diff is, so the wide track can only scroll inside `.body`.
+  contain: inline-size;
+  width: 100%;
+}
+
+// --- header ---
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: $surface-neutral;
+  border-bottom: 1px solid $border;
+}
+
+.collapseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: $text-medium;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, $accent 10%, transparent);
+    color: $accent;
+  }
+}
+
+.chevron {
+  transition: transform 0.15s ease;
+}
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: $text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusChip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+.status_new {
+  color: $positive;
+  background: color-mix(in srgb, $positive 12%, transparent);
+}
+.status_deleted {
+  color: $negative;
+  background: color-mix(in srgb, $negative 12%, transparent);
+}
+.status_modified {
+  color: var(--warning-color, #d6a022);
+  background: color-mix(in srgb, var(--warning-color, #d6a022) 14%, transparent);
+}
+.status_renamed {
+  color: $accent;
+  background: color-mix(in srgb, $accent 12%, transparent);
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.add {
+  color: $positive;
+}
+.del {
+  color: $negative;
+}
+
+.changeBar {
+  display: flex;
+  gap: 2px;
+}
+.barAdd,
+.barDel,
+.barNeutral {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+.barAdd {
+  background: $positive;
+}
+.barDel {
+  background: $negative;
+}
+.barNeutral {
+  background: $border;
+}
+
+.viewToggle {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: color-mix(in srgb, $text-medium 8%, transparent);
+  flex-shrink: 0;
+}
+.toggleBtn {
+  border: none;
+  background: transparent;
+  color: $text-medium;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    color: $text;
+  }
+}
+.toggleActive {
+  background: $surface;
+  color: $accent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+
+  &:hover {
+    color: $accent;
+  }
+}
+
+// --- body ---
+
+.body {
+  overflow: auto;
+  background: $surface;
+  font-size: 12.5px;
+  // sticky gutters need a known scroll context
+  position: relative;
+  // allow the body to shrink inside flex/grid hosts so it scrolls its own (wide) content
+  // horizontally instead of forcing the page wider.
+  min-width: 0;
+}
+
+// Unified: the track grows to the longest line so the body scrolls it horizontally (one scrollbar).
+.track {
+  width: max-content;
+  min-width: 100%;
+}
+
+// Split: pin the track to the pane width so the two `minmax(0, 1fr)` columns resolve to a strict
+// 50/50 (both sides always visible, no whole-diff horizontal scroll). Long lines scroll inside their
+// own half via `.splitCell .code { overflow-x: auto }`. Without this the `width: max-content` above
+// would size the track to the content and each 1fr column would balloon to the longest line.
+.trackSplit {
+  width: 100%;
+}
+
+// Wrap mode: long lines soft-wrap instead of scrolling — no horizontal scroll anywhere, both split
+// sides stay at a strict 50%, and every character stays visible. Rows grow to fit the wrapped text.
+.wrap {
+  .track {
+    width: 100%;
+  }
+
+  .unifiedRow {
+    grid-template-columns: 50px 50px 22px minmax(0, 1fr);
+  }
+
+  .row {
+    height: auto;
+    min-height: var(--diff-row-h, 22px);
+    align-items: stretch;
+  }
+
+  .code {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow: visible;
+    padding-top: 1px;
+    padding-bottom: 1px;
+  }
+
+  // no per-side horizontal scrollbars when wrapping
+  .splitCell .code {
+    overflow-x: visible;
+  }
+}
+
+// --- rows (fixed height for clean virtualization) ---
+
+.row {
+  height: var(--diff-row-h, 22px);
+  line-height: var(--diff-row-h, 22px);
+  background-color: $surface;
+  // fill the track so line backgrounds span the full width even when the code is narrow.
+  width: 100%;
+}
+
+// `--diff-code-width` (the longest line, in ch) is the code column's MIN so every line fits and all
+// rows share one width (alignment); `1fr` lets it grow to fill the container when the code is
+// narrower than the pane. Narrow → fills width; wide → the body scrolls. Same shared min keeps the
+// virtualized rows aligned.
+.unifiedRow {
+  display: grid;
+  grid-template-columns: 50px 50px 22px minmax(var(--diff-code-width, 60ch), 1fr);
+}
+
+// Split view: each side is a strict 50% so BOTH are always visible and the row never exceeds the
+// pane (no page overflow regardless of line length). Long lines scroll inside their own side.
+.splitRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.splitCell {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  background-color: inherit;
+  min-width: 0;
+
+  &:first-child {
+    border-right: 1px solid $border;
+  }
+
+  // a long line scrolls horizontally within its half (overlay scrollbar on macOS, thin elsewhere)
+  // instead of widening the row / page.
+  .code {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+}
+
+.emptyCell {
+  background: color-mix(in srgb, $text-medium 4%, transparent);
+}
+
+.gutter {
+  background: inherit;
+  color: var(--diff-line-num, $text-muted);
+  text-align: right;
+  padding: 0 8px;
+  font-size: 11px;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sign {
+  text-align: center;
+  padding: 0;
+  font-weight: 700;
+}
+
+// unified-view line-number gutters stay pinned while the code scrolls horizontally.
+// each sticky column needs an increasing `left` offset so they don't stack on top of each other.
+.unifiedRow {
+  .gutterNum:nth-of-type(1) {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+  }
+  .gutterNum:nth-of-type(2) {
+    position: sticky;
+    left: 50px;
+    z-index: 2;
+  }
+  .sign {
+    position: sticky;
+    left: 100px;
+    z-index: 2;
+  }
+}
+
+.code {
+  font-family: $code-font;
+  white-space: pre;
+  padding: 0 10px;
+  color: $text;
+  tab-size: 2;
+  overflow: hidden;
+}
+
+// add / del tints (subtle, Bit-flavored — not GitHub greens/reds)
+
+.addLine {
+  background-color: $add-tint;
+
+  .sign {
+    color: $positive;
+  }
+  &.unifiedRow .gutterNum:last-of-type,
+  .gutterNum {
+    color: color-mix(in srgb, $positive 70%, $text-muted);
+  }
+}
+
+.delLine {
+  background-color: $del-tint;
+
+  .sign {
+    color: $negative;
+  }
+  .gutterNum {
+    color: color-mix(in srgb, $negative 70%, $text-muted);
+  }
+}
+
+// left accent rail on changed lines
+.unifiedRow.addLine,
+.splitCell.addLine {
+  box-shadow: inset 2px 0 0 $positive;
+}
+.unifiedRow.delLine,
+.splitCell.delLine {
+  box-shadow: inset 2px 0 0 $negative;
+}
+
+// intra-line (word-level) change emphasis
+.intra {
+  background: color-mix(in srgb, $accent 16%, transparent);
+  border-radius: 2px;
+  padding: 1px 0;
+}
+.addLine .intra {
+  background: color-mix(in srgb, $positive 26%, transparent);
+}
+.delLine .intra {
+  background: color-mix(in srgb, $negative 26%, transparent);
+}
+
+// --- expand-context (gap) rows ---
+
+.gapRow {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  align-items: center;
+  background: color-mix(in srgb, $accent 4%, $surface);
+  border-top: 1px solid color-mix(in srgb, $border 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, $border 70%, transparent);
+  color: $text-medium;
+}
+
+.gapControls {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  height: 100%;
+}
+
+.gapBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 11px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: $accent;
+  cursor: pointer;
+  opacity: 0.7;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.gapLabel {
+  justify-self: start;
+  border: none;
+  background: transparent;
+  color: $text-medium;
+  font-family: $code-font;
+  font-size: 11.5px;
+  padding: 0 10px;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+
+  &:hover {
+    color: $accent;
+    text-decoration: underline;
+  }
+}

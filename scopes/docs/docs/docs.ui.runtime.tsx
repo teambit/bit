@@ -14,6 +14,7 @@ import type { UsePreviewProps, UseSandboxPermission } from '@teambit/preview.ui.
 import type { APIReferenceUI } from '@teambit/api-reference';
 import { APIReferenceAspect } from '@teambit/api-reference';
 import { DocsAspect } from './docs.aspect';
+import docsCompareContainStyles from './docs-compare-contain.module.scss';
 import { OverviewSection } from './overview.section';
 import type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
 
@@ -110,6 +111,24 @@ export class DocsUI {
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation(compareSection);
     componentCompare.registerRoutes([compareSection.route]);
+    // Register the inline docs tab on component-compare (canonical owner; shared by the single
+    // component-compare page and lane-compare). `docs.getDocsCompare()` returns
+    // `<OverviewCompare titleBadges={this.titleBadgeSlot} overviewOptions={this.overviewOptionsSlot} />`,
+    // so any other aspect that registers title badges or overview options sees those contributions
+    // in the inline-docs panel too.
+    componentCompare.registerCompareTab({
+      id: 'inline-docs',
+      order: 3,
+      displayName: 'Docs',
+      // OverviewCompare renders base/compare docs side by side via the external split-layout preset,
+      // whose panes are `flex: 1` without `min-width: 0`, so each spans its full (wide) content and the
+      // pair overflows. `docsCompareContainStyles.contain` hard-caps the width and forces the two panes
+      // to share it (see the scss for details) — external component, so we target its panes by class.
+      element: <div className={docsCompareContainStyles.contain}>{docs.getDocsCompare()}</div>,
+      // lazy: OverviewCompare mounts base+compare docs iframes, each loading the full env overview
+      // bundle on mount (even under `display: none`) — deferred until the panel is actually visible.
+      lazy: true,
+    });
     docs.registerPreviewSandbox((manager, componentModel) => {
       if (componentModel?.host === 'teambit.scope/scope') {
         manager.add('allow-scripts');

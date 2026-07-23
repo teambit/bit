@@ -26,10 +26,15 @@ export class ExportAssignmentTransformer implements SchemaTransformer {
 
     const exportNode = await context.getTypeRef(specifier.getText(), absoluteFilePath, location);
 
+    // The export is literally named `default` in TS (`export { Foo as default }`). Use that as the
+    // schema's stable name/alias — the target symbol is preserved on the wrapped `TypeRefSchema.name`.
+    // Baking a `"Foo (default)"` label into the name instead produced an invalid signature
+    // (`export { Foo as Foo (default) }`) and an unstable diff key that flip-flopped with the
+    // extractor's fallback representation across builds (surfacing as a phantom "added" export).
     if (exportNode) {
       return new ExportSchema(
         location,
-        `${exportNode.name} (default)`,
+        'default',
         new TypeRefSchema(
           exportNode.location,
           exportNode.name,
@@ -37,12 +42,11 @@ export class ExportAssignmentTransformer implements SchemaTransformer {
           exportNode.packageName,
           exportNode.internalFilePath
         ),
-        `${exportNode.name} (default)`
+        'default'
       );
     }
 
     const schemaNode = await context.computeSchema(specifier);
-    const nodeName = schemaNode.name ? `${schemaNode.name} (default)` : 'default';
-    return new ExportSchema(location, nodeName, schemaNode, nodeName);
+    return new ExportSchema(location, 'default', schemaNode, 'default');
   }
 }

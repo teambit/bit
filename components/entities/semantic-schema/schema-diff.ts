@@ -5,6 +5,11 @@ export type SchemaChangeFact = {
   context: Record<string, any>;
   from?: string;
   to?: string;
+  /**
+   * the owning member's signature, carried on member-level facts (e.g. a doc-only change) so the UI
+   * can show the declaration as context — "what member is this doc/change on" — next to the diff.
+   */
+  signature?: string;
 };
 
 const SCHEMA_DISPLAY_NAMES: Record<string, string> = {
@@ -122,6 +127,23 @@ export function deepEqualNoLocation(a: any, b: any): boolean {
   return false;
 }
 
+/**
+ * the full human-readable doc text: the description plus every JSDoc tag (`@see …`, `@deprecated …`,
+ * etc.) on its own line. The diff must show the whole comment — surfacing only `doc.comment` drops
+ * the tags, so a "documentation removed" reads as a trimmed fragment of what was actually there.
+ */
+function fullDocText(doc: Record<string, any> | undefined): string | undefined {
+  if (!doc) return undefined;
+  const parts: string[] = [];
+  if (doc.comment) parts.push(doc.comment);
+  for (const tag of doc.tags || []) {
+    const tagName = tag.tagName || tag.name;
+    if (!tagName) continue;
+    parts.push(`@${tagName}${tag.comment ? ` ${tag.comment}` : ''}`);
+  }
+  return parts.join('\n') || doc.raw || undefined;
+}
+
 export function diffDoc(
   baseDoc: Record<string, any> | undefined,
   compareDoc: Record<string, any> | undefined
@@ -134,7 +156,7 @@ export function diffDoc(
         changeKind: 'documentation-added',
         description: 'documentation added',
         context: {},
-        to: compareDoc.comment || '(doc added)',
+        to: fullDocText(compareDoc) || '(doc added)',
       },
     ];
   }
@@ -144,7 +166,7 @@ export function diffDoc(
         changeKind: 'documentation-removed',
         description: 'documentation removed',
         context: {},
-        from: baseDoc.comment || '(doc removed)',
+        from: fullDocText(baseDoc) || '(doc removed)',
       },
     ];
   }
@@ -161,8 +183,8 @@ export function diffDoc(
       changeKind: 'documentation-changed',
       description: `documentation ${changes.join(' and ')} changed`,
       context: {},
-      from: baseDoc?.comment,
-      to: compareDoc?.comment,
+      from: fullDocText(baseDoc),
+      to: fullDocText(compareDoc),
     },
   ];
 }

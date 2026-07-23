@@ -1724,6 +1724,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/ui"
     },
+    "ui/api-diff-view": {
+        "name": "ui/api-diff-view",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.semantics",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/api-diff-view"
+    },
     "ui/aspect-box": {
         "name": "ui/aspect-box",
         "scope": "teambit.harmony",
@@ -1772,6 +1780,41 @@
         "version": "0.0.565",
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-view"
+    },
+    "ui/compare/lane-compare": {
+        "name": "ui/compare/lane-compare",
+        "scope": "teambit.lanes",
+        "version": "0.0.206",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/compare/lane-compare",
+        "config": {
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "dependencies": {
+                        "@teambit/legacy": "-"
+                    },
+                    "devDependencies": {
+                        "@types/mocha": "9.1.0",
+                        "@teambit/legacy": "-"
+                    },
+                    "peerDependencies": {}
+                }
+            }
+        }
+    },
+    "ui/compare/lane-compare-hooks/use-lane-diff-status": {
+        "name": "ui/compare/lane-compare-hooks/use-lane-diff-status",
+        "scope": "teambit.lanes",
+        "version": "0.0.144",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/compare/lane-compare-hooks/use-lane-diff-status"
+    },
+    "ui/compare/lane-compare-page": {
+        "name": "ui/compare/lane-compare-page",
+        "scope": "teambit.lanes",
+        "version": "0.0.174",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/compare/lane-compare-page"
     },
     "ui/component-compare/changelog": {
         "name": "ui/component-compare/changelog",
@@ -1850,12 +1893,27 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-filters/show-main-filter"
     },
+    "ui/component-meta": {
+        "name": "ui/component-meta",
+        "scope": "teambit.component",
+        "version": "0.0.368",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-meta"
+    },
     "ui/component-preview": {
         "name": "ui/component-preview",
         "scope": "teambit.preview",
         "version": "1.0.36",
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/component-preview"
+    },
+    "ui/components-overview": {
+        "name": "ui/components-overview",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.explorer",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/components-overview"
     },
     "ui/composition-compare": {
         "name": "ui/composition-compare",
@@ -1884,6 +1942,28 @@
         "version": "0.0.45",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/current-user"
+    },
+    "ui/deps-diff-table": {
+        "name": "ui/deps-diff-table",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.dependencies",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/deps-diff-table"
+    },
+    "ui/diff-viewer": {
+        "name": "ui/diff-viewer",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/diff-viewer",
+        "config": {
+            "teambit.react/react-env@1.3.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/docs-app": {
         "name": "ui/docs-app",
@@ -1948,12 +2028,85 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/scope-context"
     },
+    "ui/hooks/use-bulk-paged-query": {
+        "name": "ui/hooks/use-bulk-paged-query",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.ui-foundation",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-bulk-paged-query",
+        "config": {
+            "teambit.react/react-env@1.3.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
+    },
     "ui/hooks/use-core-aspects": {
         "name": "ui/hooks/use-core-aspects",
         "scope": "teambit.harmony",
         "version": "0.0.6",
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/use-core-aspects"
+    },
+    "ui/hooks/use-data-query": {
+        "name": "ui/hooks/use-data-query",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.506",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-data-query"
+    },
+    "ui/inline-code-compare": {
+        "name": "ui/inline-code-compare",
+        "scope": "teambit.code",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-code-compare"
+    },
+    "ui/inline-config-compare": {
+        "name": "ui/inline-config-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-config-compare"
+    },
+    "ui/inline-deps-compare": {
+        "name": "ui/inline-deps-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-deps-compare"
+    },
+    "ui/inline-diff-viewer": {
+        "name": "ui/inline-diff-viewer",
+        "scope": "teambit.code",
+        "version": "0.0.3",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-diff-viewer",
+        "config": {
+            "teambit.react/react-env@1.3.5": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
+    },
+    "ui/inline-preview-compare": {
+        "name": "ui/inline-preview-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.preview",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-preview-compare"
+    },
+    "ui/inline-tests-compare": {
+        "name": "ui/inline-tests-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/inline-tests-compare"
     },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
@@ -2010,6 +2163,14 @@
         "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "components/ui/preserve-workspace-mode"
+    },
+    "ui/preview-compare": {
+        "name": "ui/preview-compare",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.preview",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/preview-compare"
     },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",

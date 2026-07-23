@@ -1,0 +1,34 @@
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--on-surface-medium-color, #707279);
+
+  &[data-state='remote'] {
+    color: var(--on-surface-medium-color, #707279);
+  }
+
+  &[data-state='loading'] {
+    color: var(--on-surface-medium-color, #707279);
+  }
+
+  &[data-state='unavailable'] {
+    color: var(--error-color, #e62e5c);
+  }
+}
+
+.spin {
+  animation: base-source-spin 0.9s linear infinite;
+}
+
+@keyframes base-source-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

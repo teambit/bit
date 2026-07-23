@@ -54,7 +54,19 @@ type ComponentChangedSubData = {
   };
 };
 
-export function useFileContent(componentId?: ComponentID, filePath?: string, skip?: boolean, host?: string) {
+export function useFileContent(
+  componentId?: ComponentID,
+  filePath?: string,
+  skip?: boolean,
+  host?: string,
+  /**
+   * Subscribe to `componentChanged` and refetch this file on a match. Opt-in because the hook is
+   * also used in component/lane compare, where many instances mount at once (one per file) — every
+   * one subscribing and refetching on a single event causes a refetch storm. Only the live Code tab
+   * needs live updates, so it alone enables this.
+   */
+  subscribeToChanges?: boolean
+) {
   const id = componentId?.toString();
   const querySkip = skip || !componentId || filePath === undefined;
 
@@ -64,7 +76,7 @@ export function useFileContent(componentId?: ComponentID, filePath?: string, ski
   });
 
   useSubscription<ComponentChangedSubData>(COMPONENT_CHANGED_SUBSCRIPTION, {
-    skip: querySkip,
+    skip: querySkip || !subscribeToChanges,
     onSubscriptionData: ({ subscriptionData }) => {
       const changedId = subscriptionData.data?.componentChanged?.component?.id;
       if (!changedId || !componentId) return;

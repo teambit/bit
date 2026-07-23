@@ -61,6 +61,11 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         id: String!
         sourceHead: String!
         targetHead: String
+        """
+        where the compared base was resolved from: "workspace" (already local) or "scope" (fetched
+        on demand from the remote scope). null for a new component (no base) or a lane-vs-lane diff.
+        """
+        baseSource: String
         componentId: ComponentID!
         changeType: String @deprecated(reason: "Use changes")
         """
@@ -254,7 +259,16 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         ) => {
           const sourceLaneId = LaneId.parse(source);
           const targetLaneId = target ? LaneId.parse(target) : undefined;
-          return lanesMain.diffStatus(sourceLaneId, targetLaneId, options);
+          // Defer `changes` derivation to the per-component field resolver so the eager pMap inside
+          // `diffStatus` is fast. The field resolver only fires when the client selects `changes`,
+          // and graphql-js runs each component's resolver in parallel via `Promise.all`.
+          // `prewarmCaches`: this is the UI caller, which fires the follow-up compare/host queries the
+          // prewarm warms. Non-UI callers of `diffStatus` leave it off so they don't pay the fan-out.
+          return lanesMain.diffStatus(sourceLaneId, targetLaneId, {
+            ...options,
+            deferChanges: true,
+            prewarmCaches: true,
+          });
         },
         removeUpdateDependents: async (lanesMain: LanesMain, { laneId, ids }: { laneId: string; ids?: string[] }) => {
           const laneIdParsed = LaneId.parse(laneId);
@@ -271,6 +285,11 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
             diffCompStatus.targetHead
           }`,
         componentId: (diffCompStatus: LaneComponentDiffStatus) => diffCompStatus.componentId.toObject(),
+        changes: (diffCompStatus: LaneComponentDiffStatus) => lanesMainRuntime.deriveComponentChanges(diffCompStatus),
+        changeType: async (diffCompStatus: LaneComponentDiffStatus) => {
+          const changes = await lanesMainRuntime.deriveComponentChanges(diffCompStatus);
+          return changes?.[0];
+        },
       },
       Lane: {
         id: (lane: LaneData) => lane.id.toObject(),
