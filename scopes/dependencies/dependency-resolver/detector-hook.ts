@@ -48,29 +48,26 @@ export interface DependencyDetector {
    * @param file
    */
   dependencyLookup?(file: DependencyContext): string;
-
-  /**
-   * a fallback detector is used only when no regular detector supports the file. it lets core
-   * aspects provide a baseline detection (e.g. regex-based imports extraction for md/mdx) while a
-   * loaded aspect with a full parser for the same extension takes precedence.
-   */
-  isFallback?: boolean;
 }
 
 export class DetectorHook {
   static hooks: DependencyDetector[] = [];
 
   isSupported(ext: string, filename: string): boolean {
-    return !!this.getDetector(ext, filename);
-  }
-
-  getDetector(ext: string, filename: string): DependencyDetector | undefined {
-    const supported = DetectorHook.hooks.filter((hook) => {
+    return !!DetectorHook.hooks.find((hook) => {
       return hook.isSupported({
         ext,
         filename,
       });
     });
-    return supported.find((hook) => !hook.isFallback) ?? supported[0];
+  }
+
+  getDetector(ext: string, filename: string): DependencyDetector | undefined {
+    return DetectorHook.hooks.find((hook) => {
+      return hook.isSupported({
+        ext,
+        filename,
+      });
+    });
   }
 }
