@@ -17,7 +17,9 @@ import { ConfigStoreAspect } from '@teambit/config-store';
 import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
-import type { Ref, Lane, Version, Log } from '@teambit/objects';
+import type { Lane, Version, Log } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
+import { isSnap } from '@teambit/component-version';
 import pMapSeries from 'p-map-series';
 import type { Scope as LegacyScope } from '@teambit/legacy.scope';
 import type { ScopeMain } from '@teambit/scope';
@@ -284,9 +286,85 @@ export class MergeLanesMain {
       }
     });
 
+    // A merged head may reference — via its flattened dependencies — a non-head snap of another
+    // component. When merging to main the squash removes intermediate snaps from each component's own
+    // chain, and a bare-scope merge (`bit _merge-lane --push`) exports heads only; in both cases such a
+    // referenced snap wouldn't be exported, and on lean lanes it lives only on the lane scope. Import
+    // any missing one now so the export can ship it (otherwise the remote's dependency-integrity check
+    // would reject the push). Not needed for non-squash workspace merges, which export full history.
+    if (shouldSquash || !this.workspace) {
+      await this.importMissingReferencedDeps(mergedSuccessfullyIds, otherLane);
+    }
+
     await this.workspace?.consumer.onDestroy(`lane-merge (${otherLaneId.name})`);
 
     return { mergeResults, deleteResults, configMergeResults, mergedSuccessfullyIds, conflicts };
+  }
+
+  /**
+   * A merged component head may reference, via its flattened dependencies, a non-head snap of another
+   * component — e.g. a deleted component that keeps pinning an older snap of a dependency that has
+   * since advanced. On lean lanes those snaps live only on the lane scope and are not fetched by the
+   * merge, so the heads-only export (used by `bit _merge-lane --push`) would leave them out and the
+   * remote's dependency-integrity check would fail. Import any such missing snap from the lane scope.
+   */
+  private async importMissingReferencedDeps(ids: ComponentID[], otherLane?: Lane) {
+    // the missing snaps live on the lane scope (lean lanes). without the source lane we don't know
+    // where to fetch them from, so there's nothing to do.
+    if (!otherLane) return;
+    const legacyScope = this.scope.legacyScope;
+    const missingHashes: string[] = [];
+    // one existence check per unique hash — the same snap appears in the flattened list of many heads
+    const checkedHashes = new Set<string>();
+    await pMapSeries(ids, async (id) => {
+      const modelComponent = await legacyScope.getModelComponentIfExist(id);
+      const head = modelComponent?.head;
+      if (!modelComponent || !head) return;
+      const headVersion = await modelComponent.loadVersion(head.toString(), legacyScope.objects, false);
+      if (!headVersion) return;
+      // flattened (not only direct) to mirror the remote-side check, which validates the flattened
+      // dependencies of every exported head (see throwForMissingLocalDependencies). cheap: only the
+      // heads are loaded and each unique hash is stat-ed once.
+      await Promise.all(
+        headVersion.getAllFlattenedDependencies().map(async (depId) => {
+          // only snaps can go missing this way — tags live on the home scope and are never squashed
+          // off a lane. (a tag version is a semver string, not an object hash, so Ref.from would be
+          // bogus for it anyway.)
+          if (!depId.version || !isSnap(depId.version)) return;
+          if (checkedHashes.has(depId.version)) return;
+          checkedHashes.add(depId.version);
+          const exists = await legacyScope.objects.has(Ref.from(depId.version));
+          if (!exists) missingHashes.push(depId.version);
+        })
+      );
+    });
+    if (!missingHashes.length) return;
+    this.logger.debug(
+      `importMissingReferencedDeps, importing ${missingHashes.length} non-head dependency snaps referenced by the merged heads from ${otherLane.scope}`
+    );
+    // fetch the raw objects only (by hash, from the lane scope). importManyObjects does not touch
+    // component models/heads, so it can't leave a component pointing at a version whose object is
+    // missing — unlike a component-level import.
+    await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingHashes });
+    // a Version object references other objects the export must ship along with it — the file
+    // sources and the flattened-edges/dependencies-graph. fetch the missing ones too. (parents are
+    // not needed — the export doesn't collect them for these versions. artifacts are not needed
+    // either — the export tolerates missing artifacts for such non-local versions.)
+    const missingRefsOfVersions: string[] = [];
+    await pMapSeries(missingHashes, async (hash) => {
+      const versionObject = (await legacyScope.objects.load(Ref.from(hash))) as Version | null;
+      if (!versionObject) return; // the hash could not be fetched after all
+      await Promise.all(
+        versionObject.refsWithOptions(false, false).map(async (ref) => {
+          if (checkedHashes.has(ref.toString())) return;
+          checkedHashes.add(ref.toString());
+          const exists = await legacyScope.objects.has(ref);
+          if (!exists) missingRefsOfVersions.push(ref.toString());
+        })
+      );
+    });
+    if (!missingRefsOfVersions.length) return;
+    await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingRefsOfVersions });
   }
 
   private validateMergeFlags(otherLaneId: LaneId, currentLaneId: LaneId, options: MergeLaneOptions) {
