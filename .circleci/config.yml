@@ -494,7 +494,7 @@ commands:
           # temporarily raised: former-core envs are now regular exported components, so building the
           # workspace-aspects graph for fixtures that use them imports the env's full component graph
           # from the remote (silent, ~12m). tracked as a separate perf follow-up; revert to 10m once fixed.
-          no_output_timeout: 40m
+          no_output_timeout: 20m
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
