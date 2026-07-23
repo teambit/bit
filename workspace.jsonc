@@ -318,7 +318,7 @@
         "@teambit/react.jest.react-jest": "^1.0.38",
         "@teambit/react.rendering.ssr": "^1.0.4",
         "@teambit/react.ui.component-highlighter": "0.2.7",
-        "@teambit/react.ui.highlighter.component-metadata.bit-component-meta": "0.0.43",
+        "@teambit/react.ui.highlighter.component-metadata.bit-component-meta": "0.0.45",
         "@teambit/react.webpack.react-webpack": "^1.0.56",
         "@teambit/scope.content.scope-overview": "1.96.8",
         "@teambit/scope.ui.empty-scope": "^0.0.510",
@@ -698,6 +698,13 @@
       "lodash@4": "4.17.21",
       "trim@0": "0.0.3",
       "@teambit/harmony": "0.4.12",
+      // bit-component-meta@0.0.44 is a broken publish: its package.json is CJS
+      // (main: dist/index.js, no "type":"module") but dist/index.js contains ESM
+      // ("export { ... }"). react.babel.bit-react-transformer require()s it during
+      // GeneratePreview, so the cold-install resolution of 0.0.44 throws
+      // "SyntaxError: Unexpected token 'export'". bit-react-transformer still
+      // transitively hard-pins 0.0.44, so force it to the CJS-restored 0.0.45.
+      "@teambit/react.ui.highlighter.component-metadata.bit-component-meta": "0.0.45",
       "@types/fs-capacitor": "2.0.0",
       // @types/node is used as a peer dependency, so to reduce duplication,
       // we force the version installed in the root.

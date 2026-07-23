@@ -1036,7 +1036,10 @@
         "scope": "teambit.webpack",
         "version": "0.0.177",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/config-mutator"
+        "rootDir": "scopes/webpack/config-mutator",
+        "config": {
+            "teambit.node/node@3.0.1": {}
+        }
     },
     "modules/create-element-from-string": {
         "name": "modules/create-element-from-string",
@@ -1113,7 +1116,10 @@
         "scope": "teambit.webpack",
         "version": "1.0.26",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/modules/generate-style-loaders"
+        "rootDir": "scopes/webpack/modules/generate-style-loaders",
+        "config": {
+            "teambit.node/node@3.0.1": {}
+        }
     },
     "modules/get-basic-log": {
         "name": "modules/get-basic-log",
