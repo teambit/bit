@@ -217,7 +217,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "2.0.28",
+        "version": "2.0.35",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -337,7 +337,7 @@
     "cloud": {
         "name": "cloud",
         "scope": "teambit.cloud",
-        "version": "0.0.1362",
+        "version": "0.0.1367",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/cloud"
     },
@@ -536,7 +536,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1137",
+        "version": "2.0.1144",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -1586,7 +1586,7 @@
     "pnpm": {
         "name": "pnpm",
         "scope": "teambit.dependencies",
-        "version": "1.0.1100",
+        "version": "1.0.1105",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
     },
@@ -1693,7 +1693,7 @@
     "ripple": {
         "name": "ripple",
         "scope": "teambit.cloud",
-        "version": "0.0.148",
+        "version": "0.0.154",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ripple"
     },

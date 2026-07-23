@@ -278,9 +278,18 @@ export class CloudMain {
           if (code === 'EADDRINUSE') {
             // set up a new auth listener with new port
             this.logger.warn(`port: ${port} already in use for cloud auth listener, trying port ${port + 1}`);
+            // The entry for this port was added optimistically (before listen() ran). listen() just
+            // failed, so remove the stale, server-less entry — otherwise getLoginUrl/getLoginPort
+            // callers can resolve to a port that has no server behind it.
+            this.authListenerByPort.delete(port);
+            // Forward clientId/skipConfigUpdate/cloudDomain so the retried listener keeps the same
+            // identity and honors the original options (previously they were dropped on the bump).
             // eslint-disable-next-line promise/no-promise-in-callback
             this.setupAuthListener({
               port: port + 1,
+              clientId,
+              skipConfigUpdate,
+              cloudDomain,
             })
               .then(resolve)
               .catch(reject);
@@ -450,19 +459,34 @@ export class CloudMain {
     }
     const authListenerForPort = this.authListenerByPort.get(port);
     if (authListenerForPort) {
-      return `${loginUrl}?port=${port}&clientId=${authListenerForPort.clientId}&responseType=token&deviceName=${
-        machineName || os.hostname()
-      }&os=${process.platform}`;
+      return this.buildLoginUrl(loginUrl, authListenerForPort, machineName);
     }
     const authListener = await this.setupAuthListener({ port });
 
     if (!authListener) return null;
 
-    return encodeURI(
-      `${loginUrl}?port=${port}&clientId=${authListener?.clientId}&responseType=token&deviceName=${
-        machineName || os.hostname()
-      }&os=${process.platform}`
-    );
+    return this.buildLoginUrl(loginUrl, authListener, machineName);
+  }
+
+  /**
+   * Build the login url the browser is sent to. Always advertises the port the listener actually
+   * bound to — setupAuthListener falls back to the next free port when the requested one is taken,
+   * and advertising the requested port would point the browser at a port with no server behind it.
+   */
+  private buildLoginUrl(loginUrl: string, authListener: CloudAuthListener, machineName?: string): string {
+    // Percent-encode every value. deviceName comes from --machine-name or os.hostname(), either of
+    // which can contain spaces, '&', '#' or non-ascii characters. encodeURI() is not sufficient —
+    // it leaves '&', '#' and '+' intact, so a machine named `home & away #1` would truncate the
+    // query string and drop the params that follow it.
+    const params: [string, string][] = [
+      ['port', String(authListener.port)],
+      ['clientId', authListener.clientId ?? ''],
+      ['responseType', 'token'],
+      ['deviceName', machineName || os.hostname()],
+      ['os', process.platform],
+    ];
+    const query = params.map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join('&');
+    return `${loginUrl}?${query}`;
   }
 
   async logout() {
@@ -542,7 +566,7 @@ export class CloudMain {
         return;
       }
 
-      const promptLogin = async () => {
+      const promptLogin = async (authListener: CloudAuthListener | null) => {
         this.REDIRECT_URL = redirectUrl;
         this.registerOnSuccessLogin((loggedInParams) => {
           resolve({
@@ -556,7 +580,11 @@ export class CloudMain {
         const loginUrl = await this.getLoginUrl({
           machineName,
           cloudDomain,
-          port,
+          // Use the port the auth listener actually bound to. When the requested port is already
+          // in use, setupAuthListener falls back to the next free port (EADDRINUSE bump); building
+          // the URL from the requested port would tell the browser to POST the token to a port with
+          // no server behind it, so the token is never received and login hangs ("locked out").
+          port: authListener?.port !== undefined ? String(authListener.port) : port,
         });
         if (!loginUrl) {
           reject(new Error('Failed to get login url'));
