@@ -480,7 +480,6 @@ export function createReadPackageHooks(options: {
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
     readPackage.push(readPackageHook as ReadPackageHook);
   }
-  readPackage.push(removeLegacyFromDeps as ReadPackageHook);
   if (!options.forcedHarmonyVersion) {
     // If the workspace did not specify a harmony version in a root policy,
     // then we remove harmony from any dependencies, so that the one linked from bvm is used.
@@ -507,24 +506,6 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
         ...pkg.dependencies,
       },
     };
-  }
-  return pkg;
-}
-
-/**
- * @teambit/legacy should never be installed as a dependency.
- * It is linked from bvm.
- */
-function removeLegacyFromDeps(pkg: PackageManifest): PackageManifest {
-  if (pkg.dependencies != null) {
-    if (pkg.dependencies['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
-      delete pkg.dependencies['@teambit/legacy'];
-    }
-  }
-  if (pkg.peerDependencies != null) {
-    if (pkg.peerDependencies['@teambit/legacy']) {
-      delete pkg.peerDependencies['@teambit/legacy'];
-    }
   }
   return pkg;
 }

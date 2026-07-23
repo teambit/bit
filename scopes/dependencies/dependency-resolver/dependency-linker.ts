@@ -105,7 +105,6 @@ export type LinkResults = {
   teambitBitLink?: CoreAspectLinkResult;
   coreAspectsLinks?: CoreAspectLinkResult[];
   harmonyLink?: LinkDetail;
-  teambitLegacyLink?: LinkDetail;
   resolvedFromEnvLinks?: DepsLinkedToEnvResult[];
   nestedDepsInNmLinks?: NestedNMDepsLinksResult[];
   linkToDirResults?: LinkToDirResult[];
@@ -161,9 +160,6 @@ export class DependencyLinker {
     }
     if (linkResults.harmonyLink) {
       localLinks.push(this.linkDetailToLocalDepEntry(linkResults.harmonyLink));
-    }
-    if (linkResults.teambitLegacyLink) {
-      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
     }
     if (linkResults.slotOriginatedLinks) {
       localLinks.push(...linkResults.slotOriginatedLinks.map((l) => this.linkDetailToLocalDepEntry(l)));
@@ -324,9 +320,6 @@ export class DependencyLinker {
     }
 
     if (mainAspectPath) {
-      // the following line links @teambit/legacy to the workspace node_modules. at this point, we removed all
-      // @teambit/legacy occurrences from the repo but others/external repos still have it.
-      result.teambitLegacyLink = this.linkNonAspectCorePackages(rootDir, 'legacy', mainAspectPath);
       result.harmonyLink = this.linkNonAspectCorePackages(rootDir, 'harmony', mainAspectPath);
     }
     return result;
@@ -803,15 +796,7 @@ export class DependencyLinker {
     }
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
-      let newDir: string;
-      try {
-        newDir = getDistDirForDevEnv(packageName);
-      } catch (err: any) {
-        // the package may not exist at all (e.g. @teambit/legacy was removed from the repo).
-        // this link is best-effort for backward compatibility, skip it rather than failing.
-        this.logger.debug(`linkNonAspectCorePackages, unable to resolve ${packageName}, skipping the link. ${err}`);
-        return undefined;
-      }
+      const newDir = getDistDirForDevEnv(packageName);
       return { packageName, from: newDir, to: target };
     }
 
@@ -835,7 +820,7 @@ function getDistDirForDevEnv(packageName: string): string {
   if (moduleDirectory.includes(packageName)) {
     dirPath = path.join(moduleDirectory, '../..'); // to remove the "index.js" at the end
   } else {
-    // This is usually required for the @teambit/legacy, as we re inside the nm so we can't find it in the other way
+    // as we are inside the nm we can't find it in the other way
     const nmDir = __dirname.substring(0, __dirname.indexOf('@teambit'));
     dirPath = path.join(nmDir, packageName);
     moduleDirectory = require.resolve(packageName, { paths: [nmDir] });
