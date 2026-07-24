@@ -7,6 +7,25 @@ import chaiString from 'chai-string';
 chai.use(chaiFs);
 chai.use(chaiString);
 
+/**
+ * create an env defined solely by a *.bit-env.* plugin file (no env-of-env configured).
+ * the plugin file is plain .js on purpose: the default env (empty env) has no compiler,
+ * so a .ts plugin would never get a dist and the env would fail to load.
+ */
+function createBitEnvPluginEnv(helper: Helper) {
+  helper.fs.outputFile(
+    'my-env/my-env.bit-env.js',
+    `class MyEnv {
+  name = 'my-env';
+}
+module.exports.default = new MyEnv();
+`
+  );
+  helper.fs.outputFile('my-env/index.js', `module.exports = require('./my-env.bit-env');\n`);
+  helper.command.addComponent('my-env');
+  helper.command.link();
+}
+
 describe('env command', function () {
   this.timeout(0);
   let helper: Helper;
@@ -117,19 +136,7 @@ describe('env command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
-      // the plugin file is plain .js on purpose: the default env (empty env) has no compiler,
-      // so a .ts plugin would never get a dist and the env would fail to load
-      helper.fs.outputFile(
-        'my-env/my-env.bit-env.js',
-        `class MyEnv {
-  name = 'my-env';
-}
-module.exports.default = new MyEnv();
-`
-      );
-      helper.fs.outputFile('my-env/index.js', `module.exports = require('./my-env.bit-env');\n`);
-      helper.command.addComponent('my-env');
-      helper.command.link();
+      createBitEnvPluginEnv(helper);
     });
     // previously, a component was recognized as an env only after it was loaded as an aspect,
     // which happened only once its own env (env-of-env, e.g. teambit.envs/env or
@@ -144,6 +151,28 @@ module.exports.default = new MyEnv();
     });
     it('bit snap should work', () => {
       expect(() => helper.command.snapAllComponentsWithoutBuild()).to.not.throw();
+    });
+  });
+  describe('component using a .bit-env plugin-file env should have a clean status', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1, false);
+      createBitEnvPluginEnv(helper);
+      helper.command.setEnv('comp1', 'my-env');
+      helper.command.install();
+      helper.command.tagAllWithoutBuild();
+    });
+    // the plugin file identifies the component as an env - it must not be reported as
+    // misconfigured just because its own env is not an env-env (teambit.envs/env or
+    // bitdev.general/envs/bit-env)
+    it('should not warn that the env is not of type env', () => {
+      const output = helper.command.status();
+      expect(output).to.not.have.string('is not of type env');
+    });
+    // this covers MissingDists as well: my-env provides no compiler, so comp1 is consumed
+    // as-source - there are no dists to miss, and "bit compile" would not produce any
+    it('should have no component issues at all', () => {
+      helper.command.expectStatusToNotHaveIssues();
     });
   });
   describe('bit env replace', () => {

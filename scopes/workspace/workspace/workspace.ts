@@ -1732,9 +1732,10 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     } catch {
       return; // unable to get the component for some reason. don't sweat it. forget about the warning
     }
-    // an env that declares itself via a *.bit-env.* plugin file is a valid env even without
-    // an env-of-env configured (same signal used by isEnv() to recognize envs)
-    if (!this.envs.isUsingEnvEnv(env) && !this.envs.hasEnvPluginFile(env)) {
+    // isEnv covers all the signals identifying an env, including the *.bit-env.* plugin file -
+    // an env recognized by any of them is not misconfigured (isUsingEnvEnv alone misses plugin
+    // envs whose own env is not an env-env).
+    if (!this.envs.isEnv(env)) {
       this.warnedAboutMisconfiguredEnvs.push(envId);
       this.logger.consoleWarning(
         `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} bitdev.general/envs/bit-env")`
