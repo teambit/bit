@@ -290,14 +290,19 @@ export class EnvsMain {
   }
 
   /**
-   * find an env in the slot by matching the id while ignoring the version.
-   * needed for legacy core envs: old components use them without a version, but once loaded (as
-   * regular envs) they are registered to the slot with a version, so exact lookups fail. also
-   * used for regular envs referenced without a version (e.g. workspace envs in envs-config).
+   * for an env that used to be a core aspect and appears without a version (in old components),
+   * get its EnvDefinition from the slot by matching the id ignoring the version.
+   * old components reference these envs without a version by design, but once loaded (as regular
+   * envs) they are registered to the slot with a version, so exact lookups fail.
+   * gated to legacy core env ids only - for any other env the version matters: two components in
+   * the same workspace may use the same env with different versions, so a versionless reference
+   * must be resolved through the component's own aspect entry, never by scanning the slot (which
+   * could return another component's version).
    * multiple versions of the same env may be registered - pick the highest one deterministically
    * (rather than relying on registration order) and warn, so ambiguity is visible.
    */
-  private getEnvFromSlotIgnoreVersion(envIdMaybeVersioned: string): EnvDefinition | undefined {
+  private getLegacyCoreEnvFromSlot(envIdMaybeVersioned: string): EnvDefinition | undefined {
+    if (!isLegacyCoreEnvId(envIdMaybeVersioned)) return undefined;
     const envIdWithoutVersion = envIdMaybeVersioned.split('@')[0];
     const matches = this.envSlot.toArray().filter(([envId]) => envId.split('@')[0] === envIdWithoutVersion);
     if (!matches.length) return undefined;
@@ -323,15 +328,6 @@ export class EnvsMain {
     }
     const [envId, env] = matches[0];
     return new EnvDefinition(envId, env);
-  }
-
-  /**
-   * for an env that used to be a core aspect and appears without a version (in old components),
-   * get its EnvDefinition from the slot by matching the id ignoring the version.
-   */
-  private getLegacyCoreEnvFromSlot(envIdMaybeVersioned: string): EnvDefinition | undefined {
-    if (!isLegacyCoreEnvId(envIdMaybeVersioned)) return undefined;
-    return this.getEnvFromSlotIgnoreVersion(envIdMaybeVersioned);
   }
 
   /**
@@ -572,12 +568,13 @@ export class EnvsMain {
     const exactMatchId = exactMatch?.[0];
     if (exactMatchId) return exactMatchId;
 
-    // the env may be registered to the slot with a version while the component references it
-    // without one - e.g. legacy core envs saved in old components without a version, or a config
-    // coming from a lane merge without an extension entry holding the version. match ignoring
-    // the version.
-    const versionlessSlotMatch = this.getEnvFromSlotIgnoreVersion(envIdFromEnvData);
-    if (versionlessSlotMatch) return versionlessSlotMatch.id;
+    // legacy core envs are saved in old components without a version by design, while once
+    // loaded they are registered to the slot with a version - match ignoring the version.
+    // gated to these ids only: for regular envs the version matters (two components may use the
+    // same env with different versions), so their resolution must go through the component's own
+    // aspect entry (resolveEnv above) and never through a versionless slot scan.
+    const legacyCoreEnvSlotMatch = this.getLegacyCoreEnvFromSlot(envIdFromEnvData);
+    if (legacyCoreEnvSlotMatch) return legacyCoreEnvSlotMatch.id;
     // a legacy core env that was not loaded (probably not installed yet). return the id as-is,
     // the same way it was returned when these envs were core aspects.
     if (isLegacyCoreEnvId(envIdFromEnvData)) return envIdFromEnvData;
@@ -1193,13 +1190,11 @@ if needed, use "bit env set" command to align the env id`;
       return new EnvDefinition(envId, env as Environment);
     }
     if (!envId.includes('@')) {
-      // the env may be registered to the slot with a version (envs loaded as components register
-      // versioned) while the reference carries no version - the standard form for workspace envs
-      // (e.g. a tagged workspace env: it registers as env@0.0.1 while envs-config keeps the plain
-      // id). not specific to legacy core envs. the exact lookup above always wins when the
-      // reference does carry a version; this ignore-version match resolves version-less
-      // references, picking the highest registered version and warning when several exist.
-      const found = this.getEnvFromSlotIgnoreVersion(envId);
+      // versionless references hit the slot only for legacy core envs, which old components store
+      // without a version by design while the loaded env registers versioned. any other env must
+      // be looked up with its exact version: two components in the same workspace may use the
+      // same env with different versions, and an ignore-version match could return the wrong one.
+      const found = this.getLegacyCoreEnvFromSlot(envId);
       if (found) {
         return found;
       }
