@@ -1194,8 +1194,11 @@ if needed, use "bit env set" command to align the env id`;
     }
     if (!envId.includes('@')) {
       // the env may be registered to the slot with a version (envs loaded as components register
-      // versioned) while the config references it without one (the standard form for workspace
-      // envs). envs are single-instance per process, so match ignoring the version.
+      // versioned) while the reference carries no version - the standard form for workspace envs
+      // (e.g. a tagged workspace env: it registers as env@0.0.1 while envs-config keeps the plain
+      // id). not specific to legacy core envs. the exact lookup above always wins when the
+      // reference does carry a version; this ignore-version match resolves version-less
+      // references, picking the highest registered version and warning when several exist.
       const found = this.getEnvFromSlotIgnoreVersion(envId);
       if (found) {
         return found;
