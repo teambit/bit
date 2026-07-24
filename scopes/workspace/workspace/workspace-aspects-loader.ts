@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
+import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR, DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import type { Graph } from '@teambit/graph.cleargraph';
@@ -725,7 +725,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   private getDistMain(component: Component, localPath: string): string | undefined {
     const mainFile = component.state._consumer.mainFile;
     if (!mainFile) return undefined;
-    const distMain = join(localPath, 'dist', mainFile.replace(/\.(ts|tsx|mts|cts|jsx)$/, '.js'));
+    const distMain = join(localPath, DEFAULT_DIST_DIRNAME, mainFile.replace(/\.(ts|tsx|mts|cts|jsx)$/, '.js'));
     return fs.pathExistsSync(distMain) ? distMain : undefined;
   }
 
@@ -870,8 +870,14 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     }
     // guard against circular dependencies in the graph. the set acts as the active call stack -
     // ids are removed when unwinding (finally below), so it never misclassifies reconverging
-    // (diamond) paths as cycles.
-    if (visiting.has(aspectStringId)) return undefined;
+    // (diamond) paths as cycles. debug-level only: hitting a cycle participant merely prunes this
+    // chain, the caller still tries the remaining parent chains.
+    if (visiting.has(aspectStringId)) {
+      this.logger.debug(
+        `resolveInstalledAspectRecursively, cycle detected for ${aspectStringId}, pruning this parent chain`
+      );
+      return undefined;
+    }
     visiting.add(aspectStringId);
     try {
       // match roots ignoring the version - rootIds coming from configured aspects (workspace.jsonc
