@@ -753,7 +753,12 @@ export class InstallMain {
             err.code === 'MODULE_NOT_FOUND' ||
             err.code === 'ERR_MODULE_NOT_FOUND' ||
             err.code === 'ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING' ||
-            err.message?.includes('Cannot find module');
+            err.code === 'ERR_REQUIRE_ESM' ||
+            err.message?.includes('Cannot find module') ||
+            // a CJS dist evaluated as ESM (or vice versa) - happens when the package manager
+            // re-created the env's package instance and its package.json is not in place yet
+            err.message?.includes('exports is not defined in ES module scope') ||
+            err.message?.includes('Cannot use import statement outside a module');
           if (!notRequirableYet) throw err;
           this.logger.consoleWarning(
             `unable to reload the env ${id.toString()}, it will be loaded once compiled. error: ${err.message}`
