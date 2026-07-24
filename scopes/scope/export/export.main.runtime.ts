@@ -471,8 +471,11 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       });
       const anySquashed = [...headPerCompIdStr.values()].some(({ headVersion }) => headVersion.squashed);
       if (!anySquashed) return; // no squash in this export set — no snap could have been dropped
-      await mapSeries([...headPerCompIdStr.values()], async ({ headVersion }) => {
+      await mapSeries([...headPerCompIdStr.values()], async ({ entry: headEntry, headVersion }) => {
         await mapSeries(headVersion.getAllFlattenedDependencies(), async (depId) => {
+          // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`),
+          // so same-scope is all that needs shipping. also filters out most of the flattened list.
+          if (depId.scope !== headEntry.modelComponent.scope) return;
           if (!depId.version || !isSnap(depId.version)) return;
           const depComp = headPerCompIdStr.get(depId.toStringWithoutVersion());
           if (!depComp) return; // the referenced component is not part of this export set

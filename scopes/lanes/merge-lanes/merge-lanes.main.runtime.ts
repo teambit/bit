@@ -327,6 +327,10 @@ export class MergeLanesMain {
       // heads are loaded and each unique hash is stat-ed once.
       await Promise.all(
         headVersion.getAllFlattenedDependencies().map(async (depId) => {
+          // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`,
+          // cross-scope deps are fetched later by the remote itself), so same-scope is all the export
+          // needs to ship. this also filters out the vast majority of the flattened list.
+          if (depId.scope !== id.scope) return;
           // only snaps can go missing this way — tags live on the home scope and are never squashed
           // off a lane. (a tag version is a semver string, not an object hash, so Ref.from would be
           // bogus for it anyway.)
