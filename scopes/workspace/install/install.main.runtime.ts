@@ -742,11 +742,19 @@ export class InstallMain {
         if (!runtime) return;
         // the reload is best-effort (resolveAspects above runs with throwOnError: false). the
         // provider requires the plugin files, which may not be requirable yet, e.g. an env in a
-        // fresh workspace whose dist was not compiled - it will be loaded later, once compiled.
-        // it must not fail the install.
+        // fresh workspace whose dist was not compiled - it will be loaded later, once compiled
+        // (the compile phase of this very install). only that transient state is tolerated - a
+        // plugin failing with a genuine error must still fail the install, otherwise a "success"
+        // is reported for an env the user has to fix.
         try {
           await runtime.provider(undefined, undefined, undefined, this.harmony);
         } catch (err: any) {
+          const notRequirableYet =
+            err.code === 'MODULE_NOT_FOUND' ||
+            err.code === 'ERR_MODULE_NOT_FOUND' ||
+            err.code === 'ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING' ||
+            err.message?.includes('Cannot find module');
+          if (!notRequirableYet) throw err;
           this.logger.consoleWarning(
             `unable to reload the env ${id.toString()}, it will be loaded once compiled. error: ${err.message}`
           );
