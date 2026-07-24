@@ -313,11 +313,13 @@ export class MergeLanesMain {
     // where to fetch them from, so there's nothing to do.
     if (!otherLane) return;
     const legacyScope = this.scope.legacyScope;
-    const missingHashes: string[] = [];
     // one existence check per unique hash — the same snap appears in the flattened list of many heads
     const checkedHashes = new Set<string>();
+    const candidateRefs: Ref[] = [];
     await pMapSeries(ids, async (id) => {
-      const modelComponent = await legacyScope.getModelComponentIfExist(id);
+      // strip the version — a versioned lookup (sources.get) returns undefined when that Version
+      // object is missing locally, and only the model is needed here anyway (for its head).
+      const modelComponent = await legacyScope.getModelComponentIfExist(id.changeVersion(undefined));
       const head = modelComponent?.head;
       if (!modelComponent || !head) return;
       const headVersion = await modelComponent.loadVersion(head.toString(), legacyScope.objects, false);
@@ -325,23 +327,24 @@ export class MergeLanesMain {
       // flattened (not only direct) to mirror the remote-side check, which validates the flattened
       // dependencies of every exported head (see throwForMissingLocalDependencies). cheap: only the
       // heads are loaded and each unique hash is stat-ed once.
-      await Promise.all(
-        headVersion.getAllFlattenedDependencies().map(async (depId) => {
-          // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`,
-          // cross-scope deps are fetched later by the remote itself), so same-scope is all the export
-          // needs to ship. this also filters out the vast majority of the flattened list.
-          if (depId.scope !== id.scope) return;
-          // only snaps can go missing this way — tags live on the home scope and are never squashed
-          // off a lane. (a tag version is a semver string, not an object hash, so Ref.from would be
-          // bogus for it anyway.)
-          if (!depId.version || !isSnap(depId.version)) return;
-          if (checkedHashes.has(depId.version)) return;
-          checkedHashes.add(depId.version);
-          const exists = await legacyScope.objects.has(Ref.from(depId.version));
-          if (!exists) missingHashes.push(depId.version);
-        })
-      );
+      headVersion.getAllFlattenedDependencies().forEach((depId) => {
+        // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`,
+        // cross-scope deps are fetched later by the remote itself), so same-scope is all the export
+        // needs to ship. this also filters out the vast majority of the flattened list.
+        if (depId.scope !== id.scope) return;
+        // only snaps can go missing this way — tags live on the home scope and are never squashed
+        // off a lane. (a tag version is a semver string, not an object hash, so Ref.from would be
+        // bogus for it anyway.)
+        if (!depId.version || !isSnap(depId.version)) return;
+        if (checkedHashes.has(depId.version)) return;
+        checkedHashes.add(depId.version);
+        candidateRefs.push(Ref.from(depId.version));
+      });
     });
+    // hasMultiple bounds the I/O concurrency, unlike a Promise.all of has() calls
+    const existingRefs = await legacyScope.objects.hasMultiple(candidateRefs);
+    const existingHashes = new Set(existingRefs.map((ref) => ref.toString()));
+    const missingHashes = candidateRefs.map((ref) => ref.toString()).filter((hash) => !existingHashes.has(hash));
     if (!missingHashes.length) return;
     this.logger.debug(
       `importMissingReferencedDeps, importing ${missingHashes.length} non-head dependency snaps referenced by the merged heads from ${otherLane.scope}`
@@ -354,21 +357,20 @@ export class MergeLanesMain {
     // sources and the flattened-edges/dependencies-graph. fetch the missing ones too. (parents are
     // not needed — the export doesn't collect them for these versions. artifacts are not needed
     // either — the export tolerates missing artifacts for such non-local versions.)
-    const missingRefsOfVersions: string[] = [];
+    const subRefs: Ref[] = [];
     await pMapSeries(missingHashes, async (hash) => {
       const versionObject = (await legacyScope.objects.load(Ref.from(hash))) as Version | null;
       if (!versionObject) return; // the hash could not be fetched after all
-      await Promise.all(
-        versionObject.refsWithOptions(false, false).map(async (ref) => {
-          if (checkedHashes.has(ref.toString())) return;
-          checkedHashes.add(ref.toString());
-          const exists = await legacyScope.objects.has(ref);
-          if (!exists) missingRefsOfVersions.push(ref.toString());
-        })
-      );
+      versionObject.refsWithOptions(false, false).forEach((ref) => {
+        if (checkedHashes.has(ref.toString())) return;
+        checkedHashes.add(ref.toString());
+        subRefs.push(ref);
+      });
     });
-    if (!missingRefsOfVersions.length) return;
-    await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingRefsOfVersions });
+    const existingSubRefs = new Set((await legacyScope.objects.hasMultiple(subRefs)).map((ref) => ref.toString()));
+    const missingSubRefs = subRefs.map((ref) => ref.toString()).filter((hash) => !existingSubRefs.has(hash));
+    if (!missingSubRefs.length) return;
+    await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingSubRefs });
   }
 
   private validateMergeFlags(otherLaneId: LaneId, currentLaneId: LaneId, options: MergeLaneOptions) {

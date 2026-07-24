@@ -490,10 +490,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
           // already anyway (in which case the export succeeds without shipping it).
           const depVersion = await depComp.entry.modelComponent.loadVersion(depRef.toString(), scope.objects, false);
           if (!depVersion) return;
-          const subRefsExist = await Promise.all(
-            depVersion.refsWithOptions(false, false).map((ref) => scope.objects.has(ref))
-          );
-          if (subRefsExist.some((exists) => !exists)) return;
+          const subRefs = depVersion.refsWithOptions(false, false);
+          // hasMultiple bounds the I/O concurrency, unlike a Promise.all of has() calls
+          const existingSubRefs = await scope.objects.hasMultiple(subRefs);
+          if (existingSubRefs.length !== subRefs.length) return;
           depComp.entry.refs.push(depRef);
         });
       });
