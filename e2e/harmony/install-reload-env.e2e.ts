@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit install when a plugin env fails to reload', function () {
@@ -30,6 +31,11 @@ export default new EmptyEnv();
       const output = helper.command.install();
       expect(output).to.have.string('unable to reload the env');
       expect(output).to.have.string('Successfully');
+    });
+    // the failure is degraded to a warning, not swallowed - the env keeps being reported as
+    // non-loaded after the install
+    it('should still report the failed env as a component issue', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.NonLoadedEnv.name);
     });
   });
 });
