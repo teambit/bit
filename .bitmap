@@ -224,7 +224,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "2.0.39",
+        "version": "2.0.40",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -543,7 +543,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1147",
+        "version": "2.0.1148",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -2458,7 +2458,7 @@
     "yarn": {
         "name": "yarn",
         "scope": "teambit.dependencies",
-        "version": "1.0.1073",
+        "version": "1.0.1074",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/yarn"
     },
