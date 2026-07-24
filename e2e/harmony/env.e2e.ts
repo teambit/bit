@@ -134,6 +134,42 @@ export default new MyEnv();
       expect(() => helper.command.snapAllComponentsWithoutBuild()).to.not.throw();
     });
   });
+  describe('component using a .bit-env plugin-file env should have a clean status', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile(
+        'my-env/my-env.bit-env.ts',
+        `export class MyEnv {
+  name = 'my-env';
+}
+export default new MyEnv();
+`
+      );
+      helper.fs.outputFile('my-env/index.ts', `export { MyEnv } from './my-env.bit-env';`);
+      helper.command.addComponent('my-env');
+      helper.command.compile();
+      helper.command.setEnv('comp1', 'my-env');
+      helper.command.install();
+      helper.command.tagAllWithoutBuild();
+    });
+    // the plugin file identifies the component as an env - it must not be reported as
+    // misconfigured just because its own env is not an env-env (teambit.envs/env or
+    // bitdev.general/envs/bit-env)
+    it('should not warn that the env is not of type env', () => {
+      const output = helper.command.status();
+      expect(output).to.not.have.string('is not of type env');
+    });
+    // my-env provides no compiler, so comp1 is consumed as-source - there are no dists to miss,
+    // and "bit compile" would not produce any
+    it('should not have a MissingDists issue', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingDists.name);
+    });
+    it('should have no component issues at all', () => {
+      const status = helper.command.statusJson();
+      expect(status.componentsWithIssues).to.have.lengthOf(0);
+    });
+  });
   describe('bit env replace', () => {
     describe('replacing a failed-loaded env', () => {
       before(() => {
