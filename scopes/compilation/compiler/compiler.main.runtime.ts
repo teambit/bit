@@ -123,8 +123,11 @@ export class CompilerMain {
         // an env without a compiler has no dists - the component is consumed as-source, and
         // "bit compile" would not produce anything. getCompiler may also be implemented but
         // return undefined.
-        if (!environment.getCompiler?.()) return;
-        const exist = await this.isDistDirExists(component);
+        const compilerInstance: Compiler | undefined = environment.getCompiler?.();
+        if (!compilerInstance) return;
+        const packageDir = await this.workspace.getComponentPackagePath(component);
+        const distDir = compilerInstance.getDistDir ? compilerInstance.getDistDir() : DEFAULT_DIST_DIRNAME;
+        const exist = fs.existsSync(path.join(packageDir, distDir));
         if (!exist) {
           component.state.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
         }
