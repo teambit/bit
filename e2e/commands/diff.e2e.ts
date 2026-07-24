@@ -9,6 +9,7 @@ import { VersionNotFound } from '@teambit/legacy.scope';
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };\n";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };\n";
 const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };\n";
+const barFooV4 = "module.exports = function foo() { return 'got foo v4'; };\n";
 const noDiffMessage = 'no diff for';
 const successDiffMessage = 'showing diff for';
 
@@ -434,6 +435,88 @@ describe('bit diff command', function () {
       it('--configs-only + --file should error', () => {
         const out = helper.general.runWithTryCatch('bit diff bar/foo --configs-only --file foo.js');
         expect(out).to.have.string('mutually exclusive');
+      });
+    });
+  });
+  describe('diff with --parent flag', () => {
+    let firstSnap: string;
+    let secondSnap: string;
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.createComponentBarFoo(barFooV1);
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllWithoutBuild(); // 0.0.1
+      helper.fixtures.createComponentBarFoo(barFooV2);
+      helper.command.tagAllWithoutBuild(); // 0.0.2
+      helper.fixtures.createComponentBarFoo(barFooV3);
+      helper.command.snapAllComponentsWithoutBuild();
+      firstSnap = helper.command.getHead('bar/foo');
+      helper.fixtures.createComponentBarFoo(barFooV4);
+      helper.command.snapAllComponentsWithoutBuild();
+      secondSnap = helper.command.getHead('bar/foo');
+    });
+    describe('when the version is a tag', () => {
+      it('should show the diff between the tag and its parent tag', () => {
+        const output = helper.command.diff('bar/foo 0.0.2 --parent');
+        expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
+        expect(output).to.have.string(`+++ ${barFooFile} (0.0.2)`);
+        expect(output).to.have.string("-module.exports = function foo() { return 'got foo'; };");
+        expect(output).to.have.string("+module.exports = function foo() { return 'got foo v2'; };");
+      });
+    });
+    describe('when the parent is a snap', () => {
+      it('should show the diff between the snap and its parent snap', () => {
+        const output = helper.command.diff(`bar/foo ${secondSnap} --parent`);
+        expect(output).to.have.string(`--- ${barFooFile} (${firstSnap})`);
+        expect(output).to.have.string(`+++ ${barFooFile} (${secondSnap})`);
+        expect(output).to.have.string("-module.exports = function foo() { return 'got foo v3'; };");
+        expect(output).to.have.string("+module.exports = function foo() { return 'got foo v4'; };");
+      });
+    });
+    describe('when no version is specified', () => {
+      it('should show the diff between the current version and its parent', () => {
+        const output = helper.command.diff('bar/foo --parent');
+        expect(output).to.have.string(`--- ${barFooFile} (${firstSnap})`);
+        expect(output).to.have.string(`+++ ${barFooFile} (${secondSnap})`);
+        expect(output).to.have.string("-module.exports = function foo() { return 'got foo v3'; };");
+        expect(output).to.have.string("+module.exports = function foo() { return 'got foo v4'; };");
+      });
+    });
+    describe('when the version is the first version', () => {
+      it('should show all files as added', () => {
+        const output = helper.command.diff('bar/foo 0.0.1 --parent');
+        expect(output).to.not.have.string(noDiffMessage);
+        expect(output).to.have.string("+module.exports = function foo() { return 'got foo'; };");
+        expect(output).to.not.have.string('-module.exports');
+      });
+    });
+    describe('when two versions are specified along with --parent', () => {
+      it('should throw an error', () => {
+        const output = helper.general.runWithTryCatch('bit diff bar/foo 0.0.1 0.0.2 --parent');
+        expect(output).to.have.string('--parent flag expects to get only one version');
+      });
+    });
+    describe('when the parent has identical content (e.g. a tag created on top of a squashed merge-snap)', () => {
+      before(() => {
+        // create a tag identical in content to its parent snap, simulating the tag created on main
+        // when merging a lane, which is identical to the squashed snap it points to as its parent
+        helper.command.tagAllWithoutBuild('--unmodified');
+      });
+      it('should skip identical ancestors and diff against the first ancestor with different content', () => {
+        const output = helper.command.diff('bar/foo 0.0.3 --parent');
+        expect(output).to.have.string(`--- ${barFooFile} (${firstSnap})`);
+        expect(output).to.have.string(`+++ ${barFooFile} (0.0.3)`);
+        expect(output).to.have.string("-module.exports = function foo() { return 'got foo v3'; };");
+        expect(output).to.have.string("+module.exports = function foo() { return 'got foo v4'; };");
+      });
+    });
+    describe('when the parent is a tag with identical content (a legit tag with no changes)', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild('--unmodified'); // creates 0.0.4, identical to its parent tag 0.0.3
+      });
+      it('should show no diff rather than walking further up the history', () => {
+        const output = helper.command.diff('bar/foo 0.0.4 --parent');
+        expect(output).to.have.string(noDiffMessage);
       });
     });
   });

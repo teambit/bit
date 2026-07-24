@@ -239,12 +239,48 @@ export class ComponentCompareMain {
     const idList = ComponentIdList.fromArray(idsToImport);
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
     if (diffOpts.compareToParent) {
-      if (!version) throw new BitError('--parent flag expects to get version');
       if (toVersion) throw new BitError('--parent flag expects to get only one version');
+      if (!version) version = component.id.version;
       const versionObject = await modelComponent.loadVersion(version, repository);
-      const parent = versionObject.parents[0];
+      let parentRef = versionObject.parents[0];
+      if (!parentRef) {
+        // it's the first version. show all files as new.
+        const versionFiles = await versionObject.modelFilesToSourceFiles(repository);
+        diffResult.filesDiff = await getFilesDiff([], versionFiles, version, version);
+        if (hasDiff(diffResult)) diffResult.hasDiff = true;
+        return diffResult;
+      }
+      // walk up the parent chain and skip ancestors that are not meaningful to diff against:
+      // 1. hidden ancestors. when a lane is merged and the tag is created by tag-from-scope (_tag),
+      // the tag is identical to the merged snap, so that snap is marked as hidden.
+      // 2. snap ancestors with content identical to the given version. same tag-from-scope scenario,
+      // but when the artifacts are re-built, the merged snap is not marked as hidden.
+      // a tag ancestor is never skipped by content, so a legit tag with no changes (e.g. created
+      // with --unmodified) still shows no diff.
       toVersion = version;
-      version = parent ? modelComponent.getTagOfRefIfExists(parent) : undefined;
+      while (parentRef) {
+        const parentTag = modelComponent.getTagOfRefIfExists(parentRef);
+        const parentVersion: string = parentTag || parentRef.toString();
+        await this.scope.legacyScope.scopeImporter.importWithoutDeps(
+          ComponentIdList.fromArray([component.id.changeVersion(parentVersion)]),
+          { cache: true, reason: 'to show diff' }
+        );
+        const parentObject = await modelComponent.loadVersion(parentVersion, repository);
+        version = parentVersion;
+        if (!parentObject.hidden) {
+          if (parentTag) break;
+          const parentDiff = await this.diffBetweenVersionsObjects(
+            modelComponent,
+            parentObject,
+            versionObject,
+            parentVersion,
+            toVersion,
+            diffOpts
+          );
+          if (parentDiff.hasDiff) break;
+        }
+        parentRef = parentObject.parents[0];
+      }
     }
     const fromVersionObject = version ? await modelComponent.loadVersion(version, repository) : undefined;
     const toVersionObject = toVersion ? await modelComponent.loadVersion(toVersion, repository) : undefined;
