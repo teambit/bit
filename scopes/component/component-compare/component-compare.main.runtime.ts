@@ -232,6 +232,10 @@ export class ComponentCompareMain {
       return diffResult;
     }
     const repository = this.scope.legacyScope.objects;
+    if (diffOpts.compareToParent) {
+      if (toVersion) throw new BitError('--parent flag expects to get only one version');
+      if (!version) version = component.id.version;
+    }
     const idsToImport = compact([
       version ? component.id.changeVersion(version) : undefined,
       toVersion ? component.id.changeVersion(toVersion) : undefined,
@@ -239,14 +243,13 @@ export class ComponentCompareMain {
     const idList = ComponentIdList.fromArray(idsToImport);
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
     if (diffOpts.compareToParent) {
-      if (toVersion) throw new BitError('--parent flag expects to get only one version');
-      if (!version) version = component.id.version;
-      const versionObject = await modelComponent.loadVersion(version, repository);
+      const targetVersion = version as string; // guaranteed to be set above when compareToParent
+      const versionObject = await modelComponent.loadVersion(targetVersion, repository);
       let parentRef = versionObject.parents[0];
       if (!parentRef) {
         // it's the first version. show all files as new.
         const versionFiles = await versionObject.modelFilesToSourceFiles(repository);
-        diffResult.filesDiff = await getFilesDiff([], versionFiles, version, version);
+        diffResult.filesDiff = await getFilesDiff([], versionFiles, targetVersion, targetVersion);
         if (hasDiff(diffResult)) diffResult.hasDiff = true;
         return diffResult;
       }
@@ -257,7 +260,7 @@ export class ComponentCompareMain {
       // but when the artifacts are re-built, the merged snap is not marked as hidden.
       // a tag ancestor is never skipped by content, so a legit tag with no changes (e.g. created
       // with --unmodified) still shows no diff.
-      toVersion = version;
+      toVersion = targetVersion;
       while (parentRef) {
         const parentTag = modelComponent.getTagOfRefIfExists(parentRef);
         const parentVersion: string = parentTag || parentRef.toString();
@@ -269,6 +272,10 @@ export class ComponentCompareMain {
         version = parentVersion;
         if (!parentObject.hidden) {
           if (parentTag) break;
+          // cheap check first. when the files differ, this ancestor is meaningful, no need to
+          // compute the full diff here (it is computed once below for the output).
+          if (!this.haveSameFiles(parentObject, versionObject)) break;
+          // files are identical, compute the diff to find out whether the fields (deps/config) differ.
           const parentDiff = await this.diffBetweenVersionsObjects(
             modelComponent,
             parentObject,
@@ -314,6 +321,15 @@ export class ComponentCompareMain {
     await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult, diffOpts);
 
     return diffResult;
+  }
+
+  private haveSameFiles(versionA: Version, versionB: Version): boolean {
+    const serializeFiles = (version: Version) =>
+      version.files
+        .map((file) => `${file.relativePath}:${file.file.toString()}`)
+        .sort()
+        .join();
+    return serializeFiles(versionA) === serializeFiles(versionB);
   }
 
   async diffBetweenVersionsObjects(

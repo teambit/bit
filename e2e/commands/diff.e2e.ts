@@ -511,11 +511,16 @@ describe('bit diff command', function () {
       });
     });
     describe('when the parent is a tag with identical content (a legit tag with no changes)', () => {
+      let newTag: string;
       before(() => {
-        helper.command.tagAllWithoutBuild('--unmodified'); // creates 0.0.4, identical to its parent tag 0.0.3
+        // create two tags with no changes, so the last tag's parent is a tag with identical content
+        helper.command.tagAllWithoutBuild('--unmodified');
+        helper.command.tagAllWithoutBuild('--unmodified');
+        const catComp = helper.command.catComponent('bar/foo');
+        newTag = Object.keys(catComp.versions as Record<string, string>).pop() as string;
       });
       it('should show no diff rather than walking further up the history', () => {
-        const output = helper.command.diff('bar/foo 0.0.4 --parent');
+        const output = helper.command.diff(`bar/foo ${newTag} --parent`);
         expect(output).to.have.string(noDiffMessage);
       });
     });
