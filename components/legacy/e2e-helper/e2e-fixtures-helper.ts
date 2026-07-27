@@ -11,6 +11,7 @@ import type NpmHelper from './e2e-npm-helper';
 import type PackageJsonHelper from './e2e-package-json-helper';
 import type ScopeHelper from './e2e-scope-helper';
 import type ScopesData from './e2e-scopes';
+import type WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
 
 export type GenerateEnvJsoncOptions = {
   extends?: string;
@@ -26,6 +27,7 @@ export default class FixtureHelper {
   npm: NpmHelper;
   packageJson: PackageJsonHelper;
   scopeHelper: ScopeHelper;
+  workspaceJsonc: WorkspaceJsoncHelper;
 
   constructor(
     fsHelper: FsHelper,
@@ -34,7 +36,8 @@ export default class FixtureHelper {
     scopes: ScopesData,
     debugMode: boolean,
     packageJson: PackageJsonHelper,
-    scopeHelper: ScopeHelper
+    scopeHelper: ScopeHelper,
+    workspaceJsonc: WorkspaceJsoncHelper
   ) {
     this.fs = fsHelper;
     this.command = commandHelper;
@@ -43,6 +46,7 @@ export default class FixtureHelper {
     this.debugMode = debugMode;
     this.packageJson = packageJson;
     this.scopeHelper = scopeHelper;
+    this.workspaceJsonc = workspaceJsonc;
   }
   createComponentBarFoo(impl: string = fixtures.fooFixture) {
     this.fs.createFile('bar', 'foo.js', impl);
@@ -236,7 +240,7 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
    * the aspect directly.
    */
   createAspect(name = 'my-aspect', options: { path?: string } = {}) {
-    const scope = this.scopes.remote;
+    const scope = this.workspaceJsonc.getDefaultScope() || this.scopes.remote;
     const scopeWithoutOwner = scope.includes('.') ? scope.split('.')[1] : scope;
     const dir = options.path || path.join(scopeWithoutOwner, name);
     const namePascalCase = name
