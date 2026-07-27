@@ -229,6 +229,62 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     }
   }
 
+  /**
+   * creates an aspect component with the same files and env config ("teambit.harmony/aspect")
+   * that the former core "bit-aspect" template used to generate. the template itself is no
+   * longer part of bit core (it lives in the env used by the bit repo), so e2e-tests scaffold
+   * the aspect directly.
+   */
+  createAspect(name = 'my-aspect', options: { path?: string } = {}) {
+    const scope = this.scopes.remote;
+    const scopeWithoutOwner = scope.includes('.') ? scope.split('.')[1] : scope;
+    const dir = options.path || path.join(scopeWithoutOwner, name);
+    const namePascalCase = name
+      .split('-')
+      .map((part) => capitalize(part))
+      .join('');
+    this.fs.outputFile(
+      path.join(dir, 'index.ts'),
+      `import { ${namePascalCase}Aspect } from './${name}.aspect';
+
+export type { ${namePascalCase}Main } from './${name}.main.runtime';
+export default ${namePascalCase}Aspect;
+export { ${namePascalCase}Aspect };
+`
+    );
+    this.fs.outputFile(
+      path.join(dir, `${name}.aspect.ts`),
+      `import { Aspect } from '@teambit/harmony';
+
+export const ${namePascalCase}Aspect = Aspect.create({
+  id: '${scope}/${name}',
+});
+`
+    );
+    this.fs.outputFile(
+      path.join(dir, `${name}.main.runtime.ts`),
+      `import { MainRuntime } from '@teambit/cli';
+import { ${namePascalCase}Aspect } from './${name}.aspect';
+
+export class ${namePascalCase}Main {
+  static slots = [];
+  static dependencies = [];
+  static runtime = MainRuntime;
+
+  static async provider() {
+    return new ${namePascalCase}Main();
+  }
+}
+
+${namePascalCase}Aspect.addRuntime(${namePascalCase}Main);
+
+export default ${namePascalCase}Main;
+`
+    );
+    this.command.addComponent(dir, { i: name });
+    this.command.setEnv(name, 'teambit.harmony/aspect');
+  }
+
   populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = true): string {
     let nmPathPrefix = `${owner}/${this.scopes.remote}.`;
     if (isHarmony) {
