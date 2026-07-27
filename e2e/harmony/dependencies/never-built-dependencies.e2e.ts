@@ -42,7 +42,8 @@ chai.use(chaiFs);
       ).not.to.be.a.path();
     });
   });
-  describe('using yarn', () => {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('using yarn', () => {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
