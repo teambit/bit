@@ -482,6 +482,9 @@ commands:
       # - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      - run:
+          name: set user agent for Bit processes in e2e tests
+          command: echo "user-agent=bit-e2e-circleci" >> ~/.npmrc
       # Make sure when we run bit from e2e tests we run it from the global not from here
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
