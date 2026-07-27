@@ -74,140 +74,200 @@
         "scope": "teambit.compilation",
         "version": "0.0.178",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/aspect-docs/babel"
+        "rootDir": "scopes/compilation/aspect-docs/babel",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/builder": {
         "name": "aspect-docs/builder",
         "scope": "teambit.pipelines",
         "version": "0.0.178",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pipelines/aspect-docs/builder"
+        "rootDir": "scopes/pipelines/aspect-docs/builder",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/compiler": {
         "name": "aspect-docs/compiler",
         "scope": "teambit.compilation",
         "version": "0.0.177",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/aspect-docs/compiler"
+        "rootDir": "scopes/compilation/aspect-docs/compiler",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/component": {
         "name": "aspect-docs/component",
         "scope": "teambit.component",
         "version": "0.0.177",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/aspect-docs/component"
+        "rootDir": "scopes/component/aspect-docs/component",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/compositions": {
         "name": "aspect-docs/compositions",
         "scope": "teambit.compositions",
         "version": "0.0.178",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/aspect-docs/compositions"
+        "rootDir": "scopes/compositions/aspect-docs/compositions",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/dependency-resolver": {
         "name": "aspect-docs/dependency-resolver",
         "scope": "teambit.dependencies",
         "version": "0.0.188",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/aspect-docs/dependency-resolver"
+        "rootDir": "scopes/dependencies/aspect-docs/dependency-resolver",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/envs": {
         "name": "aspect-docs/envs",
         "scope": "teambit.envs",
         "version": "0.0.179",
         "mainFile": "index.ts",
-        "rootDir": "scopes/envs/aspect-docs/envs"
+        "rootDir": "scopes/envs/aspect-docs/envs",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/generator": {
         "name": "aspect-docs/generator",
         "scope": "teambit.generator",
         "version": "0.0.181",
         "mainFile": "index.ts",
-        "rootDir": "scopes/generator/aspect-docs/generator"
+        "rootDir": "scopes/generator/aspect-docs/generator",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/html": {
         "name": "aspect-docs/html",
         "scope": "teambit.html",
         "version": "0.0.134",
         "mainFile": "index.ts",
-        "rootDir": "scopes/html/aspect-docs/html"
+        "rootDir": "scopes/html/aspect-docs/html",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/logger": {
         "name": "aspect-docs/logger",
         "scope": "teambit.harmony",
         "version": "0.0.177",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/aspect-docs/logger"
+        "rootDir": "scopes/harmony/aspect-docs/logger",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/mdx": {
         "name": "aspect-docs/mdx",
         "scope": "teambit.mdx",
         "version": "0.0.179",
         "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/aspect-docs/mdx"
+        "rootDir": "scopes/mdx/aspect-docs/mdx",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/multi-compiler": {
         "name": "aspect-docs/multi-compiler",
         "scope": "teambit.compilation",
         "version": "0.0.179",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/aspect-docs/multi-compiler"
+        "rootDir": "scopes/compilation/aspect-docs/multi-compiler",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/node": {
         "name": "aspect-docs/node",
         "scope": "teambit.harmony",
         "version": "0.0.179",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/aspect-docs/node"
+        "rootDir": "scopes/harmony/aspect-docs/node",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/pkg": {
         "name": "aspect-docs/pkg",
         "scope": "teambit.pkg",
         "version": "0.0.179",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pkg/aspect-docs/pkg"
+        "rootDir": "scopes/pkg/aspect-docs/pkg",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/pnpm": {
         "name": "aspect-docs/pnpm",
         "scope": "teambit.dependencies",
         "version": "0.0.177",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/aspect-docs/pnpm"
+        "rootDir": "scopes/dependencies/aspect-docs/pnpm",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/preview": {
         "name": "aspect-docs/preview",
         "scope": "teambit.preview",
         "version": "0.0.177",
         "mainFile": "index.ts",
-        "rootDir": "scopes/preview/aspect-docs/preview"
+        "rootDir": "scopes/preview/aspect-docs/preview",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/react": {
         "name": "aspect-docs/react",
         "scope": "teambit.react",
         "version": "0.0.180",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/aspect-docs/react"
+        "rootDir": "scopes/react/aspect-docs/react",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/typescript": {
         "name": "aspect-docs/typescript",
         "scope": "teambit.typescript",
         "version": "0.0.178",
         "mainFile": "index.ts",
-        "rootDir": "scopes/typescript/aspect-docs/typescript"
+        "rootDir": "scopes/typescript/aspect-docs/typescript",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/variants": {
         "name": "aspect-docs/variants",
         "scope": "teambit.workspace",
         "version": "0.0.178",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/aspect-docs/variants"
+        "rootDir": "scopes/workspace/aspect-docs/variants",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-docs/yarn": {
         "name": "aspect-docs/yarn",
         "scope": "teambit.dependencies",
         "version": "0.0.177",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/aspect-docs/yarn"
+        "rootDir": "scopes/dependencies/aspect-docs/yarn",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "aspect-loader": {
         "name": "aspect-loader",
@@ -641,7 +701,10 @@
         "scope": "teambit.harmony",
         "version": "2.0.1153",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/cli-reference"
+        "rootDir": "scopes/harmony/cli-reference",
+        "config": {
+            "teambit.mdx/mdx-env@3.1.0": {}
+        }
     },
     "crypto/sha1": {
         "name": "crypto/sha1",
