@@ -228,7 +228,8 @@ describe('install new dependencies', function () {
       );
     });
   });
-  describe('using yarn', () => {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('using yarn', () => {
     before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();

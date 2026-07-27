@@ -1004,8 +1004,8 @@ importers:
         specifier: ~0.0.2
         version: 0.0.2
       '@teambit/typescript.typescript-compiler':
-        specifier: ^4.0.0
-        version: 4.0.0(react@19.1.0)
+        specifier: ^5.0.0
+        version: 5.0.0(react@19.1.0)
       '@teambit/ui-foundation.ui.constants.z-indexes':
         specifier: ^0.0.504
         version: 0.0.504(react-dom@19.1.0)(react@19.1.0)
@@ -2160,14 +2160,14 @@ importers:
         specifier: 3.0.5
         version: 3.0.5(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.10.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@teambit/node.node':
-        specifier: 2.0.4
-        version: 2.0.4(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.10.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
+        specifier: 4.0.0
+        version: 4.0.0(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.10.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
       '@teambit/react.internal.base-react-env':
         specifier: 1.1.4
         version: 1.1.4(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/node@22.10.5)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(less@4.2.1)(lightningcss@1.28.2)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)
@@ -2203,8 +2203,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -2234,8 +2234,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -2311,8 +2311,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -2351,8 +2351,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -2385,8 +2385,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -2600,8 +2600,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -2628,8 +2628,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -2674,8 +2674,8 @@ importers:
         version: 2.0.0
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -2744,8 +2744,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -2793,8 +2793,8 @@ importers:
         version: 2.0.0
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -2857,8 +2857,8 @@ importers:
         version: 1.0.1
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/cli-table':
         specifier: ^0.3.0
         version: 0.3.4
@@ -2903,8 +2903,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -2934,8 +2934,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -2986,8 +2986,8 @@ importers:
         version: 0.5.0
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -3047,8 +3047,8 @@ importers:
         version: 8.3.2
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -3105,8 +3105,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -3163,8 +3163,8 @@ importers:
         version: 2.1.6
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -3205,8 +3205,8 @@ importers:
         specifier: ~0.0.312
         version: 0.0.312
       '@teambit/typescript.typescript-compiler':
-        specifier: ^4.0.0
-        version: 4.0.0(react@19.1.0)
+        specifier: ^5.0.0
+        version: 5.0.0(react@19.1.0)
       '@teambit/workspace.root-components':
         specifier: ^1.0.1
         version: 1.0.1
@@ -3263,8 +3263,8 @@ importers:
         version: 1.10.2
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -3312,8 +3312,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -3352,8 +3352,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/pretty-time':
         specifier: ^1.1.5
         version: 1.1.5
@@ -3404,8 +3404,8 @@ importers:
         version: 2.0.0
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -3486,8 +3486,8 @@ importers:
         version: 6.0.0
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -3547,8 +3547,8 @@ importers:
         version: 7.7.1
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -3605,8 +3605,8 @@ importers:
         version: 5.0.0
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -3645,8 +3645,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -3682,8 +3682,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -3713,8 +3713,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -3747,8 +3747,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -3781,8 +3781,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -3891,8 +3891,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -4065,8 +4065,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -4108,8 +4108,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -7304,7 +7304,7 @@ importers:
         specifier: 19.1.0
         version: 19.1.0(react@19.1.0)
 
-  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@1.0.2:
+  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@2.0.0:
     dependencies:
       '@mdx-js/react':
         specifier: 3.1.1
@@ -7685,8 +7685,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/cli-reference(react@19.1.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 1.0.2
-        version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)
       '@teambit/harmony.modules.concurrency':
         specifier: workspace:*
         version: file:scopes/harmony/modules/concurrency
@@ -9320,7 +9320,7 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@18.3.1)(react@18.3.1)
 
-  node_modules/.bit_roots/teambit.node_envs_node-babel-mocha@1.0.3:
+  node_modules/.bit_roots/teambit.node_envs_node-babel-mocha@2.0.0:
     dependencies:
       '@mdx-js/react':
         specifier: 3.1.1
@@ -9905,8 +9905,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(eslint@8.56.0)(jest@29.3.1)
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
@@ -10304,7 +10304,7 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
 
-  node_modules/.bit_roots/teambit.node_envs_node-typescript-mocha@1.0.1:
+  node_modules/.bit_roots/teambit.node_envs_node-typescript-mocha@2.0.0:
     dependencies:
       '@mdx-js/react':
         specifier: 3.1.1
@@ -10889,8 +10889,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(eslint@8.56.0)(jest@29.3.1)
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
@@ -11288,7 +11288,7 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
 
-  node_modules/.bit_roots/teambit.node_node@2.0.4:
+  node_modules/.bit_roots/teambit.node_node@4.0.0:
     dependencies:
       '@babel/core':
         specifier: 7.26.9
@@ -11876,8 +11876,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(eslint@8.56.0)(jest@29.3.1)
       '@teambit/node.node':
-        specifier: 2.0.4
-        version: 2.0.4(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
+        specifier: 4.0.0
+        version: 4.0.0(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
@@ -14399,8 +14399,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -14433,8 +14433,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -14464,8 +14464,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -14495,8 +14495,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -14523,8 +14523,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -14551,8 +14551,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -15049,8 +15049,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/babel__core':
         specifier: 7.20.0
         version: 7.20.0
@@ -15650,8 +15650,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -15761,8 +15761,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -16432,8 +16432,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -16756,8 +16756,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -16920,8 +16920,8 @@ importers:
         version: 5.0.0
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -17067,8 +17067,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -17439,8 +17439,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -17586,8 +17586,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/eslint':
         specifier: 8.56.6
         version: 8.56.6
@@ -17926,8 +17926,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -18462,8 +18462,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -19359,8 +19359,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -19393,8 +19393,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -19596,8 +19596,8 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/typescript.typescript-compiler':
-        specifier: ^4.0.0
-        version: 4.0.0(react@19.1.0)
+        specifier: ^5.0.0
+        version: 5.0.0(react@19.1.0)
       '@types/node':
         specifier: 22.10.5
         version: 22.10.5
@@ -20625,8 +20625,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -20653,8 +20653,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -20687,8 +20687,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -20718,8 +20718,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -20746,8 +20746,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -20777,8 +20777,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -20805,8 +20805,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -20833,8 +20833,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -20986,8 +20986,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -21143,8 +21143,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -21171,8 +21171,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -21214,8 +21214,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -21248,8 +21248,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -21467,8 +21467,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -21608,8 +21608,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -21880,8 +21880,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -21914,8 +21914,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -21988,8 +21988,8 @@ importers:
         version: 7.7.1
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -22150,8 +22150,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -22461,8 +22461,8 @@ importers:
         specifier: 7.22.3
         version: 7.22.3
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.19.6)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.19.6)
       '@types/find-root':
         specifier: 1.1.2
         version: 1.1.2
@@ -22519,8 +22519,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -22609,8 +22609,8 @@ importers:
         specifier: 0.0.45
         version: 0.0.45(react-dom@19.1.0)(react@19.1.0)
       '@teambit/typescript.typescript-compiler':
-        specifier: ^4.0.0
-        version: 4.0.0(react@19.1.0)
+        specifier: ^5.0.0
+        version: 5.0.0(react@19.1.0)
       '@typescript-eslint/eslint-plugin':
         specifier: 7.1.0
         version: 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
@@ -23357,8 +23357,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -23427,8 +23427,8 @@ importers:
         version: 8.3.2
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/http-proxy-agent':
         specifier: 2.0.2
         version: 2.0.2
@@ -23564,8 +23564,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23859,8 +23859,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -23893,8 +23893,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -23933,8 +23933,8 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -23970,8 +23970,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24007,8 +24007,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -24053,8 +24053,8 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24090,8 +24090,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -24130,8 +24130,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24164,8 +24164,8 @@ importers:
         version: 1.20.0
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24192,8 +24192,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24223,8 +24223,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24254,8 +24254,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24291,8 +24291,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24322,8 +24322,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24353,8 +24353,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24387,8 +24387,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24418,8 +24418,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24452,8 +24452,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24480,8 +24480,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24511,8 +24511,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24539,8 +24539,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24573,8 +24573,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/cli-table':
         specifier: ^0.3.0
         version: 0.3.4
@@ -24601,8 +24601,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24632,8 +24632,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24660,8 +24660,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24688,8 +24688,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 1.0.1
-        version: 1.0.1(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24762,8 +24762,8 @@ importers:
         version: 5.9.2
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24817,8 +24817,8 @@ importers:
         version: 3.16.0
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -24832,8 +24832,8 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/typescript.typescript-compiler':
-        specifier: ^4.0.0
-        version: 4.0.0(react@19.1.0)
+        specifier: ^5.0.0
+        version: 5.0.0(react@19.1.0)
       '@types/node':
         specifier: 22.10.5
         version: 22.10.5
@@ -25391,8 +25391,8 @@ importers:
         version: 5.8.0
     devDependencies:
       '@teambit/node.node':
-        specifier: 2.0.4
-        version: 2.0.4(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@4.41.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
+        specifier: 4.0.0
+        version: 4.0.0(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@4.41.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -25428,8 +25428,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25459,8 +25459,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25490,8 +25490,8 @@ importers:
         version: 19.2.0(react@19.2.0)
     devDependencies:
       '@teambit/node.node':
-        specifier: 2.0.4
-        version: 2.0.4(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@4.41.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
+        specifier: 4.0.0
+        version: 4.0.0(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@4.41.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25524,8 +25524,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25552,8 +25552,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -26012,8 +26012,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/cacache':
         specifier: 19.0.0
         version: 19.0.0
@@ -26055,8 +26055,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -26107,8 +26107,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -26144,8 +26144,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -26221,8 +26221,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-babel-mocha':
-        specifier: 1.0.3
-        version: 1.0.3(@babel/core@7.28.3)
+        specifier: 2.0.0
+        version: 2.0.0(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -34356,8 +34356,8 @@ packages:
     peerDependencies:
       react: 19.1.0
 
-  '@teambit/harmony.envs.core-aspect-env@1.0.2':
-    resolution: {integrity: sha512-99NEBkaSYKbaCTlQ/rnRrZqL2N8+93TMmNKVLfXg+l/WJIVjgQy7+yrvAZkBAE0N4/3ge31A44t2E9gBPpYjDg==}
+  '@teambit/harmony.envs.core-aspect-env@2.0.0':
+    resolution: {integrity: sha512-s8t6AZwR2k3sdj6EhvMdV3CmayCVv37ygPjM9x2ECoUc7joG45TcvHAA8KMttFL+rg0FH/9BtMUtR7xUopWw6w==}
 
   '@teambit/harmony.envs.core-aspect-env@2.0.1':
     resolution: {integrity: sha512-YRvm5jkqOu84NHjtK/vr9GGId3fHjbpvtLvKgGb25hniDbHuNjRigC4aZMOz2B1gcMHU2Htpx6hzwAI+kzITkA==}
@@ -34991,11 +34991,11 @@ packages:
   '@teambit/node.deps-detectors.parser-helper@0.0.6':
     resolution: {integrity: sha512-dSHRaKL9ScGkWx2+NE/smUqBrhC+knh9u5aCREKohkBCejt0siZDsu7toQP5/mtwBOrlU97KjJBxbKXr32rIDQ==}
 
-  '@teambit/node.envs.node-babel-mocha@1.0.3':
-    resolution: {integrity: sha512-ysJ65jofT5nxI4we+mNzsKg7hnuNBL0j0RzNG/VoPMusiXV01osAARqG2HUtzE2CIXp4IDlgyGW0RLHvqdY9fA==}
+  '@teambit/node.envs.node-babel-mocha@2.0.0':
+    resolution: {integrity: sha512-tGFASnZS2+tUeQOd3dcbLcgPAv0MH2eprkNKdb5c/XIfVbkoIo7l+OtLzwir7FVzKYVtHBJLG09C7tP7yi3Rqg==}
 
-  '@teambit/node.envs.node-typescript-mocha@1.0.1':
-    resolution: {integrity: sha512-zrhUK1y0DaF0AkOQttgbG7M1Bos5H23hYfA8nAh2FIw18JhV1PvoXWB4+XZbfaKAfkphnoAZmlBrleYc3KXz9A==}
+  '@teambit/node.envs.node-typescript-mocha@2.0.0':
+    resolution: {integrity: sha512-FbeQqfU5GVA/6szQsPgI/6J6UDKqBYte4OAYnkm/4P0zMR0ZnheEsrE5PraVT14+bjtHliqgurYaa2shA1io9w==}
 
   '@teambit/node.generator.node-starters@1.0.0':
     resolution: {integrity: sha512-EkEt8XJVx/+JAiC9eMQR7CH3tgYKGuZ7bu9raFDUi4EpWvdEkjR7Q6enXj/Ifqu3ekXtl2XecN/Nr1VxMBcGsQ==}
@@ -35003,8 +35003,8 @@ packages:
   '@teambit/node.generator.node-templates@1.0.22':
     resolution: {integrity: sha512-NwqgNWeAiw3rqqayPoQF2dY3fEdhjQS3Kf0xeEPuqIEkaq4rV73qp7bJZl7Bph0fGQ/l+kqBE7+9tTrz/nRxoQ==}
 
-  '@teambit/node.node@2.0.4':
-    resolution: {integrity: sha512-WNeySE2+FM6S4wMEGFG1/RYA0vzMht2RCuFQLG8LlgpJhFa7yLP5PVnCmm2Hli1jsXVmM8VSEJunDI3EB2nWDQ==}
+  '@teambit/node.node@4.0.0':
+    resolution: {integrity: sha512-zSOjuwAOgkbFxvaWbGRQpgJWaqjRU7PdgQkWRkAkyz0BnzC6Vigu5w+4Jwbtdjz4HFKjlyQxhPH+9WIhXZiotw==}
 
   '@teambit/node.utils.esm-loader@0.0.7':
     resolution: {integrity: sha512-DlihQpBgfMTI+onyqGgsDrcV3TfV/aCEVgjidc4JvyYeaOY2vCk0bLwwkkBSHJbvALrltK5p2/Z5lVpnlZ+01w==}
@@ -35941,11 +35941,6 @@ packages:
 
   '@teambit/typescript.typescript-compiler@3.0.0':
     resolution: {integrity: sha512-14w/ySxJrt/5Lzl+NBHktlV3Ea1vT4CjiY2N57h8ZAAzJ22Ss8R7Wc5HHW5Qu8mKGlIZ40wwBfi9GgHWMC91bA==}
-    peerDependencies:
-      react: 19.1.0
-
-  '@teambit/typescript.typescript-compiler@4.0.0':
-    resolution: {integrity: sha512-EA10uUxQmTdE9v/8rI7HK1iUgkgnlhpqKziqUTsClE9LlmdpIlOUlay20NjwZbhvYM6EtlNO6oBfL/SKP42qkg==}
     peerDependencies:
       react: 19.1.0
 
@@ -56240,17 +56235,6 @@ snapshots:
       - supports-color
       - typescript
 
-  '@svgr/core@8.1.0(typescript@6.0.3)':
-    dependencies:
-      '@babel/core': 7.28.3
-      '@svgr/babel-preset': 8.1.0(@babel/core@7.28.3)
-      camelcase: 6.2.0
-      cosmiconfig: 8.3.6(typescript@6.0.3)
-      snake-case: 3.0.4
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-
   '@svgr/core@8.1.0(typescript@7.0.2)':
     dependencies:
       '@babel/core': 7.28.3
@@ -56295,15 +56279,6 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@svgr/plugin-svgo@8.1.0(@svgr/core@8.1.0)(typescript@6.0.3)':
-    dependencies:
-      '@svgr/core': 8.1.0(typescript@5.9.2)
-      cosmiconfig: 8.3.6(typescript@6.0.3)
-      deepmerge: 4.3.1
-      svgo: 3.3.2
-    transitivePeerDependencies:
-      - typescript
-
   '@svgr/plugin-svgo@8.1.0(@svgr/core@8.1.0)(typescript@7.0.2)':
     dependencies:
       '@svgr/core': 8.1.0(typescript@5.9.2)
@@ -56337,20 +56312,6 @@ snapshots:
       '@svgr/core': 8.1.0(typescript@5.9.2)
       '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0)
       '@svgr/plugin-svgo': 8.1.0(@svgr/core@8.1.0)(typescript@5.9.2)
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-
-  '@svgr/webpack@8.1.0(typescript@6.0.3)':
-    dependencies:
-      '@babel/core': 7.28.3
-      '@babel/plugin-transform-react-constant-elements': 7.25.9(@babel/core@7.28.3)
-      '@babel/preset-env': 7.28.3(@babel/core@7.28.3)
-      '@babel/preset-react': 7.27.1(@babel/core@7.28.3)
-      '@babel/preset-typescript': 7.27.1(@babel/core@7.28.3)
-      '@svgr/core': 8.1.0(typescript@6.0.3)
-      '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0)
-      '@svgr/plugin-svgo': 8.1.0(@svgr/core@8.1.0)(typescript@6.0.3)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -59100,7 +59061,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -59151,7 +59112,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -59202,7 +59163,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -76488,7 +76449,7 @@ snapshots:
       react-dom: 18.3.1(react@19.1.0)
       react-router-dom: 6.30.1(react-dom@18.3.1)(react@19.1.0)
 
-  '@teambit/harmony.envs.core-aspect-env@1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)':
+  '@teambit/harmony.envs.core-aspect-env@2.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)':
     dependencies:
       '@babel/plugin-proposal-decorators': 7.28.0(@babel/core@7.28.3)
       '@babel/plugin-transform-class-properties': 7.27.1(@babel/core@7.28.3)
@@ -76505,9 +76466,9 @@ snapshots:
       '@teambit/defender.prettier-formatter': 1.0.24
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
       '@teambit/oxc.linter.oxlint-linter': 2.0.5
-      '@teambit/preview.react-preview': 1.1.12(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@6.0.3)(utf-8-validate@5.0.5)
+      '@teambit/preview.react-preview': 1.1.12(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)
       '@teambit/react.mounter': 1.1.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/typescript.typescript-compiler': 3.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@testing-library/react-hooks': 8.0.1(@types/react@19.2.14)(react-dom@19.1.0)(react-test-renderer@17.0.2)(react@19.1.0)
       '@types/chai': 5.2.2
@@ -76529,7 +76490,7 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       sass: 1.72.0
-      typescript: 6.0.3
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@babel/traverse'
@@ -79516,7 +79477,7 @@ snapshots:
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@teambit/workspace.root-components': 1.0.1
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -79561,7 +79522,7 @@ snapshots:
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@18.3.1)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@18.3.1)
       '@teambit/workspace.root-components': 1.0.1
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -79606,7 +79567,7 @@ snapshots:
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@teambit/workspace.root-components': 1.0.1
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -81320,7 +81281,7 @@ snapshots:
 
   '@teambit/node.deps-detectors.parser-helper@0.0.6': {}
 
-  '@teambit/node.envs.node-babel-mocha@1.0.3(@babel/core@7.19.6)':
+  '@teambit/node.envs.node-babel-mocha@2.0.0(@babel/core@7.19.6)':
     dependencies:
       '@babel/plugin-transform-modules-commonjs': 7.27.1(@babel/core@7.19.6)
       '@babel/preset-env': 7.28.3(@babel/core@7.19.6)
@@ -81335,7 +81296,7 @@ snapshots:
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
       '@teambit/oxc.linter.oxlint-linter': 2.0.5
       '@teambit/react.mounter': 1.1.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/mocha': 10.0.10
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -81347,12 +81308,12 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
-      typescript: 6.0.3
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
 
-  '@teambit/node.envs.node-babel-mocha@1.0.3(@babel/core@7.28.3)':
+  '@teambit/node.envs.node-babel-mocha@2.0.0(@babel/core@7.28.3)':
     dependencies:
       '@babel/plugin-transform-modules-commonjs': 7.27.1(@babel/core@7.28.3)
       '@babel/preset-env': 7.28.3(@babel/core@7.28.3)
@@ -81367,7 +81328,7 @@ snapshots:
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
       '@teambit/oxc.linter.oxlint-linter': 2.0.5
       '@teambit/react.mounter': 1.1.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/mocha': 10.0.10
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -81379,12 +81340,12 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
-      typescript: 6.0.3
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
 
-  '@teambit/node.envs.node-typescript-mocha@1.0.1(@babel/core@7.28.3)':
+  '@teambit/node.envs.node-typescript-mocha@2.0.0(@babel/core@7.28.3)':
     dependencies:
       '@babel/preset-env': 7.22.15(@babel/core@7.28.3)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.28.3)
@@ -81394,7 +81355,7 @@ snapshots:
       '@teambit/defender.prettier-formatter': 1.0.24
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
       '@teambit/oxc.linter.oxlint-linter': 2.0.5
-      '@teambit/typescript.typescript-compiler': 3.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/mocha': 10.0.10
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -81406,7 +81367,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
-      typescript: 6.0.3
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -81419,7 +81380,7 @@ snapshots:
     dependencies:
       lodash: 4.17.21
 
-  '@teambit/node.node@2.0.4(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)':
+  '@teambit/node.node@4.0.0(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)':
     dependencies:
       '@babel/core': 7.26.9
       '@babel/plugin-proposal-decorators': 7.20.2(@babel/core@7.26.9)
@@ -81436,21 +81397,21 @@ snapshots:
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
       '@teambit/node.generator.node-starters': 1.0.0
       '@teambit/node.generator.node-templates': 1.0.22
-      '@teambit/preview.react-preview': 1.1.11(@babel/core@7.26.9)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@5.5.3)(utf-8-validate@5.0.5)
+      '@teambit/preview.react-preview': 1.1.11(@babel/core@7.26.9)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)
       '@teambit/react.mounter': 1.1.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.react-env': 2.0.2(@babel/core@7.26.9)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
-      '@teambit/typescript.typescript-compiler': 2.0.68(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/jest': 29.5.14
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
-      '@typescript-eslint/eslint-plugin': 6.19.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)(typescript@5.5.3)
-      '@typescript-eslint/parser': 6.19.1(eslint@8.56.0)(typescript@5.5.3)
+      '@typescript-eslint/eslint-plugin': 6.19.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)(typescript@7.0.2)
+      '@typescript-eslint/parser': 6.19.1(eslint@8.56.0)(typescript@7.0.2)
       babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.26.9)(@babel/traverse@7.29.7)
       core-js: 3.13.0
       eslint: 8.56.0
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)
-      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@6.19.1)(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
+      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@6.19.1)(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.56.0)
       eslint-plugin-mdx: 1.17.1(eslint@8.56.0)
       eslint-plugin-react: 7.33.2(eslint@8.56.0)
@@ -81458,6 +81419,7 @@ snapshots:
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@module-federation/runtime-tools'
@@ -81492,7 +81454,6 @@ snapshots:
       - supports-color
       - ts-node
       - type-fest
-      - typescript
       - uglify-js
       - utf-8-validate
       - vue-template-compiler
@@ -81502,7 +81463,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/node.node@2.0.4(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.10.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)':
+  '@teambit/node.node@4.0.0(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.10.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)':
     dependencies:
       '@babel/core': 7.26.9
       '@babel/plugin-proposal-decorators': 7.20.2(@babel/core@7.26.9)
@@ -81519,21 +81480,21 @@ snapshots:
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
       '@teambit/node.generator.node-starters': 1.0.0
       '@teambit/node.generator.node-templates': 1.0.22
-      '@teambit/preview.react-preview': 1.1.11(@babel/core@7.26.9)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@5.9.2)(utf-8-validate@5.0.5)
+      '@teambit/preview.react-preview': 1.1.11(@babel/core@7.26.9)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)
       '@teambit/react.mounter': 1.1.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.react-env': 2.0.2(@babel/core@7.26.9)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.10.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
-      '@teambit/typescript.typescript-compiler': 2.0.68(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/jest': 29.5.14
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
-      '@typescript-eslint/eslint-plugin': 6.19.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)(typescript@5.9.2)
-      '@typescript-eslint/parser': 6.19.1(eslint@8.56.0)(typescript@5.9.2)
+      '@typescript-eslint/eslint-plugin': 6.19.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)(typescript@7.0.2)
+      '@typescript-eslint/parser': 6.19.1(eslint@8.56.0)(typescript@7.0.2)
       babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.26.9)(@babel/traverse@7.29.7)
       core-js: 3.13.0
       eslint: 8.56.0
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)
-      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@6.19.1)(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
+      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@6.19.1)(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.56.0)
       eslint-plugin-mdx: 1.17.1(eslint@8.56.0)
       eslint-plugin-react: 7.33.2(eslint@8.56.0)
@@ -81541,6 +81502,7 @@ snapshots:
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@module-federation/runtime-tools'
@@ -81575,7 +81537,6 @@ snapshots:
       - supports-color
       - ts-node
       - type-fest
-      - typescript
       - uglify-js
       - utf-8-validate
       - vue-template-compiler
@@ -81585,7 +81546,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/node.node@2.0.4(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@4.41.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)':
+  '@teambit/node.node@4.0.0(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@4.41.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)':
     dependencies:
       '@babel/core': 7.26.9
       '@babel/plugin-proposal-decorators': 7.20.2(@babel/core@7.26.9)
@@ -81605,7 +81566,7 @@ snapshots:
       '@teambit/preview.react-preview': 1.1.11(@babel/core@7.26.9)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@4.41.0)(typescript@7.0.2)(utf-8-validate@5.0.5)
       '@teambit/react.mounter': 1.1.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.react-env': 2.0.2(@babel/core@7.26.9)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.14.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@4.41.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
-      '@teambit/typescript.typescript-compiler': 2.0.68(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/jest': 29.5.14
       '@types/node': 22.10.5
       '@types/react': 19.2.14
@@ -81624,6 +81585,7 @@ snapshots:
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@module-federation/runtime-tools'
@@ -81658,7 +81620,6 @@ snapshots:
       - supports-color
       - ts-node
       - type-fest
-      - typescript
       - uglify-js
       - utf-8-validate
       - vue-template-compiler
@@ -82476,13 +82437,13 @@ snapshots:
 
   '@teambit/preview.modules.preview-modules@1.0.3': {}
 
-  '@teambit/preview.react-preview@1.1.11(@babel/core@7.26.9)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@5.5.3)(utf-8-validate@5.0.5)':
+  '@teambit/preview.react-preview@1.1.11(@babel/core@7.26.9)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)':
     dependencies:
       '@bitdev/react.preview.react-docs-app': 0.0.11
       '@teambit/react.mounter': 1.1.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/react.webpack.react-webpack': 1.0.57(@babel/core@7.26.9)(@rspack/core@1.7.5)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+      '@teambit/react.webpack.react-webpack': 1.0.57(@babel/core@7.26.9)(@rspack/core@1.7.5)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/webpack.webpack-bundler': 1.0.19(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(react@19.1.0)
-      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
       html-webpack-inject-plugin: 5.3.1(html-webpack-plugin@5.3.2)(webpack@5.97.1)
       object-hash: 3.0.0
       react: 19.1.0
@@ -82523,13 +82484,13 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/preview.react-preview@1.1.11(@babel/core@7.26.9)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@5.9.2)(utf-8-validate@5.0.5)':
+  '@teambit/preview.react-preview@1.1.11(@babel/core@7.26.9)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)':
     dependencies:
       '@bitdev/react.preview.react-docs-app': 0.0.11
       '@teambit/react.mounter': 1.1.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/react.webpack.react-webpack': 1.0.57(@babel/core@7.26.9)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+      '@teambit/react.webpack.react-webpack': 1.0.57(@babel/core@7.26.9)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/webpack.webpack-bundler': 1.0.19(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(react@19.1.0)
-      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
       html-webpack-inject-plugin: 5.3.1(html-webpack-plugin@5.3.2)(webpack@5.97.1)
       object-hash: 3.0.0
       react: 19.1.0
@@ -82805,13 +82766,13 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/preview.react-preview@1.1.12(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@6.0.3)(utf-8-validate@5.0.5)':
+  '@teambit/preview.react-preview@1.1.12(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)':
     dependencies:
       '@bitdev/react.preview.react-docs-app': 0.0.11
       '@teambit/react.mounter': 1.1.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/react.webpack.react-webpack': 1.0.58(@babel/core@7.28.3)(@rspack/core@1.7.5)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@6.0.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+      '@teambit/react.webpack.react-webpack': 1.0.58(@babel/core@7.28.3)(@rspack/core@1.7.5)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
       '@teambit/webpack.webpack-bundler': 1.0.19(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(react@19.1.0)
-      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@6.0.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
       html-webpack-inject-plugin: 5.3.1(html-webpack-plugin@5.3.2)(webpack@5.97.1)
       object-hash: 3.0.0
       react: 19.1.0
@@ -86501,7 +86462,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/react.webpack.react-webpack@1.0.57(@babel/core@7.26.9)(@rspack/core@1.7.5)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)':
+  '@teambit/react.webpack.react-webpack@1.0.57(@babel/core@7.26.9)(@rspack/core@1.7.5)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)':
     dependencies:
       '@babel/preset-env': 7.29.2(@babel/core@7.26.9)
       '@babel/preset-react': 7.22.15(@babel/core@7.26.9)
@@ -86510,7 +86471,7 @@ snapshots:
       '@mdx-js/loader': 3.1.1(webpack@5.97.1)
       '@parcel/css': 1.14.0
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@0.21.3)(webpack-dev-server@4.15.0)(webpack@5.97.1)
-      '@svgr/webpack': 8.1.0(typescript@5.5.3)
+      '@svgr/webpack': 8.1.0(typescript@7.0.2)
       '@swc/css': 0.0.20
       '@teambit/component-id': 1.2.4
       '@teambit/mdx.modules.mdx-pre-loader': 0.0.1
@@ -86518,7 +86479,7 @@ snapshots:
       '@teambit/react.babel.bit-react-transformer': 1.0.48(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': 1.0.21
       '@teambit/webpack.modules.style-regexps': 1.0.10
-      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
       babel-loader: 9.1.0(@babel/core@7.26.9)(webpack@5.97.1)
       css-loader: 6.7.2(webpack@5.97.1)
       css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1)
@@ -86533,7 +86494,7 @@ snapshots:
       postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.97.1)
       postcss-normalize: 10.0.1(browserslist@4.28.2)(postcss@8.4.19)
       postcss-preset-env: 7.8.3(postcss@8.4.19)
-      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@5.5.3)(webpack@5.97.1)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@7.0.2)(webpack@5.97.1)
       react-dom: 19.1.0(react@19.1.0)
       react-refresh: 0.14.0
       resolve-url-loader: 5.0.0
@@ -86572,7 +86533,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/react.webpack.react-webpack@1.0.57(@babel/core@7.26.9)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)':
+  '@teambit/react.webpack.react-webpack@1.0.57(@babel/core@7.26.9)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)':
     dependencies:
       '@babel/preset-env': 7.29.2(@babel/core@7.26.9)
       '@babel/preset-react': 7.22.15(@babel/core@7.26.9)
@@ -86581,7 +86542,7 @@ snapshots:
       '@mdx-js/loader': 3.1.1(webpack@5.97.1)
       '@parcel/css': 1.14.0
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@0.21.3)(webpack-dev-server@4.15.0)(webpack@5.97.1)
-      '@svgr/webpack': 8.1.0(typescript@5.9.2)
+      '@svgr/webpack': 8.1.0(typescript@7.0.2)
       '@swc/css': 0.0.20
       '@teambit/component-id': 1.2.4
       '@teambit/mdx.modules.mdx-pre-loader': 0.0.1
@@ -86589,7 +86550,7 @@ snapshots:
       '@teambit/react.babel.bit-react-transformer': 1.0.48(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': 1.0.21
       '@teambit/webpack.modules.style-regexps': 1.0.10
-      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
       babel-loader: 9.1.0(@babel/core@7.26.9)(webpack@5.97.1)
       css-loader: 6.7.2(webpack@5.97.1)
       css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1)
@@ -86604,7 +86565,7 @@ snapshots:
       postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.97.1)
       postcss-normalize: 10.0.1(browserslist@4.23.3)(postcss@8.4.19)
       postcss-preset-env: 7.8.3(postcss@8.4.19)
-      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@5.9.2)(webpack@5.97.1)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@7.0.2)(webpack@5.97.1)
       react-dom: 19.1.0(react@19.1.0)
       react-refresh: 0.14.0
       resolve-url-loader: 5.0.0
@@ -86998,7 +86959,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/react.webpack.react-webpack@1.0.58(@babel/core@7.28.3)(@rspack/core@1.7.5)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@6.0.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)':
+  '@teambit/react.webpack.react-webpack@1.0.58(@babel/core@7.28.3)(@rspack/core@1.7.5)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)':
     dependencies:
       '@babel/preset-env': 7.29.2(@babel/core@7.28.3)
       '@babel/preset-react': 7.22.15(@babel/core@7.28.3)
@@ -87007,7 +86968,7 @@ snapshots:
       '@mdx-js/loader': 3.1.1(webpack@5.97.1)
       '@parcel/css': 1.14.0
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@0.21.3)(webpack-dev-server@4.15.0)(webpack@5.97.1)
-      '@svgr/webpack': 8.1.0(typescript@6.0.3)
+      '@svgr/webpack': 8.1.0(typescript@7.0.2)
       '@swc/css': 0.0.20
       '@teambit/component-id': 1.2.4
       '@teambit/mdx.modules.mdx-pre-loader': 0.0.1
@@ -87015,7 +86976,7 @@ snapshots:
       '@teambit/react.babel.bit-react-transformer': 1.0.49(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': 1.0.21
       '@teambit/webpack.modules.style-regexps': 1.0.10
-      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@6.0.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
       babel-loader: 9.1.0(@babel/core@7.28.3)(webpack@5.97.1)
       css-loader: 6.7.2(webpack@5.97.1)
       css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1)
@@ -87030,7 +86991,7 @@ snapshots:
       postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.97.1)
       postcss-normalize: 10.0.1(browserslist@4.28.2)(postcss@8.4.19)
       postcss-preset-env: 7.8.3(postcss@8.4.19)
-      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@6.0.3)(webpack@5.97.1)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@7.0.2)(webpack@5.97.1)
       react-dom: 19.1.0(react@19.1.0)
       react-refresh: 0.14.0
       resolve-url-loader: 5.0.0
@@ -87323,7 +87284,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -87461,7 +87422,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -87599,7 +87560,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@18.3.1)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@18.3.1)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -87737,7 +87698,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -90488,21 +90449,7 @@ snapshots:
       react: 18.3.1
       typescript: 6.0.3
 
-  '@teambit/typescript.typescript-compiler@3.0.0(react@19.1.0)':
-    dependencies:
-      '@teambit/bit-error': 0.0.404
-      '@teambit/compilation.compiler-task': 1.0.12
-      comment-json: 4.2.3
-      fs-extra: 11.3.4
-      get-tsconfig: 4.2.0
-      glob: 10.4.5
-      globby: 11.1.0
-      lodash: 4.17.21
-      normalize-path: 3.0.0
-      react: 19.1.0
-      typescript: 6.0.3
-
-  '@teambit/typescript.typescript-compiler@4.0.0(react@18.3.1)':
+  '@teambit/typescript.typescript-compiler@5.0.0(react@18.3.1)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/compilation.compiler-task': 1.0.12
@@ -90514,20 +90461,6 @@ snapshots:
       lodash: 4.17.21
       normalize-path: 3.0.0
       react: 18.3.1
-      typescript: 6.0.3
-
-  '@teambit/typescript.typescript-compiler@4.0.0(react@19.1.0)':
-    dependencies:
-      '@teambit/bit-error': 0.0.404
-      '@teambit/compilation.compiler-task': 1.0.12
-      comment-json: 4.2.3
-      fs-extra: 11.3.4
-      get-tsconfig: 4.2.0
-      glob: 10.4.5
-      globby: 11.1.0
-      lodash: 4.17.21
-      normalize-path: 3.0.0
-      react: 19.1.0
       typescript: 6.0.3
 
   '@teambit/typescript.typescript-compiler@5.0.0(react@19.1.0)':
@@ -90554,7 +90487,7 @@ snapshots:
       '@teambit/ts-server': file:scopes/typescript/ts-server
       '@teambit/typescript.aspect-docs.typescript': file:scopes/typescript/aspect-docs/typescript(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
       '@teambit/typescript.modules.ts-config-mutator': file:scopes/typescript/modules/ts-config-mutator
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@18.3.1)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -90584,7 +90517,7 @@ snapshots:
       '@teambit/ts-server': file:scopes/typescript/ts-server
       '@teambit/typescript.aspect-docs.typescript': file:scopes/typescript/aspect-docs/typescript(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
       '@teambit/typescript.modules.ts-config-mutator': file:scopes/typescript/modules/ts-config-mutator
-      '@teambit/typescript.typescript-compiler': 4.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -93501,7 +93434,7 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack.webpack-dev-server@1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)':
+  '@teambit/webpack.webpack-dev-server@1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)':
     dependencies:
       '@teambit/toolbox.path.path': 0.0.8
       '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@19.1.0)
@@ -93509,38 +93442,7 @@ snapshots:
       find-root: 1.1.0
       html-webpack-plugin: 5.6.3(@rspack/core@1.7.5)(webpack@5.97.1)
       object-hash: 3.0.0
-      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@5.5.3)(webpack@5.97.1)
-      webpack: 5.97.1(esbuild@0.14.29)
-      webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.97.1)
-    transitivePeerDependencies:
-      - '@parcel/css'
-      - '@rspack/core'
-      - '@swc/core'
-      - '@swc/css'
-      - bufferutil
-      - clean-css
-      - csso
-      - debug
-      - esbuild
-      - eslint
-      - lightningcss
-      - react
-      - supports-color
-      - typescript
-      - uglify-js
-      - utf-8-validate
-      - vue-template-compiler
-      - webpack-cli
-
-  '@teambit/webpack.webpack-dev-server@1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@6.0.3)(utf-8-validate@5.0.5)(webpack@5.97.1)':
-    dependencies:
-      '@teambit/toolbox.path.path': 0.0.8
-      '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@19.1.0)
-      '@teambit/webpack.webpack-bundler': 1.0.19(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(react@19.1.0)
-      find-root: 1.1.0
-      html-webpack-plugin: 5.6.3(@rspack/core@1.7.5)(webpack@5.97.1)
-      object-hash: 3.0.0
-      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@6.0.3)(webpack@5.97.1)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@7.0.2)(webpack@5.97.1)
       webpack: 5.97.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.97.1)
     transitivePeerDependencies:
@@ -99072,15 +98974,6 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.2
 
-  cosmiconfig@8.3.6(typescript@6.0.3):
-    dependencies:
-      import-fresh: 3.3.0
-      js-yaml: 4.1.0
-      parse-json: 5.2.0
-      path-type: 4.0.0
-    optionalDependencies:
-      typescript: 6.0.3
-
   cosmiconfig@8.3.6(typescript@7.0.2):
     dependencies:
       import-fresh: 3.3.0
@@ -101181,26 +101074,6 @@ snapshots:
       semver: 7.7.1
       tapable: 1.1.3
       typescript: 5.9.2
-      webpack: 5.97.1(esbuild@0.14.29)
-    optionalDependencies:
-      eslint: 8.56.0
-
-  fork-ts-checker-webpack-plugin@6.5.3(eslint@8.56.0)(typescript@6.0.3)(webpack@5.97.1):
-    dependencies:
-      '@babel/code-frame': 7.29.7
-      '@types/json-schema': 7.0.15
-      chalk: 4.1.2
-      chokidar: 3.6.0
-      cosmiconfig: 6.0.0
-      deepmerge: 4.3.1
-      fs-extra: 9.1.0
-      glob: 7.2.3
-      memfs: 3.5.3
-      minimatch: 3.0.5
-      schema-utils: 2.7.0
-      semver: 7.7.1
-      tapable: 1.1.3
-      typescript: 6.0.3
       webpack: 5.97.1(esbuild@0.14.29)
     optionalDependencies:
       eslint: 8.56.0
@@ -106683,40 +106556,6 @@ snapshots:
       webpack: 5.97.1(esbuild@0.14.29)
     optionalDependencies:
       typescript: 5.9.2
-    transitivePeerDependencies:
-      - eslint
-      - supports-color
-      - vue-template-compiler
-
-  react-dev-utils@12.0.1(eslint@8.56.0)(typescript@6.0.3)(webpack@5.97.1):
-    dependencies:
-      '@babel/code-frame': 7.27.1
-      address: 1.2.2
-      browserslist: 4.23.3
-      chalk: 4.1.2
-      cross-spawn: 7.0.6
-      detect-port-alt: 1.1.6
-      escape-string-regexp: 4.0.0
-      filesize: 8.0.7
-      find-up: 5.0.0
-      fork-ts-checker-webpack-plugin: 6.5.3(eslint@8.56.0)(typescript@6.0.3)(webpack@5.97.1)
-      global-modules: 2.0.0
-      globby: 11.1.0
-      gzip-size: 6.0.0
-      immer: 9.0.21
-      is-root: 2.1.0
-      loader-utils: 3.3.1
-      open: 8.4.2
-      pkg-up: 3.1.0
-      prompts: 2.4.2
-      react-error-overlay: 6.0.11
-      recursive-readdir: 2.2.3
-      shell-quote: 1.8.2
-      strip-ansi: 6.0.1
-      text-table: 0.2.0
-      webpack: 5.97.1(esbuild@0.14.29)
-    optionalDependencies:
-      typescript: 6.0.3
     transitivePeerDependencies:
       - eslint
       - supports-color
