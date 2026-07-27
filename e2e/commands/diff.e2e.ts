@@ -486,6 +486,8 @@ describe('bit diff command', function () {
       it('should show all files as added', () => {
         const output = helper.command.diff('bar/foo 0.0.1 --parent');
         expect(output).to.not.have.string(noDiffMessage);
+        expect(output).to.have.string(`--- ${barFooFile} (no parent)`);
+        expect(output).to.have.string(`+++ ${barFooFile} (0.0.1)`);
         expect(output).to.have.string("+module.exports = function foo() { return 'got foo'; };");
         expect(output).to.not.have.string('-module.exports');
       });

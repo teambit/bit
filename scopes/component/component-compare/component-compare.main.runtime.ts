@@ -249,7 +249,7 @@ export class ComponentCompareMain {
       if (!parentRef) {
         // it's the first version. show all files as new.
         const versionFiles = await versionObject.modelFilesToSourceFiles(repository);
-        diffResult.filesDiff = await getFilesDiff([], versionFiles, targetVersion, targetVersion);
+        diffResult.filesDiff = await getFilesDiff([], versionFiles, 'no parent', targetVersion);
         if (hasDiff(diffResult)) diffResult.hasDiff = true;
         return diffResult;
       }
