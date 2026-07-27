@@ -36,7 +36,8 @@ describe('installing with non-default nodeLinker', function () {
       });
     });
   });
-  describe('using Yarn as a package manager', () => {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('using Yarn as a package manager', () => {
     describe(`setting nodeLinker to "hoisted"`, () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
