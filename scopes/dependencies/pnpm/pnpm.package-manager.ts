@@ -297,7 +297,7 @@ export class PnpmPackageManager implements PackageManager {
     // We need to use config.rawConfig as it will only contain the settings defined by the user.
     // config contains default values of the settings when they are not defined by the user.
     const result: PackageManagerNetworkConfig = {
-      userAgent: `bit user/${this.username}`,
+      userAgent: config.rawConfig['user-agent'] ?? `bit user/${this.username}`,
     };
     if (config.rawConfig['max-sockets'] != null) {
       result.maxSockets = config.rawConfig['max-sockets'];

@@ -106,6 +106,7 @@ commands:
             pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            echo "user-agent=bvm-bundle-circleci" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
@@ -133,6 +134,7 @@ commands:
             pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            echo "user-agent=bvm-bundle-circleci" >> .npmrc &&
             echo "prefer-symlinked-executables=false" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
@@ -577,7 +579,7 @@ jobs:
       - run: cd bit && bbit init
       - run:
           name: bbit install
-          command: cd bit && bbit install
+          command: cd bit && echo "user-agent=bit-repo-circleci" >> .npmrc && bbit install
       # - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
