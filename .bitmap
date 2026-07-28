@@ -292,7 +292,7 @@
     "babel/bit-react-transformer": {
         "name": "babel/bit-react-transformer",
         "scope": "teambit.react",
-        "version": "1.0.58",
+        "version": "1.0.59",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/bit-react-transformer",
         "config": {
@@ -2617,7 +2617,7 @@
     "ui/highlighter-provider": {
         "name": "ui/highlighter-provider",
         "scope": "teambit.react",
-        "version": "0.0.227",
+        "version": "0.0.228",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/highlighter-provider"
     },
