@@ -48,7 +48,7 @@ if both "version" and "to-version" are provided, compare those two versions dire
     [
       'p',
       'parent',
-      'compare the specified "version" (or the current version if not specified) to its nearest meaningful ancestor, showing what changed in that version. ancestors that are hidden or identical (e.g. the merged snap a release-tag was created from) are skipped',
+      'compare the specified "version" (or the current version if not specified) to its nearest meaningful ancestor, showing what changed in that version. hidden ancestors and identical un-tagged snaps (e.g. the merged snap a release-tag was created from) are skipped; tagged ancestors are never skipped',
     ],
     ['v', 'verbose', 'show a more verbose output where possible'],
     ['t', 'table', 'show tables instead of plain text for dependencies diff'],
