@@ -6,9 +6,9 @@ import { EmptyEnvAspect } from './empty-env.aspect';
 export const EmptyEnvType = 'empty';
 
 /**
- * the default env for components that were not configured with any env. it intentionally provides
- * nothing - no compiler, no tester, no preview, no dependencies policy - so components are used
- * as-source and bit works fully offline out of the box.
+ * an env that intentionally provides nothing - no compiler, no tester, no preview, no
+ * dependencies policy - so components are used as-source and bit works fully offline out of the
+ * box. designed to serve as the default env for components that were not configured with any env.
  *
  * it has no behavior on purpose: any behavior baked into a core env changes components' output
  * when bit itself changes, without any env-version bump. to get a development experience (compile,
@@ -19,7 +19,7 @@ export class EmptyEnv implements Environment {
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
-  description = 'default env, provides no development tooling. configure an env to get one';
+  description = 'provides no development tooling. configure an env to get one';
 
   async __getDescriptor() {
     return {
