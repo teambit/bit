@@ -20,7 +20,7 @@ describe('publish functionality', function () {
     let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       // a compiling env is needed so the published packages have dists (the consumer runs them
       // with node)

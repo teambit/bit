@@ -19,6 +19,7 @@ chai.use(chaiString);
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -38,7 +39,8 @@ chai.use(chaiString);
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
     });
-    describe('using Yarn', () => {
+    // skipped: yarn support is deprecated and planned for removal
+    describe.skip('using Yarn', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace({
           yarnRCConfig: {

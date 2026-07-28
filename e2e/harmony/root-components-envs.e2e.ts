@@ -233,7 +233,8 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     });
   });
 
-  describe('yarn hoisted linker', function () {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('yarn hoisted linker', function () {
     before(() => prepare('yarn'));
     after(() => {
       helper.scopeHelper.destroy();

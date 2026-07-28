@@ -291,13 +291,14 @@ export class PnpmPackageManager implements PackageManager {
 
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
-    if (!this.username) {
+    const configuredUserAgent = config.rawConfig['user-agent'];
+    if (!configuredUserAgent && !this.username) {
       this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
     }
     // We need to use config.rawConfig as it will only contain the settings defined by the user.
     // config contains default values of the settings when they are not defined by the user.
     const result: PackageManagerNetworkConfig = {
-      userAgent: `bit user/${this.username}`,
+      userAgent: configuredUserAgent ?? `bit user/${this.username}`,
     };
     if (config.rawConfig['max-sockets'] != null) {
       result.maxSockets = config.rawConfig['max-sockets'];
