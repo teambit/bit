@@ -214,8 +214,9 @@ export class ComponentCompareMain {
     const modelComponent =
       consumerComponent.modelComponent || (await this.scope.legacyScope.getModelComponentIfExist(component.id));
 
-    if (this.workspace && component.isDeleted()) {
-      // component exists in the model but not in the filesystem, show all files as deleted
+    if (this.workspace && component.isDeleted() && !diffOpts.compareToParent) {
+      // component exists in the model but not in the filesystem, show all files as deleted.
+      // with --parent, the comparison is between stored versions, so the deletion state is irrelevant.
       const modelFiles = consumerComponent.files;
       diffResult.filesDiff = await getFilesDiff(modelFiles, [], component.id.version, component.id.version);
       if (hasDiff(diffResult)) diffResult.hasDiff = true;

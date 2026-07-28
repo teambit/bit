@@ -526,5 +526,18 @@ describe('bit diff command', function () {
         expect(output).to.have.string(noDiffMessage);
       });
     });
+    describe('when the component is soft-deleted in the workspace', () => {
+      before(() => {
+        helper.command.deleteComponent('bar/foo');
+      });
+      it('should still compare the stored versions rather than showing the files as deleted', () => {
+        // no component-pattern. a soft-deleted component cannot be resolved by a pattern.
+        const output = helper.command.diff('--parent');
+        // the current version was created with --unmodified, so it has no diff against its parent.
+        // without --parent precedence, the output would show all the files as deleted.
+        expect(output).to.not.have.string("-module.exports = function foo() { return 'got foo v4'; };");
+        expect(output).to.have.string(noDiffMessage);
+      });
+    });
   });
 });
