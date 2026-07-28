@@ -1,1 +1,5 @@
-/Users/davidfirst/teambit/bit7/components/legacy/e2e-helper/excluded-fixtures/extensions/lint-error-env/config/oxlintrc.json
+{
+  "categories": {
+    "correctness": "error"
+  }
+}
