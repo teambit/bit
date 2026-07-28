@@ -1,6 +1,7 @@
 import type { ComponentCompareModel } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import type { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
 import type { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
+import type { APIDiffResult } from '@teambit/semantics.ui.api-diff-view';
 import { createContext, useContext } from 'react';
 
 export type StateAndHooks = {
@@ -16,6 +17,8 @@ export type ComponentCompareContextType = ComponentCompareModel &
   StateAndHooks & {
     baseContext?: StateAndHooks;
     compareContext?: StateAndHooks;
+    /** API diff between base and compare — undefined while loading, null when not computable */
+    apiDiffResult?: APIDiffResult | null;
   } & ViewState;
 
 export const ComponentCompareContext: React.Context<ComponentCompareContextType | undefined> = createContext<
