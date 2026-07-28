@@ -223,7 +223,8 @@ describe('dependency-resolver extension', function () {
     //   ├─┬ once 1.4.0
     //   │ └── wrappy 1.0.2
     //   └── path-is-absolute 1.0.1
-    describe('using Yarn as a package manager', () => {
+    // skipped: yarn support is deprecated and planned for removal
+    describe.skip('using Yarn as a package manager', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
