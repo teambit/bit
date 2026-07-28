@@ -1000,8 +1000,8 @@ importers:
         specifier: ~0.0.2
         version: 0.0.2
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@teambit/ui-foundation.ui.constants.z-indexes':
         specifier: ^0.0.504
         version: 0.0.504(react-dom@19.1.0)(react@19.1.0)
@@ -2162,8 +2162,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2(@babel/core@7.28.3)
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@teambit/node.node':
         specifier: 4.0.1
         version: 4.0.1(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-refresh@0.10.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack@5.97.1)
@@ -2316,8 +2316,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -3252,8 +3252,8 @@ importers:
         specifier: ~0.0.312
         version: 0.0.312
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@teambit/workspace.root-components':
         specifier: ^1.0.1
         version: 1.0.1
@@ -3310,8 +3310,8 @@ importers:
         version: 1.10.2
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -3821,8 +3821,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -3968,8 +3968,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -10393,7 +10393,7 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
 
-  node_modules/.bit_roots/teambit.node_envs_node-typescript-mocha@2.0.0:
+  node_modules/.bit_roots/teambit.node_envs_node-typescript-mocha@2.0.2:
     dependencies:
       '@mdx-js/react':
         specifier: 3.1.1
@@ -10978,8 +10978,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(eslint@8.56.0)(jest@29.3.1)
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@teambit/notifications':
         specifier: workspace:*
         version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
@@ -19742,8 +19742,8 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@types/node':
         specifier: 22.10.5
         version: 22.10.5
@@ -21796,8 +21796,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -22815,8 +22815,8 @@ importers:
         specifier: 0.0.45
         version: 0.0.45(react-dom@19.1.0)(react@19.1.0)
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@typescript-eslint/eslint-plugin':
         specifier: 7.1.0
         version: 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
@@ -24111,8 +24111,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24191,8 +24191,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24228,8 +24228,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -24274,8 +24274,8 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24311,8 +24311,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
@@ -24388,8 +24388,8 @@ importers:
         version: 1.20.0
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24416,8 +24416,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24447,8 +24447,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24478,8 +24478,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24515,8 +24515,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24546,8 +24546,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24577,8 +24577,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24611,8 +24611,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24642,8 +24642,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24676,8 +24676,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24704,8 +24704,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24735,8 +24735,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24763,8 +24763,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24828,8 +24828,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -24859,8 +24859,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24887,8 +24887,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24915,8 +24915,8 @@ importers:
         version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
       '@teambit/node.envs.node-typescript-mocha':
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.28.3)
+        specifier: 2.0.2
+        version: 2.0.2(@babel/core@7.28.3)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -25065,8 +25065,8 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@types/node':
         specifier: 22.10.5
         version: 22.10.5
@@ -35251,8 +35251,8 @@ packages:
   '@teambit/node.envs.node-babel-mocha@2.0.2':
     resolution: {integrity: sha512-CFZ4wCHcKoSk5C4dgm8oh33oxfDROzd+eLNxRDmcKrJK8S8deh91W5bdAxNEjKV1wIG+098s5RyvxRmPYn67IQ==}
 
-  '@teambit/node.envs.node-typescript-mocha@2.0.0':
-    resolution: {integrity: sha512-FbeQqfU5GVA/6szQsPgI/6J6UDKqBYte4OAYnkm/4P0zMR0ZnheEsrE5PraVT14+bjtHliqgurYaa2shA1io9w==}
+  '@teambit/node.envs.node-typescript-mocha@2.0.2':
+    resolution: {integrity: sha512-3Z3mVsuaDt7kvjUHAeGyXNWRO7drIIVicRIa1ej0Lnh7akZCPUzyDxHtr0SeQow0HJDPSQdV7vq1B3nqzDMUKQ==}
 
   '@teambit/node.generator.node-starters@1.0.0':
     resolution: {integrity: sha512-EkEt8XJVx/+JAiC9eMQR7CH3tgYKGuZ7bu9raFDUi4EpWvdEkjR7Q6enXj/Ifqu3ekXtl2XecN/Nr1VxMBcGsQ==}
@@ -36202,6 +36202,11 @@ packages:
 
   '@teambit/typescript.typescript-compiler@5.0.0':
     resolution: {integrity: sha512-fPXpWjoyq+Tkl1K+wmZEZQ6MS//AX1T/y7wOfXfhdcUhz26L+nvUnJ/s307wLTqPTfOkNUUhPn9/Q1LwJMC9Vw==}
+    peerDependencies:
+      react: 19.1.0
+
+  '@teambit/typescript.typescript-compiler@5.0.1':
+    resolution: {integrity: sha512-BIFHc21qX9gFMvhb7AaPC6Ie231s65Gtbs/Ag/Gqeyhyt7cDUPZ4Yh0RzBtBx5vakaSRfL7akY7qWfAHqy3nWg==}
     peerDependencies:
       react: 19.1.0
 
@@ -42239,6 +42244,9 @@ packages:
 
   immutable@4.3.7:
     resolution: {integrity: sha512-1hqclzwYwjRDFLjcFxOM5AYkkG0rpFPpr1RLPMEuGczoS7YA8gLhy8SWXYRAA/XwfEHpfo3cw5JGioS32fnMRw==}
+
+  immutable@5.1.3:
+    resolution: {integrity: sha512-+chQdDfvscSF1SJqv2gn4SRO2ZyS3xL3r7IW/wWEEzrzLisnOlKiQu5ytC/BVNcS15C39WT2Hg/bjKjDMcu+zg==}
 
   immutable@5.1.9:
     resolution: {integrity: sha512-m8nVez3rwrgmWxtLMt1ZYXB2Lv7OKYn/disyxAlSDYAlKSlFoPPfIAmAM/M5xqL4m4C/wAPw7S2/CNaUii1Hxg==}
@@ -49020,7 +49028,7 @@ snapshots:
 
   '@babel/helper-module-imports@7.27.1':
     dependencies:
-      '@babel/traverse': 7.29.7
+      '@babel/traverse': 7.28.3
       '@babel/types': 7.28.2
     transitivePeerDependencies:
       - supports-color
@@ -56979,11 +56987,11 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
-  '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary@0.0.47(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+  '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary@0.0.47(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.renderers.parameter': 0.0.67(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.78(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.78(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
       '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.45
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
@@ -56997,10 +57005,8 @@ snapshots:
       react-dom: 19.1.0(react@18.3.1)
       react-syntax-highlighter: 15.6.1(react@18.3.1)
     transitivePeerDependencies:
-      - '@testing-library/react'
       - '@types/react'
       - '@types/react-dom'
-      - react-router-dom
 
   '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary@0.0.47(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)':
     dependencies:
@@ -57240,7 +57246,7 @@ snapshots:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/api-reference.renderers.schema-nodes-index': 0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.schema-nodes-index': 0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.utils.code-editor-options': 0.0.16
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/code.ui.code-editor': 0.0.14(react-dom@19.1.0)(react@18.3.1)
@@ -57348,7 +57354,7 @@ snapshots:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/api-reference.renderers.schema-nodes-index': 0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.schema-nodes-index': 0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.utils.code-editor-options': 0.0.16
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/code.ui.code-editor': 0.0.16(react-dom@19.1.0)(react@18.3.1)
@@ -57459,6 +57465,23 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
+  '@teambit/api-reference.renderers.decorator@0.0.40(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/documenter.ui.table-row': 4.1.14(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
+    transitivePeerDependencies:
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
   '@teambit/api-reference.renderers.decorator@0.0.40(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@18.3.1)(react-router-dom@6.30.1)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
@@ -57468,22 +57491,6 @@ snapshots:
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@testing-library/react'
-      - '@types/react'
-      - '@types/react-dom'
-      - react-router-dom
-
-  '@teambit/api-reference.renderers.decorator@0.0.40(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/documenter.ui.table-row': 4.1.14(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
@@ -57572,22 +57579,22 @@ snapshots:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.renderers.class': 0.0.86(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.decorator': 0.0.40(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.decorator': 0.0.40(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/api-reference.renderers.enum': 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/api-reference.renderers.function': 0.0.88(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/api-reference.renderers.inference-type': 0.0.66(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.interface': 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.interface': 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.this': 0.0.71(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.this': 0.0.71(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/api-reference.renderers.tuple-type': file:components/renderers/tuple-type(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.type': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.type': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/api-reference.renderers.type-array': 0.0.55(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.renderers.type-intersection': 0.0.55(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.type-literal': 0.0.75(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.type-literal': 0.0.75(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/api-reference.renderers.type-ref': 0.0.101(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/api-reference.renderers.type-union': 0.0.55(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.unresolved': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.variable': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.unresolved': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.variable': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 19.1.0(react@18.3.1)
@@ -57653,9 +57660,9 @@ snapshots:
   '@teambit/api-reference.renderers.enum@0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.47(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.47(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
       '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/semantics.entities.semantic-schema': 0.0.95
       core-js: 3.13.0
       react: 18.3.1
@@ -57779,6 +57786,25 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
+  '@teambit/api-reference.renderers.grouped-schema-nodes-summary@0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.78(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.45
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
+    transitivePeerDependencies:
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
   '@teambit/api-reference.renderers.grouped-schema-nodes-summary@0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@18.3.1)(react-router-dom@6.30.1)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
@@ -57790,24 +57816,6 @@ snapshots:
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@testing-library/react'
-      - '@types/react'
-      - '@types/react-dom'
-      - react-router-dom
-
-  '@teambit/api-reference.renderers.grouped-schema-nodes-summary@0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.78(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.45
-      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
@@ -57969,6 +57977,24 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
+  '@teambit/api-reference.renderers.interface@0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.47(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
+    transitivePeerDependencies:
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
   '@teambit/api-reference.renderers.interface@0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@19.1.0)
@@ -57997,23 +58023,6 @@ snapshots:
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@testing-library/react'
-      - '@types/react'
-      - '@types/react-dom'
-      - react-router-dom
-
-  '@teambit/api-reference.renderers.interface@0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.47(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
@@ -58177,6 +58186,30 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
+  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.78(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.parameter': 0.0.67(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
+      '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/documenter.ui.table-row': 4.1.14(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
+      react-syntax-highlighter: 15.6.1(react@18.3.1)
+    transitivePeerDependencies:
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
   '@teambit/api-reference.renderers.schema-node-member-summary@0.0.78(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@18.3.1)(react-router-dom@6.30.1)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
@@ -58192,29 +58225,6 @@ snapshots:
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      react-syntax-highlighter: 15.6.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@testing-library/react'
-      - '@types/react'
-      - '@types/react-dom'
-      - react-router-dom
-
-  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.78(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.parameter': 0.0.67(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
-      '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
-      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/documenter.ui.table-row': 4.1.14(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
       react-syntax-highlighter: 15.6.1(react@18.3.1)
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
@@ -58355,9 +58365,9 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
-  '@teambit/api-reference.renderers.schema-nodes-index@0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+  '@teambit/api-reference.renderers.schema-nodes-index@0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)':
     dependencies:
-      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.78(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.78(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/design.ui.surfaces.menu.item': 0.0.354(react-dom@19.1.0)(react@18.3.1)
       '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5(@testing-library/react-hooks@8.0.1)(react@18.3.1)
@@ -58367,11 +58377,9 @@ snapshots:
       react: 18.3.1
       react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
-      - '@testing-library/react'
       - '@testing-library/react-hooks'
       - '@types/react'
       - '@types/react-dom'
-      - react-router-dom
 
   '@teambit/api-reference.renderers.schema-nodes-index@0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)':
     dependencies:
@@ -58406,6 +58414,23 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
+  '@teambit/api-reference.renderers.this@0.0.71(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.renderers.type-ref': 0.0.99(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
+    transitivePeerDependencies:
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
   '@teambit/api-reference.renderers.this@0.0.71(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)':
     dependencies:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
@@ -58432,21 +58457,6 @@ snapshots:
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@testing-library/react'
-      - '@types/react'
-      - react-router-dom
-
-  '@teambit/api-reference.renderers.this@0.0.71(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.type-ref': 0.0.99(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
@@ -58528,6 +58538,24 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
+  '@teambit/api-reference.renderers.type-literal@0.0.75(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.47(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.utils.copy-schema-node': 0.0.45
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
+    transitivePeerDependencies:
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
   '@teambit/api-reference.renderers.type-literal@0.0.75(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@18.3.1)(react-router-dom@6.30.1)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
@@ -58538,23 +58566,6 @@ snapshots:
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@testing-library/react'
-      - '@types/react'
-      - '@types/react-dom'
-      - react-router-dom
-
-  '@teambit/api-reference.renderers.type-literal@0.0.75(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.47(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.80(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.utils.copy-schema-node': 0.0.45
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
@@ -58682,6 +58693,27 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
+  '@teambit/api-reference.renderers.type-ref@0.0.99(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/api-reference.utils.copy-schema-node': 0.0.45
+      '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/component-id': 1.2.4
+      '@teambit/component.modules.component-url': 0.0.182(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      classnames: 2.2.6
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
   '@teambit/api-reference.renderers.type-ref@0.0.99(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)':
     dependencies:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
@@ -58717,25 +58749,6 @@ snapshots:
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@testing-library/react'
-      - '@types/react'
-      - react-router-dom
-
-  '@teambit/api-reference.renderers.type-ref@0.0.99(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.utils.copy-schema-node': 0.0.45
-      '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/component-id': 1.2.4
-      '@teambit/component.modules.component-url': 0.0.182(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      classnames: 2.2.6
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react'
@@ -58785,6 +58798,23 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
+  '@teambit/api-reference.renderers.type@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.47(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
+    transitivePeerDependencies:
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
   '@teambit/api-reference.renderers.type@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@19.1.0)
@@ -58818,22 +58848,6 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
-  '@teambit/api-reference.renderers.type@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.47(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@testing-library/react'
-      - '@types/react'
-      - '@types/react-dom'
-      - react-router-dom
-
   '@teambit/api-reference.renderers.unresolved@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@19.1.0)
@@ -58842,6 +58856,22 @@ snapshots:
       core-js: 3.13.0
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+    transitivePeerDependencies:
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
+  '@teambit/api-reference.renderers.unresolved@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
@@ -58880,20 +58910,6 @@ snapshots:
       - '@types/react'
       - react-router-dom
 
-  '@teambit/api-reference.renderers.unresolved@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@testing-library/react'
-      - '@types/react'
-      - react-router-dom
-
   '@teambit/api-reference.renderers.variable@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@19.1.0)
@@ -58902,6 +58918,22 @@ snapshots:
       core-js: 3.13.0
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+    transitivePeerDependencies:
+      - '@teambit/base-react.navigation.link'
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+      - '@types/react-dom'
+      - react-router-dom
+
+  '@teambit/api-reference.renderers.variable@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.95
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
@@ -58934,20 +58966,6 @@ snapshots:
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
-      - '@testing-library/react'
-      - '@types/react'
-      - react-router-dom
-
-  '@teambit/api-reference.renderers.variable@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)':
-    dependencies:
-      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.renderers.api-node-details': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.95
-      core-js: 3.13.0
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
@@ -59342,7 +59360,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -59393,7 +59411,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -59444,7 +59462,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -79759,7 +79777,7 @@ snapshots:
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/workspace.root-components': 1.0.1
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -79804,7 +79822,7 @@ snapshots:
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@18.3.1)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@18.3.1)
       '@teambit/workspace.root-components': 1.0.1
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -79849,7 +79867,7 @@ snapshots:
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/workspace.root-components': 1.0.1
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -81606,7 +81624,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  '@teambit/node.envs.node-typescript-mocha@2.0.0(@babel/core@7.28.3)':
+  '@teambit/node.envs.node-typescript-mocha@2.0.2(@babel/core@7.28.3)':
     dependencies:
       '@babel/preset-env': 7.22.15(@babel/core@7.28.3)
       '@babel/preset-typescript': 7.22.15(@babel/core@7.28.3)
@@ -81616,7 +81634,7 @@ snapshots:
       '@teambit/defender.prettier-formatter': 1.0.24
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
       '@teambit/oxc.linter.oxlint-linter': 2.0.5
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@types/mocha': 10.0.10
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -87352,7 +87370,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -87490,7 +87508,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -87628,7 +87646,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@18.3.1)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@18.3.1)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -87766,7 +87784,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -90539,7 +90557,21 @@ snapshots:
       react: 18.3.1
       typescript: 6.0.3
 
-  '@teambit/typescript.typescript-compiler@5.0.0(react@18.3.1)':
+  '@teambit/typescript.typescript-compiler@5.0.0(react@19.1.0)':
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/compilation.compiler-task': 1.0.12
+      comment-json: 4.2.3
+      fs-extra: 11.3.4
+      get-tsconfig: 4.2.0
+      glob: 10.4.5
+      globby: 11.1.0
+      lodash: 4.17.21
+      normalize-path: 3.0.0
+      react: 19.1.0
+      typescript: 6.0.3
+
+  '@teambit/typescript.typescript-compiler@5.0.1(react@18.3.1)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/compilation.compiler-task': 1.0.12
@@ -90553,7 +90585,7 @@ snapshots:
       react: 18.3.1
       typescript: 6.0.3
 
-  '@teambit/typescript.typescript-compiler@5.0.0(react@19.1.0)':
+  '@teambit/typescript.typescript-compiler@5.0.1(react@19.1.0)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/compilation.compiler-task': 1.0.12
@@ -90577,7 +90609,7 @@ snapshots:
       '@teambit/ts-server': file:scopes/typescript/ts-server
       '@teambit/typescript.aspect-docs.typescript': file:scopes/typescript/aspect-docs/typescript(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
       '@teambit/typescript.modules.ts-config-mutator': file:scopes/typescript/modules/ts-config-mutator
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@18.3.1)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -90607,7 +90639,7 @@ snapshots:
       '@teambit/ts-server': file:scopes/typescript/ts-server
       '@teambit/typescript.aspect-docs.typescript': file:scopes/typescript/aspect-docs/typescript(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
       '@teambit/typescript.modules.ts-config-mutator': file:scopes/typescript/modules/ts-config-mutator
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -102301,6 +102333,8 @@ snapshots:
 
   immutable@4.3.7: {}
 
+  immutable@5.1.3: {}
+
   immutable@5.1.9: {}
 
   import-fresh@3.3.0:
@@ -108037,7 +108071,7 @@ snapshots:
   sass@1.92.1:
     dependencies:
       chokidar: 4.0.3
-      immutable: 5.1.9
+      immutable: 5.1.3
       source-map-js: 1.2.1
     optionalDependencies:
       '@parcel/watcher': 2.5.1
