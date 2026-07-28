@@ -767,31 +767,43 @@ jobs:
           when: always
           no_output_timeout: '15m'
           command: |
-            set -x
-            TSC=$(ls -d ~/bit/bit/node_modules/.pnpm/typescript@7*/node_modules/typescript/lib/tsc.js 2>/dev/null | head -1)
+            set +e
+            set +o pipefail
+            TSC=$(find ~/bit/bit/node_modules/.pnpm -maxdepth 4 -path '*typescript@7*/node_modules/typescript/lib/tsc.js' 2>/dev/null | head -1)
             echo "TSC=$TSC"
             for N in ~/Library/Caches/Bit/capsules/*/; do
               [ -f "$N/tsconfig.json" ] || continue
               echo "==== network: $N ===="
-              head -80 "$N/tsconfig.json"
+              head -100 "$N/tsconfig.json"
               echo "-- tsbuildinfo files --"
-              find "$N/dist" -name '*tsbuildinfo*' 2>/dev/null | head -5
-              echo "-- root dist: entry-level d.ts (maxdepth 2) --"
-              find "$N/dist" -maxdepth 2 -name '*.d.ts' 2>/dev/null | head -40
-              echo "-- sample capsule dists --"
-              ls -d "$N"teambit.* 2>/dev/null | head -6 | while read C; do
-                echo "--- $(basename $C)"; ls "$C/dist" 2>/dev/null | head -15
-              done
+              find "$N/dist" -name '*tsbuildinfo*' 2>/dev/null > /tmp/tbi.txt; cat /tmp/tbi.txt
+              echo "-- capsules missing entry d.ts vs having it --"
+              for C in "$N"teambit.*/; do
+                [ -d "$C/dist" ] || continue
+                base=$(basename "$C")
+                dts=$(find "$C/dist" -maxdepth 1 -name '*.d.ts' 2>/dev/null | wc -l)
+                if [ -f "$C/dist/index.d.ts" ]; then
+                  echo "OK      $base (top-level d.ts: $dts)"
+                else
+                  echo "MISSING $base (top-level d.ts: $dts)"
+                fi
+              done > /tmp/caps.txt
+              grep -c '^OK' /tmp/caps.txt; grep -c '^MISSING' /tmp/caps.txt
+              echo "--- MISSING list (first 30):"; grep '^MISSING' /tmp/caps.txt > /tmp/miss.txt; head -30 /tmp/miss.txt
+              echo "--- OK list (first 10):"; grep '^OK' /tmp/caps.txt > /tmp/ok.txt; head -10 /tmp/ok.txt
+              echo "-- root dist entry d.ts count --"
+              find "$N/dist" -maxdepth 2 -name 'index.d.ts' 2>/dev/null > /tmp/rootidx.txt; wc -l < /tmp/rootidx.txt; head -15 /tmp/rootidx.txt
               if [ -n "$TSC" ]; then
                 echo "-- re-running native tsc with --listEmittedFiles --"
-                cd "$N"
+                cd "$N" || continue
                 node "$TSC" -p tsconfig.json --listEmittedFiles > /tmp/emit.log 2>&1
                 echo "tsc-exit=$?"
-                echo "emitted total: $(grep -c '^TSFILE' /tmp/emit.log)"
-                echo "-- emitted entry d.ts (dist/<capsule>/index.d.ts, depth-2 only) --"
-                grep '^TSFILE' /tmp/emit.log | grep -E "dist/[^/]+/index\.d\.ts$" | head -30
-                echo "-- non-TSFILE output (errors etc.) --"
-                grep -v '^TSFILE' /tmp/emit.log | head -40
+                grep -c '^TSFILE' /tmp/emit.log
+                echo "-- emitted entry d.ts (depth-2 index.d.ts) --"
+                grep '^TSFILE' /tmp/emit.log > /tmp/tsfiles.txt
+                grep -E "dist/[^/]+/index\.d\.ts$" /tmp/tsfiles.txt > /tmp/entries.txt; wc -l < /tmp/entries.txt; head -15 /tmp/entries.txt
+                echo "-- non-TSFILE output (errors etc., first 40) --"
+                grep -v '^TSFILE' /tmp/emit.log > /tmp/rest.txt; head -40 /tmp/rest.txt
                 cd - > /dev/null
               fi
             done
