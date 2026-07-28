@@ -1001,8 +1001,8 @@ importers:
         specifier: ~0.0.2
         version: 0.0.2
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@teambit/ui-foundation.ui.constants.z-indexes':
         specifier: ^0.0.504
         version: 0.0.504(react-dom@19.1.0)(react@19.1.0)
@@ -3253,8 +3253,8 @@ importers:
         specifier: ~0.0.312
         version: 0.0.312
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@teambit/workspace.root-components':
         specifier: ^1.0.1
         version: 1.0.1
@@ -6486,7 +6486,7 @@ importers:
         version: file:scopes/harmony/cache(chai@5.2.1)(react@19.1.0)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai-fs@1.0.0)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
@@ -6663,7 +6663,7 @@ importers:
         version: file:scopes/compositions/composition-card(react-dom@19.1.0)(react@19.1.0)
       '@teambit/compositions':
         specifier: workspace:*
-        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/compositions.aspect-docs.compositions':
         specifier: workspace:*
         version: file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -6699,13 +6699,13 @@ importers:
         version: file:scopes/defender/prettier-config-mutator
       '@teambit/defender.ui.test-compare':
         specifier: workspace:*
-        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-page':
         specifier: workspace:*
-        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@7.0.2)
+        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -6753,7 +6753,7 @@ importers:
         version: file:scopes/workspace/eject(graphql@15.8.0)(react@19.1.0)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(graphql@15.8.0)(react@19.1.0)
@@ -7080,13 +7080,13 @@ importers:
         version: file:scopes/react/bit-react-transformer
       '@teambit/react.eslint-config-bit-react':
         specifier: workspace:*
-        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/react.ui.compositions-app':
         specifier: workspace:*
         version: file:scopes/react/ui/compositions-app(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -7095,10 +7095,10 @@ importers:
         version: file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs.docs-content':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.properties-table':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.error-fallback':
         specifier: workspace:*
         version: file:scopes/react/ui/error-fallback(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -7182,7 +7182,7 @@ importers:
         version: file:components/tagged-exports(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/tester':
         specifier: workspace:*
-        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/toolbox.array.duplications-finder':
         specifier: workspace:*
         version: file:scopes/toolbox/array/duplications-finder
@@ -7278,7 +7278,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
@@ -7311,13 +7311,13 @@ importers:
         version: file:scopes/scope/version-history(graphql@15.8.0)
       '@teambit/vue-aspect':
         specifier: workspace:*
-        version: file:scopes/vue/vue(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/vue/vue(react@19.1.0)(typescript@5.5.3)
       '@teambit/watcher':
         specifier: workspace:*
         version: file:scopes/workspace/watcher
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(esbuild@0.14.29)
@@ -7440,7 +7440,7 @@ importers:
         version: file:scopes/harmony/cache(chai@5.2.1)(react@19.1.0)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai-fs@1.0.0)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
@@ -7617,7 +7617,7 @@ importers:
         version: file:scopes/compositions/composition-card(react-dom@19.1.0)(react@19.1.0)
       '@teambit/compositions':
         specifier: workspace:*
-        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/compositions.aspect-docs.compositions':
         specifier: workspace:*
         version: file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -7653,13 +7653,13 @@ importers:
         version: file:scopes/defender/prettier-config-mutator
       '@teambit/defender.ui.test-compare':
         specifier: workspace:*
-        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-page':
         specifier: workspace:*
-        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@7.0.2)
+        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -7707,7 +7707,7 @@ importers:
         version: file:scopes/workspace/eject(graphql@15.8.0)(react@19.1.0)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(graphql@15.8.0)(react@19.1.0)
@@ -8040,13 +8040,13 @@ importers:
         version: file:scopes/react/bit-react-transformer
       '@teambit/react.eslint-config-bit-react':
         specifier: workspace:*
-        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/react.ui.compositions-app':
         specifier: workspace:*
         version: file:scopes/react/ui/compositions-app(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(@testing-library/react@14.3.1)(react-dom@19.1.0)(react@19.1.0)
@@ -8055,10 +8055,10 @@ importers:
         version: file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@14.3.1)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs.docs-content':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.properties-table':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.error-fallback':
         specifier: workspace:*
         version: file:scopes/react/ui/error-fallback(@testing-library/react@14.3.1)(react-dom@19.1.0)(react@19.1.0)
@@ -8142,7 +8142,7 @@ importers:
         version: file:components/tagged-exports(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/tester':
         specifier: workspace:*
-        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/toolbox.array.duplications-finder':
         specifier: workspace:*
         version: file:scopes/toolbox/array/duplications-finder
@@ -8238,7 +8238,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
@@ -8271,13 +8271,13 @@ importers:
         version: file:scopes/scope/version-history(graphql@15.8.0)
       '@teambit/vue-aspect':
         specifier: workspace:*
-        version: file:scopes/vue/vue(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/vue/vue(react@19.1.0)(typescript@5.5.3)
       '@teambit/watcher':
         specifier: workspace:*
         version: file:scopes/workspace/watcher
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(esbuild@0.14.29)
@@ -9459,7 +9459,7 @@ importers:
         version: file:scopes/harmony/cache(chai@5.2.1)(react@19.1.0)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai-fs@1.0.0)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
@@ -9636,7 +9636,7 @@ importers:
         version: file:scopes/compositions/composition-card(react-dom@19.1.0)(react@19.1.0)
       '@teambit/compositions':
         specifier: workspace:*
-        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/compositions.aspect-docs.compositions':
         specifier: workspace:*
         version: file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -9672,13 +9672,13 @@ importers:
         version: file:scopes/defender/prettier-config-mutator
       '@teambit/defender.ui.test-compare':
         specifier: workspace:*
-        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-page':
         specifier: workspace:*
-        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@7.0.2)
+        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -9726,7 +9726,7 @@ importers:
         version: file:scopes/workspace/eject(graphql@15.8.0)(react@19.1.0)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(graphql@15.8.0)(react@19.1.0)
@@ -10059,13 +10059,13 @@ importers:
         version: file:scopes/react/bit-react-transformer
       '@teambit/react.eslint-config-bit-react':
         specifier: workspace:*
-        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/react.ui.compositions-app':
         specifier: workspace:*
         version: file:scopes/react/ui/compositions-app(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -10074,10 +10074,10 @@ importers:
         version: file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs.docs-content':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.properties-table':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.error-fallback':
         specifier: workspace:*
         version: file:scopes/react/ui/error-fallback(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -10161,7 +10161,7 @@ importers:
         version: file:components/tagged-exports(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/tester':
         specifier: workspace:*
-        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/toolbox.array.duplications-finder':
         specifier: workspace:*
         version: file:scopes/toolbox/array/duplications-finder
@@ -10257,7 +10257,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
@@ -10290,13 +10290,13 @@ importers:
         version: file:scopes/scope/version-history(graphql@15.8.0)
       '@teambit/vue-aspect':
         specifier: workspace:*
-        version: file:scopes/vue/vue(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/vue/vue(react@19.1.0)(typescript@5.5.3)
       '@teambit/watcher':
         specifier: workspace:*
         version: file:scopes/workspace/watcher
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(esbuild@0.14.29)
@@ -10446,7 +10446,7 @@ importers:
         version: file:scopes/harmony/cache(chai@5.2.1)(react@19.1.0)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai-fs@1.0.0)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
@@ -10623,7 +10623,7 @@ importers:
         version: file:scopes/compositions/composition-card(react-dom@19.1.0)(react@19.1.0)
       '@teambit/compositions':
         specifier: workspace:*
-        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/compositions.aspect-docs.compositions':
         specifier: workspace:*
         version: file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -10659,13 +10659,13 @@ importers:
         version: file:scopes/defender/prettier-config-mutator
       '@teambit/defender.ui.test-compare':
         specifier: workspace:*
-        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-page':
         specifier: workspace:*
-        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@7.0.2)
+        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -10713,7 +10713,7 @@ importers:
         version: file:scopes/workspace/eject(graphql@15.8.0)(react@19.1.0)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(graphql@15.8.0)(react@19.1.0)
@@ -11046,13 +11046,13 @@ importers:
         version: file:scopes/react/bit-react-transformer
       '@teambit/react.eslint-config-bit-react':
         specifier: workspace:*
-        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/react.ui.compositions-app':
         specifier: workspace:*
         version: file:scopes/react/ui/compositions-app(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -11061,10 +11061,10 @@ importers:
         version: file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs.docs-content':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.properties-table':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.error-fallback':
         specifier: workspace:*
         version: file:scopes/react/ui/error-fallback(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -11148,7 +11148,7 @@ importers:
         version: file:components/tagged-exports(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/tester':
         specifier: workspace:*
-        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/toolbox.array.duplications-finder':
         specifier: workspace:*
         version: file:scopes/toolbox/array/duplications-finder
@@ -11244,7 +11244,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
@@ -11277,13 +11277,13 @@ importers:
         version: file:scopes/scope/version-history(graphql@15.8.0)
       '@teambit/vue-aspect':
         specifier: workspace:*
-        version: file:scopes/vue/vue(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/vue/vue(react@19.1.0)(typescript@5.5.3)
       '@teambit/watcher':
         specifier: workspace:*
         version: file:scopes/workspace/watcher
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(esbuild@0.14.29)
@@ -11433,7 +11433,7 @@ importers:
         version: file:scopes/harmony/cache(chai@5.2.1)(react@19.1.0)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(@babel/core@7.26.9)(@pnpm/logger@1001.0.1)(chai-fs@1.0.0)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
@@ -11610,7 +11610,7 @@ importers:
         version: file:scopes/compositions/composition-card(react-dom@19.1.0)(react@19.1.0)
       '@teambit/compositions':
         specifier: workspace:*
-        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/compositions.aspect-docs.compositions':
         specifier: workspace:*
         version: file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -11646,13 +11646,13 @@ importers:
         version: file:scopes/defender/prettier-config-mutator
       '@teambit/defender.ui.test-compare':
         specifier: workspace:*
-        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-page':
         specifier: workspace:*
-        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies(@babel/core@7.26.9)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@7.0.2)
+        version: file:scopes/dependencies/dependencies(@babel/core@7.26.9)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -11700,7 +11700,7 @@ importers:
         version: file:scopes/workspace/eject(graphql@15.8.0)(react@19.1.0)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(graphql@15.8.0)(react@19.1.0)
@@ -12033,13 +12033,13 @@ importers:
         version: file:scopes/react/bit-react-transformer
       '@teambit/react.eslint-config-bit-react':
         specifier: workspace:*
-        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/react.ui.compositions-app':
         specifier: workspace:*
         version: file:scopes/react/ui/compositions-app(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -12048,10 +12048,10 @@ importers:
         version: file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs.docs-content':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.properties-table':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.error-fallback':
         specifier: workspace:*
         version: file:scopes/react/ui/error-fallback(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -12135,7 +12135,7 @@ importers:
         version: file:components/tagged-exports(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/tester':
         specifier: workspace:*
-        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/toolbox.array.duplications-finder':
         specifier: workspace:*
         version: file:scopes/toolbox/array/duplications-finder
@@ -12231,7 +12231,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
@@ -12264,13 +12264,13 @@ importers:
         version: file:scopes/scope/version-history(graphql@15.8.0)
       '@teambit/vue-aspect':
         specifier: workspace:*
-        version: file:scopes/vue/vue(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/vue/vue(react@19.1.0)(typescript@5.5.3)
       '@teambit/watcher':
         specifier: workspace:*
         version: file:scopes/workspace/watcher
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(esbuild@0.14.29)
@@ -12348,10 +12348,10 @@ importers:
         version: 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin':
         specifier: 6.19.1
-        version: 6.19.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)(typescript@7.0.2)
+        version: 6.19.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)(typescript@5.5.3)
       '@typescript-eslint/parser':
         specifier: 6.19.1
-        version: 6.19.1(eslint@8.56.0)(typescript@7.0.2)
+        version: 6.19.1(eslint@8.56.0)(typescript@5.5.3)
       eslint:
         specifier: 8.56.0
         version: 8.56.0
@@ -12360,7 +12360,7 @@ importers:
         version: 2.29.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)
       eslint-plugin-jest:
         specifier: 27.6.3
-        version: 27.6.3(@typescript-eslint/eslint-plugin@6.19.1)(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: 27.6.3(@typescript-eslint/eslint-plugin@6.19.1)(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       eslint-plugin-jsx-a11y:
         specifier: 6.8.0
         version: 6.8.0(eslint@8.56.0)
@@ -12435,7 +12435,7 @@ importers:
         version: file:scopes/harmony/cache(chai@5.2.1)(react@19.1.0)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai-fs@1.0.0)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
@@ -12612,7 +12612,7 @@ importers:
         version: file:scopes/compositions/composition-card(react-dom@19.1.0)(react@19.1.0)
       '@teambit/compositions':
         specifier: workspace:*
-        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/compositions.aspect-docs.compositions':
         specifier: workspace:*
         version: file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -12648,13 +12648,13 @@ importers:
         version: file:scopes/defender/prettier-config-mutator
       '@teambit/defender.ui.test-compare':
         specifier: workspace:*
-        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-page':
         specifier: workspace:*
-        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@7.0.2)
+        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -12702,7 +12702,7 @@ importers:
         version: file:scopes/workspace/eject(graphql@15.8.0)(react@19.1.0)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(graphql@15.8.0)(react@19.1.0)
@@ -13029,7 +13029,7 @@ importers:
         version: file:scopes/react/bit-react-transformer
       '@teambit/react.eslint-config-bit-react':
         specifier: workspace:*
-        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/react.internal.base-react-env':
         specifier: 1.1.4
         version: 1.1.4(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.5)(@swc/css@0.0.20)(@types/node@22.10.5)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(less@4.2.1)(lightningcss@1.28.2)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)
@@ -13038,7 +13038,7 @@ importers:
         version: file:scopes/react/ui/compositions-app(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -13047,10 +13047,10 @@ importers:
         version: file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs.docs-content':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.properties-table':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.error-fallback':
         specifier: workspace:*
         version: file:scopes/react/ui/error-fallback(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -13134,7 +13134,7 @@ importers:
         version: file:components/tagged-exports(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/tester':
         specifier: workspace:*
-        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/toolbox.array.duplications-finder':
         specifier: workspace:*
         version: file:scopes/toolbox/array/duplications-finder
@@ -13230,7 +13230,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
@@ -13263,13 +13263,13 @@ importers:
         version: file:scopes/scope/version-history(graphql@15.8.0)
       '@teambit/vue-aspect':
         specifier: workspace:*
-        version: file:scopes/vue/vue(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/vue/vue(react@19.1.0)(typescript@5.5.3)
       '@teambit/watcher':
         specifier: workspace:*
         version: file:scopes/workspace/watcher
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(esbuild@0.14.29)
@@ -13341,10 +13341,10 @@ importers:
         version: 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin':
         specifier: 6.19.1
-        version: 6.19.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)(typescript@7.0.2)
+        version: 6.19.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)(typescript@5.5.3)
       '@typescript-eslint/parser':
         specifier: 6.19.1
-        version: 6.19.1(eslint@8.56.0)(typescript@7.0.2)
+        version: 6.19.1(eslint@8.56.0)(typescript@5.5.3)
       eslint:
         specifier: 8.56.0
         version: 8.56.0
@@ -13353,7 +13353,7 @@ importers:
         version: 2.29.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)
       eslint-plugin-jest:
         specifier: 27.6.3
-        version: 27.6.3(@typescript-eslint/eslint-plugin@6.19.1)(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: 27.6.3(@typescript-eslint/eslint-plugin@6.19.1)(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       eslint-plugin-jsx-a11y:
         specifier: 6.8.0
         version: 6.8.0(eslint@8.56.0)
@@ -13428,7 +13428,7 @@ importers:
         version: file:scopes/harmony/cache(chai@5.2.1)(react@19.1.0)
       '@teambit/changelog':
         specifier: workspace:*
-        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)
       '@teambit/checkout':
         specifier: workspace:*
         version: file:scopes/component/checkout(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai-fs@1.0.0)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
@@ -13605,7 +13605,7 @@ importers:
         version: file:scopes/compositions/composition-card(react-dom@19.1.0)(react@19.1.0)
       '@teambit/compositions':
         specifier: workspace:*
-        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/compositions.aspect-docs.compositions':
         specifier: workspace:*
         version: file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -13641,13 +13641,13 @@ importers:
         version: file:scopes/defender/prettier-config-mutator
       '@teambit/defender.ui.test-compare':
         specifier: workspace:*
-        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-page':
         specifier: workspace:*
-        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/dependencies':
         specifier: workspace:*
-        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@7.0.2)
+        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)
       '@teambit/dependencies.aspect-docs.dependency-resolver':
         specifier: workspace:*
         version: file:scopes/dependencies/aspect-docs/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -13695,7 +13695,7 @@ importers:
         version: file:scopes/workspace/eject(graphql@15.8.0)(react@19.1.0)
       '@teambit/env':
         specifier: workspace:*
-        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/envs':
         specifier: workspace:*
         version: file:scopes/envs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(graphql@15.8.0)(react@19.1.0)
@@ -14022,13 +14022,13 @@ importers:
         version: file:scopes/react/bit-react-transformer
       '@teambit/react.eslint-config-bit-react':
         specifier: workspace:*
-        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       '@teambit/react.ui.compositions-app':
         specifier: workspace:*
         version: file:scopes/react/ui/compositions-app(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs-app':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.apply-providers':
         specifier: workspace:*
         version: file:scopes/react/ui/docs/apply-providers(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -14037,10 +14037,10 @@ importers:
         version: file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs.docs-content':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.docs.properties-table':
         specifier: workspace:*
-        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.error-fallback':
         specifier: workspace:*
         version: file:scopes/react/ui/error-fallback(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -14124,7 +14124,7 @@ importers:
         version: file:components/tagged-exports(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/tester':
         specifier: workspace:*
-        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/toolbox.array.duplications-finder':
         specifier: workspace:*
         version: file:scopes/toolbox/array/duplications-finder
@@ -14220,7 +14220,7 @@ importers:
         version: file:scopes/typescript/modules/ts-config-mutator
       '@teambit/ui':
         specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
       '@teambit/ui-foundation.ui.buttons.collapser':
         specifier: workspace:*
         version: file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
@@ -14253,13 +14253,13 @@ importers:
         version: file:scopes/scope/version-history(graphql@15.8.0)
       '@teambit/vue-aspect':
         specifier: workspace:*
-        version: file:scopes/vue/vue(react@19.1.0)(typescript@7.0.2)
+        version: file:scopes/vue/vue(react@19.1.0)(typescript@5.5.3)
       '@teambit/watcher':
         specifier: workspace:*
         version: file:scopes/workspace/watcher
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(esbuild@0.14.29)
@@ -19743,8 +19743,8 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@types/node':
         specifier: 22.10.5
         version: 22.10.5
@@ -22816,8 +22816,8 @@ importers:
         specifier: 0.0.45
         version: 0.0.45(react-dom@19.1.0)(react@19.1.0)
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@typescript-eslint/eslint-plugin':
         specifier: 7.1.0
         version: 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
@@ -25066,8 +25066,8 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/typescript.typescript-compiler':
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.1.0)
+        specifier: ^5.0.1
+        version: 5.0.1(react@19.1.0)
       '@types/node':
         specifier: 22.10.5
         version: 22.10.5
@@ -56906,7 +56906,7 @@ snapshots:
 
   '@teambit/api-reference.models.api-node-renderer@0.0.53(react-dom@19.1.0)(react@18.3.1)':
     dependencies:
-      '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@19.1.0)(react@18.3.1)
       '@teambit/semantics.entities.semantic-schema': 0.0.95
       core-js: 3.13.0
       react: 18.3.1
@@ -56966,7 +56966,7 @@ snapshots:
   '@teambit/api-reference.overview.api-reference-table-of-contents@0.0.41(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/api-reference.utils.sort-api-nodes': 0.0.53
+      '@teambit/api-reference.utils.sort-api-nodes': 0.0.53(react-dom@19.1.0)(react@18.3.1)
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       classnames: 2.5.1
       core-js: 3.13.0
@@ -59115,10 +59115,6 @@ snapshots:
     dependencies:
       '@teambit/semantics.entities.semantic-schema': 0.0.92
 
-  '@teambit/api-reference.utils.sort-api-nodes@0.0.53':
-    dependencies:
-      '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@19.1.0)(react@19.1.0)
-
   '@teambit/api-reference.utils.sort-api-nodes@0.0.53(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@18.3.1)(react@18.3.1)
@@ -59379,7 +59375,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -59430,7 +59426,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -59481,7 +59477,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -61828,7 +61824,7 @@ snapshots:
       lodash: 4.17.21
       p-limit: 2.3.0
 
-  '@teambit/changelog@file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/changelog@file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/component.instructions.exporting-components': 0.0.8(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/component.ui.version-block': file:components/ui/version-block(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
@@ -61836,7 +61832,7 @@ snapshots:
       '@teambit/design.ui.separator': 0.0.367(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.heading': 4.1.8(react-dom@19.1.0)(react@19.1.0)
       '@teambit/harmony': 0.4.12
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@19.1.0)(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
@@ -61882,7 +61878,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@teambit/changelog@file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/changelog@file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/component.instructions.exporting-components': 0.0.8(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/component.ui.version-block': file:components/ui/version-block(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
@@ -61890,7 +61886,7 @@ snapshots:
       '@teambit/design.ui.separator': 0.0.367(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.heading': 4.1.8(react-dom@19.1.0)(react@19.1.0)
       '@teambit/harmony': 0.4.12
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@19.1.0)(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
@@ -63887,7 +63883,7 @@ snapshots:
   '@teambit/compilation.aspect-docs.babel@file:scopes/compilation/aspect-docs/babel(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -63907,7 +63903,7 @@ snapshots:
   '@teambit/compilation.aspect-docs.compiler@file:scopes/compilation/aspect-docs/compiler(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -63927,7 +63923,7 @@ snapshots:
   '@teambit/compilation.aspect-docs.multi-compiler@file:scopes/compilation/aspect-docs/multi-compiler(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -64580,7 +64576,7 @@ snapshots:
   '@teambit/component.aspect-docs.component@file:scopes/component/aspect-docs/component(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -64898,7 +64894,7 @@ snapshots:
       '@teambit/legacy.extension-data': 0.0.51(graphql@15.8.0)
       '@teambit/legacy.logger': 0.0.19
       '@teambit/legacy.scope': 0.0.49(graphql@15.8.0)
-      '@teambit/pkg.modules.component-package-name': 0.0.56(graphql@15.8.0)
+      '@teambit/pkg.modules.component-package-name': 0.0.56
       '@teambit/toolbox.fs.link-or-symlink': 0.0.20
       '@teambit/toolbox.fs.remove-empty-dir': 0.0.5
       '@teambit/toolbox.path.path': 0.0.8
@@ -67885,7 +67881,7 @@ snapshots:
   '@teambit/compositions.aspect-docs.compositions@file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -68165,7 +68161,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
-  '@teambit/compositions@file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/compositions@file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/api-reference.hooks.use-api': 0.0.57(@apollo/client@3.12.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
@@ -68196,11 +68192,11 @@ snapshots:
       '@teambit/docs.ui.queries.get-docs': file:scopes/docs/ui/queries/get-docs(@apollo/client@3.12.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.theme.theme-context': 4.0.7(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.heading': 4.1.8(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/documenter.ui.property-table': 4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/documenter.ui.property-table': 4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/evangelist.elements.icon': 1.0.5(react-dom@19.1.0)(react@19.1.0)
       '@teambit/harmony': 0.4.12
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(graphql@15.8.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/preview.ui.component-preview': file:scopes/preview/ui/component-preview(react-dom@19.1.0)(react@19.1.0)
       '@teambit/toolbox.path.match-patterns': file:scopes/toolbox/path/match-patterns
       '@teambit/ui-foundation.ui.buttons.collapser': file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
@@ -68297,7 +68293,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@teambit/compositions@file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/compositions@file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/api-reference.hooks.use-api': 0.0.57(@apollo/client@3.12.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
@@ -68328,11 +68324,11 @@ snapshots:
       '@teambit/docs.ui.queries.get-docs': file:scopes/docs/ui/queries/get-docs(@apollo/client@3.12.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.theme.theme-context': 4.0.7(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.heading': 4.1.8(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/documenter.ui.property-table': 4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/documenter.ui.property-table': 4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/evangelist.elements.icon': 1.0.5(react-dom@19.1.0)(react@19.1.0)
       '@teambit/harmony': 0.4.12
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(graphql@15.8.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/preview.ui.component-preview': file:scopes/preview/ui/component-preview(react-dom@19.1.0)(react@19.1.0)
       '@teambit/toolbox.path.match-patterns': file:scopes/toolbox/path/match-patterns
       '@teambit/ui-foundation.ui.buttons.collapser': file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
@@ -68873,18 +68869,18 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
-  '@teambit/defender.ui.test-compare@file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/defender.ui.test-compare@file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@apollo/client': 3.12.2(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(subscriptions-transport-ws@0.9.19)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset': 0.0.10(react-dom@19.1.0)(react@19.1.0)
       '@teambit/defender.ui.test-loader': 0.0.504(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-table': 0.0.512(react-dom@19.1.0)(react@19.1.0)
       '@teambit/design.ui.alert-card': 0.0.27(@testing-library/react@14.3.1)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/design.ui.empty-box': 0.0.364(@testing-library/react@14.3.1)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/design.ui.round-loader': 0.0.355(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.1.0
@@ -68954,18 +68950,18 @@ snapshots:
       - react-router-dom
       - typescript
 
-  '@teambit/defender.ui.test-compare@file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/defender.ui.test-compare@file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@apollo/client': 3.12.2(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(subscriptions-transport-ws@0.9.19)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset': 0.0.10(react-dom@19.1.0)(react@19.1.0)
       '@teambit/defender.ui.test-loader': 0.0.504(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-table': 0.0.512(react-dom@19.1.0)(react@19.1.0)
       '@teambit/design.ui.alert-card': 0.0.27(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/design.ui.empty-box': 0.0.364(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/design.ui.round-loader': 0.0.355(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.1.0
@@ -69005,7 +69001,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
-  '@teambit/defender.ui.test-page@file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/defender.ui.test-page@file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@apollo/client': 3.12.2(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(subscriptions-transport-ws@0.9.19)
       '@teambit/defender.ui.test-loader': 0.0.504(react-dom@19.1.0)(react@19.1.0)
@@ -69017,7 +69013,7 @@ snapshots:
       '@teambit/design.ui.separator': 0.0.367(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.heading': 4.1.8(react-dom@19.1.0)(react@19.1.0)
       '@teambit/lanes.hooks.use-viewed-lane-from-url': file:components/hooks/use-viewed-lane-from-url_1(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       classnames: 2.5.1
       core-js: 3.13.0
@@ -69092,7 +69088,7 @@ snapshots:
       - react-router-dom
       - typescript
 
-  '@teambit/defender.ui.test-page@file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/defender.ui.test-page@file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@apollo/client': 3.12.2(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(subscriptions-transport-ws@0.9.19)
       '@teambit/defender.ui.test-loader': 0.0.504(react-dom@19.1.0)(react@19.1.0)
@@ -69104,7 +69100,7 @@ snapshots:
       '@teambit/design.ui.separator': 0.0.367(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.heading': 4.1.8(react-dom@19.1.0)(react@19.1.0)
       '@teambit/lanes.hooks.use-viewed-lane-from-url': file:components/hooks/use-viewed-lane-from-url_1(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.505(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       classnames: 2.5.1
       core-js: 3.13.0
@@ -69191,7 +69187,7 @@ snapshots:
   '@teambit/dependencies.aspect-docs.dependency-resolver@file:scopes/dependencies/aspect-docs/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -69211,7 +69207,7 @@ snapshots:
   '@teambit/dependencies.aspect-docs.pnpm@file:scopes/dependencies/aspect-docs/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -69231,7 +69227,7 @@ snapshots:
   '@teambit/dependencies.aspect-docs.yarn@file:scopes/dependencies/aspect-docs/yarn(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -69266,7 +69262,7 @@ snapshots:
     dependencies:
       '@pnpm/dependency-path': 1001.1.10
 
-  '@teambit/dependencies@file:scopes/dependencies/dependencies(@babel/core@7.26.9)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@7.0.2)':
+  '@teambit/dependencies@file:scopes/dependencies/dependencies(@babel/core@7.26.9)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
@@ -69296,9 +69292,77 @@ snapshots:
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(typescript@7.0.2)
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(typescript@5.5.3)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.26.9)(@pnpm/logger@1001.0.1)(chai@5.2.1)(typanion@3.14.0)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+      archy: 1.0.0
+      chai: 5.2.1
+      chalk: 4.1.2
+      cli-table: 0.3.6
+      debug: 4.3.4(supports-color@9.4.0)
+      detective-amd: 3.0.1
+      detective-stylus: 1.0.0
+      fs-extra: 10.0.0
+      lodash: 4.17.21
+      module-definition: 3.3.1
+      moment: 2.29.4
+      node-source-walk: 4.2.0
+      p-map-series: 2.1.0
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
+      read-pkg-up: 7.0.1
+      resolve-dependency-path: 2.0.0
+      semver: 7.7.1
+      stylus-lookup: 3.0.2
+      table: 6.7.3
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@pnpm/logger'
+      - domexception
+      - encoding
+      - graphql
+      - postcss
+      - supports-color
+      - typanion
+      - typescript
+
+  '@teambit/dependencies@file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)':
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/component-id': 1.2.4
+      '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-package-version': file:scopes/component/component-package-version
+      '@teambit/component-version': 1.0.4
+      '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)
+      '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(graphql@15.8.0)
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(graphql@15.8.0)
+      '@teambit/legacy.bit-map': file:components/legacy/bit-map(graphql@15.8.0)
+      '@teambit/legacy.constants': file:components/legacy/constants
+      '@teambit/legacy.consumer': file:components/legacy/consumer(graphql@15.8.0)
+      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(graphql@15.8.0)
+      '@teambit/legacy.consumer-config': file:components/legacy/consumer-config(graphql@15.8.0)
+      '@teambit/legacy.dependency-graph': file:components/legacy/dependency-graph(graphql@15.8.0)
+      '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
+      '@teambit/legacy.logger': file:components/legacy/logger
+      '@teambit/legacy.utils': file:components/legacy/utils
+      '@teambit/mdx.deps-detectors.detective-mdx': file:scopes/mdx/deps-detectors/detective-mdx
+      '@teambit/node.deps-detectors.detective-es6': 0.0.6
+      '@teambit/styling.deps-detectors.detective-css': 0.0.6(postcss@8.4.45)
+      '@teambit/styling.deps-detectors.detective-less': 0.0.6(postcss@8.4.45)
+      '@teambit/styling.deps-detectors.detective-sass': 0.0.9(postcss@8.4.45)
+      '@teambit/styling.deps-detectors.detective-scss': 0.0.9(postcss@8.4.45)
+      '@teambit/styling.deps-lookups.lookup-styling': 0.0.4
+      '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
+      '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
+      '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(typescript@5.5.3)
+      '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
+      '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(typanion@3.14.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -69365,74 +69429,6 @@ snapshots:
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
       '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(typescript@6.0.3)
-      '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
-      '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(typanion@3.14.0)
-      '@types/node': 22.10.5
-      '@types/react': 19.2.14
-      '@types/react-dom': 19.2.3(@types/react@19.2.14)
-      archy: 1.0.0
-      chai: 5.2.1
-      chalk: 4.1.2
-      cli-table: 0.3.6
-      debug: 4.3.4(supports-color@9.4.0)
-      detective-amd: 3.0.1
-      detective-stylus: 1.0.0
-      fs-extra: 10.0.0
-      lodash: 4.17.21
-      module-definition: 3.3.1
-      moment: 2.29.4
-      node-source-walk: 4.2.0
-      p-map-series: 2.1.0
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
-      read-pkg-up: 7.0.1
-      resolve-dependency-path: 2.0.0
-      semver: 7.7.1
-      stylus-lookup: 3.0.2
-      table: 6.7.3
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@pnpm/logger'
-      - domexception
-      - encoding
-      - graphql
-      - postcss
-      - supports-color
-      - typanion
-      - typescript
-
-  '@teambit/dependencies@file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@7.0.2)':
-    dependencies:
-      '@teambit/bit-error': 0.0.404
-      '@teambit/component-id': 1.2.4
-      '@teambit/component-issues': file:components/component-issues
-      '@teambit/component-package-version': file:scopes/component/component-package-version
-      '@teambit/component-version': 1.0.4
-      '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)
-      '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(graphql@15.8.0)
-      '@teambit/harmony': 0.4.12
-      '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(graphql@15.8.0)
-      '@teambit/legacy.bit-map': file:components/legacy/bit-map(graphql@15.8.0)
-      '@teambit/legacy.constants': file:components/legacy/constants
-      '@teambit/legacy.consumer': file:components/legacy/consumer(graphql@15.8.0)
-      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(graphql@15.8.0)
-      '@teambit/legacy.consumer-config': file:components/legacy/consumer-config(graphql@15.8.0)
-      '@teambit/legacy.dependency-graph': file:components/legacy/dependency-graph(graphql@15.8.0)
-      '@teambit/legacy.extension-data': file:components/legacy/extension-data(graphql@15.8.0)
-      '@teambit/legacy.logger': file:components/legacy/logger
-      '@teambit/legacy.utils': file:components/legacy/utils
-      '@teambit/mdx.deps-detectors.detective-mdx': file:scopes/mdx/deps-detectors/detective-mdx
-      '@teambit/node.deps-detectors.detective-es6': 0.0.6
-      '@teambit/styling.deps-detectors.detective-css': 0.0.6(postcss@8.4.45)
-      '@teambit/styling.deps-detectors.detective-less': 0.0.6(postcss@8.4.45)
-      '@teambit/styling.deps-detectors.detective-sass': 0.0.9(postcss@8.4.45)
-      '@teambit/styling.deps-detectors.detective-scss': 0.0.9(postcss@8.4.45)
-      '@teambit/styling.deps-lookups.lookup-styling': 0.0.4
-      '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
-      '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
-      '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(typescript@7.0.2)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(typanion@3.14.0)
       '@types/node': 22.10.5
@@ -73660,6 +73656,22 @@ snapshots:
       - react-dom
       - typescript
 
+  '@teambit/documenter.code.react-playground@4.1.11(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
+    dependencies:
+      '@teambit/base-ui.input.error': 1.0.3(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.0(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.1.0)(react@19.1.0)
+      '@types/react': 19.2.14
+      classnames: 2.5.1
+      prism-react-renderer: 1.3.5(react@19.1.0)
+      react: 19.1.0
+      react-live: 4.1.8(react-dom@19.1.0)(react@19.1.0)
+      react-use-dimensions: 1.2.1(@types/react@19.2.14)(react@19.1.0)(typescript@5.5.3)
+      use-debounce: 9.0.4(react@19.1.0)
+    transitivePeerDependencies:
+      - react-dom
+      - typescript
+
   '@teambit/documenter.code.react-playground@4.1.11(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
     dependencies:
       '@teambit/base-ui.input.error': 1.0.3(react-dom@19.1.0)(react@19.1.0)
@@ -73741,9 +73753,9 @@ snapshots:
       - react-dom
       - typescript
 
-  '@teambit/documenter.markdown.hybrid-live-code-snippet@0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
+  '@teambit/documenter.markdown.hybrid-live-code-snippet@0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
-      '@teambit/documenter.code.react-playground': 4.1.11(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
+      '@teambit/documenter.code.react-playground': 4.1.11(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/documenter.ui.code-snippet': 4.2.6(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -73754,9 +73766,9 @@ snapshots:
       - react-dom
       - typescript
 
-  '@teambit/documenter.markdown.hybrid-live-code-snippet@0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/documenter.markdown.hybrid-live-code-snippet@0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
     dependencies:
-      '@teambit/documenter.code.react-playground': 4.1.11(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/documenter.code.react-playground': 4.1.11(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
       '@teambit/documenter.ui.code-snippet': 4.2.6(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -73813,6 +73825,19 @@ snapshots:
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 18.3.1
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@types/react-syntax-highlighter'
+      - react-dom
+      - typescript
+
+  '@teambit/documenter.markdown.hybrid-live-code-snippet@0.1.16(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
+    dependencies:
+      '@teambit/documenter.code.react-playground': 4.1.11(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
+      '@teambit/documenter.ui.code-snippet': 4.2.6(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+      react: 19.1.0
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react-syntax-highlighter'
@@ -73961,11 +73986,11 @@ snapshots:
       - react-dom
       - typescript
 
-  '@teambit/documenter.markdown.mdx@0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
+  '@teambit/documenter.markdown.mdx@0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@mdx-js/react': 3.1.1(@types/react@19.2.14)(react@19.1.0)
       '@teambit/documenter.markdown.heading': 0.1.10(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
+      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/documenter.routing.external-link': 4.1.4(react@19.1.0)
       '@teambit/documenter.ui.block-quote': 4.0.9(react@19.1.0)
       '@teambit/documenter.ui.bold': 4.0.9(react@19.1.0)
@@ -73990,11 +74015,11 @@ snapshots:
       - react-dom
       - typescript
 
-  '@teambit/documenter.markdown.mdx@0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/documenter.markdown.mdx@0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
     dependencies:
       '@mdx-js/react': 3.1.1(@types/react@19.2.14)(react@19.1.0)
       '@teambit/documenter.markdown.heading': 0.1.10(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
       '@teambit/documenter.routing.external-link': 4.1.4(react@19.1.0)
       '@teambit/documenter.ui.block-quote': 4.0.9(react@19.1.0)
       '@teambit/documenter.ui.bold': 4.0.9(react@19.1.0)
@@ -74099,6 +74124,35 @@ snapshots:
       '@types/react': 19.2.14
       classnames: 2.5.1
       react: 18.3.1
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@types/react-dom'
+      - '@types/react-syntax-highlighter'
+      - react-dom
+      - typescript
+
+  '@teambit/documenter.markdown.mdx@0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
+    dependencies:
+      '@mdx-js/react': 3.1.1(@types/react@19.2.14)(react@19.1.0)
+      '@teambit/documenter.markdown.heading': 0.1.10(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
+      '@teambit/documenter.routing.external-link': 4.1.4(react@19.1.0)
+      '@teambit/documenter.ui.block-quote': 4.0.9(react@19.1.0)
+      '@teambit/documenter.ui.bold': 4.0.9(react@19.1.0)
+      '@teambit/documenter.ui.image': 4.0.4(react@19.1.0)
+      '@teambit/documenter.ui.inline-code': 0.1.7(react@19.1.0)
+      '@teambit/documenter.ui.italic': 4.0.9(react@19.1.0)
+      '@teambit/documenter.ui.ol': 4.1.7(react@19.1.0)
+      '@teambit/documenter.ui.paragraph': 4.1.8(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/documenter.ui.separator': 4.1.7(react@19.1.0)
+      '@teambit/documenter.ui.sup': 4.0.9(react@19.1.0)
+      '@teambit/documenter.ui.table.base-table': 4.1.7(react@19.1.0)
+      '@teambit/documenter.ui.table.td': 4.1.7(react@19.1.0)
+      '@teambit/documenter.ui.table.tr': 4.1.7(react@19.1.0)
+      '@teambit/documenter.ui.ul': 4.1.7(react@19.1.0)
+      '@types/react': 19.2.14
+      classnames: 2.5.1
+      react: 19.1.0
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react-dom'
@@ -74657,6 +74711,19 @@ snapshots:
       - react-dom
       - typescript
 
+  '@teambit/documenter.ui.property-table@4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
+    dependencies:
+      '@teambit/documenter.ui.table': 4.1.10(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/documenter.ui.table-row': 4.1.14(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+      '@types/react': 19.2.14
+      react: 19.1.0
+      react-use-dimensions: 1.2.1(@types/react@19.2.14)(react@19.1.0)(typescript@5.5.3)
+      use-debounce: 3.4.3(react@19.1.0)
+    transitivePeerDependencies:
+      - '@types/react-dom'
+      - react-dom
+      - typescript
+
   '@teambit/documenter.ui.property-table@4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
     dependencies:
       '@teambit/documenter.ui.table': 4.1.10(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
@@ -75019,17 +75086,17 @@ snapshots:
       - graphql
       - supports-color
 
-  '@teambit/env@file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@6.0.3)':
+  '@teambit/env@file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)':
     dependencies:
       '@teambit/harmony': 0.4.12
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
-      '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@6.0.3)
-      '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@6.0.3)
+      '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.5.3)
+      '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@5.5.3)
       eslint-mdx: 1.17.1(eslint@8.56.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)
-      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@6.0.3)
+      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.56.0)
       eslint-plugin-mdx: 1.17.1(eslint@8.56.0)
       eslint-plugin-react: 7.33.2(eslint@8.56.0)
@@ -75045,17 +75112,17 @@ snapshots:
       - supports-color
       - typescript
 
-  '@teambit/env@file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)':
+  '@teambit/env@file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@6.0.3)':
     dependencies:
       '@teambit/harmony': 0.4.12
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
-      '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@7.0.2)
-      '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@7.0.2)
+      '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@6.0.3)
+      '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@6.0.3)
       eslint-mdx: 1.17.1(eslint@8.56.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)
-      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
+      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@6.0.3)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.56.0)
       eslint-plugin-mdx: 1.17.1(eslint@8.56.0)
       eslint-plugin-react: 7.33.2(eslint@8.56.0)
@@ -75084,7 +75151,7 @@ snapshots:
   '@teambit/envs.aspect-docs.envs@file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -76215,7 +76282,7 @@ snapshots:
   '@teambit/generator.aspect-docs.generator@file:scopes/generator/aspect-docs/generator(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -76695,7 +76762,7 @@ snapshots:
   '@teambit/harmony.aspect-docs.logger@file:scopes/harmony/aspect-docs/logger(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -76715,7 +76782,7 @@ snapshots:
   '@teambit/harmony.aspect-docs.node@file:scopes/harmony/aspect-docs/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -77359,7 +77426,7 @@ snapshots:
   '@teambit/html.aspect-docs.html@file:scopes/html/aspect-docs/html(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -79871,7 +79938,7 @@ snapshots:
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/workspace.root-components': 1.0.1
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -79916,7 +79983,7 @@ snapshots:
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@18.3.1)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@18.3.1)
       '@teambit/workspace.root-components': 1.0.1
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -79961,7 +80028,7 @@ snapshots:
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/workspace.root-components': 1.0.1
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -80390,7 +80457,7 @@ snapshots:
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
       '@teambit/evangelist.elements.button': 1.0.6(react-dom@18.3.1)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       lodash: 4.17.21
@@ -81038,9 +81105,9 @@ snapshots:
       - react-dom
       - typescript
 
-  '@teambit/mdx.ui.docs.snippet@0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
+  '@teambit/mdx.ui.docs.snippet@0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
-      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
+      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/documenter.ui.inline-code': 0.1.7(react@19.1.0)
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
       react: 19.1.0
@@ -81052,9 +81119,9 @@ snapshots:
       - react-dom
       - typescript
 
-  '@teambit/mdx.ui.docs.snippet@0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/mdx.ui.docs.snippet@0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
     dependencies:
-      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
       '@teambit/documenter.ui.inline-code': 0.1.7(react@19.1.0)
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
       react: 19.1.0
@@ -81114,6 +81181,20 @@ snapshots:
       '@teambit/documenter.ui.inline-code': 0.1.7(react@18.3.1)
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@18.3.1)
       react: 18.3.1
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@types/react'
+      - '@types/react-dom'
+      - '@types/react-syntax-highlighter'
+      - react-dom
+      - typescript
+
+  '@teambit/mdx.ui.docs.snippet@0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
+    dependencies:
+      '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
+      '@teambit/documenter.ui.inline-code': 0.1.7(react@19.1.0)
+      '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
+      react: 19.1.0
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react'
@@ -81214,11 +81295,11 @@ snapshots:
       - react-dom
       - typescript
 
-  '@teambit/mdx.ui.mdx-layout@1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
+  '@teambit/mdx.ui.mdx-layout@1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
-      '@teambit/documenter.markdown.mdx': 0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
+      '@teambit/documenter.markdown.mdx': 0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/mdx.ui.docs.link': 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.docs.snippet': 0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
+      '@teambit/mdx.ui.docs.snippet': 0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       react: 19.1.0
     transitivePeerDependencies:
       - '@mdx-js/react'
@@ -81230,11 +81311,11 @@ snapshots:
       - react-dom
       - typescript
 
-  '@teambit/mdx.ui.mdx-layout@1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/mdx.ui.mdx-layout@1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
     dependencies:
-      '@teambit/documenter.markdown.mdx': 0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/documenter.markdown.mdx': 0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
       '@teambit/mdx.ui.docs.link': 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.docs.snippet': 0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.docs.snippet': 0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
       react: 19.1.0
     transitivePeerDependencies:
       - '@mdx-js/react'
@@ -81284,6 +81365,22 @@ snapshots:
       '@teambit/mdx.ui.docs.link': 0.0.505(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
       '@teambit/mdx.ui.docs.snippet': 0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)(typescript@6.0.3)
       react: 18.3.1
+    transitivePeerDependencies:
+      - '@mdx-js/react'
+      - '@teambit/mdx.ui.mdx-scope-context'
+      - '@testing-library/react'
+      - '@types/react'
+      - '@types/react-dom'
+      - '@types/react-syntax-highlighter'
+      - react-dom
+      - typescript
+
+  '@teambit/mdx.ui.mdx-layout@1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
+    dependencies:
+      '@teambit/documenter.markdown.mdx': 0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
+      '@teambit/mdx.ui.docs.link': 0.0.505(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/mdx.ui.docs.snippet': 0.0.513(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
+      react: 19.1.0
     transitivePeerDependencies:
       - '@mdx-js/react'
       - '@teambit/mdx.ui.mdx-scope-context'
@@ -82244,7 +82341,7 @@ snapshots:
   '@teambit/pipelines.aspect-docs.builder@file:scopes/pipelines/aspect-docs/builder(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -82278,7 +82375,7 @@ snapshots:
   '@teambit/pkg.aspect-docs.pkg@file:scopes/pkg/aspect-docs/pkg(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -82332,7 +82429,7 @@ snapshots:
 
   '@teambit/pkg.entities.registry@0.0.4': {}
 
-  '@teambit/pkg.modules.component-package-name@0.0.56(graphql@15.8.0)':
+  '@teambit/pkg.modules.component-package-name@0.0.56':
     dependencies:
       '@teambit/component-id': 1.2.4
       '@teambit/legacy.constants': 0.0.11
@@ -82341,10 +82438,7 @@ snapshots:
       '@teambit/legacy.utils': 0.0.21
       '@teambit/toolbox.path.path': 0.0.8
     transitivePeerDependencies:
-      - domexception
       - encoding
-      - graphql
-      - supports-color
 
   '@teambit/pkg.modules.component-package-name@file:components/modules/component-package-name(graphql@15.8.0)':
     dependencies:
@@ -82799,7 +82893,7 @@ snapshots:
   '@teambit/preview.aspect-docs.preview@file:scopes/preview/aspect-docs/preview(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -84147,7 +84241,7 @@ snapshots:
   '@teambit/react.aspect-docs.react@file:scopes/react/aspect-docs/react(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -84287,6 +84381,26 @@ snapshots:
       - supports-color
       - typescript
 
+  '@teambit/react.eslint-config-bit-react@file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)':
+    dependencies:
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+      '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.5.3)
+      '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@5.5.3)
+      eslint: 8.56.0
+      eslint-config-prettier: 8.5.0(eslint@8.56.0)
+      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
+      eslint-plugin-mdx: 1.17.1(eslint@8.56.0)
+      eslint-plugin-react-hooks: 4.6.2(eslint@8.56.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
+    transitivePeerDependencies:
+      - jest
+      - supports-color
+      - typescript
+
   '@teambit/react.eslint-config-bit-react@file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)':
     dependencies:
       '@types/node': 22.10.5
@@ -84317,26 +84431,6 @@ snapshots:
       eslint: 8.56.0
       eslint-config-prettier: 8.5.0(eslint@8.56.0)
       eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@6.0.3)
-      eslint-plugin-mdx: 1.17.1(eslint@8.56.0)
-      eslint-plugin-react-hooks: 4.6.2(eslint@8.56.0)
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
-    transitivePeerDependencies:
-      - jest
-      - supports-color
-      - typescript
-
-  '@teambit/react.eslint-config-bit-react@file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)':
-    dependencies:
-      '@types/node': 22.10.5
-      '@types/react': 19.2.14
-      '@types/react-dom': 19.2.3(@types/react@19.2.14)
-      '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@7.0.2)
-      '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@7.0.2)
-      eslint: 8.56.0
-      eslint-config-prettier: 8.5.0(eslint@8.56.0)
-      eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@7.0.2)
       eslint-plugin-mdx: 1.17.1(eslint@8.56.0)
       eslint-plugin-react-hooks: 4.6.2(eslint@8.56.0)
       react: 19.1.0
@@ -85569,13 +85663,13 @@ snapshots:
       - graphql
       - typescript
 
-  '@teambit/react.ui.docs-app@file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/react.ui.docs-app@file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/design.theme.icons-font': 2.0.29(react-dom@19.1.0)(react@19.1.0)
       '@teambit/design.themes.theme-toggler': 0.1.69(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs.compositions-carousel': file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@14.3.1)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/react.ui.docs.docs-content': file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
-      '@teambit/react.ui.docs.properties-table': file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/react.ui.docs.docs-content': file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
+      '@teambit/react.ui.docs.properties-table': file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.1.0
@@ -85613,13 +85707,13 @@ snapshots:
       - graphql
       - typescript
 
-  '@teambit/react.ui.docs-app@file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/react.ui.docs-app@file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/design.theme.icons-font': 2.0.29(react-dom@19.1.0)(react@19.1.0)
       '@teambit/design.themes.theme-toggler': 0.1.69(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.docs.compositions-carousel': file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/react.ui.docs.docs-content': file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
-      '@teambit/react.ui.docs.properties-table': file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/react.ui.docs.docs-content': file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
+      '@teambit/react.ui.docs.properties-table': file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.1.0
@@ -85761,10 +85855,10 @@ snapshots:
       - '@types/react-syntax-highlighter'
       - typescript
 
-  '@teambit/react.ui.docs.docs-content@file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/react.ui.docs.docs-content@file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/documenter.ui.section': 4.1.7(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.error-fallback': file:scopes/react/ui/error-fallback(@testing-library/react@14.3.1)(react-dom@19.1.0)(react@19.1.0)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -85799,10 +85893,10 @@ snapshots:
       - '@types/react-syntax-highlighter'
       - typescript
 
-  '@teambit/react.ui.docs.docs-content@file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/react.ui.docs.docs-content@file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/documenter.ui.section': 4.1.7(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/react.ui.error-fallback': file:scopes/react/ui/error-fallback(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -85850,11 +85944,11 @@ snapshots:
       - graphql
       - typescript
 
-  '@teambit/react.ui.docs.properties-table@file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
+  '@teambit/react.ui.docs.properties-table@file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/component.ui.hooks.use-fetch-docs': 0.0.21(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.linked-heading': 4.1.10(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/documenter.ui.property-table': 4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
+      '@teambit/documenter.ui.property-table': 4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@teambit/documenter.ui.section': 4.1.7(react@19.1.0)
       core-js: 3.13.0
       react: 19.1.0
@@ -85866,11 +85960,11 @@ snapshots:
       - graphql
       - typescript
 
-  '@teambit/react.ui.docs.properties-table@file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/react.ui.docs.properties-table@file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)':
     dependencies:
       '@teambit/component.ui.hooks.use-fetch-docs': 0.0.21(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.linked-heading': 4.1.10(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/documenter.ui.property-table': 4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/documenter.ui.property-table': 4.1.11(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.9.2)
       '@teambit/documenter.ui.section': 4.1.7(react@19.1.0)
       core-js: 3.13.0
       react: 19.1.0
@@ -87665,7 +87759,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -87803,7 +87897,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -87941,7 +88035,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@18.3.1)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@18.3.1)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -88079,7 +88173,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
@@ -90130,16 +90224,16 @@ snapshots:
       - '@apollo/client'
       - '@teambit/base-react.navigation.link'
 
-  '@teambit/tester@file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/tester@file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@apollo/client': 3.12.2(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(subscriptions-transport-ws@0.9.19)
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)
-      '@teambit/defender.ui.test-compare': file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/defender.ui.test-compare': file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-compare-section': 0.0.102(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/design.ui.pill-label': 0.0.360(react@19.1.0)
       '@teambit/design.ui.tooltip': file:components/ui/tooltip(react-dom@19.1.0)(react@19.1.0)
       '@teambit/evangelist.elements.icon': 1.0.5(react-dom@19.1.0)(react@19.1.0)
@@ -90218,16 +90312,16 @@ snapshots:
       - supports-color
       - typescript
 
-  '@teambit/tester@file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/tester@file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@apollo/client': 3.12.2(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(subscriptions-transport-ws@0.9.19)
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)
-      '@teambit/defender.ui.test-compare': file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/defender.ui.test-compare': file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/defender.ui.test-compare-section': 0.0.102(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
       '@teambit/design.ui.pill-label': 0.0.360(react@19.1.0)
       '@teambit/design.ui.tooltip': file:components/ui/tooltip(react-dom@19.1.0)(react@19.1.0)
       '@teambit/evangelist.elements.icon': 1.0.5(react-dom@19.1.0)(react@19.1.0)
@@ -90676,7 +90770,7 @@ snapshots:
   '@teambit/typescript.aspect-docs.typescript@file:scopes/typescript/aspect-docs/typescript(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -90707,15 +90801,6 @@ snapshots:
       '@typescript-eslint/typescript-estree': 8.39.0(typescript@6.0.3)
       node-source-walk: 6.0.2
       typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-
-  '@teambit/typescript.deps-detectors.detective-typescript@0.0.10(typescript@7.0.2)':
-    dependencies:
-      '@teambit/node.deps-detectors.parser-helper': 0.0.6
-      '@typescript-eslint/typescript-estree': 8.39.0(typescript@7.0.2)
-      node-source-walk: 6.0.2
-      typescript: 7.0.2
     transitivePeerDependencies:
       - supports-color
 
@@ -90852,20 +90937,6 @@ snapshots:
       react: 18.3.1
       typescript: 6.0.3
 
-  '@teambit/typescript.typescript-compiler@5.0.0(react@18.3.1)':
-    dependencies:
-      '@teambit/bit-error': 0.0.404
-      '@teambit/compilation.compiler-task': 1.0.12
-      comment-json: 4.2.3
-      fs-extra: 11.3.4
-      get-tsconfig: 4.2.0
-      glob: 10.4.5
-      globby: 11.1.0
-      lodash: 4.17.21
-      normalize-path: 3.0.0
-      react: 18.3.1
-      typescript: 6.0.3
-
   '@teambit/typescript.typescript-compiler@5.0.0(react@19.1.0)':
     dependencies:
       '@teambit/bit-error': 0.0.404
@@ -90878,6 +90949,20 @@ snapshots:
       lodash: 4.17.21
       normalize-path: 3.0.0
       react: 19.1.0
+      typescript: 6.0.3
+
+  '@teambit/typescript.typescript-compiler@5.0.1(react@18.3.1)':
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/compilation.compiler-task': 1.0.12
+      comment-json: 4.2.3
+      fs-extra: 11.3.4
+      get-tsconfig: 4.2.0
+      glob: 10.4.5
+      globby: 11.1.0
+      lodash: 4.17.21
+      normalize-path: 3.0.0
+      react: 18.3.1
       typescript: 6.0.3
 
   '@teambit/typescript.typescript-compiler@5.0.1(react@19.1.0)':
@@ -90904,7 +90989,7 @@ snapshots:
       '@teambit/ts-server': file:scopes/typescript/ts-server
       '@teambit/typescript.aspect-docs.typescript': file:scopes/typescript/aspect-docs/typescript(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
       '@teambit/typescript.modules.ts-config-mutator': file:scopes/typescript/modules/ts-config-mutator
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@18.3.1)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -90934,7 +91019,7 @@ snapshots:
       '@teambit/ts-server': file:scopes/typescript/ts-server
       '@teambit/typescript.aspect-docs.typescript': file:scopes/typescript/aspect-docs/typescript(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
       '@teambit/typescript.modules.ts-config-mutator': file:scopes/typescript/modules/ts-config-mutator
-      '@teambit/typescript.typescript-compiler': 5.0.0(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
       '@types/node': 22.10.5
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -92783,7 +92868,7 @@ snapshots:
     dependencies:
       url-parse: 1.5.3
 
-  '@teambit/ui@file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)':
+  '@teambit/ui@file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)':
     dependencies:
       '@apollo/client': 3.12.2(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(subscriptions-transport-ws@0.9.19)
       '@babel/runtime': 7.23.2
@@ -92836,7 +92921,7 @@ snapshots:
       postcss-normalize: 10.0.0(browserslist@4.28.2)(postcss@8.4.18)
       postcss-preset-env: 7.8.2(postcss@8.4.18)
       react: 19.1.0
-      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@7.0.2)(webpack@5.97.1)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@5.5.3)(webpack@5.97.1)
       react-dom: 19.1.0(react@19.1.0)
       react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       resolve-url-loader: 5.0.0
@@ -92951,7 +93036,7 @@ snapshots:
       - webpack-cli
       - webpack-hot-middleware
 
-  '@teambit/ui@file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)':
+  '@teambit/ui@file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)':
     dependencies:
       '@apollo/client': 3.12.2(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(subscriptions-transport-ws@0.9.19)
       '@babel/runtime': 7.23.2
@@ -93004,7 +93089,7 @@ snapshots:
       postcss-normalize: 10.0.0(browserslist@4.28.2)(postcss@8.4.18)
       postcss-preset-env: 7.8.2(postcss@8.4.18)
       react: 19.1.0
-      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@7.0.2)(webpack@5.97.1)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@5.5.3)(webpack@5.97.1)
       react-dom: 19.1.0(react@19.1.0)
       react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       resolve-url-loader: 5.0.0
@@ -93161,7 +93246,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@teambit/vue-aspect@file:scopes/vue/vue(react@19.1.0)(typescript@7.0.2)':
+  '@teambit/vue-aspect@file:scopes/vue/vue(react@19.1.0)(typescript@5.5.3)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@19.1.0)
       '@teambit/api-reference.models.api-reference-model': 0.0.53(react-dom@19.1.0)(react@19.1.0)
@@ -93176,7 +93261,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
-      vue-component-meta: 2.2.10(typescript@7.0.2)
+      vue-component-meta: 2.2.10(typescript@5.5.3)
     transitivePeerDependencies:
       - typescript
 
@@ -94074,7 +94159,7 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack@file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)':
+  '@teambit/webpack@file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.12
@@ -94110,7 +94195,7 @@ snapshots:
       punycode: 2.3.1
       querystring-es3: 0.2.1
       react: 19.1.0
-      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@7.0.2)(webpack@5.97.1)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@5.5.3)(webpack@5.97.1)
       react-dom: 19.1.0(react@19.1.0)
       react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       stream-browserify: 3.0.0
@@ -94198,7 +94283,7 @@ snapshots:
   '@teambit/workspace.aspect-docs.variants@file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)':
     dependencies:
       '@teambit/documenter.theme.theme-compositions': 4.1.5(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
+      '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
@@ -96184,15 +96269,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.39.0(typescript@7.0.2)':
-    dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.39.0(typescript@7.0.2)
-      '@typescript-eslint/types': 8.39.0
-      debug: 4.3.4(supports-color@9.4.0)
-      typescript: 7.0.2
-    transitivePeerDependencies:
-      - supports-color
-
   '@typescript-eslint/scope-manager@4.4.1':
     dependencies:
       '@typescript-eslint/types': 4.4.1
@@ -96229,10 +96305,6 @@ snapshots:
   '@typescript-eslint/tsconfig-utils@8.39.0(typescript@6.0.3)':
     dependencies:
       typescript: 6.0.3
-
-  '@typescript-eslint/tsconfig-utils@8.39.0(typescript@7.0.2)':
-    dependencies:
-      typescript: 7.0.2
 
   '@typescript-eslint/type-utils@6.19.1(eslint@8.56.0)(typescript@5.5.3)':
     dependencies:
@@ -96537,22 +96609,6 @@ snapshots:
       semver: 7.7.1
       ts-api-utils: 2.1.0(typescript@6.0.3)
       typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-
-  '@typescript-eslint/typescript-estree@8.39.0(typescript@7.0.2)':
-    dependencies:
-      '@typescript-eslint/project-service': 8.39.0(typescript@7.0.2)
-      '@typescript-eslint/tsconfig-utils': 8.39.0(typescript@7.0.2)
-      '@typescript-eslint/types': 8.39.0
-      '@typescript-eslint/visitor-keys': 8.39.0
-      debug: 4.3.4(supports-color@9.4.0)
-      fast-glob: 3.3.2
-      is-glob: 4.0.3
-      minimatch: 9.0.5
-      semver: 7.7.1
-      ts-api-utils: 2.1.0(typescript@7.0.2)
-      typescript: 7.0.2
     transitivePeerDependencies:
       - supports-color
 
@@ -96973,6 +97029,19 @@ snapshots:
     dependencies:
       de-indent: 1.0.2
       he: 1.2.0
+
+  '@vue/language-core@2.2.10(typescript@5.5.3)':
+    dependencies:
+      '@volar/language-core': 2.4.14
+      '@vue/compiler-dom': 3.5.17
+      '@vue/compiler-vue2': 2.7.16
+      '@vue/shared': 3.5.17
+      alien-signals: 1.0.13
+      minimatch: 9.0.5
+      muggle-string: 0.4.1
+      path-browserify: 1.0.1
+    optionalDependencies:
+      typescript: 5.5.3
 
   '@vue/language-core@2.2.10(typescript@5.9.2)':
     dependencies:
@@ -100836,6 +100905,17 @@ snapshots:
       eslint: 8.56.0
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 6.19.1(@typescript-eslint/parser@6.19.1)(eslint@8.56.0)(typescript@7.0.2)
+      jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  eslint-plugin-jest@27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3):
+    dependencies:
+      '@typescript-eslint/utils': 5.62.0(eslint@8.56.0)(typescript@5.5.3)
+      eslint: 8.56.0
+    optionalDependencies:
+      '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.5.3)
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)
     transitivePeerDependencies:
       - supports-color
@@ -107467,6 +107547,12 @@ snapshots:
       react: 18.3.1
       typescript: 7.0.2
 
+  react-use-dimensions@1.2.1(@types/react@19.2.14)(react@19.1.0)(typescript@5.5.3):
+    dependencies:
+      '@types/react': 19.2.14
+      react: 19.1.0
+      typescript: 5.5.3
+
   react-use-dimensions@1.2.1(@types/react@19.2.14)(react@19.1.0)(typescript@5.9.2):
     dependencies:
       '@types/react': 19.2.14
@@ -109535,10 +109621,6 @@ snapshots:
     dependencies:
       typescript: 6.0.3
 
-  ts-api-utils@2.1.0(typescript@7.0.2):
-    dependencies:
-      typescript: 7.0.2
-
   ts-easing@0.2.0: {}
 
   ts-graphviz@2.1.6:
@@ -110325,6 +110407,15 @@ snapshots:
   vscode-languageserver-types@3.16.0: {}
 
   vscode-uri@3.1.0: {}
+
+  vue-component-meta@2.2.10(typescript@5.5.3):
+    dependencies:
+      '@volar/typescript': 2.4.14
+      '@vue/language-core': 2.2.10(typescript@5.5.3)
+      path-browserify: 1.0.1
+      vue-component-type-helpers: 2.2.10
+    optionalDependencies:
+      typescript: 5.5.3
 
   vue-component-meta@2.2.10(typescript@5.9.2):
     dependencies:
