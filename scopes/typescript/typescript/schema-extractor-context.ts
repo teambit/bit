@@ -308,7 +308,6 @@ export class SchemaExtractorContext {
 
   async getFilePathByNode(node: Node) {
     const def = await this.tsserver.getDefinition(this.getPath(node), this.getLocation(node));
-
     const firstDef = head(def?.body);
     return firstDef?.file;
   }
