@@ -261,6 +261,8 @@ export class ComponentCompareMain {
       // a tag ancestor is never skipped by content, so a legit tag with no changes (e.g. created
       // with --unmodified) still shows no diff.
       toVersion = targetVersion;
+      let foundMeaningfulParent = false;
+      let sawNonHiddenAncestor = false;
       while (parentRef) {
         const parentTag = modelComponent.getTagOfRefIfExists(parentRef);
         const parentVersion: string = parentTag || parentRef.toString();
@@ -271,10 +273,17 @@ export class ComponentCompareMain {
         const parentObject = await modelComponent.loadVersion(parentVersion, repository);
         version = parentVersion;
         if (!parentObject.hidden) {
-          if (parentTag) break;
+          sawNonHiddenAncestor = true;
+          if (parentTag) {
+            foundMeaningfulParent = true;
+            break;
+          }
           // cheap check first. when the files differ, this ancestor is meaningful, no need to
           // compute the full diff here (it is computed once below for the output).
-          if (!this.haveSameFiles(parentObject, versionObject)) break;
+          if (!this.haveSameFiles(parentObject, versionObject)) {
+            foundMeaningfulParent = true;
+            break;
+          }
           // files are identical, compute the diff to find out whether the fields (deps/config) differ.
           const parentDiff = await this.diffBetweenVersionsObjects(
             modelComponent,
@@ -284,9 +293,21 @@ export class ComponentCompareMain {
             toVersion,
             diffOpts
           );
-          if (parentDiff.hasDiff) break;
+          if (parentDiff.hasDiff) {
+            foundMeaningfulParent = true;
+            break;
+          }
         }
         parentRef = parentObject.parents[0];
+      }
+      if (!foundMeaningfulParent && !sawNonHiddenAncestor) {
+        // the entire parent chain is hidden (e.g. the first release of a component created by the
+        // merge + tag-from-scope flow). treat it as having no parent and show all files as new,
+        // rather than diffing against a hidden snap.
+        const versionFiles = await versionObject.modelFilesToSourceFiles(repository);
+        diffResult.filesDiff = await getFilesDiff([], versionFiles, 'no parent', targetVersion);
+        if (hasDiff(diffResult)) diffResult.hasDiff = true;
+        return diffResult;
       }
     }
     const fromVersionObject = version ? await modelComponent.loadVersion(version, repository) : undefined;
