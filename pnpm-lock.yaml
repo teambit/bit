@@ -1699,9 +1699,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
@@ -2183,6 +2180,9 @@ importers:
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   components/bit/get-bit-version:
     dependencies:
@@ -6437,957 +6437,6 @@ importers:
         specifier: 5.9.5
         version: 5.9.5
 
-  node_modules/.bit_roots/teambit.envs_env:
-    dependencies:
-      '@teambit/api-reference':
-        specifier: workspace:*
-        version: file:scopes/api-reference/api-reference(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(react@19.1.0)
-      '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        specifier: workspace:*
-        version: file:components/overview/renderers/grouped-schema-nodes-overview-summary(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/api-reference.renderers.default-node-renderers':
-        specifier: workspace:*
-        version: file:components/renderers/default-node-renderers(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/api-reference.renderers.tuple-type':
-        specifier: workspace:*
-        version: file:components/renderers/tuple-type(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/api-server':
-        specifier: workspace:*
-        version: file:scopes/harmony/api-server(graphql@15.8.0)
-      '@teambit/application':
-        specifier: workspace:*
-        version: file:scopes/harmony/application(react@19.1.0)
-      '@teambit/aspect':
-        specifier: workspace:*
-        version: file:scopes/harmony/aspect(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@testing-library/react@16.3.2)(babel-plugin-macros@3.1.0)(eslint@8.56.0)(graphql@15.8.0)
-      '@teambit/aspect-loader':
-        specifier: workspace:*
-        version: file:scopes/harmony/aspect-loader(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)
-      '@teambit/babel':
-        specifier: workspace:*
-        version: file:scopes/compilation/babel(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/bit':
-        specifier: workspace:*
-        version: file:scopes/harmony/bit(@testing-library/react@16.3.2)(subscriptions-transport-ws@0.9.19)(typanion@3.14.0)
-      '@teambit/bit.get-bit-version':
-        specifier: workspace:*
-        version: file:components/bit/get-bit-version
-      '@teambit/builder':
-        specifier: workspace:*
-        version: file:scopes/pipelines/builder(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)
-      '@teambit/builder-data':
-        specifier: workspace:*
-        version: file:scopes/pipelines/modules/builder-data
-      '@teambit/bundler':
-        specifier: workspace:*
-        version: file:scopes/compilation/bundler(@apollo/client@3.12.2)(react@19.1.0)
-      '@teambit/cache':
-        specifier: workspace:*
-        version: file:scopes/harmony/cache(chai@5.2.1)(react@19.1.0)
-      '@teambit/changelog':
-        specifier: workspace:*
-        version: file:scopes/component/changelog(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(react@19.1.0)(typescript@5.5.3)
-      '@teambit/checkout':
-        specifier: workspace:*
-        version: file:scopes/component/checkout(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai-fs@1.0.0)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
-      '@teambit/ci':
-        specifier: workspace:*
-        version: file:scopes/git/ci(chai@5.2.1)(graphql@15.8.0)
-      '@teambit/clear-cache':
-        specifier: workspace:*
-        version: file:scopes/workspace/clear-cache(graphql@15.8.0)(react@19.1.0)
-      '@teambit/cli':
-        specifier: workspace:*
-        version: file:scopes/harmony/cli(react@19.1.0)
-      '@teambit/cli-mcp-server':
-        specifier: workspace:*
-        version: file:scopes/mcp/cli-mcp-server(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
-      '@teambit/cli-table':
-        specifier: workspace:*
-        version: file:scopes/toolbox/tables/cli-table
-      '@teambit/cloud':
-        specifier: workspace:*
-        version: file:scopes/cloud/cloud(@apollo/client@3.12.2)(@testing-library/react@16.3.2)(graphql@15.8.0)(react@19.1.0)
-      '@teambit/cloud.hooks.use-cloud-scopes':
-        specifier: workspace:*
-        version: file:scopes/cloud/hooks/use-cloud-scopes(@apollo/client@3.12.2)
-      '@teambit/cloud.hooks.use-current-user':
-        specifier: workspace:*
-        version: file:scopes/cloud/hooks/use-current-user(@apollo/client@3.12.2)(react@19.1.0)
-      '@teambit/cloud.hooks.use-logout':
-        specifier: workspace:*
-        version: file:scopes/cloud/hooks/use-logout(@apollo/client@3.12.2)
-      '@teambit/cloud.models.cloud-scope':
-        specifier: workspace:*
-        version: file:scopes/cloud/models/cloud-scope
-      '@teambit/cloud.models.cloud-user':
-        specifier: workspace:*
-        version: file:scopes/cloud/models/cloud-user
-      '@teambit/cloud.modules.get-cloud-user':
-        specifier: workspace:*
-        version: file:scopes/cloud/modules/get-cloud-user(graphql@15.8.0)
-      '@teambit/cloud.ui.current-user':
-        specifier: workspace:*
-        version: file:scopes/cloud/ui/current-user(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/cloud.ui.login':
-        specifier: workspace:*
-        version: file:scopes/cloud/ui/login(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/cloud.ui.user-bar':
-        specifier: workspace:*
-        version: file:scopes/cloud/ui/user-bar(@apollo/client@3.12.2)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/code':
-        specifier: workspace:*
-        version: file:scopes/component/code(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(monaco-editor@0.33.0)(react@19.1.0)
-      '@teambit/code.ui.code-compare':
-        specifier: workspace:*
-        version: file:components/ui/code-compare(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(monaco-editor@0.33.0)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/code.ui.code-editor':
-        specifier: workspace:*
-        version: file:components/ui/code-editor(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/code.ui.code-tab-page':
-        specifier: workspace:*
-        version: file:components/ui/code-tab-page(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/code.ui.code-view':
-        specifier: workspace:*
-        version: file:components/ui/code-view(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/code.ui.queries.get-file-content':
-        specifier: workspace:*
-        version: file:components/ui/queries/get-file-content(@apollo/client@3.12.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/command-bar':
-        specifier: workspace:*
-        version: file:scopes/explorer/command-bar(@testing-library/react@16.3.2)(react@19.1.0)
-      '@teambit/community':
-        specifier: workspace:*
-        version: file:scopes/community/community
-      '@teambit/compilation.aspect-docs.babel':
-        specifier: workspace:*
-        version: file:scopes/compilation/aspect-docs/babel(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/compilation.aspect-docs.compiler':
-        specifier: workspace:*
-        version: file:scopes/compilation/aspect-docs/compiler(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/compilation.aspect-docs.multi-compiler':
-        specifier: workspace:*
-        version: file:scopes/compilation/aspect-docs/multi-compiler(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/compilation.modules.babel-compiler':
-        specifier: workspace:*
-        version: file:scopes/compilation/modules/babel-compiler
-      '@teambit/compiler':
-        specifier: workspace:*
-        version: file:scopes/compilation/compiler(graphql@15.8.0)(react@19.1.0)
-      '@teambit/component':
-        specifier: workspace:*
-        version: file:scopes/component/component(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(chai@5.2.1)(graphql@15.8.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/component-compare':
-        specifier: workspace:*
-        version: file:scopes/component/component-compare(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(graphql@15.8.0)(monaco-editor@0.33.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/component-descriptor':
-        specifier: workspace:*
-        version: file:scopes/component/component-descriptor(chai@5.2.1)
-      '@teambit/component-issues':
-        specifier: workspace:*
-        version: file:components/component-issues
-      '@teambit/component-log':
-        specifier: workspace:*
-        version: file:scopes/component/component-log(graphql@15.8.0)(react@19.1.0)
-      '@teambit/component-package-version':
-        specifier: workspace:*
-        version: file:scopes/component/component-package-version
-      '@teambit/component-sizer':
-        specifier: workspace:*
-        version: file:scopes/component/component-sizer(@testing-library/react@16.3.2)(graphql@15.8.0)(react@19.1.0)
-      '@teambit/component-tree':
-        specifier: workspace:*
-        version: file:scopes/component/component-tree(react@19.1.0)
-      '@teambit/component-writer':
-        specifier: workspace:*
-        version: file:scopes/component/component-writer
-      '@teambit/component.aspect-docs.component':
-        specifier: workspace:*
-        version: file:scopes/component/aspect-docs/component(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/component.modules.component-url':
-        specifier: workspace:*
-        version: file:scopes/component/component-url(react@19.1.0)
-      '@teambit/component.modules.merge-helper':
-        specifier: workspace:*
-        version: file:scopes/component/modules/merge-helper
-      '@teambit/component.snap-distance':
-        specifier: workspace:*
-        version: file:scopes/component/snap-distance(graphql@15.8.0)
-      '@teambit/component.sources':
-        specifier: workspace:*
-        version: file:scopes/component/sources(graphql@15.8.0)
-      '@teambit/component.testing.mock-components':
-        specifier: workspace:*
-        version: file:scopes/component/testing/mock-components(graphql@15.8.0)
-      '@teambit/component.ui.component-compare.changelog':
-        specifier: workspace:*
-        version: file:components/ui/component-compare/changelog(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/component.ui.component-compare.component-compare':
-        specifier: workspace:*
-        version: file:components/ui/component-compare/component-compare(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/component.ui.component-compare.context':
-        specifier: workspace:*
-        version: file:components/ui/component-compare/context(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/component.ui.component-compare.models.component-compare-props':
-        specifier: workspace:*
-        version: file:components/ui/component-compare/models/component-compare-props(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/component.ui.component-compare.utils.lazy-loading':
-        specifier: workspace:*
-        version: file:components/ui/component-compare/utils/lazy-loading(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/component.ui.component-compare.version-picker':
-        specifier: workspace:*
-        version: file:components/ui/component-compare/version-picker(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/component.ui.component-drawer':
-        specifier: workspace:*
-        version: file:components/ui/component-drawer(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(chai@5.2.1)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/component.ui.component-filters.component-filter-context':
-        specifier: workspace:*
-        version: file:components/ui/component-filters/component-filter-context(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/component.ui.component-filters.deprecate-filter':
-        specifier: workspace:*
-        version: file:components/ui/component-filters/deprecate-filter(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/component.ui.component-filters.env-filter':
-        specifier: workspace:*
-        version: file:components/ui/component-filters/env-filter(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/component.ui.component-filters.show-main-filter':
-        specifier: workspace:*
-        version: file:components/ui/component-filters/show-main-filter(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/component.ui.version-block':
-        specifier: workspace:*
-        version: file:components/ui/version-block(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/component.ui.version-dropdown':
-        specifier: workspace:*
-        version: file:components/ui/version-dropdown(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/composition-card':
-        specifier: workspace:*
-        version: file:scopes/compositions/composition-card(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/compositions':
-        specifier: workspace:*
-        version: file:scopes/compositions/compositions(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(graphql@15.8.0)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
-      '@teambit/compositions.aspect-docs.compositions':
-        specifier: workspace:*
-        version: file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/compositions.model.composition-id':
-        specifier: workspace:*
-        version: file:scopes/compositions/model/composition-id(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/compositions.model.composition-type':
-        specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.1.0)
-      '@teambit/compositions.panels.composition-gallery':
-        specifier: workspace:*
-        version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/compositions.ui.composition-compare':
-        specifier: workspace:*
-        version: file:components/ui/composition-compare(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/compositions.ui.composition-compare-section':
-        specifier: workspace:*
-        version: file:components/ui/composition-compare-section(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/config':
-        specifier: workspace:*
-        version: file:scopes/harmony/config(graphql@15.8.0)
-      '@teambit/config-merger':
-        specifier: workspace:*
-        version: file:scopes/workspace/config-merger(chai@5.2.1)(graphql@15.8.0)
-      '@teambit/config-store':
-        specifier: workspace:*
-        version: file:components/config-store
-      '@teambit/defender.eslint.config-mutator':
-        specifier: workspace:*
-        version: file:scopes/defender/eslint-config-mutator(eslint@8.56.0)
-      '@teambit/defender.prettier.config-mutator':
-        specifier: workspace:*
-        version: file:scopes/defender/prettier-config-mutator
-      '@teambit/defender.ui.test-compare':
-        specifier: workspace:*
-        version: file:components/ui/test-compare(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
-      '@teambit/defender.ui.test-page':
-        specifier: workspace:*
-        version: file:components/ui/test-page(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(typescript@5.5.3)
-      '@teambit/dependencies':
-        specifier: workspace:*
-        version: file:scopes/dependencies/dependencies(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(postcss@8.4.45)(typanion@3.14.0)(typescript@5.5.3)
-      '@teambit/dependencies.aspect-docs.dependency-resolver':
-        specifier: workspace:*
-        version: file:scopes/dependencies/aspect-docs/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/dependencies.aspect-docs.pnpm':
-        specifier: workspace:*
-        version: file:scopes/dependencies/aspect-docs/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/dependencies.aspect-docs.yarn':
-        specifier: workspace:*
-        version: file:scopes/dependencies/aspect-docs/yarn(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/dependencies.fs.linked-dependencies':
-        specifier: workspace:*
-        version: file:scopes/dependencies/fs/linked-dependencies
-      '@teambit/dependency-resolver':
-        specifier: workspace:*
-        version: file:scopes/dependencies/dependency-resolver(@pnpm/logger@1001.0.1)(@pnpm/worker@1000.6.7)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@yarnpkg/core@4.2.0)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typanion@3.14.0)
-      '@teambit/deprecation':
-        specifier: workspace:*
-        version: file:scopes/component/deprecation(@testing-library/react@16.3.2)(graphql@15.8.0)(react@19.1.0)
-      '@teambit/design.ui.avatar':
-        specifier: workspace:*
-        version: file:components/ui/avatar(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/design.ui.time-ago':
-        specifier: workspace:*
-        version: file:components/ui/time-ago(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/design.ui.tooltip':
-        specifier: workspace:*
-        version: file:components/ui/tooltip(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/dev-files':
-        specifier: workspace:*
-        version: file:scopes/component/dev-files(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)
-      '@teambit/diagnostic':
-        specifier: workspace:*
-        version: file:scopes/harmony/diagnostic(graphql@15.8.0)
-      '@teambit/docs':
-        specifier: workspace:*
-        version: file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/docs.ui.queries.get-docs':
-        specifier: workspace:*
-        version: file:scopes/docs/ui/queries/get-docs(@apollo/client@3.12.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/doctor':
-        specifier: workspace:*
-        version: file:scopes/harmony/doctor(graphql@15.8.0)
-      '@teambit/eject':
-        specifier: workspace:*
-        version: file:scopes/workspace/eject(graphql@15.8.0)(react@19.1.0)
-      '@teambit/env':
-        specifier: workspace:*
-        version: file:scopes/envs/env(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
-      '@teambit/envs':
-        specifier: workspace:*
-        version: file:scopes/envs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(graphql@15.8.0)(react@19.1.0)
-      '@teambit/envs.aspect-docs.envs':
-        specifier: workspace:*
-        version: file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/envs.ui.env-icon':
-        specifier: workspace:*
-        version: file:scopes/envs/ui/env-icon(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/eslint':
-        specifier: workspace:*
-        version: file:scopes/defender/eslint(react@19.1.0)
-      '@teambit/export':
-        specifier: workspace:*
-        version: file:scopes/scope/export(graphql@15.8.0)(react@19.1.0)
-      '@teambit/express':
-        specifier: workspace:*
-        version: file:scopes/harmony/express(react@19.1.0)
-      '@teambit/forking':
-        specifier: workspace:*
-        version: file:scopes/component/forking(graphql@15.8.0)(react@19.1.0)
-      '@teambit/formatter':
-        specifier: workspace:*
-        version: file:scopes/defender/formatter(graphql@15.8.0)(react@19.1.0)
-      '@teambit/generator':
-        specifier: workspace:*
-        version: file:scopes/generator/generator(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(graphql@15.8.0)(react@19.1.0)
-      '@teambit/generator.aspect-docs.generator':
-        specifier: workspace:*
-        version: file:scopes/generator/aspect-docs/generator(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/git':
-        specifier: workspace:*
-        version: file:scopes/git/git
-      '@teambit/git.modules.git-executable':
-        specifier: workspace:*
-        version: file:scopes/git/modules/git-executable
-      '@teambit/git.modules.ignore-file-reader':
-        specifier: workspace:*
-        version: file:scopes/git/modules/ignore-file-reader
-      '@teambit/global-config':
-        specifier: workspace:*
-        version: file:scopes/harmony/global-config(graphql@15.8.0)(react@19.1.0)
-      '@teambit/graph':
-        specifier: workspace:*
-        version: file:scopes/component/graph(@apollo/client@3.12.2)(@testing-library/react@16.3.2)(graphql@15.8.0)(immer@9.0.21)(react@19.1.0)
-      '@teambit/graphql':
-        specifier: workspace:*
-        version: file:scopes/harmony/graphql(@apollo/client@3.12.2)(debug@4.3.4)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(reflect-metadata@0.1.13)
-      '@teambit/harmony-ui-app':
-        specifier: workspace:*
-        version: file:scopes/ui-foundation/harmony-ui-app/harmony-ui-app(react@19.1.0)
-      '@teambit/harmony.aspect-docs.logger':
-        specifier: workspace:*
-        version: file:scopes/harmony/aspect-docs/logger(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/harmony.aspect-docs.node':
-        specifier: workspace:*
-        version: file:scopes/harmony/aspect-docs/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/harmony.content.cli-reference':
-        specifier: workspace:*
-        version: file:scopes/harmony/cli-reference(react@19.1.0)
-      '@teambit/harmony.modules.concurrency':
-        specifier: workspace:*
-        version: file:scopes/harmony/modules/concurrency
-      '@teambit/harmony.modules.feature-toggle':
-        specifier: workspace:*
-        version: file:scopes/harmony/modules/feature-toggle
-      '@teambit/harmony.modules.get-basic-log':
-        specifier: workspace:*
-        version: file:scopes/harmony/modules/get-basic-log(graphql@15.8.0)
-      '@teambit/harmony.modules.harmony-root-generator':
-        specifier: workspace:*
-        version: file:components/modules/harmony-root-generator
-      '@teambit/harmony.modules.in-memory-cache':
-        specifier: workspace:*
-        version: file:scopes/harmony/modules/in-memory-cache
-      '@teambit/harmony.modules.load-trace':
-        specifier: workspace:*
-        version: file:scopes/harmony/modules/load-trace
-      '@teambit/harmony.modules.requireable-component':
-        specifier: workspace:*
-        version: file:scopes/harmony/modules/requireable-component
-      '@teambit/harmony.modules.resolved-component':
-        specifier: workspace:*
-        version: file:scopes/harmony/modules/resolved-component
-      '@teambit/harmony.modules.send-server-sent-events':
-        specifier: workspace:*
-        version: file:scopes/harmony/modules/send-server-sent-events
-      '@teambit/harmony.testing.load-aspect':
-        specifier: workspace:*
-        version: file:scopes/harmony/testing/load-aspect(graphql@15.8.0)
-      '@teambit/harmony.ui.aspect-box':
-        specifier: workspace:*
-        version: file:scopes/harmony/ui/aspect-box(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/harmony.ui.hooks.use-core-aspects':
-        specifier: workspace:*
-        version: file:components/ui/hooks/use-core-aspects(@apollo/client@3.12.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/host-initializer':
-        specifier: workspace:*
-        version: file:scopes/harmony/host-initializer(graphql@15.8.0)
-      '@teambit/html.aspect-docs.html':
-        specifier: workspace:*
-        version: file:scopes/html/aspect-docs/html(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/html.modules.create-element-from-string':
-        specifier: workspace:*
-        version: file:scopes/html/modules/create-element-from-string
-      '@teambit/html.modules.fetch-html-from-url':
-        specifier: workspace:*
-        version: file:scopes/html/modules/fetch-html-from-url
-      '@teambit/importer':
-        specifier: workspace:*
-        version: file:scopes/scope/importer(graphql@15.8.0)(react@19.1.0)
-      '@teambit/insights':
-        specifier: workspace:*
-        version: file:scopes/explorer/insights(react@19.1.0)
-      '@teambit/install':
-        specifier: workspace:*
-        version: file:scopes/workspace/install(chai@5.2.1)(graphql@15.8.0)
-      '@teambit/internalize':
-        specifier: workspace:*
-        version: file:scopes/component/internalize(graphql@15.8.0)
-      '@teambit/ipc-events':
-        specifier: workspace:*
-        version: file:scopes/harmony/ipc-events
-      '@teambit/isolator':
-        specifier: workspace:*
-        version: file:scopes/component/isolator(graphql@15.8.0)(react@19.1.0)
-      '@teambit/issues':
-        specifier: workspace:*
-        version: file:scopes/component/issues
-      '@teambit/jest':
-        specifier: workspace:*
-        version: file:scopes/defender/jest(babel-plugin-macros@3.1.0)(react@19.1.0)
-      '@teambit/lanes':
-        specifier: workspace:*
-        version: file:scopes/lanes/lanes(@apollo/client@3.12.2)(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(chai@5.2.1)(graphql@15.8.0)(react-router-dom@6.30.1)(react@19.1.0)(typanion@3.14.0)
-      '@teambit/lanes.entities.lane-diff':
-        specifier: workspace:*
-        version: file:scopes/lanes/entities/lane-diff
-      '@teambit/lanes.hooks.use-lane-components':
-        specifier: workspace:*
-        version: file:components/hooks/use-lane-components(@apollo/client@3.12.2)(chai@5.2.1)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/lanes.hooks.use-lanes':
-        specifier: workspace:*
-        version: file:components/hooks/use-lanes(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/lanes.hooks.use-viewed-lane-from-url':
-        specifier: workspace:*
-        version: file:components/hooks/use-viewed-lane-from-url_1(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)
-      '@teambit/lanes.modules.create-lane':
-        specifier: workspace:*
-        version: file:scopes/lanes/modules/create-lane(graphql@15.8.0)
-      '@teambit/lanes.modules.diff':
-        specifier: workspace:*
-        version: file:scopes/lanes/diff(graphql@15.8.0)
-      '@teambit/lanes.ui.inputs.lane-selector':
-        specifier: workspace:*
-        version: file:components/ui/inputs/lane-selector_1(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/lanes.ui.lane-overview':
-        specifier: workspace:*
-        version: file:components/ui/lane-overview(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(chai@5.2.1)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/lanes.ui.models.lanes-model':
-        specifier: workspace:*
-        version: file:components/ui/models/lanes-model(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/legacy-component-log':
-        specifier: workspace:*
-        version: file:components/legacy-component-log
-      '@teambit/legacy.analytics':
-        specifier: workspace:*
-        version: file:components/legacy/analytics
-      '@teambit/legacy.bit-map':
-        specifier: workspace:*
-        version: file:components/legacy/bit-map(graphql@15.8.0)
-      '@teambit/legacy.cli.error':
-        specifier: workspace:*
-        version: file:components/legacy/cli/error
-      '@teambit/legacy.component-diff':
-        specifier: workspace:*
-        version: file:components/legacy/component-diff(graphql@15.8.0)
-      '@teambit/legacy.component-list':
-        specifier: workspace:*
-        version: file:components/legacy/component-list(graphql@15.8.0)
-      '@teambit/legacy.constants':
-        specifier: workspace:*
-        version: file:components/legacy/constants
-      '@teambit/legacy.consumer':
-        specifier: workspace:*
-        version: file:components/legacy/consumer(graphql@15.8.0)
-      '@teambit/legacy.consumer-component':
-        specifier: workspace:*
-        version: file:components/legacy/consumer-component(graphql@15.8.0)
-      '@teambit/legacy.consumer-config':
-        specifier: workspace:*
-        version: file:components/legacy/consumer-config(graphql@15.8.0)
-      '@teambit/legacy.dependency-graph':
-        specifier: workspace:*
-        version: file:components/legacy/dependency-graph(graphql@15.8.0)
-      '@teambit/legacy.e2e-helper':
-        specifier: workspace:*
-        version: file:components/legacy/e2e-helper(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(react@19.1.0)(typanion@3.14.0)
-      '@teambit/legacy.extension-data':
-        specifier: workspace:*
-        version: file:components/legacy/extension-data(graphql@15.8.0)
-      '@teambit/legacy.loader':
-        specifier: workspace:*
-        version: file:components/legacy/loader
-      '@teambit/legacy.logger':
-        specifier: workspace:*
-        version: file:components/legacy/logger
-      '@teambit/legacy.scope':
-        specifier: workspace:*
-        version: file:components/legacy/scope(graphql@15.8.0)
-      '@teambit/legacy.scope-api':
-        specifier: workspace:*
-        version: file:components/legacy/scope-api(graphql@15.8.0)
-      '@teambit/legacy.utils':
-        specifier: workspace:*
-        version: file:components/legacy/utils
-      '@teambit/linter':
-        specifier: workspace:*
-        version: file:scopes/defender/linter(graphql@15.8.0)(react@19.1.0)
-      '@teambit/lister':
-        specifier: workspace:*
-        version: file:scopes/component/lister(graphql@15.8.0)
-      '@teambit/logger':
-        specifier: workspace:*
-        version: file:scopes/harmony/logger(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/mcp.mcp-config-writer':
-        specifier: workspace:*
-        version: file:components/mcp/mcp-config-writer
-      '@teambit/mdx':
-        specifier: workspace:*
-        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(rollup@4.53.3)
-      '@teambit/mdx.aspect-docs.mdx':
-        specifier: workspace:*
-        version: file:scopes/mdx/aspect-docs/mdx(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/mdx.deps-detectors.detective-mdx':
-        specifier: workspace:*
-        version: file:scopes/mdx/deps-detectors/detective-mdx
-      '@teambit/merge-lanes':
-        specifier: workspace:*
-        version: file:scopes/lanes/merge-lanes(graphql@15.8.0)
-      '@teambit/merging':
-        specifier: workspace:*
-        version: file:scopes/component/merging(graphql@15.8.0)
-      '@teambit/mocha':
-        specifier: workspace:*
-        version: file:scopes/defender/mocha(mocha@11.7.1)(react@19.1.0)
-      '@teambit/mover':
-        specifier: workspace:*
-        version: file:scopes/component/mover(graphql@15.8.0)
-      '@teambit/multi-compiler':
-        specifier: workspace:*
-        version: file:scopes/compilation/multi-compiler(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/multi-tester':
-        specifier: workspace:*
-        version: file:scopes/defender/multi-tester(react@19.1.0)
-      '@teambit/new-component-helper':
-        specifier: workspace:*
-        version: file:scopes/component/new-component-helper(react@19.1.0)
-      '@teambit/node':
-        specifier: workspace:*
-        version: file:scopes/harmony/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(eslint@8.56.0)(jest@29.3.1)
-      '@teambit/notifications':
-        specifier: workspace:*
-        version: file:scopes/ui-foundation/notifications/aspect(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/objects':
-        specifier: workspace:*
-        version: file:scopes/scope/objects(chai@5.2.1)(graphql@15.8.0)
-      '@teambit/panels':
-        specifier: workspace:*
-        version: file:scopes/ui-foundation/panels(react@19.1.0)
-      '@teambit/pipelines.aspect-docs.builder':
-        specifier: workspace:*
-        version: file:scopes/pipelines/aspect-docs/builder(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/pipelines.modules.merge-component-results':
-        specifier: workspace:*
-        version: file:scopes/pipelines/modules/merge-component-results
-      '@teambit/pkg':
-        specifier: workspace:*
-        version: file:scopes/pkg/pkg(@pnpm/logger@1001.0.1)(@pnpm/worker@1000.6.7)(@testing-library/react@16.3.2)(graphql@15.8.0)(react@19.1.0)(typanion@3.14.0)
-      '@teambit/pkg.aspect-docs.pkg':
-        specifier: workspace:*
-        version: file:scopes/pkg/aspect-docs/pkg(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/pkg.modules.component-package-name':
-        specifier: workspace:*
-        version: file:components/modules/component-package-name(graphql@15.8.0)
-      '@teambit/pkg.modules.semver-helper':
-        specifier: workspace:*
-        version: file:scopes/pkg/modules/semver-helper
-      '@teambit/pnpm':
-        specifier: workspace:*
-        version: file:scopes/dependencies/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(@yarnpkg/core@4.2.0)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typanion@3.14.0)
-      '@teambit/prettier':
-        specifier: workspace:*
-        version: file:scopes/defender/prettier(react@19.1.0)
-      '@teambit/preview':
-        specifier: workspace:*
-        version: file:scopes/preview/preview(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(chai@5.2.1)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.100.0)(webpack@5.97.1)
-      '@teambit/preview.aspect-docs.preview':
-        specifier: workspace:*
-        version: file:scopes/preview/aspect-docs/preview(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/preview.cli.webpack-events-listener':
-        specifier: workspace:*
-        version: file:scopes/preview/cli/webpack-events-listener
-      '@teambit/preview.ui.component-preview':
-        specifier: workspace:*
-        version: file:scopes/preview/ui/component-preview(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/preview.ui.preview-placeholder':
-        specifier: workspace:*
-        version: file:scopes/preview/ui/preview-placeholder(chai@5.2.1)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/pubsub':
-        specifier: workspace:*
-        version: file:scopes/harmony/pubsub(react@19.1.0)
-      '@teambit/react':
-        specifier: workspace:*
-        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
-      '@teambit/react-router':
-        specifier: workspace:*
-        version: file:scopes/ui-foundation/react-router/react-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/react.aspect-docs.react':
-        specifier: workspace:*
-        version: file:scopes/react/aspect-docs/react(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/react.babel.bit-react-transformer':
-        specifier: workspace:*
-        version: file:scopes/react/bit-react-transformer
-      '@teambit/react.eslint-config-bit-react':
-        specifier: workspace:*
-        version: file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(typescript@5.5.3)
-      '@teambit/react.ui.compositions-app':
-        specifier: workspace:*
-        version: file:scopes/react/ui/compositions-app(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/react.ui.docs-app':
-        specifier: workspace:*
-        version: file:scopes/react/ui/docs-app(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
-      '@teambit/react.ui.docs.apply-providers':
-        specifier: workspace:*
-        version: file:scopes/react/ui/docs/apply-providers(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/react.ui.docs.compositions-carousel':
-        specifier: workspace:*
-        version: file:scopes/react/ui/docs/compositions-carousel(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/react.ui.docs.docs-content':
-        specifier: workspace:*
-        version: file:scopes/react/ui/docs/docs-content(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
-      '@teambit/react.ui.docs.properties-table':
-        specifier: workspace:*
-        version: file:scopes/react/ui/docs/properties-table(@types/react-dom@19.2.3)(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)(typescript@5.5.3)
-      '@teambit/react.ui.error-fallback':
-        specifier: workspace:*
-        version: file:scopes/react/ui/error-fallback(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/react.ui.highlighter-provider':
-        specifier: workspace:*
-        version: file:scopes/react/ui/highlighter-provider(react@19.1.0)
-      '@teambit/react.ui.loader-fallback':
-        specifier: workspace:*
-        version: file:scopes/react/ui/loader-fallback(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/readme':
-        specifier: workspace:*
-        version: file:scopes/mdx/readme
-      '@teambit/refactoring':
-        specifier: workspace:*
-        version: file:scopes/component/refactoring
-      '@teambit/remove':
-        specifier: workspace:*
-        version: file:scopes/component/remove(graphql@15.8.0)
-      '@teambit/renaming':
-        specifier: workspace:*
-        version: file:scopes/component/renaming(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai-fs@1.0.0)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typanion@3.14.0)
-      '@teambit/ripple':
-        specifier: workspace:*
-        version: file:scopes/cloud/ripple
-      '@teambit/rspack.modules.generate-asset-manifest':
-        specifier: workspace:*
-        version: file:components/modules/generate-asset-manifest
-      '@teambit/rspack.plugins.manifest-plugin':
-        specifier: workspace:*
-        version: file:components/plugins/manifest-plugin(@rspack/core@1.7.5)
-      '@teambit/schema':
-        specifier: workspace:*
-        version: file:scopes/semantics/schema(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(@teambit/base-react.navigation.link@2.0.33)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typanion@3.14.0)
-      '@teambit/scope':
-        specifier: workspace:*
-        version: file:scopes/scope/scope(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/chai@4.2.15)(chai@5.2.1)(graphql@15.8.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/scope.models.scope-model':
-        specifier: workspace:*
-        version: file:scopes/scope/models/scope-model(chai@5.2.1)
-      '@teambit/scope.modules.find-scope-path':
-        specifier: workspace:*
-        version: file:components/modules/find-scope-path
-      '@teambit/scope.network':
-        specifier: workspace:*
-        version: file:scopes/scope/network(graphql@15.8.0)
-      '@teambit/scope.remote-actions':
-        specifier: workspace:*
-        version: file:scopes/scope/remote-actions(graphql@15.8.0)
-      '@teambit/scope.remotes':
-        specifier: workspace:*
-        version: file:components/scope/remotes(graphql@15.8.0)
-      '@teambit/scope.ui.hooks.scope-context':
-        specifier: workspace:*
-        version: file:components/ui/hooks/scope-context(chai@5.2.1)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/scripts':
-        specifier: workspace:*
-        version: file:scopes/workspace/scripts
-      '@teambit/semantics.doc-parser':
-        specifier: workspace:*
-        version: file:components/semantics/doc-parser
-      '@teambit/semantics.entities.semantic-schema':
-        specifier: workspace:*
-        version: file:components/entities/semantic-schema
-      '@teambit/semantics.entities.semantic-schema-diff':
-        specifier: workspace:*
-        version: file:components/entities/semantic-schema-diff
-      '@teambit/sidebar':
-        specifier: workspace:*
-        version: file:scopes/ui-foundation/sidebar(react@19.1.0)
-      '@teambit/snapping':
-        specifier: workspace:*
-        version: file:scopes/component/snapping(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(graphql@15.8.0)(typanion@3.14.0)
-      '@teambit/stash':
-        specifier: workspace:*
-        version: file:scopes/component/stash(graphql@15.8.0)
-      '@teambit/status':
-        specifier: workspace:*
-        version: file:scopes/component/status(graphql@15.8.0)
-      '@teambit/tagged-exports':
-        specifier: workspace:*
-        version: file:components/tagged-exports(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/tester':
-        specifier: workspace:*
-        version: file:scopes/defender/tester(@apollo/client@3.12.2)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(chai@5.2.1)(graphql@15.8.0)(react@19.1.0)(typescript@5.5.3)
-      '@teambit/toolbox.array.duplications-finder':
-        specifier: workspace:*
-        version: file:scopes/toolbox/array/duplications-finder
-      '@teambit/toolbox.crypto.sha1':
-        specifier: workspace:*
-        version: file:components/crypto/sha1
-      '@teambit/toolbox.fs.extension-getter':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/extension-getter
-      '@teambit/toolbox.fs.hard-link-directory':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/hard-link-directory
-      '@teambit/toolbox.fs.is-dir-empty':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/is-dir-empty
-      '@teambit/toolbox.fs.last-modified':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/last-modified
-      '@teambit/toolbox.fs.link-or-symlink':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/link-or-symlink
-      '@teambit/toolbox.fs.remove-empty-dir':
-        specifier: workspace:*
-        version: file:scopes/toolbox/fs/remove-empty-dir
-      '@teambit/toolbox.json.jsonc-utils':
-        specifier: workspace:*
-        version: file:scopes/toolbox/json/jsonc-utils
-      '@teambit/toolbox.modules.module-resolver':
-        specifier: workspace:*
-        version: file:scopes/toolbox/modules/module-resolver
-      '@teambit/toolbox.network.get-port':
-        specifier: workspace:*
-        version: file:scopes/toolbox/network/get-port
-      '@teambit/toolbox.path.is-path-inside':
-        specifier: workspace:*
-        version: file:scopes/toolbox/path/is-path-inside
-      '@teambit/toolbox.path.match-patterns':
-        specifier: workspace:*
-        version: file:scopes/toolbox/path/match-patterns
-      '@teambit/toolbox.path.path':
-        specifier: workspace:*
-        version: file:scopes/toolbox/path/path
-      '@teambit/toolbox.path.to-windows-compatible-path':
-        specifier: workspace:*
-        version: file:scopes/toolbox/path/to-windows-compatible-path
-      '@teambit/toolbox.promise.map-pool':
-        specifier: workspace:*
-        version: file:scopes/toolbox/promise/map-pool
-      '@teambit/toolbox.string.capitalize':
-        specifier: workspace:*
-        version: file:scopes/toolbox/string/capitalize
-      '@teambit/toolbox.string.ellipsis':
-        specifier: workspace:*
-        version: file:scopes/toolbox/string/ellipsis
-      '@teambit/toolbox.string.eol':
-        specifier: workspace:*
-        version: file:scopes/toolbox/string/eol
-      '@teambit/toolbox.string.get-initials':
-        specifier: workspace:*
-        version: file:scopes/toolbox/string/get-initials
-      '@teambit/toolbox.string.random':
-        specifier: workspace:*
-        version: file:scopes/toolbox/string/random
-      '@teambit/toolbox.string.strip-trailing-char':
-        specifier: workspace:*
-        version: file:scopes/toolbox/string/strip-trailing-char
-      '@teambit/toolbox.time.timer':
-        specifier: workspace:*
-        version: file:scopes/toolbox/time/timer
-      '@teambit/toolbox.types.serializable':
-        specifier: workspace:*
-        version: file:scopes/toolbox/types/serializable
-      '@teambit/toolbox.url.add-avatar-query-params':
-        specifier: workspace:*
-        version: file:scopes/toolbox/url/add-avatar-query-params
-      '@teambit/toolbox.url.query-string':
-        specifier: workspace:*
-        version: file:scopes/toolbox/url/query-string
-      '@teambit/tracker':
-        specifier: workspace:*
-        version: file:scopes/component/tracker(graphql@15.8.0)
-      '@teambit/ts-server':
-        specifier: workspace:*
-        version: file:scopes/typescript/ts-server
-      '@teambit/typescript':
-        specifier: workspace:*
-        version: file:scopes/typescript/typescript(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@5.2.1)(react@19.1.0)
-      '@teambit/typescript.aspect-docs.typescript':
-        specifier: workspace:*
-        version: file:scopes/typescript/aspect-docs/typescript(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/typescript.modules.ts-config-mutator':
-        specifier: workspace:*
-        version: file:scopes/typescript/modules/ts-config-mutator
-      '@teambit/ui':
-        specifier: workspace:*
-        version: file:scopes/ui-foundation/ui(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/babel__core@7.20.0)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(react-dom@19.1.0)(react-refresh@0.14.2)(react-router-dom@6.30.1)(react@19.1.0)(sass-embedded@1.100.0)(tslib@2.8.1)(typescript@5.5.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
-      '@teambit/ui-foundation.ui.buttons.collapser':
-        specifier: workspace:*
-        version: file:components/ui/buttons/collapser(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/ui-foundation.ui.pages.preview-not-found':
-        specifier: workspace:*
-        version: file:components/ui/pages/preview-not-found(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/ui-foundation.ui.pages.static-error':
-        specifier: workspace:*
-        version: file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/ui-foundation.ui.react-router.slot-router':
-        specifier: workspace:*
-        version: file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/ui-foundation.ui.rendering.html':
-        specifier: workspace:*
-        version: file:components/ui/rendering/html(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/ui-foundation.ui.side-bar':
-        specifier: workspace:*
-        version: file:components/ui/side-bar(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/user-agent':
-        specifier: workspace:*
-        version: file:scopes/ui-foundation/user-agent(react@19.1.0)
-      '@teambit/validator':
-        specifier: workspace:*
-        version: file:scopes/defender/validator
-      '@teambit/variants':
-        specifier: workspace:*
-        version: file:scopes/workspace/variants(graphql@15.8.0)(react@19.1.0)
-      '@teambit/version-history':
-        specifier: workspace:*
-        version: file:scopes/scope/version-history(graphql@15.8.0)
-      '@teambit/vue-aspect':
-        specifier: workspace:*
-        version: file:scopes/vue/vue(react@19.1.0)(typescript@5.5.3)
-      '@teambit/watcher':
-        specifier: workspace:*
-        version: file:scopes/workspace/watcher
-      '@teambit/webpack':
-        specifier: workspace:*
-        version: file:scopes/webpack/webpack(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react@19.1.0)(typescript@5.5.3)(utf-8-validate@5.0.5)
-      '@teambit/webpack.modules.config-mutator':
-        specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(esbuild@0.14.29)
-      '@teambit/webpack.modules.generate-expose-loaders':
-        specifier: workspace:*
-        version: file:scopes/webpack/modules/generate-expose-loaders(webpack@5.97.1)
-      '@teambit/webpack.modules.generate-externals':
-        specifier: workspace:*
-        version: file:scopes/webpack/modules/generate-externals
-      '@teambit/webpack.modules.generate-style-loaders':
-        specifier: workspace:*
-        version: file:scopes/webpack/modules/generate-style-loaders
-      '@teambit/webpack.modules.style-regexps':
-        specifier: workspace:*
-        version: file:scopes/webpack/style-regexps
-      '@teambit/webpack.plugins.inject-head-webpack-plugin':
-        specifier: workspace:*
-        version: file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)
-      '@teambit/worker':
-        specifier: workspace:*
-        version: file:scopes/harmony/worker(react@19.1.0)
-      '@teambit/workspace':
-        specifier: workspace:*
-        version: file:scopes/workspace/workspace(@apollo/client@3.12.2)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(chai@5.2.1)(graphql@15.8.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/workspace-config-files':
-        specifier: workspace:*
-        version: file:scopes/workspace/workspace-config-files(chai@5.2.1)
-      '@teambit/workspace.aspect-docs.variants':
-        specifier: workspace:*
-        version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
-      '@teambit/workspace.hooks.use-navigation-message-listener':
-        specifier: workspace:*
-        version: file:components/hooks/use-navigation-message-listener(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/workspace.hooks.use-url-change-broadcaster':
-        specifier: workspace:*
-        version: file:components/hooks/use-url-change-broadcaster(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/workspace.modules.fs-cache':
-        specifier: workspace:*
-        version: file:scopes/workspace/modules/fs-cache
-      '@teambit/workspace.modules.match-pattern':
-        specifier: workspace:*
-        version: file:scopes/workspace/modules/match-pattern
-      '@teambit/workspace.modules.node-modules-linker':
-        specifier: workspace:*
-        version: file:scopes/workspace/modules/node-modules-linker(graphql@15.8.0)
-      '@teambit/workspace.modules.workspace-locator':
-        specifier: workspace:*
-        version: file:scopes/workspace/modules/workspace-locator
-      '@teambit/workspace.testing.mock-workspace':
-        specifier: workspace:*
-        version: file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@pnpm/logger@1001.0.1)(chai@5.2.1)(typanion@3.14.0)
-      '@teambit/workspace.ui.preserve-workspace-mode':
-        specifier: workspace:*
-        version: file:components/ui/preserve-workspace-mode(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/workspace.ui.use-workspace-mode':
-        specifier: workspace:*
-        version: file:components/ui/use-workspace-mode(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)
-      '@teambit/workspace.ui.workspace-component-card':
-        specifier: workspace:*
-        version: file:components/ui/workspace-component-card(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.14)(chai@5.2.1)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/yarn':
-        specifier: workspace:*
-        version: file:scopes/dependencies/yarn(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(@yarnpkg/plugin-pack@3.2.0)(react@19.1.0)(typanion@3.14.0)
-      react:
-        specifier: 19.1.0
-        version: 19.1.0
-      react-dom:
-        specifier: 19.1.0
-        version: 19.1.0(react@19.1.0)
-
   node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@2.0.4:
     dependencies:
       '@mdx-js/react':
@@ -7941,7 +6990,7 @@ importers:
         version: file:components/mcp/mcp-config-writer
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@14.3.1)(rollup@4.53.3)
+        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@14.3.1)(chai@5.2.1)(rollup@4.53.3)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -8028,7 +7077,7 @@ importers:
         version: file:scopes/harmony/pubsub(react@19.1.0)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
+        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(react-router-dom@6.30.1)(react@19.1.0)
@@ -8949,7 +7998,7 @@ importers:
         version: file:components/mcp/mcp-config-writer
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(rollup@4.53.3)
+        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(chai@5.2.1)(rollup@4.53.3)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
@@ -9042,7 +8091,7 @@ importers:
         version: file:scopes/harmony/pubsub(react@18.3.1)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@18.3.1)(react-router-dom@6.30.1)(react@18.3.1)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
+        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@18.3.1)
@@ -9957,7 +9006,7 @@ importers:
         version: file:components/mcp/mcp-config-writer
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(rollup@4.53.3)
+        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(chai@5.2.1)(rollup@4.53.3)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -10047,7 +9096,7 @@ importers:
         version: file:scopes/harmony/pubsub(react@19.1.0)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
+        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
@@ -10944,7 +9993,7 @@ importers:
         version: file:components/mcp/mcp-config-writer
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(rollup@4.53.3)
+        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(chai@5.2.1)(rollup@4.53.3)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -11034,7 +10083,7 @@ importers:
         version: file:scopes/harmony/pubsub(react@19.1.0)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
+        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
@@ -11931,7 +10980,7 @@ importers:
         version: file:components/mcp/mcp-config-writer
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx(@babel/core@7.26.9)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(rollup@4.53.3)
+        version: file:scopes/mdx/mdx(@babel/core@7.26.9)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(chai@5.2.1)(rollup@4.53.3)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -12021,7 +11070,7 @@ importers:
         version: file:scopes/harmony/pubsub(react@19.1.0)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@babel/core@7.26.9)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
+        version: file:scopes/react/react(@babel/core@7.26.9)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
@@ -12933,7 +11982,7 @@ importers:
         version: file:components/mcp/mcp-config-writer
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(rollup@4.53.3)
+        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(chai@5.2.1)(rollup@4.53.3)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -13017,7 +12066,7 @@ importers:
         version: file:scopes/harmony/pubsub(react@19.1.0)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
+        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
@@ -13926,7 +12975,7 @@ importers:
         version: file:components/mcp/mcp-config-writer
       '@teambit/mdx':
         specifier: workspace:*
-        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(rollup@4.53.3)
+        version: file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(chai@5.2.1)(rollup@4.53.3)
       '@teambit/mdx.aspect-docs.mdx':
         specifier: workspace:*
         version: file:scopes/mdx/aspect-docs/mdx(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
@@ -14010,7 +13059,7 @@ importers:
         version: file:scopes/harmony/pubsub(react@19.1.0)
       '@teambit/react':
         specifier: workspace:*
-        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
+        version: file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)
       '@teambit/react-router':
         specifier: workspace:*
         version: file:scopes/ui-foundation/react-router/react-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(react-router-dom@6.30.1)(react@19.1.0)
@@ -21015,9 +20064,6 @@ importers:
 
   scopes/harmony/node:
     dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@bitdev/node.generators.node-starters':
         specifier: ^1.0.0
         version: 1.0.0
@@ -21033,15 +20079,21 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin':
         specifier: 7.1.0
         version: 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
       '@typescript-eslint/parser':
         specifier: 7.1.0
         version: 7.1.0(eslint@8.56.0)(typescript@5.9.2)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       eslint-mdx:
         specifier: 1.17.1
         version: 1.17.1(eslint@8.56.0)
@@ -21072,28 +20124,19 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.1.0(react@19.1.0)
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       typescript:
         specifier: 5.9.2
         version: 5.9.2
     devDependencies:
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
+      '@teambit/harmony.envs.core-aspect-env':
+        specifier: 2.0.4
+        version: 2.0.4(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.6.3)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@4.41.0)(utf-8-validate@5.0.5)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/node':
-        specifier: 22.10.5
-        version: 22.10.5
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.0.0
-        version: 19.2.3(@types/react@19.2.14)
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
 
   scopes/harmony/pubsub:
     dependencies:
@@ -21814,9 +20857,6 @@ importers:
       '@babel/helper-plugin-test-runner':
         specifier: 7.16.7
         version: 7.16.7
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
       '@mdx-js/mdx':
         specifier: ^3.1.1
         version: 3.1.1
@@ -21838,9 +20878,18 @@ importers:
       '@teambit/mdx.modules.mdx-v3-options':
         specifier: ^0.0.3
         version: 0.0.3(rollup@4.53.3)
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -21850,16 +20899,22 @@ importers:
       react-dom:
         specifier: 19.1.0
         version: 19.1.0(react@19.1.0)
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
-      '@types/chai':
-        specifier: 4.2.15
-        version: 4.2.15
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
+      '@teambit/harmony.envs.core-aspect-env':
+        specifier: 2.0.4
+        version: 2.0.4(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.6.3)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@4.41.0)(utf-8-validate@5.0.5)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
+
+  scopes/mdx/readme:
+    dependencies:
+      '@teambit/harmony':
+        specifier: 0.4.12
+        version: 0.4.12
       '@types/node':
         specifier: 22.10.5
         version: 22.10.5
@@ -21869,49 +20924,22 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.3(@types/react@19.2.14)
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
-      chai:
-        specifier: 4.3.0
-        version: 4.3.0
-
-  scopes/mdx/readme:
-    dependencies:
-      '@babel/runtime':
-        specifier: 7.20.0
-        version: 7.20.0
-      '@teambit/harmony':
-        specifier: 0.4.12
-        version: 0.4.12
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       react:
         specifier: 19.1.0
         version: 19.1.0
       react-dom:
         specifier: 19.1.0
         version: 19.1.0(react@19.1.0)
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     devDependencies:
-      '@types/jest':
-        specifier: ^26.0.0
-        version: 26.0.20
+      '@teambit/harmony.envs.core-aspect-env':
+        specifier: 2.0.4
+        version: 2.0.4(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.6.3)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@4.41.0)(utf-8-validate@5.0.5)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
-      '@types/node':
-        specifier: 22.10.5
-        version: 22.10.5
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.0.0
-        version: 19.2.3(@types/react@19.2.14)
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
 
   scopes/pipelines/aspect-docs/builder:
     dependencies:
@@ -22818,6 +21846,15 @@ importers:
       '@teambit/typescript.typescript-compiler':
         specifier: ^5.0.1
         version: 5.0.1(react@19.1.0)
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin':
         specifier: 7.1.0
         version: 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
@@ -22830,9 +21867,6 @@ importers:
       chalk:
         specifier: 4.1.2
         version: 4.1.2
-      core-js:
-        specifier: ^3.0.0
-        version: 3.13.0
       css-loader:
         specifier: 6.2.0
         version: 6.2.0(webpack@5.97.1)
@@ -22893,9 +21927,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       mini-css-extract-plugin:
         specifier: 2.2.2
         version: 2.2.2(webpack@5.97.1)
@@ -22915,13 +21946,13 @@ importers:
         specifier: 7.8.2
         version: 7.8.2(postcss@8.4.45)
       react:
-        specifier: 19.1.0
+        specifier: ^19.0.0
         version: 19.1.0
       react-dev-utils:
         specifier: 12.0.1
         version: 12.0.1(eslint@8.56.0)(typescript@5.9.2)(webpack@5.97.1)
       react-dom:
-        specifier: 19.1.0
+        specifier: ^19.0.0
         version: 19.1.0(react@19.1.0)
       react-error-overlay:
         specifier: 6.0.9
@@ -22929,6 +21960,9 @@ importers:
       react-refresh:
         specifier: 0.10.0
         version: 0.10.0
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       resolve-url-loader:
         specifier: 5.0.0
         version: 5.0.0
@@ -22963,6 +21997,9 @@ importers:
         specifier: 5.97.1
         version: 5.97.1(esbuild@0.14.29)
     devDependencies:
+      '@teambit/harmony.envs.core-aspect-env':
+        specifier: 2.0.4
+        version: 2.0.4(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.6.3)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)
       '@teambit/react.content.react-overview':
         specifier: 1.96.6
         version: 1.96.6(@apollo/client@3.12.2)(@testing-library/react@16.3.2)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)
@@ -22993,30 +22030,21 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
-      '@types/node':
-        specifier: 22.10.5
-        version: 22.10.5
       '@types/postcss-normalize':
         specifier: 9.0.1
         version: 9.0.1
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.2.14
       '@types/react-dev-utils':
         specifier: 9.0.15
         version: 9.0.15(debug@4.3.4)
-      '@types/react-dom':
-        specifier: ^19.0.0
-        version: 19.2.3(@types/react@19.2.14)
-      '@types/testing-library__jest-dom':
-        specifier: 5.9.5
-        version: 5.9.5
       '@types/url-join':
         specifier: 4.0.0
         version: 4.0.0
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(esbuild@0.14.29)
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   scopes/react/ui/compositions-app:
     dependencies:
@@ -35206,6 +34234,8 @@ packages:
 
   '@teambit/mdx@file:scopes/mdx/mdx':
     resolution: {directory: scopes/mdx/mdx, type: directory}
+    peerDependencies:
+      chai: 5.2.1
 
   '@teambit/merge-lanes@file:scopes/lanes/merge-lanes':
     resolution: {directory: scopes/lanes/merge-lanes, type: directory}
@@ -77105,6 +76135,81 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
+  '@teambit/harmony.envs.core-aspect-env@2.0.4(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.6.3)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)':
+    dependencies:
+      '@babel/plugin-proposal-decorators': 7.28.0(@babel/core@7.28.3)
+      '@babel/plugin-transform-class-properties': 7.27.1(@babel/core@7.28.3)
+      '@babel/plugin-transform-modules-commonjs': 7.27.1(@babel/core@7.28.3)
+      '@babel/plugin-transform-object-rest-spread': 7.28.0(@babel/core@7.28.3)
+      '@babel/preset-env': 7.28.3(@babel/core@7.28.3)
+      '@babel/preset-react': 7.27.1(@babel/core@7.28.3)
+      '@babel/preset-typescript': 7.27.1(@babel/core@7.28.3)
+      '@babel/runtime': 7.20.0
+      '@bitdev/react.preview.react-docs-template': 1.0.11(react-dom@19.1.0)(react@19.1.0)
+      '@mdx-js/react': 3.1.1(@types/react@19.2.14)(react@19.1.0)
+      '@teambit/compilation.babel-compiler': 1.1.18(react@19.1.0)
+      '@teambit/defender.mocha-tester': 1.1.1(@babel/core@7.28.3)(react@19.1.0)
+      '@teambit/defender.prettier-formatter': 1.0.24
+      '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.1.0)
+      '@teambit/oxc.linter.oxlint-linter': 2.0.5
+      '@teambit/preview.react-preview': 1.1.13(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.6.3)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)
+      '@teambit/react.mounter': 1.1.9(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/typescript.typescript-compiler': 5.0.1(react@19.1.0)
+      '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+      '@testing-library/react-hooks': 8.0.1(@types/react@19.2.14)(react-dom@19.1.0)(react-test-renderer@17.0.2)(react@19.1.0)
+      '@types/chai': 5.2.2
+      '@types/chai-fs': 2.0.5
+      '@types/mocha': 10.0.10
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+      babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.28.3)(@babel/traverse@7.29.7)
+      chai: 5.2.1
+      chai-fs: 1.0.0(chai@5.2.1)
+      core-js: 3.13.0
+      graphql: 15.8.0
+      mocha: 11.7.1
+      oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
+      oxlint-tsgolint: 0.17.0
+      ramda: 0.29.1
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
+      sass: 1.72.0
+      typescript: 7.0.2
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@babel/traverse'
+      - '@parcel/css'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@swc/css'
+      - '@types/webpack'
+      - browserslist
+      - bufferutil
+      - clean-css
+      - csso
+      - debug
+      - esbuild
+      - eslint
+      - fibers
+      - html-webpack-plugin
+      - less
+      - lightningcss
+      - node-sass
+      - react-test-renderer
+      - rollup
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+
   '@teambit/harmony.envs.core-aspect-env@2.0.4(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.6.3)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@17.0.2)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@4.41.0)(utf-8-validate@5.0.5)':
     dependencies:
       '@babel/plugin-proposal-decorators': 7.28.0(@babel/core@7.28.3)
@@ -81439,10 +80544,9 @@ snapshots:
     dependencies:
       react: 19.2.7
 
-  '@teambit/mdx@file:scopes/mdx/mdx(@babel/core@7.26.9)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(rollup@4.53.3)':
+  '@teambit/mdx@file:scopes/mdx/mdx(@babel/core@7.26.9)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(chai@5.2.1)(rollup@4.53.3)':
     dependencies:
       '@babel/helper-plugin-test-runner': 7.16.7
-      '@babel/runtime': 7.20.0
       '@mdx-js/mdx': 3.1.1
       '@teambit/component-id': 1.2.4
       '@teambit/design.ui.empty-box': 0.0.364(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -81452,10 +80556,14 @@ snapshots:
       '@teambit/mdx.deps-detectors.detective-mdx': file:scopes/mdx/deps-detectors/detective-mdx
       '@teambit/mdx.generator.mdx-templates': 1.0.14
       '@teambit/mdx.modules.mdx-v3-options': 0.0.3(rollup@4.53.3)
-      core-js: 3.13.0
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+      chai: 5.2.1
       lodash: 4.17.21
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     transitivePeerDependencies:
       - '@babel/core'
       - '@teambit/documenter.theme.theme-compositions'
@@ -81464,10 +80572,9 @@ snapshots:
       - rollup
       - supports-color
 
-  '@teambit/mdx@file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@14.3.1)(rollup@4.53.3)':
+  '@teambit/mdx@file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@14.3.1)(chai@5.2.1)(rollup@4.53.3)':
     dependencies:
       '@babel/helper-plugin-test-runner': 7.16.7
-      '@babel/runtime': 7.20.0
       '@mdx-js/mdx': 3.1.1
       '@teambit/component-id': 1.2.4
       '@teambit/design.ui.empty-box': 0.0.364(@testing-library/react@14.3.1)(react-dom@19.1.0)(react@19.1.0)
@@ -81477,10 +80584,14 @@ snapshots:
       '@teambit/mdx.deps-detectors.detective-mdx': file:scopes/mdx/deps-detectors/detective-mdx
       '@teambit/mdx.generator.mdx-templates': 1.0.14
       '@teambit/mdx.modules.mdx-v3-options': 0.0.3(rollup@4.53.3)
-      core-js: 3.13.0
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+      chai: 5.2.1
       lodash: 4.17.21
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     transitivePeerDependencies:
       - '@babel/core'
       - '@teambit/documenter.theme.theme-compositions'
@@ -81489,10 +80600,9 @@ snapshots:
       - rollup
       - supports-color
 
-  '@teambit/mdx@file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(rollup@4.53.3)':
+  '@teambit/mdx@file:scopes/mdx/mdx(@babel/core@7.28.3)(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(chai@5.2.1)(rollup@4.53.3)':
     dependencies:
       '@babel/helper-plugin-test-runner': 7.16.7
-      '@babel/runtime': 7.20.0
       '@mdx-js/mdx': 3.1.1
       '@teambit/component-id': 1.2.4
       '@teambit/design.ui.empty-box': 0.0.364(@testing-library/react@16.3.2)(react-dom@19.1.0)(react@19.1.0)
@@ -81502,10 +80612,14 @@ snapshots:
       '@teambit/mdx.deps-detectors.detective-mdx': file:scopes/mdx/deps-detectors/detective-mdx
       '@teambit/mdx.generator.mdx-templates': 1.0.14
       '@teambit/mdx.modules.mdx-v3-options': 0.0.3(rollup@4.53.3)
-      core-js: 3.13.0
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+      chai: 5.2.1
       lodash: 4.17.21
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
     transitivePeerDependencies:
       - '@babel/core'
       - '@teambit/documenter.theme.theme-compositions'
@@ -82106,7 +81220,6 @@ snapshots:
 
   '@teambit/node@file:scopes/harmony/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@14.3.1)(eslint@8.56.0)(jest@29.3.1)':
     dependencies:
-      '@babel/runtime': 7.20.0
       '@bitdev/node.generators.node-starters': 1.0.0
       '@bitdev/node.generators.node-templates': 6.0.1
       '@teambit/component-id': 1.2.4
@@ -82115,9 +81228,11 @@ snapshots:
       '@teambit/harmony.aspect-docs.node': file:scopes/harmony/aspect-docs/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@5.9.2)
-      core-js: 3.13.0
       eslint-mdx: 1.17.1(eslint@8.56.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)
       eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
@@ -82128,6 +81243,7 @@ snapshots:
       lodash: 4.17.21
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       typescript: 5.9.2
     transitivePeerDependencies:
       - '@teambit/documenter.theme.theme-compositions'
@@ -82141,7 +81257,6 @@ snapshots:
 
   '@teambit/node@file:scopes/harmony/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@testing-library/react@16.3.2)(eslint@8.56.0)(jest@29.3.1)':
     dependencies:
-      '@babel/runtime': 7.20.0
       '@bitdev/node.generators.node-starters': 1.0.0
       '@bitdev/node.generators.node-templates': 6.0.1
       '@teambit/component-id': 1.2.4
@@ -82150,9 +81265,11 @@ snapshots:
       '@teambit/harmony.aspect-docs.node': file:scopes/harmony/aspect-docs/node(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.1.0)
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@5.9.2)
-      core-js: 3.13.0
       eslint-mdx: 1.17.1(eslint@8.56.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)
       eslint-plugin-jest: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(typescript@5.9.2)
@@ -82163,6 +81280,7 @@ snapshots:
       lodash: 4.17.21
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       typescript: 5.9.2
     transitivePeerDependencies:
       - '@teambit/documenter.theme.theme-compositions'
@@ -83393,6 +82511,53 @@ snapshots:
       object-hash: 3.0.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+      webpack: 5.97.1(esbuild@0.14.29)
+      webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.97.1)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@parcel/css'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@swc/css'
+      - '@types/react'
+      - '@types/webpack'
+      - browserslist
+      - bufferutil
+      - clean-css
+      - csso
+      - debug
+      - esbuild
+      - eslint
+      - fibers
+      - html-webpack-plugin
+      - less
+      - lightningcss
+      - node-sass
+      - rollup
+      - sass
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+
+  '@teambit/preview.react-preview@1.1.13(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.6.3)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)':
+    dependencies:
+      '@bitdev/react.preview.react-docs-app': 0.0.11
+      '@teambit/react.mounter': 1.1.9(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/react.webpack.react-webpack': 1.0.59(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)
+      '@teambit/webpack.webpack-bundler': 1.0.19(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(react@19.1.0)
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      html-webpack-inject-plugin: 5.3.1(html-webpack-plugin@5.6.3)(webpack@5.97.1)
+      object-hash: 3.0.0
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
       webpack: 5.97.1(esbuild@0.14.29)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.97.1)
     transitivePeerDependencies:
@@ -87575,6 +86740,77 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
+  '@teambit/react.webpack.react-webpack@1.0.59(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@0.21.3)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)':
+    dependencies:
+      '@babel/preset-env': 7.29.2(@babel/core@7.28.3)
+      '@babel/preset-react': 7.22.15(@babel/core@7.28.3)
+      '@babel/preset-typescript': 7.28.5(@babel/core@7.28.3)
+      '@bitdev/react.webpack.refresh-overlay': 1.0.0
+      '@mdx-js/loader': 3.1.1(webpack@5.97.1)
+      '@parcel/css': 1.14.0
+      '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@0.21.3)(webpack-dev-server@4.15.0)(webpack@5.97.1)
+      '@svgr/webpack': 8.1.0(typescript@7.0.2)
+      '@swc/css': 0.0.20
+      '@teambit/component-id': 1.2.4
+      '@teambit/mdx.modules.mdx-pre-loader': 0.0.1
+      '@teambit/mdx.modules.mdx-v3-options': 0.0.3(rollup@4.53.3)
+      '@teambit/react.babel.bit-react-transformer': 1.0.59(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/webpack.modules.generate-style-loaders': 1.0.21
+      '@teambit/webpack.modules.style-regexps': 1.0.10
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.1.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      babel-loader: 9.1.0(@babel/core@7.28.3)(webpack@5.97.1)
+      css-loader: 6.7.2(webpack@5.97.1)
+      css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1)
+      esbuild: 0.14.29
+      less-loader: 11.1.0(less@4.2.1)(webpack@5.97.1)
+      lightningcss: 1.28.2
+      lodash: 4.17.21
+      mini-css-extract-plugin: 2.9.2(webpack@5.97.1)
+      new-url-loader: 0.1.1(webpack@5.97.1)
+      postcss: 8.4.19
+      postcss-flexbugs-fixes: 5.0.2(postcss@8.4.19)
+      postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.97.1)
+      postcss-normalize: 10.0.1(browserslist@4.28.2)(postcss@8.4.19)
+      postcss-preset-env: 7.8.3(postcss@8.4.19)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(typescript@7.0.2)(webpack@5.97.1)
+      react-dom: 19.1.0(react@19.1.0)
+      react-refresh: 0.14.0
+      resolve-url-loader: 5.0.0
+      sass-loader: 13.3.2(sass-embedded@1.100.0)(sass@1.72.0)(webpack@5.97.1)
+      source-map-loader: 4.0.1(webpack@5.97.1)
+      style-loader: 3.3.1(webpack@5.97.1)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(webpack@5.97.1)
+      webpack: 5.97.1(esbuild@0.14.29)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@types/webpack'
+      - browserslist
+      - bufferutil
+      - clean-css
+      - csso
+      - debug
+      - eslint
+      - fibers
+      - less
+      - node-sass
+      - react
+      - rollup
+      - sass
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+
   '@teambit/react.webpack.react-webpack@1.0.59(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.28.2)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.72.0)(type-fest@4.41.0)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)':
     dependencies:
       '@babel/preset-env': 7.29.2(@babel/core@7.28.3)
@@ -87717,7 +86953,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/react@file:scopes/react/react(@babel/core@7.26.9)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)':
+  '@teambit/react@file:scopes/react/react(@babel/core@7.26.9)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)':
     dependencies:
       '@babel/helper-plugin-test-runner': 7.16.7
       '@babel/preset-env': 7.28.3(@babel/core@7.26.9)
@@ -87762,11 +86998,13 @@ snapshots:
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@5.9.2)
       babel-loader: 9.2.1(@babel/core@7.26.9)(webpack@5.97.1)
       chalk: 4.1.2
-      core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.97.1)
       css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1)
       esbuild: 0.14.29
@@ -87787,7 +87025,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       postcss-flexbugs-fixes: 5.0.2(postcss@8.4.45)
@@ -87799,6 +87036,7 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       react-error-overlay: 6.0.9
       react-refresh: 0.10.0
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       resolve-url-loader: 5.0.0
       sanitize.css: 12.0.1
       sass: 1.63.6
@@ -87820,9 +87058,6 @@ snapshots:
       - '@teambit/mdx.ui.mdx-scope-context'
       - '@testing-library/react'
       - '@testing-library/react-hooks'
-      - '@types/node'
-      - '@types/react'
-      - '@types/react-dom'
       - '@types/react-syntax-highlighter'
       - '@types/webpack'
       - babel-plugin-macros
@@ -87840,7 +87075,6 @@ snapshots:
       - node-notifier
       - node-sass
       - postcss
-      - react-router-dom
       - rollup
       - sass-embedded
       - sockjs-client
@@ -87855,7 +87089,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/react@file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)':
+  '@teambit/react@file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)':
     dependencies:
       '@babel/helper-plugin-test-runner': 7.16.7
       '@babel/preset-env': 7.28.3(@babel/core@7.28.3)
@@ -87900,11 +87134,13 @@ snapshots:
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@5.9.2)
       babel-loader: 9.2.1(@babel/core@7.28.3)(webpack@5.97.1)
       chalk: 4.1.2
-      core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.97.1)
       css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1)
       esbuild: 0.14.29
@@ -87925,7 +87161,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       postcss-flexbugs-fixes: 5.0.2(postcss@8.4.45)
@@ -87937,6 +87172,7 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       react-error-overlay: 6.0.9
       react-refresh: 0.10.0
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       resolve-url-loader: 5.0.0
       sanitize.css: 12.0.1
       sass: 1.63.6
@@ -87958,9 +87194,6 @@ snapshots:
       - '@teambit/mdx.ui.mdx-scope-context'
       - '@testing-library/react'
       - '@testing-library/react-hooks'
-      - '@types/node'
-      - '@types/react'
-      - '@types/react-dom'
       - '@types/react-syntax-highlighter'
       - '@types/webpack'
       - babel-plugin-macros
@@ -87978,7 +87211,6 @@ snapshots:
       - node-notifier
       - node-sass
       - postcss
-      - react-router-dom
       - rollup
       - sass-embedded
       - sockjs-client
@@ -87993,7 +87225,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/react@file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@18.3.1)(react-router-dom@6.30.1)(react@18.3.1)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)':
+  '@teambit/react@file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)':
     dependencies:
       '@babel/helper-plugin-test-runner': 7.16.7
       '@babel/preset-env': 7.28.3(@babel/core@7.28.3)
@@ -88038,11 +87270,13 @@ snapshots:
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@5.9.2)
       babel-loader: 9.2.1(@babel/core@7.28.3)(webpack@5.97.1)
       chalk: 4.1.2
-      core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.97.1)
       css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1)
       esbuild: 0.14.29
@@ -88063,7 +87297,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       postcss-flexbugs-fixes: 5.0.2(postcss@8.4.45)
@@ -88075,6 +87308,7 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       react-error-overlay: 6.0.9
       react-refresh: 0.10.0
+      react-router-dom: 6.30.1(react-dom@18.3.1)(react@18.3.1)
       resolve-url-loader: 5.0.0
       sanitize.css: 12.0.1
       sass: 1.63.6
@@ -88096,9 +87330,6 @@ snapshots:
       - '@teambit/mdx.ui.mdx-scope-context'
       - '@testing-library/react'
       - '@testing-library/react-hooks'
-      - '@types/node'
-      - '@types/react'
-      - '@types/react-dom'
       - '@types/react-syntax-highlighter'
       - '@types/webpack'
       - babel-plugin-macros
@@ -88116,7 +87347,6 @@ snapshots:
       - node-notifier
       - node-sass
       - postcss
-      - react-router-dom
       - rollup
       - sass-embedded
       - sockjs-client
@@ -88131,7 +87361,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/react@file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react-router-dom@6.30.1)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)':
+  '@teambit/react@file:scopes/react/react(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.2)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@0.21.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)':
     dependencies:
       '@babel/helper-plugin-test-runner': 7.16.7
       '@babel/preset-env': 7.28.3(@babel/core@7.28.3)
@@ -88176,11 +87406,13 @@ snapshots:
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@16.3.2)(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(typescript@5.9.2)
       babel-loader: 9.2.1(@babel/core@7.28.3)(webpack@5.97.1)
       chalk: 4.1.2
-      core-js: 3.13.0
       css-loader: 6.2.0(webpack@5.97.1)
       css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1)
       esbuild: 0.14.29
@@ -88201,7 +87433,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       postcss-flexbugs-fixes: 5.0.2(postcss@8.4.45)
@@ -88213,6 +87444,7 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       react-error-overlay: 6.0.9
       react-refresh: 0.10.0
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
       resolve-url-loader: 5.0.0
       sanitize.css: 12.0.1
       sass: 1.63.6
@@ -88234,9 +87466,6 @@ snapshots:
       - '@teambit/mdx.ui.mdx-scope-context'
       - '@testing-library/react'
       - '@testing-library/react-hooks'
-      - '@types/node'
-      - '@types/react'
-      - '@types/react-dom'
       - '@types/react-syntax-highlighter'
       - '@types/webpack'
       - babel-plugin-macros
@@ -88254,7 +87483,6 @@ snapshots:
       - node-notifier
       - node-sass
       - postcss
-      - react-router-dom
       - rollup
       - sass-embedded
       - sockjs-client
@@ -88271,11 +87499,13 @@ snapshots:
 
   '@teambit/readme@file:scopes/mdx/readme':
     dependencies:
-      '@babel/runtime': 7.20.0
       '@teambit/harmony': 0.4.12
-      core-js: 3.13.0
+      '@types/node': 22.10.5
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+      react-router-dom: 6.30.1(react-dom@19.1.0)(react@19.1.0)
 
   '@teambit/refactoring@file:scopes/component/refactoring':
     dependencies:
