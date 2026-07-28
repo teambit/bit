@@ -263,7 +263,6 @@ export class ComponentCompareMain {
       // with --unmodified) still shows no diff.
       toVersion = targetVersion;
       let foundMeaningfulParent = false;
-      let sawNonHiddenAncestor = false;
       while (parentRef) {
         const parentTag = modelComponent.getTagOfRefIfExists(parentRef);
         const parentVersion: string = parentTag || parentRef.toString();
@@ -274,7 +273,6 @@ export class ComponentCompareMain {
         const parentObject = await modelComponent.loadVersion(parentVersion, repository);
         version = parentVersion;
         if (!parentObject.hidden) {
-          sawNonHiddenAncestor = true;
           if (parentTag) {
             foundMeaningfulParent = true;
             break;
@@ -301,10 +299,11 @@ export class ComponentCompareMain {
         }
         parentRef = parentObject.parents[0];
       }
-      if (!foundMeaningfulParent && !sawNonHiddenAncestor) {
-        // the entire parent chain is hidden (e.g. the first release of a component created by the
-        // merge + tag-from-scope flow). treat it as having no parent and show all files as new,
-        // rather than diffing against a hidden snap.
+      if (!foundMeaningfulParent) {
+        // the entire parent chain consists of skipped ancestors - hidden snaps and/or snaps with
+        // identical content (e.g. the first release of a component created by the merge +
+        // tag-from-scope flow, with or without rebuilt artifacts). treat it as having no parent
+        // and show all files as new, rather than diffing against a skipped snap.
         const versionFiles = await versionObject.modelFilesToSourceFiles(repository);
         diffResult.filesDiff = await getFilesDiff([], versionFiles, 'no parent', targetVersion);
         if (hasDiff(diffResult)) diffResult.hasDiff = true;

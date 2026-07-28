@@ -539,5 +539,20 @@ describe('bit diff command', function () {
         expect(output).to.have.string(noDiffMessage);
       });
     });
+    describe('when the only ancestor is a snap with identical content', () => {
+      before(() => {
+        helper.fs.createFile('comp2', 'index.js', 'console.log("hello");');
+        helper.command.addComponent('comp2');
+        helper.command.snapComponentWithoutBuild('comp2');
+        helper.command.tagWithoutBuild('comp2', '--unmodified');
+      });
+      it('should treat the version as having no parent and show all files as added', () => {
+        const output = helper.command.diff('comp2 0.0.1 --parent');
+        expect(output).to.not.have.string(noDiffMessage);
+        expect(output).to.have.string('--- index.js (no parent)');
+        expect(output).to.have.string('+++ index.js (0.0.1)');
+        expect(output).to.have.string('+console.log("hello");');
+      });
+    });
   });
 });
