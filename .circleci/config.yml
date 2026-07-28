@@ -758,6 +758,44 @@ jobs:
             # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
             # this build is CPU-bound and dominated by one env, so concurrency only added contention.
             # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
+      # TEMPORARY diagnostic for the missing dist/{main}.d.ts in packages built on CI
+      # (entry d.ts absent from the declaration artifacts of every component snapped on
+      # the TS7 lane, while local builds emit it). Dumps the capsule-network state and
+      # re-runs the exact native tsc with --listEmittedFiles to see what gets emitted here.
+      - run:
+          name: 'dts emit diagnostics'
+          when: always
+          no_output_timeout: '15m'
+          command: |
+            set -x
+            TSC=$(ls -d ~/bit/bit/node_modules/.pnpm/typescript@7*/node_modules/typescript/lib/tsc.js 2>/dev/null | head -1)
+            echo "TSC=$TSC"
+            for N in ~/Library/Caches/Bit/capsules/*/; do
+              [ -f "$N/tsconfig.json" ] || continue
+              echo "==== network: $N ===="
+              head -80 "$N/tsconfig.json"
+              echo "-- tsbuildinfo files --"
+              find "$N/dist" -name '*tsbuildinfo*' 2>/dev/null | head -5
+              echo "-- root dist: entry-level d.ts (maxdepth 2) --"
+              find "$N/dist" -maxdepth 2 -name '*.d.ts' 2>/dev/null | head -40
+              echo "-- sample capsule dists --"
+              ls -d "$N"teambit.* 2>/dev/null | head -6 | while read C; do
+                echo "--- $(basename $C)"; ls "$C/dist" 2>/dev/null | head -15
+              done
+              if [ -n "$TSC" ]; then
+                echo "-- re-running native tsc with --listEmittedFiles --"
+                cd "$N"
+                node "$TSC" -p tsconfig.json --listEmittedFiles > /tmp/emit.log 2>&1
+                echo "tsc-exit=$?"
+                echo "emitted total: $(grep -c '^TSFILE' /tmp/emit.log)"
+                echo "-- emitted entry d.ts (dist/<capsule>/index.d.ts, depth-2 only) --"
+                grep '^TSFILE' /tmp/emit.log | grep -E "dist/[^/]+/index\.d\.ts$" | head -30
+                echo "-- non-TSFILE output (errors etc.) --"
+                grep -v '^TSFILE' /tmp/emit.log | head -40
+                cd - > /dev/null
+              fi
+            done
+            true
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
