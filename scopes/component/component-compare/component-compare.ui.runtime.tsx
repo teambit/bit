@@ -13,11 +13,6 @@ import type {
 } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareChangelog } from '@teambit/component.ui.component-compare.changelog';
 import { ComponentCompareAspects } from '@teambit/component.ui.component-compare.compare-aspects.compare-aspects';
-import { InlineCodeCompare } from '@teambit/code.ui.inline-code-compare';
-import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare';
-import { InlineDepsCompare } from '@teambit/code.ui.inline-deps-compare';
-import { InlineTestsCompare } from '@teambit/code.ui.inline-tests-compare';
-import { InlineConfigCompare } from '@teambit/code.ui.inline-config-compare';
 import type { ApiDiffInsight } from '@teambit/semantics.ui.api-diff-view';
 import { AspectsCompareSection } from './component-compare-aspects.section';
 import { ComponentCompareAspect } from './component-compare.aspect';
@@ -27,42 +22,6 @@ import { ComponentComparePage } from './component-compare-page';
 
 export type ComponentCompareNav = Array<TabItem>;
 export type ComponentCompareNavSlot = SlotRegistry<ComponentCompareNav>;
-
-/**
- * Inline-compare tabs are stacked in the new ComponentComparePage and shown/hidden by the
- * toolbar via `data-view-mode` CSS rules. Aspects can register their own via
- * `ComponentCompareUI.registerCompareTab(...)`. These fallbacks fill any id the slot didn't
- * provide so the page is usable out of the box. (Owned by component-compare so single-component
- * and lane-compare share the same list; lane-compare delegates here.)
- */
-const FALLBACK_COMPARE_TABS: TabItem[] = [
-  { id: 'inline-code', order: 1, displayName: 'Code', element: React.createElement(InlineCodeCompare) },
-  // lazy: the preview panel mounts base+compare composition iframes, each pulling the full env
-  // preview bundle the moment it hits the DOM (even under `display: none`) — in a large lane
-  // compare that's hundreds of MB of hidden-iframe traffic starving the visible view.
-  {
-    id: 'inline-preview',
-    order: 2,
-    displayName: 'Preview',
-    element: React.createElement(InlinePreviewCompare),
-    lazy: true,
-  },
-  { id: 'inline-deps', order: 4, displayName: 'Dependencies', element: React.createElement(InlineDepsCompare) },
-  // lazy: the tests view isn't even enabled in the lane-compare toolbar today — mounting it per
-  // component only fires its data queries for panels nobody can see.
-  { id: 'inline-tests', order: 5, displayName: 'Tests', element: React.createElement(InlineTestsCompare), lazy: true },
-  // lazy: the config panel fires two `no-cache` aspect queries per component the moment it mounts —
-  // eager-mounted (CSS-hidden) panels turned that into avoidable network work for users who never
-  // open the Configuration view. The config sidebar tree is unaffected: it's fed centrally from the
-  // bulk compare data (RegistryFeeder), not by this panel.
-  {
-    id: 'inline-config',
-    order: 6,
-    displayName: 'Configuration',
-    element: React.createElement(InlineConfigCompare),
-    lazy: true,
-  },
-];
 
 export type ComponentCompareTabSlot = SlotRegistry<TabItem | TabItem[]>;
 
@@ -164,8 +123,11 @@ export class ComponentCompareUI {
   private _resolvedCompareTabs?: TabItem[];
   private _resolvedCompareTabsKey?: number;
   /**
-   * Merge slot-registered tabs with the fallbacks, dedup by id (registered wins), sort by order.
-   * Memoized by slot-entry count so the resolved list keeps stable identity across renders.
+   * Resolve the inline-compare tabs that aspects register via `registerCompareTab` (code →
+   * inline-code/deps/tests/config, compositions → inline-preview, docs → inline-docs, …). Dedup by
+   * id (first registration wins), sort by order. Memoized by slot-entry count so the resolved list
+   * keeps a stable identity across renders. Owning each tab in its aspect keeps component-compare
+   * decoupled from code/preview/docs UI; single-component compare and lane-compare both read this.
    */
   resolveCompareTabs(): TabItem[] {
     const slotEntries = this.compareTabSlot.toArray();
@@ -173,10 +135,9 @@ export class ComponentCompareUI {
       return this._resolvedCompareTabs;
     }
     const registered = flatten(slotEntries.map(([, value]) => value).filter(Boolean) as Array<TabItem | TabItem[]>);
-    const registeredIds = new Set(registered.map((t) => t.id));
-    const merged = [...registered, ...FALLBACK_COMPARE_TABS.filter((t) => !registeredIds.has(t.id))].sort(
-      (a, b) => (a.order ?? 0) - (b.order ?? 0)
-    );
+    const seen = new Set<string>();
+    const deduped = registered.filter((tab) => (seen.has(tab.id) ? false : (seen.add(tab.id), true)));
+    const merged = deduped.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     this._resolvedCompareTabs = merged;
     this._resolvedCompareTabsKey = slotEntries.length;
     return merged;
