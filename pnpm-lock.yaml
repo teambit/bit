@@ -935,8 +935,8 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.component-highlighter':
-        specifier: 0.2.7
-        version: 0.2.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+        specifier: 0.2.8
+        version: 0.2.8(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta':
         specifier: 0.0.45
         version: 0.0.45(react-dom@19.1.0)(react@19.1.0)
@@ -23334,8 +23334,8 @@ importers:
   scopes/react/ui/highlighter-provider:
     dependencies:
       '@teambit/react.ui.component-highlighter':
-        specifier: 0.2.7
-        version: 0.2.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+        specifier: 0.2.8
+        version: 0.2.8(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.14
@@ -79685,7 +79685,7 @@ snapshots:
       '@teambit/legacy.cli.error': 0.0.19
       '@teambit/legacy.constants': 0.0.11
       '@teambit/legacy.consumer': 0.0.49(graphql@15.8.0)
-      '@teambit/legacy.consumer-config': 0.0.49(graphql@15.8.0)
+      '@teambit/legacy.consumer-config': 0.0.49
       '@teambit/legacy.extension-data': 0.0.51(graphql@15.8.0)
       '@teambit/legacy.loader': 0.0.7
       '@teambit/legacy.logger': 0.0.19
@@ -79753,7 +79753,7 @@ snapshots:
       - graphql
       - supports-color
 
-  '@teambit/legacy.consumer-config@0.0.49(graphql@15.8.0)':
+  '@teambit/legacy.consumer-config@0.0.49':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
@@ -79770,9 +79770,7 @@ snapshots:
       lodash: 4.17.21
       p-map-series: 2.1.0
     transitivePeerDependencies:
-      - domexception
       - encoding
-      - graphql
       - supports-color
 
   '@teambit/legacy.consumer-config@file:components/legacy/consumer-config(graphql@15.8.0)':
@@ -79814,7 +79812,7 @@ snapshots:
       '@teambit/legacy.bit-map': 0.0.106(graphql@15.8.0)
       '@teambit/legacy.constants': 0.0.11
       '@teambit/legacy.consumer-component': 0.0.50(graphql@15.8.0)
-      '@teambit/legacy.consumer-config': 0.0.49(graphql@15.8.0)
+      '@teambit/legacy.consumer-config': 0.0.49
       '@teambit/legacy.logger': 0.0.19
       '@teambit/legacy.scope': 0.0.49(graphql@15.8.0)
       '@teambit/legacy.utils': 0.0.21
@@ -80209,7 +80207,7 @@ snapshots:
       '@teambit/legacy.constants': 0.0.11
       '@teambit/legacy.consumer': 0.0.49(graphql@15.8.0)
       '@teambit/legacy.consumer-component': 0.0.50(graphql@15.8.0)
-      '@teambit/legacy.consumer-config': 0.0.49(graphql@15.8.0)
+      '@teambit/legacy.consumer-config': 0.0.49
       '@teambit/legacy.dependency-graph': 0.0.52(graphql@15.8.0)
       '@teambit/legacy.extension-data': 0.0.51(graphql@15.8.0)
       '@teambit/legacy.loader': 0.0.7
@@ -82433,12 +82431,13 @@ snapshots:
     dependencies:
       '@teambit/component-id': 1.2.4
       '@teambit/legacy.constants': 0.0.11
-      '@teambit/legacy.consumer-config': 0.0.49(graphql@15.8.0)
+      '@teambit/legacy.consumer-config': 0.0.49
       '@teambit/legacy.extension-data': 0.0.51(graphql@15.8.0)
       '@teambit/legacy.utils': 0.0.21
       '@teambit/toolbox.path.path': 0.0.8
     transitivePeerDependencies:
       - encoding
+      - supports-color
 
   '@teambit/pkg.modules.component-package-name@file:components/modules/component-package-name(graphql@15.8.0)':
     dependencies:
@@ -85456,27 +85455,6 @@ snapshots:
       use-debounce: 6.0.1(react@19.1.0)
       uuid: 3.4.0
 
-  '@teambit/react.ui.component-highlighter@0.2.7(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)':
-    dependencies:
-      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/base-ui.routing.native-link': 1.0.1(react@18.3.1)
-      '@teambit/component-id': 1.2.2
-      '@teambit/component.modules.component-url': 0.0.188(react@18.3.1)
-      '@teambit/react.modules.dom-to-react': 0.2.1(react@18.3.1)
-      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.1.0)(react@18.3.1)
-      '@teambit/react.ui.hover-selector': 0.2.1(react@18.3.1)
-      '@tippyjs/react': 4.2.0(react-dom@19.1.0)(react@18.3.1)
-      classnames: 2.5.1
-      get-xpath: 3.2.0
-      lodash.compact: 3.0.1
-      react: 18.3.1
-      react-dom: 19.1.0(react@18.3.1)
-      url-join: 4.0.1
-      use-debounce: 8.0.4(react@18.3.1)
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - '@types/react'
-
   '@teambit/react.ui.component-highlighter@0.2.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)':
     dependencies:
       '@floating-ui/react-dom': 0.7.2(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
@@ -85513,6 +85491,27 @@ snapshots:
       lodash.compact: 3.0.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+      url-join: 4.0.1
+      use-debounce: 8.0.4(react@18.3.1)
+      uuid: 10.0.0
+    transitivePeerDependencies:
+      - '@types/react'
+
+  '@teambit/react.ui.component-highlighter@0.2.8(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)':
+    dependencies:
+      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/base-ui.routing.native-link': 1.0.1(react@18.3.1)
+      '@teambit/component-id': 1.2.2
+      '@teambit/component.modules.component-url': 0.0.188(react@18.3.1)
+      '@teambit/react.modules.dom-to-react': 0.2.1(react@18.3.1)
+      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/react.ui.hover-selector': 0.2.1(react@18.3.1)
+      '@tippyjs/react': 4.2.0(react-dom@19.1.0)(react@18.3.1)
+      classnames: 2.5.1
+      get-xpath: 3.2.0
+      lodash.compact: 3.0.1
+      react: 18.3.1
+      react-dom: 19.1.0(react@18.3.1)
       url-join: 4.0.1
       use-debounce: 8.0.4(react@18.3.1)
       uuid: 10.0.0
@@ -86074,7 +86073,7 @@ snapshots:
 
   '@teambit/react.ui.highlighter-provider@file:scopes/react/ui/highlighter-provider(react@18.3.1)':
     dependencies:
-      '@teambit/react.ui.component-highlighter': 0.2.7(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
+      '@teambit/react.ui.component-highlighter': 0.2.8(@types/react@19.2.14)(react-dom@19.1.0)(react@18.3.1)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       classnames: 2.5.1
@@ -86084,7 +86083,7 @@ snapshots:
 
   '@teambit/react.ui.highlighter-provider@file:scopes/react/ui/highlighter-provider(react@19.1.0)':
     dependencies:
-      '@teambit/react.ui.component-highlighter': 0.2.7(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/react.ui.component-highlighter': 0.2.8(@types/react@19.2.14)(react-dom@19.1.0)(react@19.1.0)
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
       classnames: 2.5.1
