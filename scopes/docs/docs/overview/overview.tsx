@@ -123,7 +123,6 @@ export function Overview({
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}
           displayName={component.displayName}
-          version={component.version}
           abstract={component.description}
           labels={component.labels}
           packageName={component.packageName}

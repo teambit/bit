@@ -636,7 +636,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
       </div>
       <div className={styles.compareLayout}>
         <div className={styles.compareMain}>
-          <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
+          <CompareSplitLayoutPreset className={styles.splitLayout} base={BaseLayout} compare={CompareLayout} />
         </div>
         {hasControlChannels && (
           <div
