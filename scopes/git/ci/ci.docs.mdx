@@ -227,7 +227,7 @@ bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run]
 | _(no args)_ | Same as `--all`: reconcile every mapped lane, then the main scope.                                                                                                                                                                                                                                                                                                                |
 | `[lane]`    | Reconcile a single lane (validated against the `lanes` patterns in the config).                                                                                                                                                                                                                                                                                                   |
 | `--branch`  | Resolve the lane from a git branch name via the mapping config. Used by push-triggered pipelines.                                                                                                                                                                                                                                                                                 |
-| `--all`     | Reconcile every mapped lane plus the main scope. Cannot be combined with `[lane]` or `--main`.                                                                                                                                                                                                                                                                                    |
+| `--all`     | Reconcile every mapped lane plus the main scope — including lanes that only still exist as a branch, so a lane deleted on bit.cloud gets its branch and PR retired. Cannot be combined with `[lane]` or `--main`.                                                                                                                                                                 |
 | `--main`    | Reconcile only the main scope against the default branch (opens a sync PR on drift). Conflicts between the repository and the scope are resolved **in favour of the scope** (`bit checkout head --auto-merge-resolve theirs`) — see below.                                                                                                                                        |
 | `--dry-run` | Report the action that _would_ be taken per target. Nothing is pushed and no pull request is created, closed, labelled or commented on. It is not a read-only operation locally: the working tree, `.bitmap` and the local scope are written and then restored, and `--dry-run --main` can leave a local `<mainSyncBranch>` branch behind (the next run resets it from `origin`). |
 
@@ -236,6 +236,32 @@ bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run]
 The command is **stateless and idempotent**: it derives what to do from the current state of the lane
 and of the branch, so re-running it on a converged pair is a no-op. Whatever triggers it — a bit.cloud
 webhook, a `push` event, a cron schedule — only decides _when_ it runs, never _what_ it does.
+
+### Repository checkout requirements
+
+The reconciler reads git history and compares refs, so the checkout it runs in must be **complete**:
+
+- **Full history.** On GitHub Actions that means `actions/checkout` with `fetch-depth: 0`. A `--depth=1`
+  (shallow) clone is **not supported**: the sync state of a branch is the `Bit-Lane-Head` trailer on its
+  newest `[bit-sync]` commit, and the dev-commit count is a revision range — neither is answerable from a
+  truncated history, and a branch that has been synced many times reads as never-synced.
+- **All branches.** A single-branch clone (`--single-branch`, or a `refspec` narrowed to one branch) is
+  likewise unsupported: `--all` reconciles every mapped lane and every lane-mapped branch, and the
+  main-scope path needs the default branch and `<mainSyncBranch>` too.
+
+### Which targets an `--all` run visits
+
+The lanes to reconcile are the **union** of two sources:
+
+1. every lane on the default scope's remote that the `lanes` patterns match, and
+2. every lane-mapped branch on `origin` (`branchPrefix` / `branches` resolved in reverse) that those same
+   patterns match.
+
+The second source is what makes cleanup possible at all: a lane that was **merged, archived or deleted**
+on bit.cloud is gone from the first list, so a lane-only enumeration would never visit its branch and the
+`close-pr` action would never fire — every retired lane would leave an orphan branch and an open PR
+behind. The default branch and `<mainSyncBranch>` are never treated as lane-mapped. Duplicates are
+collapsed by lane name, so a lane that appears in both sources is reconciled once.
 
 ### Per-lane reconciliation
 
@@ -253,6 +279,8 @@ For each mapped lane it compares the lane's remote head against the state record
 A lane that cannot be reconciled automatically (merge conflicts, a failing build, a stale lane) is
 **halted**: the PR gets a `bit-sync-conflict` label plus a comment with resolution steps, the remaining
 lanes are still synced, and the command exits non-zero. Remove the label to resume syncing that lane.
+The isolation is unconditional — a lane that fails in a way nobody anticipated is halted too, never
+allowed to abort the lanes after it.
 
 ### Main-scope reconciliation
 
