@@ -282,8 +282,7 @@ export class ProcessBasedTsServer {
       onCancelled?.dispose();
       return result;
     } catch (error: any) {
-      const reason = error instanceof Error ? error.message : JSON.stringify(error);
-      this.logger.error(`Error in request "${command}" (seq ${seq}): ${reason}`, error);
+      this.logger.error(`Error in request "${command}" (seq ${seq}): ${stringifyError(error)}`, error);
       throw error;
     }
   }
@@ -383,7 +382,7 @@ export class ProcessBasedTsServer {
    */
   private toRequestError(response: ts.server.protocol.Message): Error {
     const { command, message } = response as ts.server.protocol.Response;
-    const error = new Error(message || `tsserver "${command}" request failed without an error message`);
+    const error = new Error(message ?? `tsserver "${command}" request failed without an error message`);
     (error as any).command = command;
     (error as any).response = response;
     return error;
@@ -407,5 +406,14 @@ export class ProcessBasedTsServer {
     if (!this.tsServerProcess) {
       await this.restart();
     }
+  }
+}
+
+function stringifyError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
   }
 }
