@@ -36,6 +36,7 @@ import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
+import type { CiSyncConfig } from './sync/sync-config';
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
 // LANE_HASH_MISMATCH fires when both runners called `Lane.create` (the lane didn't exist on
@@ -107,6 +108,13 @@ export interface CiWorkspaceConfig {
    * ```
    */
   useExplicitBumpKeywords?: boolean;
+
+  /**
+   * Configuration for `bit ci sync` — bi-directional lane <-> branch/PR sync.
+   * See CiSyncConfig for fields. Example:
+   * { "teambit.git/ci": { "sync": { "branchPrefix": "lane/", "lanes": ["*"] } } }
+   */
+  sync?: CiSyncConfig;
 }
 
 export class CiMain {
