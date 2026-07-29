@@ -267,21 +267,25 @@ export class LaneSyncExecutor {
 
   /**
    * Both sides moved since the last sync: the lane has snaps the branch has never seen, and the
-   * branch has dev commits the lane has never seen.
+   * branch has dev commits the lane has never seen. Converging that requires a real content merge
+   * *before* anything is written to either side, in this order:
    *
-   * Two attempts, in this order:
+   * 1. **Merge the lane into the branch's working tree** (`mergeLaneIntoBranchWorkingTree`, i.e.
+   *    `bit checkout head --manual`). Conflicts → discard the marker writes and halt for a human.
+   * 2. **Snap + export the merged tree** onto the lane. Only now does the lane advance, and it
+   *    advances to a snap that contains *both* sides — the snap *is* the merge.
+   * 3. **Record the resulting lane head on the branch** with a fresh `Bit-Lane-Head` trailer and push,
+   *    so the next run sees the pair as converged.
    *
-   * 1. **Export.** Snap the branch's working tree onto the lane exactly as `export-branch` does.
-   *    This is already a convergence for most divergence: `snapPrCommit`'s switch fetches the remote
-   *    lane (so our snap's parent is the *new* lane head), and `exportWithAdoptOnConflict` rebases
-   *    our snaps onto the remote heads if the remote moved again mid-flight. Where the branch and the
-   *    lane touched the same component the branch wins on content — the documented
-   *    `mode: "git-source-of-truth"` semantics of this sync.
-   * 2. **Three-way merge**, only for the failure class where attempt 1 could not *adopt* the branch
-   *    onto the lane at all (see `classifyDivergedExportFailure`). Merge the lane's snaps into the
-   *    branch's working tree, and if that produces no conflicts, re-run attempt 1 on the merged tree.
-   *    Conflicts are handed to a human via `executeHalt` (this reconciler never resolves source
-   *    conflicts — explicitly out of scope), after the conflict-marker writes are discarded.
+   * Why the merge cannot be skipped in favour of "just export and let the export recover": the export
+   * path snaps through `snapPrCommit` → `switchToLane`, which defaults to `forceOurs: true`.
+   * `getComponentStatusBeforeMergeAttempt` returns without `propsForMerge` under `forceOurs`
+   * (`checkout.main.runtime.ts:580`), so `applyVersion` marks every file `unchanged`, leaves the
+   * filesystem alone and only moves `.bitmap` onto the lane heads. The snap that follows therefore
+   * records *the branch's* tree against the new lane head: every lane-side file edit is silently
+   * reverted on the lane tip, the branch never receives the lane's content, and the trailer this
+   * method pushes would then assert convergence over that loss. `exportWithAdoptOnConflict` cannot
+   * save it either — it rebases parent pointers, it does not merge files.
    *
    * Anything unexpected halts. This method never throws: one unreconcilable lane must not abort the
    * lanes after it in the run.
@@ -308,42 +312,12 @@ export class LaneSyncExecutor {
       this.executeHalt({ laneName, laneIdStr, branch, reason, pr: await this.findPr(branch) });
 
     try {
-      const message = await this.lastNonSyncCommitMessage(branch, defaultBranch);
-      // Deliberately the same plain checkout `export-branch` uses (no force, no reload): attempt 1
-      // below must behave exactly like the export-branch action, whose failure modes the
-      // classification is written against.
-      await git.raw(['checkout', '-B', branch, `origin/${branch}`]);
-
-      // ---- attempt 1: export the branch onto the lane -----------------------------------------
-      const exportErr = await this.snapAndExportOntoLane(laneIdStr, message);
-      if (!exportErr) {
-        const laneHead = await this.recordLaneHeadOnBranch(laneName, laneIdStr, branch);
-        if (!laneHead) {
-          return await halt(`lane ${laneIdStr} could not be read back from the remote after export`);
-        }
-        return (
-          `${laneName} -> merge-diverged (converged by export; lane ${laneIdStr} @ ${laneHead.slice(0, 9)}, ` +
-          `branch ${branch} updated)`
-        );
-      }
-
-      if (classifyDivergedExportFailure(exportErr.message) === 'halt') {
-        return await halt(`failed to converge diverged lane ${laneIdStr} with branch ${branch}: ${exportErr.message}`);
-      }
-
-      // ---- attempt 2: merge the lane into the branch's working tree, then export ---------------
-      logger.console(
-        chalk.yellow(
-          `Could not adopt branch ${branch} onto lane ${laneIdStr} directly (${exportErr.message}) — ` +
-            `falling back to a three-way merge of the lane into the branch`
-        )
-      );
-      // Attempt 1 may have written files/`.bitmap` before it failed. Nothing was committed or pushed, so
-      // resetting to the fetched branch tip discards those partial writes, puts the merge on a
-      // deterministic base, and (via the reload) makes the workspace read the branch's `.bitmap` — which
-      // the merge below depends on for both the lane pointer and the merge base.
+      // Force-checkout `origin/<branch>` and reload `.bitmap` into the live workspace: the merge below
+      // depends on that file for both the lane pointer (which lane is "current") and the merge base
+      // (which snap each component is on), and a stale local branch must never leak into the result.
       await this.resetToRemoteBranch(branch);
 
+      // ---- step 1: merge the lane's snaps into the branch's working tree -----------------------
       const merge = await this.mergeLaneIntoBranchWorkingTree(laneIdStr);
       if (merge.error) {
         return await halt(`failed to merge lane ${laneIdStr} into branch ${branch}: ${merge.error.message}`);
@@ -354,18 +328,26 @@ export class LaneSyncExecutor {
         await this.resetToRemoteBranch(branch);
         return await halt(`merge conflicts in: ${merge.conflicts.join(', ')}`);
       }
+      logger.console(
+        chalk.green(`Merged lane ${laneIdStr} into ${branch} with no conflicts — snapping the merged tree`)
+      );
 
-      logger.console(chalk.green(`Merged lane ${laneIdStr} into ${branch} with no conflicts — exporting the result`));
-      const mergedExportErr = await this.snapAndExportOntoLane(
+      // ---- step 2: snap + export the merged tree onto the lane ---------------------------------
+      // The working tree now holds both sides, so this snap is the merge commit on the lane. Any
+      // failure here (build error, rejected export, stale lane) halts: the reconciler makes exactly
+      // one attempt per lane per run and never guesses at a second recovery.
+      const exportErr = await this.snapAndExportOntoLane(
         laneIdStr,
         `merge remote lane ${laneIdStr} into ${branch} [bit-sync]`
       );
-      if (mergedExportErr) {
+      if (exportErr) {
         return await halt(
-          `merged lane ${laneIdStr} into branch ${branch} cleanly, but exporting the merged result failed: ` +
-            `${mergedExportErr.message}`
+          `merged lane ${laneIdStr} into branch ${branch} cleanly, but snapping/exporting the merged ` +
+            `result failed: ${exportErr.message}`
         );
       }
+
+      // ---- step 3: record the new lane head on the branch --------------------------------------
       const laneHead = await this.recordLaneHeadOnBranch(laneName, laneIdStr, branch);
       if (!laneHead) {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
@@ -387,8 +369,12 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * Snap the workspace (i.e. the branch's working tree) onto the lane and export it. Returns the
-   * error instead of throwing, so the caller decides between halting and trying something else.
+   * Snap the workspace's current tree onto the lane and export it. Returns the error instead of
+   * throwing, so the caller can halt (labelling the PR) rather than aborting the whole run.
+   *
+   * NOTE for callers: this snaps *whatever is in the workspace*, and `snapPrCommit`'s switch onto the
+   * lane uses `forceOurs`, which never merges files. So on a diverged lane the tree must already hold
+   * the merged content before this is called — see `executeMergeDiverged`.
    *
    * `keepLane` reuses the existing remote lane so the lane's history and any Bit Cloud lane-based
    * edits survive across syncs (the temp-lane flow recreates the lane on every run, which would churn
@@ -510,11 +496,20 @@ export class LaneSyncExecutor {
    * Put both sides back exactly on the fetched branch tip: the working tree and `.bitmap` in git, and
    * the workspace's in-memory view of that `.bitmap`.
    *
-   * The checkout is forced because a preceding attempt may have left partially written component files
-   * and a rewritten `.bitmap`; `git clean -fd` removes files a lane switch/merge added (untracked, and
-   * it never touches ignored paths like `node_modules` since `-x` is not passed). Nothing is lost:
-   * everything worth keeping is on `origin/<branch>` already, and this is a checkout — the executor
-   * never force-pushes.
+   * The checkout is forced because a merge (or a failed attempt) may have left rewritten component
+   * files and a rewritten `.bitmap`; the clean then removes whatever files that merge *added*, which
+   * are untracked and so survive a checkout.
+   *
+   * The clean is scoped: `-x` is not passed (so ignored files are left alone) **and** `.bit` and
+   * `node_modules` are excluded explicitly. Without those exclusions the clean can delete the local
+   * bit scope: a workspace whose scope lives at `<workspace>/.bit` (a pre-existing `.bit` directory,
+   * or a worktree where `.git` is a file) and whose `.gitignore` lacks Bit's block would have
+   * `.bit/objects` and `.bit/scope.json` removed mid-run. `git clean` runs in `process.cwd()` —
+   * `simpleGit()` is constructed with no `baseDir` (`../git.ts`) — which for `bit ci sync` is the
+   * workspace root.
+   *
+   * Nothing is lost: everything worth keeping is on `origin/<branch>` already, and this is a checkout —
+   * the executor never force-pushes.
    *
    * The reload is what makes the following bit operation see the *branch's* `.bitmap` (its lane pointer
    * and its per-component versions) instead of the one this process loaded at startup, which is the
@@ -523,7 +518,7 @@ export class LaneSyncExecutor {
    */
   private async resetToRemoteBranch(branch: string) {
     await git.raw(['checkout', '-f', '-B', branch, `origin/${branch}`]);
-    await git.raw(['clean', '-fd']);
+    await git.raw(['clean', '-fd', '-e', '.bit', '-e', 'node_modules']);
     await this.deps.ci.reloadWorkspaceFromDisk();
   }
 
@@ -812,6 +807,12 @@ export class LaneSyncExecutor {
    * would otherwise block the checkout with "local changes would be overwritten". Everything worth
    * keeping was committed and pushed before we get here. This is a checkout, never a push — no
    * remote state is discarded.
+   *
+   * The `.bitmap` reload after the checkout is what makes the restore complete for the *next* lane in a
+   * multi-lane run: the checkout swaps `.bitmap` on disk, and without reloading it the live workspace
+   * would keep the previous lane's branch state (`merge-diverged` deliberately loads a branch's
+   * `.bitmap` into the process, so this is not hypothetical) and would then resolve "current lane" and
+   * per-component versions for the next lane against the wrong checkout.
    */
   private async restoreWorkspace(defaultBranch: string) {
     const { logger } = this.deps;
@@ -822,47 +823,11 @@ export class LaneSyncExecutor {
         if (switchErr) logger.consoleWarning(`Could not switch the workspace back to main: ${switchErr.message}`);
       }
       await git.raw(['checkout', '-f', defaultBranch]);
+      await this.deps.ci.reloadWorkspaceFromDisk();
     } catch (e: any) {
       logger.consoleWarning(`Could not restore the workspace after sync: ${e?.message || e}`);
     }
   }
-}
-
-/**
- * Error-message fragments that mean "the export path could not *adopt* the branch's working tree onto
- * the lane; a real three-way content merge is required". Both are raised before anything is snapped or
- * exported, which is what makes the merge fallback safe to run:
- *
- * - `expect to get componentFromFS` — `applyVersion`'s `forceOurs` short-circuit
- *   (`checkout-version.ts:69`) dereferences the component from the filesystem, so it throws for a lane
- *   component the branch's `.bitmap` doesn't have. That is precisely "the lane gained a component this
- *   branch has never seen", i.e. the case a merge exists to solve. (`snapAndExportReusingLane` wraps it
- *   in its "Refusing destructive recovery for this failure class" message, so match on the fragment,
- *   not the whole string.)
- * - `--auto-merge-resolve` — `CheckoutMain.checkout` raises "automatic merge has failed for component
- *   …, please use --auto-merge-resolve" when it hits real file conflicts with no merge strategy set.
- *   Re-running with an explicit strategy is exactly what the fallback does.
- *
- * Everything else halts, deliberately. In particular:
- * - a **build/test failure** or a failed workspace-status verification is a code problem; a lane merge
- *   would neither fix it nor be safe to attempt;
- * - a **stale lane** (`unable to merge lane <id>, the component <x> was not found`, surfaced through
- *   `noDestructiveRecovery`) is a lane-integrity problem that needs a human on bit.cloud — `checkout
- *   head` fails the same way;
- * - a **merge-pending component** (`is merge-pending and cannot be checked out`) is rejected by
- *   `checkout` too, before any merge is attempted;
- * - an **export rejection** (auth, busy remote, divergence that `exportWithAdoptOnConflict` already
- *   failed to rebase) happens *after* snaps exist in the local scope, so re-driving the workspace
- *   through a merge would build on a half-finished export instead of a clean base.
- */
-const MERGE_REQUIRED_MARKERS = ['expect to get componentFromFS', '--auto-merge-resolve'];
-
-/**
- * Decide whether a failed export attempt on a diverged lane should be retried as a three-way merge or
- * handed straight to a human. Unclassifiable failures halt — the reconciler's standing posture.
- */
-export function classifyDivergedExportFailure(message: string): 'merge-required' | 'halt' {
-  return MERGE_REQUIRED_MARKERS.some((marker) => message.includes(marker)) ? 'merge-required' : 'halt';
 }
 
 /**

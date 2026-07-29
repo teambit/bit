@@ -11,8 +11,6 @@ import type { SnapResults, SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
-import { MergeLanesAspect } from '@teambit/merge-lanes';
-import type { MergeLanesMain } from '@teambit/merge-lanes';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { getDivergeData } from '@teambit/component.snap-distance';
 import { ComponentConfigMerger } from '@teambit/config-merger';
@@ -133,7 +131,6 @@ export class CiMain {
     ExportAspect,
     ImporterAspect,
     CheckoutAspect,
-    MergeLanesAspect,
   ];
 
   static slots: any = [];
@@ -155,16 +152,13 @@ export class CiMain {
 
     private checkout: CheckoutMain,
 
-    // used by `bit ci sync` to reconcile a lane and its branch when both sides moved
-    private mergeLanes: MergeLanesMain,
-
     private logger: Logger,
 
     private config: CiWorkspaceConfig
   ) {}
 
   static async provider(
-    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout, mergeLanes]: [
+    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout]: [
       CLIMain,
       Workspace,
       LoggerMain,
@@ -175,24 +169,11 @@ export class CiMain {
       ExportMain,
       ImporterMain,
       CheckoutMain,
-      MergeLanesMain,
     ],
     config: CiWorkspaceConfig
   ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-    const ci = new CiMain(
-      workspace,
-      builder,
-      status,
-      lanes,
-      snapping,
-      exporter,
-      importer,
-      checkout,
-      mergeLanes,
-      logger,
-      config
-    );
+    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
