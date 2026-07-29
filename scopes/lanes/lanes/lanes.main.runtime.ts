@@ -1,7 +1,8 @@
+/* eslint-disable max-lines */
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
-import pMapSeries from 'p-map-series';
 import pMap from 'p-map';
+import pLimit from 'p-limit';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { GraphqlMain } from '@teambit/graphql';
@@ -12,7 +13,15 @@ import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError, WorkspaceAspect } from '@teambit/workspace';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
-import { LaneDiffCmd, LaneDiffGenerator, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
+import {
+  LaneDiffCache,
+  LaneDiffCmd,
+  LaneDiffGenerator,
+  LaneHistoryDiffCmd,
+  classifyVersionChanges,
+  getHeadOnMain,
+  importMainHeads,
+} from '@teambit/lanes.modules.diff';
 import type { Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
 import { NoCommonSnap } from '@teambit/legacy.scope';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
@@ -117,10 +126,15 @@ export type SwitchLaneOptions = {
   branch?: boolean;
 };
 
+/** where the base was resolved from: `workspace` (already local) or `scope` (fetched from remote). */
+export type DiffBaseSource = 'workspace' | 'scope';
+
 export type LaneComponentDiffStatus = {
   componentId: ComponentID;
   sourceHead: string;
   targetHead?: string;
+  /** where the base was resolved from (workspace vs remote scope). @see DiffBaseSource */
+  baseSource?: DiffBaseSource;
   /**
    * @deprecated
    * use changes to get list of all the changes
@@ -130,10 +144,39 @@ export type LaneComponentDiffStatus = {
   upToDate?: boolean;
   snapsDistance?: SnapsDistanceObj;
   unrelated?: boolean;
+  /**
+   * internal context for deferred derivation of `changes`. not exposed on the GraphQL schema —
+   * the `changes` field resolver consumes this via `deriveComponentChanges` so the heavy
+   * `componentCompare.compare()` + `getAPIDiff()` work only runs when the field is selected,
+   * lazily per-component, in parallel via graphql-js list resolution.
+   */
+  changesContext?: {
+    commonSnap?: { hash: string } | null;
+    skipped?: boolean;
+    pending?: Promise<ChangeType[] | undefined>;
+  };
 };
 
 export type LaneDiffStatusOptions = {
+  /** skip importing the common snaps and computing `changes` entirely */
   skipChanges?: boolean;
+  /**
+   * drop components where the snaps-distance says the source already includes everything on the
+   * target. these contribute nothing to a target→source merge view but each costs an
+   * `importWithoutDeps` round trip + an `apiDiff` schema extraction.
+   */
+  skipUpToDate?: boolean;
+  /**
+   * still classify snap distance, but don't compute `changes` eagerly. callers derive them lazily
+   * via `deriveComponentChanges` (used by GraphQL field resolvers).
+   */
+  deferChanges?: boolean;
+  /**
+   * after computing the result, eagerly warm the compare/host caches the lane-compare UI will hit next.
+   * UI-only: it fans out concurrent component loads, so CLI/programmatic callers (which never make those
+   * follow-up queries) must leave it off to avoid paying — and multiplying — that cold-load cost.
+   */
+  prewarmCaches?: boolean;
 };
 
 export type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
@@ -169,6 +212,110 @@ export class LanesMain {
     private install: InstallMain
   ) {}
 
+  /**
+   * disk-persisted memo layer for the lane-diff computation (snaps-distance, change-types and the
+   * top-level result). extracted to its own class — see `LaneDiffCache` in lanes/diff.
+   */
+  private _laneDiffCache?: LaneDiffCache;
+  private get laneDiffCache(): LaneDiffCache {
+    if (!this._laneDiffCache) this._laneDiffCache = new LaneDiffCache(this.logger);
+    return this._laneDiffCache;
+  }
+
+  /**
+   * Bound the parallelism of `deriveChangeTypes` across all in-flight requests. graphql-js resolves
+   * list fields in parallel via `Promise.all`, so an uncapped derivation fires one `compare()` per
+   * component at once. The old cap of 4 existed because derivation also ran `getAPIDiff` (serial
+   * tsserver schema extraction) — that's now deferred to the API view, so derivation only does the
+   * I/O+CPU-bound `compare()`, which parallelizes well. Cap to the component concurrency limit.
+   */
+  private deriveChangesLimit = pLimit(concurrentComponentsLimit());
+
+  /** single-flight for concurrent `deriveComponentChanges` calls on the same memo key. */
+  private changeTypesInflight = new Map<string, Promise<ChangeType[] | undefined>>();
+
+  private tryDiffStatusResultMemo(
+    resultMemoKey: string,
+    sourceLaneId: LaneId,
+    targetLaneId: LaneId | undefined
+  ): LaneDiffStatus | undefined {
+    const cached = this.laneDiffCache.getDiffStatus(resultMemoKey);
+    if (!cached) return undefined;
+    return {
+      source: sourceLaneId,
+      target: targetLaneId || this.getDefaultLaneId(),
+      componentsStatus: cached,
+    };
+  }
+
+  /**
+   * Pre-warm the downstream caches the lane-compare UI hits right after `LaneDiffStatus`:
+   * - the scope's `ScopeComponentLoader.componentsCache` via `host.getMany([…])`
+   * - `componentCompare`'s disk-persisted result memo via `compareComponents(pairs)`
+   *
+   * Fire-and-forget. The UI's follow-up `Component` and `CompareComponents` queries arrive ~50–200 ms
+   * after we return; this kickoff happens *before* we return, so the work overlaps the UI's render
+   * tick and the response serialization. By the time the UI's queries land on the server, the caches
+   * are populated (or, worst case, the pre-warm work is in-flight and the resolver-level single-flight
+   * in `componentCompare` dedupes the load).
+   */
+  private prewarmCompareCaches(
+    host: any,
+    visibleDiffProps: Array<{ componentId: ComponentID; sourceHead: string; targetHead?: string }>
+  ) {
+    const allVersionedIds: ComponentID[] = [];
+    const comparePairs: Array<{ baseId: string; compareId: string }> = [];
+    for (const { componentId, sourceHead, targetHead } of visibleDiffProps) {
+      const compareId = componentId.changeVersion(sourceHead);
+      allVersionedIds.push(compareId);
+      if (targetHead) {
+        const baseId = componentId.changeVersion(targetHead);
+        allVersionedIds.push(baseId);
+        comparePairs.push({ baseId: baseId.toString(), compareId: compareId.toString() });
+      }
+    }
+    if (allVersionedIds.length === 0) return;
+    // NOTE: `host.getMany` uses mapSeries internally (sequential). For cold pre-warm to actually
+    // beat the UI's concurrent N-op `Component` batch we have to drive parallelism ourselves. pMap
+    // here uses the same `concurrentComponentsLimit()` cap as the lane diff body, matching what
+    // downstream loaders are tuned for.
+    Promise.all([
+      // wrap in try/catch since `host.get` could be missing or throw synchronously; the previous
+      // `host.get?.(id).catch(...)` chained .catch on `undefined` when get was absent.
+      pMap(
+        allVersionedIds,
+        async (id) => {
+          try {
+            return await host.get?.(id);
+          } catch {
+            return undefined;
+          }
+        },
+        { concurrency: concurrentComponentsLimit() }
+      ).catch(() => undefined),
+      comparePairs.length > 0
+        ? this.componentCompare.compareComponents(comparePairs).catch(() => undefined)
+        : Promise.resolve(),
+    ]).catch(() => {});
+  }
+
+  private populateDiffStatusMemoAsync(resultMemoKey: string, results: LaneComponentDiffStatus[]) {
+    Promise.all(
+      results.map(async (status) => {
+        if (status.changes) return;
+        status.changes = await this.deriveComponentChanges(status);
+      })
+    )
+      .then(() => {
+        // don't persist a result set where a component's change types couldn't be derived: `changes`
+        // came back undefined for a reason OTHER than being explicitly skipped (i.e. a transient
+        // Version-load failure). persisting it under the immutable lane-pair key would serve that gap
+        // forever; it recomputes and persists on a later request once the objects are available.
+        const anyFailed = results.some((s) => s.changes === undefined && !s.changesContext?.skipped);
+        if (!anyFailed) this.laneDiffCache.storeDiffStatus(resultMemoKey, results);
+      })
+      .catch(() => {});
+  }
   /**
    * return the lane data without the deleted components.
    * the deleted components are filtered out in legacyScope.lanes.getLanesData()
@@ -577,12 +724,9 @@ please create a new lane instead, which will include all components of this lane
     return deletedComps.map((c) => c.id);
   }
 
-  /**
-   * get the head hash (snap) of main. return undefined if the component exists only on a lane and was never merged to main
-   */
+  /** head hash of main, with remote-scope fallback. undefined only for a genuinely-new component. */
   async getHeadOnMain(componentId: ComponentID): Promise<string | undefined> {
-    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId);
-    return modelComponent.head?.toString();
+    return getHeadOnMain(this.scope, componentId);
   }
 
   /**
@@ -759,9 +903,14 @@ please create a new lane instead, which will include all components of this lane
 
     const laneComponents = lane.components;
     const workspace = this.workspace;
-    const bitIdsFromBitmap = workspace ? workspace.consumer.bitMap.getAllBitIdsFromAllLanes() : [];
+    // the bitmap filter only makes sense for the lane currently checked out — it keeps that view
+    // aligned with what's actually in the workspace. any OTHER lane lives only in the local scope:
+    // its components are never in the bitmap, so filtering by it empties the lane (a fully-fetched
+    // lane renders as "no components" in the overview) even though every object is available.
+    const isCurrentLane = Boolean(workspace && this.getCurrentLaneId()?.isEqual(lane.id));
+    const bitIdsFromBitmap = workspace && isCurrentLane ? workspace.consumer.bitMap.getAllBitIdsFromAllLanes() : [];
 
-    const filteredComponentIds = workspace
+    const filteredComponentIds = isCurrentLane
       ? laneComponents.filter((laneComponent) =>
           bitIdsFromBitmap.some((bitmapComponentId) => bitmapComponentId.isEqualWithoutVersion(laneComponent.id))
         )
@@ -846,6 +995,7 @@ please create a new lane instead, which will include all components of this lane
     targetLaneId?: LaneId,
     options?: LaneDiffStatusOptions
   ): Promise<LaneDiffStatus> {
+    await this.laneDiffCache.ensureLoaded();
     this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
 
     const sourceLane = sourceLaneId.isDefault()
@@ -860,18 +1010,52 @@ please create a new lane instead, which will include all components of this lane
     const targetLaneIds = targetLane?.toBitIds();
     const host = this.componentAspect.getHost();
 
-    const targetMainHeads =
-      !targetLaneId || targetLaneId?.isDefault()
-        ? compact(
-            await Promise.all(
-              (sourceLaneComponents || []).map(async ({ id }) => {
-                const componentId = await host.resolveComponentId(id);
-                const headOnMain = await this.getHeadOnMain(componentId);
-                return headOnMain ? id.changeVersion(headOnMain) : undefined;
-              })
-            )
+    // Resolve the main-side heads up-front: they feed BOTH the memo key (so the cache invalidates
+    // when main advances) and the diff computation below. The target=main case has no single lane
+    // hash, so without this the key was constant ('default') and stale results were served when main
+    // moved ahead (lanes.spec "not up to date when main is ahead").
+    const targetIsMain = !targetLaneId || Boolean(targetLaneId?.isDefault());
+    // whether each base on main was already local (snapshot *before* the remote fetch) - drives the
+    // UI "workspace vs remote scope" source indicator.
+    const baseWasLocalByComp = new Map<string, boolean>();
+    if (targetIsMain) {
+      const sourceComponentIds = await Promise.all(
+        (sourceLaneComponents || []).map(({ id }) => host.resolveComponentId(id))
+      );
+      await Promise.all(
+        sourceComponentIds.map(async (cid) => {
+          const modelComp = await this.scope.legacyScope.getModelComponentIfExist(cid);
+          baseWasLocalByComp.set(cid.toString(), Boolean(modelComp?.head));
+        })
+      );
+      // the base on main may live only on the remote scope; pull it so the diff is real, not a spurious NEW.
+      await importMainHeads(this.scope, sourceComponentIds);
+    }
+    const targetMainHeads = targetIsMain
+      ? compact(
+          await Promise.all(
+            (sourceLaneComponents || []).map(async ({ id }) => {
+              const componentId = await host.resolveComponentId(id);
+              const headOnMain = await this.getHeadOnMain(componentId);
+              return headOnMain ? id.changeVersion(headOnMain) : undefined;
+            })
           )
-        : [];
+        )
+      : [];
+
+    const resultMemoKey = this.laneDiffCache.diffStatusKey(
+      sourceLaneId,
+      sourceLane ?? undefined,
+      targetLaneId,
+      targetLane ?? undefined,
+      options,
+      targetMainHeads
+    );
+    const earlyReturn = this.tryDiffStatusResultMemo(resultMemoKey, sourceLaneId, targetLaneId);
+    if (earlyReturn) {
+      this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
+      return earlyReturn;
+    }
 
     await this.importer.importObjectsFromMainIfExist(targetMainHeads, { cache: true });
 
@@ -921,15 +1105,26 @@ please create a new lane instead, which will include all components of this lane
     this.logger.profile(
       `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
     );
+    let memoHits = 0;
     await pMap(
       diffProps,
       async ({ componentId, sourceHead, targetHead }) => {
-        const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(
-          componentId,
-          sourceHead,
-          targetHead,
-          false
-        );
+        const memoKey = this.laneDiffCache.snapsDistanceKey(componentId, sourceHead, targetHead);
+        const cached = this.laneDiffCache.getSnapsDistance(memoKey, componentId.toString());
+        let snapsDistance: SnapsDistance | undefined;
+        if (cached) {
+          memoHits += 1;
+          snapsDistance = cached;
+        } else {
+          const computed = await this.scope.getSnapsDistanceBetweenTwoSnaps(componentId, sourceHead, targetHead, false);
+          if (computed) {
+            // cache success + the deterministic "unrelated" outcome. transient errors stay uncached.
+            if (!computed.err || computed.err instanceof NoCommonSnap) {
+              this.laneDiffCache.storeSnapsDistance(memoKey, computed);
+            }
+            snapsDistance = computed;
+          }
+        }
         if (snapsDistance) {
           snapDistancesByComponentId.set(componentId.toString(), {
             snapsDistance,
@@ -939,20 +1134,31 @@ please create a new lane instead, which will include all components of this lane
           });
         }
       },
-      {
-        concurrency: concurrentComponentsLimit(),
-      }
+      { concurrency: concurrentComponentsLimit() }
     );
     this.logger.profile(
-      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components`
+      `get snaps distance for source lane: ${sourceLane?.id.name} and target lane: ${targetLane?.id.name} with ${diffProps.length} components (memo hits: ${memoHits}/${diffProps.length})`
     );
 
+    // when `skipUpToDate` is set, drop only components with NO difference vs the target. keep any
+    // divergence — crucially `isSourceAhead()` (the lane's own changes): a lane forked from main has no
+    // target-only snaps, so `isUpToDate()` (=!isTargetAhead) alone would wrongly hide the whole diff.
+    const visibleDiffProps = options?.skipUpToDate
+      ? diffProps.filter(({ componentId }) => {
+          // `d` may be a memo reconstruction exposing only data + `isUpToDate()`; test source-ahead via
+          // `snapsOnSourceOnly.length`, not the `isSourceAhead()` method (absent on the reconstruction).
+          const d = snapDistancesByComponentId.get(componentId.toString())?.snapsDistance;
+          return !d || (d.snapsOnSourceOnly?.length ?? 0) > 0 || !d.isUpToDate();
+        })
+      : diffProps;
+
     const commonSnapsToImport = compact(
-      [...snapDistancesByComponentId.values()].map((s) =>
-        s.snapsDistance.commonSnapBeforeDiverge
+      visibleDiffProps.map(({ componentId }) => {
+        const s = snapDistancesByComponentId.get(componentId.toString());
+        return s?.snapsDistance.commonSnapBeforeDiverge
           ? s.componentId.changeVersion(s.snapsDistance.commonSnapBeforeDiverge.hash)
-          : null
-      )
+          : null;
+      })
     );
 
     const sourceOrTargetLane =
@@ -960,23 +1166,55 @@ please create a new lane instead, which will include all components of this lane
         (targetLaneId?.isDefault() ? null : (targetLane as Lane))) ??
       undefined;
 
-    if (commonSnapsToImport.length > 0 && !options?.skipChanges) {
+    if (commonSnapsToImport.length > 0 && !options?.skipChanges && !options?.deferChanges) {
+      this.logger.profile(`import common snaps for lane diff (${commonSnapsToImport.length} snaps)`);
       await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(commonSnapsToImport), {
         cache: true,
         reason: `get the common snap for lane diff`,
         lane: sourceOrTargetLane,
       });
+      this.logger.profile(`import common snaps for lane diff (${commonSnapsToImport.length} snaps)`);
     }
 
-    const results = await pMapSeries(diffProps, async ({ componentId, sourceHead, targetHead }) =>
-      this.componentDiffStatus(
-        componentId,
-        sourceHead,
-        targetHead,
-        snapDistancesByComponentId.get(componentId.toString())?.snapsDistance,
-        options
-      )
+    this.logger.profile(`componentDiffStatus pMap (${visibleDiffProps.length} components)`);
+    // run in parallel — bounded by `concurrentComponentsLimit()`. previously this was pMapSeries which
+    // serialized 30 schema extractions and dominated the cold call (minutes).
+    const results = await pMap(
+      visibleDiffProps,
+      async ({ componentId, sourceHead, targetHead }) => {
+        // report whether an existing main base was already local (`workspace`) or pulled from remote (`scope`).
+        const baseSource: DiffBaseSource | undefined =
+          targetIsMain && targetHead
+            ? baseWasLocalByComp.get(componentId.toString())
+              ? 'workspace'
+              : 'scope'
+            : undefined;
+        return this.componentDiffStatus(
+          componentId,
+          sourceHead,
+          targetHead,
+          snapDistancesByComponentId.get(componentId.toString())?.snapsDistance,
+          options,
+          baseSource
+        );
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
+    this.logger.profile(`componentDiffStatus pMap (${visibleDiffProps.length} components)`);
+
+    // best-effort populate the top-level result memo. eagerly resolve `changes` for any deferred
+    // components so the next cold call can return immediately — does not block this response.
+    if (resultMemoKey) this.populateDiffStatusMemoAsync(resultMemoKey, results);
+
+    // Pre-warm caches the lane-compare UI will hit right after this query returns:
+    //   - `host.getMany([base+compare versioned ids])` populates `ScopeComponentLoader.componentsCache`
+    //      so the UI's 20 per-component `getHost.get` queries (componentFields + componentFieldWithLogs
+    //      for each side of each visible pair) all hit cache instead of racing through cold loads.
+    //   - `componentCompare.compareComponents(pairs)` populates the new compare-result memo so the UI's
+    //      `CompareComponents` query is answered from cache.
+    // Fired *after* we have the answer ready — never blocks the response, catch() hides any failure.
+    // Gated to `prewarmCaches` (the UI caller) so CLI/programmatic consumers don't pay & multiply it.
+    if (options?.prewarmCaches && visibleDiffProps.length > 0) this.prewarmCompareCaches(host, visibleDiffProps);
 
     this.logger.profile(`diff status for source lane: ${sourceLaneId.name} and target lane: ${targetLaneId?.name}`);
 
@@ -992,7 +1230,8 @@ please create a new lane instead, which will include all components of this lane
     sourceHead: string,
     targetHead?: string,
     snapsDistance?: SnapsDistance,
-    options?: LaneDiffStatusOptions
+    options?: LaneDiffStatusOptions,
+    baseSource?: DiffBaseSource
   ): Promise<LaneComponentDiffStatus> {
     if (snapsDistance?.err) {
       const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
@@ -1001,6 +1240,7 @@ please create a new lane instead, which will include all components of this lane
         componentId,
         sourceHead,
         targetHead,
+        baseSource,
         upToDate: snapsDistance?.isUpToDate(),
         unrelated: noCommonSnap || undefined,
         changes: [],
@@ -1009,9 +1249,14 @@ please create a new lane instead, which will include all components of this lane
 
     const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
 
-    const changes = !options?.skipChanges
-      ? await this.deriveChangeTypes(commonSnap, componentId, sourceHead)
-      : undefined;
+    // when changes are skipped or deferred, return the snap-distance metadata immediately and leave
+    // `changes` unset. callers derive them lazily through `deriveComponentChanges` (used by the GraphQL
+    // `changes` field resolver, which runs the work per-component in parallel only when the client
+    // selects the field — keeps cold p50 under 200 ms even for many components).
+    const changes =
+      options?.skipChanges || options?.deferChanges
+        ? undefined
+        : await this.deriveChangeTypes(commonSnap, componentId, sourceHead);
     const changeType = changes ? changes[0] : undefined;
 
     return {
@@ -1020,100 +1265,114 @@ please create a new lane instead, which will include all components of this lane
       changes,
       sourceHead,
       targetHead: commonSnap?.hash,
+      baseSource,
       upToDate: snapsDistance?.isUpToDate(),
       snapsDistance: {
         onSource: snapsDistance?.snapsOnSourceOnly.map((s) => s.hash) ?? [],
         onTarget: snapsDistance?.snapsOnTargetOnly.map((s) => s.hash) ?? [],
         common: snapsDistance?.commonSnapBeforeDiverge?.hash,
       },
+      changesContext: { commonSnap, skipped: options?.skipChanges },
     };
   }
 
-  async componentDiffStatusOld(
-    componentId: ComponentID,
-    sourceHead: string,
-    targetHead?: string,
-    options?: LaneDiffStatusOptions
-  ): Promise<LaneComponentDiffStatus> {
-    const snapsDistance = await this.scope.getSnapsDistanceBetweenTwoSnaps(componentId, sourceHead, targetHead, false);
+  /**
+   * Lazily derive the change types for a single component diff status. Used by the GraphQL `changes`
+   * field resolver so the (expensive) derivation only runs when the field is selected. Memoized per
+   * status object via `changesContext.pending`, so selecting both `changes` and `changeType` computes
+   * the value once.
+   */
+  async deriveComponentChanges(status: LaneComponentDiffStatus): Promise<ChangeType[] | undefined> {
+    if (status.changes) return status.changes;
+    const context = status.changesContext;
+    if (!context || context.skipped) return undefined;
 
-    if (snapsDistance?.err) {
-      const noCommonSnap = snapsDistance.err instanceof NoCommonSnap;
+    await this.laneDiffCache.ensureLoaded();
 
-      return {
-        componentId,
-        sourceHead,
-        targetHead,
-        upToDate: snapsDistance?.isUpToDate(),
-        unrelated: noCommonSnap || undefined,
-        changes: [],
-      };
+    // top-level memo on the final ChangeType[] — short-circuits BEFORE compare()/getAPIDiff() run.
+    // Persisted to disk, keyed on immutable hashes, so a cold server start with a populated cache
+    // answers the entire derivation from a Map.get().
+    const memoKey = this.laneDiffCache.changeTypesKey(
+      status.componentId,
+      status.sourceHead,
+      context.commonSnap?.hash ?? null
+    );
+    const cached = this.laneDiffCache.getChangeTypes(memoKey);
+    if (cached) return cached;
+
+    // single-flight concurrent requests for the same (componentId, sourceHead, commonSnap) tuple.
+    let pending = this.changeTypesInflight.get(memoKey);
+    if (!pending) {
+      pending = this.deriveChangesLimit(() =>
+        this.deriveChangeTypes(context.commonSnap, status.componentId, status.sourceHead)
+      )
+        .then((result) => {
+          // `undefined` means the derivation couldn't load a Version object (transient) — don't persist
+          // it under the immutable-hash key; let it recompute on a later request once the object exists.
+          if (result) this.laneDiffCache.storeChangeTypes(memoKey, result);
+          return result;
+        })
+        .finally(() => {
+          this.changeTypesInflight.delete(memoKey);
+        });
+      this.changeTypesInflight.set(memoKey, pending);
     }
-
-    const commonSnap = snapsDistance?.commonSnapBeforeDiverge;
-
-    const changes = !options?.skipChanges
-      ? await this.deriveChangeTypes(commonSnap, componentId, sourceHead)
-      : undefined;
-    const changeType = changes ? changes[0] : undefined;
-
-    return {
-      componentId,
-      changeType,
-      changes,
-      sourceHead,
-      targetHead: commonSnap?.hash,
-      upToDate: snapsDistance?.isUpToDate(),
-      snapsDistance: {
-        onSource: snapsDistance?.snapsOnSourceOnly.map((s) => s.hash) ?? [],
-        onTarget: snapsDistance?.snapsOnTargetOnly.map((s) => s.hash) ?? [],
-        common: snapsDistance?.commonSnapBeforeDiverge?.hash,
-      },
-    };
+    context.pending = pending;
+    return pending;
   }
 
   private async deriveChangeTypes(
     commonSnap: { hash: string } | null | undefined,
     componentId: ComponentID,
     sourceHead: string
-  ): Promise<ChangeType[]> {
+  ): Promise<ChangeType[] | undefined> {
     if (!commonSnap) return [ChangeType.NEW];
 
-    const baseIdStr = componentId.changeVersion(commonSnap.hash).toString();
-    const compareIdStr = componentId.changeVersion(sourceHead).toString();
-    const [compare, apiDiff] = await Promise.all([
-      this.componentCompare.compare(baseIdStr, compareIdStr),
-      this.componentCompare.getAPIDiff(baseIdStr, compareIdStr),
-    ]);
+    // Classify changes by comparing the two raw `Version` objects directly (files-by-hash, deps,
+    // extensions) instead of `componentCompare.compare()`. compare() loads full consumer components
+    // (aspect calculation, capsules) for both sides just to extract two booleans — dominating the cold
+    // derivation for a large lane. Loading the raw Version objects is a cheap object read.
+    // The API change type is intentionally not computed here: it needs serial tsserver schema
+    // extraction and is resolved lazily by the API view, gated on the SOURCE_CODE/DEPENDENCY evidence.
+    const repo = this.scope.legacyScope.objects;
+    const loadPair = () =>
+      Promise.all([repo.load(Ref.from(commonSnap.hash), false), repo.load(Ref.from(sourceHead), false)]) as Promise<
+        [Version | undefined, Version | undefined]
+      >;
+    let [baseVersion, compareVersion] = await loadPair();
 
-    const hasCodeChanges = compare.code.some((c) => c.status !== 'UNCHANGED');
-    const hasFieldChanges = compare.fields.length > 0;
-    const hasApiChanges = apiDiff?.hasChanges ?? false;
-
-    if (!hasFieldChanges && !hasCodeChanges && !hasApiChanges) {
-      return [ChangeType.NONE];
+    // the deferChanges path (the default for UI lane compares) skips the eager common-snap import, so
+    // the merge-base Version can be absent locally here. rather than give up — which classifies a
+    // genuinely-changed component as "couldn't classify" and drops it from the diff views — import the
+    // missing snap(s) on demand and retry once. this fires only on a miss and is per-component, so the
+    // fast deferred path stays fast while staying correct; the derived result is memoized afterwards.
+    if (!baseVersion || !compareVersion) {
+      const missing: ComponentID[] = [];
+      if (!baseVersion) missing.push(componentId.changeVersion(commonSnap.hash));
+      if (!compareVersion) missing.push(componentId.changeVersion(sourceHead));
+      try {
+        await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(missing), {
+          cache: true,
+          ignoreMissingHead: true,
+          reason: `derive lane diff change types (snap missing locally)`,
+        });
+        [baseVersion, compareVersion] = await loadPair();
+      } catch {
+        // best-effort: if the import fails (e.g. the snap only exists on a lane we lack context for here),
+        // fall through to the undefined return below rather than throwing out of the field resolver.
+      }
     }
 
-    const changed: ChangeType[] = [];
+    // still couldn't load a Version. this is a transient "couldn't classify", NOT "no changes"
+    // ([ChangeType.NONE]) — return undefined so it's distinguishable and never persisted to the
+    // immutable-hash-keyed memo, or the component would be reported with no change types forever.
+    if (!baseVersion || !compareVersion) return undefined;
 
-    if (hasCodeChanges) {
-      changed.push(ChangeType.SOURCE_CODE);
-    }
-
-    if (hasFieldChanges) {
-      changed.push(ChangeType.ASPECTS);
-    }
-
-    const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-    if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
-      changed.push(ChangeType.DEPENDENCY);
-    }
-
-    if (hasApiChanges) {
-      changed.push(ChangeType.API);
-    }
-
-    return changed;
+    // pure classification of the two raw Version shapes — extracted & unit-tested in lanes/diff.
+    return classifyVersionChanges(
+      { obj: baseVersion.toObject(), extensionDependencies: baseVersion.extensionDependencies.cloneAsString() },
+      { obj: compareVersion.toObject(), extensionDependencies: compareVersion.extensionDependencies.cloneAsString() }
+    );
   }
 
   private async recreateNewLaneIfDeleted() {
