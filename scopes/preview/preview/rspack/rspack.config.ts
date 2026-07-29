@@ -69,6 +69,9 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
         'react/jsx-runtime': require.resolve('react/jsx-runtime'),
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
+        // dedupe to a single copy — multiple versions in the pnpm store break the module namespace
+        // when bundled (matches the alias in the react env webpack + ui-foundation rspack configs).
+        '@teambit/lanes.entities.lane-diff': require.resolve('@teambit/lanes.entities.lane-diff'),
       },
       fallback: {
         module: false,

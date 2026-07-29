@@ -24,7 +24,7 @@ async function readModulesManifest(modulesDir: string): Promise<Modules | null> 
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -39,7 +39,8 @@ async function readModulesManifest(modulesDir: string): Promise<Modules | null> 
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
     });
-    describe('using Yarn', () => {
+    // skipped: yarn support is deprecated and planned for removal
+    describe.skip('using Yarn', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace({
           yarnRCConfig: {

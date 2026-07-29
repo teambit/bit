@@ -1,0 +1,114 @@
+/* The container, sticky header, command bar, content padding and card grid are reused from
+   components-overview.module.scss so the skeleton is pixel-identical to the real overview. Only the
+   placeholder shapes live here. */
+
+/* ---- Filter-bar placeholders ---- */
+
+.pill {
+  width: 120px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface01-color, color-mix(in srgb, var(--on-background-color, #000) 6%, transparent));
+}
+
+.toggle {
+  margin-left: auto;
+  width: 96px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface01-color, color-mix(in srgb, var(--on-background-color, #000) 6%, transparent));
+}
+
+/* ---- Card placeholder — mirrors hope-component-card.module.scss ---- */
+
+.card {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-color);
+  border: 1px solid var(--border-medium-color);
+  animation: fadeIn 0.4s ease both;
+}
+
+.preview {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  background: var(--surface-color);
+  border-bottom: 1px solid var(--border-medium-color);
+}
+
+.footer {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scopeBadge {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  background: var(--surface02-color, var(--surface01-color));
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  height: 11px;
+  border-radius: 4px;
+  background: var(--surface02-color, var(--surface01-color));
+  // keep names visually varied so the row doesn't read as a solid bar
+  max-width: 62%;
+}
+
+.hash {
+  width: 42px;
+  height: 11px;
+  border-radius: 4px;
+  background: var(--surface01-color);
+  flex-shrink: 0;
+}
+
+/* ---- Shimmer sweep across the preview block ---- */
+
+.shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--on-background-color, #000) 4%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .shimmer {
+    animation: none;
+  }
+}

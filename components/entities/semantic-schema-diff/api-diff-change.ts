@@ -11,6 +11,34 @@ export enum APIDiffStatus {
   MODIFIED = 'MODIFIED',
 }
 
+/**
+ * why a schema could not be obtained for one side of the diff.
+ * NOT_BUILT — the version was built before API extraction existed (no schema.json artifact).
+ * NO_EXTRACTOR — the component's env does not provide a schema extractor.
+ * DISABLED — schema extraction is disabled by config.
+ * FAILED — extraction or artifact retrieval threw.
+ */
+export type SchemaUnavailableReason = 'NOT_BUILT' | 'NO_EXTRACTOR' | 'DISABLED' | 'FAILED';
+
+export type SchemaAvailability = {
+  available: boolean;
+  reason?: SchemaUnavailableReason;
+  /**
+   * the schema was extracted live from source files at call time rather than read from the
+   * version's built artifact. such a schema reflects the current working tree — it is mutable and
+   * can be degraded (placeholder nodes when the workspace is unhealthy) — so diff results carrying
+   * it must never be memoized or persisted under the immutable version pair.
+   */
+  live?: boolean;
+};
+
+/**
+ * whether the diff was actually computed, or skipped because schema data is
+ * missing for one or both sides. when not COMPUTED, change lists are empty —
+ * a missing schema must never be diffed as if it were an empty API.
+ */
+export type APIDiffComputeStatus = 'COMPUTED' | 'BASE_UNAVAILABLE' | 'COMPARE_UNAVAILABLE' | 'UNAVAILABLE';
+
 export type APIDiffChange = {
   status: APIDiffStatus;
   visibility: 'public' | 'internal';
@@ -26,11 +54,23 @@ export type APIDiffChange = {
 };
 
 export type APIDiffResult = {
+  status: APIDiffComputeStatus;
+  base: SchemaAvailability;
+  compare: SchemaAvailability;
   hasChanges: boolean;
+  /** consumer-facing impact — derived from public changes only */
   impact: ImpactLevel;
+  /** severity of internal (non-exported) changes — never affects `impact` */
+  internalImpact: ImpactLevel;
   publicChanges: APIDiffChange[];
   internalChanges: APIDiffChange[];
   changes: APIDiffChange[];
+  /**
+   * exports the extractor couldn't resolve on one or both sides (an `UnImplementedSchema` or
+   * `UnresolvedSchema` placeholder). these are NOT diffed as add/remove/modify — extraction gaps,
+   * surfaced separately as "couldn't analyze" so a real change list stays meaningful.
+   */
+  unresolvedExports: string[];
   added: number;
   removed: number;
   modified: number;

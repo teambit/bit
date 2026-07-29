@@ -3,10 +3,10 @@
   "impact": "NON_BREAKING",
   "added": 1,
   "removed": 0,
-  "modified": 7,
+  "modified": 6,
   "breaking": 0,
   "nonBreaking": 6,
-  "patch": 2,
+  "patch": 1,
   "publicChanges": [
     {
       "status": "MODIFIED",
@@ -27,8 +27,8 @@
           "changeKind": "documentation-changed",
           "description": "documentation description and tags changed",
           "impact": "PATCH",
-          "from": "General comment of the myFunc",
-          "to": "Updated comment for myFunc"
+          "from": "General comment of the myFunc\n@deprecate example of deprecation tag\n@parameter this is A\n@parameter this is B\n@return results of adding a to b",
+          "to": "Updated comment for myFunc\n@parameter this is A\n@parameter this is B\n@parameter this is C\n@return results of adding a, b and c"
         }
       ]
     },
@@ -47,22 +47,6 @@
           "impact": "PATCH",
           "from": "type ButtonElementType = \"a\" | \"button\"",
           "to": "type ButtonElementType = \"a\" | \"button\" | \"div\""
-        }
-      ]
-    },
-    {
-      "status": "MODIFIED",
-      "visibility": "public",
-      "impact": "PATCH",
-      "exportName": "ButtonProps",
-      "schemaType": "Type Alias",
-      "details": [
-        {
-          "changeKind": "type-definition-changed",
-          "description": "type definition changed",
-          "impact": "PATCH",
-          "from": "type ButtonProps = any",
-          "to": "type ButtonProps = any"
         }
       ]
     },

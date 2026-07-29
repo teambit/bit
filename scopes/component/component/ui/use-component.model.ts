@@ -22,6 +22,8 @@ export type UseComponentOptions = {
   logFilters?: Filters;
   customUseComponent?: UseComponentType;
   skip?: boolean;
+  /** apollo operation context forwarded to the underlying queries (e.g. `{ batch: true }`) */
+  context?: Record<string, any>;
 };
 
 export type ComponentQueryResult = {
@@ -46,4 +48,10 @@ export type ComponentLogs = {
   loading?: boolean;
 };
 
-export type UseComponentType = (id: string, host: string, filters?: Filters, skip?: boolean) => ComponentQueryResult;
+export type UseComponentType = (
+  id: string,
+  host: string,
+  filters?: Filters,
+  skip?: boolean,
+  context?: Record<string, any>
+) => ComponentQueryResult;

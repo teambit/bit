@@ -228,6 +228,21 @@ export class YarnPackageManager implements PackageManager {
 
     const ws = new Workspace(wsPath, { project });
     await ws.setup();
+    // when the project has no package.json name, yarn synthesizes the workspace ident from the
+    // directory basename. the ".bit_roots" dir of an env installed from the registry is named
+    // with its version (e.g. "my-org_my-env@1.0.0"), so the synthesized ident holds an extra "@".
+    // such an ident doesn't survive yarn's locator stringify/parse round-trip (parsing splits on
+    // the first "@", leaving a protocol-less reference), which fails the resolution of the
+    // project's file: dependencies with "isn't supported by any available fetcher".
+    if (ws.locator.name.includes('@')) {
+      const sanitizedIdent = structUtils.makeIdent(ws.locator.scope, ws.locator.name.replace(/@/g, '_'));
+      // @ts-ignore: It's ok to initialize it now, even if it's readonly (setup was just called)
+      ws.locator = structUtils.makeLocator(sanitizedIdent, ws.reference);
+      // @ts-ignore: It's ok to initialize it now, even if it's readonly (setup was just called)
+      ws.anchoredDescriptor = structUtils.makeDescriptor(ws.locator, `${WorkspaceResolver.protocol}${ws.relativeCwd}`);
+      // @ts-ignore: It's ok to initialize it now, even if it's readonly (setup was just called)
+      ws.anchoredLocator = structUtils.makeLocator(ws.locator, `${WorkspaceResolver.protocol}${ws.relativeCwd}`);
+    }
     const identity = structUtils.parseIdent(name);
     ws.manifest.name = identity;
     ws.manifest.version = manifest.version;

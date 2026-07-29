@@ -310,11 +310,12 @@ export class PnpmPackageManager implements PackageManager {
 
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
-    if (!this.username) {
+    const configuredUserAgent = config.rawConfig['user-agent'];
+    if (!configuredUserAgent && !this.username) {
       this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
     }
     const result: PackageManagerNetworkConfig = {
-      userAgent: `bit user/${this.username}`,
+      userAgent: configuredUserAgent ?? `bit user/${this.username}`,
     };
     if (config.maxSockets != null) {
       result.maxSockets = config.maxSockets;

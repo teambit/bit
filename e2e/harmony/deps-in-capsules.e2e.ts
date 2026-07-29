@@ -20,7 +20,7 @@ chai.use(chaiString);
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setWorkspaceWithRemoteScope();
-    helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
+    helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
     npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -75,7 +75,8 @@ chai.use(chaiString);
       expect(path.join(nodeEnv2CapsuleDir, 'node_modules', comp2PkgJson.name)).to.be.a.path();
     });
   });
-  describe('using Yarn', () => {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('using Yarn', () => {
     let nodeEnv1CapsuleDir: string;
     let nodeEnv2CapsuleDir: string;
     before(() => {
@@ -113,7 +114,8 @@ chai.use(chaiString);
       expect(path.join(nodeEnv2CapsuleDir, 'node_modules', comp2PkgJson.name)).to.be.a.path();
     });
   });
-  describe('using Yarn with isolatedCapsules set to false', () => {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('using Yarn with isolatedCapsules set to false', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
