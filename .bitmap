@@ -1799,9 +1799,8 @@
     },
     "ui/api-diff-view": {
         "name": "ui/api-diff-view",
-        "scope": "",
+        "scope": "teambit.semantics",
         "version": "0.0.1",
-        "defaultScope": "teambit.semantics",
         "mainFile": "index.ts",
         "rootDir": "components/ui/api-diff-view"
     },
@@ -1968,9 +1967,8 @@
     },
     "ui/components-overview": {
         "name": "ui/components-overview",
-        "scope": "",
+        "scope": "teambit.explorer",
         "version": "0.0.1",
-        "defaultScope": "teambit.explorer",
         "mainFile": "index.ts",
         "rootDir": "components/ui/components-overview"
     },
@@ -2004,17 +2002,15 @@
     },
     "ui/deps-diff-table": {
         "name": "ui/deps-diff-table",
-        "scope": "",
+        "scope": "teambit.dependencies",
         "version": "0.0.1",
-        "defaultScope": "teambit.dependencies",
         "mainFile": "index.ts",
         "rootDir": "components/ui/deps-diff-table"
     },
     "ui/diff-viewer": {
         "name": "ui/diff-viewer",
-        "scope": "",
+        "scope": "teambit.code",
         "version": "0.0.1",
-        "defaultScope": "teambit.code",
         "mainFile": "index.ts",
         "rootDir": "components/ui/diff-viewer"
     },
@@ -2086,9 +2082,8 @@
     },
     "ui/hooks/use-bulk-paged-query": {
         "name": "ui/hooks/use-bulk-paged-query",
-        "scope": "",
+        "scope": "teambit.ui-foundation",
         "version": "0.0.1",
-        "defaultScope": "teambit.ui-foundation",
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/use-bulk-paged-query"
     },
@@ -2115,17 +2110,15 @@
     },
     "ui/inline-config-compare": {
         "name": "ui/inline-config-compare",
-        "scope": "",
+        "scope": "teambit.code",
         "version": "0.0.1",
-        "defaultScope": "teambit.code",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-config-compare"
     },
     "ui/inline-deps-compare": {
         "name": "ui/inline-deps-compare",
-        "scope": "",
+        "scope": "teambit.code",
         "version": "0.0.1",
-        "defaultScope": "teambit.code",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-deps-compare"
     },
@@ -2138,17 +2131,15 @@
     },
     "ui/inline-preview-compare": {
         "name": "ui/inline-preview-compare",
-        "scope": "",
+        "scope": "teambit.preview",
         "version": "0.0.1",
-        "defaultScope": "teambit.preview",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-preview-compare"
     },
     "ui/inline-tests-compare": {
         "name": "ui/inline-tests-compare",
-        "scope": "",
+        "scope": "teambit.code",
         "version": "0.0.1",
-        "defaultScope": "teambit.code",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-tests-compare"
     },
@@ -2210,9 +2201,8 @@
     },
     "ui/preview-compare": {
         "name": "ui/preview-compare",
-        "scope": "",
+        "scope": "teambit.preview",
         "version": "0.0.1",
-        "defaultScope": "teambit.preview",
         "mainFile": "index.ts",
         "rootDir": "components/ui/preview-compare"
     },
