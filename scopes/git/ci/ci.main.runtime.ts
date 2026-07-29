@@ -43,6 +43,7 @@ import { branchToLaneName, resolveSyncConfig, shouldSyncLane } from './sync/sync
 import { HALT_SUMMARY_PREFIX, LaneSyncExecutor } from './sync/lane-sync-executor';
 import { MainSyncExecutor } from './sync/main-sync-executor';
 import { GitHubClient } from './sync/github-client';
+import { addAllExceptScopeAndModules } from './sync/git-ops';
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
 // LANE_HASH_MISMATCH fires when both runners called `Lane.create` (the lane didn't exist on
@@ -1820,7 +1821,11 @@ export class CiMain {
 
     // Stage everything: `bit checkout head` earlier in the flow may modify files
     // beyond .bitmap and pnpm-lock.yaml, so a narrow `git add` would miss them.
-    await git.add(['.']);
+    // The two exclusions in the shared helper keep the local bit scope (`.bit`) and `node_modules` out
+    // of the commit in a workspace whose `.gitignore` lacks Bit's block — otherwise this stages the
+    // object store into the default branch. Same helper the sync executors use, so all three commit
+    // paths agree on what counts as workspace content.
+    await addAllExceptScopeAndModules();
     const commitMessage = await this.getCustomCommitMessage();
     await git.commit(commitMessage);
 
