@@ -310,7 +310,10 @@ export class PnpmPackageManager implements PackageManager {
 
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
-    const configuredUserAgent = config.rawConfig['user-agent'];
+    const rawConfig = (config as Config & { rawConfig?: Record<string, unknown> }).rawConfig;
+    const configuredUserAgent =
+      (rawConfig?.['user-agent'] as string | undefined) ??
+      (config.explicitlySetKeys?.has('user-agent') ? config.userAgent : undefined);
     if (!configuredUserAgent && !this.username) {
       this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
     }
