@@ -2387,10 +2387,7 @@
         "scope": "teambit.lanes",
         "version": "0.0.207",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare",
-        "config": {
-            "teambit.react/v17/react-env@1.2.8": {}
-        }
+        "rootDir": "components/ui/compare/lane-compare"
     },
     "ui/compare/lane-compare-hooks/use-lane-diff-status": {
         "name": "ui/compare/lane-compare-hooks/use-lane-diff-status",
@@ -2404,10 +2401,7 @@
         "scope": "teambit.lanes",
         "version": "0.0.175",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-page",
-        "config": {
-            "teambit.react/v17/react-env@1.2.8": {}
-        }
+        "rootDir": "components/ui/compare/lane-compare-page"
     },
     "ui/component-compare/changelog": {
         "name": "ui/component-compare/changelog",
@@ -2547,10 +2541,7 @@
         "scope": "teambit.code",
         "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/diff-viewer",
-        "config": {
-            "teambit.react/react-env@2.0.3": {}
-        }
+        "rootDir": "components/ui/diff-viewer"
     },
     "ui/docs-app": {
         "name": "ui/docs-app",
@@ -2623,10 +2614,7 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/hooks/use-bulk-paged-query",
-        "config": {
-            "teambit.react/react-env@2.0.3": {}
-        }
+        "rootDir": "components/ui/hooks/use-bulk-paged-query"
     },
     "ui/hooks/use-core-aspects": {
         "name": "ui/hooks/use-core-aspects",
@@ -2647,10 +2635,7 @@
         "scope": "teambit.code",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-code-compare",
-        "config": {
-            "teambit.cloud/envs/cloud-react@0.1.13": {}
-        }
+        "rootDir": "components/ui/inline-code-compare"
     },
     "ui/inline-config-compare": {
         "name": "ui/inline-config-compare",
@@ -2671,10 +2656,7 @@
         "scope": "teambit.code",
         "version": "0.0.4",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-diff-viewer",
-        "config": {
-            "teambit.react/react-env@2.0.3": {}
-        }
+        "rootDir": "components/ui/inline-diff-viewer"
     },
     "ui/inline-preview-compare": {
         "name": "ui/inline-preview-compare",
