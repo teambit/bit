@@ -78,6 +78,15 @@ describe('parseSyncCommitLaneId', () => {
   it('returns undefined for an ordinary commit', () => {
     expect(parseSyncCommitLaneId('feat: add a thing')).to.equal(undefined);
   });
+
+  it('ignores a sync-shaped line that appears only in the BODY — the subject alone attributes', () => {
+    // A developer pasting a sync commit's message into their own commit body (a revert note, a quote)
+    // must not make an ordinary commit read as ours: attribution is half of what licenses deleting a
+    // branch, and this commit was not written by the reconciler.
+    const quoted =
+      'fix: revert the bad sync\n\nreverts this one:\nchore(bit-sync): sync lane acme.shop/my-lane @ abc123def\n';
+    expect(parseSyncCommitLaneId(quoted)).to.equal(undefined);
+  });
 });
 
 describe('hasSyncMarker as loop guard', () => {

@@ -44,9 +44,15 @@ export function buildSyncCommitMessage(laneIdStr: string, laneHead: string): str
  * its trailer sits on the **default branch's own first-parent line**, so every branch forked from the
  * default branch afterwards carries it and looks, by trailer alone, like a branch the reconciler created.
  * The subject names the lane, so it distinguishes them.
+ *
+ * Only the SUBJECT — the message's first line — may satisfy this. A multiline match would let a
+ * sync-shaped line *anywhere* in a message attribute the commit: a developer quoting a sync commit's
+ * message in their own commit body would make an ordinary commit read as ours, and attribution is half of
+ * what licenses deleting a branch. `parseLogRecords` (and `%B` generally) delivers messages starting at
+ * the subject, so line one is the subject.
  */
 export function parseSyncCommitLaneId(message: string): string | undefined {
-  return message.match(/^chore\(bit-sync\): sync lane (\S+) @ /m)?.[1];
+  return message.split('\n', 1)[0].match(/^chore\(bit-sync\): sync lane (\S+) @ /)?.[1];
 }
 
 /** A sync commit found in a branch's history: identified by its trailer, attributed by its subject. */

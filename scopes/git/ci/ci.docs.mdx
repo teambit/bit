@@ -277,17 +277,24 @@ good the command's claim on the branch is, judged from git history alone:
    default branch afterwards inherits one**. The subject is what tells "written for this pair" apart from
    "inherited".
 2. **Reachability — deleting must not lose commits.** Either that sync commit is **not** in the default
-   branch yet (a live lane branch of ours), or the branch **tip** already is (everything on the branch is in
-   the default branch, so deletion loses nothing).
+   branch yet (a live lane branch of ours) _and nothing was committed on top of it_, or the branch **tip**
+   already is in the default branch (everything on the branch is in the default branch, so deletion loses
+   nothing). A live lane branch carrying dev commits above its sync commit is never deleted: the PR was
+   never merged, so that work reached neither the lane nor the default branch and exists in no other ref.
 
 The outcomes:
 
-| Branch                                                                | Outcome                                                                                               |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| sync commit names this lane, not yet in the default branch            | PR closed, branch deleted                                                                             |
-| sync commit names this lane, branch tip already in the default branch | PR closed, branch deleted (the just-merged lane whose branch the host didn't auto-delete)             |
-| sync commit names this lane and is merged, but the tip is **not**     | PR closed, **branch kept** — commits were pushed after the merge and exist in no other ref            |
-| no sync commit of its own, or one naming a different lane             | `noop (branch maps to no lane and has no sync history of its own; ignoring)` — nothing written at all |
+| Branch                                                                         | Outcome                                                                                               |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| sync commit names this lane, not yet in the default branch, tip is it          | PR closed, branch deleted                                                                             |
+| sync commit names this lane, not yet in the default branch, dev commits on top | PR closed, **branch kept** — those commits reached neither the lane nor the default branch            |
+| sync commit names this lane, branch tip already in the default branch          | PR closed, branch deleted (the just-merged lane whose branch the host didn't auto-delete)             |
+| sync commit names this lane and is merged, but the tip is **not**              | PR closed, **branch kept** — commits were pushed after the merge and exist in no other ref            |
+| no sync commit of its own, or one naming a different lane                      | `noop (branch maps to no lane and has no sync history of its own; ignoring)` — nothing written at all |
+
+A **kept** branch stays visible to the reconciler: every later run re-reports `close-pr` for it until the
+branch is deleted by hand (or its commits reach the default branch, which makes it deletable). That is
+idempotent — the first run closes the PR, and after that there is nothing left to write.
 
 Set a `branchPrefix` (or an explicit `lanes` list) if you would rather the reconciler not enumerate those
 branches at all.

@@ -13,7 +13,9 @@
  * *reachability* (is that commit, or the branch tip, already in the default branch?):
  *
  * - `own-live` — a sync commit naming this lane, and it is **not** in the default branch. This is a real,
- *   still-unmerged lane branch of ours. Retiring it is what `close-pr` is for.
+ *   still-unmerged lane branch of ours. Retiring it is what `close-pr` is for — but deleting it
+ *   additionally requires that nothing sits above the sync commit (see `planLaneSync`): the PR was never
+ *   merged, so dev commits on top reached neither the lane nor the default branch.
  * - `own-merged` — a sync commit naming this lane, and the branch **tip** is already in the default
  *   branch. Everything on the branch is in the default branch, so deleting it loses nothing. (This is the
  *   just-merged lane whose branch the git host did not auto-delete.)
@@ -55,6 +57,11 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
     // the claim on the branch is — see `LaneOwnershipEvidence`, which is where the reasoning lives.
     switch (ownership) {
       case 'own-live':
+        // The sync commit never reached the default branch — the PR was never merged — so dev commits
+        // above it never reached the lane or the default branch either: that content exists in NO other
+        // ref, and deleting the branch would destroy it. Without dev commits the branch is exactly the
+        // lane's mirror, and removing the lane on bit.cloud is the human saying that content is done with.
+        return { type: 'close-pr', deleteBranch: !hasDevCommits };
       case 'own-merged':
         return { type: 'close-pr', deleteBranch: true };
       case 'own-superseded':

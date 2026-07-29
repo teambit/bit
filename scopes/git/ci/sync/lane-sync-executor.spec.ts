@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { laneHeadFingerprint } from './lane-sync-executor';
+import { isProtectedBranch, laneHeadFingerprint } from './lane-sync-executor';
 
 type LaneComponents = Parameters<typeof laneHeadFingerprint>[0];
 
@@ -42,5 +42,21 @@ describe('laneHeadFingerprint', () => {
     // `LaneData.hash` is minted randomly at creation time and never moves when the lane advances, so it
     // cannot answer "did this lane change since the last sync?".
     expect(laneHeadFingerprint([a, b])).to.equal(laneHeadFingerprint([comp('acme.shop/comp1', a.head), b]));
+  });
+});
+
+/**
+ * The last-resort guard at `executeClosePr`'s `git push origin --delete` site. The planner can never
+ * route the default branch or the main sync branch to `close-pr` (neither is treated as lane-mapped), so
+ * these rows lock the belt-and-braces refusal that must hold even when everything upstream is wrong.
+ */
+describe('isProtectedBranch', () => {
+  it('refuses the default branch and the main sync branch', () => {
+    expect(isProtectedBranch('develop', 'develop', 'bit-sync/main')).to.equal(true);
+    expect(isProtectedBranch('bit-sync/main', 'develop', 'bit-sync/main')).to.equal(true);
+  });
+
+  it('permits an ordinary lane branch', () => {
+    expect(isProtectedBranch('my-lane', 'develop', 'bit-sync/main')).to.equal(false);
   });
 });

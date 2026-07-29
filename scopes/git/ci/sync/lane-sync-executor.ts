@@ -75,6 +75,17 @@ export function laneHeadFingerprint(components: LaneData['components']): string 
   return sha1(joined);
 }
 
+/**
+ * Branches `executeClosePr` refuses to delete no matter what the ownership evidence concluded: the
+ * repository's default branch and the main-scope sync branch. The planner should never route either here
+ * (neither is treated as lane-mapped), so this is belt-and-braces against a wrong enumeration or evidence
+ * chain upstream — the two branches whose deletion is most catastrophic get an unconditional guard at the
+ * one site that runs `git push origin --delete`.
+ */
+export function isProtectedBranch(branch: string, defaultBranch: string, mainSyncBranch: string): boolean {
+  return branch === defaultBranch || branch === mainSyncBranch;
+}
+
 export class LaneSyncExecutor {
   constructor(private deps: LaneSyncDeps) {}
 
@@ -200,7 +211,14 @@ export class LaneSyncExecutor {
       case 'merge-diverged':
         return this.executeMergeDiverged({ laneName, laneIdStr, branch, defaultBranch });
       case 'close-pr':
-        return this.executeClosePr({ laneName, laneIdStr, branch, pr, deleteBranch: action.deleteBranch });
+        return this.executeClosePr({
+          laneName,
+          laneIdStr,
+          branch,
+          defaultBranch,
+          pr,
+          deleteBranch: action.deleteBranch,
+        });
       case 'halt':
         return this.executeHalt({ laneName, laneIdStr, branch, reason: action.reason, pr });
       default: {
@@ -649,20 +667,24 @@ export class LaneSyncExecutor {
   /**
    * The lane is gone from bit.cloud — close its PR, and retire the branch **if** the claim on it allows.
    *
-   * `deleteBranch: false` is the `own-superseded` case: the sync PR was merged and then more commits were
-   * pushed to the branch. Those commits are in no other ref, so the PR is closed and the branch is kept and
-   * said so out loud. Deleting it would be the one irreversible thing this command can do.
+   * `deleteBranch: false` is the keep path, reached from two shapes: `own-superseded` (the sync PR was
+   * merged and then more commits were pushed to the branch) and `own-live` with dev commits (the PR was
+   * never merged, and the commits above the sync commit never reached the lane). Either way those commits
+   * are in no other ref, so the PR is closed and the branch is kept and said so out loud. Deleting it
+   * would be the one irreversible thing this command can do.
    */
   private async executeClosePr({
     laneName,
     laneIdStr,
     branch,
+    defaultBranch,
     pr,
     deleteBranch,
   }: {
     laneName: string;
     laneIdStr: string;
     branch: string;
+    defaultBranch: string;
     pr?: PrInfo;
     deleteBranch: boolean;
   }): Promise<string> {
@@ -693,6 +715,20 @@ export class LaneSyncExecutor {
       return (
         `${laneName} -> close-pr (${pr ? `PR #${pr.number} closed` : 'no open PR'}, branch ${branch} kept: ` +
         `it carries commits missing from the default branch)`
+      );
+    }
+
+    // Unconditional refusal for the two branches whose deletion is catastrophic — see `isProtectedBranch`.
+    // Reaching this guard means something upstream is wrong; log it and keep the branch.
+    if (isProtectedBranch(branch, defaultBranch, this.deps.cfg.mainSyncBranch)) {
+      logger.consoleWarning(
+        `Refusing to delete branch ${branch}: it is ${
+          branch === defaultBranch ? 'the default branch' : 'the main sync branch'
+        }, whatever the ownership evidence concluded`
+      );
+      return (
+        `${laneName} -> close-pr (${pr ? `PR #${pr.number} closed` : 'no open PR'}, branch ${branch} kept: ` +
+        `deleting it is never allowed)`
       );
     }
 

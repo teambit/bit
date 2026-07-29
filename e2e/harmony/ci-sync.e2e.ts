@@ -526,10 +526,20 @@ describe('bit ci sync', function () {
     });
 
     // -------------------------------------------------------------------------------------------
-    describe('lane removed from the remote -> close-pr retires the branch', () => {
+    /**
+     * THE unexported-work lock on `close-pr`. D2 left the branch tip at a dev commit the conflict kept
+     * from ever being exported — its content is on no lane (the lane is being deleted right here) and
+     * not in the default branch (the sync PR was never merged): it exists in NO other ref. The evidence
+     * is `own-live` *with dev commits*, and deleting the branch would destroy the only copy. The
+     * genuine-deletion coverage lives in the two-lane block (own-live, no dev commits) and in the
+     * ownership block (own-merged).
+     */
+    describe('lane removed from the remote while the branch holds unexported work -> close-pr keeps the branch', () => {
       let output: string;
       let exitCode: number;
+      let tipBefore: string;
       before(() => {
+        tipBefore = branchTipSha(LANE);
         // --force: the lane carries snaps that were never merged into main, which is the whole point
         // of a lane the reconciler was mirroring. Without it `bit lane remove --remote` refuses.
         helper.command.removeRemoteLane(LANE, '--force');
@@ -546,19 +556,30 @@ describe('bit ci sync', function () {
         expect(output).to.include(`skipping PR close for ${LANE}`);
       });
 
-      it('should delete the branch from the git remote', () => {
-        expect(output).to.include(`branch ${LANE} deleted`);
-        expect(remoteBranchExists(LANE)).to.be.false;
+      it('should keep the branch, and say why', () => {
+        expect(output).to.include('lane removed remotely but branch carries unmerged commits; keeping branch');
+        expect(output).to.include(`branch ${LANE} kept`);
       });
 
-      describe('re-running once both sides are gone', () => {
+      it("should leave the branch and the developer's unexported commit exactly in place", () => {
+        expect(remoteBranchExists(LANE), `origin/${LANE} must survive — its commits exist nowhere else`).to.be.true;
+        expect(branchTipSha(LANE)).to.equal(tipBefore);
+        expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('branch-conflict');
+      });
+
+      describe('re-running while the lane is still gone and the branch still kept', () => {
         let rerun: { output: string; exitCode: number };
         before(() => {
           rerun = runBit(`bit ci sync ${LANE}`);
+          gitFetch();
         });
-        it('should be a no-op', () => {
+        it('should re-report close-pr, keep the branch again, and write nothing', () => {
+          // The kept branch stays visible to every later run until a human deletes it (or merges it).
+          // Idempotent by construction: closing an already-closed PR and keeping a branch write nothing.
           expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
-          expect(rerun.output).to.include('lane and branch both absent');
+          expect(rerun.output).to.include(`branch ${LANE} kept`);
+          expect(remoteBranchExists(LANE)).to.be.true;
+          expect(branchTipSha(LANE)).to.equal(tipBefore);
         });
       });
     });
@@ -910,6 +931,34 @@ describe('bit ci sync', function () {
       let output: string;
       let exitCode: number;
       before(() => {
+        // First, resolve lane A's halted divergence the way a developer would and let one sync run
+        // converge the pair: put comp1 back to the branch's last-synced content (so only the lane still
+        // holds a change to it — the merge is then conflict-free) and push fresh comp2 work for the run
+        // to export. That leaves the branch tip a sync commit with nothing above it, so the deletion
+        // below exercises `close-pr`'s genuine delete path (own-live, NO unexported work). A branch
+        // still carrying unexported dev commits is *kept*, which has its own scenario in the
+        // reconcile-cycle block.
+        branchSideCommit(
+          LANE_A,
+          defaultBranch,
+          'comp1/index.js',
+          comp1Src('lane-a-snap-1'),
+          'revert comp1 to the last synced content'
+        );
+        branchSideCommit(
+          LANE_A,
+          defaultBranch,
+          'comp2/index.js',
+          comp2Src('branch-a-export'),
+          'feat: dev edits comp2 on lane A branch'
+        );
+        const converge = runBit(`bit ci sync ${LANE_A}`);
+        expect(converge.exitCode, `converge run output:\n${converge.output}`).to.equal(0);
+        gitFetch();
+        expect(branchTipMessage(LANE_A), 'the converge run must leave a sync commit at the tip').to.include(
+          '[bit-sync]'
+        );
+
         // --force: the lane carries snaps never merged into main, which is the normal state of a lane
         // the reconciler was mirroring.
         helper.command.removeRemoteLane(LANE_A, '--force');

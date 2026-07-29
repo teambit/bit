@@ -39,8 +39,18 @@ describe('planLaneSync', () => {
    * "does it carry a trailer" boolean was not enough (an inherited trailer satisfies it).
    */
   describe('lane deleted remotely, branch still present: the claim on the branch decides', () => {
-    it('own-live (our sync commit, not yet in the default branch) -> close-pr AND delete', () => {
+    it("own-live with NO dev commits (the branch is exactly the lane's mirror) -> close-pr AND delete", () => {
       expect(planLaneSync(laneGone('own-live'))).to.deep.equal({ type: 'close-pr', deleteBranch: true });
+    });
+
+    it('own-live WITH dev commits (never-exported work above the sync commit) -> close-pr but KEEP the branch', () => {
+      // own-live means the sync PR was never merged, so commits above the sync commit reached neither the
+      // lane nor the default branch — they exist in no other ref, and deleting the branch would destroy
+      // the only copy.
+      expect(planLaneSync({ ...laneGone('own-live'), hasDevCommits: true })).to.deep.equal({
+        type: 'close-pr',
+        deleteBranch: false,
+      });
     });
 
     it('own-merged (branch tip already in the default branch) -> close-pr AND delete', () => {
