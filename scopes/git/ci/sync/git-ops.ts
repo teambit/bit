@@ -26,14 +26,31 @@ export async function cleanUntrackedScoped(): Promise<void> {
 }
 
 /**
- * Stage every change except the two paths `cleanUntrackedScoped` refuses to touch. The pathspec
- * exclusions matter because both sync paths stage with `-A`: in a workspace whose `.gitignore` lacks
+ * Stage every change except the two paths `cleanUntrackedScoped` refuses to touch. Excluding them
+ * matters because all three commit paths stage with `-A`: in a workspace whose `.gitignore` lacks
  * Bit's block, a bare `git add -A` would commit the entire local scope (`.bit/objects`) into the sync
- * branch. Nothing of value is lost — a tracked `.bit` is pathological, and both executors already
- * treat those two paths as "not workspace content".
+ * branch. Nothing of value is lost — a tracked `.bit` is pathological, and every executor already
+ * treats those two paths as "not workspace content".
+ *
+ * Why this is two commands rather than one `git add` with `:(exclude)` pathspecs: `git add` **exits
+ * non-zero** ("The following paths are ignored by one of your .gitignore files … use -f") when *any*
+ * pathspec element names a path that `.gitignore` ignores — and it applies that rule to negative
+ * `:(exclude)` elements too. So `add -A -- . :(exclude).bit :(exclude)node_modules` staged the right
+ * set but failed with exit 1 in the *normal* setup, where `.gitignore` carries Bit's block — breaking
+ * every commit path of `bit ci sync` and of `bit ci merge` (see `commitAndPushBitmapChanges`).
+ * Silencing it is not possible: `advice.addIgnoredFile=false` drops the hint but keeps the exit code,
+ * and `--ignore-errors` does not cover it either. `-f` does make it exit 0, but it is **unsafe** — it
+ * force-adds every *other* ignored path (`dist/`, `*.log`, …) into the sync commit, which is precisely
+ * the class of accident the exclusions exist to prevent.
+ *
+ * Staging normally and then unstaging the two paths is equivalent and exits clean: `git add -A -- .`
+ * already skips them when they are ignored, and the `reset` covers the workspace where they are not.
+ * `git reset -- <paths>` is a no-op (exit 0) for paths absent from the index, including on an unborn
+ * HEAD, so neither command can fail on a shape the sync engine can encounter.
  */
 export async function addAllExceptScopeAndModules(): Promise<void> {
-  await git.raw(['add', '-A', '--', '.', ...SYNC_EXCLUDED_PATHS.map((path) => `:(exclude)${path}`)]);
+  await git.raw(['add', '-A', '--', '.']);
+  await git.raw(['reset', '-q', '--', ...SYNC_EXCLUDED_PATHS]);
 }
 
 /**
