@@ -176,12 +176,13 @@ export class LaneSyncExecutor {
     const startPoint = branchExists ? `origin/${branch}` : `origin/${defaultBranch}`;
     await git.raw(['checkout', '-B', branch, startPoint]);
 
-    // Write the lane's files and `.bitmap` into the workspace. `workspaceOnly: false` is essential
-    // here (the PR flow's default is `true`): we need EVERY component on the lane, including ones
-    // this checkout of the branch doesn't have yet, otherwise the branch would silently mirror only
-    // part of the lane.
     try {
-      const switchErr = await this.deps.ci.switchToLaneForSync(laneIdStr, { workspaceOnly: false });
+      // Write the lane's files and `.bitmap` into the workspace. This is the load-bearing step: the
+      // sync commit below asserts (via the `Bit-Lane-Head` trailer) that the branch mirrors the lane,
+      // so if nothing is materialized the trailer becomes a permanent lie and every later run reports
+      // the pair as converged. See `materializeLane` for why a plain `switchToLaneForSync` is not
+      // enough.
+      const switchErr = await this.materializeLane(laneIdStr);
       if (switchErr) {
         // A failed switch is a halt, not a crash: the lane may reference a component this workspace
         // can't resolve, which needs a human. `finally` still restores the workspace.
@@ -237,14 +238,33 @@ export class LaneSyncExecutor {
       // churn the very lane we're mirroring). `skipCleanup` leaves the workspace on the lane so the
       // `.bitmap` written by the snap is what we commit onto the branch below — restoring to main
       // first would reset it to main's state and the branch would lose the lane pointer.
-      await this.deps.ci.snapPrCommit({
-        laneIdStr,
-        message,
-        build: undefined,
-        strict: undefined,
-        keepLane: true,
-        skipCleanup: true,
-      });
+      try {
+        await this.deps.ci.snapPrCommit({
+          laneIdStr,
+          message,
+          build: undefined,
+          strict: undefined,
+          keepLane: true,
+          skipCleanup: true,
+          // The lane is the authored artifact here, not a throwaway mirror of the branch. Without
+          // this, `snapAndExportReusingLane`'s stale-lane recovery would delete the remote lane and
+          // re-fork it from main — destroying the very lane we're syncing. With it, that case throws
+          // and is turned into a halt just below.
+          noDestructiveRecovery: true,
+        });
+      } catch (e: any) {
+        // Halt rather than propagate: `bit ci sync` reconciles many lanes in one run, and one lane's
+        // failed snap/export (a stale lane needing a human, a build error, a rejected export) must not
+        // abort the lanes after it. The halt labels the PR, records the reason, and makes the run exit
+        // non-zero via the HALTED summary.
+        return await this.executeHalt({
+          laneName,
+          laneIdStr,
+          branch,
+          reason: `failed to snap and export branch ${branch} onto lane ${laneIdStr}: ${e?.message || e}`,
+          pr: await this.findPr(branch),
+        });
+      }
 
       // Re-query: the snap+export moved the lane, so the fingerprint we recorded before this
       // operation is stale. The trailer must name the state the branch now mirrors.
@@ -298,7 +318,11 @@ export class LaneSyncExecutor {
     if (github && pr) {
       logger.console(chalk.blue(`Closing PR #${pr.number} for removed lane ${laneIdStr}`));
       await github.closePr(pr.number, `Lane ${laneIdStr} was removed/archived on bit.cloud.`);
-    } else if (!github) {
+    } else if (github) {
+      // Not an error: the PR may have been merged or closed by hand already, or never existed. Say so
+      // explicitly, otherwise the run looks like it silently skipped the PR half of the cleanup.
+      logger.console(chalk.yellow(`No open PR found for ${branch} — only retiring the branch`));
+    } else {
       logger.console(chalk.yellow(`No GitHub client configured — skipping PR close for ${branch}`));
     }
 
@@ -348,6 +372,68 @@ export class LaneSyncExecutor {
       logger.console(chalk.yellow(`No GitHub client configured — skipping conflict label/comment for ${branch}`));
     }
     return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
+  }
+
+  /**
+   * Drive the workspace's *filesystem* to the remote lane's content. This is the import-lane
+   * direction, where the lane is the source of truth and the branch is the mirror — the opposite of
+   * `bit ci pr`, where the git checkout is the source of truth and the lane is the mirror. Returns
+   * the error instead of throwing, so the caller can turn a failure into a halt.
+   *
+   * Two traps in `CiMain.switchToLane` make a plain call insufficient here:
+   *
+   * 1. It defaults to `forceOurs: true`, which is right for `bit ci pr` (keep the PR's working tree)
+   *    and catastrophic for us. `applyVersion` checks `forceOurs` *first* and short-circuits: every
+   *    file is marked `unchanged`, the filesystem is never touched, and only `.bitmap` ids move. The
+   *    result would be a `.bitmap`-only commit carrying a `Bit-Lane-Head` trailer that claims the
+   *    branch mirrors the lane. Worse, that same short-circuit throws
+   *    `applyVersion expect to get componentFromFS for <id>` for any lane component this branch's
+   *    `.bitmap` doesn't already have. So `forceOurs` must be cleared *explicitly* (the option spread
+   *    in `switchToLane` puts caller options last, so this override does take effect), and
+   *    `forceTheirs` set — it writes the model's files and tolerates `componentFromFS === undefined`.
+   *
+   * 2. `switchLanes` throws "already checked out" from `throwForSwitchingToCurrentLane` *before* doing
+   *    any work, and `switchToLane` reports that as success. Switching onto the lane we already sit on
+   *    therefore materializes nothing while looking like it worked — which happens whenever the
+   *    process starts on that lane or a previous warn-only `restoreWorkspace` failed. We step off to
+   *    main first so the real switch always runs. (`bit checkout head`, which that error message
+   *    suggests, is NOT sufficient: `ensureCheckoutConfiguration` derives its ids from
+   *    `workspace.listIds()`, so a lane component missing from this branch's `.bitmap` is silently
+   *    skipped. `switchLanes` instead takes its ids from the lane object itself.)
+   */
+  private async materializeLane(laneIdStr: string): Promise<Error | undefined> {
+    const { logger } = this.deps;
+    const target = await this.deps.lanes.parseLaneId(laneIdStr);
+    // Compare name AND scope, so a same-named lane in another scope can't masquerade as our lane
+    // (same probe `snapAndExportReusingLane` uses).
+    const isOnTarget = async () => {
+      const current = await this.deps.lanes.getCurrentLane();
+      return current?.name === target.name && current?.scope === target.scope;
+    };
+
+    if (await isOnTarget()) {
+      logger.console(
+        chalk.yellow(`Workspace is already on ${laneIdStr} — stepping off to main so the re-import actually runs`)
+      );
+      const toMainErr = await this.deps.ci.switchToLaneForSync('main');
+      if (toMainErr) return toMainErr;
+      if (await isOnTarget()) {
+        return new Error(`unable to leave lane ${laneIdStr} before re-importing it; the workspace is still on it`);
+      }
+    }
+
+    const switchErr = await this.deps.ci.switchToLaneForSync(laneIdStr, { forceOurs: false, forceTheirs: true });
+    if (switchErr) return switchErr;
+
+    // `switchToLane` swallows "already checked out" as success, and a switch can also land somewhere
+    // unexpected. Verify before the caller commits a trailer asserting this lane's content.
+    if (!(await isOnTarget())) {
+      const current = await this.deps.lanes.getCurrentLane();
+      return new Error(
+        `switching to lane ${laneIdStr} reported success but the workspace is on "${current?.name ?? 'main'}"`
+      );
+    }
+    return undefined;
   }
 
   private async fetchOnce() {
@@ -530,4 +616,5 @@ To resolve locally:
 Remove the \`bit-sync-conflict\` label to resume syncing.
 `;
 }
+
 

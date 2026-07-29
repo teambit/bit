@@ -387,10 +387,16 @@ export class CiMain {
 
   /**
    * Public entry point onto `switchToLane` for `bit ci sync`'s lane-sync executor, which lives in its
-   * own module (`sync/lane-sync-executor.ts`) but must switch lanes with exactly the same
-   * battle-tested options the PR flow uses (`forceOurs`, `skipDependencyInstallation`, tolerating
-   * "already checked out"). Like `switchToLane` it *returns* the error instead of throwing — the
-   * executor turns a failed switch into a halt rather than aborting the whole sync run.
+   * own module (`sync/lane-sync-executor.ts`) but needs the same lane-switch plumbing. Like
+   * `switchToLane` it *returns* the error instead of throwing — the executor turns a failed switch
+   * into a halt rather than aborting the whole sync run.
+   *
+   * NOTE on `options`: `switchToLane` spreads caller options *after* its defaults, so every default
+   * (including `forceOurs: true`) is overridable — and the sync executor depends on that. The two
+   * directions want opposite conflict resolutions: `bit ci pr` keeps the working tree (`forceOurs`,
+   * since git is the source of truth), while `bit ci sync`'s import direction must write the lane's
+   * files over the branch (`forceOurs: false, forceTheirs: true`, since the lane is the source of
+   * truth). Do not reorder that spread.
    */
   async switchToLaneForSync(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
     return this.switchToLane(laneName, options);
@@ -682,6 +688,7 @@ export class CiMain {
     keepLane,
     skipCleanup,
     skipTasks,
+    noDestructiveRecovery,
   }: {
     laneIdStr: string;
     message: string;
@@ -691,6 +698,14 @@ export class CiMain {
     keepLane?: boolean;
     skipCleanup?: boolean;
     skipTasks?: string;
+    /**
+     * Opt out of the `--keep-lane` stale-lane recovery that deletes the remote lane and recreates it
+     * from main. That trade is fine for a PR lane (a throwaway mirror of a git branch, recreated on
+     * every commit) but unacceptable for `bit ci sync`, where the lane is the *authored* artifact and
+     * the branch is its mirror — deleting it would destroy the very thing being synced. When set, the
+     * stale-lane case throws instead, which the sync executor surfaces as a halt for a human.
+     */
+    noDestructiveRecovery?: boolean;
   }) {
     // The post-export cleanup switches the workspace back to main, which re-checks-out main's HEAD
     // and re-imports every workspace component — pointless when the workspace is about to be
@@ -750,6 +765,7 @@ export class CiMain {
         dryRun,
         skipCleanup: resolvedSkipCleanup,
         skipTasks: resolvedSkipTasks,
+        noDestructiveRecovery,
       });
     }
     return this.snapAndExportWithTempLane({
@@ -821,6 +837,7 @@ export class CiMain {
     dryRun,
     skipCleanup,
     skipTasks,
+    noDestructiveRecovery,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
@@ -829,6 +846,7 @@ export class CiMain {
     dryRun?: boolean;
     skipCleanup: boolean;
     skipTasks?: string;
+    noDestructiveRecovery?: boolean;
   }) {
     // Query the remote (by name, to avoid fetching all lanes) so we know whether to reuse or create
     const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
@@ -886,6 +904,19 @@ export class CiMain {
               `Failed to switch to remote lane ${laneId.toString()}: ${errMsg || '(no error captured)'}. ` +
                 `Refusing destructive recovery for this failure class — the error doesn't match the ` +
                 `stale-lane marker, so deleting the lane could destroy real history. Investigate or retry.`
+            );
+          }
+          if (noDestructiveRecovery) {
+            // `bit ci sync` mirrors an authored lane onto a branch. Recovering by deleting the remote
+            // lane and re-forking it from main would discard the lane's components and history — the
+            // exact artifact the sync exists to preserve — and the next sync would then happily
+            // mirror the now-empty lane onto the branch. Fail loudly instead; the executor turns this
+            // into a halt so a human resolves the lane on bit.cloud.
+            throw new Error(
+              `Failed to switch to remote lane ${laneId.toString()}: ${errMsg || '(no error captured)'}. ` +
+                `The stale-lane recovery (delete the remote lane and recreate it from main) is disabled ` +
+                `for this caller, because the lane is an authored artifact rather than a throwaway PR ` +
+                `lane. Resolve the lane on bit.cloud and re-run.`
             );
           }
           this.logger.console(
