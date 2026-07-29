@@ -1,0 +1,319 @@
+import chalk from 'chalk';
+import type { Logger } from '@teambit/logger';
+import type { LanesMain } from '@teambit/lanes';
+import type { CheckoutMain } from '@teambit/checkout';
+import { git } from '../git';
+import type { CiMain } from '../ci.main.runtime';
+import type { CiSyncConfig } from './sync-config';
+import { SYNC_COMMIT_MARKER } from './sync-state';
+import type { GitHubClient } from './github-client';
+import { HALT_SUMMARY_PREFIX } from './lane-sync-executor';
+import { addAllExceptScopeAndModules, branchExistsOnRemote, cleanUntrackedScoped, ensureGitIdentity } from './git-ops';
+
+export type MainSyncDeps = {
+  checkout: CheckoutMain;
+  lanes: LanesMain;
+  /** for reloadWorkspaceFromDisk + switchToLaneForSync */
+  ci: CiMain;
+  logger: Logger;
+  /** undefined => no GitHub credentials/repo detected; PR operations are logged and skipped */
+  github?: GitHubClient;
+  cfg: Required<CiSyncConfig>;
+  defaultBranch: string;
+  defaultScope: string;
+};
+
+/**
+ * Paths that are never workspace content for drift purposes: the local bit scope and installed
+ * packages. Kept out of the drift set (and out of the commit) so a workspace whose `.gitignore`
+ * lacks Bit's block doesn't report permanent "drift" and open a sync PR containing its own scope.
+ */
+const NON_CONTENT_PREFIXES = ['.bit/', 'node_modules/'];
+
+/**
+ * Reconcile the *main scope* with the repository's default branch.
+ *
+ * Unlike lane sync there is no state to record: the main scope's heads and the repository's tree are
+ * compared directly. `bit checkout head` writes the latest exported versions into the working tree, so
+ * an empty `git status` afterwards **is** convergence, and any diff **is** the drift. That makes the
+ * whole operation idempotent and stateless — no trailer, no fingerprint, nothing to keep in sync with
+ * the lane-side bookkeeping.
+ *
+ * The convergence is proposed rather than applied: the result is a commit on `cfg.mainSyncBranch` and
+ * a pull request against the default branch. The default branch is never written to directly, and
+ * nothing is ever force-pushed.
+ */
+export class MainSyncExecutor {
+  constructor(private deps: MainSyncDeps) {}
+
+  /**
+   * Returns a single human-readable summary line. On a failure the line starts with
+   * `HALT_SUMMARY_PREFIX` so the caller can aggregate it with the lane summaries and exit non-zero;
+   * like `syncLane`, it does not throw — a main-sync failure must not erase the lane results
+   * collected before it in the same run.
+   */
+  async syncMain(opts: { dryRun?: boolean } = {}): Promise<string> {
+    const { cfg, defaultBranch, defaultScope, logger } = this.deps;
+    const branch = cfg.mainSyncBranch;
+
+    if (cfg.autoMergeMainSyncPr) {
+      // Say so rather than silently ignoring the setting: enabling auto-merge is a GraphQL mutation
+      // (`enablePullRequestAutoMerge`) and `GitHubClient` is REST-only.
+      logger.consoleWarning(
+        `sync.autoMergeMainSyncPr is enabled in the config, but enabling GitHub auto-merge is not implemented yet — ` +
+          `the sync PR is opened without it. Use a repository auto-merge rule instead.`
+      );
+    }
+
+    try {
+      await git.fetch(['origin']);
+      const syncBranchExists = await branchExistsOnRemote(branch);
+      // Start from the existing sync branch when there is one, so its history (and any review
+      // discussion attached to the open PR) survives across runs; otherwise fork from the default
+      // branch.
+      const startPoint = syncBranchExists ? `origin/${branch}` : `origin/${defaultBranch}`;
+      logger.console(chalk.blue(`main -> checking the main scope against ${defaultBranch} (sync branch ${branch})`));
+
+      await this.resetToStartPoint(branch, startPoint);
+
+      if (syncBranchExists) {
+        // The existing sync branch may be behind the default branch — its PR may even have been
+        // merged already, in which case the branch is stale. Without catching up, `checkout head`
+        // would be computed against an old tree and the PR diff would "revert" everything that
+        // landed on the default branch since. A merge (never a rebase, never a force-push) is the
+        // only non-destructive way to move a branch that already has an open PR.
+        const catchUpErr = await this.catchUpWithDefaultBranch(branch);
+        if (catchUpErr) return `${HALT_SUMMARY_PREFIX} main -> ${catchUpErr}`;
+      }
+
+      // `checkout head` resolves versions against *the current lane*. The sync branch forks from the
+      // default branch, whose `.bitmap` is on main, so this should never fire — but if it does (a
+      // hand-edited `.bitmap`, a lane pointer committed to the default branch by mistake), the diff
+      // this run would compute is the lane's content, not the main scope's. Refuse rather than open a
+      // wildly wrong PR.
+      const currentLane = await this.deps.lanes.getCurrentLane();
+      if (currentLane) {
+        return (
+          `${HALT_SUMMARY_PREFIX} main -> the .bitmap on ${startPoint} points at lane ` +
+          `"${currentLane.scope}/${currentLane.name}" rather than main, so the main-scope drift cannot be computed`
+        );
+      }
+
+      // `checkoutByCLIValues` rather than `checkout`: it runs `importer.importCurrentObjects()` first
+      // (so `head` resolves to the versions currently on the *remote* scope rather than whatever this
+      // clone happens to have) and ends with `consumer.onDestroy`, which persists `.bitmap`. Bare
+      // `checkout()` does neither — `mergePr` has to call `bitMap.write()` by hand right after it, and
+      // a `.bitmap` left unwritten would silently drop the version bumps from the drift diff.
+      //
+      // `includeNewFromScope` closes the under-mirroring hole: `ensureCheckoutConfiguration` derives
+      // its ids from `workspace.listIds()`, so a component that was exported to the scope's main but
+      // never added to this repo's `.bitmap` (created from another workspace, or on bit.cloud) would
+      // otherwise be invisible to every sync run forever. With the flag, `getNewComponentsFromScope`
+      // lists the default scope and writes those components into the workspace, so the sync PR adds
+      // them to git. See the shared-scope caveat in the class docs of the report.
+      const results = await this.deps.checkout.checkoutByCLIValues('', {
+        head: true,
+        skipNpmInstall: true,
+        includeNewFromScope: true,
+      });
+      const newFromScope = results.newFromScope ?? [];
+      if (newFromScope.length) {
+        logger.console(
+          chalk.blue(
+            `Added ${newFromScope.length} component(s) that exist on ${defaultScope}'s main but not in this ` +
+              `workspace: ${newFromScope.join(', ')}`
+          )
+        );
+      }
+
+      const drift = await this.driftFiles();
+      if (!drift.length) return 'main -> converged (checkout head produced no changes)';
+
+      logger.console(chalk.yellow(`main -> drift in ${drift.length} file(s): ${drift.slice(0, 20).join(', ')}`));
+
+      if (opts.dryRun) {
+        // Nothing is committed, pushed, or reported to GitHub. The working tree *was* written (a
+        // diff-based check has no other way to learn the answer) and `finally` restores it.
+        logger.console(chalk.yellow(`🏃 Dry-run: main -> would push ${branch} and open a sync PR`));
+        return `main -> drift detected in ${drift.length} file(s) — would open sync PR`;
+      }
+
+      await ensureGitIdentity();
+      await addAllExceptScopeAndModules();
+      await git.commit(mainSyncCommitMessage(drift.length));
+      // Never force: we started from the branch tip we fetched and only added commits on top, so a
+      // rejected push means a concurrent run pushed in between — the next run re-plans from the new
+      // state rather than clobbering it.
+      await git.push('origin', branch);
+      logger.console(chalk.green(`Pushed ${branch}`));
+
+      const prUrl = await this.ensureSyncPr({ branch, driftCount: drift.length, newFromScope });
+      return `main -> pushed sync commit to ${branch}${prUrl ? ` (PR ${prUrl})` : ''}`;
+    } catch (e: any) {
+      // Same contract as the lane executor: report the failure as a HALTED summary line so the run
+      // exits non-zero with every other line intact, instead of throwing out of the middle of a
+      // multi-target sync.
+      return `${HALT_SUMMARY_PREFIX} main -> ${e?.message || e}`;
+    } finally {
+      await this.restoreWorkspace();
+    }
+  }
+
+  /**
+   * Put the working tree on the sync branch at a *pristine* copy of `startPoint`.
+   *
+   * Both the force-checkout and the clean are load-bearing for a diff-based reconciler: any
+   * pre-existing modification or stray untracked file in the workspace would be indistinguishable
+   * from main-scope drift and would be committed into the sync PR. Nothing is lost that isn't already
+   * on `origin` — this is only ever a checkout, never a push.
+   *
+   * The reload is what makes the following `checkout head` read *this* branch's `.bitmap` (its
+   * per-component versions and lane pointer) rather than the copy the process loaded at startup.
+   */
+  private async resetToStartPoint(branch: string, startPoint: string) {
+    await git.raw(['checkout', '-f', '-B', branch, startPoint]);
+    await cleanUntrackedScoped();
+    await this.deps.ci.reloadWorkspaceFromDisk();
+  }
+
+  /**
+   * Merge the default branch into the sync branch, so the drift is computed against the repository's
+   * current state. Returns a reason string on failure (the caller turns it into a HALTED summary)
+   * rather than throwing.
+   *
+   * A conflict here means the sync branch and the default branch edited the same lines — a human has
+   * to decide, and the safe recovery is to let them (or to delete the sync branch, which makes the
+   * next run fork a fresh one from the default branch).
+   */
+  private async catchUpWithDefaultBranch(branch: string): Promise<string | undefined> {
+    const { defaultBranch, logger } = this.deps;
+    await ensureGitIdentity();
+    try {
+      const out = await git.raw(['merge', '--no-edit', `origin/${defaultBranch}`]);
+      logger.console(chalk.blue(`Brought ${branch} up to date with origin/${defaultBranch}: ${out.trim()}`));
+    } catch (e: any) {
+      await git.raw(['merge', '--abort']).catch(() => undefined);
+      return (
+        `could not bring the sync branch ${branch} up to date with origin/${defaultBranch}: ${e?.message || e}. ` +
+        `Resolve or delete ${branch} (a deleted sync branch is re-forked from ${defaultBranch} on the next run)`
+      );
+    }
+    // The merge may have brought a new `.bitmap` in from the default branch.
+    await this.deps.ci.reloadWorkspaceFromDisk();
+    return undefined;
+  }
+
+  /**
+   * The files `bit checkout head` changed, i.e. the drift. Excludes the local bit scope and installed
+   * packages (see `NON_CONTENT_PREFIXES`) so they can never be mistaken for main-scope drift — the
+   * same paths `cleanUntrackedScoped` and `addAllExceptScopeAndModules` refuse to touch, which is what
+   * keeps "what counts as drift" and "what gets committed" the same set.
+   */
+  private async driftFiles(): Promise<string[]> {
+    const status = await git.status();
+    const paths = status.files
+      .map((file) => file.path)
+      .filter((path) => !NON_CONTENT_PREFIXES.some((prefix) => path.startsWith(prefix)));
+    return [...new Set(paths)];
+  }
+
+  /**
+   * Make sure the pushed branch has an open PR. A GitHub failure only warns: the branch is pushed,
+   * which is the load-bearing half, and the next run retries the PR.
+   */
+  private async ensureSyncPr({
+    branch,
+    driftCount,
+    newFromScope,
+  }: {
+    branch: string;
+    driftCount: number;
+    newFromScope: string[];
+  }): Promise<string | undefined> {
+    const { github, logger, defaultBranch } = this.deps;
+    if (!github) {
+      logger.consoleWarning(
+        'No GitHub token found (GITHUB_TOKEN/BIT_GITHUB_TOKEN) — pushed sync branch, skipping PR operations'
+      );
+      return undefined;
+    }
+    try {
+      const existing = await github.findPrByBranch(branch);
+      if (existing) {
+        logger.console(chalk.blue(`Sync PR ${existing.htmlUrl} is already open — pushed the new commit onto it`));
+        return existing.htmlUrl;
+      }
+      const created = await github.createPr({
+        head: branch,
+        base: defaultBranch,
+        title: 'Bit sync: update to latest main scope versions',
+        body: mainSyncPrBody({ driftCount, newFromScope }),
+      });
+      logger.console(chalk.green(`Opened sync PR ${created.htmlUrl}`));
+      return created.htmlUrl;
+    } catch (e: any) {
+      logger.consoleWarning(`Could not open or find the sync PR for ${branch}: ${e?.message || e}`);
+      return undefined;
+    }
+  }
+
+  /**
+   * Leave git on the default branch and bit on main, so the next target in the run (or the developer
+   * running this interactively) starts where it expects to. Mirrors
+   * `LaneSyncExecutor.restoreWorkspace`: best-effort and warn-only, so a restore hiccup can't throw
+   * out of a `finally` and mask the real error.
+   *
+   * The clean is what discards the *untracked* files `checkout head` wrote (new component
+   * directories) on the converged and dry-run paths; on the pushed path they were committed, so the
+   * forced checkout removes them by itself. The reload is what stops the sync branch's `.bitmap` from
+   * staying in the live workspace after the git checkout swapped it on disk.
+   */
+  private async restoreWorkspace() {
+    const { logger, defaultBranch } = this.deps;
+    try {
+      const currentLane = await this.deps.lanes.getCurrentLane();
+      if (currentLane) {
+        const switchErr = await this.deps.ci.switchToLaneForSync('main');
+        if (switchErr) logger.consoleWarning(`Could not switch the workspace back to main: ${switchErr.message}`);
+      }
+      await git.raw(['checkout', '-f', defaultBranch]);
+      await cleanUntrackedScoped();
+      await this.deps.ci.reloadWorkspaceFromDisk();
+    } catch (e: any) {
+      logger.consoleWarning(`Could not restore the workspace after the main sync: ${e?.message || e}`);
+    }
+  }
+}
+
+/**
+ * The sync commit message. The `[bit-sync]` marker is what lets triggers (and humans) recognize the
+ * commit as machine-generated; unlike a lane sync commit it carries no `Bit-Lane-Head` trailer,
+ * because main sync keeps no state — the next run recomputes the drift from scratch.
+ */
+function mainSyncCommitMessage(driftCount: number): string {
+  return [
+    `chore(bit-sync): sync git to latest main scope versions (${driftCount} file(s))`,
+    '',
+    SYNC_COMMIT_MARKER,
+  ].join('\n');
+}
+
+function mainSyncPrBody({ driftCount, newFromScope }: { driftCount: number; newFromScope: string[] }): string {
+  const lines = [
+    'Automated sync PR: the Bit scope moved ahead of this repository. This PR checks the workspace out to the ' +
+      'latest exported versions (`bit checkout head`).',
+    '',
+    `- files changed: ${driftCount}`,
+  ];
+  if (newFromScope.length) {
+    lines.push(
+      `- components added from the scope (not previously in this repository's \`.bitmap\`):`,
+      ...newFromScope.map((id) => `  - \`${id}\``)
+    );
+  }
+  lines.push(
+    '',
+    'This PR is maintained by `bit ci sync` — re-running the command pushes any further drift onto the same branch.'
+  );
+  return lines.join('\n');
+}

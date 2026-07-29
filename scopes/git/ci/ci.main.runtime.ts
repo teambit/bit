@@ -23,6 +23,7 @@ import { CiCmd } from './ci.cmd';
 import { CiVerifyCmd } from './commands/verify.cmd';
 import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
+import { CiSyncCmd } from './commands/sync.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentID } from '@teambit/component-id';
@@ -37,6 +38,10 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import type { CiSyncConfig } from './sync/sync-config';
+import { branchToLaneName, resolveSyncConfig, shouldSyncLane } from './sync/sync-config';
+import { HALT_SUMMARY_PREFIX, LaneSyncExecutor } from './sync/lane-sync-executor';
+import { MainSyncExecutor } from './sync/main-sync-executor';
+import { GitHubClient } from './sync/github-client';
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
 // LANE_HASH_MISMATCH fires when both runners called `Lane.create` (the lane didn't exist on
@@ -179,6 +184,7 @@ export class CiMain {
       new CiVerifyCmd(workspace, logger, ci),
       new CiPrCmd(workspace, logger, ci),
       new CiMergeCmd(workspace, logger, ci),
+      new CiSyncCmd(workspace, logger, ci),
     ];
     cli.register(ciCmd);
 
@@ -398,6 +404,164 @@ export class CiMain {
    */
   async reloadWorkspaceFromDisk(): Promise<void> {
     await this.workspace._reloadConsumer();
+  }
+
+  /**
+   * `bit ci sync` — reconcile Bit lanes and the main scope with git branches and pull requests.
+   *
+   * This is only routing and aggregation: every decision about *what* to do lives in the two
+   * executors (`LaneSyncExecutor` per lane, `MainSyncExecutor` for the main scope), and every
+   * executor is stateless and idempotent. The trigger that invoked the command therefore only decides
+   * *when* the reconciler runs, never what it does.
+   *
+   * Returns the collected per-target summary lines. If any target halted (its line starts with
+   * `HALT_SUMMARY_PREFIX`) the method **throws** the joined summary after the loop, so a CI run exits
+   * non-zero — while still having attempted, and reported on, every other target.
+   */
+  async sync(
+    opts: { lane?: string; branch?: string; all?: boolean; main?: boolean; dryRun?: boolean } = {}
+  ): Promise<string> {
+    const cfg = resolveSyncConfig(this.config.sync);
+    const defaultScope = this.workspace.defaultScope;
+    const defaultBranch = await this.getDefaultBranchName();
+    const mainLaneName = this.lanes.getDefaultLaneId().name;
+
+    // `fromEnv` prefers `GITHUB_REPOSITORY` (set by every GitHub Actions runner) and only falls back
+    // to parsing the remote, so a missing or non-GitHub `origin` is not fatal — it degrades to "no
+    // GitHub client", which each executor reports and works around (git-only sync).
+    const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
+    const github = GitHubClient.fromEnv(typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined);
+
+    const laneSync = new LaneSyncExecutor({
+      lanes: this.lanes,
+      ci: this,
+      logger: this.logger,
+      github,
+      cfg,
+      defaultScope,
+    });
+    const mainSync = new MainSyncExecutor({
+      checkout: this.checkout,
+      lanes: this.lanes,
+      ci: this,
+      logger: this.logger,
+      github,
+      cfg,
+      defaultBranch,
+      defaultScope,
+    });
+
+    if (opts.main) {
+      return this.summarizeSync([await mainSync.syncMain({ dryRun: opts.dryRun })]);
+    }
+
+    if (opts.branch) {
+      const branch = opts.branch;
+      // With the default config (`branchPrefix: ''`) every branch name maps to a same-named lane, so
+      // these two would otherwise resolve to the lanes "main" / "bit-sync/main" and sync nonsense.
+      // Both branches are reconciled by the main-scope path, not as lanes.
+      if (branch === defaultBranch) {
+        return `branch ${branch} is the default branch — reconcile it with "bit ci sync --main"; nothing to do`;
+      }
+      if (branch === cfg.mainSyncBranch) {
+        return `branch ${branch} is the main sync branch maintained by this command; nothing to do`;
+      }
+      const laneName = branchToLaneName(branch, cfg);
+      if (!laneName) return `branch ${branch} is not lane-mapped; nothing to do`;
+      const skipReason = this.laneNotSyncableReason(laneName, cfg, mainLaneName);
+      if (skipReason) return `${skipReason} (branch ${branch})`;
+      return this.summarizeSync([await laneSync.syncLane(laneName, { dryRun: opts.dryRun })]);
+    }
+
+    if (opts.lane) {
+      const skipReason = this.laneNotSyncableReason(opts.lane, cfg, mainLaneName);
+      if (skipReason) return skipReason;
+      return this.summarizeSync([await laneSync.syncLane(opts.lane, { dryRun: opts.dryRun })]);
+    }
+
+    // `--all`, which is also the no-arguments default: every mapped lane, then the main scope. The
+    // lanes are synced sequentially on purpose — they share one workspace and one git checkout.
+    const lines: string[] = [];
+    const lanesToSync = await this.listLanesToSync(cfg, mainLaneName);
+    if (typeof lanesToSync === 'string') {
+      lines.push(lanesToSync);
+    } else {
+      this.logger.console(
+        chalk.blue(
+          `Reconciling ${lanesToSync.length} mapped lane(s) of ${defaultScope}` +
+            `${lanesToSync.length ? `: ${lanesToSync.join(', ')}` : ''}`
+        )
+      );
+      for (const laneName of lanesToSync) {
+        // eslint-disable-next-line no-await-in-loop
+        lines.push(await laneSync.syncLane(laneName, { dryRun: opts.dryRun }));
+      }
+    }
+    lines.push(await mainSync.syncMain({ dryRun: opts.dryRun }));
+    return this.summarizeSync(lines);
+  }
+
+  /** Why this lane name must not be handed to the lane executor, or undefined when it's syncable. */
+  private laneNotSyncableReason(
+    laneName: string,
+    cfg: Required<CiSyncConfig>,
+    mainLaneName: string
+  ): string | undefined {
+    if (laneName === mainLaneName) {
+      return `"${mainLaneName}" is not a lane — reconcile the main scope with "bit ci sync --main"; nothing to do`;
+    }
+    if (!shouldSyncLane(laneName, cfg)) {
+      return `lane ${laneName} is not matched by the sync config (lanes: ${JSON.stringify(cfg.lanes)}); nothing to do`;
+    }
+    return undefined;
+  }
+
+  /**
+   * The lane names to reconcile on an `--all` run: every lane on the default scope's remote that the
+   * config matches, sorted for a deterministic run order.
+   *
+   * Returns a HALTED summary *line* (a string) instead of a list when the lanes can't be enumerated.
+   * That failure must be loud — silently syncing only the main scope would look like a successful run
+   * while every lane went unreconciled. A remote that reports it has no lanes is not a failure.
+   */
+  private async listLanesToSync(cfg: Required<CiSyncConfig>, mainLaneName: string): Promise<string[] | string> {
+    if (!cfg.lanes.length) {
+      this.logger.console(
+        chalk.yellow('sync.lanes is empty — lane mirroring is disabled, reconciling the main scope only')
+      );
+      return [];
+    }
+    const remote = this.workspace.defaultScope;
+    try {
+      const lanes = await this.lanes.getLanes({ remote });
+      return lanes
+        .map((lane) => lane.id?.name ?? lane.name)
+        .filter((name) => Boolean(name) && name !== mainLaneName)
+        .filter((name) => shouldSyncLane(name, cfg))
+        .sort();
+    } catch (e: any) {
+      const msg = e?.toString() ?? '';
+      // A scope with no lanes at all: the remote answers "not found" rather than an empty list.
+      if (msg.includes('was not found') || msg.includes('not found')) {
+        this.logger.console(chalk.yellow(`No lanes found on ${remote} — reconciling the main scope only`));
+        return [];
+      }
+      return `${HALT_SUMMARY_PREFIX} lanes -> could not list the lanes of ${remote}: ${msg}`;
+    }
+  }
+
+  /**
+   * Join the per-target summary lines, and turn any halt into a non-zero exit. Throwing is
+   * deliberate: the executors never throw (one unreconcilable target must not abort the targets after
+   * it), so this is the single place where "something needs a human" becomes visible to CI.
+   */
+  private summarizeSync(lines: string[]): string {
+    const summary = lines.join('\n');
+    const halted = lines.filter((line) => line.startsWith(HALT_SUMMARY_PREFIX));
+    if (halted.length) {
+      throw new Error(`bit ci sync could not reconcile ${halted.length} target(s):\n${summary}`);
+    }
+    return summary;
   }
 
   /**

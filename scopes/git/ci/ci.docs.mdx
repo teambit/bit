@@ -7,11 +7,12 @@ labels: ['aspect', 'ci']
 
 Bit's **`bit ci`** commands (plus one BVM enhancement) wrap several routine Bit tasks into single-purpose scripts so your CI pipelines stay short, readable and consistent.
 
-| Command                           | Purpose                                               | Typical CI Stage       |
-| --------------------------------- | ----------------------------------------------------- | ---------------------- |
-| [`bit ci verify`](#bit-ci-verify) | Lint + build gate on every commit                     | pre-push / commit hook |
-| [`bit ci pr`](#bit-ci-pr)         | Snap + export a feature lane when a PR opens/updates  | pull-request pipeline  |
-| [`bit ci merge`](#bit-ci-merge)   | Tag + export new semantic versions on merge to `main` | merge-to-main pipeline |
+| Command                           | Purpose                                                    | Typical CI Stage       |
+| --------------------------------- | ---------------------------------------------------------- | ---------------------- |
+| [`bit ci verify`](#bit-ci-verify) | Lint + build gate on every commit                          | pre-push / commit hook |
+| [`bit ci pr`](#bit-ci-pr)         | Snap + export a feature lane when a PR opens/updates       | pull-request pipeline  |
+| [`bit ci merge`](#bit-ci-merge)   | Tag + export new semantic versions on merge to `main`      | merge-to-main pipeline |
+| [`bit ci sync`](#bit-ci-sync)     | Reconcile lanes ⇄ branches/PRs and the main scope ⇄ `main` | webhook / push / cron  |
 
 ---
 
@@ -211,6 +212,68 @@ Gate this step behind a branch-protection rule so only fast-forward merges trigg
 
 ---
 
+## `bit ci sync`
+
+Keeps Bit lanes and GitHub branches/PRs converged, in both directions, and proposes a PR when the
+main scope moves ahead of the repository.
+
+```bash
+bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run]
+```
+
+| Flag        | Description                                                                                          |
+| ----------- | ---------------------------------------------------------------------------------------------------- |
+| _(no args)_ | Same as `--all`: reconcile every mapped lane, then the main scope.                                   |
+| `[lane]`    | Reconcile a single lane (validated against the `lanes` patterns in the config).                      |
+| `--branch`  | Resolve the lane from a git branch name via the mapping config. Used by push-triggered pipelines.    |
+| `--all`     | Reconcile every mapped lane plus the main scope.                                                     |
+| `--main`    | Reconcile only the main scope against the default branch (opens a sync PR on drift).                 |
+| `--dry-run` | Report the action that _would_ be taken per target; nothing is committed, pushed, or sent to GitHub. |
+
+### It is a reconciler, not a pipeline
+
+The command is **stateless and idempotent**: it derives what to do from the current state of the lane
+and of the branch, so re-running it on a converged pair is a no-op. Whatever triggers it — a bit.cloud
+webhook, a `push` event, a cron schedule — only decides _when_ it runs, never _what_ it does.
+
+### Per-lane reconciliation
+
+For each mapped lane it compares the lane's remote head against the state recorded on the branch (the
+`Bit-Lane-Head` trailer on the last `[bit-sync]` commit) and picks exactly one action:
+
+| Situation                                       | Action           | Effect                                                                   |
+| ----------------------------------------------- | ---------------- | ------------------------------------------------------------------------ |
+| lane moved, branch didn't                       | `import-lane`    | Materializes the lane onto the branch, pushes, opens the PR if missing.  |
+| branch got dev commits, lane didn't move        | `export-branch`  | Snaps + exports the branch's tree onto the lane, records the new head.   |
+| both moved                                      | `merge-diverged` | `bit checkout head --manual` into the branch's tree, then snap + export. |
+| lane removed on bit.cloud                       | `close-pr`       | Closes the PR and deletes the branch.                                    |
+| nothing moved / PR labelled `bit-sync-conflict` | `noop`           | Nothing.                                                                 |
+
+A lane that cannot be reconciled automatically (merge conflicts, a failing build, a stale lane) is
+**halted**: the PR gets a `bit-sync-conflict` label plus a comment with resolution steps, the remaining
+lanes are still synced, and the command exits non-zero. Remove the label to resume syncing that lane.
+
+### Main-scope reconciliation
+
+`--main` (and the tail of an `--all` run) reconciles the scope's `main` with the repository:
+
+1. `git checkout -B <mainSyncBranch>` from the existing sync branch, or from the default branch if
+   there isn't one — then merge the default branch in, so the diff is computed against current `main`.
+2. `bit checkout head` (including components that exist on the scope but not yet in this workspace).
+3. An empty `git status` **is** convergence. Otherwise the drift is committed with a `[bit-sync]`
+   marker, pushed to `<mainSyncBranch>` (never force-pushed), and a pull request is opened against the
+   default branch.
+
+The default branch is never written to directly — the convergence is always proposed as a PR.
+
+### GitHub credentials
+
+PR operations need `GITHUB_TOKEN` or `BIT_GITHUB_TOKEN`, plus a repository — taken from
+`GITHUB_REPOSITORY` when present, otherwise parsed from the `origin` remote. Without them the command
+still does all of its git and Bit work and logs the PR operations it skipped.
+
+---
+
 ## Configuration
 
 The CI aspect supports configuration in `workspace.jsonc`:
@@ -289,3 +352,34 @@ try {
 git commit -m "feat: add new feature BIT-BUMP-MINOR"
 bit ci merge --build  # → automatically uses minor version bump
 ```
+
+### `sync`
+
+**Optional.** Lane ⇄ branch mapping and main-scope settings for [`bit ci sync`](#bit-ci-sync).
+
+```json
+{
+  "teambit.git/ci": {
+    "sync": {
+      "mode": "git-source-of-truth",
+      "branchPrefix": "lane/",
+      "branches": { "design-system": "feature/design-system" },
+      "lanes": ["*"],
+      "mainSyncBranch": "bit-sync/main",
+      "autoMergeMainSyncPr": false
+    }
+  }
+}
+```
+
+| Field                 | Default               | Description                                                                                                                         |
+| --------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`                | `git-source-of-truth` | `git-source-of-truth`: merges happen in GitHub, lanes mirror to PRs. `mirror`: bit.cloud merges are allowed and git tracks them.    |
+| `branchPrefix`        | `""`                  | Prefix for lane-mapped branches, e.g. `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                        |
+| `branches`            | `{}`                  | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                           |
+| `lanes`               | `["*"]`               | Glob patterns (`*` only) of lane names to sync. `[]` disables lane mirroring entirely, leaving main-scope sync.                     |
+| `mainSyncBranch`      | `"bit-sync/main"`     | Branch used for the main-scope drift PR.                                                                                            |
+| `autoMergeMainSyncPr` | `false`               | Reserved: enabling GitHub auto-merge on the sync PR is not implemented yet — the command warns if it is set. Use a repository rule. |
+
+The default branch and `mainSyncBranch` are never treated as lane-mapped, even when `branchPrefix` is
+empty (which otherwise maps every branch to a same-named lane).

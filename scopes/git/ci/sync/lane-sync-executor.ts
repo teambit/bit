@@ -12,6 +12,7 @@ import { laneNameToBranch } from './sync-config';
 import { CONFLICT_LABEL, buildSyncCommitMessage, isSyncCommitMessage, readBranchSyncState } from './sync-state';
 import type { GitHubClient, PrInfo } from './github-client';
 import { planLaneSync } from './sync-planner';
+import { addAllExceptScopeAndModules, branchExistsOnRemote, cleanUntrackedScoped, ensureGitIdentity } from './git-ops';
 
 /**
  * Prefix of the summary line returned by `syncLane` when a lane could not be reconciled. The
@@ -82,7 +83,7 @@ export class LaneSyncExecutor {
     const defaultBranch = await this.deps.ci.getDefaultBranchName();
     const remoteLane = await this.getRemoteLane(laneName);
     const laneHead = remoteLane ? laneHeadFingerprint(remoteLane.components) : undefined;
-    const branchExists = await this.branchExistsOnRemote(branch);
+    const branchExists = await branchExistsOnRemote(branch);
     // No branch => no history to read (and `git log origin/<branch>` would throw). The planner
     // short-circuits on `!branchExists` before it looks at either field.
     const branchState = branchExists
@@ -498,15 +499,8 @@ export class LaneSyncExecutor {
    *
    * The checkout is forced because a merge (or a failed attempt) may have left rewritten component
    * files and a rewritten `.bitmap`; the clean then removes whatever files that merge *added*, which
-   * are untracked and so survive a checkout.
-   *
-   * The clean is scoped: `-x` is not passed (so ignored files are left alone) **and** `.bit` and
-   * `node_modules` are excluded explicitly. Without those exclusions the clean can delete the local
-   * bit scope: a workspace whose scope lives at `<workspace>/.bit` (a pre-existing `.bit` directory,
-   * or a worktree where `.git` is a file) and whose `.gitignore` lacks Bit's block would have
-   * `.bit/objects` and `.bit/scope.json` removed mid-run. `git clean` runs in `process.cwd()` —
-   * `simpleGit()` is constructed with no `baseDir` (`../git.ts`) — which for `bit ci sync` is the
-   * workspace root.
+   * are untracked and so survive a checkout. The clean is scoped — see `cleanUntrackedScoped`, which
+   * documents why `.bit` and `node_modules` must be excluded.
    *
    * Nothing is lost: everything worth keeping is on `origin/<branch>` already, and this is a checkout —
    * the executor never force-pushes.
@@ -518,7 +512,7 @@ export class LaneSyncExecutor {
    */
   private async resetToRemoteBranch(branch: string) {
     await git.raw(['checkout', '-f', '-B', branch, `origin/${branch}`]);
-    await git.raw(['clean', '-fd', '-e', '.bit', '-e', 'node_modules']);
+    await cleanUntrackedScoped();
     await this.deps.ci.reloadWorkspaceFromDisk();
   }
 
@@ -677,11 +671,6 @@ export class LaneSyncExecutor {
     return lanes[0];
   }
 
-  private async branchExistsOnRemote(branch: string): Promise<boolean> {
-    const out = await git.raw(['ls-remote', '--heads', 'origin', branch]);
-    return out.trim().length > 0;
-  }
-
   /**
    * The open PR for the branch, if any. A GitHub API hiccup degrades to "no PR known" rather than
    * failing the lane: without the PR we lose the `bit-sync-conflict` check and PR bookkeeping, but
@@ -722,26 +711,11 @@ export class LaneSyncExecutor {
    * subsequent run would re-plan the same import.
    */
   private async commitAllAndPush(branch: string, message: string) {
-    await this.ensureGitIdentity();
-    await git.add(['-A', '.']);
+    await ensureGitIdentity();
+    await addAllExceptScopeAndModules();
     await git.commit(message, undefined, { '--allow-empty': null });
     await git.push('origin', branch);
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
-  }
-
-  /**
-   * `git commit` fails outright when no identity is configured, which is the norm in a fresh CI
-   * checkout. Only set one when the repo/environment doesn't already provide it, so an interactive
-   * run keeps the developer's own identity.
-   */
-  private async ensureGitIdentity() {
-    const configured = await git
-      .raw(['config', '--get', 'user.email'])
-      .then((out) => out.trim().length > 0)
-      .catch(() => false);
-    if (configured) return;
-    await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
-    await git.addConfig('user.name', 'Bit CI');
   }
 
   private async openPrForLane({
