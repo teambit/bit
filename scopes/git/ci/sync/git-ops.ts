@@ -36,6 +36,19 @@ export async function addAllExceptScopeAndModules(): Promise<void> {
   await git.raw(['add', '-A', '--', '.', ...SYNC_EXCLUDED_PATHS.map((path) => `:(exclude)${path}`)]);
 }
 
+/**
+ * Whether a `git status` path is one of the paths the sync executors never treat as workspace content.
+ *
+ * This is the single definition of that set, and it has to be applied everywhere a status is
+ * *interpreted*, not just where files are written: in a workspace whose `.gitignore` lacks Bit's block,
+ * `git status` lists every file under `.bit/` and `node_modules/` as untracked — tens of thousands of
+ * them — and counting those as drift (or as "changes that will be discarded") is both wrong and
+ * unreadable.
+ */
+export function isNonContentPath(path: string): boolean {
+  return SYNC_EXCLUDED_PATHS.some((excluded) => path === excluded || path.startsWith(`${excluded}/`));
+}
+
 /** Whether `origin` has the given branch. Assumes a `git fetch` isn't required (uses `ls-remote`). */
 export async function branchExistsOnRemote(branch: string): Promise<boolean> {
   const out = await git.raw(['ls-remote', '--heads', 'origin', branch]);

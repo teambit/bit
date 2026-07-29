@@ -43,7 +43,7 @@ import { branchToLaneName, resolveSyncConfig, shouldSyncLane } from './sync/sync
 import { HALT_SUMMARY_PREFIX, LaneSyncExecutor } from './sync/lane-sync-executor';
 import { MainSyncExecutor } from './sync/main-sync-executor';
 import { GitHubClient } from './sync/github-client';
-import { addAllExceptScopeAndModules } from './sync/git-ops';
+import { addAllExceptScopeAndModules, isNonContentPath } from './sync/git-ops';
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
 // LANE_HASH_MISMATCH fires when both runners called `Lane.create` (the lane didn't exist on
@@ -451,12 +451,15 @@ export class CiMain {
     // definition) and destructive when someone runs the command interactively — so say it out loud
     // before doing any of it, naming the files at stake.
     const statusAtStart = await git.status().catch(() => undefined);
-    if (statusAtStart && !statusAtStart.isClean()) {
-      const files = statusAtStart.files.map((file) => file.path);
+    // `.bit/` and `node_modules/` are filtered out because the executors never touch them — and in a
+    // workspace whose `.gitignore` lacks Bit's block, `git status` lists every file under them,
+    // which would make this warning claim tens of thousands of files are about to be discarded.
+    const dirtyFiles = (statusAtStart?.files ?? []).map((file) => file.path).filter((path) => !isNonContentPath(path));
+    if (dirtyFiles.length) {
       this.logger.consoleWarning(
-        `the working tree has ${files.length} uncommitted change(s). "bit ci sync" force-checkouts branches and ` +
-          `removes untracked files (except .bit/ and node_modules/), so these will be discarded: ` +
-          `${files.slice(0, 10).join(', ')}${files.length > 10 ? ', …' : ''}`
+        `the working tree has ${dirtyFiles.length} uncommitted change(s). "bit ci sync" force-checkouts branches ` +
+          `and removes untracked files (except .bit/ and node_modules/), so these will be discarded: ` +
+          `${dirtyFiles.slice(0, 10).join(', ')}${dirtyFiles.length > 10 ? ', …' : ''}`
       );
     }
 

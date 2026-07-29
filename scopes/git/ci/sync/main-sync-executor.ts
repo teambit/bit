@@ -8,7 +8,13 @@ import type { CiSyncConfig } from './sync-config';
 import { SYNC_COMMIT_MARKER } from './sync-state';
 import type { GitHubClient } from './github-client';
 import { HALT_SUMMARY_PREFIX } from './lane-sync-executor';
-import { addAllExceptScopeAndModules, branchExistsOnRemote, cleanUntrackedScoped, ensureGitIdentity } from './git-ops';
+import {
+  addAllExceptScopeAndModules,
+  branchExistsOnRemote,
+  cleanUntrackedScoped,
+  ensureGitIdentity,
+  isNonContentPath,
+} from './git-ops';
 
 export type MainSyncDeps = {
   checkout: CheckoutMain;
@@ -22,13 +28,6 @@ export type MainSyncDeps = {
   defaultBranch: string;
   defaultScope: string;
 };
-
-/**
- * Paths that are never workspace content for drift purposes: the local bit scope and installed
- * packages. Kept out of the drift set (and out of the commit) so a workspace whose `.gitignore`
- * lacks Bit's block doesn't report permanent "drift" and open a sync PR containing its own scope.
- */
-const NON_CONTENT_PREFIXES = ['.bit/', 'node_modules/'];
 
 /**
  * Reconcile the *main scope* with the repository's default branch.
@@ -221,15 +220,13 @@ export class MainSyncExecutor {
 
   /**
    * The files `bit checkout head` changed, i.e. the drift. Excludes the local bit scope and installed
-   * packages (see `NON_CONTENT_PREFIXES`) so they can never be mistaken for main-scope drift — the
-   * same paths `cleanUntrackedScoped` and `addAllExceptScopeAndModules` refuse to touch, which is what
-   * keeps "what counts as drift" and "what gets committed" the same set.
+   * packages (see `isNonContentPath`) so they can never be mistaken for main-scope drift — the same
+   * paths `cleanUntrackedScoped` and `addAllExceptScopeAndModules` refuse to touch, which is what keeps
+   * "what counts as drift" and "what gets committed" the same set.
    */
   private async driftFiles(): Promise<string[]> {
     const status = await git.status();
-    const paths = status.files
-      .map((file) => file.path)
-      .filter((path) => !NON_CONTENT_PREFIXES.some((prefix) => path.startsWith(prefix)));
+    const paths = status.files.map((file) => file.path).filter((path) => !isNonContentPath(path));
     return [...new Set(paths)];
   }
 
