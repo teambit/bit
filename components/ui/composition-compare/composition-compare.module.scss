@@ -69,6 +69,19 @@
   overflow: hidden;
 }
 
+// The shared split-layout preset (className merges onto its flex `mainContainer`) gives each side
+// `flex: 1` without `min-width: 0`, so a wide preview pins its side to content width and the pair
+// overflows the pane. Re-assert min-width:0 on the two panes — the preset's direct children — so they
+// share the width and both stay within the pane. (No `overflow` here: the panes hold iframe-based
+// previews that must render freely; clipping them collapses the preview to an empty box.)
+.splitLayout {
+  min-width: 0;
+
+  & > * {
+    min-width: 0;
+  }
+}
+
 .controlsPanel {
   flex: 0 0 auto;
   display: flex;

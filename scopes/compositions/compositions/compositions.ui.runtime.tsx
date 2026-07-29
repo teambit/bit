@@ -7,6 +7,7 @@ import { ComponentAspect } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { CompositionCompareSection } from '@teambit/compositions.ui.composition-compare-section';
 import { CompositionCompare } from '@teambit/compositions.ui.composition-compare';
+import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare';
 import type { ComponentCompareUI } from '@teambit/component-compare';
 import { ComponentCompareAspect } from '@teambit/component-compare';
 import type { UsePreviewProps, UseSandboxPermission } from '@teambit/preview.ui.component-preview';
@@ -103,6 +104,19 @@ export class CompositionsUI {
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation(compositionCompare);
     componentCompare.registerRoutes([compositionCompare.route]);
+    // Inline preview tab for the redesigned ComponentComparePage / lane-compare. Owned by the
+    // compositions aspect (owner of the preview/composition compare integration) instead of being
+    // hardcoded in component-compare, so component-compare stays decoupled from preview UI.
+    // lazy: the preview panel mounts base+compare composition iframes, each pulling the full env
+    // preview bundle on mount (even under `display: none`) — in a large lane compare that's hundreds
+    // of MB of hidden-iframe traffic starving the visible view.
+    componentCompare.registerCompareTab({
+      id: 'inline-preview',
+      order: 2,
+      displayName: 'Preview',
+      element: <InlinePreviewCompare />,
+      lazy: true,
+    });
     compositions.registerPreviewSandbox((manager, componentModel) => {
       if (componentModel?.host === 'teambit.scope/scope') {
         manager.add('allow-scripts');
