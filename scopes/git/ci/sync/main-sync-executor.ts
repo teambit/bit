@@ -77,11 +77,13 @@ export class MainSyncExecutor {
       await this.resetToStartPoint(branch, startPoint);
 
       if (syncBranchExists) {
-        // The existing sync branch may be behind the default branch — its PR may even have been
-        // merged already, in which case the branch is stale. Without catching up, `checkout head`
-        // would be computed against an old tree and the PR diff would "revert" everything that
-        // landed on the default branch since. A merge (never a rebase, never a force-push) is the
-        // only non-destructive way to move a branch that already has an open PR.
+        // The existing sync branch may be behind the default branch — its PR may even have been merged
+        // already, in which case the branch is stale. Catching up matters for two concrete reasons:
+        // the PR has to stay *mergeable* (a branch that conflicts with its base can't be merged), and
+        // `checkout head` writes component files over whatever tree it finds, so running it on a stale
+        // tree re-commits the pre-merge content of every file that the default branch has changed since
+        // — clobbering those changes on this branch. A merge (never a rebase, never a force-push) is
+        // the only non-destructive way to move a branch that already has an open PR.
         const catchUpErr = await this.catchUpWithDefaultBranch(branch);
         if (catchUpErr) return `${HALT_SUMMARY_PREFIX} main -> ${catchUpErr}`;
       }
@@ -111,10 +113,24 @@ export class MainSyncExecutor {
       // otherwise be invisible to every sync run forever. With the flag, `getNewComponentsFromScope`
       // lists the default scope and writes those components into the workspace, so the sync PR adds
       // them to git. See the shared-scope caveat in the class docs of the report.
+      //
+      // `mergeStrategy: 'theirs'` is required, not cosmetic. A component whose files on the sync
+      // branch differ from the version its `.bitmap` records — ordinary unexported source drift on the
+      // default branch — is *modified*, so `getComponentStatusBeforeMergeAttempt` computes a real
+      // three-way merge, and with no strategy `checkout` throws
+      // `automatic merge has failed … please use "--auto-merge-resolve"`. That message would land
+      // verbatim in the HALTED summary, telling the user about a flag `bit ci sync` does not have.
+      // 'theirs' resolves conflicted files from the scope's main, which is what this PR is *for*:
+      // materializing the exported truth. If that reverts unexported git drift, the reversion is
+      // visible in the PR diff and a human rejects it. 'ours' is forbidden — it would advance
+      // `.bitmap` to the new versions while keeping the old files, i.e. a commit asserting a state the
+      // tree does not have (the same class of lie as the Task 6 critical finding). `promptMergeOptions`
+      // stays unset: prompting in CI would hang.
       const results = await this.deps.checkout.checkoutByCLIValues('', {
         head: true,
         skipNpmInstall: true,
         includeNewFromScope: true,
+        mergeStrategy: 'theirs',
       });
       const newFromScope = results.newFromScope ?? [];
       if (newFromScope.length) {
@@ -301,9 +317,12 @@ function mainSyncCommitMessage(driftCount: number): string {
 function mainSyncPrBody({ driftCount, newFromScope }: { driftCount: number; newFromScope: string[] }): string {
   const lines = [
     'Automated sync PR: the Bit scope moved ahead of this repository. This PR checks the workspace out to the ' +
-      'latest exported versions (`bit checkout head`).',
+      'latest exported versions (`bit checkout head --auto-merge-resolve theirs`).',
     '',
     `- files changed: ${driftCount}`,
+    '- conflicts between this repository and the scope were resolved **in favour of the scope** — if a file here ' +
+      'held changes that were never exported to Bit, this PR reverts them. Review the diff and close the PR ' +
+      'instead of merging if that is not what you want.',
   ];
   if (newFromScope.length) {
     lines.push(

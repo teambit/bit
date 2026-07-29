@@ -221,14 +221,14 @@ main scope moves ahead of the repository.
 bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run]
 ```
 
-| Flag        | Description                                                                                          |
-| ----------- | ---------------------------------------------------------------------------------------------------- |
-| _(no args)_ | Same as `--all`: reconcile every mapped lane, then the main scope.                                   |
-| `[lane]`    | Reconcile a single lane (validated against the `lanes` patterns in the config).                      |
-| `--branch`  | Resolve the lane from a git branch name via the mapping config. Used by push-triggered pipelines.    |
-| `--all`     | Reconcile every mapped lane plus the main scope.                                                     |
-| `--main`    | Reconcile only the main scope against the default branch (opens a sync PR on drift).                 |
-| `--dry-run` | Report the action that _would_ be taken per target; nothing is committed, pushed, or sent to GitHub. |
+| Flag        | Description                                                                                                                                                                                                                                                                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _(no args)_ | Same as `--all`: reconcile every mapped lane, then the main scope.                                                                                                                                                                                                                                                                                                                |
+| `[lane]`    | Reconcile a single lane (validated against the `lanes` patterns in the config).                                                                                                                                                                                                                                                                                                   |
+| `--branch`  | Resolve the lane from a git branch name via the mapping config. Used by push-triggered pipelines.                                                                                                                                                                                                                                                                                 |
+| `--all`     | Reconcile every mapped lane plus the main scope. Cannot be combined with `[lane]` or `--main`.                                                                                                                                                                                                                                                                                    |
+| `--main`    | Reconcile only the main scope against the default branch (opens a sync PR on drift). Conflicts between the repository and the scope are resolved **in favour of the scope** (`bit checkout head --auto-merge-resolve theirs`) — see below.                                                                                                                                        |
+| `--dry-run` | Report the action that _would_ be taken per target. Nothing is pushed and no pull request is created, closed, labelled or commented on. It is not a read-only operation locally: the working tree, `.bitmap` and the local scope are written and then restored, and `--dry-run --main` can leave a local `<mainSyncBranch>` branch behind (the next run resets it from `origin`). |
 
 ### It is a reconciler, not a pipeline
 
@@ -257,14 +257,24 @@ lanes are still synced, and the command exits non-zero. Remove the label to resu
 
 `--main` (and the tail of an `--all` run) reconciles the scope's `main` with the repository:
 
-1. `git checkout -B <mainSyncBranch>` from the existing sync branch, or from the default branch if
-   there isn't one — then merge the default branch in, so the diff is computed against current `main`.
-2. `bit checkout head` (including components that exist on the scope but not yet in this workspace).
+1. `git checkout -B <mainSyncBranch>` from the existing sync branch, or from the default branch when
+   there isn't one yet. When the sync branch already existed, the default branch is then merged into it,
+   so the PR stays mergeable and the drift is computed against the repository's current state.
+2. `bit checkout head`, including components that exist on the scope but not yet in this workspace, and
+   resolving conflicts in favour of the scope (see below).
 3. An empty `git status` **is** convergence. Otherwise the drift is committed with a `[bit-sync]`
    marker, pushed to `<mainSyncBranch>` (never force-pushed), and a pull request is opened against the
    default branch.
 
 The default branch is never written to directly — the convergence is always proposed as a PR.
+
+**Conflict resolution is one-sided, on purpose.** The whole point of the main sync PR is to show what
+the repository looks like at the scope's latest exported versions, so the checkout runs with
+`--auto-merge-resolve theirs`: where a file in the repository conflicts with the exported version, the
+exported version wins. If a component held source changes that were never exported to Bit, this PR
+therefore **reverts** them — visibly, in the PR diff, for a human to reject by closing the PR. (The
+alternative, resolving in favour of the repository, would advance `.bitmap` to the new versions while
+keeping the old files — a commit asserting a state the tree does not have.)
 
 ### GitHub credentials
 
@@ -372,14 +382,14 @@ bit ci merge --build  # → automatically uses minor version bump
 }
 ```
 
-| Field                 | Default               | Description                                                                                                                         |
-| --------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`                | `git-source-of-truth` | `git-source-of-truth`: merges happen in GitHub, lanes mirror to PRs. `mirror`: bit.cloud merges are allowed and git tracks them.    |
-| `branchPrefix`        | `""`                  | Prefix for lane-mapped branches, e.g. `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                        |
-| `branches`            | `{}`                  | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                           |
-| `lanes`               | `["*"]`               | Glob patterns (`*` only) of lane names to sync. `[]` disables lane mirroring entirely, leaving main-scope sync.                     |
-| `mainSyncBranch`      | `"bit-sync/main"`     | Branch used for the main-scope drift PR.                                                                                            |
-| `autoMergeMainSyncPr` | `false`               | Reserved: enabling GitHub auto-merge on the sync PR is not implemented yet — the command warns if it is set. Use a repository rule. |
+| Field                 | Default               | Description                                                                                                                                                                                                                                                                                                                             |
+| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`                | `git-source-of-truth` | **Reserved: accepted but not implemented** — every run behaves as `git-source-of-truth`, and the command warns when another value is configured. Intended semantics: `git-source-of-truth` (today's behaviour) keeps merges in GitHub and mirrors lanes to PRs; `mirror` would allow merges on bit.cloud and have git track the result. |
+| `branchPrefix`        | `""`                  | Prefix for lane-mapped branches, e.g. `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                                                                                                                                                                                                                            |
+| `branches`            | `{}`                  | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                                                                                                                                                                                                                               |
+| `lanes`               | `["*"]`               | Glob patterns (`*` only) of lane names to sync. `[]` disables lane mirroring entirely, leaving main-scope sync.                                                                                                                                                                                                                         |
+| `mainSyncBranch`      | `"bit-sync/main"`     | Branch used for the main-scope drift PR.                                                                                                                                                                                                                                                                                                |
+| `autoMergeMainSyncPr` | `false`               | Reserved: enabling GitHub auto-merge on the sync PR is not implemented yet — the command warns if it is set. Use a repository rule.                                                                                                                                                                                                     |
 
 The default branch and `mainSyncBranch` are never treated as lane-mapped, even when `branchPrefix` is
 empty (which otherwise maps every branch to a same-named lane).

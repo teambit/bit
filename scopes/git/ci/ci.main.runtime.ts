@@ -15,6 +15,7 @@ import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { getDivergeData } from '@teambit/component.snap-distance';
 import { ComponentConfigMerger } from '@teambit/config-merger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { BitError } from '@teambit/bit-error';
 import execa from 'execa';
 import chalk from 'chalk';
 import type { ReleaseType } from 'semver';
@@ -421,10 +422,28 @@ export class CiMain {
   async sync(
     opts: { lane?: string; branch?: string; all?: boolean; main?: boolean; dryRun?: boolean } = {}
   ): Promise<string> {
+    // `--all` is the default, so combining it with a narrower target is always a mistake about what the
+    // command will do. Refuse instead of silently letting the narrower target win.
+    if (opts.all && (opts.lane || opts.main)) {
+      throw new BitError(
+        `--all cannot be combined with ${opts.lane ? `a lane argument ("${opts.lane}")` : '--main'}: ` +
+          `--all reconciles every mapped lane plus the main scope, and is what runs when no target is given`
+      );
+    }
+
     const cfg = resolveSyncConfig(this.config.sync);
     const defaultScope = this.workspace.defaultScope;
     const defaultBranch = await this.getDefaultBranchName();
     const mainLaneName = this.lanes.getDefaultLaneId().name;
+
+    if (cfg.mode !== 'git-source-of-truth') {
+      // `mode` is accepted and resolved but nothing reads it yet — every path behaves as
+      // 'git-source-of-truth'. Say so rather than letting a configured 'mirror' look effective.
+      this.logger.consoleWarning(
+        `sync.mode is set to "${cfg.mode}", but mode is not implemented yet — this run behaves as ` +
+          `"git-source-of-truth" (git wins on conflict, merges happen in GitHub)`
+      );
+    }
 
     // Both executors force-checkout branches and remove untracked files, so anything uncommitted in
     // this workspace is discarded. That is the right behaviour in a CI clone (its tree is pristine by
