@@ -2392,7 +2392,8 @@
             "teambit.react/react": {},
             "teambit.envs/envs": {
                 "env": "teambit.react/react"
-            }
+            },
+            "teambit.react/v17/react-env@1.1.82": "-"
         }
     },
     "ui/compare/lane-compare-hooks/use-lane-diff-status": {
