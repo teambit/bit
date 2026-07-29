@@ -2387,7 +2387,13 @@
         "scope": "teambit.lanes",
         "version": "0.0.207",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare"
+        "rootDir": "components/ui/compare/lane-compare",
+        "config": {
+            "teambit.react/react-env@2.0.3": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/compare/lane-compare-hooks/use-lane-diff-status": {
         "name": "ui/compare/lane-compare-hooks/use-lane-diff-status",
@@ -2401,7 +2407,13 @@
         "scope": "teambit.lanes",
         "version": "0.0.175",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-page"
+        "rootDir": "components/ui/compare/lane-compare-page",
+        "config": {
+            "teambit.react/react-env@2.0.3": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react-env"
+            }
+        }
     },
     "ui/component-compare/changelog": {
         "name": "ui/component-compare/changelog",
