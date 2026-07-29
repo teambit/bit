@@ -403,6 +403,23 @@ export class CiMain {
   }
 
   /**
+   * Re-read `.bitmap` from disk into the live workspace (and drop the caches derived from it).
+   *
+   * `bit ci sync` moves the git checkout underneath a running process: `git checkout <branch>` swaps
+   * `.bitmap` on disk, but the workspace keeps the copy it loaded at startup. Until it is reloaded,
+   * `getCurrentLane()` reports the lane of the *starting* checkout, `bit checkout head` resolves ids
+   * and versions from it, and the next `.bitmap` write persists that stale state over the branch's
+   * file. The lane-sync executor calls this after any git checkout whose `.bitmap` a subsequent bit
+   * operation must see — notably before merging a lane into a branch's working tree.
+   *
+   * `_reloadConsumer` is the workspace's own (rarely-used) hook for exactly this; the watcher uses it
+   * to pick up `.bitmap` edits made behind its back.
+   */
+  async reloadWorkspaceFromDisk(): Promise<void> {
+    await this.workspace._reloadConsumer();
+  }
+
+  /**
    * Sync *config-only* changes from main onto the lane — without a full `bit lane merge`.
    *
    * In this workflow git is the source of truth for files: the PR author merges the default branch
