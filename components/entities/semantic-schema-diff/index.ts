@@ -1,6 +1,13 @@
 export { computeAPIDiff } from './api-diff';
+export type { APIDiffAvailability } from './api-diff';
 export { APIDiffStatus } from './api-diff-change';
-export type { APIDiffResult, APIDiffChange } from './api-diff-change';
+export type {
+  APIDiffResult,
+  APIDiffChange,
+  SchemaAvailability,
+  SchemaUnavailableReason,
+  APIDiffComputeStatus,
+} from './api-diff-change';
 export type { ImpactLevel, ImpactRule } from './impact-rule';
 export { ImpactAssessor, worstImpact } from './impact-assessor';
 export type { AssessedChange } from './impact-assessor';

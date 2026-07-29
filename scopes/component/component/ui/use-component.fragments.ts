@@ -13,7 +13,9 @@ export const componentOverviewFields = gql`
     id {
       ...componentIdFields
     }
-    aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
+    # dependency-resolver is required by InlineDepsCompare — reads
+    # descriptor.get('teambit.dependencies/dependency-resolver').dependencies to compute the diff.
+    aspects(include: ["teambit.preview/preview", "teambit.envs/envs", "teambit.dependencies/dependency-resolver"]) {
       # 'id' property in gql refers to a *global* identifier and used for caching.
       # this makes aspect data cache under the same key, even when they are under different components.
       # renaming the property fixes that.
