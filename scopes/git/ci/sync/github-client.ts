@@ -1,23 +1,38 @@
 import type { GitHostProvider, PrInfo } from './git-host-provider';
 
-// `PrInfo` is the git-host contract's type, not GitHub's — it lives in `git-host-provider.ts` so the
-// interface doesn't depend on one of its implementations. Re-exported here because every existing
-// consumer imports it from this module.
-export type { PrInfo };
-
 export function parseGitHubRepo(remoteUrl: string): string | undefined {
   const match = remoteUrl.match(/github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/);
   return match?.[1];
 }
 
 /**
- * Does this remote point at GitHub? Deliberately the *host* half of `parseGitHubRepo`'s pattern and
- * nothing more: `matchesRemote` answers "whose host is this", while resolving the `owner/repo` is
- * `isConfigured`'s job — a github.com remote we can't parse is still GitHub's to claim, and must not
- * fall through to another provider.
+ * The host a git remote URL points at, lower-cased, or undefined when the URL has no authority (a local
+ * path, a `file://` URL).
+ *
+ * Matches the authority component of every remote form git accepts and nothing else: an optional scheme
+ * (`https://`, `ssh://`, `git+ssh://`), optional `user@` credentials, then the host up to the first `:`
+ * (port, or the scp-like path separator in `git@github.com:owner/repo`) or `/`.
+ */
+function remoteHost(remoteUrl: string): string | undefined {
+  return remoteUrl
+    .trim()
+    .match(/^(?:[a-z+]+:\/\/)?(?:[^@/]+@)?([^:/]+)/i)?.[1]
+    ?.toLowerCase();
+}
+
+/**
+ * Does this remote point at GitHub? A *host* test and nothing more: `matchesRemote` answers "whose host
+ * is this", while resolving the `owner/repo` is `isConfigured`'s job — a github.com remote we can't parse
+ * is still GitHub's to claim, and must not fall through to another provider.
+ *
+ * The host is parsed out and compared for equality rather than searched for in the URL, because
+ * `github.com` is a perfectly ordinary *path* segment on another host: a substring test claims
+ * `https://gitlab.example.com/mirrors/github.com/acme/repo.git` for GitHub, and this provider then
+ * exclusively owns a remote it cannot talk to — every PR operation for that repository is either skipped
+ * or, with a token in the environment, aimed at api.github.com for a repository that lives elsewhere.
  */
 export function isGitHubRemote(remoteUrl: string): boolean {
-  return /(^|[@/.])github\.com[:/]/.test(remoteUrl);
+  return remoteHost(remoteUrl) === 'github.com';
 }
 
 const API = 'https://api.github.com';
