@@ -46,7 +46,7 @@ import { MainSyncExecutor } from './sync/main-sync-executor';
 import type { GitHostProvider } from './sync/git-host-provider';
 import { selectGitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider } from './sync/github-client';
-import { addAllExceptScopeAndModules, isNonContentPath } from './sync/git-ops';
+import { addAllExceptScopeAndModules, isNonContentPath, listRemoteBranches } from './sync/git-ops';
 
 /**
  * Registered git hosts (GitHub ships built-in; others register from their own aspect).
@@ -582,20 +582,17 @@ export class CiMain {
     // `--all`, which is also the no-arguments default: every mapped lane, then the main scope. The
     // lanes are synced sequentially on purpose — they share one workspace and one git checkout.
     const lines: string[] = [];
-    const lanesToSync = await this.listLanesToSync(cfg, mainLaneName);
-    if (typeof lanesToSync === 'string') {
-      lines.push(lanesToSync);
-    } else {
-      this.logger.console(
-        chalk.blue(
-          `Reconciling ${lanesToSync.length} mapped lane(s) of ${defaultScope}` +
-            `${lanesToSync.length ? `: ${lanesToSync.join(', ')}` : ''}`
-        )
-      );
-      for (const laneName of lanesToSync) {
-        // eslint-disable-next-line no-await-in-loop
-        lines.push(await laneSync.syncLane(laneName, { dryRun: opts.dryRun }));
-      }
+    const { lanes: lanesToSync, errors } = await this.listLanesToSync(cfg, mainLaneName, defaultBranch);
+    lines.push(...errors);
+    this.logger.console(
+      chalk.blue(
+        `Reconciling ${lanesToSync.length} mapped lane(s) of ${defaultScope}` +
+          `${lanesToSync.length ? `: ${lanesToSync.join(', ')}` : ''}`
+      )
+    );
+    for (const laneName of lanesToSync) {
+      // eslint-disable-next-line no-await-in-loop
+      lines.push(await laneSync.syncLane(laneName, { dryRun: opts.dryRun }));
     }
     lines.push(await mainSync.syncMain({ dryRun: opts.dryRun }));
     return this.summarizeSync(lines);
@@ -617,49 +614,97 @@ export class CiMain {
   }
 
   /**
-   * The lane names to reconcile on an `--all` run: every lane on the default scope's remote that the
-   * config matches, sorted for a deterministic run order.
+   * The lane names to reconcile on an `--all` run, sorted for a deterministic run order, plus one
+   * HALTED summary line per enumeration failure.
    *
-   * Returns a HALTED summary *line* (a string) instead of a list when the lanes can't be enumerated.
-   * That failure must be loud — silently syncing only the main scope would look like a successful run
-   * while every lane went unreconciled. A remote that reports it has no lanes is not a failure.
+   * The list is the **union of two sources**, and the second half is not redundant:
+   *
+   * - **the lanes on the default scope's remote** — the lanes that still exist, and may need mirroring
+   *   onto a branch;
+   * - **the lane-mapped branches on `origin`** — a lane that was merged, archived or deleted on
+   *   bit.cloud is *gone* from the first list, so enumerating lanes alone can never visit its branch and
+   *   the whole `close-pr` action (close the PR, delete the branch) would never fire for the one state
+   *   that needs it. A branch-only entry resolves `laneHead === undefined` in `syncLane`, which is
+   *   exactly the input `planLaneSync` turns into `close-pr`.
+   *
+   * Both halves are filtered by the same rules (never the main lane, must match `sync.lanes`) and
+   * deduplicated by lane name, so a lane that exists on both sides is reconciled once.
+   *
+   * A failure to enumerate either source is reported as a HALTED line rather than thrown, so the half
+   * that *did* enumerate is still reconciled and the run still exits non-zero. Silently syncing a subset
+   * would look like a successful run while lanes (or orphaned branches) went untouched. A remote that
+   * reports it has no lanes at all is not a failure.
    */
-  private async listLanesToSync(cfg: Required<CiSyncConfig>, mainLaneName: string): Promise<string[] | string> {
+  private async listLanesToSync(
+    cfg: Required<CiSyncConfig>,
+    mainLaneName: string,
+    defaultBranch: string
+  ): Promise<{ lanes: string[]; errors: string[] }> {
     if (!cfg.lanes.length) {
       this.logger.console(
         chalk.yellow('sync.lanes is empty — lane mirroring is disabled, reconciling the main scope only')
       );
-      return [];
+      return { lanes: [], errors: [] };
     }
+    const errors: string[] = [];
+    const names = new Set<string>();
     const remote = this.workspace.defaultScope;
+
     try {
       const lanes = await this.lanes.getLanes({ remote });
-      return lanes
-        .map((lane) => lane.id?.name ?? lane.name)
-        .filter((name) => Boolean(name) && name !== mainLaneName)
-        .filter((name) => shouldSyncLane(name, cfg))
-        .sort();
+      lanes.forEach((lane) => {
+        const name = lane.id?.name ?? lane.name;
+        if (name) names.add(name);
+      });
     } catch (e: any) {
       const msg = e?.toString() ?? '';
       // A scope with no lanes at all: the remote answers "not found" rather than an empty list.
       if (msg.includes('was not found') || msg.includes('not found')) {
-        this.logger.console(chalk.yellow(`No lanes found on ${remote} — reconciling the main scope only`));
-        return [];
+        this.logger.console(
+          chalk.yellow(`No lanes found on ${remote} — reconciling lane-mapped branches and the main scope only`)
+        );
+      } else {
+        errors.push(`${HALT_SUMMARY_PREFIX} lanes -> could not list the lanes of ${remote}: ${msg}`);
       }
-      return `${HALT_SUMMARY_PREFIX} lanes -> could not list the lanes of ${remote}: ${msg}`;
     }
+
+    try {
+      for (const branch of await listRemoteBranches()) {
+        // Both of these are reconciled by the main-scope path, never as lanes. The exclusion is
+        // load-bearing under the default `branchPrefix: ''`, where every branch name maps to a
+        // same-named lane: without it they would resolve to the bogus lanes "main" / "bit-sync/main".
+        if (branch === defaultBranch || branch === cfg.mainSyncBranch) continue;
+        const laneName = branchToLaneName(branch, cfg);
+        if (laneName) names.add(laneName);
+      }
+    } catch (e: any) {
+      errors.push(
+        `${HALT_SUMMARY_PREFIX} lanes -> could not list the branches of "origin", so a lane deleted on ` +
+          `bit.cloud may have kept an orphan branch and an open PR: ${e?.message || e}`
+      );
+    }
+
+    const lanes = [...names]
+      .filter((name) => name !== mainLaneName)
+      .filter((name) => shouldSyncLane(name, cfg))
+      .sort();
+    return { lanes, errors };
   }
 
   /**
    * Join the per-target summary lines, and turn any halt into a non-zero exit. Throwing is
    * deliberate: the executors never throw (one unreconcilable target must not abort the targets after
    * it), so this is the single place where "something needs a human" becomes visible to CI.
+   *
+   * `BitError` rather than `Error`: a halt is a *user-actionable* outcome (resolve a conflict, remove a
+   * label, unstick a lane), and bit's error handler reports a plain `Error` as an internal failure —
+   * printing a stack trace and shipping it to Sentry as FATAL. The message is the whole payload here.
    */
   private summarizeSync(lines: string[]): string {
     const summary = lines.join('\n');
     const halted = lines.filter((line) => line.startsWith(HALT_SUMMARY_PREFIX));
     if (halted.length) {
-      throw new Error(`bit ci sync could not reconcile ${halted.length} target(s):\n${summary}`);
+      throw new BitError(`bit ci sync could not reconcile ${halted.length} target(s):\n${summary}`);
     }
     return summary;
   }

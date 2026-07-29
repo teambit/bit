@@ -149,6 +149,23 @@ describe('bit ci sync', function () {
   }
 
   /**
+   * The paths on the remote branch's tree whose *name* contains `needle`.
+   *
+   * Path-agnostic on purpose: when the reconciler materializes a lane component this workspace never
+   * had, bit picks the directory for it from the workspace's `defaultDirectory` — not from wherever the
+   * lane author happened to put it. So "is this component on the branch?" cannot be asked with a hard
+   * coded path, only by looking at the tree. Matching on the path (not the content) keeps `.bitmap`,
+   * which names every component, out of the answer.
+   */
+  function branchPathsMatching(branch: string, needle: string): string[] {
+    return helper.command
+      .runCmd(`git ls-tree -r --name-only origin/${branch}`)
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && line.includes(needle));
+  }
+
+  /**
    * A content fingerprint of the remote lane: the per-component heads. Used to assert "the lane moved"
    * / "the lane did NOT move" without depending on the lane object's (randomly minted) hash.
    */
@@ -718,6 +735,194 @@ describe('bit ci sync', function () {
         const res = runBit('bit ci sync --all --main');
         expect(res.exitCode).to.not.equal(0);
         expect(res.output).to.include('--all cannot be combined with');
+      });
+    });
+  });
+
+  // =============================================================================================
+  // Two lanes in ONE `--all` run. Three properties live only at the loop level — a single-lane run
+  // cannot express any of them — and each one was a real defect:
+  //
+  //   1. **A deleted lane is still visited.** `--all` used to enumerate only the lanes that exist on
+  //      the remote. A lane merged/archived/deleted on bit.cloud is by definition *not* in that list, so
+  //      its branch was never visited and `close-pr` could never fire for the one state it exists for:
+  //      every merged lane left an orphan branch and an open PR behind, forever. The enumeration is now
+  //      the union of the remote's lanes and the lane-mapped branches on `origin`.
+  //   2. **One halted lane must not abort the lanes after it.** `syncLane` documents that contract and
+  //      had no top-level try/catch, so any unanticipated throw took the rest of the run with it.
+  //   3. **Lanes must not contaminate each other.** A lane's components are materialized into the shared
+  //      workspace; anything left behind is picked up by the next lane's `git add -A` and lands on its
+  //      branch under a `Bit-Lane-Head` trailer that does not describe it. `comp3` — a component that
+  //      exists on lane A and nowhere else — is what makes that observable.
+  // =============================================================================================
+  describe('--all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation)', () => {
+    const LANE_A = 'sync-a';
+    const LANE_B = 'sync-b';
+    /** a component that exists on lane A only — the tracer for cross-lane contamination */
+    const comp3Src = (marker: string) => `module.exports = () => 'comp3: ${marker}';\n`;
+    let defaultBranch: string;
+    let devA: string;
+    let devB: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setSyncConfig({ lanes: ['*'] });
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      // lane A: an edit to comp1, plus comp3 which exists nowhere else (not on main, not on lane B).
+      devA = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE_A}`, devA);
+      fs.outputFileSync(path.join(devA, 'comp1', 'index.js'), comp1Src('lane-a-snap-1'));
+      fs.outputFileSync(path.join(devA, 'comp3', 'index.js'), comp3Src('lane-a-only'));
+      helper.command.addComponent('comp3', {}, devA);
+      helper.command.runCmd('bit snap --message "lane a snap 1"', devA);
+      helper.command.runCmd('bit export', devA);
+
+      // lane B moves a *different* component, so the two lanes never contend for the same file and any
+      // content crossing between them can only be contamination.
+      devB = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE_B}`, devB);
+      fs.outputFileSync(path.join(devB, 'comp2', 'index.js'), comp2Src('lane-b-snap-1'));
+      helper.command.runCmd('bit snap --message "lane b snap 1"', devB);
+      helper.command.runCmd('bit export', devB);
+    });
+
+    // -------------------------------------------------------------------------------------------
+    describe('first --all run: both lanes are imported onto their own branches', () => {
+      let output: string;
+      let exitCode: number;
+      before(() => {
+        ({ output, exitCode } = runBit('bit ci sync --all'));
+        gitFetch();
+      });
+
+      it('should succeed and import both lanes in one run', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(`${LANE_A} -> import-lane`);
+        expect(output).to.include(`${LANE_B} -> import-lane`);
+      });
+
+      it("should put each lane's own content on its own branch", () => {
+        expect(fileOnBranch(LANE_A, 'comp1/index.js')).to.include('lane-a-snap-1');
+        expect(fileOnBranch(LANE_B, 'comp2/index.js')).to.include('lane-b-snap-1');
+      });
+
+      it("should materialize lane A's exclusive component onto lane A's branch, and only there", () => {
+        // lane A is reconciled first (the run order is sorted), so its materialized comp3 files sit in
+        // the shared workspace when lane B's turn comes. Without the restore between lanes cleaning up
+        // after itself, lane B's `git add -A` commits them under lane B's `Bit-Lane-Head` trailer —
+        // content that trailer does not describe.
+        const onA = branchPathsMatching(LANE_A, 'comp3');
+        expect(onA, `paths mentioning comp3 on origin/${LANE_A}`).to.not.have.lengthOf(0);
+        expect(fileOnBranch(LANE_A, onA.find((p) => p.endsWith('index.js')) as string)).to.include('lane-a-only');
+        expect(branchPathsMatching(LANE_B, 'comp3'), `comp3 must not exist on origin/${LANE_B}`).to.have.lengthOf(0);
+      });
+
+      it('should leave the workspace restored after the whole run', () => {
+        expect(helper.command.runCmd('git branch --show-current').trim()).to.equal(defaultBranch);
+        expect(helper.command.listLanesParsed().currentLane).to.equal('main');
+      });
+    });
+
+    // -------------------------------------------------------------------------------------------
+    describe('a conflicting lane halts, and the lane after it still syncs', () => {
+      let output: string;
+      let exitCode: number;
+      let devCommitShaA: string;
+      before(() => {
+        // lane A diverges irreconcilably: both sides edit the same comp1 line.
+        laneSideEdit(devA, 'comp1/index.js', comp1Src('lane-a-conflict'), 'lane a conflicting snap');
+        devCommitShaA = branchSideCommit(
+          LANE_A,
+          defaultBranch,
+          'comp1/index.js',
+          comp1Src('branch-a-conflict'),
+          'feat: dev edits the same comp1 line on lane A branch'
+        );
+        // lane B, meanwhile, has ordinary work to mirror.
+        laneSideEdit(devB, 'comp2/index.js', comp2Src('lane-b-snap-2'), 'lane b snap 2');
+        ({ output, exitCode } = runBit('bit ci sync --all'));
+        gitFetch();
+      });
+
+      it('should halt lane A and exit non-zero', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+        expect(output).to.include('HALTED');
+        expect(output).to.include('merge conflicts in');
+        expect(output).to.include('bit ci sync could not reconcile 1 target(s)');
+      });
+
+      it('should leave lane A entirely untouched: branch tip still the dev commit', () => {
+        expect(branchTipSha(LANE_A)).to.equal(devCommitShaA);
+        expect(branchTipMessage(LANE_A)).to.not.include('[bit-sync]');
+      });
+
+      it('should STILL reconcile lane B — the halt is per-lane, not per-run', () => {
+        expect(output).to.include(`${LANE_B} -> import-lane`);
+        expect(fileOnBranch(LANE_B, 'comp2/index.js')).to.include('lane-b-snap-2');
+        expect(laneHeadTrailer(LANE_B)).to.be.a('string').with.lengthOf(40);
+      });
+
+      it("should not leak the halted lane's files onto lane B's branch", () => {
+        expect(branchPathsMatching(LANE_B, 'comp3')).to.have.lengthOf(0);
+        expect(fileOnBranch(LANE_B, 'comp1/index.js')).to.not.include('lane-a-conflict');
+      });
+    });
+
+    // -------------------------------------------------------------------------------------------
+    // THE `--all` deleted-lane lock. Nothing about lane A exists on bit.cloud any more, so enumerating
+    // the remote's lanes yields lane B alone — the branch would be visited only if the run also
+    // enumerates the lane-mapped branches on `origin`.
+    describe('a lane deleted on bit.cloud is retired by --all, and the surviving lane still syncs', () => {
+      let output: string;
+      let exitCode: number;
+      before(() => {
+        // --force: the lane carries snaps never merged into main, which is the normal state of a lane
+        // the reconciler was mirroring.
+        helper.command.removeRemoteLane(LANE_A, '--force');
+        ({ output, exitCode } = runBit('bit ci sync --all'));
+        gitFetch();
+      });
+
+      it('should still visit BOTH lanes, taking the deleted one from its branch', () => {
+        // Non-vacuous by construction: only one of the two lanes exists on the remote now. Enumerating
+        // lanes alone reports "1 mapped lane" here and silently skips lane A's branch.
+        expect(output, `bit ci sync output:\n${output}`).to.include('Reconciling 2 mapped lane(s)');
+        expect(output).to.include(`${LANE_A} -> close-pr`);
+      });
+
+      it('should succeed', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      });
+
+      it("should delete the removed lane's branch from the git remote", () => {
+        expect(output).to.include(`branch ${LANE_A} deleted`);
+        expect(remoteBranchExists(LANE_A)).to.be.false;
+      });
+
+      it('should announce the skipped PR close (PR-less run) rather than skipping it silently', () => {
+        expect(output).to.include(`skipping PR close for ${LANE_A}`);
+      });
+
+      it('should leave the surviving lane converged and its branch intact', () => {
+        expect(output).to.include(`${LANE_B} -> noop (converged)`);
+        expect(remoteBranchExists(LANE_B)).to.be.true;
+        expect(fileOnBranch(LANE_B, 'comp2/index.js')).to.include('lane-b-snap-2');
+      });
+
+      describe('re-running once the deleted lane has no branch left either', () => {
+        let rerun: { output: string; exitCode: number };
+        before(() => {
+          rerun = runBit('bit ci sync --all');
+          gitFetch();
+        });
+        it('should drop the retired lane from the run entirely', () => {
+          expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+          expect(rerun.output).to.include('Reconciling 1 mapped lane(s)');
+          expect(rerun.output).to.not.include(`${LANE_A} ->`);
+          expect(rerun.output).to.include(`${LANE_B} -> noop (converged)`);
+        });
       });
     });
   });

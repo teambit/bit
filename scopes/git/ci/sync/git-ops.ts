@@ -73,6 +73,24 @@ export async function branchExistsOnRemote(branch: string): Promise<boolean> {
 }
 
 /**
+ * Every branch `origin` has, by short name (`refs/heads/` stripped).
+ *
+ * `ls-remote` rather than `git branch -r`: it asks the remote directly, so the answer can't be narrowed
+ * by this checkout's `remote.origin.fetch` refspec or by how recently it fetched — in a single-branch
+ * clone `git branch -r` lists exactly one branch, which is precisely the case where a stale lane branch
+ * would go unnoticed.
+ */
+export async function listRemoteBranches(): Promise<string[]> {
+  const out = await git.raw(['ls-remote', '--heads', 'origin']);
+  const prefix = 'refs/heads/';
+  return out
+    .split('\n')
+    .map((line) => line.split('\t')[1]?.trim())
+    .filter((ref): ref is string => Boolean(ref && ref.startsWith(prefix)))
+    .map((ref) => ref.slice(prefix.length));
+}
+
+/**
  * `git commit` fails outright when no identity is configured, which is the norm in a fresh CI
  * checkout. Only set one when the repo/environment doesn't already provide it, so an interactive
  * run keeps the developer's own identity.
