@@ -754,21 +754,38 @@ describe('bit ci sync', function () {
   //      workspace; anything left behind is picked up by the next lane's `git add -A` and lands on its
   //      branch under a `Bit-Lane-Head` trailer that does not describe it. `comp3` — a component that
   //      exists on lane A and nowhere else — is what makes that observable.
+  //   4. **An ordinary branch must survive the run.** With the union enumeration and the documented
+  //      defaults, *every* branch on `origin` lane-maps, so a developer branch that never had a lane
+  //      reaches the reconciler looking exactly like a lane branch whose lane was deleted — and that
+  //      action deletes the branch. `PLAIN_BRANCH` is the branch that must still be there afterwards.
   // =============================================================================================
   describe('--all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation)', () => {
     const LANE_A = 'sync-a';
     const LANE_B = 'sync-b';
+    /** an ordinary developer branch: no lane, no sync history, unmerged work on it */
+    const PLAIN_BRANCH = 'feature-x';
     /** a component that exists on lane A only — the tracer for cross-lane contamination */
     const comp3Src = (marker: string) => `module.exports = () => 'comp3: ${marker}';\n`;
     let defaultBranch: string;
     let devA: string;
     let devB: string;
+    let plainBranchSha: string;
 
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       setupGitRemote();
       setSyncConfig({ lanes: ['*'] });
       defaultBranch = setupComponentsAndInitialCommit();
+
+      // The ordinary developer branch. It is pushed before anything else so it is present for *every*
+      // run below — its survival is asserted on the first run and again after the deleted-lane cleanup.
+      helper.command.runCmd(`git checkout -b ${PLAIN_BRANCH}`);
+      helper.fs.outputFile('docs/notes.md', 'unmerged developer work that must not be destroyed\n');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "docs: unmerged developer work"');
+      helper.command.runCmd(`git push origin ${PLAIN_BRANCH}`);
+      plainBranchSha = helper.command.runCmd('git rev-parse HEAD').trim();
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
 
       // lane A: an edit to comp1, plus comp3 which exists nowhere else (not on main, not on lane B).
       devA = helper.scopeHelper.cloneWorkspace();
@@ -806,6 +823,21 @@ describe('bit ci sync', function () {
       it("should put each lane's own content on its own branch", () => {
         expect(fileOnBranch(LANE_A, 'comp1/index.js')).to.include('lane-a-snap-1');
         expect(fileOnBranch(LANE_B, 'comp2/index.js')).to.include('lane-b-snap-1');
+      });
+
+      /**
+       * THE branch-destruction lock. `feature-x` has no lane, so `laneHead` is undefined; it exists on
+       * `origin`, so `branchExists` is true — the same planner input as a lane branch whose lane was
+       * deleted, whose action is `git push origin --delete`. Only the *absence of a `Bit-Lane-Head`
+       * trailer in its history* distinguishes them, and that is what makes it a no-op.
+       */
+      it('should visit an ordinary developer branch and leave it completely alone', () => {
+        expect(output, `bit ci sync output:\n${output}`).to.include(
+          `${PLAIN_BRANCH} -> noop (branch maps to no lane and has no sync history`
+        );
+        expect(remoteBranchExists(PLAIN_BRANCH), `origin/${PLAIN_BRANCH} must still exist`).to.be.true;
+        expect(branchTipSha(PLAIN_BRANCH)).to.equal(plainBranchSha);
+        expect(fileOnBranch(PLAIN_BRANCH, 'docs/notes.md')).to.include('must not be destroyed');
       });
 
       it("should materialize lane A's exclusive component onto lane A's branch, and only there", () => {
@@ -885,10 +917,12 @@ describe('bit ci sync', function () {
         gitFetch();
       });
 
-      it('should still visit BOTH lanes, taking the deleted one from its branch', () => {
-        // Non-vacuous by construction: only one of the two lanes exists on the remote now. Enumerating
-        // lanes alone reports "1 mapped lane" here and silently skips lane A's branch.
-        expect(output, `bit ci sync output:\n${output}`).to.include('Reconciling 2 mapped lane(s)');
+      it('should still visit the deleted lane, taking it from its branch', () => {
+        // Non-vacuous by construction: only lane B exists as a lane on the remote now, so lane A can only
+        // have been reached through the branch half of the enumeration. The count is 3 because every
+        // branch on `origin` lane-maps under the default config — lane A (branch only), lane B (lane), and
+        // the ordinary developer branch, which is visited and then ignored.
+        expect(output, `bit ci sync output:\n${output}`).to.include('Reconciling 3 mapped lane(s)');
         expect(output).to.include(`${LANE_A} -> close-pr`);
       });
 
@@ -911,6 +945,12 @@ describe('bit ci sync', function () {
         expect(fileOnBranch(LANE_B, 'comp2/index.js')).to.include('lane-b-snap-2');
       });
 
+      it('should still not have touched the ordinary developer branch', () => {
+        // The run that deletes one branch must not have deleted this one on the way past.
+        expect(remoteBranchExists(PLAIN_BRANCH)).to.be.true;
+        expect(branchTipSha(PLAIN_BRANCH)).to.equal(plainBranchSha);
+      });
+
       describe('re-running once the deleted lane has no branch left either', () => {
         let rerun: { output: string; exitCode: number };
         before(() => {
@@ -919,8 +959,75 @@ describe('bit ci sync', function () {
         });
         it('should drop the retired lane from the run entirely', () => {
           expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
-          expect(rerun.output).to.include('Reconciling 1 mapped lane(s)');
+          // 2 = lane B plus the ordinary developer branch; lane A is gone from both enumeration sources.
+          expect(rerun.output).to.include('Reconciling 2 mapped lane(s)');
           expect(rerun.output).to.not.include(`${LANE_A} ->`);
+          expect(rerun.output).to.include(`${LANE_B} -> noop (converged)`);
+        });
+      });
+    });
+
+    // -------------------------------------------------------------------------------------------
+    /**
+     * A `Bit-Lane-Head` commit that arrives on the branch through a **merge** must not be mistaken for the
+     * branch's own sync state.
+     *
+     * `git log --grep` orders by commit date across *all* parents, so a trailer commit merged in from
+     * elsewhere — the default branch carrying another lane's sync commit, an old sync branch merged in —
+     * outranks this branch's own sync commit simply by being newer. The adopted `lastSyncedHead` is then
+     * another pair's fingerprint, which never equals this lane's head, so every run reads the lane as
+     * moved and re-plans work already done.
+     *
+     * The decoy here is built with plain git rather than by driving a second lane through a merge: it
+     * needs to be a trailer commit that is (a) newer than the branch's own and (b) reachable only through
+     * a second parent, and forging exactly that is one commit and one merge. The bogus fingerprint
+     * (`ffff…`) is what makes the failure legible — if it were adopted, the lane would look moved.
+     */
+    describe('a Bit-Lane-Head commit merged in from elsewhere must not outrank the branch’s own', () => {
+      let output: string;
+      let exitCode: number;
+      before(() => {
+        gitFetch();
+        // The decoy: a sync-shaped commit off the default branch, plus a real component edit so the
+        // export the reconciler plans has something to snap.
+        helper.command.runCmd(`git checkout -f -B decoy-src origin/${defaultBranch}`);
+        helper.fs.outputFile('comp1/index.js', comp1Src('post-merge-dev'));
+        helper.command.runCmd('git add -A');
+        helper.command.runCmd(
+          `git commit -m "chore(bit-sync): decoy from another pair" -m "Bit-Lane-Head: ${'f'.repeat(40)}" -m "[bit-sync]"`
+        );
+        // Merge it into lane B's branch: --no-ff guarantees the decoy stays on the *second* parent, which
+        // is exactly where `--first-parent` refuses to look and where default ordering happily looks.
+        helper.command.runCmd(`git checkout -f -B ${LANE_B} origin/${LANE_B}`);
+        helper.command.runCmd('git merge --no-ff --no-edit decoy-src');
+        helper.command.runCmd(`git push origin ${LANE_B}`);
+        helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+        ({ output, exitCode } = runBit('bit ci sync --all'));
+        gitFetch();
+      });
+
+      it("should read the branch's OWN sync commit, so the lane does not look moved", () => {
+        // The lane never moved; only the branch did. That is `export-branch`. Reading the decoy instead
+        // makes the lane look moved and yields `merge-diverged` — the observable pre-fix outcome.
+        expect(output, `bit ci sync output:\n${output}`).to.include(`${LANE_B} -> export-branch`);
+        expect(output).to.not.include(`${LANE_B} -> merge-diverged`);
+        expect(output).to.not.include(`${LANE_B} -> import-lane`);
+      });
+
+      it('should succeed and converge, leaving the decoy trailer unused', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        // The fresh trailer the run pushed describes the real lane, never the forged value.
+        expect(laneHeadTrailer(LANE_B)).to.not.equal('f'.repeat(40));
+      });
+
+      describe('re-running after the merge has been reconciled', () => {
+        let rerun: { output: string; exitCode: number };
+        before(() => {
+          rerun = runBit('bit ci sync --all');
+          gitFetch();
+        });
+        it('should be a converged no-op — idempotence survives the merge', () => {
+          expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
           expect(rerun.output).to.include(`${LANE_B} -> noop (converged)`);
         });
       });

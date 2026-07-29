@@ -80,15 +80,26 @@ function parseLogRecords(out: string): Array<{ hash: string; message: string }> 
  * Bit-Lane-Head trailer" — a reason that is simply false. `--grep` asks git to find it however deep it
  * is, and costs the same.
  *
- * All matches are scanned rather than just the newest, because `--grep` matches the trailer *anywhere*
- * in a message (a developer quoting a previous sync commit in their own body would match) while
+ * `--first-parent` is a correctness requirement, not an optimization. `git log` orders by commit date
+ * across *all* parents, so a `Bit-Lane-Head` commit that arrived through a **merge** — someone merged the
+ * default branch, which contains another lane's sync commit, or the branch once merged a different sync
+ * branch — has a newer commit date than this branch's own sync commit and would be picked instead. The
+ * adopted `lastSyncedHead` would then be another lane's fingerprint: it never equals this lane's head, so
+ * every run reads the lane as moved and re-plans work that was already done, and idempotence is gone.
+ * First-parent traversal restricts the walk to this branch's own line of development, which is the only
+ * line whose sync commits describe *this* pair. (It also bounds the walk.)
+ *
+ * All matches on that line are scanned rather than just the newest, because `--grep` matches the trailer
+ * *anywhere* in a message (a developer quoting a previous sync commit in their own body would match) while
  * `parseLaneHeadTrailer` only accepts it at the start of a line. Taking `-n 1` would let such a commit
  * mask the real sync commit behind it.
  */
 export async function readBranchSyncState(branch: string, defaultBranch: string): Promise<BranchSyncState> {
   const revision = `origin/${branch}`;
   const [tip] = parseLogRecords(await git.raw(['log', revision, '-n', '1', LOG_FORMAT]));
-  const candidates = parseLogRecords(await git.raw(['log', revision, `--grep=${LANE_HEAD_TRAILER}:`, LOG_FORMAT]));
+  const candidates = parseLogRecords(
+    await git.raw(['log', revision, '--first-parent', `--grep=${LANE_HEAD_TRAILER}:`, LOG_FORMAT])
+  );
 
   const syncCommit = candidates.find((candidate) => parseLaneHeadTrailer(candidate.message) !== undefined);
   const lastSyncedHead = syncCommit && parseLaneHeadTrailer(syncCommit.message);

@@ -263,18 +263,28 @@ on bit.cloud is gone from the first list, so a lane-only enumeration would never
 behind. The default branch and `<mainSyncBranch>` are never treated as lane-mapped. Duplicates are
 collapsed by lane name, so a lane that appears in both sources is reconciled once.
 
+**An ordinary branch is visited, then ignored.** With the default `branchPrefix: ""` every branch name
+maps to a same-named lane, so a developer branch that never had a lane is enumerated too — and it arrives
+at the planner in the same shape as a lane branch whose lane was just deleted, whose action **deletes the
+branch**. Retiring a branch therefore requires _positive evidence_ that `bit ci sync` created it: a
+`Bit-Lane-Head` trailer somewhere in the branch's own history. Without one the branch is reported as
+`noop (branch maps to no lane and has no sync history; ignoring)` and nothing is written or deleted. Set a
+`branchPrefix` (or an explicit `lanes` list) if you would rather the reconciler not look at those branches
+at all.
+
 ### Per-lane reconciliation
 
 For each mapped lane it compares the lane's remote head against the state recorded on the branch (the
 `Bit-Lane-Head` trailer on the last `[bit-sync]` commit) and picks exactly one action:
 
-| Situation                                       | Action           | Effect                                                                   |
-| ----------------------------------------------- | ---------------- | ------------------------------------------------------------------------ |
-| lane moved, branch didn't                       | `import-lane`    | Materializes the lane onto the branch, pushes, opens the PR if missing.  |
-| branch got dev commits, lane didn't move        | `export-branch`  | Snaps + exports the branch's tree onto the lane, records the new head.   |
-| both moved                                      | `merge-diverged` | `bit checkout head --manual` into the branch's tree, then snap + export. |
-| lane removed on bit.cloud                       | `close-pr`       | Closes the PR and deletes the branch.                                    |
-| nothing moved / PR labelled `bit-sync-conflict` | `noop`           | Nothing.                                                                 |
+| Situation                                         | Action           | Effect                                                                   |
+| ------------------------------------------------- | ---------------- | ------------------------------------------------------------------------ |
+| lane moved, branch didn't                         | `import-lane`    | Materializes the lane onto the branch, pushes, opens the PR if missing.  |
+| branch got dev commits, lane didn't move          | `export-branch`  | Snaps + exports the branch's tree onto the lane, records the new head.   |
+| both moved                                        | `merge-diverged` | `bit checkout head --manual` into the branch's tree, then snap + export. |
+| lane removed on bit.cloud, branch was lane-synced | `close-pr`       | Closes the PR and deletes the branch.                                    |
+| no lane, and the branch has no sync history       | `noop`           | Nothing — the branch is not the reconciler's to retire.                  |
+| nothing moved / PR labelled `bit-sync-conflict`   | `noop`           | Nothing.                                                                 |
 
 A lane that cannot be reconciled automatically (merge conflicts, a failing build, a stale lane) is
 **halted**: the PR gets a `bit-sync-conflict` label plus a comment with resolution steps, the remaining

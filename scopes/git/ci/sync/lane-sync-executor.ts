@@ -147,6 +147,9 @@ export class LaneSyncExecutor {
       lastSyncedHead: branchState.lastSyncedHead,
       hasDevCommits: branchState.hasDevCommits,
       conflictLabelPresent,
+      // A trailer anywhere in the branch's own history is the proof that we created this branch, which is
+      // what licenses `close-pr` to delete it. `lastSyncedHead` *is* that trailer, so no extra git call.
+      wasLaneManaged: branchState.lastSyncedHead !== undefined,
     });
 
     logger.console(
