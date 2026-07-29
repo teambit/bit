@@ -13,9 +13,21 @@ export class CiSyncCmd implements Command {
 
   options: CommandOptions = [
     ['', 'branch <branch>', 'Resolve the lane from this git branch name using the sync mapping config'],
-    ['', 'all', 'Reconcile every mapped lane plus the main scope (the default when no lane is given)'],
-    ['', 'main', 'Reconcile only the main scope against the main branch (opens a sync PR on drift)'],
-    ['', 'dry-run', 'Print the planned action per lane without writing anything to the remote'],
+    [
+      '',
+      'all',
+      'Reconcile every mapped lane plus the main scope (the default when no target is given; cannot be combined with a lane argument or --main)',
+    ],
+    [
+      '',
+      'main',
+      'Reconcile only the main scope against the default branch, opening a sync PR on drift (conflicts resolve in favour of the scope)',
+    ],
+    [
+      '',
+      'dry-run',
+      'Print the planned action per target. Nothing is pushed and no pull request is created or modified; the working tree is still written and then restored',
+    ],
   ];
 
   constructor(
