@@ -11,6 +11,8 @@ import type { SnapResults, SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
+import { MergeLanesAspect } from '@teambit/merge-lanes';
+import type { MergeLanesMain } from '@teambit/merge-lanes';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { getDivergeData } from '@teambit/component.snap-distance';
 import { ComponentConfigMerger } from '@teambit/config-merger';
@@ -131,6 +133,7 @@ export class CiMain {
     ExportAspect,
     ImporterAspect,
     CheckoutAspect,
+    MergeLanesAspect,
   ];
 
   static slots: any = [];
@@ -152,13 +155,16 @@ export class CiMain {
 
     private checkout: CheckoutMain,
 
+    // used by `bit ci sync` to reconcile a lane and its branch when both sides moved
+    private mergeLanes: MergeLanesMain,
+
     private logger: Logger,
 
     private config: CiWorkspaceConfig
   ) {}
 
   static async provider(
-    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout]: [
+    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout, mergeLanes]: [
       CLIMain,
       Workspace,
       LoggerMain,
@@ -169,11 +175,24 @@ export class CiMain {
       ExportMain,
       ImporterMain,
       CheckoutMain,
+      MergeLanesMain,
     ],
     config: CiWorkspaceConfig
   ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
+    const ci = new CiMain(
+      workspace,
+      builder,
+      status,
+      lanes,
+      snapping,
+      exporter,
+      importer,
+      checkout,
+      mergeLanes,
+      logger,
+      config
+    );
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
@@ -364,6 +383,17 @@ export class CiMain {
       return e;
     }
     return undefined;
+  }
+
+  /**
+   * Public entry point onto `switchToLane` for `bit ci sync`'s lane-sync executor, which lives in its
+   * own module (`sync/lane-sync-executor.ts`) but must switch lanes with exactly the same
+   * battle-tested options the PR flow uses (`forceOurs`, `skipDependencyInstallation`, tolerating
+   * "already checked out"). Like `switchToLane` it *returns* the error instead of throwing — the
+   * executor turns a failed switch into a halt rather than aborting the whole sync run.
+   */
+  async switchToLaneForSync(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
+    return this.switchToLane(laneName, options);
   }
 
   /**
