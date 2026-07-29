@@ -7,7 +7,7 @@ type Options = { branch?: string; all?: boolean; main?: boolean; dryRun?: boolea
 
 export class CiSyncCmd implements Command {
   name = 'sync [lane]';
-  description = 'Reconciles Bit lanes and the main scope with GitHub branches and pull requests.';
+  description = 'Reconciles Bit lanes and the main scope with git branches and pull requests.';
   extendedDescription = `Stateless reconciler: compares each mapped lane's remote head against the branch state recorded in git (Bit-Lane-Head commit trailer) and converges — importing lane changes onto the branch, exporting dev commits to the lane, or opening/closing PRs. The main scope is reconciled by checking the workspace out to its latest exported versions and proposing the result as a sync PR. Triggers (webhook, push, cron) only decide when it runs, never what it does. Safe to re-run at any time; converged state is a no-op. Configure mapping under "teambit.git/ci": { "sync": { ... } } in workspace.jsonc.`;
   group = 'collaborate';
 

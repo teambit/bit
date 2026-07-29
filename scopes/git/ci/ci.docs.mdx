@@ -214,8 +214,9 @@ Gate this step behind a branch-protection rule so only fast-forward merges trigg
 
 ## `bit ci sync`
 
-Keeps Bit lanes and GitHub branches/PRs converged, in both directions, and proposes a PR when the
-main scope moves ahead of the repository.
+Keeps Bit lanes and git branches/PRs converged, in both directions, and proposes a PR when the main
+scope moves ahead of the repository. The PR half goes through a pluggable git host provider — GitHub
+is built in; see [Git host providers](#git-host-providers).
 
 ```bash
 bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run]
@@ -275,6 +276,26 @@ exported version wins. If a component held source changes that were never export
 therefore **reverts** them — visibly, in the PR diff, for a human to reject by closing the PR. (The
 alternative, resolving in favour of the repository, would advance `.bitmap` to the new versions while
 keeping the old files — a commit asserting a state the tree does not have.)
+
+### Git host providers
+
+The sync engine is host-agnostic. Everything it does with git is plain git, and everything it does
+with _pull requests_ goes through a `GitHostProvider` — find/create/close a PR, comment, add a label.
+GitHub ships built-in and is registered by this aspect itself, through the same public slot anyone
+else uses:
+
+```ts
+import type { CiMain, GitHostProvider } from '@teambit/ci';
+
+// in your aspect's provider()
+ci.registerGitHostProvider(new GitLabHostProvider());
+```
+
+Each `bit ci sync` run selects exactly one provider: the first registered one that both claims the
+`origin` remote (`matchesRemote`) and has credentials (`isConfigured`). When the remote can't be read,
+or no provider claims it, a single configured provider is used anyway; two or more is ambiguous and
+the run falls back to PR-less sync. Registering a provider therefore never disturbs a repository it
+doesn't serve.
 
 ### GitHub credentials
 

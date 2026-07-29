@@ -1,4 +1,5 @@
-import type { RuntimeDefinition } from '@teambit/harmony';
+import type { RuntimeDefinition, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { CLIAspect, type CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
@@ -42,8 +43,16 @@ import type { CiSyncConfig } from './sync/sync-config';
 import { branchToLaneName, resolveSyncConfig, shouldSyncLane } from './sync/sync-config';
 import { HALT_SUMMARY_PREFIX, LaneSyncExecutor } from './sync/lane-sync-executor';
 import { MainSyncExecutor } from './sync/main-sync-executor';
-import { GitHubClient } from './sync/github-client';
+import type { GitHostProvider } from './sync/git-host-provider';
+import { selectGitHostProvider } from './sync/git-host-provider';
+import { GitHubHostProvider } from './sync/github-client';
 import { addAllExceptScopeAndModules, isNonContentPath } from './sync/git-ops';
+
+/**
+ * Registered git hosts (GitHub ships built-in; others register from their own aspect).
+ * @see GitHostProvider
+ */
+export type GitHostProviderSlot = SlotRegistry<GitHostProvider>;
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
 // LANE_HASH_MISMATCH fires when both runners called `Lane.create` (the lane didn't exist on
@@ -140,7 +149,7 @@ export class CiMain {
     CheckoutAspect,
   ];
 
-  static slots: any = [];
+  static slots = [Slot.withType<GitHostProvider>()];
 
   constructor(
     private workspace: Workspace,
@@ -161,7 +170,9 @@ export class CiMain {
 
     private logger: Logger,
 
-    private config: CiWorkspaceConfig
+    private config: CiWorkspaceConfig,
+
+    private gitHostProviderSlot: GitHostProviderSlot
   ) {}
 
   static async provider(
@@ -177,10 +188,28 @@ export class CiMain {
       ImporterMain,
       CheckoutMain,
     ],
-    config: CiWorkspaceConfig
+    config: CiWorkspaceConfig,
+    [gitHostProviderSlot]: [GitHostProviderSlot]
   ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
+    const ci = new CiMain(
+      workspace,
+      builder,
+      status,
+      lanes,
+      snapping,
+      exporter,
+      importer,
+      checkout,
+      logger,
+      config,
+      gitHostProviderSlot
+    );
+    // GitHub ships built-in, but it is not privileged: the ci aspect registers it through the same
+    // public slot any other host aspect uses (mirroring how the generator aspect self-registers its
+    // own templates). `GitHubHostProvider` resolves its credentials lazily, so registering here —
+    // at aspect load, with no env and no git remote read yet — is always safe.
+    ci.registerGitHostProvider(new GitHubHostProvider());
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
@@ -191,6 +220,28 @@ export class CiMain {
     cli.register(ciCmd);
 
     return ci;
+  }
+
+  /**
+   * Register a git host (GitHub, GitLab, Bitbucket, …) that `bit ci sync` can use for its
+   * pull-request operations. Call this from your aspect's `provider()`:
+   *
+   * ```ts
+   * ci.registerGitHostProvider(new GitLabHostProvider());
+   * ```
+   *
+   * On each `bit ci sync` run exactly one registered provider is selected, by the `origin` remote —
+   * see `selectGitHostProvider`. Registration order breaks ties, so registering a provider does not
+   * disturb a repository it doesn't claim.
+   */
+  registerGitHostProvider(provider: GitHostProvider) {
+    this.gitHostProviderSlot.register(provider);
+    return this;
+  }
+
+  /** Every registered git host provider, in registration order. */
+  listGitHostProviders(): GitHostProvider[] {
+    return this.gitHostProviderSlot.values().flat();
   }
 
   async getBranchName() {
@@ -442,7 +493,7 @@ export class CiMain {
       // 'git-source-of-truth'. Say so rather than letting a configured 'mirror' look effective.
       this.logger.consoleWarning(
         `sync.mode is set to "${cfg.mode}", but mode is not implemented yet — this run behaves as ` +
-          `"git-source-of-truth" (git wins on conflict, merges happen in GitHub)`
+          `"git-source-of-truth" (git wins on conflict, merges happen on the git host)`
       );
     }
 
@@ -463,17 +514,23 @@ export class CiMain {
       );
     }
 
-    // `fromEnv` prefers `GITHUB_REPOSITORY` (set by every GitHub Actions runner) and only falls back
-    // to parsing the remote, so a missing or non-GitHub `origin` is not fatal — it degrades to "no
-    // GitHub client", which each executor reports and works around (git-only sync).
+    // Which git host serves this repository is a *registration* question, not a hard-coded one: the
+    // engine only knows the `GitHostProvider` contract, and picks among the providers registered into
+    // the slot (GitHub among them) by the `origin` remote. An unreadable remote or a host nobody
+    // claims and no credentials is not fatal — it degrades to "no git host", which each executor
+    // reports and works around (git-only sync).
     const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
-    const github = GitHubClient.fromEnv(typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined);
+    const gitHost = selectGitHostProvider(
+      this.listGitHostProviders(),
+      typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined
+    );
+    if (gitHost) this.logger.debug(`bit ci sync: using the "${gitHost.name}" git host provider`);
 
     const laneSync = new LaneSyncExecutor({
       lanes: this.lanes,
       ci: this,
       logger: this.logger,
-      github,
+      gitHost,
       cfg,
       defaultScope,
     });
@@ -482,7 +539,7 @@ export class CiMain {
       lanes: this.lanes,
       ci: this,
       logger: this.logger,
-      github,
+      gitHost,
       cfg,
       defaultBranch,
       defaultScope,

@@ -6,7 +6,7 @@ import { git } from '../git';
 import type { CiMain } from '../ci.main.runtime';
 import type { CiSyncConfig } from './sync-config';
 import { SYNC_COMMIT_MARKER } from './sync-state';
-import type { GitHubClient } from './github-client';
+import type { GitHostProvider } from './git-host-provider';
 import { HALT_SUMMARY_PREFIX } from './lane-sync-executor';
 import {
   addAllExceptScopeAndModules,
@@ -22,8 +22,12 @@ export type MainSyncDeps = {
   /** for reloadWorkspaceFromDisk + switchToLaneForSync */
   ci: CiMain;
   logger: Logger;
-  /** undefined => no GitHub credentials/repo detected; PR operations are logged and skipped */
-  github?: GitHubClient;
+  /**
+   * The git host serving `origin`, resolved from the registered providers (see `git-host-provider.ts`).
+   * undefined => no provider claimed the remote, or the one that did has no credentials; every PR
+   * operation is then logged and skipped, and the git half of the sync still runs.
+   */
+  gitHost?: GitHostProvider;
   cfg: Required<CiSyncConfig>;
   defaultBranch: string;
   defaultScope: string;
@@ -56,10 +60,11 @@ export class MainSyncExecutor {
     const branch = cfg.mainSyncBranch;
 
     if (cfg.autoMergeMainSyncPr) {
-      // Say so rather than silently ignoring the setting: enabling auto-merge is a GraphQL mutation
-      // (`enablePullRequestAutoMerge`) and `GitHubClient` is REST-only.
+      // Say so rather than silently ignoring the setting: enabling auto-merge is host-specific
+      // (on GitHub, the `enablePullRequestAutoMerge` GraphQL mutation) and is not part of the
+      // `GitHostProvider` contract, so the provider-agnostic engine has no way to ask for it.
       logger.consoleWarning(
-        `sync.autoMergeMainSyncPr is enabled in the config, but enabling GitHub auto-merge is not implemented yet — ` +
+        `sync.autoMergeMainSyncPr is enabled in the config, but enabling auto-merge is not implemented yet — ` +
           `the sync PR is opened without it. Use a repository auto-merge rule instead.`
       );
     }
@@ -147,7 +152,7 @@ export class MainSyncExecutor {
       logger.console(chalk.yellow(`main -> drift in ${drift.length} file(s): ${drift.slice(0, 20).join(', ')}`));
 
       if (opts.dryRun) {
-        // Nothing is committed, pushed, or reported to GitHub. The working tree *was* written (a
+        // Nothing is committed, pushed, or reported to the git host. The working tree *was* written (a
         // diff-based check has no other way to learn the answer) and `finally` restores it.
         logger.console(chalk.yellow(`🏃 Dry-run: main -> would push ${branch} and open a sync PR`));
         return `main -> drift detected in ${drift.length} file(s) — would open sync PR`;
@@ -231,7 +236,7 @@ export class MainSyncExecutor {
   }
 
   /**
-   * Make sure the pushed branch has an open PR. A GitHub failure only warns: the branch is pushed,
+   * Make sure the pushed branch has an open PR. A git-host failure only warns: the branch is pushed,
    * which is the load-bearing half, and the next run retries the PR.
    */
   private async ensureSyncPr({
@@ -243,20 +248,21 @@ export class MainSyncExecutor {
     driftCount: number;
     newFromScope: string[];
   }): Promise<string | undefined> {
-    const { github, logger, defaultBranch } = this.deps;
-    if (!github) {
+    const { gitHost, logger, defaultBranch } = this.deps;
+    if (!gitHost) {
       logger.consoleWarning(
-        'No GitHub token found (GITHUB_TOKEN/BIT_GITHUB_TOKEN) — pushed sync branch, skipping PR operations'
+        'No configured git host provider (for GitHub: GITHUB_TOKEN/BIT_GITHUB_TOKEN plus a repository) — ' +
+          'pushed sync branch, skipping PR operations'
       );
       return undefined;
     }
     try {
-      const existing = await github.findPrByBranch(branch);
+      const existing = await gitHost.findPrByBranch(branch);
       if (existing) {
         logger.console(chalk.blue(`Sync PR ${existing.htmlUrl} is already open — pushed the new commit onto it`));
         return existing.htmlUrl;
       }
-      const created = await github.createPr({
+      const created = await gitHost.createPr({
         head: branch,
         base: defaultBranch,
         title: 'Bit sync: update to latest main scope versions',

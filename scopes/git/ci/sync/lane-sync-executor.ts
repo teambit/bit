@@ -10,7 +10,7 @@ import type { CiMain } from '../ci.main.runtime';
 import type { CiSyncConfig } from './sync-config';
 import { laneNameToBranch } from './sync-config';
 import { CONFLICT_LABEL, buildSyncCommitMessage, isSyncCommitMessage, readBranchSyncState } from './sync-state';
-import type { GitHubClient, PrInfo } from './github-client';
+import type { GitHostProvider, PrInfo } from './git-host-provider';
 import { planLaneSync } from './sync-planner';
 import { addAllExceptScopeAndModules, branchExistsOnRemote, cleanUntrackedScoped, ensureGitIdentity } from './git-ops';
 
@@ -27,8 +27,12 @@ export type LaneSyncDeps = {
   /** for snapPrCommit + getDefaultBranchName + switchToLaneForSync */
   ci: CiMain;
   logger: Logger;
-  /** undefined => no GitHub credentials/repo detected; PR operations are logged and skipped */
-  github?: GitHubClient;
+  /**
+   * The git host serving `origin`, resolved from the registered providers (see `git-host-provider.ts`).
+   * undefined => no provider claimed the remote, or the one that did has no credentials; every PR
+   * operation is then logged and skipped, and the git half of the sync still runs.
+   */
+  gitHost?: GitHostProvider;
   cfg: Required<CiSyncConfig>;
   defaultScope: string;
 };
@@ -528,16 +532,16 @@ export class LaneSyncExecutor {
     branch: string;
     pr?: PrInfo;
   }): Promise<string> {
-    const { logger, github } = this.deps;
-    if (github && pr) {
+    const { logger, gitHost } = this.deps;
+    if (gitHost && pr) {
       logger.console(chalk.blue(`Closing PR #${pr.number} for removed lane ${laneIdStr}`));
-      await github.closePr(pr.number, `Lane ${laneIdStr} was removed/archived on bit.cloud.`);
-    } else if (github) {
+      await gitHost.closePr(pr.number, `Lane ${laneIdStr} was removed/archived on bit.cloud.`);
+    } else if (gitHost) {
       // Not an error: the PR may have been merged or closed by hand already, or never existed. Say so
       // explicitly, otherwise the run looks like it silently skipped the PR half of the cleanup.
       logger.console(chalk.yellow(`No open PR found for ${branch} — only retiring the branch`));
     } else {
-      logger.console(chalk.yellow(`No GitHub client configured — skipping PR close for ${branch}`));
+      logger.console(chalk.yellow(`No configured git host provider — skipping PR close for ${branch}`));
     }
 
     // Deleting the remote branch is best-effort: it may be protected, or a human may have already
@@ -571,19 +575,19 @@ export class LaneSyncExecutor {
     reason: string;
     pr?: PrInfo;
   }): Promise<string> {
-    const { logger, github } = this.deps;
+    const { logger, gitHost } = this.deps;
     logger.console(chalk.red(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
-    if (github && pr) {
+    if (gitHost && pr) {
       try {
-        await github.addLabel(pr.number, CONFLICT_LABEL);
-        await github.comment(pr.number, haltCommentBody({ reason, branch, laneId: laneIdStr }));
+        await gitHost.addLabel(pr.number, CONFLICT_LABEL);
+        await gitHost.comment(pr.number, haltCommentBody({ reason, branch, laneId: laneIdStr }));
       } catch (e: any) {
         // The halt itself is the outcome that matters; failing to annotate the PR must not replace
-        // the real reason with a GitHub API error.
+        // the real reason with a git-host API error.
         logger.consoleWarning(`Failed to annotate PR #${pr.number} with the sync conflict: ${e?.message || e}`);
       }
-    } else if (!github) {
-      logger.console(chalk.yellow(`No GitHub client configured — skipping conflict label/comment for ${branch}`));
+    } else if (!gitHost) {
+      logger.console(chalk.yellow(`No configured git host provider — skipping conflict label/comment for ${branch}`));
     }
     return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
   }
@@ -672,15 +676,15 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * The open PR for the branch, if any. A GitHub API hiccup degrades to "no PR known" rather than
+   * The open PR for the branch, if any. A git-host API hiccup degrades to "no PR known" rather than
    * failing the lane: without the PR we lose the `bit-sync-conflict` check and PR bookkeeping, but
    * the git side of the sync is still correct and the next run re-reads the PR.
    */
   private async findPr(branch: string): Promise<PrInfo | undefined> {
-    const { github, logger } = this.deps;
-    if (!github) return undefined;
+    const { gitHost, logger } = this.deps;
+    if (!gitHost) return undefined;
     try {
-      return await github.findPrByBranch(branch);
+      return await gitHost.findPrByBranch(branch);
     } catch (e: any) {
       logger.consoleWarning(`Could not look up the PR for ${branch}: ${e?.message || e}`);
       return undefined;
@@ -733,9 +737,9 @@ export class LaneSyncExecutor {
     laneHead: string;
     remoteLane: LaneData;
   }): Promise<string | undefined> {
-    const { github, logger, defaultScope } = this.deps;
-    if (!github) {
-      logger.console(chalk.yellow(`No GitHub client configured — skipping PR creation for ${branch}`));
+    const { gitHost, logger, defaultScope } = this.deps;
+    if (!gitHost) {
+      logger.console(chalk.yellow(`No configured git host provider — skipping PR creation for ${branch}`));
       return undefined;
     }
     const laneUrl = `https://${getCloudDomain()}/${defaultScope.replace('.', '/')}/~lane/${laneName}`;
@@ -754,7 +758,7 @@ export class LaneSyncExecutor {
       'This PR is maintained by `bit ci sync` — push to the branch to send changes back to the lane.',
     ].join('\n');
     try {
-      const created = await github.createPr({
+      const created = await gitHost.createPr({
         head: branch,
         base: defaultBranch,
         title: `Lane sync: ${laneIdStr}`,

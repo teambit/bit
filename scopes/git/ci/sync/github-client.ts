@@ -1,13 +1,30 @@
-export type PrInfo = { number: number; state: 'open' | 'closed'; labels: string[]; headRef: string; htmlUrl: string };
+import type { GitHostProvider, PrInfo } from './git-host-provider';
+
+// `PrInfo` is the git-host contract's type, not GitHub's — it lives in `git-host-provider.ts` so the
+// interface doesn't depend on one of its implementations. Re-exported here because every existing
+// consumer imports it from this module.
+export type { PrInfo };
 
 export function parseGitHubRepo(remoteUrl: string): string | undefined {
   const match = remoteUrl.match(/github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/);
   return match?.[1];
 }
 
+/**
+ * Does this remote point at GitHub? Deliberately the *host* half of `parseGitHubRepo`'s pattern and
+ * nothing more: `matchesRemote` answers "whose host is this", while resolving the `owner/repo` is
+ * `isConfigured`'s job — a github.com remote we can't parse is still GitHub's to claim, and must not
+ * fall through to another provider.
+ */
+export function isGitHubRemote(remoteUrl: string): boolean {
+  return /(^|[@/.])github\.com[:/]/.test(remoteUrl);
+}
+
 const API = 'https://api.github.com';
 
-export class GitHubClient {
+export class GitHubClient implements GitHostProvider {
+  readonly name = 'github';
+
   private token: string;
   private repo: string;
   private fetchImpl: typeof fetch;
@@ -23,6 +40,15 @@ export class GitHubClient {
     const repo = process.env.GITHUB_REPOSITORY || (gitRemoteUrl ? parseGitHubRepo(gitRemoteUrl) : undefined);
     if (!token || !repo) return undefined;
     return new GitHubClient({ token, repo });
+  }
+
+  matchesRemote(remoteUrl: string): boolean {
+    return isGitHubRemote(remoteUrl);
+  }
+
+  /** A constructed client always has both halves — it cannot be built without them. */
+  isConfigured(): boolean {
+    return Boolean(this.token && this.repo);
   }
 
   private async request(method: string, path: string, body?: unknown): Promise<any> {
@@ -74,5 +100,74 @@ export class GitHubClient {
 
   async addLabel(prNumber: number, label: string): Promise<void> {
     await this.request('POST', `/issues/${prNumber}/labels`, { labels: [label] });
+  }
+}
+
+/**
+ * The registrable GitHub provider: a `GitHostProvider` that resolves its `GitHubClient` from the
+ * environment lazily, on first use.
+ *
+ * Registration happens when the ci aspect loads — long before anyone knows whether this run has a
+ * token, or what `origin` points at. So the registered object cannot *be* a `GitHubClient`
+ * (`fromEnv` returns undefined without credentials, and there'd be nothing to register). Instead it's
+ * this shell: always registrable, never throws at registration time, and simply reports
+ * `isConfigured() === false` when the credentials aren't there — which the engine reads as PR-less
+ * sync.
+ *
+ * The resolved client is memoized because `fromEnv` is a pure function of `process.env` plus the
+ * remote URL, both fixed for the life of a command.
+ */
+export class GitHubHostProvider implements GitHostProvider {
+  readonly name = 'github';
+
+  private client: GitHubClient | undefined;
+
+  matchesRemote(remoteUrl: string): boolean {
+    return isGitHubRemote(remoteUrl);
+  }
+
+  isConfigured(remoteUrl?: string): boolean {
+    return Boolean(this.resolveClient(remoteUrl));
+  }
+
+  async findPrByBranch(branch: string): Promise<PrInfo | undefined> {
+    return this.requireClient().findPrByBranch(branch);
+  }
+
+  async createPr(opts: { head: string; base: string; title: string; body: string }): Promise<PrInfo> {
+    return this.requireClient().createPr(opts);
+  }
+
+  async closePr(prNumber: number, comment?: string): Promise<void> {
+    return this.requireClient().closePr(prNumber, comment);
+  }
+
+  async comment(prNumber: number, body: string): Promise<void> {
+    return this.requireClient().comment(prNumber, body);
+  }
+
+  async addLabel(prNumber: number, label: string): Promise<void> {
+    return this.requireClient().addLabel(prNumber, label);
+  }
+
+  /**
+   * `remoteUrl` only matters on the first call — it's how `owner/repo` is recovered when
+   * `GITHUB_REPOSITORY` isn't set (any CI that isn't GitHub Actions). Selection passes it via
+   * `isConfigured`, so by the time a PR method runs the client is already built.
+   */
+  private resolveClient(remoteUrl?: string): GitHubClient | undefined {
+    if (!this.client) this.client = GitHubClient.fromEnv(remoteUrl);
+    return this.client;
+  }
+
+  private requireClient(): GitHubClient {
+    const client = this.resolveClient();
+    if (!client) {
+      throw new Error(
+        `the github host provider is not configured: set GITHUB_TOKEN or BIT_GITHUB_TOKEN, and either ` +
+          `GITHUB_REPOSITORY or a github.com "origin" remote`
+      );
+    }
+    return client;
   }
 }
