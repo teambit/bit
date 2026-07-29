@@ -375,7 +375,9 @@ export async function install(
     emitLogEvent(event);
   };
 
-  const installOptions: nodeApi.InstallOptions = {
+  // Keep this structural extension until Bit consumes the @pnpm/napi release
+  // whose public InstallOptions type includes trustLockfile.
+  const installOptions: nodeApi.InstallOptions & { trustLockfile?: boolean } = {
     dir: rootDir,
     projects,
     storeDir,
@@ -419,6 +421,9 @@ export async function install(
     engineStrict: options.engineStrict,
     minimumReleaseAge: options.minimumReleaseAge,
     minimumReleaseAgeExclude: options.minimumReleaseAgeExclude,
+    // Bit lockfiles are trusted workspace input. Keep installs compatible with
+    // lockfiles generated before pnpm v12 added registry resolution verification.
+    trustLockfile: true,
     ignorePackageManifest: options.ignorePackageManifest,
     hoistWorkspacePackages: options.hoistWorkspacePackages,
     enableModulesDir: options.enableModulesDir,
