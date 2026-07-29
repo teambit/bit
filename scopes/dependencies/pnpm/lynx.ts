@@ -706,9 +706,6 @@ function removeHarmonyFromDeps(pkg: PackageManifest): PackageManifest {
  * For direct dependencies, Bit's linking is used.
  */
 function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
-  if (!pkg.dependencies) {
-    return pkg;
-  }
   // workspaceDir is set only for workspace packages
   if (workspaceDir && !workspaceDir.includes(BIT_ROOTS_DIR)) {
     return readWorkspacePackageHook(pkg);
