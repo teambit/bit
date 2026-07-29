@@ -9,7 +9,13 @@ import { git } from '../git';
 import type { CiMain } from '../ci.main.runtime';
 import type { CiSyncConfig } from './sync-config';
 import { laneNameToBranch } from './sync-config';
-import { CONFLICT_LABEL, buildSyncCommitMessage, isSyncCommitMessage, readBranchSyncState } from './sync-state';
+import {
+  CONFLICT_LABEL,
+  buildSyncCommitMessage,
+  isSyncCommitMessage,
+  readBranchSyncState,
+  hasSyncMarker,
+} from './sync-state';
 import type { GitHostProvider, PrInfo } from './git-host-provider';
 import { planLaneSync } from './sync-planner';
 import { addAllExceptScopeAndModules, branchExistsOnRemote, cleanUntrackedScoped, ensureGitIdentity } from './git-ops';
@@ -93,6 +99,16 @@ export class LaneSyncExecutor {
     const branchState = branchExists
       ? await readBranchSyncState(branch, defaultBranch)
       : { lastSyncedHead: undefined, syncCommitSha: undefined, hasDevCommits: false };
+    if (branchExists) {
+      const tipLog = await git.log([`origin/${branch}`, '--max-count=1']);
+      if (tipLog.all.length > 0) {
+        const tipEntry = tipLog.all[0];
+        const tipMessage = tipEntry.body ? `${tipEntry.message}\n\n${tipEntry.body}` : tipEntry.message;
+        if (hasSyncMarker(tipMessage)) {
+          logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
+        }
+      }
+    }
     const pr = await this.findPr(branch);
     const conflictLabelPresent = pr?.labels.includes(CONFLICT_LABEL) ?? false;
 

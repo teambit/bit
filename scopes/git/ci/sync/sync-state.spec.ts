@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { parseLaneHeadTrailer, buildSyncCommitMessage, isSyncCommitMessage } from './sync-state';
+import { parseLaneHeadTrailer, buildSyncCommitMessage, isSyncCommitMessage, hasSyncMarker } from './sync-state';
 
 describe('sync-state', () => {
   it('builds a message that round-trips through the parser', () => {
@@ -17,5 +17,12 @@ describe('sync-state', () => {
   it('parses the trailer from a multi-line message body', () => {
     const msg = 'chore(bit-sync): update\n\nsome body\n\nBit-Lane-Head: deadbeef01\n[bit-sync]';
     expect(parseLaneHeadTrailer(msg)).to.equal('deadbeef01');
+  });
+});
+
+describe('isSyncCommitMessage as loop guard', () => {
+  it('recognizes main-sync commits (marker without trailer) via marker-only helper', () => {
+    expect(hasSyncMarker('chore(bit-sync): sync git to latest main scope versions\n\n[bit-sync]')).to.equal(true);
+    expect(hasSyncMarker('feat: something')).to.equal(false);
   });
 });

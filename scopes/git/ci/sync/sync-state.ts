@@ -9,6 +9,10 @@ export function parseLaneHeadTrailer(message: string): string | undefined {
   return match?.[1];
 }
 
+export function hasSyncMarker(message: string): boolean {
+  return message.includes(SYNC_COMMIT_MARKER);
+}
+
 export function isSyncCommitMessage(message: string): boolean {
   return message.includes(SYNC_COMMIT_MARKER) && parseLaneHeadTrailer(message) !== undefined;
 }
