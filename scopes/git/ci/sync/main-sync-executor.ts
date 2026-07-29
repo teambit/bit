@@ -147,7 +147,7 @@ export class MainSyncExecutor {
       }
 
       const drift = await this.driftFiles();
-      if (!drift.length) return 'main -> converged (checkout head produced no changes)';
+      if (!drift.length) return await this.convergedSummary(branch);
 
       logger.console(chalk.yellow(`main -> drift in ${drift.length} file(s): ${drift.slice(0, 20).join(', ')}`));
 
@@ -221,6 +221,22 @@ export class MainSyncExecutor {
     // The merge may have brought a new `.bitmap` in from the default branch.
     await this.deps.ci.reloadWorkspaceFromDisk();
     return undefined;
+  }
+
+  /**
+   * The "nothing to do" summary line — plus, when a sync PR is still open, the fact that it is.
+   *
+   * The checkout ran on the *sync branch*, so no drift means the sync branch matches the scope. The
+   * default branch does not, if the PR proposing that convergence hasn't been merged: a bare "converged"
+   * would read as full agreement between the repository and the scope while the difference sits in a
+   * pull request awaiting review.
+   */
+  private async convergedSummary(branch: string): Promise<string> {
+    const base = 'main -> converged (checkout head produced no changes)';
+    const { gitHost } = this.deps;
+    if (!gitHost) return base;
+    const pr = await gitHost.findPrByBranch(branch).catch(() => undefined);
+    return pr ? `${base} — open sync PR #${pr.number} still awaits review/merge` : base;
   }
 
   /**

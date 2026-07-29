@@ -11,6 +11,7 @@ import type { CiSyncConfig } from './sync-config';
 import { laneNameToBranch } from './sync-config';
 import {
   CONFLICT_LABEL,
+  SYNC_COMMIT_MARKER,
   buildSyncCommitMessage,
   isSyncCommitMessage,
   readBranchSyncState,
@@ -81,12 +82,47 @@ export class LaneSyncExecutor {
    * Reconcile one lane with its git branch/PR.
    *
    * Returns a single human-readable summary line. On a halt the line starts with
-   * `HALT_SUMMARY_PREFIX` so the caller can aggregate failures and exit non-zero; it does not throw.
+   * `HALT_SUMMARY_PREFIX` so the caller can aggregate failures and exit non-zero; **it does not
+   * throw** — that is the contract the `--all` loop is written against, and it has to hold for every
+   * failure mode, not only the ones each step anticipates. The steps below route their own expected
+   * failures to `executeHalt`; this wrapper is what covers the unexpected ones (a git command that
+   * fails, a `checkout -B` that collides, a push the remote rejects, a git-host API that throws where
+   * nobody expected it), any of which would otherwise abort the sync of every lane after this one.
    */
   async syncLane(laneName: string, opts: { dryRun?: boolean } = {}): Promise<string> {
     const { cfg, defaultScope, logger } = this.deps;
     const branch = laneNameToBranch(laneName, cfg);
     const laneIdStr = `${defaultScope}/${laneName}`;
+    try {
+      return await this.reconcileLane({ laneName, laneIdStr, branch, dryRun: opts.dryRun });
+    } catch (e: any) {
+      const reason = `unexpected error: ${e?.message || e}`;
+      try {
+        // Halt properly where we can: label the PR and comment the resolution steps, so the lane is
+        // visibly handed to a human rather than only mentioned in the run's summary.
+        return await this.executeHalt({ laneName, laneIdStr, branch, reason, pr: await this.findPr(branch) });
+      } catch (haltError: any) {
+        // The halt itself failed. There is nothing left to try, and throwing here would abort the
+        // remaining lanes — the exact outcome this wrapper exists to prevent — so report and move on.
+        logger.error(`bit ci sync: failed to halt lane ${laneIdStr}`, haltError);
+        logger.consoleWarning(`Could not record the halt of lane ${laneIdStr}: ${haltError?.message || haltError}`);
+        return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
+      }
+    }
+  }
+
+  private async reconcileLane({
+    laneName,
+    laneIdStr,
+    branch,
+    dryRun,
+  }: {
+    laneName: string;
+    laneIdStr: string;
+    branch: string;
+    dryRun?: boolean;
+  }): Promise<string> {
+    const { logger } = this.deps;
 
     await this.fetchOnce();
 
@@ -95,19 +131,12 @@ export class LaneSyncExecutor {
     const laneHead = remoteLane ? laneHeadFingerprint(remoteLane.components) : undefined;
     const branchExists = await branchExistsOnRemote(branch);
     // No branch => no history to read (and `git log origin/<branch>` would throw). The planner
-    // short-circuits on `!branchExists` before it looks at either field.
+    // short-circuits on `!branchExists` before it looks at any of these fields.
     const branchState = branchExists
       ? await readBranchSyncState(branch, defaultBranch)
-      : { lastSyncedHead: undefined, syncCommitSha: undefined, hasDevCommits: false };
-    if (branchExists) {
-      const tipLog = await git.log([`origin/${branch}`, '--max-count=1']);
-      if (tipLog.all.length > 0) {
-        const tipEntry = tipLog.all[0];
-        const tipMessage = tipEntry.body ? `${tipEntry.message}\n\n${tipEntry.body}` : tipEntry.message;
-        if (hasSyncMarker(tipMessage)) {
-          logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
-        }
-      }
+      : { lastSyncedHead: undefined, hasDevCommits: false, tipMessage: '' };
+    if (hasSyncMarker(branchState.tipMessage)) {
+      logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
     }
     const pr = await this.findPr(branch);
     const conflictLabelPresent = pr?.labels.includes(CONFLICT_LABEL) ?? false;
@@ -127,7 +156,7 @@ export class LaneSyncExecutor {
       )
     );
 
-    if (opts.dryRun) {
+    if (dryRun) {
       const line = `${laneName} -> ${action.type}`;
       logger.console(chalk.yellow(`🏃 Dry-run: ${line}`));
       return line;
@@ -196,7 +225,7 @@ export class LaneSyncExecutor {
     // A brand-new lane branch forks from the default branch; an existing one is reset to whatever
     // the remote has, so a stale local copy of the branch can never leak into the sync commit.
     const startPoint = branchExists ? `origin/${branch}` : `origin/${defaultBranch}`;
-    await git.raw(['checkout', '-B', branch, startPoint]);
+    await this.checkoutFromRemote(branch, startPoint);
 
     try {
       // Write the lane's files and `.bitmap` into the workspace. This is the load-bearing step: the
@@ -252,7 +281,7 @@ export class LaneSyncExecutor {
     logger.console(chalk.blue(`Exporting branch ${branch} onto lane ${laneIdStr}`));
 
     const message = await this.lastNonSyncCommitMessage(branch, defaultBranch);
-    await git.raw(['checkout', '-B', branch, `origin/${branch}`]);
+    await this.checkoutFromRemote(branch, `origin/${branch}`);
 
     try {
       const exportErr = await this.snapAndExportOntoLane(laneIdStr, message);
@@ -359,7 +388,7 @@ export class LaneSyncExecutor {
       // one attempt per lane per run and never guesses at a second recovery.
       const exportErr = await this.snapAndExportOntoLane(
         laneIdStr,
-        `merge remote lane ${laneIdStr} into ${branch} [bit-sync]`
+        `merge remote lane ${laneIdStr} into ${branch} ${SYNC_COMMIT_MARKER}`
       );
       if (exportErr) {
         return await halt(
@@ -514,6 +543,27 @@ export class LaneSyncExecutor {
   }
 
   /**
+   * Check `branch` out at `startPoint` (a remote-tracking ref) and reload the `.bitmap` it brings.
+   *
+   * `-f` is not optional. Without it a single tracked modification left in the workspace — by an
+   * earlier lane in the same `--all` run, by a warn-only `restoreWorkspace`, or by a developer running
+   * this interactively — makes git refuse with "local changes would be overwritten", and the lane
+   * *aborts* instead of halting. Nothing is lost: `bit ci sync` announces up front that it discards
+   * uncommitted changes, and this is only ever a checkout — the executor never force-pushes.
+   *
+   * The reload is the same invariant `resetToRemoteBranch` documents: the git checkout swaps `.bitmap`
+   * on disk, and until the workspace re-reads it, every following bit operation resolves "current lane"
+   * and per-component versions against the checkout the process started on.
+   *
+   * (`resetToRemoteBranch` cannot simply call this: its `cleanUntrackedScoped` has to run *between* the
+   * checkout and the reload, so the merge that follows sees neither stale files nor a stale `.bitmap`.)
+   */
+  private async checkoutFromRemote(branch: string, startPoint: string) {
+    await git.raw(['checkout', '-f', '-B', branch, startPoint]);
+    await this.deps.ci.reloadWorkspaceFromDisk();
+  }
+
+  /**
    * Put both sides back exactly on the fetched branch tip: the working tree and `.bitmap` in git, and
    * the workspace's in-memory view of that `.bitmap`.
    *
@@ -602,7 +652,12 @@ export class LaneSyncExecutor {
         // the real reason with a git-host API error.
         logger.consoleWarning(`Failed to annotate PR #${pr.number} with the sync conflict: ${e?.message || e}`);
       }
-    } else if (!gitHost) {
+    } else if (gitHost) {
+      // Not an error — the lane may never have had a PR, or a human may have closed it. Say so
+      // explicitly (same three-way shape as `executeClosePr`), otherwise the halt looks like it silently
+      // skipped the annotation half and the label that suppresses the next run is nowhere to be found.
+      logger.console(chalk.yellow(`No open PR found for ${branch} — the halt is recorded in this run's summary only`));
+    } else {
       logger.console(chalk.yellow(`No configured git host provider — skipping conflict label/comment for ${branch}`));
     }
     return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
@@ -802,6 +857,15 @@ export class LaneSyncExecutor {
    * keeping was committed and pushed before we get here. This is a checkout, never a push — no
    * remote state is discarded.
    *
+   * The clean is what discards the files this lane *materialized* rather than modified — a lane
+   * component that isn't on the default branch is written as an **untracked** directory, which a
+   * checkout leaves in place. On the pushed paths they were committed and the forced checkout removes
+   * them by itself, but a lane that halted after materializing never committed anything, so without the
+   * clean its component files survive into the *next* lane of an `--all` run, get staged by that lane's
+   * `git add -A`, and land on that lane's branch under its `Bit-Lane-Head` trailer — content the trailer
+   * does not describe. `MainSyncExecutor.restoreWorkspace` cleans for the same reason; the two restores
+   * must not diverge. The clean is scoped (see `cleanUntrackedScoped`).
+   *
    * The `.bitmap` reload after the checkout is what makes the restore complete for the *next* lane in a
    * multi-lane run: the checkout swaps `.bitmap` on disk, and without reloading it the live workspace
    * would keep the previous lane's branch state (`merge-diverged` deliberately loads a branch's
@@ -817,6 +881,7 @@ export class LaneSyncExecutor {
         if (switchErr) logger.consoleWarning(`Could not switch the workspace back to main: ${switchErr.message}`);
       }
       await git.raw(['checkout', '-f', defaultBranch]);
+      await cleanUntrackedScoped();
       await this.deps.ci.reloadWorkspaceFromDisk();
     } catch (e: any) {
       logger.consoleWarning(`Could not restore the workspace after sync: ${e?.message || e}`);

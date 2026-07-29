@@ -1,6 +1,15 @@
 import { git } from '../git';
 
 export const LANE_HEAD_TRAILER = 'Bit-Lane-Head';
+/**
+ * The marker that makes a commit recognizably machine-generated, on both sync commit shapes (a lane
+ * sync commit also carries a `Bit-Lane-Head` trailer; a main sync commit carries only this).
+ *
+ * **This string is duplicated across repositories.** The `bit-git-sync` action repo's event router
+ * matches the same literal to decide that a `push` was our own and must not re-trigger a sync — that is
+ * the loop guard. The two copies are a cross-repo pair: changing this value without changing the router's
+ * makes every sync commit look like a developer push and the reconciler starts triggering itself.
+ */
 export const SYNC_COMMIT_MARKER = '[bit-sync]';
 export const CONFLICT_LABEL = 'bit-sync-conflict';
 
@@ -27,37 +36,68 @@ export function buildSyncCommitMessage(laneIdStr: string, laneHead: string): str
 }
 
 export type BranchSyncState = {
+  /** The `Bit-Lane-Head` value on the newest sync commit of the branch, if it ever had one. */
   lastSyncedHead?: string;
-  syncCommitSha?: string;
+  /** Whether the branch carries commits the lane has never seen. */
   hasDevCommits: boolean;
+  /** The branch tip's full commit message (subject + body), for the sync-marker loop-guard probe. */
+  tipMessage: string;
 };
+
+/**
+ * `git log --format` value that emits, per commit, the sha on its own line followed by the full raw
+ * message, terminated by a NUL. NUL is the one byte a commit message cannot contain, so it is the only
+ * safe record separator here — a message body can contain blank lines, `\r`, and anything else a
+ * text-based delimiter would collide with.
+ */
+const LOG_FORMAT = '--format=%H%n%B%x00';
+
+/** Parse the `LOG_FORMAT` stream into `{ hash, message }` records, dropping the trailing empty one. */
+function parseLogRecords(out: string): Array<{ hash: string; message: string }> {
+  return out
+    .split('\0')
+    .map((record) => record.replace(/^\n+/, ''))
+    .filter((record) => record.trim().length > 0)
+    .map((record) => {
+      const newline = record.indexOf('\n');
+      return newline === -1
+        ? { hash: record.trim(), message: '' }
+        : { hash: record.slice(0, newline).trim(), message: record.slice(newline + 1).trimEnd() };
+    });
+}
 
 /**
  * Read the sync state of a remote branch from git history alone.
  * `defaultBranch` is used when the branch has no sync commit: dev commits then means
  * "commits on origin/<branch> that are not on origin/<defaultBranch>".
  * Assumes `git fetch origin` already ran this process (executor does it once up front).
+ *
+ * The sync commit is located with `--grep` rather than by walking the last N commits. A window is not a
+ * safe way to find it: merging the default branch into a long-lived lane branch brings in *all* of that
+ * branch's history, so a repository with any real commit volume pushes the branch's own sync commit
+ * arbitrarily far back within one merge. The window would then report `lastSyncedHead: undefined` for a
+ * branch that has been synced many times, and the planner would halt with "branch has commits but no
+ * Bit-Lane-Head trailer" — a reason that is simply false. `--grep` asks git to find it however deep it
+ * is, and costs the same.
+ *
+ * All matches are scanned rather than just the newest, because `--grep` matches the trailer *anywhere*
+ * in a message (a developer quoting a previous sync commit in their own body would match) while
+ * `parseLaneHeadTrailer` only accepts it at the start of a line. Taking `-n 1` would let such a commit
+ * mask the real sync commit behind it.
  */
 export async function readBranchSyncState(branch: string, defaultBranch: string): Promise<BranchSyncState> {
-  const log = await git.log([`origin/${branch}`, '--max-count=200']);
-  let lastSyncedHead: string | undefined;
-  let syncCommitSha: string | undefined;
-  let hasDevCommits = false;
-  for (const entry of log.all) {
-    const message = entry.body ? `${entry.message}\n\n${entry.body}` : entry.message;
-    const head = parseLaneHeadTrailer(message);
-    if (head) {
-      lastSyncedHead = head;
-      syncCommitSha = entry.hash;
-      break;
-    }
-  }
-  if (syncCommitSha) {
-    const since = await git.raw(['rev-list', `${syncCommitSha}..origin/${branch}`, '--count']);
-    hasDevCommits = parseInt(since.trim(), 10) > 0;
-  } else {
-    const ahead = await git.raw(['rev-list', `origin/${defaultBranch}..origin/${branch}`, '--count']);
-    hasDevCommits = parseInt(ahead.trim(), 10) > 0;
-  }
-  return { lastSyncedHead, syncCommitSha, hasDevCommits };
+  const revision = `origin/${branch}`;
+  const [tip] = parseLogRecords(await git.raw(['log', revision, '-n', '1', LOG_FORMAT]));
+  const candidates = parseLogRecords(await git.raw(['log', revision, `--grep=${LANE_HEAD_TRAILER}:`, LOG_FORMAT]));
+
+  const syncCommit = candidates.find((candidate) => parseLaneHeadTrailer(candidate.message) !== undefined);
+  const lastSyncedHead = syncCommit && parseLaneHeadTrailer(syncCommit.message);
+
+  // Dev commits are counted from the sync commit when there is one — anything on top of it is work the
+  // lane has never seen. Without one there is no baseline on the branch, so the default branch (the
+  // branch's fork point) is the next best one.
+  const range = syncCommit ? `${syncCommit.hash}..${revision}` : `origin/${defaultBranch}..${revision}`;
+  const count = await git.raw(['rev-list', range, '--count']);
+
+  return { lastSyncedHead, hasDevCommits: parseInt(count.trim(), 10) > 0, tipMessage: tip?.message ?? '' };
 }
