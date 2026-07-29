@@ -4,8 +4,7 @@ import { compact } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
-import type { ComponentID } from '@teambit/component-id';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { GraphqlMain } from '@teambit/graphql';
@@ -25,12 +24,17 @@ import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
+import type { CacheMain } from '@teambit/cache';
+import { CacheAspect } from '@teambit/cache';
 
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { compareComponentPairs } from './compare-component-pairs';
+import type { ComponentComparePair } from './compare-component-pairs';
 
 export type ComponentCompareResult = {
   id: string;
@@ -39,6 +43,12 @@ export type ComponentCompareResult = {
   code: FileDiff[];
   fields: FieldsDiff[];
   tests: FileDiff[];
+  /**
+   * true when the compare side is the live workspace (on-disk files, incl. uncommitted changes).
+   * such a result is inherently mutable, so it must never be persisted to the cross-run cache —
+   * only the in-flight single-flight dedupe applies. not exposed via graphql.
+   */
+  isLiveWorkspace?: boolean;
 };
 
 type ConfigDiff = {
@@ -46,6 +56,13 @@ type ConfigDiff = {
   dependencies?: string[];
   aspects?: Record<string, any>;
 };
+
+/**
+ * expiry for persisted compare/api-diff results. the results themselves are immutable (keyed on snap
+ * hashes), but the payloads are heavy — full per-file contents per pair — so without a TTL the cache
+ * directory grows with every pair ever viewed. two weeks comfortably covers a review cycle.
+ */
+const PERSISTENT_CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
 export class ComponentCompareMain {
   constructor(
@@ -56,10 +73,104 @@ export class ComponentCompareMain {
     private depResolver: DependencyResolverMain,
     private importer: ImporterMain,
     private schema: SchemaMain,
+    private cache: CacheMain,
     private workspace?: Workspace
   ) {}
 
+  // in-flight `compute` promises, so concurrent callers for the same pair share one computation
+  // instead of recomputing (the lane compare UI and lane-diff status hit the same pairs in parallel
+  // on a cold load). Persisted results survive restarts via the global `@teambit/cache` aspect.
+  private compareInflight = new Map<string, Promise<ComponentCompareResult>>();
+  private apiDiffInflight = new Map<string, Promise<Record<string, any> | null>>();
+
+  /**
+   * Read-through cache with single-flight dedupe: serve a persisted result, else share an in-flight
+   * computation, else compute once and persist. Most `(baseId, compareId)` pairs are immutable (keyed
+   * on snap hashes), so a cached result never goes stale. `cacheable` gates which results are persisted.
+   *
+   * `skipPersistentCache` bypasses the persistent cache entirely (neither read nor write) while still
+   * sharing the in-flight computation. Callers must set it whenever the result depends on mutable state
+   * the key does not capture — e.g. a live-workspace diff against on-disk files — so a previously
+   * persisted snap-to-snap result for the same key is never served in its place.
+   */
+  private async getOrCompute<T>(
+    inflight: Map<string, Promise<T>>,
+    cacheKey: string,
+    compute: () => Promise<T>,
+    cacheable: (value: T) => boolean = () => true,
+    skipPersistentCache = false
+  ): Promise<T> {
+    const pending = inflight.get(cacheKey);
+    if (pending) return pending;
+    if (!skipPersistentCache) {
+      const cached = await this.cache.get<T>(cacheKey);
+      if (cached !== undefined) return cached;
+      // a concurrent caller may have started computing while we awaited the cache read.
+      const started = inflight.get(cacheKey);
+      if (started) return started;
+    }
+    const promise = compute()
+      .then((result) => {
+        // TTL keeps the cache bounded: compare payloads embed full per-file contents for every pair,
+        // so without an expiry every pair ever viewed stays on disk forever. entries are cheap to
+        // recompute after expiry (sources still cached in the scope), so a stale-eviction is harmless.
+        if (!skipPersistentCache && cacheable(result)) void this.cache.set(cacheKey, result, PERSISTENT_CACHE_TTL_MS);
+        return result;
+      })
+      .finally(() => inflight.delete(cacheKey));
+    inflight.set(cacheKey, promise);
+    return promise;
+  }
+
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
+    return this.getOrCompute(
+      this.compareInflight,
+      `component-compare:result:${baseIdStr}|${compareIdStr}`,
+      () => this.computeCompare(baseIdStr, compareIdStr),
+      // never persist a live-workspace diff: it reflects on-disk files (incl. uncommitted changes),
+      // so a cached copy would go stale the moment the user edits a file. the (baseId, compareId)
+      // pair is otherwise immutable (keyed on snap hashes), so those stay cacheable.
+      (result) => !result.isLiveWorkspace,
+      // whether this call *reads* the persistent cache is decided up front from the same signal:
+      // a live-workspace compare must skip the cache entirely, otherwise a snap-to-snap result
+      // persisted for this key in a prior run (or a non-live context) would mask on-disk changes.
+      this.comparesLiveWorkspace(baseIdStr, compareIdStr)
+    );
+  }
+
+  /**
+   * cheap, synchronous pre-check mirroring the `comparingWithLocalChanges` / `compareIsLiveWorkspace`
+   * logic in `computeCompare`: will this compare diff against live on-disk workspace files rather than
+   * two immutable snaps? errs toward `true` (skip the persistent cache) whenever the id cannot be
+   * classified, so a stale snap-to-snap result is never served in place of a live one.
+   */
+  private comparesLiveWorkspace(baseIdStr: string, compareIdStr: string): boolean {
+    if (!this.workspace) return false; // scope/remote host: every compare is an immutable snap-to-snap pair
+    if (baseIdStr === compareIdStr) return true; // the "local changes" view: checked-out snap vs on-disk files
+    return this.isLiveCheckout(compareIdStr);
+  }
+
+  /**
+   * whether this id refers to the component version currently checked out on disk — the one case
+   * where "the same versioned id" can produce different data over time (the user edits files). errs
+   * toward `true` when the id cannot be classified, so a stale cached result is never served.
+   */
+  private isLiveCheckout(idStr: string): boolean {
+    if (!this.workspace) return false;
+    let id: ComponentID;
+    try {
+      id = ComponentID.fromString(idStr);
+    } catch {
+      return true; // unclassifiable id → assume live so a stale cached diff is never returned
+    }
+    const checkedOut = this.workspace.getIdIfExist(id);
+    if (!checkedOut) return false; // not checked out → a stored snap, safe to cache
+    // live only when this side is the exact version currently checked out on disk.
+    return !id.hasVersion() || checkedOut.version === id.version;
+  }
+
+  /** The original `compare()` body — moved here so the public method can wrap with memo + single-flight. */
+  private async computeCompare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
     const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId);
@@ -82,13 +193,21 @@ export class ComponentCompareMain {
     const compareComponent = components?.[1];
     const componentWithoutVersion = await host.get((baseCompId || compareCompId).changeVersion(undefined));
 
+    // When the compare side is the component currently checked out in the workspace, diff against the
+    // on-disk files rather than a stored snap: passing `undefined` as the compare version makes
+    // `computeDiff` fall back to `consumerComponent.files`, so uncommitted local changes are included.
+    // This covers two cases with one code path:
+    //   - base === compare (the classic "local changes" view): checked-out model → workspace files.
+    //   - base = an earlier version: that version's committed changes + any uncommitted changes on top.
+    // Without this, the default workspace compare resolves base and compare to the same checked-out
+    // snap and reports no changes, collapsing the compare view to only its always-on sections.
+    const checkedOutVersion = componentWithoutVersion?.id.version;
+    const compareIsLiveWorkspace = Boolean(this.workspace && checkedOutVersion && compareVersion === checkedOutVersion);
+    const effectiveBaseVersion = comparingWithLocalChanges ? undefined : baseVersion;
+    const effectiveCompareVersion = comparingWithLocalChanges || compareIsLiveWorkspace ? undefined : compareVersion;
+
     const diff = componentWithoutVersion
-      ? await this.computeDiff(
-          componentWithoutVersion,
-          comparingWithLocalChanges ? undefined : baseVersion,
-          comparingWithLocalChanges ? undefined : compareVersion,
-          {}
-        )
+      ? await this.computeDiff(componentWithoutVersion, effectiveBaseVersion, effectiveCompareVersion, {})
       : {
           filesDiff: [],
           fieldsDiff: [],
@@ -112,10 +231,85 @@ export class ComponentCompareMain {
       code: diff.filesDiff || [],
       fields: diff.fieldsDiff || [],
       tests: testFilesDiff,
+      isLiveWorkspace: compareIsLiveWorkspace,
     };
   }
 
+  /**
+   * compare a paginated slice of component pairs in one call.
+   * a pair that fails to compare (e.g. a component without versions) becomes `null` in the
+   * returned array rather than failing the whole batch. the array is aligned to the requested
+   * slice (`pairs[offset .. offset + limit]`).
+   */
+  async compareComponents(
+    pairs: ComponentComparePair[],
+    options?: { offset?: number; limit?: number }
+  ): Promise<Array<ComponentCompareResult | null>> {
+    return compareComponentPairs(pairs, (baseId, compareId) => this.compare(baseId, compareId), {
+      offset: options?.offset,
+      limit: options?.limit,
+      concurrency: concurrentComponentsLimit(),
+      onError: (pair, err) => {
+        this.logger.warn(`compareComponents: failed to compare ${pair.baseId} <> ${pair.compareId}`, err);
+      },
+    });
+  }
+
+  /**
+   * api-diff a paginated slice of component pairs in one call — the bulk counterpart of the single
+   * `getAPIDiff`, mirroring `compareComponents`. reuses `getAPIDiff` per pair (so its disk memo +
+   * single-flight dedupe still apply), turning a pair whose diff throws into `null` rather than
+   * failing the whole batch. the returned array is aligned to the requested slice.
+   */
+  async apiDiffs(
+    pairs: ComponentComparePair[],
+    options?: { offset?: number; limit?: number }
+  ): Promise<Array<Record<string, any> | null>> {
+    return compareComponentPairs(pairs, (baseId, compareId) => this.getAPIDiff(baseId, compareId), {
+      offset: options?.offset,
+      limit: options?.limit,
+      concurrency: concurrentComponentsLimit(),
+      onError: (pair, err) => {
+        this.logger.warn(`apiDiffs: failed to compute api diff ${pair.baseId} <> ${pair.compareId}`, err);
+      },
+    });
+  }
+
+  private static isApiDiffCacheable(result: Record<string, any>): boolean {
+    // a live-extracted side reflects the current working tree, not the snap the cache key names —
+    // persisting it would serve a stale (possibly degraded) diff for that pair forever.
+    if (result.base?.live || result.compare?.live) return false;
+    if (result.status === 'COMPUTED') return true;
+    // A non-COMPUTED result is only safe to persist (disk cache, keyed on the immutable snap pair, no
+    // TTL) when it can never change for that pair. FAILED is transient. NOT_BUILT is *pending*: the snap
+    // simply hasn't been built yet, and once CI builds it (same hash) the schema appears — caching the
+    // pre-build "unavailable" answer would keep the API view blank forever. NO_EXTRACTOR/DISABLED are
+    // stable properties of the snap's env, so they stay cacheable.
+    const pendingOrTransient = (reason?: string) => reason === 'FAILED' || reason === 'NOT_BUILT';
+    return !pendingOrTransient(result.base?.reason) && !pendingOrTransient(result.compare?.reason);
+  }
+
   async getAPIDiff(baseIdStr: string, compareIdStr: string): Promise<Record<string, any> | null> {
+    // never persist a result that can still change: `null` (snaps couldn't load), FAILED (schema
+    // retrieval threw) and NOT_BUILT (snap not yet built) must recompute next call; NO_EXTRACTOR/
+    // DISABLED are stable env properties and safe to cache (see `isApiDiffCacheable`).
+    // the version namespace invalidates older computed results on engine changes:
+    // v2 — availability-aware results; v3 — self-referential-returnType display fix.
+    // skip the persistent cache when EITHER side is the live checkout: SchemaMain live-extracts the
+    // schema of a modified checkout of the exact same versioned id, so a snap-to-snap result cached
+    // under this key in a prior (unmodified) run would mask the user's on-disk API changes. both
+    // sides are checked (unlike `compare()`, where only the compare side can be live) because the
+    // checked-out version can appear on either side of an API diff pair.
+    return this.getOrCompute(
+      this.apiDiffInflight,
+      `component-compare:api-diff:v3:${baseIdStr}|${compareIdStr}`,
+      () => this.computeAPIDiff(baseIdStr, compareIdStr),
+      (v) => v !== null && ComponentCompareMain.isApiDiffCacheable(v),
+      this.isLiveCheckout(baseIdStr) || this.isLiveCheckout(compareIdStr)
+    );
+  }
+
+  private async computeAPIDiff(baseIdStr: string, compareIdStr: string): Promise<Record<string, any> | null> {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
     await this.importer.importObjectsFromMainIfExist([baseCompId, compareCompId], { cache: true });
@@ -328,6 +522,7 @@ export class ComponentCompareMain {
     DependencyResolverAspect,
     ImporterAspect,
     SchemaAspect,
+    CacheAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -341,6 +536,7 @@ export class ComponentCompareMain {
     depResolver,
     importer,
     schema,
+    cache,
   ]: [
     GraphqlMain,
     ComponentMain,
@@ -352,6 +548,7 @@ export class ComponentCompareMain {
     DependencyResolverMain,
     ImporterMain,
     SchemaMain,
+    CacheMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentCompareAspect.id);
     const componentCompareMain = new ComponentCompareMain(
@@ -362,6 +559,7 @@ export class ComponentCompareMain {
       depResolver,
       importer,
       schema,
+      cache,
       workspace
     );
     cli.register(new DiffCmd(componentCompareMain));

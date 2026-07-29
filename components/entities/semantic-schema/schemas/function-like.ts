@@ -136,6 +136,26 @@ export class FunctionLikeSchema extends SchemaNode {
     };
   }
 
+  /**
+   * display string for a function's return type in diffs. Normally the returnType node's rendering —
+   * but schemas extracted while type inference was degraded (e.g. unresolved React types) can carry
+   * a bogus SELF-referential returnType: a `TypeRefSchema` named after the function itself, while
+   * the checker-generated `signature` string holds the real inferred text (`…): any`). Such
+   * artifacts are already persisted for built versions and can't be re-extracted, so when the node
+   * renders to the function's own name but the signature's return annotation disagrees, the
+   * signature wins. (A legitimately self-typed function — e.g. one merged with a same-named
+   * interface — agrees with its signature and is unaffected.)
+   */
+  private static returnTypeDisplay(obj: Record<string, any>): string {
+    const nodeStr = typeStr(obj.returnType);
+    if (nodeStr !== obj.name) return nodeStr;
+    const signature: string | undefined = obj.signature;
+    const idx = signature ? signature.lastIndexOf('): ') : -1;
+    if (idx === -1 || !signature) return nodeStr;
+    const fromSignature = signature.slice(idx + 3).trim();
+    return fromSignature && fromSignature !== nodeStr ? fromSignature : nodeStr;
+  }
+
   static fromObject(obj: Record<string, any>) {
     return new FunctionLikeSchema(
       obj.location,
@@ -159,8 +179,8 @@ export class FunctionLikeSchema extends SchemaNode {
     FunctionLikeSchema.diffParams(baseObj.params || [], compareObj.params || [], facts);
 
     if (!typesAreSemanticallyEqual(baseObj.returnType, compareObj.returnType)) {
-      const fromType = typeStr(baseObj.returnType);
-      const toType = typeStr(compareObj.returnType);
+      const fromType = FunctionLikeSchema.returnTypeDisplay(baseObj);
+      const toType = FunctionLikeSchema.returnTypeDisplay(compareObj);
       facts.push({
         changeKind: 'return-type-changed',
         description: `return type changed: ${fromType} → ${toType}`,

@@ -13,6 +13,10 @@ import type { ComponentCompareUI } from '@teambit/component-compare';
 import { ComponentCompareAspect } from '@teambit/component-compare';
 import { CodeEditorProvider } from '@teambit/code.ui.code-editor';
 import { CodeCompareSection } from '@teambit/code.ui.code-compare-section';
+import { InlineCodeCompare } from '@teambit/code.ui.inline-code-compare';
+import { InlineDepsCompare } from '@teambit/code.ui.inline-deps-compare';
+import { InlineTestsCompare } from '@teambit/code.ui.inline-tests-compare';
+import { InlineConfigCompare } from '@teambit/code.ui.inline-config-compare';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
 
@@ -80,6 +84,21 @@ export class CodeUI {
     const codeCompare = new CodeCompareSection(ui);
     componentCompare.registerNavigation(codeCompare);
     componentCompare.registerRoutes([codeCompare.route]);
+    // Inline-compare tabs for the redesigned ComponentComparePage / lane-compare. Owned here by the
+    // code aspect (canonical owner of the `@teambit/code.ui.*` compare panels) instead of being
+    // hardcoded in component-compare — that keeps component-compare decoupled from code UI, and
+    // pulls these panels into a bundle only via aspects that actually use them.
+    componentCompare.registerCompareTab([
+      { id: 'inline-code', order: 1, displayName: 'Code', element: <InlineCodeCompare /> },
+      { id: 'inline-deps', order: 4, displayName: 'Dependencies', element: <InlineDepsCompare /> },
+      // lazy: the tests view isn't even enabled in the lane-compare toolbar today — mounting it per
+      // component only fires its data queries for a panel nobody can see.
+      { id: 'inline-tests', order: 5, displayName: 'Tests', element: <InlineTestsCompare />, lazy: true },
+      // lazy: the config panel fires two `no-cache` aspect queries per component the moment it mounts —
+      // defer that network work until the Configuration view is actually opened. The config sidebar
+      // tree is unaffected: it's fed centrally from the bulk compare data, not by this panel.
+      { id: 'inline-config', order: 6, displayName: 'Configuration', element: <InlineConfigCompare />, lazy: true },
+    ]);
     return ui;
   }
 }
