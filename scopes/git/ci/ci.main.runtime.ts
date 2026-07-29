@@ -426,6 +426,20 @@ export class CiMain {
     const defaultBranch = await this.getDefaultBranchName();
     const mainLaneName = this.lanes.getDefaultLaneId().name;
 
+    // Both executors force-checkout branches and remove untracked files, so anything uncommitted in
+    // this workspace is discarded. That is the right behaviour in a CI clone (its tree is pristine by
+    // definition) and destructive when someone runs the command interactively — so say it out loud
+    // before doing any of it, naming the files at stake.
+    const statusAtStart = await git.status().catch(() => undefined);
+    if (statusAtStart && !statusAtStart.isClean()) {
+      const files = statusAtStart.files.map((file) => file.path);
+      this.logger.consoleWarning(
+        `the working tree has ${files.length} uncommitted change(s). "bit ci sync" force-checkouts branches and ` +
+          `removes untracked files (except .bit/ and node_modules/), so these will be discarded: ` +
+          `${files.slice(0, 10).join(', ')}${files.length > 10 ? ', …' : ''}`
+      );
+    }
+
     // `fromEnv` prefers `GITHUB_REPOSITORY` (set by every GitHub Actions runner) and only falls back
     // to parsing the remote, so a missing or non-GitHub `origin` is not fatal — it degrades to "no
     // GitHub client", which each executor reports and works around (git-only sync).
