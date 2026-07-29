@@ -35,9 +35,39 @@ export function buildSyncCommitMessage(laneIdStr: string, laneHead: string): str
   ].join('\n');
 }
 
+/**
+ * The lane id `buildSyncCommitMessage` recorded in a sync commit's **subject**, if the subject has that
+ * exact shape.
+ *
+ * This is what tells "a sync commit written for *this* pair" apart from "a sync commit this branch merely
+ * inherited". The `Bit-Lane-Head` trailer cannot: once a sync PR is squash-, rebase- or fast-forward-merged,
+ * its trailer sits on the **default branch's own first-parent line**, so every branch forked from the
+ * default branch afterwards carries it and looks, by trailer alone, like a branch the reconciler created.
+ * The subject names the lane, so it distinguishes them.
+ */
+export function parseSyncCommitLaneId(message: string): string | undefined {
+  return message.match(/^chore\(bit-sync\): sync lane (\S+) @ /m)?.[1];
+}
+
+/** A sync commit found in a branch's history: identified by its trailer, attributed by its subject. */
+export type SyncCommit = {
+  hash: string;
+  /** full raw message (subject + body) */
+  message: string;
+  /** the `Bit-Lane-Head` trailer value — always set, because it is what identified this commit */
+  laneHead: string;
+  /** the lane id named in the subject, when the subject has `buildSyncCommitMessage`'s shape */
+  laneIdStr?: string;
+};
+
 export type BranchSyncState = {
-  /** The `Bit-Lane-Head` value on the newest sync commit of the branch, if it ever had one. */
-  lastSyncedHead?: string;
+  /**
+   * The newest sync commit on the branch's **own** (first-parent) line, if it has one. This is the single
+   * record of "what has this branch been synced to, and by whom" — callers derive both the last synced
+   * lane head and the branch-ownership question from it, rather than being handed pre-digested booleans
+   * that could disagree with each other.
+   */
+  syncCommit?: SyncCommit;
   /** Whether the branch carries commits the lane has never seen. */
   hasDevCommits: boolean;
   /** The branch tip's full commit message (subject + body), for the sync-marker loop-guard probe. */
@@ -93,6 +123,15 @@ function parseLogRecords(out: string): Array<{ hash: string; message: string }> 
  * *anywhere* in a message (a developer quoting a previous sync commit in their own body would match) while
  * `parseLaneHeadTrailer` only accepts it at the start of a line. Taking `-n 1` would let such a commit
  * mask the real sync commit behind it.
+ *
+ * **Known cost of `--first-parent`.** If a developer resolves a lane branch's remote update with a merge
+ * rather than a rebase — a plain `git pull` on the branch after a sync run pushed to it — the sync commit
+ * we wrote ends up on the *second* parent, and this walk will not see it. `lastSyncedHead` then falls back
+ * to an older sync commit (or none), the lane reads as moved, and the run plans `merge-diverged` where
+ * `export-branch` was the truth. That converges — `merge-diverged` merges the lane into the branch and
+ * snaps the result, and the fresh trailer it pushes lands back on the first-parent line — so the cost is
+ * one round of churn, not a wrong outcome. It is the deliberate trade against the alternative, which is
+ * adopting *another pair's* fingerprint and never converging at all.
  */
 export async function readBranchSyncState(branch: string, defaultBranch: string): Promise<BranchSyncState> {
   const revision = `origin/${branch}`;
@@ -101,8 +140,13 @@ export async function readBranchSyncState(branch: string, defaultBranch: string)
     await git.raw(['log', revision, '--first-parent', `--grep=${LANE_HEAD_TRAILER}:`, LOG_FORMAT])
   );
 
-  const syncCommit = candidates.find((candidate) => parseLaneHeadTrailer(candidate.message) !== undefined);
-  const lastSyncedHead = syncCommit && parseLaneHeadTrailer(syncCommit.message);
+  let syncCommit: SyncCommit | undefined;
+  for (const candidate of candidates) {
+    const laneHead = parseLaneHeadTrailer(candidate.message);
+    if (!laneHead) continue;
+    syncCommit = { ...candidate, laneHead, laneIdStr: parseSyncCommitLaneId(candidate.message) };
+    break;
+  }
 
   // Dev commits are counted from the sync commit when there is one — anything on top of it is work the
   // lane has never seen. Without one there is no baseline on the branch, so the default branch (the
@@ -110,5 +154,5 @@ export async function readBranchSyncState(branch: string, defaultBranch: string)
   const range = syncCommit ? `${syncCommit.hash}..${revision}` : `origin/${defaultBranch}..${revision}`;
   const count = await git.raw(['rev-list', range, '--count']);
 
-  return { lastSyncedHead, hasDevCommits: parseInt(count.trim(), 10) > 0, tipMessage: tip?.message ?? '' };
+  return { syncCommit, hasDevCommits: parseInt(count.trim(), 10) > 0, tipMessage: tip?.message ?? '' };
 }

@@ -9,6 +9,7 @@ import { git } from '../git';
 import type { CiMain } from '../ci.main.runtime';
 import type { CiSyncConfig } from './sync-config';
 import { laneNameToBranch } from './sync-config';
+import type { BranchSyncState, SyncCommit } from './sync-state';
 import {
   CONFLICT_LABEL,
   SYNC_COMMIT_MARKER,
@@ -18,8 +19,15 @@ import {
   hasSyncMarker,
 } from './sync-state';
 import type { GitHostProvider, PrInfo } from './git-host-provider';
+import type { LaneOwnershipEvidence } from './sync-planner';
 import { planLaneSync } from './sync-planner';
-import { addAllExceptScopeAndModules, branchExistsOnRemote, cleanUntrackedScoped, ensureGitIdentity } from './git-ops';
+import {
+  addAllExceptScopeAndModules,
+  branchExistsOnRemote,
+  cleanUntrackedScoped,
+  ensureGitIdentity,
+  isAncestor,
+} from './git-ops';
 
 /**
  * Prefix of the summary line returned by `syncLane` when a lane could not be reconciled. The
@@ -132,30 +140,36 @@ export class LaneSyncExecutor {
     const branchExists = await branchExistsOnRemote(branch);
     // No branch => no history to read (and `git log origin/<branch>` would throw). The planner
     // short-circuits on `!branchExists` before it looks at any of these fields.
-    const branchState = branchExists
+    const branchState: BranchSyncState = branchExists
       ? await readBranchSyncState(branch, defaultBranch)
-      : { lastSyncedHead: undefined, hasDevCommits: false, tipMessage: '' };
+      : { syncCommit: undefined, hasDevCommits: false, tipMessage: '' };
     if (hasSyncMarker(branchState.tipMessage)) {
       logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
     }
+    // "The lane is gone but the branch is still here" is the only situation whose outcome depends on the
+    // claim, and the only one that can delete a branch — so the two extra git questions are asked there and
+    // nowhere else, and the value is reported only where it meant something.
+    const laneIsGone = branchExists && !laneHead;
+    const ownership: LaneOwnershipEvidence = laneIsGone
+      ? await this.assessBranchOwnership({ laneIdStr, branch, defaultBranch, syncCommit: branchState.syncCommit })
+      : 'inherited-or-none';
     const pr = await this.findPr(branch);
     const conflictLabelPresent = pr?.labels.includes(CONFLICT_LABEL) ?? false;
 
     const action = planLaneSync({
       laneHead,
       branchExists,
-      lastSyncedHead: branchState.lastSyncedHead,
+      lastSyncedHead: branchState.syncCommit?.laneHead,
       hasDevCommits: branchState.hasDevCommits,
       conflictLabelPresent,
-      // A trailer anywhere in the branch's own history is the proof that we created this branch, which is
-      // what licenses `close-pr` to delete it. `lastSyncedHead` *is* that trailer, so no extra git call.
-      wasLaneManaged: branchState.lastSyncedHead !== undefined,
+      ownership,
     });
 
     logger.console(
       chalk.blue(
         `${laneName} -> ${action.type} (branch: ${branch}, lane head: ${laneHead?.slice(0, 9) ?? 'none'}, ` +
-          `last synced: ${branchState.lastSyncedHead?.slice(0, 9) ?? 'none'}, dev commits: ${branchState.hasDevCommits})`
+          `last synced: ${branchState.syncCommit?.laneHead.slice(0, 9) ?? 'none'}, ` +
+          `dev commits: ${branchState.hasDevCommits}${laneIsGone ? `, branch claim: ${ownership}` : ''})`
       )
     );
 
@@ -186,7 +200,7 @@ export class LaneSyncExecutor {
       case 'merge-diverged':
         return this.executeMergeDiverged({ laneName, laneIdStr, branch, defaultBranch });
       case 'close-pr':
-        return this.executeClosePr({ laneName, laneIdStr, branch, pr });
+        return this.executeClosePr({ laneName, laneIdStr, branch, pr, deleteBranch: action.deleteBranch });
       case 'halt':
         return this.executeHalt({ laneName, laneIdStr, branch, reason: action.reason, pr });
       default: {
@@ -589,28 +603,97 @@ export class LaneSyncExecutor {
     await this.deps.ci.reloadWorkspaceFromDisk();
   }
 
-  /** The lane is gone from bit.cloud — close its PR and retire the branch. */
+  /**
+   * How strong a claim this lane/branch pair has on `origin/<branch>`, which is what decides whether the
+   * branch may be deleted. See `LaneOwnershipEvidence` for what each answer means; this method is only the
+   * two git questions behind it.
+   *
+   * An unanswerable question resolves to `inherited-or-none`. That is not a fallback chosen for
+   * convenience: every other answer permits deleting a branch, and a `merge-base` that failed (unrelated
+   * histories, an unresolvable ref, a git hiccup) is not evidence of anything.
+   */
+  private async assessBranchOwnership({
+    laneIdStr,
+    branch,
+    defaultBranch,
+    syncCommit,
+  }: {
+    laneIdStr: string;
+    branch: string;
+    defaultBranch: string;
+    syncCommit?: SyncCommit;
+  }): Promise<LaneOwnershipEvidence> {
+    const { logger } = this.deps;
+    // Attribution. The subject has to name *this* lane. A trailer alone proves nothing about ownership:
+    // once a sync PR is squash-, rebase- or fast-forward-merged its trailer sits on the default branch's
+    // own first-parent line, so every branch cut from the default branch afterwards inherits one.
+    if (!syncCommit || syncCommit.laneIdStr !== laneIdStr) return 'inherited-or-none';
+
+    try {
+      // Reachability. A sync commit the default branch does NOT contain means this branch's sync history is
+      // still its own — a live lane branch of ours, which is exactly what `close-pr` retires.
+      if (!(await isAncestor(syncCommit.hash, `origin/${defaultBranch}`))) return 'own-live';
+      // The default branch does contain it, so the PR was merged. Deleting is only safe if the *tip* is in
+      // there too; otherwise work was pushed after the merge and lives nowhere else.
+      if (await isAncestor(`origin/${branch}`, `origin/${defaultBranch}`)) return 'own-merged';
+      return 'own-superseded';
+    } catch (e: any) {
+      logger.consoleWarning(
+        `Could not establish whether ${branch} is already merged into ${defaultBranch}, so it will be left ` +
+          `alone rather than retired: ${e?.message || e}`
+      );
+      return 'inherited-or-none';
+    }
+  }
+
+  /**
+   * The lane is gone from bit.cloud — close its PR, and retire the branch **if** the claim on it allows.
+   *
+   * `deleteBranch: false` is the `own-superseded` case: the sync PR was merged and then more commits were
+   * pushed to the branch. Those commits are in no other ref, so the PR is closed and the branch is kept and
+   * said so out loud. Deleting it would be the one irreversible thing this command can do.
+   */
   private async executeClosePr({
     laneName,
     laneIdStr,
     branch,
     pr,
+    deleteBranch,
   }: {
     laneName: string;
     laneIdStr: string;
     branch: string;
     pr?: PrInfo;
+    deleteBranch: boolean;
   }): Promise<string> {
     const { logger, gitHost } = this.deps;
+    const closeComment = deleteBranch
+      ? `Lane ${laneIdStr} was removed/archived on bit.cloud.`
+      : `Lane ${laneIdStr} was removed/archived on bit.cloud. The branch \`${branch}\` is being kept: it ` +
+        `carries commits that are not in the default branch.`;
     if (gitHost && pr) {
       logger.console(chalk.blue(`Closing PR #${pr.number} for removed lane ${laneIdStr}`));
-      await gitHost.closePr(pr.number, `Lane ${laneIdStr} was removed/archived on bit.cloud.`);
+      await gitHost.closePr(pr.number, closeComment);
     } else if (gitHost) {
       // Not an error: the PR may have been merged or closed by hand already, or never existed. Say so
       // explicitly, otherwise the run looks like it silently skipped the PR half of the cleanup.
-      logger.console(chalk.yellow(`No open PR found for ${branch} — only retiring the branch`));
+      logger.console(
+        chalk.yellow(
+          `No open PR found for ${branch} — ${deleteBranch ? 'only retiring the branch' : 'nothing to close'}`
+        )
+      );
     } else {
       logger.console(chalk.yellow(`No configured git host provider — skipping PR close for ${branch}`));
+    }
+
+    if (!deleteBranch) {
+      logger.console(
+        chalk.yellow(`lane removed remotely but branch carries unmerged commits; keeping branch ${branch}`)
+      );
+      return (
+        `${laneName} -> close-pr (${pr ? `PR #${pr.number} closed` : 'no open PR'}, branch ${branch} kept: ` +
+        `it carries commits missing from the default branch)`
+      );
     }
 
     // Deleting the remote branch is best-effort: it may be protected, or a human may have already

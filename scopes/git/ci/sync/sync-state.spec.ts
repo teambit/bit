@@ -1,5 +1,11 @@
 import { expect } from 'chai';
-import { parseLaneHeadTrailer, buildSyncCommitMessage, isSyncCommitMessage, hasSyncMarker } from './sync-state';
+import {
+  parseLaneHeadTrailer,
+  parseSyncCommitLaneId,
+  buildSyncCommitMessage,
+  isSyncCommitMessage,
+  hasSyncMarker,
+} from './sync-state';
 
 describe('sync-state', () => {
   it('builds a message that round-trips through the parser', () => {
@@ -36,6 +42,41 @@ describe('sync-state', () => {
     // trailer block and the newline after it.
     const rawBody = `${buildSyncCommitMessage('acme.shop/my-lane', 'f'.repeat(40))}\n`;
     expect(parseLaneHeadTrailer(rawBody)).to.equal('f'.repeat(40));
+  });
+});
+
+/**
+ * The attribution half of the branch-ownership check. A `Bit-Lane-Head` trailer says "some sync commit";
+ * only the subject says *which pair* it was written for — and that distinction is the whole defence against
+ * deleting a developer branch that merely inherited a trailer from the default branch.
+ */
+describe('parseSyncCommitLaneId', () => {
+  it('recovers the lane id from a message buildSyncCommitMessage produced', () => {
+    const msg = buildSyncCommitMessage('acme.shop/my-lane', 'a'.repeat(40));
+    expect(parseSyncCommitLaneId(msg)).to.equal('acme.shop/my-lane');
+  });
+
+  it('survives the raw `git log %B` shape, trailing newline included', () => {
+    const rawBody = `${buildSyncCommitMessage('acme.shop/my-lane', 'b'.repeat(40))}\n`;
+    expect(parseSyncCommitLaneId(rawBody)).to.equal('acme.shop/my-lane');
+  });
+
+  it('distinguishes one lane from another, which is the point', () => {
+    const ours = buildSyncCommitMessage('acme.shop/my-lane', 'c'.repeat(40));
+    const theirs = buildSyncCommitMessage('acme.shop/other-lane', 'c'.repeat(40));
+    expect(parseSyncCommitLaneId(ours)).to.not.equal(parseSyncCommitLaneId(theirs));
+  });
+
+  it('returns undefined for a commit that carries a trailer but not our subject', () => {
+    // e.g. a hand-written commit, or a squash commit whose subject the git host rewrote to the PR title.
+    // Unattributable is treated exactly like "not ours" — the branch is left alone.
+    const squashed = 'Lane sync: acme.shop/my-lane (#42)\n\nBit-Lane-Head: deadbeef\n[bit-sync]';
+    expect(parseSyncCommitLaneId(squashed)).to.equal(undefined);
+    expect(parseLaneHeadTrailer(squashed)).to.equal('deadbeef');
+  });
+
+  it('returns undefined for an ordinary commit', () => {
+    expect(parseSyncCommitLaneId('feat: add a thing')).to.equal(undefined);
   });
 });
 

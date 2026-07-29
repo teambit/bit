@@ -91,6 +91,26 @@ export async function listRemoteBranches(): Promise<string[]> {
 }
 
 /**
+ * Is `maybeAncestor` reachable from `descendant` — i.e. does `descendant`'s history already contain it?
+ * True for identical commits too.
+ *
+ * Deliberately **not** `git merge-base --is-ancestor`, which reports its answer through the exit code
+ * (0 = ancestor, 1 = not): simple-git's `raw` *resolves* rather than rejects on exit 1, so "not an
+ * ancestor" would read as success and this would always answer yes. `isBranchBehindDefaultBranch` in
+ * `ci.main.runtime.ts` documents the same trap, found the same way. Compute the merge base and compare
+ * instead — `merge-base(A, B) === A` iff A is an ancestor of B.
+ *
+ * Throws when the two commits share no history at all (`merge-base` exits non-zero with no output) or a
+ * revision cannot be resolved; callers decide what an unanswerable question means for them.
+ */
+export async function isAncestor(maybeAncestor: string, descendant: string): Promise<boolean> {
+  const ancestorSha = (await git.revparse([maybeAncestor])).trim();
+  const mergeBase = (await git.raw(['merge-base', maybeAncestor, descendant])).trim();
+  if (!ancestorSha || !mergeBase) throw new Error(`could not compare ${maybeAncestor} against ${descendant}`);
+  return ancestorSha === mergeBase;
+}
+
+/**
  * `git commit` fails outright when no identity is configured, which is the norm in a fresh CI
  * checkout. Only set one when the repo/environment doesn't already provide it, so an interactive
  * run keeps the developer's own identity.

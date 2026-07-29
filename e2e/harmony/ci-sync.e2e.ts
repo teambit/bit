@@ -1033,4 +1033,194 @@ describe('bit ci sync', function () {
       });
     });
   });
+
+  // =============================================================================================
+  // Branch ownership: WHICH branches `close-pr` is allowed to delete.
+  //
+  // `close-pr` is the one irreversible thing this command does — `git push origin --delete`. It fires
+  // when the lane is gone and the branch is not, and under the default config *every* branch on `origin`
+  // lane-maps, so that shape is reached by ordinary developer branches too. "Does the branch carry a
+  // `Bit-Lane-Head` trailer" does not separate them: once a sync PR is squash-, rebase- or ff-merged its
+  // trailer lives on the **default branch's own first-parent line**, so every branch cut from the default
+  // branch afterwards inherits one.
+  //
+  // The real rule has two parts — the sync commit must *name this lane*, and either it is not yet in the
+  // default branch (a live lane branch) or the branch tip is (nothing to lose). This block walks one lane
+  // branch through all three outcomes, plus the inherited-trailer branch that must never be touched.
+  // =============================================================================================
+  describe('branch ownership decides what close-pr may delete', () => {
+    const LANE = 'own-lane';
+    /** an ordinary developer branch, forked from a default branch that already carries a sync trailer */
+    const PLAIN_BRANCH = 'feature-x';
+    let defaultBranch: string;
+    let devPath: string;
+    let plainBranchSha: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setSyncConfig({ lanes: ['*'] });
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE}`, devPath);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('own-lane-snap'));
+      helper.command.runCmd('bit snap --message "own lane snap"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      // Give the lane a real branch with a real sync commit of its own, before anything else happens.
+      const first = runBit(`bit ci sync ${LANE}`);
+      expect(first.exitCode, `bit ci sync ${LANE} output:\n${first.output}`).to.equal(0);
+      gitFetch();
+
+      // Now simulate what a squash-, rebase- or fast-forward-merged sync PR leaves behind: a commit with
+      // our exact sync shape — subject, `Bit-Lane-Head` trailer, `[bit-sync]` marker — sitting on the
+      // DEFAULT branch's own first-parent line. It names a different lane, because that is what a merged
+      // sync PR for some other lane looks like. Empty on purpose, so it cannot show up as main-scope drift.
+      helper.command.runCmd(`git checkout -f -B ${defaultBranch} origin/${defaultBranch}`);
+      helper.command.runCmd(
+        `git commit --allow-empty ` +
+          `-m "chore(bit-sync): sync lane ${helper.scopes.remote}/other-lane @ abc123def" ` +
+          `-m "Bit-Lane-Head: ${'a'.repeat(40)}" -m "[bit-sync]"`
+      );
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+
+      // The developer branch is cut from THAT tip, so it inherits the trailer, and then carries work of
+      // its own that exists nowhere else.
+      helper.command.runCmd(`git checkout -b ${PLAIN_BRANCH}`);
+      helper.fs.outputFile('docs/plan.md', 'unmerged developer work that must not be destroyed\n');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "docs: unmerged developer work"');
+      helper.command.runCmd(`git push origin ${PLAIN_BRANCH}`);
+      plainBranchSha = helper.command.runCmd('git rev-parse HEAD').trim();
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+      gitFetch();
+    });
+
+    /** put `origin/<defaultBranch>` ancestrally ahead of the lane branch without changing its content */
+    function mergeLaneBranchIntoDefault() {
+      gitFetch();
+      helper.command.runCmd(`git checkout -f -B ${defaultBranch} origin/${defaultBranch}`);
+      // `-s ours` records the merge — which is all the ownership check reads, since it asks only about
+      // reachability — while leaving the default branch's tree (and `.bitmap`, which must stay on main)
+      // exactly as it was. A content merge here would put the lane pointer on the default branch and the
+      // main-scope sync would rightly refuse to run.
+      helper.command.runCmd(`git merge -s ours --no-edit origin/${LANE}`);
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      gitFetch();
+    }
+
+    // -------------------------------------------------------------------------------------------
+    /**
+     * THE inherited-trailer lock — the reviewer's live repro. `feature-x` has a `Bit-Lane-Head` trailer on
+     * its own first-parent line, inherited from the default branch, and no lane. A trailer-presence check
+     * calls that "lane-managed" and deletes the branch.
+     */
+    describe('an ordinary branch that INHERITED a sync trailer from the default branch', () => {
+      let output: string;
+      let exitCode: number;
+      before(() => {
+        ({ output, exitCode } = runBit('bit ci sync --all'));
+        gitFetch();
+      });
+
+      it('should be ignored, not retired', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(`${PLAIN_BRANCH} -> noop (branch maps to no lane and has no sync history`);
+      });
+
+      it('should leave the branch and its work exactly as the developer pushed them', () => {
+        expect(remoteBranchExists(PLAIN_BRANCH), `origin/${PLAIN_BRANCH} must still exist`).to.be.true;
+        expect(branchTipSha(PLAIN_BRANCH)).to.equal(plainBranchSha);
+        expect(fileOnBranch(PLAIN_BRANCH, 'docs/plan.md')).to.include('must not be destroyed');
+      });
+
+      it('should have been non-vacuous: the branch really does carry an inherited trailer', () => {
+        // Without this the test could pass because the trailer never landed. The trailer is on the
+        // branch's own first-parent line and names a lane that is NOT this branch's.
+        const log = helper.command.runCmd(`git log origin/${PLAIN_BRANCH} --first-parent --format=%B`);
+        expect(log).to.include('Bit-Lane-Head:');
+        expect(log).to.include(`sync lane ${helper.scopes.remote}/other-lane`);
+      });
+
+      describe('running --all a second time', () => {
+        let rerun: { output: string; exitCode: number };
+        before(() => {
+          rerun = runBit('bit ci sync --all');
+          gitFetch();
+        });
+        it('should still ignore it and still not delete it', () => {
+          expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+          expect(rerun.output).to.include(`${PLAIN_BRANCH} -> noop`);
+          expect(remoteBranchExists(PLAIN_BRANCH)).to.be.true;
+          expect(branchTipSha(PLAIN_BRANCH)).to.equal(plainBranchSha);
+        });
+      });
+    });
+
+    // -------------------------------------------------------------------------------------------
+    /**
+     * The lane's own branch, whose sync PR was merged and which then received more commits. The PR should
+     * be closed, but those commits are in no other ref — so the branch must survive.
+     */
+    describe('our own branch whose sync history is merged but whose tip is not (own-superseded)', () => {
+      let output: string;
+      let exitCode: number;
+      let tipBefore: string;
+      before(() => {
+        // 1. the sync commit lands in the default branch (the PR was merged) ...
+        mergeLaneBranchIntoDefault();
+        // 2. ... and then work continues on the branch, so the tip is ahead of the default branch again.
+        branchSideCommit(LANE, defaultBranch, 'comp2/index.js', comp2Src('after-the-merge'), 'feat: more work');
+        gitFetch();
+        tipBefore = branchTipSha(LANE);
+        // 3. the lane is retired on bit.cloud.
+        helper.command.removeRemoteLane(LANE, '--force');
+        ({ output, exitCode } = runBit('bit ci sync --all'));
+        gitFetch();
+      });
+
+      it('should close the PR but keep the branch, and say so', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include('lane removed remotely but branch carries unmerged commits; keeping branch');
+        expect(output).to.include(`branch ${LANE} kept`);
+      });
+
+      it('should not have deleted the branch or moved it', () => {
+        expect(remoteBranchExists(LANE), `origin/${LANE} must survive — its commits exist nowhere else`).to.be.true;
+        expect(branchTipSha(LANE)).to.equal(tipBefore);
+        expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('after-the-merge');
+      });
+    });
+
+    // -------------------------------------------------------------------------------------------
+    /**
+     * The legitimate cleanup: the lane is gone and the branch is fully contained in the default branch, so
+     * retiring it cannot lose anything. This is the just-merged lane whose branch the git host did not
+     * auto-delete — the case the ownership rule must keep working.
+     */
+    describe('our own branch that is fully merged into the default branch (own-merged)', () => {
+      let output: string;
+      let exitCode: number;
+      before(() => {
+        // The remaining commits reach the default branch, so nothing on the branch is unique to it.
+        mergeLaneBranchIntoDefault();
+        ({ output, exitCode } = runBit('bit ci sync --all'));
+        gitFetch();
+      });
+
+      it('should close the PR and delete the branch', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(`${LANE} -> close-pr`);
+        expect(output).to.include(`branch ${LANE} deleted`);
+        expect(remoteBranchExists(LANE)).to.be.false;
+      });
+
+      it('should still not have touched the ordinary developer branch', () => {
+        // The run that legitimately deletes one branch must not take the other with it.
+        expect(remoteBranchExists(PLAIN_BRANCH)).to.be.true;
+        expect(branchTipSha(PLAIN_BRANCH)).to.equal(plainBranchSha);
+      });
+    });
+  });
 });
