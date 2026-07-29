@@ -32,43 +32,78 @@ const gitlab = (configured = true) => fakeProvider({ name: 'gitlab', hostPattern
 describe('selectGitHostProvider', () => {
   it('picks the provider whose host matches the remote url', () => {
     const providers = [github(), gitlab()];
-    expect(selectGitHostProvider(providers, 'git@gitlab.com:acme/shop.git')?.name).to.equal('gitlab');
-    expect(selectGitHostProvider(providers, 'https://github.com/acme/shop.git')?.name).to.equal('github');
+    expect(selectGitHostProvider(providers, 'git@gitlab.com:acme/shop.git').provider?.name).to.equal('gitlab');
+    expect(selectGitHostProvider(providers, 'https://github.com/acme/shop.git').provider?.name).to.equal('github');
   });
 
-  it('skips a host match that is not configured, and keeps looking', () => {
-    // github claims the remote but has no credentials; gitlab is configured but does not claim it, so
-    // it only wins through the sole-configured fallback — not by matching.
-    expect(selectGitHostProvider([github(false), gitlab(true)], 'https://github.com/acme/shop')?.name).to.equal(
-      'gitlab'
+  it('never routes a claimed remote to a different provider, even the only configured one', () => {
+    // THE guarantee: github claims this remote but has no credentials, and gitlab holds a token. Using
+    // gitlab here would create/close/comment on pull requests on the wrong host — so the run goes
+    // PR-less instead, and says which provider claimed the remote without being configured.
+    const selection = selectGitHostProvider([github(false), gitlab(true)], 'https://github.com/acme/shop');
+    expect(selection.provider).to.equal(undefined);
+    expect(selection.reason).to.contain('"github"');
+    expect(selection.reason).to.contain('not configured');
+    // order of registration must not matter to that outcome
+    expect(selectGitHostProvider([gitlab(true), github(false)], 'https://github.com/acme/shop').provider).to.equal(
+      undefined
     );
-    // …and with nothing else configured, an unconfigured host match yields PR-less mode.
-    expect(selectGitHostProvider([github(false), gitlab(false)], 'https://github.com/acme/shop')).to.equal(undefined);
+    // …and with nothing configured at all, likewise PR-less.
+    expect(selectGitHostProvider([github(false), gitlab(false)], 'https://github.com/acme/shop').provider).to.equal(
+      undefined
+    );
+  });
+
+  it('reports every claimant when several claim the remote and none is configured', () => {
+    const first = fakeProvider({ name: 'ghe-a', hostPattern: /git\.acme/, configured: false });
+    const second = fakeProvider({ name: 'ghe-b', hostPattern: /git\.acme/, configured: false });
+    const selection = selectGitHostProvider([first, second], 'https://git.acme.com/acme/shop');
+    expect(selection.provider).to.equal(undefined);
+    expect(selection.reason).to.contain('"ghe-a"');
+    expect(selection.reason).to.contain('"ghe-b"');
   });
 
   it('falls back to the sole configured provider when no remote url is known', () => {
-    expect(selectGitHostProvider([github(true)], undefined)?.name).to.equal('github');
-    expect(selectGitHostProvider([github(false), gitlab(true)], undefined)?.name).to.equal('gitlab');
+    expect(selectGitHostProvider([github(true)], undefined).provider?.name).to.equal('github');
+    expect(selectGitHostProvider([github(false), gitlab(true)], undefined).provider?.name).to.equal('gitlab');
   });
 
   it('falls back to the sole configured provider for a remote no provider claims', () => {
     // e.g. a self-hosted GitLab on a custom domain, or an `insteadOf` rewrite of the origin url.
-    expect(selectGitHostProvider([github(false), gitlab(true)], 'git@git.acme.internal:acme/shop.git')?.name).to.equal(
-      'gitlab'
-    );
+    expect(
+      selectGitHostProvider([github(false), gitlab(true)], 'git@git.acme.internal:acme/shop.git').provider?.name
+    ).to.equal('gitlab');
   });
 
-  it('returns undefined when two configured providers both fail to claim the remote', () => {
+  it('selects nothing when two configured providers both fail to claim the remote', () => {
     // Ambiguous: guessing could comment on the wrong host's PR, so degrade to git-only sync.
-    expect(selectGitHostProvider([github(true), gitlab(true)], 'git@git.acme.internal:acme/shop.git')).to.equal(
-      undefined
-    );
-    expect(selectGitHostProvider([github(true), gitlab(true)], undefined)).to.equal(undefined);
+    const selection = selectGitHostProvider([github(true), gitlab(true)], 'git@git.acme.internal:acme/shop.git');
+    expect(selection.provider).to.equal(undefined);
+    expect(selection.reason).to.contain('ambiguous');
+    expect(selectGitHostProvider([github(true), gitlab(true)], undefined).provider).to.equal(undefined);
   });
 
-  it('returns undefined when nothing is configured, and when nothing is registered', () => {
-    expect(selectGitHostProvider([github(false), gitlab(false)], undefined)).to.equal(undefined);
-    expect(selectGitHostProvider([], 'https://github.com/acme/shop')).to.equal(undefined);
+  it('selects nothing when nothing is configured, and when nothing is registered', () => {
+    expect(selectGitHostProvider([github(false), gitlab(false)], undefined).provider).to.equal(undefined);
+    const empty = selectGitHostProvider([], 'https://github.com/acme/shop');
+    expect(empty.provider).to.equal(undefined);
+    expect(empty.reason).to.contain('no git host provider is registered');
+  });
+
+  it('always explains itself when it selects nothing', () => {
+    const cases = [
+      selectGitHostProvider([], undefined),
+      selectGitHostProvider([github(false)], undefined),
+      selectGitHostProvider([github(false)], 'https://github.com/acme/shop'),
+      selectGitHostProvider([github(true), gitlab(true)], undefined),
+    ];
+    cases.forEach((selection) => {
+      expect(selection.provider).to.equal(undefined);
+      expect(selection.reason).to.be.a('string');
+      expect((selection.reason ?? '').length, 'a skipped run must never be silent').to.be.greaterThan(0);
+    });
+    // …and stays quiet when it does select one.
+    expect(selectGitHostProvider([github(true)], 'https://github.com/acme/shop').reason).to.equal(undefined);
   });
 
   it('passes the remote url to isConfigured, so a host can derive its repo from it', () => {
@@ -83,15 +118,17 @@ describe('selectGitHostProvider', () => {
         return Boolean(remoteUrl?.includes('github.com'));
       },
     });
-    expect(selectGitHostProvider([derivesRepoFromRemote], 'https://github.com/acme/shop')?.name).to.equal('github');
+    expect(selectGitHostProvider([derivesRepoFromRemote], 'https://github.com/acme/shop').provider?.name).to.equal(
+      'github'
+    );
     expect(seen).to.deep.equal(['https://github.com/acme/shop']);
-    expect(selectGitHostProvider([derivesRepoFromRemote], undefined)).to.equal(undefined);
+    expect(selectGitHostProvider([derivesRepoFromRemote], undefined).provider).to.equal(undefined);
   });
 
   it('breaks ties by registration order when two providers claim the same remote', () => {
     const first = fakeProvider({ name: 'first', hostPattern: /github\.com/, configured: true });
     const second = fakeProvider({ name: 'second', hostPattern: /github\.com/, configured: true });
-    expect(selectGitHostProvider([first, second], 'https://github.com/acme/shop')?.name).to.equal('first');
+    expect(selectGitHostProvider([first, second], 'https://github.com/acme/shop').provider?.name).to.equal('first');
   });
 });
 
@@ -128,7 +165,9 @@ describe('GitHubHostProvider', () => {
     const provider = new GitHubHostProvider();
     expect(provider.name).to.equal('github');
     expect(provider.isConfigured('https://github.com/acme/shop')).to.equal(false);
-    expect(selectGitHostProvider([provider], 'https://github.com/acme/shop')).to.equal(undefined);
+    const selection = selectGitHostProvider([provider], 'https://github.com/acme/shop');
+    expect(selection.provider).to.equal(undefined);
+    expect(selection.reason).to.contain('"github"');
   });
 
   it('is configured once a token is present, deriving the repo from the remote url', () => {
@@ -137,6 +176,19 @@ describe('GitHubHostProvider', () => {
     expect(provider.isConfigured('git@github.com:acme/shop.git')).to.equal(true);
     // no repo resolvable (no GITHUB_REPOSITORY, no parseable remote) => still unconfigured
     expect(new GitHubHostProvider().isConfigured(undefined)).to.equal(false);
+    // a look-alike host must not be parsed into a repo aimed at api.github.com
+    expect(new GitHubHostProvider().isConfigured('https://mygithub.com/acme/shop')).to.equal(false);
+  });
+
+  it('remembers the remote url it was asked about, so a later call without one still resolves', () => {
+    process.env.BIT_GITHUB_TOKEN = 'tok';
+    const provider = new GitHubHostProvider();
+    // only `matchesRemote` carried the url; the origin-parse path (and therefore what a PR method
+    // reaches through `requireClient`) must survive that
+    expect(provider.matchesRemote('git@github.com:acme/shop.git')).to.equal(true);
+    expect(provider.isConfigured()).to.equal(true);
+    // without that hint the same call cannot resolve a repository
+    expect(new GitHubHostProvider().isConfigured()).to.equal(false);
   });
 
   it('reports what is missing rather than failing obscurely when a PR call happens unconfigured', async () => {

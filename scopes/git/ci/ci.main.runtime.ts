@@ -231,17 +231,19 @@ export class CiMain {
    * ```
    *
    * On each `bit ci sync` run exactly one registered provider is selected, by the `origin` remote —
-   * see `selectGitHostProvider`. Registration order breaks ties, so registering a provider does not
-   * disturb a repository it doesn't claim.
+   * see `selectGitHostProvider`. A provider that claims the remote is the only candidate for it
+   * (registration order breaks ties among claimants), so registering a provider never changes how a
+   * repository claimed by a *different* provider is handled: at worst the run skips pull-request
+   * operations and says which provider claimed the remote without being configured.
    */
   registerGitHostProvider(provider: GitHostProvider) {
     this.gitHostProviderSlot.register(provider);
     return this;
   }
 
-  /** Every registered git host provider, in registration order. */
+  /** Every registered git host provider, in registration order (one provider per registration). */
   listGitHostProviders(): GitHostProvider[] {
-    return this.gitHostProviderSlot.values().flat();
+    return this.gitHostProviderSlot.values();
   }
 
   async getBranchName() {
@@ -520,11 +522,15 @@ export class CiMain {
     // claims and no credentials is not fatal — it degrades to "no git host", which each executor
     // reports and works around (git-only sync).
     const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
-    const gitHost = selectGitHostProvider(
+    const { provider: gitHost, reason: noGitHostReason } = selectGitHostProvider(
       this.listGitHostProviders(),
       typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined
     );
     if (gitHost) this.logger.debug(`bit ci sync: using the "${gitHost.name}" git host provider`);
+    // Warn once, up front, with the specific reason — the executors' per-action lines can only say
+    // that PR operations were skipped, not why. This is where "the github provider claims origin but
+    // has no token" becomes visible instead of looking like a deliberately git-only run.
+    else if (noGitHostReason) this.logger.consoleWarning(noGitHostReason);
 
     const laneSync = new LaneSyncExecutor({
       lanes: this.lanes,

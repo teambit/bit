@@ -291,11 +291,20 @@ import type { CiMain, GitHostProvider } from '@teambit/ci';
 ci.registerGitHostProvider(new GitLabHostProvider());
 ```
 
-Each `bit ci sync` run selects exactly one provider: the first registered one that both claims the
-`origin` remote (`matchesRemote`) and has credentials (`isConfigured`). When the remote can't be read,
-or no provider claims it, a single configured provider is used anyway; two or more is ambiguous and
-the run falls back to PR-less sync. Registering a provider therefore never disturbs a repository it
-doesn't serve.
+Each `bit ci sync` run selects at most one provider, from the `origin` remote:
+
+1. **A claim is exclusive.** If any registered provider claims the remote (`matchesRemote`), only a
+   claimant can be selected — the first one that also has credentials (`isConfigured`). If no claimant
+   is configured, the run goes PR-less and warns which provider claimed the remote; another provider is
+   never used in its place, because that would create, close and comment on pull requests on the wrong
+   host.
+2. **A single configured provider is the fallback when nobody claims** — the remote couldn't be read, or
+   no provider recognises it (a self-hosted host on a custom domain, a mirror, an `insteadOf` rewrite).
+   Two or more configured providers there is ambiguous, so the run goes PR-less.
+
+Because of (1), registering a provider never changes how a repository claimed by a _different_ provider
+is handled. Whenever no provider is selected, the run says why, does all of its git and Bit work, and
+skips only the pull-request operations.
 
 ### GitHub credentials
 
@@ -403,14 +412,14 @@ bit ci merge --build  # → automatically uses minor version bump
 }
 ```
 
-| Field                 | Default               | Description                                                                                                                                                                                                                                                                                                                             |
-| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`                | `git-source-of-truth` | **Reserved: accepted but not implemented** — every run behaves as `git-source-of-truth`, and the command warns when another value is configured. Intended semantics: `git-source-of-truth` (today's behaviour) keeps merges in GitHub and mirrors lanes to PRs; `mirror` would allow merges on bit.cloud and have git track the result. |
-| `branchPrefix`        | `""`                  | Prefix for lane-mapped branches, e.g. `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                                                                                                                                                                                                                            |
-| `branches`            | `{}`                  | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                                                                                                                                                                                                                               |
-| `lanes`               | `["*"]`               | Glob patterns (`*` only) of lane names to sync. `[]` disables lane mirroring entirely, leaving main-scope sync.                                                                                                                                                                                                                         |
-| `mainSyncBranch`      | `"bit-sync/main"`     | Branch used for the main-scope drift PR.                                                                                                                                                                                                                                                                                                |
-| `autoMergeMainSyncPr` | `false`               | Reserved: enabling GitHub auto-merge on the sync PR is not implemented yet — the command warns if it is set. Use a repository rule.                                                                                                                                                                                                     |
+| Field                 | Default               | Description                                                                                                                                                                                                                                                                                                                                   |
+| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`                | `git-source-of-truth` | **Reserved: accepted but not implemented** — every run behaves as `git-source-of-truth`, and the command warns when another value is configured. Intended semantics: `git-source-of-truth` (today's behaviour) keeps merges on the git host and mirrors lanes to PRs; `mirror` would allow merges on bit.cloud and have git track the result. |
+| `branchPrefix`        | `""`                  | Prefix for lane-mapped branches, e.g. `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                                                                                                                                                                                                                                  |
+| `branches`            | `{}`                  | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                                                                                                                                                                                                                                     |
+| `lanes`               | `["*"]`               | Glob patterns (`*` only) of lane names to sync. `[]` disables lane mirroring entirely, leaving main-scope sync.                                                                                                                                                                                                                               |
+| `mainSyncBranch`      | `"bit-sync/main"`     | Branch used for the main-scope drift PR.                                                                                                                                                                                                                                                                                                      |
+| `autoMergeMainSyncPr` | `false`               | Reserved: enabling GitHub auto-merge on the sync PR is not implemented yet — the command warns if it is set. Use a repository rule.                                                                                                                                                                                                           |
 
 The default branch and `mainSyncBranch` are never treated as lane-mapped, even when `branchPrefix` is
 empty (which otherwise maps every branch to a same-named lane).

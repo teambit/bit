@@ -37,7 +37,12 @@ export class GitHubClient implements GitHostProvider {
 
   static fromEnv(gitRemoteUrl?: string): GitHubClient | undefined {
     const token = process.env.GITHUB_TOKEN || process.env.BIT_GITHUB_TOKEN;
-    const repo = process.env.GITHUB_REPOSITORY || (gitRemoteUrl ? parseGitHubRepo(gitRemoteUrl) : undefined);
+    // The remote is only allowed to name the repository once it is established to *be* a github.com
+    // remote. `parseGitHubRepo` is unanchored (it searches for `github.com/<owner>/<repo>` anywhere in
+    // the string), so without this guard `https://mygithub.com/acme/shop` would yield `acme/shop` and
+    // mint a client pointed at api.github.com for a repository on an entirely different host.
+    const repoFromRemote = gitRemoteUrl && isGitHubRemote(gitRemoteUrl) ? parseGitHubRepo(gitRemoteUrl) : undefined;
+    const repo = process.env.GITHUB_REPOSITORY || repoFromRemote;
     if (!token || !repo) return undefined;
     return new GitHubClient({ token, repo });
   }
@@ -114,19 +119,30 @@ export class GitHubClient implements GitHostProvider {
  * `isConfigured() === false` when the credentials aren't there — which the engine reads as PR-less
  * sync.
  *
- * The resolved client is memoized because `fromEnv` is a pure function of `process.env` plus the
- * remote URL, both fixed for the life of a command.
+ * A successfully resolved client is memoized — `fromEnv` is a pure function of `process.env` plus the
+ * remote URL, both fixed for the life of a command — while an unresolved one is retried, so a later
+ * call that *does* carry the remote URL can still succeed. That keeps `isConfigured` cheap and
+ * idempotent, which the interface requires of it.
  */
 export class GitHubHostProvider implements GitHostProvider {
   readonly name = 'github';
 
   private client: GitHubClient | undefined;
 
+  /**
+   * The last `origin` URL this provider was asked about, remembered so a PR method can still recover
+   * `owner/repo` from it. Both interface methods that receive the remote record it, because either can
+   * be the first (or only) one the engine calls.
+   */
+  private remoteHint: string | undefined;
+
   matchesRemote(remoteUrl: string): boolean {
+    this.remoteHint = remoteUrl;
     return isGitHubRemote(remoteUrl);
   }
 
   isConfigured(remoteUrl?: string): boolean {
+    if (remoteUrl) this.remoteHint = remoteUrl;
     return Boolean(this.resolveClient(remoteUrl));
   }
 
@@ -151,12 +167,13 @@ export class GitHubHostProvider implements GitHostProvider {
   }
 
   /**
-   * `remoteUrl` only matters on the first call — it's how `owner/repo` is recovered when
-   * `GITHUB_REPOSITORY` isn't set (any CI that isn't GitHub Actions). Selection passes it via
-   * `isConfigured`, so by the time a PR method runs the client is already built.
+   * The remote URL is how `owner/repo` is recovered when `GITHUB_REPOSITORY` isn't set (any CI that
+   * isn't GitHub Actions). Selection normally supplies it via `isConfigured` before any PR method runs,
+   * but a consumer holding this provider directly may not — so fall back to the remembered hint rather
+   * than silently losing the origin-parse path and reporting "not configured".
    */
   private resolveClient(remoteUrl?: string): GitHubClient | undefined {
-    if (!this.client) this.client = GitHubClient.fromEnv(remoteUrl);
+    if (!this.client) this.client = GitHubClient.fromEnv(remoteUrl ?? this.remoteHint);
     return this.client;
   }
 
