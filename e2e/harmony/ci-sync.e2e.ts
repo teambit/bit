@@ -217,6 +217,58 @@ describe('bit ci sync', function () {
     return sha;
   }
 
+  /**
+   * Make the workspace's local bit scope **cold** — the state a production run is always in, and the one
+   * this whole suite otherwise never reaches.
+   *
+   * `bit ci sync` runs on an ephemeral CI runner: a fresh `git clone`, `bit init`, and a local scope that
+   * has never imported anything. Every other scenario here reuses one long-lived workspace whose scope is
+   * warm by the time it is asserted on, so any code that silently depends on a cached lane object passes
+   * all of them and fails on every real run. Wiping the scope directory and re-initializing reproduces the
+   * runner exactly: `.bitmap` and `workspace.jsonc` are workspace files and survive (as they would in a
+   * fresh clone), while every object — lane objects above all — is gone.
+   *
+   * Both scope locations are removed because which one bit picks depends on whether `.git` existed when
+   * `bit init` ran, and this suite's setup order (bit init, then git init) is not the only one a user has.
+   * The remote has to be re-registered because that registration lives *in* the scope we just deleted.
+   */
+  function makeLocalScopeCold() {
+    const workspace = helper.scopes.localPath;
+    fs.removeSync(path.join(workspace, '.bit'));
+    fs.removeSync(path.join(workspace, '.git', 'bit'));
+    helper.command.runCmd('bit init');
+    helper.scopeHelper.addRemoteScope();
+  }
+
+  /**
+   * How many objects the workspace's local scope holds — the measurable form of "cold".
+   *
+   * Used instead of a `bit lane list` probe because a genuinely cold scope cannot answer that: `.bitmap`
+   * names components whose objects are not there yet, and the command exits non-zero with
+   * `<comp> is missing, please run "bit import"`. That is not a symptom of anything wrong — it is what a
+   * fresh clone looks like before its first sync — but it makes the CLI the wrong instrument. Counting
+   * files under the scope's object store asks the question directly, and asking it twice (before and after)
+   * proves both halves: the run started with nothing and had to fetch what it needed.
+   */
+  function scopeObjectCount(): number {
+    const candidates = [
+      path.join(helper.scopes.localPath, '.bit', 'objects'),
+      path.join(helper.scopes.localPath, '.git', 'bit', 'objects'),
+    ];
+    const root = candidates.find((dir) => fs.existsSync(dir));
+    if (!root) return 0;
+    let count = 0;
+    const walk = (dir: string) => {
+      fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else count += 1;
+      });
+    };
+    walk(root);
+    return count;
+  }
+
   // =============================================================================================
   // Scenarios A, B, C, D1, D2 and the lane-deleted path all describe *successive states of the same
   // lane/branch pair*, so they share one workspace and run in order. That is not just a speed
@@ -962,6 +1014,147 @@ describe('bit ci sync', function () {
         expect(remoteBranchExists(UNEXPORTED_BRANCH), `origin/${UNEXPORTED_BRANCH} must still exist`).to.be.true;
         expect(branchTipSha(UNEXPORTED_BRANCH)).to.equal(tipBefore);
         expect(fileOnBranch(UNEXPORTED_BRANCH, 'comp1/index.js')).to.include('work-on-a-never-pushed-lane');
+      });
+    });
+  });
+
+  // =============================================================================================
+  // COLD START — the state every production run is actually in.
+  //
+  // `bit ci sync` runs on an ephemeral GitHub runner: fresh clone, `bit init`, local scope that has never
+  // imported a thing. This suite's other 40-odd scenarios all run against one long-lived warm workspace, so
+  // a dependency on a cached lane object is invisible to every one of them — which is exactly what happened.
+  // On a cold runner `bit ci sync <lane>` classified the pair as merge-diverged and then halted with
+  //
+  //     failed to merge lane <scope>/<lane> into branch <lane>:
+  //     the branch's .bitmap points at "main" rather than <scope>/<lane>
+  //
+  // about a branch whose committed `.bitmap` provably carried the lane pointer. The guard was asking
+  // `lanes.getCurrentLane()`, which reads the pointer from `.bitmap` and then resolves it through the LOCAL
+  // SCOPE's copy of the lane object; with no object it answered "main" and the guard reported a fact about
+  // the scope cache as a fact about the branch. See `workspace-lane.ts`.
+  //
+  // This block is the regression lock, and its value is entirely in the `makeLocalScopeCold()` call: run the
+  // same fixture warm and it passes against the broken code too.
+  // =============================================================================================
+  describe('a cold runner (fresh clone, empty local scope) reconciles a diverged pair', () => {
+    const LANE = 'cold-start';
+    let defaultBranch: string;
+    let devPath: string;
+    let output: string;
+    let exitCode: number;
+    let objectsWhenCold: number;
+    let objectsAfterRun: number;
+    let bitmapOnBranch: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setSyncConfig({ lanes: ['*'] });
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE}`, devPath);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('cold-lane-snap-1'));
+      helper.command.runCmd('bit snap --message "cold lane snap 1"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      const first = runBit(`bit ci sync ${LANE}`);
+      expect(first.exitCode, `bit ci sync ${LANE} output:\n${first.output}`).to.equal(0);
+      gitFetch();
+
+      // Diverge on DIFFERENT files, so a correct merge is conflict-free and the only thing that can fail
+      // is the cold-start machinery itself.
+      laneSideEdit(devPath, 'comp1/index.js', comp1Src('cold-lane-snap-2'), 'cold lane snap 2');
+      branchSideCommit(LANE, defaultBranch, 'comp2/index.js', comp2Src('cold-branch-dev'), 'feat: dev edits comp2');
+
+      // THE POINT OF THE BLOCK. Everything above built the fixture on a warm workspace; the run below is
+      // the first one that starts where production starts.
+      makeLocalScopeCold();
+      objectsWhenCold = scopeObjectCount();
+      bitmapOnBranch = fileOnBranch(LANE, '.bitmap');
+
+      ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
+      objectsAfterRun = scopeObjectCount();
+      gitFetch();
+    });
+
+    it('should be non-vacuous: the scope really is cold, and the branch really does name the lane', () => {
+      // Without the first assertion this is just scenario D1 again. Without the second, a halt would be
+      // *correct* and the test would be locking the wrong thing — this is the exact pair of facts that
+      // made the production failure a bug rather than a true refusal.
+      expect(objectsWhenCold, 'the local scope must hold no objects at all when the run starts').to.equal(0);
+      expect(bitmapOnBranch, `.bitmap on origin/${LANE}:\n${bitmapOnBranch}`).to.include(LANE);
+      expect(bitmapOnBranch).to.include('_bit_lane');
+    });
+
+    it('should have had to fetch everything it used, which is what "cold" costs', () => {
+      // The other half of the coldness claim: the run cannot have been reading a cached lane object,
+      // because there was nothing cached to read.
+      expect(objectsAfterRun, 'the run must have imported objects into the empty scope').to.be.greaterThan(0);
+    });
+
+    it('should CONVERGE rather than halt — the guard must read the branch, not the scope cache', () => {
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> merge-diverged`);
+      expect(output).to.not.include('HALTED');
+      // the exact production symptom, named so a regression is unmistakable in the failure output
+      expect(output).to.not.include(`the branch's .bitmap points at "main"`);
+    });
+
+    it('should merge both sides on a scope that had never seen the lane', () => {
+      expect(output).to.include('with no conflicts');
+      expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('cold-lane-snap-2');
+      expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('cold-branch-dev');
+    });
+
+    it('should advance the lane, keeping the lane-side edit alive on its tip', () => {
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('cold-lane-snap-2');
+      expect(laneTipFile(devPath, 'comp2/index.js')).to.include('cold-branch-dev');
+    });
+
+    describe('re-running on the now-warm workspace', () => {
+      let rerun: { output: string; exitCode: number };
+      let shaBefore: string;
+      before(() => {
+        shaBefore = branchTipSha(LANE);
+        rerun = runBit(`bit ci sync ${LANE}`);
+        gitFetch();
+      });
+      it('should be a converged no-op — cold and warm agree on the state', () => {
+        expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+        expect(rerun.output).to.include(`${LANE} -> noop (converged)`);
+        expect(branchTipSha(LANE)).to.equal(shaBefore);
+      });
+    });
+
+    /**
+     * The other half of the audit: `import-lane` onto an EXISTING branch reads the current lane too, to
+     * decide whether it must step off to main before re-importing. Cold, the scope-object read said "main"
+     * for a branch already on the lane, so it skipped the step-off, `switchLanes` threw "already checked
+     * out" (which `switchToLane` reports as success), nothing was materialized, and the run halted blaming
+     * the switch. That is the commonest action there is, broken on every fresh runner.
+     */
+    describe('and import-lane onto an existing branch, also cold', () => {
+      let importOutput: string;
+      let importExit: number;
+      before(() => {
+        // Only the lane moves, so the plan is import-lane onto the branch that already exists.
+        laneSideEdit(devPath, 'comp1/index.js', comp1Src('cold-lane-snap-3'), 'cold lane snap 3');
+        makeLocalScopeCold();
+        ({ output: importOutput, exitCode: importExit } = runBit(`bit ci sync ${LANE}`));
+        gitFetch();
+      });
+
+      it('should import the lane onto the existing branch instead of halting', () => {
+        expect(importExit, `bit ci sync output:\n${importOutput}`).to.equal(0);
+        expect(importOutput).to.include(`${LANE} -> import-lane`);
+        expect(importOutput).to.not.include('HALTED');
+        expect(importOutput).to.not.include('reported success but the workspace is on');
+      });
+
+      it("should put the lane's new content on the branch", () => {
+        expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('cold-lane-snap-3');
       });
     });
   });

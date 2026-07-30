@@ -18,6 +18,7 @@ import {
   isSyncAuthoredMessage,
 } from './sync-state';
 import { branchStateFingerprint, fingerprintIdVersions } from './bitmap-state';
+import { currentLaneIdStr, ensureCurrentLaneObject } from './workspace-lane';
 import type { GitHostProvider, PrInfo } from './git-host-provider';
 import type { BranchKeepReason, LaneOwnershipEvidence } from './sync-planner';
 import { planLaneSync } from './sync-planner';
@@ -954,17 +955,27 @@ export class LaneSyncExecutor {
       // previous sync and `resetToRemoteBranch` just loaded that file. If it doesn't (an untracked
       // `.bitmap`, a hand-edited branch, a failed reload), the merge would silently resolve to main's
       // heads and write main's content over the dev work — so refuse and let a human look.
+      //
+      // `currentLaneIdStr`, NOT `lanes.getCurrentLane()`. That is the difference between reading the
+      // branch's pointer and reading the local scope's *cache* of the lane object, and on a cold CI runner
+      // (fresh clone, lane never imported) the latter answers "main" for a `.bitmap` that plainly names the
+      // lane — so this guard halted every diverged sync on a fresh runner while telling the operator
+      // something about their branch that was not true. See `workspace-lane.ts`.
       const target = await lanes.parseLaneId(laneIdStr);
-      const current = await lanes.getCurrentLane();
-      if (current?.name !== target.name || current?.scope !== target.scope) {
+      const current = currentLaneIdStr(lanes);
+      if (current !== target.toString()) {
         return {
           conflicts: [],
           error: new Error(
-            `the branch's .bitmap points at "${current ? `${current.scope}/${current.name}` : 'main'}" ` +
+            `the branch's .bitmap points at "${current ?? 'main'}" ` +
               `rather than ${laneIdStr}, so the lane's snaps cannot be merged into the branch's working tree`
           ),
         };
       }
+
+      // Cold runner: the pointer is right, but the lane object and its components may not be in this
+      // scope at all. Import them before the merge rather than relying on a fetch three layers down.
+      await ensureCurrentLaneObject(lanes);
 
       logger.console(
         chalk.blue(`Merging lane ${laneIdStr} into the branch's working tree (bit checkout head --manual)`)
@@ -1311,20 +1322,24 @@ export class LaneSyncExecutor {
   private async materializeLane(laneIdStr: string): Promise<Error | undefined> {
     const { logger } = this.deps;
     const target = await this.deps.lanes.parseLaneId(laneIdStr);
-    // Compare name AND scope, so a same-named lane in another scope can't masquerade as our lane
-    // (same probe `snapAndExportReusingLane` uses).
-    const isOnTarget = async () => {
-      const current = await this.deps.lanes.getCurrentLane();
-      return current?.name === target.name && current?.scope === target.scope;
-    };
+    // Compare name AND scope (`toString()` is `<scope>/<name>`), so a same-named lane in another scope
+    // can't masquerade as our lane.
+    //
+    // Read from `.bitmap`, not from the scope's lane object — see `workspace-lane.ts`. Cold, the object
+    // read answers "main" for a branch already on the lane, which sends this method down the wrong path:
+    // it skips the step-off to main, `switchLanes` then throws "already checked out" (which
+    // `switchToLane` swallows as success), nothing is materialized, and the final check below fails with
+    // a message blaming the switch. That is `import-lane` onto an existing branch — the commonest action
+    // there is — broken on every fresh runner.
+    const isOnTarget = () => currentLaneIdStr(this.deps.lanes) === target.toString();
 
-    if (await isOnTarget()) {
+    if (isOnTarget()) {
       logger.console(
         chalk.yellow(`Workspace is already on ${laneIdStr} — stepping off to main so the re-import actually runs`)
       );
       const toMainErr = await this.deps.ci.switchToLaneForSync('main');
       if (toMainErr) return toMainErr;
-      if (await isOnTarget()) {
+      if (isOnTarget()) {
         return new Error(`unable to leave lane ${laneIdStr} before re-importing it; the workspace is still on it`);
       }
     }
@@ -1334,10 +1349,10 @@ export class LaneSyncExecutor {
 
     // `switchToLane` swallows "already checked out" as success, and a switch can also land somewhere
     // unexpected. Verify before the caller commits a `.bitmap` asserting this lane's content.
-    if (!(await isOnTarget())) {
-      const current = await this.deps.lanes.getCurrentLane();
+    if (!isOnTarget()) {
       return new Error(
-        `switching to lane ${laneIdStr} reported success but the workspace is on "${current?.name ?? 'main'}"`
+        `switching to lane ${laneIdStr} reported success but the workspace is on ` +
+          `"${currentLaneIdStr(this.deps.lanes) ?? 'main'}"`
       );
     }
     return undefined;
@@ -1502,8 +1517,11 @@ export class LaneSyncExecutor {
   private async restoreWorkspace(defaultBranch: string) {
     const { logger } = this.deps;
     try {
-      const currentLane = await this.deps.lanes.getCurrentLane();
-      if (currentLane) {
+      // `.bitmap`-derived (see `workspace-lane.ts`): cold, the scope-object read answers "main" for a
+      // workspace that is really on a lane, and the switch back would be skipped. The forced checkout below
+      // would still restore `.bitmap`, so this was benign — but "benign because something else cleans up"
+      // is not a property worth keeping once the correct read costs nothing.
+      if (currentLaneIdStr(this.deps.lanes)) {
         const switchErr = await this.deps.ci.switchToLaneForSync('main');
         if (switchErr) logger.consoleWarning(`Could not switch the workspace back to main: ${switchErr.message}`);
       }

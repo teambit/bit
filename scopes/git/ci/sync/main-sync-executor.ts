@@ -6,6 +6,7 @@ import { git } from '../git';
 import type { CiMain } from '../ci.main.runtime';
 import type { CiSyncConfig } from './sync-config';
 import { SYNC_COMMIT_MARKER } from './sync-state';
+import { currentLaneIdStr } from './workspace-lane';
 import type { GitHostProvider } from './git-host-provider';
 import { HALT_SUMMARY_PREFIX } from './lane-sync-executor';
 import {
@@ -97,11 +98,17 @@ export class MainSyncExecutor {
       // hand-edited `.bitmap`, a lane pointer committed to the default branch by mistake), the diff
       // this run would compute is the lane's content, not the main scope's. Refuse rather than open a
       // wildly wrong PR.
-      const currentLane = await this.deps.lanes.getCurrentLane();
+      //
+      // `.bitmap`-derived (see `workspace-lane.ts`), and here that is the difference between a guard and a
+      // decoration. The scope-object read answers "main" whenever the lane object is not cached locally —
+      // which on a fresh CI runner is *always* — so this refusal would silently stop refusing in exactly
+      // the environment it ships in, and the run would go on to compute the lane's content as main-scope
+      // drift and open the wildly wrong PR this exists to prevent.
+      const currentLane = currentLaneIdStr(this.deps.lanes);
       if (currentLane) {
         return (
           `${HALT_SUMMARY_PREFIX} main -> the .bitmap on ${startPoint} points at lane ` +
-          `"${currentLane.scope}/${currentLane.name}" rather than main, so the main-scope drift cannot be computed`
+          `"${currentLane}" rather than main, so the main-scope drift cannot be computed`
         );
       }
 
@@ -306,8 +313,9 @@ export class MainSyncExecutor {
   private async restoreWorkspace() {
     const { logger, defaultBranch } = this.deps;
     try {
-      const currentLane = await this.deps.lanes.getCurrentLane();
-      if (currentLane) {
+      // `.bitmap`-derived for the same reason as its sibling in `lane-sync-executor` — see
+      // `workspace-lane.ts`.
+      if (currentLaneIdStr(this.deps.lanes)) {
         const switchErr = await this.deps.ci.switchToLaneForSync('main');
         if (switchErr) logger.consoleWarning(`Could not switch the workspace back to main: ${switchErr.message}`);
       }
