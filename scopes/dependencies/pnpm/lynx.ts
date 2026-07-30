@@ -380,8 +380,8 @@ export async function install(
   };
 
   // Keep this structural extension until Bit consumes the @pnpm/napi release
-  // whose public InstallOptions type includes trustLockfile.
-  const installOptions: nodeApi.InstallOptions & { trustLockfile?: boolean } = {
+  // whose public InstallOptions type includes trustLockfile and dedupePeers.
+  const installOptions: nodeApi.InstallOptions & { trustLockfile?: boolean; dedupePeers?: boolean } = {
     dir: rootDir,
     projects,
     storeDir,
@@ -412,6 +412,7 @@ export async function install(
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
     peersSuffixMaxLength: 1000,
     dedupePeerDependents: true,
+    dedupePeers: options.dedupePeers,
     dedupeDirectDeps: true,
     dedupeInjectedDeps: options.dedupeInjectedDeps,
     injectWorkspacePackages: true,
