@@ -4,20 +4,19 @@ import type { LanesMain } from '@teambit/lanes';
 import type { LaneData } from '@teambit/legacy.scope';
 import { getCloudDomain } from '@teambit/legacy.constants';
 import { FileStatus } from '@teambit/component.modules.merge-helper';
-import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { git } from '../git';
 import type { CiMain } from '../ci.main.runtime';
 import type { CiSyncConfig, LaneTarget } from './sync-config';
 import { laneNameToBranch } from './sync-config';
-import type { BranchSyncState, SyncCommit } from './sync-state';
+import type { BranchSyncState } from './sync-state';
 import {
   CONFLICT_LABEL,
   SYNC_COMMIT_MARKER,
   buildSyncCommitMessage,
-  isSyncCommitMessage,
   readBranchSyncState,
   hasSyncMarker,
 } from './sync-state';
+import { branchStateFingerprint, fingerprintIdVersions } from './bitmap-state';
 import type { GitHostProvider, PrInfo } from './git-host-provider';
 import type { LaneOwnershipEvidence } from './sync-planner';
 import { planLaneSync } from './sync-planner';
@@ -66,26 +65,22 @@ export type LaneSyncDeps = {
 };
 
 /**
- * Fingerprint of a lane's content, used as the `Bit-Lane-Head` trailer value on sync commits.
+ * Fingerprint of a lane's content — one half of the comparison the planner makes; the other half is
+ * `branchStateFingerprint` over the branch's committed `.bitmap`, and the two are deliberately produced by
+ * the same primitive so that "equal" means exactly "the branch records every lane component at the lane's
+ * head".
  *
  * We deliberately do NOT use `LaneData.hash`: that hash is minted randomly at lane-creation time
  * (`sha1(v4())`) and does not change when the lane's components advance, so it can't answer "did
- * the lane move since we last synced it?". Instead we derive the value from content: sort the
- * `<component-id>@<head>` pairs (so the remote's ordering can't perturb it) and join with a
- * newline.
- *
- * The join is then hashed rather than stored verbatim, because the value has to survive a
- * round-trip through a git commit trailer — `parseLaneHeadTrailer` reads it with `(\S+)`, so a
- * multi-line (or space-containing) value would be truncated to its first token. sha1 of the join is
- * a single 40-hex token, is stable across processes and machines (pure content), and keeps the
- * abbreviated form used in the commit subject meaningful.
+ * the lane move since we last synced it?". This is derived from content instead.
  */
 export function laneHeadFingerprint(components: LaneData['components']): string {
-  const joined = components
-    .map((comp) => `${comp.id.toStringWithoutVersion()}@${comp.head}`)
-    .sort()
-    .join('\n');
-  return sha1(joined);
+  return fingerprintIdVersions(components.map((comp) => `${comp.id.toStringWithoutVersion()}@${comp.head}`));
+}
+
+/** The lane's component ids, without versions — the id set `branchStateFingerprint` reads off the branch. */
+function laneComponentIds(components: LaneData['components']): string[] {
+  return components.map((comp) => comp.id.toStringWithoutVersion());
 }
 
 /**
@@ -212,11 +207,12 @@ Do NOT run the usual "bit lane import" resolution steps on this branch — they 
  * A lane that **became** cross-scope after this repository had already mirrored it onto a branch.
  *
  * This is the one cross-scope shape that is a genuine halt: the pair is mid-flight. The branch is the
- * lane's *live* mirror — a sync commit naming this lane which the default branch does not yet contain — so
- * there may be an open PR and dev commits on it that can no longer converge with the lane. That needs a
- * human, and the PR is exactly where to say so. Liveness is not a detail: a merged sync PR's commit lands
- * on the default branch's first-parent line, so every branch cut from it afterwards carries one, and
- * attribution by subject alone would label ordinary developer branches.
+ * lane's *live* mirror — its committed `.bitmap` points at this lane, and the commit that put it there is
+ * not yet in the default branch — so there may be an open PR and dev commits on it that can no longer
+ * converge with the lane. That needs a human, and the PR is exactly where to say so. Liveness is not a
+ * detail: a merged sync PR's state commit lands on the default branch's first-parent line, so every branch
+ * cut from it afterwards inherits that `.bitmap`, and attribution alone would label ordinary developer
+ * branches.
  */
 export function crossScopeMidFlightHaltReason(branch: string, foreignIds: string[], defaultScope: string): string {
   return (
@@ -275,9 +271,9 @@ export class LaneSyncExecutor {
     const laneName = target.name;
     // The BRANCH mapping is by lane NAME only — a lane hosted elsewhere still mirrors onto the branch its
     // name maps to. Everything addressed to bit, by contrast, uses the lane's REAL id: reading it from the
-    // remote, snapping/exporting onto it, and the id recorded in the sync commit subject (which is what
-    // later attributes the branch to this lane). Deriving that id from `defaultScope` instead would make
-    // the reconciler read, write and claim a lane that does not exist.
+    // remote, snapping/exporting onto it, and the id bit writes into the branch's `.bitmap` lane pointer
+    // (which is what later attributes the branch to this lane). Deriving that id from `defaultScope`
+    // instead would make the reconciler read, write and claim a lane that does not exist.
     const branch = laneNameToBranch(laneName, cfg);
     const laneIdStr = `${target.hostScope}/${laneName}`;
     try {
@@ -352,8 +348,8 @@ export class LaneSyncExecutor {
     // No branch => no history to read (and `git log origin/<branch>` would throw). The planner
     // short-circuits on `!branchExists` before it looks at any of these fields.
     const branchState: BranchSyncState = branchExists
-      ? await readBranchSyncState(branch, defaultBranch)
-      : { syncCommit: undefined, hasDevCommits: false, tipMessage: '' };
+      ? await readBranchSyncState(branch, defaultBranch, defaultScope)
+      : { stateCommit: undefined, bitmap: undefined, hasDevCommits: false, tipMessage: '' };
     if (hasSyncMarker(branchState.tipMessage)) {
       logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
     }
@@ -365,29 +361,29 @@ export class LaneSyncExecutor {
     const conflictLabelPresent = pr?.labels.includes(CONFLICT_LABEL) ?? false;
     const suppressedByLabel = `${laneName} -> noop (PR is labeled ${CONFLICT_LABEL}; resolve and remove the label to resume)`;
 
-    // Which lane, if any, this branch's own *live* sync history mirrors.
+    // Which lane, if any, this branch is the *live* mirror of.
     //
-    // "Live" is doing the load-bearing work: a sync commit naming lane X proves nothing on its own, because
-    // once X's sync PR is squash-, rebase- or fast-forward-merged that commit sits on the default branch's
-    // own first-parent line and every branch cut from the default branch afterwards inherits it. Only a sync
-    // commit the default branch does NOT contain (`own-live`) says "this branch is X's mirror, right now".
-    // The evidence is computed once here and reused for the lane-gone path below, so a branch with a sync
-    // commit costs one or two extra `merge-base` calls **per lane per run** (up to 2N on an `--all` run of
-    // N lanes) — the price of not confusing an inherited trailer for a claim.
-    const claim: LaneOwnershipEvidence = branchState.syncCommit?.laneIdStr
-      ? await this.assessBranchOwnership({
-          laneIdStr: branchState.syncCommit.laneIdStr,
-          branch,
-          defaultBranch,
-          syncCommit: branchState.syncCommit,
-        })
-      : 'inherited-or-none';
-    const mirroredLaneIdStr = claim === 'own-live' ? branchState.syncCommit?.laneIdStr : undefined;
+    // ATTRIBUTION is the lane pointer in the branch's committed `.bitmap` — bit's own record of which lane
+    // this checkout is on. It is structural: it survives a git host rewriting commit messages on squash-,
+    // rebase- or ff-merge, and nobody can produce it by writing text into a commit message.
+    //
+    // "Live" is then doing the load-bearing work: a branch pointing at lane X proves nothing on its own,
+    // because once X's sync PR is merged that `.bitmap` state sits on the default branch's own first-parent
+    // line. Only a state commit the default branch does NOT contain (`own-live`) says "this branch is X's
+    // mirror, right now". The evidence is computed once here and reused for the lane-gone path below, so a
+    // branch with a lane pointer costs one or two extra `merge-base` calls **per lane per run** (up to 2N on
+    // an `--all` run of N lanes) — the price of not confusing an inherited state for a claim.
+    const mirroredLane = branchState.bitmap?.laneIdStr;
+    const claim: LaneOwnershipEvidence =
+      mirroredLane && branchState.stateCommit
+        ? await this.assessBranchOwnership({ branch, defaultBranch, stateCommit: branchState.stateCommit })
+        : 'inherited-or-none';
+    const mirroredLaneIdStr = claim === 'own-live' ? mirroredLane : undefined;
 
     // TWO LANES, ONE BRANCH. The branch mapping is keyed on the lane NAME, so `other.scope/release` and
     // `<defaultScope>/release` map to the same branch. If this branch is the live mirror of a *different*
     // lane, planning against it would hijack it: `import-lane` would materialize this lane over the other
-    // lane's content under a trailer claiming otherwise, and `merge-diverged` would snap one lane's work
+    // lane's content and repoint its `.bitmap`, and `merge-diverged` would snap one lane's work
     // onto the other. Halt instead — the pair really is mid-flight, and its PR is where to say so.
     //
     // Only when this lane actually exists: with no lane there is nothing to write onto the branch, and the
@@ -435,7 +431,7 @@ export class LaneSyncExecutor {
         // Mid-flight: this branch is the LIVE mirror of THIS lane — this repository reconciled the pair
         // back when the lane's content was single-scope, so an open PR and any dev commits on the branch
         // are now stranded. `mirroredLaneIdStr` has already excluded the two impostors: a branch that
-        // merely shares the lane's name, and one carrying a sync trailer inherited from the default branch.
+        // merely shares the lane's name, and one whose `.bitmap` state was inherited from the default branch.
         midFlight: mirroredLaneIdStr === laneIdStr,
         explicit: Boolean(explicitTarget),
         conflictLabelPresent,
@@ -447,15 +443,32 @@ export class LaneSyncExecutor {
     // "The lane is gone but the branch is still here" is the only situation whose outcome depends on the
     // claim, and the only one that can delete a branch — so the answer is reported only where it meant
     // something. Attribution to *this* lane is still required: the claim above was computed for whichever
-    // lane the sync commit names, and a claim on someone else's behalf licenses nothing here.
+    // lane the branch's `.bitmap` names, and a claim on someone else's behalf licenses nothing here.
     const laneIsGone = branchExists && !laneHead;
-    const ownership: LaneOwnershipEvidence =
-      laneIsGone && branchState.syncCommit?.laneIdStr === laneIdStr ? claim : 'inherited-or-none';
+    const ownership: LaneOwnershipEvidence = laneIsGone && mirroredLane === laneIdStr ? claim : 'inherited-or-none';
+
+    // S — WHAT THE BRANCH REFLECTS, read off the branch's own `.bitmap` rather than off a commit message.
+    //
+    // Only when the branch's `.bitmap` names *this* lane: a branch on main, or one mirroring a different
+    // lane, has no state for this pair, and the planner's `!lastSyncedHead` rows are exactly the ones that
+    // handle "this branch has no state of ours" (adopt it when it is otherwise untouched, halt when it
+    // carries commits nobody can order against the lane).
+    //
+    // The comparison against `laneHead` is between two fingerprints of the same shape, so equality means
+    // "the branch records every lane component at the lane's head" — i.e. converged at the bit level. Note
+    // what that buys over the trailer: a developer who snaps and exports from the branch and commits the
+    // resulting `.bitmap` has genuinely advanced *the branch's* state to the lane's, and this reads it as
+    // converged. The trailer, which only ever recorded what the *reconciler* last wrote, read the same
+    // branch as "lane moved + dev commits" and manufactured a `merge-diverged` round of churn.
+    const lastSyncedHead =
+      remoteLane && branchState.bitmap && mirroredLane === laneIdStr
+        ? branchStateFingerprint(branchState.bitmap, laneComponentIds(remoteLane.components))
+        : undefined;
 
     const action = planLaneSync({
       laneHead,
       branchExists,
-      lastSyncedHead: branchState.syncCommit?.laneHead,
+      lastSyncedHead,
       hasDevCommits: branchState.hasDevCommits,
       conflictLabelPresent,
       ownership,
@@ -464,7 +477,7 @@ export class LaneSyncExecutor {
     logger.console(
       chalk.blue(
         `${laneName} -> ${action.type} (branch: ${branch}, lane head: ${laneHead?.slice(0, 9) ?? 'none'}, ` +
-          `last synced: ${branchState.syncCommit?.laneHead.slice(0, 9) ?? 'none'}, ` +
+          `branch state: ${lastSyncedHead?.slice(0, 9) ?? 'none'}, ` +
           `dev commits: ${branchState.hasDevCommits}${laneIsGone ? `, branch claim: ${ownership}` : ''})`
       )
     );
@@ -518,9 +531,10 @@ export class LaneSyncExecutor {
   /**
    * What a cross-scope lane means *for this repository*, which is not one thing:
    *
-   * 1. **Mid-flight halt.** The branch is this lane's *live* mirror — a sync commit naming it which the
-   *    default branch does not yet contain (see `mirroredLaneIdStr` in `reconcileLane`; a merged sync PR's
-   *    trailer is inherited by every branch cut from the default branch afterwards, and must not count).
+   * 1. **Mid-flight halt.** The branch is this lane's *live* mirror — its `.bitmap` names this lane and the
+   *    commit that wrote it is not yet in the default branch (see `mirroredLaneIdStr` in `reconcileLane`; a
+   *    merged sync PR's `.bitmap` is inherited by every branch cut from the default branch afterwards, and
+   *    must not count).
    *    The pair was reconcilable until the lane grew a foreign component, and an open PR and any dev
    *    commits on that branch can now never converge. That is a genuine conflict — label the PR, comment
    *    the reason, exit non-zero — and it self-suppresses once labelled. Checked first: it outranks how the
@@ -591,8 +605,9 @@ export class LaneSyncExecutor {
 
   /**
    * Mirror the remote lane onto the branch: check the branch out, materialize the lane into the
-   * workspace, and commit the result with a `Bit-Lane-Head` trailer that records which lane state
-   * this commit represents.
+   * workspace, and commit the result. The committed `.bitmap` — the lane pointer plus every component's
+   * version — IS the record of which lane state the branch now holds; the message's trailer and marker
+   * ride along as annotations.
    */
   private async executeImportLane({
     target,
@@ -624,10 +639,10 @@ export class LaneSyncExecutor {
 
     try {
       // Write the lane's files and `.bitmap` into the workspace. This is the load-bearing step: the
-      // sync commit below asserts (via the `Bit-Lane-Head` trailer) that the branch mirrors the lane,
-      // so if nothing is materialized the trailer becomes a permanent lie and every later run reports
-      // the pair as converged. See `materializeLane` for why a plain `switchToLaneForSync` is not
-      // enough.
+      // commit below records the resulting `.bitmap` as the branch's state, so a switch that moved the
+      // pointer without materializing the files would make every later run read the pair as converged
+      // over content the branch never received. See `materializeLane` for why a plain
+      // `switchToLaneForSync` is not enough.
       const switchErr = await this.materializeLane(laneIdStr);
       if (switchErr) {
         // A failed switch is a halt, not a crash: the lane may reference a component this workspace
@@ -658,8 +673,8 @@ export class LaneSyncExecutor {
 
   /**
    * Push the branch's dev commits back onto the lane: snap+export the branch's working tree onto
-   * the lane, then record the resulting lane head on the branch with a fresh trailer commit so the
-   * next run sees the two sides as converged.
+   * the lane, then commit the `.bitmap` the snap produced back onto the branch, so the branch's state and
+   * the lane's head are once again the same and the next run sees the two sides as converged.
    */
   private async executeExportBranch({
     target,
@@ -720,7 +735,7 @@ export class LaneSyncExecutor {
    *    `bit checkout head --manual`). Conflicts → discard the marker writes and halt for a human.
    * 2. **Snap + export the merged tree** onto the lane. Only now does the lane advance, and it
    *    advances to a snap that contains *both* sides — the snap *is* the merge.
-   * 3. **Record the resulting lane head on the branch** with a fresh `Bit-Lane-Head` trailer and push,
+   * 3. **Record the resulting state on the branch** — commit the `.bitmap` the snap produced, and push,
    *    so the next run sees the pair as converged.
    *
    * Why the merge cannot be skipped in favour of "just export and let the export recover": the export
@@ -729,7 +744,7 @@ export class LaneSyncExecutor {
    * (`checkout.main.runtime.ts:580`), so `applyVersion` marks every file `unchanged`, leaves the
    * filesystem alone and only moves `.bitmap` onto the lane heads. The snap that follows therefore
    * records *the branch's* tree against the new lane head: every lane-side file edit is silently
-   * reverted on the lane tip, the branch never receives the lane's content, and the trailer this
+   * reverted on the lane tip, the branch never receives the lane's content, and the state this
    * method pushes would then assert convergence over that loss. `exportWithAdoptOnConflict` cannot
    * save it either — it rebases parent pointers, it does not merge files.
    *
@@ -851,9 +866,10 @@ export class LaneSyncExecutor {
 
   /**
    * Record on the branch which lane state it now mirrors: re-query the lane (the export just moved
-   * it, so any fingerprint taken before is stale), commit everything with a fresh `Bit-Lane-Head`
-   * trailer, and push. Returns the fingerprint, or `undefined` when the lane can no longer be read
-   * from the remote — in which case the caller halts rather than committing a trailer it can't back.
+   * it, so any fingerprint taken before is stale), commit everything — crucially the `.bitmap` the snap
+   * rewrote, which is the state — and push. Returns the fingerprint for the annotation on the message, or
+   * `undefined` when the lane can no longer be read from the remote, in which case the caller halts rather
+   * than pushing a commit whose message claims a lane state it cannot name.
    */
   private async recordLaneHeadOnBranch(
     target: LaneTarget,
@@ -984,47 +1000,42 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * How strong a claim this lane/branch pair has on `origin/<branch>`, which is what decides whether the
-   * branch may be deleted. See `LaneOwnershipEvidence` for what each answer means; this method is only the
-   * two git questions behind it.
+   * The **reachability** half of `LaneOwnershipEvidence` — how live the branch's bit state is, which is what
+   * decides whether the branch may be deleted. See `LaneOwnershipEvidence` for what each answer means.
+   *
+   * The *attribution* half lives at the call site and is structural: the branch's committed `.bitmap` has a
+   * lane pointer, and (for the retirement decision) that pointer names the lane being reconciled. This
+   * method deliberately does not repeat that comparison — it is asked only about commits.
    *
    * An unanswerable question resolves to `inherited-or-none`. That is not a fallback chosen for
    * convenience: every other answer permits deleting a branch, and a `merge-base` that failed (unrelated
    * histories, an unresolvable ref, a git hiccup) is not evidence of anything.
    *
-   * **Foreign-hosted lanes (Stage 0).** Attribution compares the subject's lane id against `laneIdStr`,
-   * and both sides are now the lane's *real* id (`hostScope/name`) because `buildSyncCommitMessage` and
-   * this comparison are fed from the same place — so a branch synced from `other.scope/my-lane` is
-   * correctly attributed whenever that same target is passed again. What it deliberately does NOT do is
-   * attribute such a branch when it is reached *by branch name* (`--branch`, or the branch half of
-   * `--all`), because those paths derive the lane id from `defaultScope`: the expectation becomes
-   * `defaultScope/my-lane`, the subject says `other.scope/my-lane`, they differ, and the evidence is
-   * `inherited-or-none` — which the planner turns into a **no-op**. That asymmetry is the safe direction
-   * and is why it is acceptable for Stage 0: an unattributed branch is left alone, never retired, and
-   * `--all` does not enumerate foreign-hosted lanes anyway (they are explicit-target only). Stage 1's
+   * **Foreign-hosted lanes (Stage 0).** Attribution compares the `.bitmap` pointer against `laneIdStr`, and
+   * both sides are scope-qualified — the pointer is the lane's *real* id (`hostScope/name`), so a branch
+   * mirroring `other.scope/my-lane` is correctly attributed whenever that same target is passed again. What
+   * it deliberately does NOT do is attribute such a branch when it is reached *by branch name* (`--branch`,
+   * or the branch half of `--all`), because those paths derive the lane id from `defaultScope`: the
+   * expectation becomes `defaultScope/my-lane`, the pointer says `other.scope/my-lane`, they differ, and the
+   * evidence is `inherited-or-none` — which the planner turns into a **no-op**. That asymmetry is the safe
+   * direction and is why it is acceptable for Stage 0: an unattributed branch is left alone, never retired,
+   * and `--all` does not enumerate foreign-hosted lanes anyway (they are explicit-target only). Stage 1's
    * `laneSources` config is what will let branch-derived targeting know which scope hosts a lane.
    */
   private async assessBranchOwnership({
-    laneIdStr,
     branch,
     defaultBranch,
-    syncCommit,
+    stateCommit,
   }: {
-    laneIdStr: string;
     branch: string;
     defaultBranch: string;
-    syncCommit?: SyncCommit;
+    stateCommit: string;
   }): Promise<LaneOwnershipEvidence> {
     const { logger } = this.deps;
-    // Attribution. The subject has to name *this* lane. A trailer alone proves nothing about ownership:
-    // once a sync PR is squash-, rebase- or fast-forward-merged its trailer sits on the default branch's
-    // own first-parent line, so every branch cut from the default branch afterwards inherits one.
-    if (!syncCommit || syncCommit.laneIdStr !== laneIdStr) return 'inherited-or-none';
-
     try {
-      // Reachability. A sync commit the default branch does NOT contain means this branch's sync history is
-      // still its own — a live lane branch of ours, which is exactly what `close-pr` retires.
-      if (!(await isAncestor(syncCommit.hash, `origin/${defaultBranch}`))) return 'own-live';
+      // A state commit the default branch does NOT contain means this branch's bit state is still its own —
+      // a live lane branch of ours, which is exactly what `close-pr` retires.
+      if (!(await isAncestor(stateCommit, `origin/${defaultBranch}`))) return 'own-live';
       // The default branch does contain it, so the PR was merged. Deleting is only safe if the *tip* is in
       // there too; otherwise work was pushed after the merge and lives nowhere else.
       if (await isAncestor(`origin/${branch}`, `origin/${defaultBranch}`)) return 'own-merged';
@@ -1219,8 +1230,8 @@ export class LaneSyncExecutor {
    * 1. It defaults to `forceOurs: true`, which is right for `bit ci pr` (keep the PR's working tree)
    *    and catastrophic for us. `applyVersion` checks `forceOurs` *first* and short-circuits: every
    *    file is marked `unchanged`, the filesystem is never touched, and only `.bitmap` ids move. The
-   *    result would be a `.bitmap`-only commit carrying a `Bit-Lane-Head` trailer that claims the
-   *    branch mirrors the lane. Worse, that same short-circuit throws
+   *    result would be a `.bitmap`-only commit whose recorded state claims the branch mirrors the lane
+   *    while its files still hold the default branch's content. Worse, that same short-circuit throws
    *    `applyVersion expect to get componentFromFS for <id>` for any lane component this branch's
    *    `.bitmap` doesn't already have. So `forceOurs` must be cleared *explicitly* (the option spread
    *    in `switchToLane` puts caller options last, so this override does take effect), and
@@ -1260,7 +1271,7 @@ export class LaneSyncExecutor {
     if (switchErr) return switchErr;
 
     // `switchToLane` swallows "already checked out" as success, and a switch can also land somewhere
-    // unexpected. Verify before the caller commits a trailer asserting this lane's content.
+    // unexpected. Verify before the caller commits a `.bitmap` asserting this lane's content.
     if (!(await isOnTarget())) {
       const current = await this.deps.lanes.getCurrentLane();
       return new Error(
@@ -1321,20 +1332,21 @@ export class LaneSyncExecutor {
     const log = await git.log([`origin/${branch}`, '--max-count=200']);
     const entry = log.all.find((item) => {
       const message = item.body ? `${item.message}\n\n${item.body}` : item.message;
-      return !isSyncCommitMessage(message);
+      return !hasSyncMarker(message);
     });
     return entry?.message || `chore: sync ${branch} into the lane (from ${defaultBranch})`;
   }
 
   /**
-   * Stage everything, commit with the sync trailer, and push. Never force-pushes: the branch is
+   * Stage everything, commit with the annotated sync message, and push. Never force-pushes: the branch is
    * always fast-forwarded from the state we just checked out, so a rejected push means someone
    * pushed concurrently and the next run should re-plan from the new state rather than clobber it.
    *
-   * `--allow-empty` matters: when the lane's materialized files happen to be byte-identical to
-   * what the branch already has, there's nothing to stage — but we still need the trailer commit,
-   * because it is the *only* record that this lane state has been synced. Without it every
-   * subsequent run would re-plan the same import.
+   * `--allow-empty` is now only insurance against `git commit` failing the lane outright. Under the v2
+   * (`.bitmap`-derived) state model it can no longer be load-bearing: every path that reaches here has just
+   * changed `.bitmap` — `import-lane` materialized a lane the branch did not already record (or it would
+   * have read as converged), and the export paths snapped, which always rewrites component versions. If a
+   * commit here ever were empty it would record nothing, because the state is the file, not the message.
    */
   private async commitAllAndPush(branch: string, message: string) {
     await ensureGitIdentity();
@@ -1415,7 +1427,7 @@ export class LaneSyncExecutor {
    * checkout leaves in place. On the pushed paths they were committed and the forced checkout removes
    * them by itself, but a lane that halted after materializing never committed anything, so without the
    * clean its component files survive into the *next* lane of an `--all` run, get staged by that lane's
-   * `git add -A`, and land on that lane's branch under its `Bit-Lane-Head` trailer — content the trailer
+   * `git add -A`, and land on that lane's branch as part of that lane's state — content that state
    * does not describe. `MainSyncExecutor.restoreWorkspace` cleans for the same reason; the two restores
    * must not diverge. The clean is scoped (see `cleanUntrackedScoped`).
    *

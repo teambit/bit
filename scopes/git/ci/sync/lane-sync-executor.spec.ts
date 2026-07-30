@@ -29,9 +29,7 @@ describe('laneHeadFingerprint', () => {
   const a = comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
   const b = comp('acme.shop/comp2', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2');
 
-  it('is a single 40-hex token, so it survives a round-trip through a commit trailer', () => {
-    // `parseLaneHeadTrailer` reads the value with `(\S+)`: a multi-line or space-containing value would
-    // be silently truncated to its first token, and every later run would compare against the truncation.
+  it('is a single 40-hex token, so it survives being written into a commit trailer as an annotation', () => {
     const fingerprint = laneHeadFingerprint([a, b]);
     expect(fingerprint).to.match(/^[0-9a-f]{40}$/);
   });

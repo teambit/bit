@@ -1,4 +1,7 @@
+import { BIT_MAP } from '@teambit/legacy.constants';
 import { git } from '../git';
+import type { BranchBitmapState } from './bitmap-state';
+import { parseBranchBitmap } from './bitmap-state';
 
 export const LANE_HEAD_TRAILER = 'Bit-Lane-Head';
 /**
@@ -13,19 +16,20 @@ export const LANE_HEAD_TRAILER = 'Bit-Lane-Head';
 export const SYNC_COMMIT_MARKER = '[bit-sync]';
 export const CONFLICT_LABEL = 'bit-sync-conflict';
 
-export function parseLaneHeadTrailer(message: string): string | undefined {
-  const match = message.match(new RegExp(`^${LANE_HEAD_TRAILER}:\\s*(\\S+)`, 'm'));
-  return match?.[1];
-}
-
 export function hasSyncMarker(message: string): boolean {
   return message.includes(SYNC_COMMIT_MARKER);
 }
 
-export function isSyncCommitMessage(message: string): boolean {
-  return message.includes(SYNC_COMMIT_MARKER) && parseLaneHeadTrailer(message) !== undefined;
-}
-
+/**
+ * The sync commit's message. Every part of it is an **annotation** — a human audit trail, plus the
+ * `[bit-sync]` marker the action repo's event router matches to skip re-triggering on our own push.
+ * **Nothing reads any of it as state** (see `readBranchSyncState`): the subject, the `Bit-Lane-Head`
+ * trailer and the marker are all forgeable by anyone who can write a commit message, and none of them
+ * survives a git host rewriting the message on squash-merge. State comes from `.bitmap`.
+ *
+ * The trailer's value is `laneHeadFingerprint`, which is still what the branch's `.bitmap` will produce
+ * for a converged pair — so it stays a genuinely useful thing for a human to read off `git log`.
+ */
 export function buildSyncCommitMessage(laneIdStr: string, laneHead: string): string {
   return [
     `chore(bit-sync): sync lane ${laneIdStr} @ ${laneHead.slice(0, 9)}`,
@@ -35,130 +39,93 @@ export function buildSyncCommitMessage(laneIdStr: string, laneHead: string): str
   ].join('\n');
 }
 
-/**
- * The lane id `buildSyncCommitMessage` recorded in a sync commit's **subject**, if the subject has that
- * exact shape.
- *
- * This is what tells "a sync commit written for *this* pair" apart from "a sync commit this branch merely
- * inherited". The `Bit-Lane-Head` trailer cannot: once a sync PR is squash-, rebase- or fast-forward-merged,
- * its trailer sits on the **default branch's own first-parent line**, so every branch forked from the
- * default branch afterwards carries it and looks, by trailer alone, like a branch the reconciler created.
- * The subject names the lane, so it distinguishes them.
- *
- * Only the SUBJECT — the message's first line — may satisfy this. A multiline match would let a
- * sync-shaped line *anywhere* in a message attribute the commit: a developer quoting a sync commit's
- * message in their own commit body would make an ordinary commit read as ours, and attribution is half of
- * what licenses deleting a branch. `parseLogRecords` (and `%B` generally) delivers messages starting at
- * the subject, so line one is the subject.
- */
-export function parseSyncCommitLaneId(message: string): string | undefined {
-  return message.split('\n', 1)[0].match(/^chore\(bit-sync\): sync lane (\S+) @ /)?.[1];
-}
-
-/** A sync commit found in a branch's history: identified by its trailer, attributed by its subject. */
-export type SyncCommit = {
-  hash: string;
-  /** full raw message (subject + body) */
-  message: string;
-  /** the `Bit-Lane-Head` trailer value — always set, because it is what identified this commit */
-  laneHead: string;
-  /** the lane id named in the subject, when the subject has `buildSyncCommitMessage`'s shape */
-  laneIdStr?: string;
-};
-
 export type BranchSyncState = {
   /**
-   * The newest sync commit on the branch's **own** (first-parent) line, if it has one. This is the single
-   * record of "what has this branch been synced to, and by whom" — callers derive both the last synced
-   * lane head and the branch-ownership question from it, rather than being handed pre-digested booleans
-   * that could disagree with each other.
+   * The newest commit on the branch's **own** (first-parent) line that changed `.bitmap` — the commit that
+   * put the branch in the bit state it is in. It is the reachability anchor for branch ownership (is the
+   * branch's bit state already in the default branch?) and the baseline for `hasDevCommits`.
+   *
+   * Undefined only for a branch on which `.bitmap` was never written at all.
    */
-  syncCommit?: SyncCommit;
-  /** Whether the branch carries commits the lane has never seen. */
+  stateCommit?: string;
+  /**
+   * The branch tip's `.bitmap`, parsed — the branch's bit state: which lane it mirrors and at which
+   * component versions. Undefined when the file is absent, unreadable or unparseable, which every caller
+   * treats as "not ours" (see `parseBranchBitmap`).
+   *
+   * Read at the **tip** rather than at `stateCommit`, and that is not an approximation: `stateCommit` is by
+   * construction the last first-parent commit whose `.bitmap` differs from its predecessor's, so nothing
+   * between it and the tip changed the file. The two are the same bytes.
+   */
+  bitmap?: BranchBitmapState;
+  /** Whether the branch carries commits on top of its bit state — work bit has not seen. */
   hasDevCommits: boolean;
   /** The branch tip's full commit message (subject + body), for the sync-marker loop-guard probe. */
   tipMessage: string;
 };
 
 /**
- * `git log --format` value that emits, per commit, the sha on its own line followed by the full raw
- * message, terminated by a NUL. NUL is the one byte a commit message cannot contain, so it is the only
- * safe record separator here — a message body can contain blank lines, `\r`, and anything else a
- * text-based delimiter would collide with.
+ * Read the sync state of a remote branch **from bit's own data**: the `.bitmap` the branch has committed.
+ * Assumes `git fetch origin` already ran this process (executor does it once up front).
+ *
+ * git is used only for what git alone can answer — *which* blob, and *what is reachable from what*:
+ *
+ * - **the state commit** — `git log --first-parent -1 -- .bitmap`. `--first-parent` is a correctness
+ *   requirement, not an optimization, and it is the same one the previous (trailer-walking) implementation
+ *   needed: `git log` orders by commit date across *all* parents, so a `.bitmap` change that arrived through
+ *   a **merge** (someone merged the default branch, or another sync branch, into this one) is newer than this
+ *   branch's own and would be picked instead. The anchor would then be a commit describing a different pair.
+ *   First-parent traversal restricts the walk to this branch's own line of development, which is the only
+ *   line whose state describes *this* pair. (It also bounds the walk.)
+ * - **the state itself** — `git show origin/<branch>:./.bitmap`, parsed with bit's own `BitMap`.
+ * - **dev commits** — how many commits sit on top of the state commit. Without a state commit at all there is
+ *   no baseline on the branch, so the default branch (the branch's fork point) is the next best one.
+ *
+ * **Why this is better than the `Bit-Lane-Head`/subject walk it replaces**, beyond being bit-native:
+ * a squash-, rebase- or ff-merge rewrites commit *messages* and the old attribution died with them, while
+ * `.bitmap` is content and survives; a developer quoting a sync commit in their own message could no longer
+ * be mistaken for one; and a developer who legitimately advances the branch's bit state (snap + export, then
+ * commit the resulting `.bitmap`) is now seen as *having moved the state* rather than as having piled
+ * unrelated dev commits on a stale one — so the planner reads such a branch as converged instead of
+ * manufacturing a `merge-diverged` round of churn.
+ *
+ * **Known cost of `--first-parent`** (unchanged from v1). If a developer resolves a lane branch's remote
+ * update with a merge rather than a rebase — a plain `git pull` on the branch after a sync run pushed to it —
+ * the sync commit we wrote ends up on the *second* parent. Its `.bitmap` is nevertheless what the merge
+ * result carries, so the merge commit itself becomes the state commit (its `.bitmap` differs from its first
+ * parent's), and the state read is correct. This is strictly better than v1, where the trailer was simply
+ * invisible and the run re-planned work already done.
  */
-const LOG_FORMAT = '--format=%H%n%B%x00';
+export async function readBranchSyncState(
+  branch: string,
+  defaultBranch: string,
+  defaultScope: string
+): Promise<BranchSyncState> {
+  const revision = `origin/${branch}`;
+  const tipMessage = (await git.raw(['log', revision, '-n', '1', '--format=%B'])).trimEnd();
+  const stateCommit =
+    (await git.raw(['log', revision, '--first-parent', '-n', '1', '--format=%H', '--', BIT_MAP])).trim() || undefined;
 
-/** Parse the `LOG_FORMAT` stream into `{ hash, message }` records, dropping the trailing empty one. */
-function parseLogRecords(out: string): Array<{ hash: string; message: string }> {
-  return out
-    .split('\0')
-    .map((record) => record.replace(/^\n+/, ''))
-    .filter((record) => record.trim().length > 0)
-    .map((record) => {
-      const newline = record.indexOf('\n');
-      return newline === -1
-        ? { hash: record.trim(), message: '' }
-        : { hash: record.slice(0, newline).trim(), message: record.slice(newline + 1).trimEnd() };
-    });
+  const bitmap = parseBranchBitmap(await readFileAtRef(revision, BIT_MAP), defaultScope);
+
+  const range = stateCommit ? `${stateCommit}..${revision}` : `origin/${defaultBranch}..${revision}`;
+  const count = await git.raw(['rev-list', range, '--count']);
+
+  return { stateCommit, bitmap, hasDevCommits: parseInt(count.trim(), 10) > 0, tipMessage };
 }
 
 /**
- * Read the sync state of a remote branch from git history alone.
- * `defaultBranch` is used when the branch has no sync commit: dev commits then means
- * "commits on origin/<branch> that are not on origin/<defaultBranch>".
- * Assumes `git fetch origin` already ran this process (executor does it once up front).
+ * A file's content at a git ref, or undefined when it isn't there.
  *
- * The sync commit is located with `--grep` rather than by walking the last N commits. A window is not a
- * safe way to find it: merging the default branch into a long-lived lane branch brings in *all* of that
- * branch's history, so a repository with any real commit volume pushes the branch's own sync commit
- * arbitrarily far back within one merge. The window would then report `lastSyncedHead: undefined` for a
- * branch that has been synced many times, and the planner would halt with "branch has commits but no
- * Bit-Lane-Head trailer" — a reason that is simply false. `--grep` asks git to find it however deep it
- * is, and costs the same.
- *
- * `--first-parent` is a correctness requirement, not an optimization. `git log` orders by commit date
- * across *all* parents, so a `Bit-Lane-Head` commit that arrived through a **merge** — someone merged the
- * default branch, which contains another lane's sync commit, or the branch once merged a different sync
- * branch — has a newer commit date than this branch's own sync commit and would be picked instead. The
- * adopted `lastSyncedHead` would then be another lane's fingerprint: it never equals this lane's head, so
- * every run reads the lane as moved and re-plans work that was already done, and idempotence is gone.
- * First-parent traversal restricts the walk to this branch's own line of development, which is the only
- * line whose sync commits describe *this* pair. (It also bounds the walk.)
- *
- * All matches on that line are scanned rather than just the newest, because `--grep` matches the trailer
- * *anywhere* in a message (a developer quoting a previous sync commit in their own body would match) while
- * `parseLaneHeadTrailer` only accepts it at the start of a line. Taking `-n 1` would let such a commit
- * mask the real sync commit behind it.
- *
- * **Known cost of `--first-parent`.** If a developer resolves a lane branch's remote update with a merge
- * rather than a rebase — a plain `git pull` on the branch after a sync run pushed to it — the sync commit
- * we wrote ends up on the *second* parent, and this walk will not see it. `lastSyncedHead` then falls back
- * to an older sync commit (or none), the lane reads as moved, and the run plans `merge-diverged` where
- * `export-branch` was the truth. That converges — `merge-diverged` merges the lane into the branch and
- * snaps the result, and the fresh trailer it pushes lands back on the first-parent line — so the cost is
- * one round of churn, not a wrong outcome. It is the deliberate trade against the alternative, which is
- * adopting *another pair's* fingerprint and never converging at all.
+ * Both failure shapes have to be handled: simple-git's `raw` *resolves* rather than rejects on some non-zero
+ * exits (the trap `isAncestor` in `git-ops.ts` documents), so a missing path can come back either as a
+ * rejection or as empty output. `:./` makes the path relative to the working directory rather than to the
+ * repository root, so this stays correct if the workspace is ever a subdirectory of the repo.
  */
-export async function readBranchSyncState(branch: string, defaultBranch: string): Promise<BranchSyncState> {
-  const revision = `origin/${branch}`;
-  const [tip] = parseLogRecords(await git.raw(['log', revision, '-n', '1', LOG_FORMAT]));
-  const candidates = parseLogRecords(
-    await git.raw(['log', revision, '--first-parent', `--grep=${LANE_HEAD_TRAILER}:`, LOG_FORMAT])
-  );
-
-  let syncCommit: SyncCommit | undefined;
-  for (const candidate of candidates) {
-    const laneHead = parseLaneHeadTrailer(candidate.message);
-    if (!laneHead) continue;
-    syncCommit = { ...candidate, laneHead, laneIdStr: parseSyncCommitLaneId(candidate.message) };
-    break;
+async function readFileAtRef(revision: string, filePath: string): Promise<string | undefined> {
+  try {
+    return await git.raw(['show', `${revision}:./${filePath}`]);
+  } catch {
+    return undefined;
   }
-
-  // Dev commits are counted from the sync commit when there is one — anything on top of it is work the
-  // lane has never seen. Without one there is no baseline on the branch, so the default branch (the
-  // branch's fork point) is the next best one.
-  const range = syncCommit ? `${syncCommit.hash}..${revision}` : `origin/${defaultBranch}..${revision}`;
-  const count = await git.raw(['rev-list', range, '--count']);
-
-  return { syncCommit, hasDevCommits: parseInt(count.trim(), 10) > 0, tipMessage: tip?.message ?? '' };
 }

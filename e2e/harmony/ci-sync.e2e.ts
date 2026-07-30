@@ -20,8 +20,8 @@ chai.use(chaiFs);
  * The assertions are deliberately about *file content on the pushed branch and on the lane tip*, not
  * just about commits existing. Two bugs found during implementation were invisible to
  * commit-existence checks:
- *   - `switchToLane`'s `forceOurs: true` default made the import direction a `.bitmap`-only commit
- *     carrying a `Bit-Lane-Head` trailer that claimed the branch mirrored the lane (it didn't).
+ *   - `switchToLane`'s `forceOurs: true` default made the import direction a `.bitmap`-only commit whose
+ *     recorded state claimed the branch mirrored the lane (it didn't).
  *   - the diverged path used to snap *before* merging, so the lane tip silently reverted every
  *     lane-side file edit to the branch's content.
  * Scenarios A and D1 lock those two respectively, by asserting on real file bytes.
@@ -586,6 +586,151 @@ describe('bit ci sync', function () {
   });
 
   // =============================================================================================
+  // THE STATE-MODEL-V2 CELL. A developer who works on the branch *with bit* — `bit snap`, `bit export`,
+  // then commit the resulting `.bitmap` — has legitimately advanced the branch's own bit state to the
+  // lane's. Since the reconciler derives that state from `.bitmap` rather than from what it last wrote in
+  // a commit trailer, it sees the pair as CONVERGED.
+  //
+  // Under the trailer-derived model the same branch read as "the lane moved (it did — the developer
+  // exported) AND the branch has dev commits", i.e. `merge-diverged`: a full lane-into-branch merge, a
+  // snap, an export and a push, all to arrive back where the developer already was. That is the churn this
+  // model removes, and it is not cosmetic — every one of those rounds advances the lane and rewrites the
+  // branch under a developer who did nothing wrong.
+  //
+  // The second half of the block is the guard on the first: dev commits must still be *detected* on top of
+  // the newly advanced state, or "converged" would just be a synonym for "blind".
+  // =============================================================================================
+  describe("a developer who snaps and exports from the branch advances the branch's own state", () => {
+    const LANE = 'dev-snap';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setSyncConfig({ lanes: ['*'] });
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE}`, devPath);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('lane-snap-1'));
+      helper.command.runCmd('bit snap --message "lane snap 1"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      const first = runBit(`bit ci sync ${LANE}`);
+      expect(first.exitCode, `bit ci sync ${LANE} output:\n${first.output}`).to.equal(0);
+      gitFetch();
+    });
+
+    describe('the developer snaps + exports on the branch and commits the .bitmap it produced', () => {
+      let output: string;
+      let exitCode: number;
+      let devCommitSha: string;
+      let laneAfterDevWork: string;
+      let branchTipAfterDevWork: string;
+
+      before(() => {
+        // Exactly what a developer does on a lane branch: check it out (its committed `.bitmap` puts the
+        // workspace on the lane), edit, snap, export, then commit — `.bitmap` included, because the snap
+        // rewrote it.
+        gitFetch();
+        helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+        helper.fs.outputFile('comp2/index.js', comp2Src('dev-snapped-on-branch'));
+        helper.command.runCmd('bit snap --message "dev snaps comp2 on the branch"');
+        helper.command.runCmd('bit export');
+        helper.command.runCmd('git add -A');
+        helper.command.runCmd('git commit -m "feat: snap comp2 from the branch"');
+        helper.command.runCmd(`git push origin ${LANE}`);
+        devCommitSha = helper.command.runCmd('git rev-parse HEAD').trim();
+        helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+        gitFetch();
+
+        laneAfterDevWork = remoteLaneFingerprint(LANE);
+        branchTipAfterDevWork = branchTipSha(LANE);
+        ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
+        gitFetch();
+      });
+
+      it('should be non-vacuous: the dev commit really did move .bitmap, and it is the branch tip', () => {
+        // Both halves matter. If the commit had not touched `.bitmap` this would be scenario C
+        // (`export-branch`) wearing a different hat; if it were not the tip, `hasDevCommits` would be true
+        // for an unrelated reason.
+        const changed = helper.command.runCmd(`git show --stat --format= origin/${LANE}`);
+        expect(changed, `files in the dev commit:\n${changed}`).to.include('.bitmap');
+        expect(branchTipAfterDevWork).to.equal(devCommitSha);
+      });
+
+      it('should read the pair as CONVERGED — the developer already did the sync', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(`${LANE} -> noop (converged)`);
+        // The v1 outcome this replaces. Naming it keeps the test honest about what regressed if it fires.
+        expect(output).to.not.include(`${LANE} -> merge-diverged`);
+        expect(output).to.not.include(`${LANE} -> export-branch`);
+        expect(output).to.not.include(`${LANE} -> import-lane`);
+      });
+
+      it('should write nothing: no commit on the branch, no snap on the lane', () => {
+        expect(branchTipSha(LANE)).to.equal(branchTipAfterDevWork);
+        expect(remoteLaneFingerprint(LANE)).to.equal(laneAfterDevWork);
+      });
+
+      it("should have left the developer's content in place on both sides", () => {
+        expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('dev-snapped-on-branch');
+        expect(laneTipFile(devPath, 'comp2/index.js')).to.include('dev-snapped-on-branch');
+      });
+    });
+
+    describe('and a plain dev commit on top of that new state is still exported', () => {
+      let output: string;
+      let exitCode: number;
+      let devCommitSha: string;
+      let laneBefore: string;
+
+      before(() => {
+        laneBefore = remoteLaneFingerprint(LANE);
+        devCommitSha = branchSideCommit(
+          LANE,
+          defaultBranch,
+          'comp2/index.js',
+          comp2Src('plain-dev-edit-after-snap'),
+          'feat: edit comp2 without snapping'
+        );
+        ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
+        gitFetch();
+      });
+
+      it('should export the branch onto the lane: the state commit is the baseline, not the sync commit', () => {
+        // The baseline the dev commit sits on top of is the DEVELOPER's `.bitmap` commit from the previous
+        // block — a commit the reconciler never wrote. Anchoring on "the last commit we wrote" would have
+        // counted the developer's own commit as a dev commit forever.
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(`${LANE} -> export-branch`);
+      });
+
+      it("should snap the plain edit onto the lane and keep the dev commit in the branch's history", () => {
+        expect(remoteLaneFingerprint(LANE)).to.not.equal(laneBefore);
+        expect(laneTipFile(devPath, 'comp2/index.js')).to.include('plain-dev-edit-after-snap');
+        expect(helper.command.runCmd(`git log origin/${LANE} --format=%H`)).to.include(devCommitSha);
+      });
+
+      describe('re-running once more', () => {
+        let rerun: { output: string; exitCode: number };
+        let shaBefore: string;
+        before(() => {
+          shaBefore = branchTipSha(LANE);
+          rerun = runBit(`bit ci sync ${LANE}`);
+          gitFetch();
+        });
+        it('should be a converged no-op — the pair settles, it does not oscillate', () => {
+          expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+          expect(rerun.output).to.include(`${LANE} -> noop (converged)`);
+          expect(branchTipSha(LANE)).to.equal(shaBefore);
+        });
+      });
+    });
+  });
+
+  // =============================================================================================
   // Scenario F (dry-run writes nothing to the remote) and scenario E (main-scope drift -> sync PR
   // branch) share a workspace: F must observe pristine remote refs *while drift exists*, which is
   // exactly the state E needs before it runs. F therefore runs first, and E right after it.
@@ -849,8 +994,8 @@ describe('bit ci sync', function () {
       /**
        * THE branch-destruction lock. `feature-x` has no lane, so `laneHead` is undefined; it exists on
        * `origin`, so `branchExists` is true — the same planner input as a lane branch whose lane was
-       * deleted, whose action is `git push origin --delete`. Only the *absence of a `Bit-Lane-Head`
-       * trailer in its history* distinguishes them, and that is what makes it a no-op.
+       * deleted, whose action is `git push origin --delete`. Only the *absence of a lane pointer in its
+       * committed `.bitmap`* distinguishes them, and that is what makes it a no-op.
        */
       it('should visit an ordinary developer branch and leave it completely alone', () => {
         expect(output, `bit ci sync output:\n${output}`).to.include(
@@ -1018,19 +1163,23 @@ describe('bit ci sync', function () {
 
     // -------------------------------------------------------------------------------------------
     /**
-     * A `Bit-Lane-Head` commit that arrives on the branch through a **merge** must not be mistaken for the
-     * branch's own sync state.
+     * A sync-shaped commit that arrives on the branch through a **merge** must not be mistaken for the
+     * branch's own state.
      *
-     * `git log --grep` orders by commit date across *all* parents, so a trailer commit merged in from
-     * elsewhere — the default branch carrying another lane's sync commit, an old sync branch merged in —
-     * outranks this branch's own sync commit simply by being newer. The adopted `lastSyncedHead` is then
-     * another pair's fingerprint, which never equals this lane's head, so every run reads the lane as
-     * moved and re-plans work already done.
+     * Two independent defences are exercised here, and this scenario proves both:
      *
-     * The decoy here is built with plain git rather than by driving a second lane through a merge: it
-     * needs to be a trailer commit that is (a) newer than the branch's own and (b) reachable only through
-     * a second parent, and forging exactly that is one commit and one merge. The bogus fingerprint
-     * (`ffff…`) is what makes the failure legible — if it were adopted, the lane would look moved.
+     *   1. **Message text is not state.** The decoy carries our exact subject, `Bit-Lane-Head` trailer and
+     *      `[bit-sync]` marker, with a bogus fingerprint (`ffff…`). Under the v2 (bit-native) model those
+     *      are annotations and nothing reads them, so adopting the forged value is impossible by
+     *      construction — where the trailer-derived model would have read the lane as moved.
+     *   2. **`--first-parent` on the state walk.** `git log` orders by commit date across *all* parents, so
+     *      any state-bearing commit merged in from elsewhere is newer than this branch's own and would
+     *      outrank it. `readBranchSyncState` walks `--first-parent -- .bitmap`, which is this branch's own
+     *      line of development — the only line whose state describes this pair.
+     *
+     * The decoy is built with plain git rather than by driving a second lane through a merge: it needs to be
+     * a commit that is (a) newer than the branch's own and (b) reachable only through a second parent, and
+     * forging exactly that is one commit and one merge.
      */
     describe('a Bit-Lane-Head commit merged in from elsewhere must not outrank the branch’s own', () => {
       let output: string;
@@ -1088,14 +1237,15 @@ describe('bit ci sync', function () {
   //
   // `close-pr` is the one irreversible thing this command does — `git push origin --delete`. It fires
   // when the lane is gone and the branch is not, and under the default config *every* branch on `origin`
-  // lane-maps, so that shape is reached by ordinary developer branches too. "Does the branch carry a
-  // `Bit-Lane-Head` trailer" does not separate them: once a sync PR is squash-, rebase- or ff-merged its
-  // trailer lives on the **default branch's own first-parent line**, so every branch cut from the default
-  // branch afterwards inherits one.
+  // lane-maps, so that shape is reached by ordinary developer branches too. Nothing about how a branch
+  // *looks* separates them: once a sync PR is squash-, rebase- or ff-merged, both the message it carried
+  // and the `.bitmap` it wrote live on the **default branch's own first-parent line**, so every branch cut
+  // from the default branch afterwards inherits them.
   //
-  // The real rule has two parts — the sync commit must *name this lane*, and either it is not yet in the
-  // default branch (a live lane branch) or the branch tip is (nothing to lose). This block walks one lane
-  // branch through all three outcomes, plus the inherited-trailer branch that must never be touched.
+  // The real rule has two parts — the branch's committed `.bitmap` must *point at this lane*, and either the
+  // commit that wrote it is not yet in the default branch (a live lane branch) or the branch tip is
+  // (nothing to lose). This block walks one lane branch through all three outcomes, plus the branch with
+  // inherited history that must never be touched.
   // =============================================================================================
   describe('branch ownership decides what close-pr may delete', () => {
     const LANE = 'own-lane';
@@ -1161,9 +1311,11 @@ describe('bit ci sync', function () {
 
     // -------------------------------------------------------------------------------------------
     /**
-     * THE inherited-trailer lock — the reviewer's live repro. `feature-x` has a `Bit-Lane-Head` trailer on
+     * THE inherited-history lock — the reviewer's live repro. `feature-x` has a `Bit-Lane-Head` trailer on
      * its own first-parent line, inherited from the default branch, and no lane. A trailer-presence check
-     * calls that "lane-managed" and deletes the branch.
+     * calls that "lane-managed" and deletes the branch. Under the v2 model the trailer is not consulted at
+     * all, and the structural answer agrees: `feature-x` carries the default branch's `.bitmap`, which has
+     * no lane pointer.
      */
     describe('an ordinary branch that INHERITED a sync trailer from the default branch', () => {
       let output: string;
@@ -1190,6 +1342,14 @@ describe('bit ci sync', function () {
         const log = helper.command.runCmd(`git log origin/${PLAIN_BRANCH} --first-parent --format=%B`);
         expect(log).to.include('Bit-Lane-Head:');
         expect(log).to.include(`sync lane ${helper.scopes.remote}/other-lane`);
+      });
+
+      it('should be ignored on the STRUCTURAL evidence: its .bitmap points at no lane', () => {
+        // The v2 reason the branch is untouchable, asserted directly rather than inferred from the outcome:
+        // `feature-x` carries the default branch's `.bitmap`, which is on main. The forged trailer above is
+        // exactly the channel that is no longer consulted — this is what it is no longer consulted in
+        // favour of.
+        expect(fileOnBranch(PLAIN_BRANCH, '.bitmap')).to.not.include('_bit_lane');
       });
 
       describe('running --all a second time', () => {
@@ -1562,9 +1722,16 @@ describe('bit ci sync', function () {
         expect(remoteBranchExists(`${hostScope}/${LANE}`)).to.be.false;
       });
 
-      it("should record the lane's REAL id in the sync commit subject", () => {
-        // Attribution compares the subject against the id the next run derives. Writing
-        // `<defaultScope>/<name>` here would claim a lane that does not exist.
+      it("should record the lane's REAL, scope-qualified id in the branch's .bitmap", () => {
+        // THE attribution lock. The next run recognizes this branch as this lane's mirror by the `.bitmap`
+        // lane pointer, and that pointer is scope-qualified — exactly what the branch-aliasing halt below
+        // compares. A pointer at `<defaultScope>/<name>` would name a lane that does not exist.
+        const bitmap = fileOnBranch(LANE, '.bitmap');
+        expect(bitmap).to.include('_bit_lane');
+        expect(bitmap).to.include(hostScope);
+      });
+
+      it("should annotate the sync commit with the lane's REAL id, for the human audit trail", () => {
         const message = branchTipMessage(LANE);
         expect(message).to.include(`sync lane ${hostScope}/${LANE}`);
         expect(message).to.include('[bit-sync]');
@@ -1607,7 +1774,7 @@ describe('bit ci sync', function () {
 
       /**
        * A branch name carries no scope, so this path resolves the lane against `defaultScope` — where it
-       * does not exist. The branch's sync commit names `<hostScope>/<lane>`, so it does not match either,
+       * does not exist. The branch's `.bitmap` points at `<hostScope>/<lane>`, so it does not match either,
        * and the evidence is `inherited-or-none`. The documented Stage-0 trade: a foreign-hosted lane must
        * be re-targeted by its full id, and in exchange the fallback direction is the safe one — the
        * branch is left alone, never retired on the strength of a lane the reconciler failed to find.
@@ -1625,8 +1792,8 @@ describe('bit ci sync', function () {
      * THE branch-aliasing lock. The branch mapping is keyed on the lane NAME, so a lane of the SAME NAME in
      * this repository's own scope maps onto the branch that already mirrors the foreign-hosted one. Planning
      * for it would hijack the branch: `import-lane` would materialize this lane's content over the other
-     * lane's under a `Bit-Lane-Head` trailer asserting the opposite, and the other lane's PR would silently
-     * become a diff of somebody else's work.
+     * lane's and repoint its `.bitmap`, and the other lane's PR would silently become a diff of somebody
+     * else's work.
      */
     describe('a same-named lane in THIS scope must not hijack the foreign-hosted lane’s branch', () => {
       let output: string;
