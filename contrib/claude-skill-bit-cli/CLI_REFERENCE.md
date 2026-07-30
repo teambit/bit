@@ -25,6 +25,13 @@ start an application component locally
 runs application components in their own development server, separate from the "bit start" UI. apps are components that create deployable applications (React apps, Node.js servers, etc.). when no app name is specified, automatically detects and runs the app if only one exists in the workspace.
 Flags: --dev, --port [port-number], --verbose, --watch, --no-browser, --args <argv>
 
+## bit apply [data]
+
+apply files/config to components
+
+the input data is a stringified JSON of an array of the following object. { componentId: string; // ids always have scope, so it's safe to parse them from string dependencies?: string[]; // dependencies include versions. for components use component-id. e.g. [teambit.compilation/compiler@1.0.0, lodash@4.17.21] aspects?: Record<string,any> // e.g. { "teambit.react/react": {}, "teambit.envs/envs": { "env": "teambit.react/react" } } message?: string; // tag-message. files?: Array<{path: string, content: string}>; // replace content of specified source-files. the content is base64 encoded. isNew?: boolean; // if it's new, it'll be generated from the given files. otherwise, it'll be fetched from the scope and updated. mainFile?: string; // relevant when isNew is true. default to "index.ts". newDependencies?: Array<{ // new dependencies (components and packages) to add. id: string; // component-id or package-name. e.g. "teambit.react/react" or "lodash". version?: string; // version of the package. e.g. "2.0.3". for packages, it is mandatory. isComponent?: boolean; // default true. if false, it's a package dependency type?: 'runtime' | 'dev' | 'peer'; // default "runtime". }>; removeDependencies?: string[]; // component-id (for components) or package-name (for packages) to remove from the dependencies. forkFrom?: string; // origin id to fork from. the componentId is the new id. (no need to populate isNew prop). version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch". } an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
+Flags: --push, --message <message>, --lane <lane-id>, --build, --loose, --skip-tests, --disable-snap-pipeline, --ignore-build-errors, --rebuild-deps-graph, --ignore-issues [issues], --tag, --stream, --json, --file <file-path>, --snap, --stream, --restart-vscode-servers, --skip-dependency-installation
+
 ## bit artifacts <component-pattern>
 
 view and download build artifacts
@@ -155,6 +162,13 @@ Tags and exports new semantic versions after merging a PR to main.
 
 By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.
 Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --auto-tag-increment <level>, --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push, --no-bitmap-commit
+
+## bit ci sync [lane]
+
+Reconciles Bit lanes and the main scope with git branches and pull requests.
+
+Stateless reconciler: compares each mapped lane's remote head against the state the branch itself records, and converges — importing lane changes onto the branch, exporting dev commits to the lane, or opening/closing PRs. That state comes from bit's own data: the .bitmap committed on the branch, which records the lane the branch mirrors and the exact version of every component on it. The "chore(bit-sync)" subject, "Bit-Lane-Head" trailer and "[bit-sync]" marker on sync commits are annotations for humans and triggers; the only decision that consults one is branch deletion, which additionally requires the marker to prove the reconciler wrote the branch tip. The main scope is reconciled by checking the workspace out to its latest exported versions and proposing the result as a sync PR. Triggers (webhook, push, cron) only decide when it runs, never what it does. Safe to re-run at any time; converged state is a no-op. A lane whose components are not all in this workspace's defaultScope is a cross-scope lane: no branch is created for it (it would leak another repository's components into this one) — enumerated runs skip it and stay green, an explicitly named one is refused, and a lane that became cross-scope after its branch existed is halted for a human. Configure mapping under "teambit.git/ci": { "sync": { ... } } in workspace.jsonc.
+Flags: --branch <branch>, --all, --main, --dry-run, --init
 
 ## bit clear-cache
 
@@ -380,6 +394,13 @@ auto-format component source code
 
 formats component files using the formatter configured by each component's environment (Prettier, etc.). by default formats all components. use --changed to format only new and modified components. supports check mode to verify formatting without making changes.
 Flags: --changed, --check, --json
+
+## bit get-deps <pattern>
+
+get direct dependencies of the specified pattern
+
+you can use a `<pattern>` for multiple component ids, such as `bit get-deps "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
+Flags: --json, --flat, --components-only
 
 ## bit git <sub-command>
 

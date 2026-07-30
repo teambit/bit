@@ -62,7 +62,7 @@ export [component-patterns...] - upload components to remote scopes
 lane [sub-command] - manage lanes for parallel development
 Subcommands: list, show, create, remove, change-scope, alias, rename, remove-readme, import, remove-comp, fetch, eject, current, history, history-diff, checkout, revert, merge-move
 ci <sub-command> - continuous integration commands for automated workflows
-Subcommands: verify, pr, merge
+Subcommands: verify, pr, merge, sync
 fork <pattern> [target-component-name] - create a new component by copying from an existing one
 internalize [component-pattern] - mark components as internal to hide them by default in the UI
 
@@ -144,5 +144,9 @@ Subcommands: save, load, list
 log <id> - display component version history
 log-file <filepath> - EXPERIMENTAL. display history of changes to a specific file
 blame <filepath> - EXPERIMENTAL. show line-by-line authorship and modification history
+
+Dot-bit
+apply [data] - apply files/config to components
+get-deps <pattern> - get direct dependencies of the specified pattern
 
 IMPORTANT: When you need flags, arguments, or subcommand details, READ the file CLI_REFERENCE.md in this same directory using the Read tool. Only fall back to 'bit <command> --help' if the reference file doesn't cover what you need.
