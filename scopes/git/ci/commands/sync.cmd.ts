@@ -19,11 +19,15 @@ export class CiSyncCmd implements Command {
   group = 'collaborate';
 
   options: CommandOptions = [
-    ['', 'branch <branch>', 'Resolve the lane from this git branch name using the sync mapping config'],
+    [
+      '',
+      'branch <branch>',
+      'Resolve the lane from this git branch name using the sync mapping config (cannot be combined with --all)',
+    ],
     [
       '',
       'all',
-      'Reconcile every mapped lane plus the main scope (the default when no target is given; cannot be combined with a lane argument or --main)',
+      'Reconcile every mapped lane plus the main scope (the default when no target is given; cannot be combined with a lane argument, --branch or --main)',
     ],
     [
       '',

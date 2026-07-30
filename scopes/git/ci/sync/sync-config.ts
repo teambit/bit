@@ -1,4 +1,5 @@
 import { BitError } from '@teambit/bit-error';
+import { assertValidBranchName, assertValidBranchPrefix } from './ref-name';
 
 export interface CiSyncConfig {
   /** 'git-source-of-truth': lanes mirror to PRs, merges happen in GitHub. 'mirror': bit.cloud merges allowed, git tracks. */
@@ -15,8 +16,17 @@ export interface CiSyncConfig {
   autoMergeMainSyncPr?: boolean;
 }
 
+/**
+ * Resolve the configured sync options, **validating every branch name before anything runs**.
+ *
+ * The validation lives here because this is the first thing `sync()` does and it happens before a single
+ * git command: a branch name that git cannot accept should fail the run at startup, naming the config key,
+ * rather than halfway through — after commits have been made and other lanes already pushed — with git's
+ * own error about a ref. The leading-`-` rule matters most: such a name is not a name at all by the time
+ * it reaches a command line, it is an option.
+ */
 export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
-  return {
+  const resolved: Required<CiSyncConfig> = {
     mode: raw?.mode ?? 'git-source-of-truth',
     branchPrefix: raw?.branchPrefix ?? '',
     branches: raw?.branches ?? {},
@@ -24,10 +34,25 @@ export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
     mainSyncBranch: raw?.mainSyncBranch ?? 'bit-sync/main',
     autoMergeMainSyncPr: raw?.autoMergeMainSyncPr ?? false,
   };
+  assertValidBranchPrefix(resolved.branchPrefix, 'sync.branchPrefix');
+  assertValidBranchName(resolved.mainSyncBranch, 'sync.mainSyncBranch');
+  Object.entries(resolved.branches).forEach(([laneName, branch]) =>
+    assertValidBranchName(branch, `sync.branches["${laneName}"]`)
+  );
+  return resolved;
 }
 
+/**
+ * The branch a lane name maps to. The derived result is validated too, not just the configured pieces: a
+ * `branchPrefix` that is fine on its own can still combine with a lane name into something git refuses,
+ * and this is the last point before the name is handed to a git command.
+ */
 export function laneNameToBranch(laneName: string, cfg: Required<CiSyncConfig>): string {
-  return cfg.branches[laneName] ?? `${cfg.branchPrefix}${laneName}`;
+  const override = cfg.branches[laneName];
+  if (override) return override; // already validated by resolveSyncConfig
+  const derived = `${cfg.branchPrefix}${laneName}`;
+  assertValidBranchName(derived, `the branch for lane "${laneName}" (sync.branchPrefix + lane name)`);
+  return derived;
 }
 
 export function branchToLaneName(branch: string, cfg: Required<CiSyncConfig>): string | undefined {

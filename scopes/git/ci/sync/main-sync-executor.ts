@@ -171,7 +171,8 @@ export class MainSyncExecutor {
       // Never force: we started from the branch tip we fetched and only added commits on top, so a
       // rejected push means a concurrent run pushed in between — the next run re-plans from the new
       // state rather than clobbering it.
-      await git.push('origin', branch);
+      // Unambiguous refspec — see the matching push in `lane-sync-executor.commitAllAndPush`.
+      await git.push(['origin', `HEAD:refs/heads/${branch}`]);
       logger.console(chalk.green(`Pushed ${branch}`));
 
       const prUrl = await this.ensureSyncPr({ branch, driftCount: drift.length, newFromScope });

@@ -191,6 +191,40 @@ describe('GitHubHostProvider', () => {
     expect(new GitHubHostProvider().isConfigured()).to.equal(false);
   });
 
+  /**
+   * THE wrong-host guard. `selectGitHostProvider` falls back to "the sole configured provider" whenever
+   * *nobody* claims the remote — a GitLab origin, a self-hosted host, an `insteadOf` rewrite. On GitHub
+   * Actions `GITHUB_TOKEN` and `GITHUB_REPOSITORY` are set for every job, including ones whose `origin`
+   * is a mirror, so this provider used to answer "configured" for a repository it had just declined to
+   * claim — becoming the sole candidate and aiming that repository's pull requests at whatever
+   * `GITHUB_REPOSITORY` named.
+   */
+  it('is NOT configured for a remote it does not claim, however complete the environment looks', () => {
+    process.env.BIT_GITHUB_TOKEN = 'tok';
+    process.env.GITHUB_REPOSITORY = 'acme/shop';
+    expect(new GitHubHostProvider().isConfigured('https://gitlab.com/acme/shop.git')).to.equal(false);
+    // non-vacuous: the very same environment DOES configure it for a github remote, and for no remote
+    expect(new GitHubHostProvider().isConfigured('https://github.com/acme/shop')).to.equal(true);
+    expect(new GitHubHostProvider().isConfigured()).to.equal(true);
+  });
+
+  it('is not selected for a non-github remote even when it is the only provider registered', () => {
+    process.env.BIT_GITHUB_TOKEN = 'tok';
+    process.env.GITHUB_REPOSITORY = 'acme/shop';
+    const selection = selectGitHostProvider([new GitHubHostProvider()], 'https://gitlab.com/acme/shop.git');
+    expect(selection.provider).to.equal(undefined);
+    expect(selection.reason).to.contain('no git host provider is configured');
+  });
+
+  it('does not let a non-github remote poison the remembered hint', () => {
+    // `matchesRemote` is called for every provider on every run, so it sees other hosts' URLs routinely.
+    // Remembering one would let it combine with GITHUB_REPOSITORY on a later argument-less call.
+    process.env.BIT_GITHUB_TOKEN = 'tok';
+    const provider = new GitHubHostProvider();
+    expect(provider.matchesRemote('https://gitlab.com/acme/shop.git')).to.equal(false);
+    expect(provider.isConfigured()).to.equal(false);
+  });
+
   it('reports what is missing rather than failing obscurely when a PR call happens unconfigured', async () => {
     const provider = new GitHubHostProvider();
     let message = '';

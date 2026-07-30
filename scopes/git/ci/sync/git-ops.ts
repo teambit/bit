@@ -111,16 +111,41 @@ export async function isAncestor(maybeAncestor: string, descendant: string): Pro
 }
 
 /**
- * `git commit` fails outright when no identity is configured, which is the norm in a fresh CI
- * checkout. Only set one when the repo/environment doesn't already provide it, so an interactive
- * run keeps the developer's own identity.
+ * The two `git config` operations `ensureGitIdentity` needs, injectable so the decision can be unit
+ * tested without a git repository. Production always uses {@link realGitConfigIO}.
  */
-export async function ensureGitIdentity(): Promise<void> {
-  const configured = await git
-    .raw(['config', '--get', 'user.email'])
-    .then((out) => out.trim().length > 0)
-    .catch(() => false);
-  if (configured) return;
-  await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
-  await git.addConfig('user.name', 'Bit CI');
+export type GitConfigIO = {
+  /** the configured value, or undefined when unset (or when git cannot answer) */
+  get(key: string): Promise<string | undefined>;
+  set(key: string, value: string): Promise<void>;
+};
+
+export const realGitConfigIO: GitConfigIO = {
+  get: (key) =>
+    git
+      .raw(['config', '--get', key])
+      .then((out) => (out.trim().length ? out.trim() : undefined))
+      // A missing key exits non-zero; so does "not a git repository". Neither is an error here —
+      // both mean "no identity to keep", which is what the caller acts on.
+      .catch(() => undefined),
+  set: async (key, value) => {
+    await git.addConfig(key, value);
+  },
+};
+
+/**
+ * `git commit` fails outright when no identity is configured, which is the norm in a fresh CI
+ * checkout. Only set what is missing, so an interactive run keeps the developer's own identity.
+ *
+ * **Both halves are checked independently, because git requires both.** Testing `user.email` alone and
+ * returning early on it is not a shortcut, it is a bug: a checkout with an email but no name — a
+ * half-configured global config, a container that sets only `EMAIL`, a `.gitconfig` with `[user] email`
+ * and nothing else — passed the check and then failed at `git commit` with
+ * `*** Please tell me who you are`, aborting the sync of every lane in the run. The two keys are also
+ * set independently rather than as a pair, so the developer's own name survives a missing email and
+ * vice versa.
+ */
+export async function ensureGitIdentity(io: GitConfigIO = realGitConfigIO): Promise<void> {
+  if (!(await io.get('user.email'))) await io.set('user.email', 'bit-ci[bot]@bit.cloud');
+  if (!(await io.get('user.name'))) await io.set('user.name', 'Bit CI');
 }

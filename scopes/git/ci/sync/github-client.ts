@@ -56,7 +56,12 @@ export class GitHubClient implements GitHostProvider {
     // remote. `parseGitHubRepo` is unanchored (it searches for `github.com/<owner>/<repo>` anywhere in
     // the string), so without this guard `https://mygithub.com/acme/shop` would yield `acme/shop` and
     // mint a client pointed at api.github.com for a repository on an entirely different host.
-    const repoFromRemote = gitRemoteUrl && isGitHubRemote(gitRemoteUrl) ? parseGitHubRepo(gitRemoteUrl) : undefined;
+    // A remote we can see and that is demonstrably NOT github's is a hard no, whatever the environment
+    // says. `GITHUB_REPOSITORY` is set for every job on GitHub Actions, including ones whose `origin` is
+    // a GitLab/Bitbucket mirror — without this, such a run mints a client for the env var's repository
+    // and aims this repository's pull requests at a completely different one.
+    if (gitRemoteUrl && !isGitHubRemote(gitRemoteUrl)) return undefined;
+    const repoFromRemote = gitRemoteUrl ? parseGitHubRepo(gitRemoteUrl) : undefined;
     const repo = process.env.GITHUB_REPOSITORY || repoFromRemote;
     if (!token || !repo) return undefined;
     return new GitHubClient({ token, repo });
@@ -152,11 +157,29 @@ export class GitHubHostProvider implements GitHostProvider {
   private remoteHint: string | undefined;
 
   matchesRemote(remoteUrl: string): boolean {
-    this.remoteHint = remoteUrl;
-    return isGitHubRemote(remoteUrl);
+    const matches = isGitHubRemote(remoteUrl);
+    // Only remember a remote that is actually ours. The hint is what `resolveClient` falls back to when a
+    // PR method is called without one, so remembering a GitLab URL here would let it be combined with
+    // `GITHUB_REPOSITORY` later and produce a client for the wrong repository.
+    if (matches) this.remoteHint = remoteUrl;
+    return matches;
   }
 
+  /**
+   * **A known non-GitHub remote can never count as configured**, however complete the environment looks.
+   *
+   * This is not the same question as `matchesRemote`, and the difference is where the bug was.
+   * `selectGitHostProvider` only consults claimants when *someone* claims the remote; when nobody does —
+   * a GitLab origin, a self-hosted host, an `insteadOf` rewrite — it falls back to "the sole configured
+   * provider". On GitHub Actions `GITHUB_TOKEN` and `GITHUB_REPOSITORY` are both set for every job, so
+   * this provider answered "configured" for a repository it had just declined to claim, became the sole
+   * candidate, and the run created pull requests on the wrong host's repository.
+   *
+   * With no URL at all the behaviour is unchanged: nothing has been established about the remote, and the
+   * sole-configured fallback is exactly what should apply.
+   */
   isConfigured(remoteUrl?: string): boolean {
+    if (remoteUrl && !isGitHubRemote(remoteUrl)) return false;
     if (remoteUrl) this.remoteHint = remoteUrl;
     return Boolean(this.resolveClient(remoteUrl));
   }

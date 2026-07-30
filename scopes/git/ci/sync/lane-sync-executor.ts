@@ -1217,7 +1217,10 @@ export class LaneSyncExecutor {
     // removed it. Neither is a reason to fail the whole sync run.
     let branchDeleted = true;
     try {
-      await git.push(['origin', '--delete', branch]);
+      // `:refs/heads/<branch>` — the empty-source delete refspec — rather than `--delete <branch>`. It
+      // names the ref to remove in full, so there is no ambiguity about what is being deleted, and the
+      // branch name can never be read as an option however it was configured.
+      await git.push(['origin', `:refs/heads/${branch}`]);
     } catch (e: any) {
       branchDeleted = false;
       logger.consoleWarning(`Could not delete remote branch ${branch}: ${e?.message || e}`);
@@ -1447,7 +1450,11 @@ export class LaneSyncExecutor {
     await ensureGitIdentity();
     await addAllExceptScopeAndModules();
     await git.commit(message, undefined, { '--allow-empty': null });
-    await git.push('origin', branch);
+    // `HEAD:refs/heads/<branch>` rather than the bare branch name: the destination is stated as a full
+    // ref, so it cannot be resolved as a tag or any other ref that happens to share the name, and the
+    // source is what we just committed rather than a second lookup of the same name. A configured branch
+    // name is user input (see `ref-name.ts`); this is the other half of not letting it be reinterpreted.
+    await git.push(['origin', `HEAD:refs/heads/${branch}`]);
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
   }
 

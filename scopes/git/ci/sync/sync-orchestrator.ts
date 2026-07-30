@@ -77,11 +77,16 @@ export class SyncOrchestrator {
     }
 
     // `--all` is the default, so combining it with a narrower target is always a mistake about what the
-    // command will do. Refuse instead of silently letting the narrower target win.
-    if (opts.all && (opts.lane || opts.main)) {
+    // command will do. Refuse instead of silently letting the narrower target win — which is what used to
+    // happen with `--all --branch x`: the branch path returns early, so `--all` was silently dropped and
+    // the run reconciled one branch while the operator believed everything had been visited.
+    const narrower = opts.lane
+      ? `a lane argument ("${opts.lane}")`
+      : (opts.branch && `--branch ("${opts.branch}")`) || (opts.main && '--main') || undefined;
+    if (opts.all && narrower) {
       throw new BitError(
-        `--all cannot be combined with ${opts.lane ? `a lane argument ("${opts.lane}")` : '--main'}: ` +
-          `--all reconciles every mapped lane plus the main scope, and is what runs when no target is given`
+        `--all cannot be combined with ${narrower}: --all reconciles every mapped lane plus the main ` +
+          `scope, and is what runs when no target is given`
       );
     }
 
