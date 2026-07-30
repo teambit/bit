@@ -145,8 +145,4 @@ log <id> - display component version history
 log-file <filepath> - EXPERIMENTAL. display history of changes to a specific file
 blame <filepath> - EXPERIMENTAL. show line-by-line authorship and modification history
 
-Dot-bit
-apply [data] - apply files/config to components
-get-deps <pattern> - get direct dependencies of the specified pattern
-
 IMPORTANT: When you need flags, arguments, or subcommand details, READ the file CLI_REFERENCE.md in this same directory using the Read tool. Only fall back to 'bit <command> --help' if the reference file doesn't cover what you need.
