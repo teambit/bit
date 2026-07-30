@@ -423,7 +423,12 @@ export async function install(
     depth: options.updateAll ? 1000 : undefined,
     nodeVersion: options.nodeVersion,
     engineStrict: options.engineStrict,
-    minimumReleaseAge: options.minimumReleaseAge,
+    // pnpm v12 defaults minimumReleaseAge to 1440 when the option is absent.
+    // bit.cloud packuments are huge (a version per snap) and their abbreviated
+    // form carries no `time` field, so the maturity cutoff forces a full-
+    // packument upgrade fetch for every component on a cold resolve. Disable
+    // the policy unless the workspace opts in.
+    minimumReleaseAge: options.minimumReleaseAge ?? 0,
     minimumReleaseAgeExclude: options.minimumReleaseAgeExclude,
     // Bit lockfiles are trusted workspace input. Keep installs compatible with
     // lockfiles generated before pnpm v12 added registry resolution verification.
