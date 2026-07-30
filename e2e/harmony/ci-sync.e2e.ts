@@ -1694,4 +1694,74 @@ describe('bit ci sync', function () {
       });
     });
   });
+
+  // =============================================================================================
+  // `bit ci sync --init` — one-command onboarding scaffolding. Unlike every other scenario in this
+  // file, this never touches bit.cloud or a lane: it is pure local scaffolding (two workflow files
+  // plus the workspace.jsonc config block), so the setup only needs a workspace with a git remote.
+  // =============================================================================================
+  describe('bit ci sync --init (onboarding scaffolding)', () => {
+    let defaultBranch: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      defaultBranch = setupComponentsAndInitialCommit();
+    });
+
+    function workflowPath(name: string): string {
+      return path.join(helper.scopes.localPath, '.github', 'workflows', name);
+    }
+
+    it('scaffolds both workflow files with the real default branch substituted, adds the sync config block, prints the checklist, and exits 0', () => {
+      const { output, exitCode } = runBit('bit ci sync --init');
+      expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
+
+      expect(fs.existsSync(workflowPath('bit-sync.yml')), 'bit-sync.yml should have been written').to.be.true;
+      expect(fs.existsSync(workflowPath('bit-release.yml')), 'bit-release.yml should have been written').to.be.true;
+
+      const syncYml = fs.readFileSync(workflowPath('bit-sync.yml'), 'utf8');
+      const releaseYml = fs.readFileSync(workflowPath('bit-release.yml'), 'utf8');
+      expect(syncYml).to.include(`branches-ignore: [${defaultBranch}, 'bit-sync/**']`);
+      expect(releaseYml).to.include(`branches: [${defaultBranch}]`);
+      // the mainSyncBranch default must survive the substitution untouched
+      expect(syncYml).to.include('main-sync-branch: bit-sync/main');
+      expect(releaseYml).to.include("github.event.pull_request.head.ref != 'bit-sync/main'");
+
+      expect(output).to.include('wrote .github/workflows/bit-sync.yml');
+      expect(output).to.include('wrote .github/workflows/bit-release.yml');
+      expect(output).to.include('added "teambit.git/ci": { "sync": {} } to workspace.jsonc');
+
+      const wsConfig = helper.workspaceJsonc.read();
+      expect(wsConfig['teambit.git/ci'].sync).to.deep.equal({});
+
+      // the manual-steps checklist
+      expect(output).to.include('BIT_CONFIG_ACCESS_TOKEN');
+      expect(output).to.include('BIT_SYNC_GH_TOKEN');
+      expect(output).to.include('Components > Export');
+      expect(output).to.include('drops its custom headers');
+      expect(output).to.include('fetch-depth: 0');
+    });
+
+    it('is idempotent: a second run skips both files and the config block, and still exits 0', () => {
+      const syncYmlBefore = fs.readFileSync(workflowPath('bit-sync.yml'), 'utf8');
+      const releaseYmlBefore = fs.readFileSync(workflowPath('bit-release.yml'), 'utf8');
+
+      const { output, exitCode } = runBit('bit ci sync --init');
+      expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
+      expect(output).to.include('skipped .github/workflows/bit-sync.yml');
+      expect(output).to.include('skipped .github/workflows/bit-release.yml');
+      expect(output).to.include('workspace.jsonc already configures "teambit.git/ci".sync');
+
+      expect(fs.readFileSync(workflowPath('bit-sync.yml'), 'utf8')).to.equal(syncYmlBefore);
+      expect(fs.readFileSync(workflowPath('bit-release.yml'), 'utf8')).to.equal(releaseYmlBefore);
+    });
+
+    it('refuses to combine --init with another flag rather than silently ignoring one of them', () => {
+      const { output, exitCode } = runBit('bit ci sync --init --dry-run');
+      expect(exitCode, `bit ci sync --init --dry-run output:\n${output}`).to.not.equal(0);
+      expect(output).to.include('--init');
+      expect(output).to.include('cannot be combined');
+    });
+  });
 });

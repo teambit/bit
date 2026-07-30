@@ -218,8 +218,37 @@ Keeps Bit lanes and git branches/PRs converged, in both directions, and proposes
 scope moves ahead of the repository. The PR half goes through a pluggable git host provider — GitHub
 is built in; see [Git host providers](#git-host-providers).
 
+### Onboarding
+
 ```bash
-bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run]
+bit ci sync --init
+```
+
+One command sets up everything `bit ci sync` needs in this repository:
+
+- Scaffolds `.github/workflows/bit-sync.yml` and `.github/workflows/bit-release.yml`, with this
+  repository's **actual default branch** substituted into them (detected the same way the reconciler
+  itself detects it — `git symbolic-ref refs/remotes/origin/HEAD`, falling back to `origin/main` /
+  `origin/master`). It never overwrites a file that already exists — printing a "skipped" note for it
+  instead — so re-running `--init` after hand-editing either file, or after fixing just one of them, is
+  safe.
+- Adds `"teambit.git/ci": { "sync": {} }` to `workspace.jsonc` if that key isn't configured yet, using
+  the same comment-preserving write path other aspects use to patch `workspace.jsonc` — existing keys
+  and comments elsewhere in the file are left alone. Already-configured `sync` settings are never
+  touched.
+- Prints a checklist of what still needs a human: the `BIT_CONFIG_ACCESS_TOKEN` secret (required) and
+  optional `BIT_SYNC_GH_TOKEN` PAT, a note that both scaffolded workflows already declare the
+  `permissions` they need, the bit.cloud webhook recipe (the "Components → Export succeeded" event, the
+  `…/dispatches` URL with this repository's owner/repo filled in when it could be read from the `origin`
+  remote, the required headers, and the exact custom payload template) together with a warning that
+  **editing an existing webhook drops its custom headers** (a known bit.cloud platform bug — delete and
+  recreate it instead), and a reminder that checkouts need `fetch-depth: 0`.
+
+`--init` only scaffolds and exits — it never reconciles, and cannot be combined with a lane argument or
+any other flag (`--branch`, `--all`, `--main`, `--dry-run`).
+
+```bash
+bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run] [--init]
 ```
 
 | Flag        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -230,6 +259,7 @@ bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run]
 | `--all`     | Reconcile every mapped lane plus the main scope — including lanes that only still exist as a branch, so a lane deleted on bit.cloud gets its branch and PR retired. Cannot be combined with `[lane]` or `--main`.                                                                                                                                                                                                                                                                             |
 | `--main`    | Reconcile only the main scope against the default branch (opens a sync PR on drift). Conflicts between the repository and the scope are resolved **in favour of the scope** (`bit checkout head --auto-merge-resolve theirs`) — see below.                                                                                                                                                                                                                                                    |
 | `--dry-run` | Report the action that _would_ be taken per target. Nothing is pushed and no pull request is created, closed, labelled or commented on. It is not a read-only operation locally: the working tree, `.bitmap` and the local scope are written and then restored, and `--dry-run --main` can leave a local `<mainSyncBranch>` branch behind (the next run resets it from `origin`).                                                                                                             |
+| `--init`    | One-command onboarding — see [Onboarding](#onboarding) above. Scaffolds the two workflow files and the `sync` config block, prints the remaining manual-steps checklist, and exits. Cannot be combined with `[lane]` or any other flag.                                                                                                                                                                                                                                                       |
 
 ### It is a reconciler, not a pipeline
 

@@ -53,6 +53,7 @@ import type { GitHostProvider } from './sync/git-host-provider';
 import { selectGitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider } from './sync/github-client';
 import { addAllExceptScopeAndModules, isNonContentPath, listRemoteBranches } from './sync/git-ops';
+import { deriveOwnerRepo, renderInitChecklist, scaffoldWorkflowFiles } from './sync/init-scaffold';
 
 /**
  * Registered git hosts (GitHub ships built-in; others register from their own aspect).
@@ -482,8 +483,22 @@ export class CiMain {
    * to do for (a cross-scope lane met by `--all`) reports itself and leaves the run green.
    */
   async sync(
-    opts: { lane?: string; branch?: string; all?: boolean; main?: boolean; dryRun?: boolean } = {}
+    opts: { lane?: string; branch?: string; all?: boolean; main?: boolean; dryRun?: boolean; init?: boolean } = {}
   ): Promise<string> {
+    // `--init` is a one-shot onboarding scaffold, not a reconcile: it writes files and exits. Combining
+    // it with any other flag (a lane, --branch, --all, --main, --dry-run) is always a mistake about what
+    // will run, so refuse rather than silently ignoring the other flag or silently skipping the scaffold.
+    if (opts.init) {
+      if (opts.lane || opts.branch || opts.all || opts.main || opts.dryRun) {
+        throw new BitError(
+          'bit ci sync --init cannot be combined with a lane argument, --branch, --all, --main or ' +
+            '--dry-run: it only scaffolds onboarding files (workflows + workspace.jsonc config) and exits ' +
+            '— it never reconciles'
+        );
+      }
+      return this.syncInit();
+    }
+
     // `--all` is the default, so combining it with a narrower target is always a mistake about what the
     // command will do. Refuse instead of silently letting the narrower target win.
     if (opts.all && (opts.lane || opts.main)) {
@@ -617,6 +632,60 @@ export class CiMain {
     }
     lines.push(await mainSync.syncMain({ dryRun: opts.dryRun }));
     return this.summarizeSync(lines);
+  }
+
+  /**
+   * `bit ci sync --init` — one-command onboarding. Scaffolds `.github/workflows/bit-sync.yml` and
+   * `bit-release.yml` (with this repository's actual default branch substituted), adds the
+   * `"teambit.git/ci": { "sync": {} }` config block to `workspace.jsonc` if it's not there yet, and
+   * prints the checklist of steps that still need a human (secrets, the bit.cloud webhook, and the
+   * `fetch-depth: 0` requirement — none of which this command can do on its own).
+   *
+   * Never throws on an "already there" outcome: an existing workflow file is skipped (not
+   * overwritten — this must be safe to re-run) and an existing `sync` config block is left alone. It
+   * only writes; it never reconciles.
+   */
+  private async syncInit(): Promise<string> {
+    const defaultBranch = await this.getDefaultBranchName();
+    const fileOutcomes = scaffoldWorkflowFiles(this.workspace.path, defaultBranch);
+    const fileLines = fileOutcomes.map((outcome) =>
+      outcome.status === 'written'
+        ? `wrote ${outcome.relativePath} (default branch: ${defaultBranch})`
+        : `skipped ${outcome.relativePath} (already exists — bit ci sync --init never overwrites)`
+    );
+
+    const configAdded = await this.ensureSyncConfigBlock();
+    const configLine = configAdded
+      ? 'added "teambit.git/ci": { "sync": {} } to workspace.jsonc'
+      : 'workspace.jsonc already configures "teambit.git/ci".sync — left untouched';
+
+    const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
+    const ownerRepo = deriveOwnerRepo(typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined);
+
+    const summary = ['bit ci sync --init', ...fileLines, configLine, renderInitChecklist(ownerRepo)].join('\n');
+    this.logger.console(summary);
+    return summary;
+  }
+
+  /**
+   * Add `"sync": {}` under `"teambit.git/ci"` in `workspace.jsonc` if that key isn't there yet.
+   * Returns whether it actually wrote anything.
+   *
+   * Uses the same comment-preserving `WorkspaceConfig` API `scope-trust.ts` uses for its own
+   * workspace.jsonc patches (`getWorkspaceConfig().setExtension(..., { mergeIntoExisting: true,
+   * ignoreVersion: true })` then `.write()`), rather than printing the block for the user to paste:
+   * it merges into whatever `teambit.git/ci` config already exists (e.g. `commitMessageScript`)
+   * instead of clobbering it, and preserves comments elsewhere in the file. `mergeIntoExisting` also
+   * makes this safe to call when the extension key doesn't exist at all yet — `setExtension` just sets
+   * it fresh in that case.
+   */
+  private async ensureSyncConfigBlock(): Promise<boolean> {
+    const wsConfig = this.workspace.getWorkspaceConfig();
+    const existing = wsConfig.extension(CiAspect.id, true) as CiWorkspaceConfig | undefined;
+    if (existing?.sync) return false;
+    wsConfig.setExtension(CiAspect.id, { sync: {} }, { mergeIntoExisting: true, ignoreVersion: true });
+    await wsConfig.write({ reasonForChange: 'bit ci sync --init: add the sync config block' });
+    return true;
   }
 
   /**

@@ -3,7 +3,7 @@ import type { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, type Workspace } from '@teambit/workspace';
 import type { CiMain } from '../ci.main.runtime';
 
-type Options = { branch?: string; all?: boolean; main?: boolean; dryRun?: boolean };
+type Options = { branch?: string; all?: boolean; main?: boolean; dryRun?: boolean; init?: boolean };
 
 export class CiSyncCmd implements Command {
   name = 'sync [lane]';
@@ -35,6 +35,11 @@ export class CiSyncCmd implements Command {
       'dry-run',
       'Print the planned action per target. Nothing is pushed and no pull request is created or modified; the working tree is still written and then restored',
     ],
+    [
+      '',
+      'init',
+      'One-command onboarding: scaffold .github/workflows/bit-sync.yml + bit-release.yml (with this repository\'s actual default branch substituted), add the "teambit.git/ci": { "sync": {} } config block to workspace.jsonc if absent, and print the remaining manual-steps checklist (secrets + bit.cloud webhook). Writes nothing else and never overwrites an existing workflow file. Cannot be combined with a lane argument or any other flag.',
+    ],
   ];
 
   constructor(
@@ -58,6 +63,7 @@ export class CiSyncCmd implements Command {
       all: options.all,
       main: options.main,
       dryRun: options.dryRun,
+      init: options.init,
     });
   }
 }
