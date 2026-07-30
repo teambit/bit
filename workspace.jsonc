@@ -56,7 +56,7 @@
         "@pnpm/cli.default-reporter": "1100.3.13",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config.parse-overrides": "1100.0.2",
-        "@pnpm/config.reader": "1101.3.1",
+        "@pnpm/config.reader": "1101.15.0",
         "@pnpm/deps.inspection.list": "1100.0.20",
         "@pnpm/deps.inspection.tree-builder": "1100.0.17",
         "@pnpm/deps.path": "1100.0.8",
@@ -713,10 +713,6 @@
       // https://github.com/garycourt/uri-js/issues/97
       "uri-js": "npm:uri-js-replace",
       "encoding": "-",
-      // bit.cloud's registry mirror only has @pnpm/config.env-replace up to 3.0.2.
-      // Newer @pnpm/config.reader (1101.3.2+) requires env-replace ^4.1.0, which is missing.
-      // Force config.reader to the last version using env-replace 3.x so install can succeed.
-      "@pnpm/config.reader": "1101.3.1",
       // bit.cloud's mirror also caps @pnpm/util.lex-comparator at 3.0.2 and
       // @pnpm/config.nerf-dart at 1.0.1, but the latest 11xx @pnpm packages depend on
       // ^4.0.1 / ^2.0.1 respectively. Their implementations are byte-identical across the

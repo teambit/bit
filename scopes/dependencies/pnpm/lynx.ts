@@ -128,7 +128,11 @@ function buildAuthHeaderByUri(authConfig: Record<string, unknown>): Record<strin
   const result: Record<string, string> = {};
   const { configByUri } = getNetworkConfigs(authConfig);
   for (const [uri, config] of Object.entries(configByUri ?? {})) {
-    const header = credsToAuthHeader((config as Record<string, any>)[DEFAULT_REGISTRY_SCOPE]);
+    // `@pnpm/config.reader` >=1101.9.0 keys each registry's credentials by
+    // package scope (`@` for registry-wide); older versions nest them under
+    // `creds`. Read both so the auth headers survive either version.
+    const creds = (config as Record<string, any>)[DEFAULT_REGISTRY_SCOPE] ?? (config as Record<string, any>).creds;
+    const header = credsToAuthHeader(creds);
     if (header) result[uri] = header;
   }
   const defaultHeader = credsToAuthHeader(getDefaultCreds(authConfig));
