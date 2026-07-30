@@ -11,7 +11,8 @@ export function useComponentLogs(
   componentId: string,
   host: string,
   filters?: Filters,
-  skipFromProps?: boolean
+  skipFromProps?: boolean,
+  context?: Record<string, any>
 ): ComponentLogsResult {
   const { variables, skip } = useComponentLogsInit(componentId, host, filters, skipFromProps);
 
@@ -19,6 +20,7 @@ export function useComponentLogs(
     variables,
     skip,
     errorPolicy: 'all',
+    context,
   });
 
   const rawComponent = data?.getHost?.get;

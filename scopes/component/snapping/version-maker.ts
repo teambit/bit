@@ -690,9 +690,15 @@ export class VersionMaker {
             `addLogToComponents is set  copyLogFromPreviousSnap: true, but it is unable to find log in the previous snap`
           );
         }
-        currentLog.message = msgFromEditor || message || currentLog.message;
-        currentLog.date = basicLog.date;
-        return currentLog;
+        // return a new object rather than mutating the current log. the current log object belongs
+        // to the previous snap Version instance, which is cached in the repository. mutating it and
+        // later persisting that Version (e.g. when marking it as hidden) would overwrite the
+        // previous snap's message and date with the new version's data.
+        return {
+          ...currentLog,
+          message: msgFromEditor || message || currentLog.message,
+          date: basicLog.date,
+        };
       }
 
       return {

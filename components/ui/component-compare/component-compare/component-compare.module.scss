@@ -3,6 +3,8 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  // shrink below content width so a wide diff scrolls inside its own body, not the page.
+  min-width: 0;
 }
 
 .top {
@@ -16,6 +18,14 @@
   overflow: hidden;
   flex-direction: column;
   flex: 1;
+  // shrink below content width so a wide diff scrolls inside its own body, not the page.
+  min-width: 0;
+
+  // direct children (the rendered tab subtrees, incl. the code diff) must also be allowed to
+  // shrink below their min-content width, otherwise a wide diff forces this column wider.
+  > * {
+    min-width: 0;
+  }
 
   &.hidden {
     display: none;
@@ -128,5 +138,181 @@
     // @todo - review styles
     display: none;
     background-color: var(--bit-accent-success-color, #37b26c);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// InlineComponentCompare + ComponentCompareHeader (ported from new-changes)
+// ---------------------------------------------------------------------------
+
+$inline-border-color: var(--border-medium-color, #e8ecf0);
+$inline-surface-color: var(--surface-color, #fff);
+$inline-accent-color: var(--bit-accent-color, #6c5ce7);
+$inline-text-primary: var(--on-surface-color, #1a1a2e);
+$inline-text-secondary: var(--on-surface-medium-color, #707279);
+$inline-text-muted: var(--on-background-medium-color, #a0aec0);
+$inline-code-font: 'JetBrains Mono', ui-monospace, monospace;
+
+.componentCompare {
+  background: $inline-surface-color;
+  margin-bottom: 2px;
+  --component-header-height: 44px;
+
+  // let the browser skip layout+paint of offscreen sections entirely — with dozens of mounted diff
+  // panels the pane's DOM is enormous, and without this every scroll frame pays for all of it.
+  // `auto` intrinsic-size remembers each section's real height once rendered, so the scrollbar
+  // stays stable; 220px is only the pre-first-render estimate. Geometry queries (the sidebar's
+  // scroll-to-component) force on-demand layout of a skipped section, so anchors keep working.
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  background: $inline-surface-color;
+  border-bottom: 1px solid $inline-border-color;
+  border-left: 3px solid var(--component-accent, #{$inline-accent-color});
+  position: sticky;
+  top: var(--group-header-height, 0px);
+  z-index: 3;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.envIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.envIconPlaceholder {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.componentName {
+  font-size: 14px;
+  font-weight: 600;
+  color: $inline-text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.changeTags {
+  display: flex;
+  gap: 6px;
+}
+
+.changeTag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+// Per-view header note (e.g. the deps change tally). Hidden by default; the compare pane reveals the
+// note whose `data-header-extra-view` matches the active view (see the pane scss). The header stays
+// view-agnostic — it never names a specific view.
+.headerExtra {
+  display: none;
+  align-items: center;
+  font-size: 13px;
+  color: var(--on-background-medium-color, #a0aec0);
+}
+
+.versions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.versionHash {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--surface-neutral-color, #f6f8fa);
+  font-family: $inline-code-font;
+  font-size: 12px;
+  color: $inline-text-secondary;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background: rgba(108, 92, 231, 0.08);
+    color: $inline-accent-color;
+  }
+}
+
+.versionArrow {
+  color: $inline-text-muted;
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.skeleton {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// placeholder for a not-yet-mounted component section: min-height ≈ the section's
+// contain-intrinsic-size estimate minus the header, so the skeleton→content swap barely shifts
+// layout and the first viewport holds only a handful of sections (each queues a staggered mount).
+.sectionPlaceholder {
+  min-height: 176px;
+  justify-content: center;
+}
+
+// shimmer rides a transform-animated pseudo-element over a static background: `transform` runs on
+// the compositor, so hundreds of bars animate without any per-frame main-thread paint — animating
+// `background-position` instead repaints every bar every frame and visibly drops the page framerate.
+.skeletonBar {
+  position: relative;
+  overflow: hidden;
+  height: 12px;
+  background: var(--surface-neutral-color, #f0f2f5);
+  border-radius: 4px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, #{$inline-border-color}, transparent);
+    transform: translateX(-100%);
+    animation: inline-shimmer 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes inline-shimmer {
+  100% {
+    transform: translateX(100%);
   }
 }
