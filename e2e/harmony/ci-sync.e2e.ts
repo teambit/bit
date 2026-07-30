@@ -1631,7 +1631,10 @@ describe('bit ci sync', function () {
     describe('a same-named lane in THIS scope must not hijack the foreign-hosted lane’s branch', () => {
       let output: string;
       let exitCode: number;
+      let dryRunOutput: string;
+      let dryRunExit: number;
       let shaBefore: string;
+      let refsBeforeDryRun: string;
       let rivalDevPath: string;
 
       before(() => {
@@ -1647,9 +1650,34 @@ describe('bit ci sync', function () {
         helper.command.runCmd('bit snap --message "rival lane snap"', rivalDevPath);
         helper.command.runCmd('bit export', rivalDevPath);
 
+        // The dry run goes FIRST, because the thing it must not do is permanent: labelling the branch
+        // owner's PR freezes that lane's syncs until a human removes the label. Running it after the real
+        // halt would prove nothing — the label would already be there.
+        refsBeforeDryRun = remoteRefs();
+        ({ output: dryRunOutput, exitCode: dryRunExit } = runBit(`bit ci sync ${LANE} --dry-run`));
+        gitFetch();
+
         // Bare name => this workspace's defaultScope, i.e. the rival lane.
         ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
         gitFetch();
+      });
+
+      /**
+       * `--dry-run` promises no pull request is created, closed, labelled or commented on. This halt is the
+       * one that would break that promise most expensively: the PR it annotates belongs to the *other*
+       * lane — the branch's owner — whose own lane is perfectly healthy, and the label would stop its syncs
+       * until a human intervened. A dry run must therefore report the halt and touch nothing.
+       */
+      it('should report the halt under --dry-run without annotating the owner’s PR', () => {
+        expect(dryRunExit, `bit ci sync --dry-run output:\n${dryRunOutput}`).to.not.equal(0);
+        expect(dryRunOutput).to.include(`HALTED ${LANE} -> branch ${LANE} mirrors lane ${hostScope}/${LANE}`);
+        // The marker only the dry-run path prints — proof the PR-writing branch was skipped rather than
+        // merely having had no PR to write to.
+        expect(dryRunOutput).to.include('Dry-run: the PR is not labelled or commented on');
+      });
+
+      it('should leave the git remote byte-identical after the dry run', () => {
+        expect(remoteRefs()).to.equal(refsBeforeDryRun);
       });
 
       it('should halt, naming the lane that owns the branch and the one that was refused', () => {

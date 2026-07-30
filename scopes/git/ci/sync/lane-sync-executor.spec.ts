@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import {
+  branchMirrorsOtherLaneNote,
   branchMirrorsOtherLaneReason,
   crossScopeDescription,
   crossScopeMidFlightHaltReason,
@@ -161,6 +162,23 @@ describe('branchMirrorsOtherLaneReason', () => {
     expect(reason).to.include('branch release mirrors lane other.scope/release');
     expect(reason).to.include('refusing to plan for acme.shop/release');
     expect(reason).to.include("overwrite the other lane's mirror");
+  });
+
+  /**
+   * This is the one halt whose PR belongs to a *different* lane than the one that failed, so the comment
+   * has to tell that PR's reviewers their own lane is fine — and must not carry the default
+   * "bit lane import <lane>" steps, which name the refused lane and would perform the very overwrite the
+   * halt prevented.
+   */
+  it('the PR comment tells the branch owner their lane is fine, and not to run the usual steps', () => {
+    const note = branchMirrorsOtherLaneNote('other.scope/release', 'acme.shop/release');
+    expect(note).to.include('belongs to lane `other.scope/release`');
+    expect(note).to.include('nothing is wrong with it');
+    expect(note).to.include('acme.shop/release');
+    expect(note).to.match(/Do NOT run the usual "bit lane import" resolution steps/);
+    // the way out, so the comment is actionable rather than only a warning
+    expect(note).to.include('rename one of the two lanes');
+    expect(note).to.include('`branches`');
   });
 });
 

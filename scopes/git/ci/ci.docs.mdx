@@ -368,8 +368,11 @@ acme.shop); foreign components: other.scope/comp2 — no branch created; see the
 The skip is deliberately **not** a failure: a cron or webhook run that keeps meeting a standing cross-scope
 lane must stay green, or the pipeline goes permanently red over a lane that is doing nothing wrong. An
 explicitly named lane is different — the user asked for that lane and must learn why nothing happened — so it
-exits non-zero, but as a plain refusal, not as a sync conflict (there is no branch or PR to label, and no
-future run is affected).
+exits non-zero, but as a plain refusal, not as a sync conflict: no PR is labelled and nothing is written, so
+no _future_ run behaves differently either. A branch of that name may nevertheless already exist — someone
+else's, or one this repository mirrored before the lane grew a foreign component — and the message says which
+of the two happened (`No branch was created and nothing was written` / `Nothing was written; the existing
+branch <b> was left untouched`) rather than promising more than it did.
 
 The **mid-flight** case is the one true halt: the branch is this lane's **live mirror** and the lane has since
 grown a foreign component — so an open PR and any dev commits on that branch can never converge again. It is
@@ -408,10 +411,28 @@ checked before anything is planned:
   claiming the opposite. The check only applies when the lane being reconciled actually exists: with no lane
   there is nothing to write, and the one destructive action left (`close-pr`) already refuses without
   attribution to that lane.
+
+  Note **whose PR gets labelled**: the branch's owner's. The refused lane has no PR of its own, so the
+  `bit-sync-conflict` label lands on a pull request whose own lane is perfectly healthy, and freezes its
+  syncs until a human removes it. That is the right trade — two lanes contending for one branch needs a
+  person either way, and the alternative is one silently overwriting the other — but it is why the comment
+  posted there names both lanes, says the PR's own lane is fine, and explicitly tells the reader **not** to
+  run the usual `bit lane import` steps (they would perform the overwrite the halt just refused). Resolve it
+  by renaming one lane or mapping one of them elsewhere with `branches`. Under `--dry-run` nothing is
+  labelled or commented at all.
+
 - **Reserved branches.** A `branches` override (or a lane named after the default branch) can map a lane onto
   the default branch or `<mainSyncBranch>`. Those belong to the main-scope path, which never writes to the
   default branch directly, so the lane path refuses them — skipped when enumerated, a refusal when named
   explicitly. This is enforced inside the per-lane reconciler, so `--all` is covered too.
+
+**Known gap in the collision check.** It fires only while the branch is the other lane's **live** mirror. Once
+that lane's sync PR has been merged and further commits pushed to the branch (`own-superseded`), the branch is
+no longer anybody's live mirror, and a same-named lane reconciled against it will read the _other_ lane's
+`Bit-Lane-Head` as its own last-synced state and plan from there. This is pre-existing behaviour, not
+introduced by the collision check, and it is left alone on purpose: tightening it means attributing branches
+on subject alone again, which is precisely what makes inherited trailers look like claims and gets ordinary
+developer branches labelled. Give colliding lanes distinct names or distinct `branches` entries.
 
 Support for lanes that genuinely span scopes is designed in two later stages: **Stage 1** slices a lane by
 scope (per-repository fingerprint, materialization, export and PR, plus a `laneSources` config so foreign-hosted

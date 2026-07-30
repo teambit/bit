@@ -152,10 +152,14 @@ export function crossScopeSkipSummary(laneName: string, foreignIds: string[], de
 /**
  * A cross-scope lane the user named **explicitly** (`bit ci sync <lane>`).
  *
- * The lane is still legitimate and there is still no branch to annotate — but a request for one specific
+ * The lane is legitimate and this repository is not going to mirror it — but a request for one specific
  * lane that quietly does nothing is a worse answer than an error, so this exits non-zero and explains
- * itself. It is a refusal, not a halt: nothing is mid-flight, nothing is labelled, and the next run is
- * unaffected.
+ * itself. It is a refusal, not a halt: no PR is labelled and no branch is written, so nothing about a
+ * *future* run changes either.
+ *
+ * A branch may nevertheless already exist under this lane's name — someone else's, or one this repository
+ * mirrored before the lane grew a foreign component and whose claim has since lapsed. `existingBranch`
+ * exists so the closing sentence describes that truthfully instead of promising a branch was never made.
  */
 export function crossScopeRefusal(foreignIds: string[], defaultScope: string, existingBranch?: string): string {
   // The promise at the end has to be true of what actually happened. A branch may already exist here —
@@ -183,6 +187,25 @@ export function branchMirrorsOtherLaneReason(branch: string, mirroredLaneIdStr: 
     `with the same name in different scopes map to the same branch, and reconciling this one would ` +
     `overwrite the other lane's mirror`
   );
+}
+
+/**
+ * The PR comment for the branch-aliasing halt, which is the one halt whose PR belongs to a **different**
+ * lane than the one that failed. Its reviewers see a `bit-sync-conflict` label appear on a pull request
+ * whose own lane is perfectly healthy, so the comment has to say whose fault it is and what to do — and it
+ * must NOT carry the default "import the lane onto this branch" steps, which name the *refused* lane and
+ * would perform exactly the overwrite the halt just prevented.
+ */
+export function branchMirrorsOtherLaneNote(mirroredLaneIdStr: string, laneIdStr: string): string {
+  return `This pull request belongs to lane \`${mirroredLaneIdStr}\`, and nothing is wrong with it.
+
+Lane \`${laneIdStr}\` has the same lane *name* in a different scope, so it maps to this same branch, and \
+\`bit ci sync\` refused to reconcile it here rather than overwrite this branch with the other lane's content.
+Both lanes stay unsynced until the collision is resolved: rename one of the two lanes, or map one of them to \
+a different branch via the \`branches\` option of the \`teambit.git/ci\` sync config.
+
+Do NOT run the usual "bit lane import" resolution steps on this branch — they would import \
+\`${laneIdStr}\` over \`${mirroredLaneIdStr}\`'s mirror.`;
 }
 
 /**
@@ -349,8 +372,8 @@ export class LaneSyncExecutor {
     // own first-parent line and every branch cut from the default branch afterwards inherits it. Only a sync
     // commit the default branch does NOT contain (`own-live`) says "this branch is X's mirror, right now".
     // The evidence is computed once here and reused for the lane-gone path below, so a branch with a sync
-    // commit costs one or two extra `merge-base` calls per run — the price of not confusing an inherited
-    // trailer for a claim.
+    // commit costs one or two extra `merge-base` calls **per lane per run** (up to 2N on an `--all` run of
+    // N lanes) — the price of not confusing an inherited trailer for a claim.
     const claim: LaneOwnershipEvidence = branchState.syncCommit?.laneIdStr
       ? await this.assessBranchOwnership({
           laneIdStr: branchState.syncCommit.laneIdStr,
@@ -374,12 +397,20 @@ export class LaneSyncExecutor {
     // scheduled run with no PR to label.
     if (laneHead && mirroredLaneIdStr && mirroredLaneIdStr !== laneIdStr) {
       if (conflictLabelPresent) return suppressedByLabel;
-      return this.executeHalt({
+      // NOTE: the PR annotated here belongs to `mirroredLaneIdStr` — the lane that *owns* this branch —
+      // not to the lane being reconciled, which has no PR of its own. Labelling it stops the owner's
+      // syncs until a human intervenes, which is the correct trade (two lanes fighting over one branch
+      // needs a human either way) but makes it doubly important that this goes through `haltOrReport`:
+      // under `--dry-run` it must not touch that PR at all. `commentNote` is what tells the owner's
+      // reviewers why a label appeared on a PR whose own lane is perfectly healthy.
+      return this.haltOrReport({
         laneName,
         laneIdStr,
         branch,
         reason: branchMirrorsOtherLaneReason(branch, mirroredLaneIdStr, laneIdStr),
         pr,
+        dryRun,
+        commentNote: branchMirrorsOtherLaneNote(mirroredLaneIdStr, laneIdStr),
       });
     }
 
@@ -487,16 +518,18 @@ export class LaneSyncExecutor {
   /**
    * What a cross-scope lane means *for this repository*, which is not one thing:
    *
-   * 1. **Mid-flight halt.** A branch exists and its sync history names this lane: the pair was reconcilable
-   *    until the lane grew a foreign component, and there may be an open PR and dev commits on that branch
-   *    that can now never converge. That is a genuine conflict — label the PR, comment the reason, exit
-   *    non-zero. This case is checked first: it outranks how the lane was targeted, because the problem is
-   *    the state of the pair, not the phrasing of the request.
-   * 2. **Explicit refusal.** No branch of ours, and the user asked for this lane by name. Nothing is
-   *    mid-flight and there is nothing to label, but silently doing nothing would be a worse answer than an
-   *    error — so the run exits non-zero with the explanation. It is reported as a refusal, not a sync
-   *    conflict.
-   * 3. **Enumerated skip.** No branch of ours, and the lane was merely enumerated (`--all`, or a
+   * 1. **Mid-flight halt.** The branch is this lane's *live* mirror — a sync commit naming it which the
+   *    default branch does not yet contain (see `mirroredLaneIdStr` in `reconcileLane`; a merged sync PR's
+   *    trailer is inherited by every branch cut from the default branch afterwards, and must not count).
+   *    The pair was reconcilable until the lane grew a foreign component, and an open PR and any dev
+   *    commits on that branch can now never converge. That is a genuine conflict — label the PR, comment
+   *    the reason, exit non-zero — and it self-suppresses once labelled. Checked first: it outranks how the
+   *    lane was targeted, because the problem is the state of the pair, not the phrasing of the request.
+   * 2. **Explicit refusal.** This branch is not our live mirror, and the user asked for this lane by name.
+   *    There is nothing to label, but silently doing nothing would be a worse answer than an error — so the
+   *    run exits non-zero with the explanation. It is reported as a refusal, not a sync conflict. (A branch
+   *    of that name may still exist; the message says so rather than claiming none was created.)
+   * 3. **Enumerated skip.** Not our live mirror, and the lane was merely enumerated (`--all`, or a
    *    push/webhook-triggered reconcile). A cross-scope lane is a legitimate thing to have on bit.cloud;
    *    this repository just cannot mirror it yet. The run says so and **stays green** — otherwise one
    *    standing cross-scope lane would make every scheduled run fail forever, and a permanently red
@@ -535,16 +568,14 @@ export class LaneSyncExecutor {
       // cross-scope would post a fresh comment on the same PR on every scheduled run, forever, and the
       // label — the documented way to silence it — would do nothing.
       if (conflictLabelPresent) return suppressedByLabel;
-      const reason = crossScopeMidFlightHaltReason(branch, foreign, defaultScope);
-      // A dry run must not label or comment on the PR (that is the flag's contract), but it must still
-      // report the halt and still exit non-zero — the halt is the answer to "what would this run do?",
-      // not a side effect of doing it.
-      if (dryRun) {
-        logger.console(chalk.red(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
-        logger.console(chalk.yellow('🏃 Dry-run: the PR is not labelled or commented on'));
-        return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
-      }
-      return this.executeHalt({ laneName, laneIdStr, branch, reason, pr });
+      return this.haltOrReport({
+        laneName,
+        laneIdStr,
+        branch,
+        reason: crossScopeMidFlightHaltReason(branch, foreign, defaultScope),
+        pr,
+        dryRun,
+      });
     }
 
     if (explicit) {
@@ -999,9 +1030,14 @@ export class LaneSyncExecutor {
       if (await isAncestor(`origin/${branch}`, `origin/${defaultBranch}`)) return 'own-merged';
       return 'own-superseded';
     } catch (e: any) {
+      // Deliberately neutral wording: this answer no longer only decides whether a branch may be retired.
+      // It also decides whether the branch counts as some lane's live mirror, which gates the branch-aliasing
+      // and cross-scope mid-flight halts — so "it will be left alone rather than retired" would misdescribe
+      // most of the runs that reach it. `inherited-or-none` is the do-nothing answer in every one of them.
       logger.consoleWarning(
-        `Could not establish whether ${branch} is already merged into ${defaultBranch}, so it will be left ` +
-          `alone rather than retired: ${e?.message || e}`
+        `Could not establish whether ${branch} is already merged into ${defaultBranch}, so its ownership ` +
+          `could not be determined; treating it as inherited-or-none (no branch is retired, and the branch ` +
+          `is not treated as any lane's live mirror): ${e?.message || e}`
       );
       return 'inherited-or-none';
     }
@@ -1090,8 +1126,50 @@ export class LaneSyncExecutor {
   }
 
   /**
+   * Record a halt **without touching the PR on a dry run**.
+   *
+   * `--dry-run` promises that no pull request is created, closed, labelled or commented on, and a halt is
+   * the one outcome that would otherwise break that promise — labelling a PR freezes its lane's syncs
+   * until a human removes the label, which is a lasting side effect of a command that claimed to have
+   * none. The line still carries `HALT_SUMMARY_PREFIX` either way, so the run still exits non-zero: the
+   * halt is the *answer* to "what would this run do?", not a side effect of doing it.
+   *
+   * Every halt reached from a pre-planning refusal goes through here rather than calling `executeHalt`
+   * directly, so the guard cannot be forgotten at one site and present at its sibling.
+   */
+  private async haltOrReport({
+    laneName,
+    laneIdStr,
+    branch,
+    reason,
+    pr,
+    dryRun,
+    commentNote,
+  }: {
+    laneName: string;
+    laneIdStr: string;
+    branch: string;
+    reason: string;
+    pr?: PrInfo;
+    dryRun?: boolean;
+    commentNote?: string;
+  }): Promise<string> {
+    if (dryRun) {
+      const { logger } = this.deps;
+      logger.console(chalk.red(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
+      logger.console(chalk.yellow('🏃 Dry-run: the PR is not labelled or commented on'));
+      return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
+    }
+    return this.executeHalt({ laneName, laneIdStr, branch, reason, pr, commentNote });
+  }
+
+  /**
    * Hand the lane back to a human: label the PR so subsequent runs skip it (the planner treats
    * `bit-sync-conflict` as a hard no-op) and comment the resolution steps.
+   *
+   * `commentNote` replaces the default resolution steps for halts where they would be wrong — notably the
+   * branch-aliasing halt, whose PR belongs to a *different* lane, and whose reader must not be told to
+   * import the refused lane onto this branch.
    */
   private async executeHalt({
     laneName,
@@ -1099,19 +1177,21 @@ export class LaneSyncExecutor {
     branch,
     reason,
     pr,
+    commentNote,
   }: {
     laneName: string;
     laneIdStr: string;
     branch: string;
     reason: string;
     pr?: PrInfo;
+    commentNote?: string;
   }): Promise<string> {
     const { logger, gitHost } = this.deps;
     logger.console(chalk.red(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
     if (gitHost && pr) {
       try {
         await gitHost.addLabel(pr.number, CONFLICT_LABEL);
-        await gitHost.comment(pr.number, haltCommentBody({ reason, branch, laneId: laneIdStr }));
+        await gitHost.comment(pr.number, haltCommentBody({ reason, branch, laneId: laneIdStr, note: commentNote }));
       } catch (e: any) {
         // The halt itself is the outcome that matters; failing to annotate the PR must not replace
         // the real reason with a git-host API error.
@@ -1373,15 +1453,34 @@ function isConflictFileStatus(status: string): boolean {
   return status === FileStatus.manual || status === FileStatus.binaryConflict || status === FileStatus.deletedConflict;
 }
 
-/** exact resolution instructions posted on a halted PR (kept verbatim; only the fields interpolate) */
-function haltCommentBody({ reason, branch, laneId }: { reason: string; branch: string; laneId: string }): string {
-  return `bit-git-sync could not reconcile this branch automatically: ${reason}
-
-To resolve locally:
+/**
+ * exact resolution instructions posted on a halted PR (kept verbatim; only the fields interpolate).
+ *
+ * `note` replaces the default steps for halts where they do not apply. The default assumes the PR belongs
+ * to `laneId` — it tells the reader to import that lane onto this branch — which is true of every halt
+ * except the branch-aliasing one, where following it would do the very overwrite the halt just refused.
+ */
+function haltCommentBody({
+  reason,
+  branch,
+  laneId,
+  note,
+}: {
+  reason: string;
+  branch: string;
+  laneId: string;
+  note?: string;
+}): string {
+  const resolution =
+    note ??
+    `To resolve locally:
   git fetch origin && git checkout ${branch}
   bit lane import ${laneId}
   # resolve conflicts, commit the result, then:
-  git push origin ${branch}
+  git push origin ${branch}`;
+  return `bit-git-sync could not reconcile this branch automatically: ${reason}
+
+${resolution}
 
 Remove the \`bit-sync-conflict\` label to resume syncing.
 `;
