@@ -240,6 +240,9 @@ export class EnvsMain {
       'teambit.envs/env',
       'teambit.mdx/readme',
       'teambit.harmony/bit-custom-aspect',
+      // note: empty-env is deliberately not listed here although it is a core aspect. components
+      // listed here are excluded from the env load-groups (their own env is assumed to be core as
+      // well), while empty-env's own env is an external env that must be loaded like any other.
     ];
   }
 

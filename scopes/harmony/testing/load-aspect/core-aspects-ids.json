@@ -27,6 +27,7 @@
   "teambit.generator/generator",
   "teambit.envs/envs",
   "teambit.envs/env",
+  "teambit.harmony/empty-env",
   "teambit.component/graph",
   "teambit.harmony/pubsub",
   "teambit.dependencies/dependency-resolver",
