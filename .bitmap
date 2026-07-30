@@ -1012,7 +1012,13 @@
         "scope": "teambit.mdx",
         "version": "1.0.1084",
         "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/mdx"
+        "rootDir": "scopes/mdx/mdx",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.0.4": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "merge-lanes": {
         "name": "merge-lanes",
@@ -1368,7 +1374,13 @@
         "scope": "teambit.harmony",
         "version": "1.0.1083",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/node"
+        "rootDir": "scopes/harmony/node",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.0.4": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "notifications": {
         "name": "notifications",
@@ -1501,7 +1513,13 @@
         "scope": "teambit.react",
         "version": "1.0.1083",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/react"
+        "rootDir": "scopes/react/react",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.0.4": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "react-router": {
         "name": "react-router",
@@ -1515,7 +1533,13 @@
         "scope": "teambit.mdx",
         "version": "1.0.1084",
         "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/readme"
+        "rootDir": "scopes/mdx/readme",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.0.4": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "refactoring": {
         "name": "refactoring",
