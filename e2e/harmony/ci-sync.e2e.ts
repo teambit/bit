@@ -1157,6 +1157,64 @@ describe('bit ci sync', function () {
         expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('cold-lane-snap-3');
       });
     });
+
+    /**
+     * The third cold path, and the one whose trap is subtlest: `export-branch`.
+     *
+     * `snapPrCommit` reuses the remote lane through `switchToLane`, which is documented as fetching the
+     * latest lane head. On this path it never does: the workspace is ALREADY on the lane (the branch's
+     * `.bitmap` put it there), so `switchLanes` throws "already checked out" from
+     * `throwForSwitchingToCurrentLane` — inside `populatePropsAccordingToLocalLane`, i.e. **before any
+     * fetch** — and `switchToLane` reports that throw as success. Nothing is imported, the `landedOnLane`
+     * probe then asks the local scope for a lane object that isn't there, and `noDestructiveRecovery` turns
+     * the phantom "failed to switch" into a halt. The developer's commit never reaches the lane.
+     *
+     * This is why "the switch has just warmed the scope" is not a safe assumption: a switch that no-ops
+     * warms nothing. The fix imports the lane before delegating, so the probe passes because the lane is
+     * really there and the snap/export runs against the lane's real remote state.
+     */
+    describe('and export-branch, also cold', () => {
+      let exportOutput: string;
+      let exportExit: number;
+      let devCommitSha: string;
+      let tipBeforeSync: string;
+
+      before(() => {
+        // Only the branch moves, so the plan is export-branch: snap the dev commit onto the lane.
+        devCommitSha = branchSideCommit(
+          LANE,
+          defaultBranch,
+          'comp2/index.js',
+          comp2Src('cold-branch-dev-2'),
+          'feat: comp2 again'
+        );
+        tipBeforeSync = branchTipSha(LANE);
+        makeLocalScopeCold();
+        ({ output: exportOutput, exitCode: exportExit } = runBit(`bit ci sync ${LANE}`));
+        gitFetch();
+      });
+
+      it('should export instead of halting on a phantom failed switch', () => {
+        expect(exportExit, `bit ci sync output:\n${exportOutput}`).to.equal(0);
+        expect(exportOutput).to.include(`${LANE} -> export-branch`);
+        expect(exportOutput).to.not.include('HALTED');
+        // the exact pre-fix symptom, named so a regression is unmistakable
+        expect(exportOutput).to.not.include('Refusing destructive recovery');
+      });
+
+      it("should carry the dev commit's content onto the LANE tip", () => {
+        // The whole point of export-branch. A halt here loses the developer's work silently until a human
+        // notices the red run.
+        expect(laneTipFile(devPath, 'comp2/index.js')).to.include('cold-branch-dev-2');
+      });
+
+      it('should record the new state on the branch above the dev commit', () => {
+        expect(branchTipSha(LANE)).to.not.equal(tipBeforeSync);
+        expect(branchTipMessage(LANE)).to.include('[bit-sync]');
+        // never force-pushed: the developer's commit is still in the history
+        expect(helper.command.runCmd(`git log origin/${LANE} --format=%H`)).to.include(devCommitSha);
+      });
+    });
   });
 
   // =============================================================================================

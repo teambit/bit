@@ -886,9 +886,27 @@ export class LaneSyncExecutor {
    * turns `snapAndExportReusingLane`'s stale-lane recovery (delete the remote lane, re-fork it from
    * main) into a throw: that recovery is acceptable for a throwaway PR lane, but here the lane is the
    * authored artifact being synced.
+   *
+   * **COLD RUNNER.** The lane object has to be in this scope *before* delegating, and the reason is a trap
+   * worth stating in full. `snapPrCommit` reuses the existing remote lane by calling `switchToLane`, whose
+   * comment promises it "fetches the latest lane head from remote" — and on these paths it never does. The
+   * workspace is already on the lane (the branch's `.bitmap` put it there), so `switchLanes` hits
+   * `throwForSwitchingToCurrentLane` inside `populatePropsAccordingToLocalLane`, i.e. **before any fetch**,
+   * and `switchToLane` swallows that throw as success. Nothing is imported. The `landedOnLane` probe that
+   * follows then asks `getCurrentLane()` — a local-scope object read — gets undefined on a cold scope, and
+   * `noDestructiveRecovery` turns the resulting "failed to switch" into a halt. The dev commit never
+   * reaches the lane.
+   *
+   * So a switch that no-ops does NOT warm the scope, and "it just switched, therefore the object is there"
+   * is only true when the switch actually moved. Importing here fixes the condition rather than the
+   * symptom: the probe then passes because the lane really is present, and — the part that matters more —
+   * the snap and export that follow operate on the lane's real remote state instead of building a local
+   * lane object that never contained the remote's history, which is exactly the stale-lane shape
+   * `noDestructiveRecovery` refuses to repair.
    */
   private async snapAndExportOntoLane(laneIdStr: string, message: string): Promise<Error | undefined> {
     try {
+      await ensureCurrentLaneObject(this.deps.lanes);
       await this.deps.ci.snapPrCommit({
         laneIdStr,
         message,
