@@ -222,14 +222,14 @@ is built in; see [Git host providers](#git-host-providers).
 bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run]
 ```
 
-| Flag        | Description                                                                                                                                                                                                                                                                                                                                                                       |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| _(no args)_ | Same as `--all`: reconcile every mapped lane, then the main scope.                                                                                                                                                                                                                                                                                                                |
-| `[lane]`    | Reconcile a single lane (validated against the `lanes` patterns in the config). A lane that no longer exists is a no-op unless its branch carries sync history naming it — see [which branches may be retired](#which-branches-may-be-retired).                                                                                                                                   |
-| `--branch`  | Resolve the lane from a git branch name via the mapping config. Used by push-triggered pipelines.                                                                                                                                                                                                                                                                                 |
-| `--all`     | Reconcile every mapped lane plus the main scope — including lanes that only still exist as a branch, so a lane deleted on bit.cloud gets its branch and PR retired. Cannot be combined with `[lane]` or `--main`.                                                                                                                                                                 |
-| `--main`    | Reconcile only the main scope against the default branch (opens a sync PR on drift). Conflicts between the repository and the scope are resolved **in favour of the scope** (`bit checkout head --auto-merge-resolve theirs`) — see below.                                                                                                                                        |
-| `--dry-run` | Report the action that _would_ be taken per target. Nothing is pushed and no pull request is created, closed, labelled or commented on. It is not a read-only operation locally: the working tree, `.bitmap` and the local scope are written and then restored, and `--dry-run --main` can leave a local `<mainSyncBranch>` branch behind (the next run resets it from `origin`). |
+| Flag        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _(no args)_ | Same as `--all`: reconcile every mapped lane, then the main scope.                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `[lane]`    | Reconcile a single lane — either a lane name (hosted on the workspace's `defaultScope`) or a scope-qualified lane id, `other-org.other-scope/my-lane`, for a lane hosted on another scope (see [cross-scope lanes](#cross-scope-lanes)). Validated against the `lanes` patterns in the config, which match the lane **name**. A lane that no longer exists is a no-op unless its branch carries sync history naming it — see [which branches may be retired](#which-branches-may-be-retired). |
+| `--branch`  | Resolve the lane from a git branch name via the mapping config. Used by push-triggered pipelines.                                                                                                                                                                                                                                                                                                                                                                                             |
+| `--all`     | Reconcile every mapped lane plus the main scope — including lanes that only still exist as a branch, so a lane deleted on bit.cloud gets its branch and PR retired. Cannot be combined with `[lane]` or `--main`.                                                                                                                                                                                                                                                                             |
+| `--main`    | Reconcile only the main scope against the default branch (opens a sync PR on drift). Conflicts between the repository and the scope are resolved **in favour of the scope** (`bit checkout head --auto-merge-resolve theirs`) — see below.                                                                                                                                                                                                                                                    |
+| `--dry-run` | Report the action that _would_ be taken per target. Nothing is pushed and no pull request is created, closed, labelled or commented on. It is not a read-only operation locally: the working tree, `.bitmap` and the local scope are written and then restored, and `--dry-run --main` can leave a local `<mainSyncBranch>` branch behind (the next run resets it from `origin`).                                                                                                             |
 
 ### It is a reconciler, not a pipeline
 
@@ -318,6 +318,83 @@ A lane that cannot be reconciled automatically (merge conflicts, a failing build
 lanes are still synced, and the command exits non-zero. Remove the label to resume syncing that lane.
 The isolation is unconditional — a lane that fails in a way nobody anticipated is halted too, never
 allowed to abort the lanes after it.
+
+### Cross-scope lanes
+
+A lane has **two** scope relations, and they are not the same thing:
+
+- the scope that **hosts** it — administrative, where the lane object lives (`other-org.other-scope/my-lane`);
+- the scopes its **components** belong to — which repositories the change actually touches.
+
+A lane is an org-global change set, so it can legitimately carry components from several scopes, i.e. map
+to branches and PRs in several repositories. **This version of `bit ci sync` supports exactly one of those
+shapes:**
+
+> **v1 boundary.** A lane's **content must live in a single scope** — this workspace's `defaultScope`. The
+> **hosting scope may differ**, and such a lane is addressable by its scope-qualified id.
+
+```bash
+bit ci sync my-lane                       # hosted on this workspace's defaultScope
+bit ci sync other-org.other-scope/my-lane # hosted elsewhere, content still in this repo's scope
+```
+
+The branch mapping always uses the lane **name** (`branchPrefix` / `branches` are applied to the name), so a
+foreign-hosted lane mirrors onto the same branch it would if this scope hosted it. Everything addressed to
+Bit — reading the lane, snapping, exporting, and the lane id written into the `[bit-sync]` commit subject —
+uses the lane's real `hostScope/name` id.
+
+**A lane with components outside `defaultScope` is never mirrored.** The reconciler treats a lane as a whole:
+it fingerprints, materializes, snaps and exports every component on it. Mirroring a cross-scope lane here
+would write another repository's components into this one, propose them in a PR nobody in their scope
+reviews, and export them from this repository on the release path. So the run stops before it plans or writes
+anything.
+
+But a cross-scope lane is a **legitimate thing to create** on bit.cloud — it is not a failure of this
+repository. What the reconciler reports therefore depends on how it arrived at the lane. The check itself
+runs on **every** trigger; only the reporting differs:
+
+| How the lane was reached                                                   | Outcome   | Exit | PR touched                   |
+| -------------------------------------------------------------------------- | --------- | ---- | ---------------------------- |
+| **Enumerated** — `--all`, or a push/webhook-triggered `--branch` reconcile | `skipped` | 0    | no (there is no branch)      |
+| **Explicitly named** — `bit ci sync my-lane`                               | refusal   | ≠ 0  | no (there is no branch)      |
+| **Became cross-scope after this repo already mirrored it onto a branch**   | `HALTED`  | ≠ 0  | yes — labelled and commented |
+
+```
+# enumerated: a healthy, green run that simply has nothing to do for this lane
+my-lane -> skipped (cross-scope lane: components from scope(s) other.scope (this repo maps scope
+acme.shop); foreign components: other.scope/comp2 — no branch created; see the docs' Cross-scope lanes section)
+```
+
+The skip is deliberately **not** a failure: a cron or webhook run that keeps meeting a standing cross-scope
+lane must stay green, or the pipeline goes permanently red over a lane that is doing nothing wrong. An
+explicitly named lane is different — the user asked for that lane and must learn why nothing happened — so it
+exits non-zero, but as a plain refusal, not as a sync conflict (there is no branch or PR to label, and no
+future run is affected).
+
+The **mid-flight** case is the one true halt: a branch exists, its sync history names this lane, and the lane
+has since grown a foreign component — so an open PR and any dev commits on that branch can never converge
+again. That is annotated the usual way (`bit-sync-conflict` label plus a comment), leaves the other lanes in
+the run to be reconciled, and exits non-zero. Attribution is required before anything is labelled: a branch
+that merely shares the lane's name, or carries a trailer inherited from the default branch, is not ours to
+touch.
+
+There is no flag to override any of the three.
+
+Two consequences worth knowing:
+
+- **`--all` does not enumerate foreign-hosted lanes.** It visits this scope's own lanes and this repository's
+  lane-mapped branches; a lane hosted elsewhere is explicit-target only. (Its branch, if it has one here, is
+  reached by name and reads as "not ours" — so it is left alone, never retired.)
+- **Branch-derived targeting assumes `defaultScope`.** `--branch` has only a branch name to work from, so it
+  resolves the lane against `defaultScope`. For a foreign-hosted lane that lookup finds nothing and the
+  branch's sync history names a different lane id, which the reconciler reads as "not our branch" — a no-op.
+  Safe, but it means a foreign-hosted lane must be re-targeted by its full id.
+
+Support for lanes that genuinely span scopes is designed in two later stages: **Stage 1** slices a lane by
+scope (per-repository fingerprint, materialization, export and PR, plus a `laneSources` config so foreign-hosted
+lanes can be enumerated), and **Stage 2** adds the coordinated cross-repository release, which needs a
+scope→repository registry and an all-PRs-merged gate before any slice merges. See the `bit-git-sync` design
+document's _Cross-scope lanes_ section.
 
 ### Main-scope reconciliation
 

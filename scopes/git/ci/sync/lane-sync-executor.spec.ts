@@ -1,15 +1,26 @@
 import { expect } from 'chai';
-import { isProtectedBranch, laneHeadFingerprint } from './lane-sync-executor';
+import {
+  crossScopeDescription,
+  crossScopeMidFlightHaltReason,
+  crossScopeRefusal,
+  crossScopeSkipSummary,
+  foreignLaneComponents,
+  isProtectedBranch,
+  laneHeadFingerprint,
+} from './lane-sync-executor';
 
 type LaneComponents = Parameters<typeof laneHeadFingerprint>[0];
 
 /**
- * A stand-in for `LaneData`'s component entry. `laneHeadFingerprint` only ever reads
- * `id.toStringWithoutVersion()` and `head`, so the test doesn't need a real `ComponentID` — and not
- * building one keeps this spec independent of the workspace/scope machinery.
+ * A stand-in for `LaneData`'s component entry. The helpers under test only ever read
+ * `id.toStringWithoutVersion()`, `id.scope` and `head`, so the test doesn't need a real `ComponentID` —
+ * and not building one keeps this spec independent of the workspace/scope machinery.
  */
 function comp(id: string, head: string): LaneComponents[number] {
-  return { id: { toStringWithoutVersion: () => id }, head } as unknown as LaneComponents[number];
+  return {
+    id: { toStringWithoutVersion: () => id, scope: id.split('/', 1)[0] },
+    head,
+  } as unknown as LaneComponents[number];
 }
 
 describe('laneHeadFingerprint', () => {
@@ -42,6 +53,92 @@ describe('laneHeadFingerprint', () => {
     // `LaneData.hash` is minted randomly at creation time and never moves when the lane advances, so it
     // cannot answer "did this lane change since the last sync?".
     expect(laneHeadFingerprint([a, b])).to.equal(laneHeadFingerprint([comp('acme.shop/comp1', a.head), b]));
+  });
+});
+
+/**
+ * The Stage-0 relevance/purity check: a lane may be *hosted* anywhere, but its content must live in the
+ * one scope this repository maps, because the reconciler has no notion of a partial lane yet.
+ */
+describe('foreignLaneComponents', () => {
+  const DEFAULT_SCOPE = 'acme.shop';
+  const ours = comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
+  const theirs = comp('other.scope/comp2', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2');
+
+  it('is empty for a lane whose components are all in the repository scope', () => {
+    expect(foreignLaneComponents([ours], DEFAULT_SCOPE)).to.deep.equal([]);
+    expect(foreignLaneComponents([], DEFAULT_SCOPE)).to.deep.equal([]);
+  });
+
+  it('names every component outside the repository scope', () => {
+    expect(foreignLaneComponents([ours, theirs], DEFAULT_SCOPE)).to.deep.equal(['other.scope/comp2']);
+  });
+
+  it('compares the scope, not the id prefix: a namespaced component of our scope is ours', () => {
+    // `acme.shop/ui/button` must not read as scope `acme.shop/ui`.
+    const namespaced = comp('acme.shop/ui/button', 'ccccccccccccccccccccccccccccccccccccc333');
+    expect(foreignLaneComponents([namespaced], DEFAULT_SCOPE)).to.deep.equal([]);
+  });
+
+  it('treats a lane hosted elsewhere but filled with our components as ours (hosting != content)', () => {
+    // This is the case Stage 0 explicitly supports: `bit ci sync other.scope/my-lane` syncs normally as
+    // long as the content is single-scope and that scope is this repository's.
+    expect(foreignLaneComponents([ours], DEFAULT_SCOPE)).to.deep.equal([]);
+  });
+});
+
+describe('crossScopeDescription', () => {
+  const DEFAULT_SCOPE = 'acme.shop';
+
+  it('names the foreign scopes and this repository scope', () => {
+    const description = crossScopeDescription(['other.scope/comp2', 'third.scope/comp3'], DEFAULT_SCOPE);
+    expect(description).to.include('components from scope(s) other.scope, third.scope');
+    expect(description).to.include(`(this repo maps scope ${DEFAULT_SCOPE})`);
+    expect(description).to.include('foreign components: other.scope/comp2, third.scope/comp3');
+  });
+
+  it('lists at most five foreign components and summarizes the rest', () => {
+    const ids = Array.from({ length: 8 }, (_, index) => `other.scope/comp${index}`);
+    const description = crossScopeDescription(ids, DEFAULT_SCOPE);
+    expect(description).to.include('other.scope/comp4');
+    expect(description).to.not.include('other.scope/comp5');
+    expect(description).to.include('…and 3 more');
+  });
+
+  it('does not append a count when everything is listed', () => {
+    expect(crossScopeDescription(['other.scope/comp1'], DEFAULT_SCOPE)).to.not.include('more');
+  });
+});
+
+/**
+ * The three ways a cross-scope lane can reach this repository. They report the same facts and mean three
+ * different things, so the wording — and, downstream, the exit code — differs on purpose.
+ */
+describe('cross-scope outcome messages', () => {
+  const DEFAULT_SCOPE = 'acme.shop';
+  const FOREIGN = ['other.scope/comp2'];
+
+  it('an enumerated lane is SKIPPED, in the vocabulary of a healthy run', () => {
+    const summary = crossScopeSkipSummary('my-lane', FOREIGN, DEFAULT_SCOPE);
+    expect(summary).to.match(/^my-lane -> skipped \(cross-scope lane: /);
+    expect(summary).to.include('no branch created');
+    // It must not read as a failure: this line is returned as-is on a green run, so a HALTED/REFUSED
+    // marker in it would flip the exit code of a repository that has nothing wrong with it.
+    expect(summary).to.not.include('HALTED');
+    expect(summary).to.not.include('REFUSED');
+  });
+
+  it('an explicitly requested lane is REFUSED, with the reason and the "nothing was written" promise', () => {
+    const refusal = crossScopeRefusal(FOREIGN, DEFAULT_SCOPE);
+    expect(refusal).to.include('cross-scope lane: components from scope(s) other.scope');
+    expect(refusal).to.include("not supported yet — see the docs' Cross-scope lanes section");
+    expect(refusal).to.include('No branch was created and nothing was written');
+  });
+
+  it('a lane that became cross-scope mid-flight names the branch it can no longer converge with', () => {
+    const reason = crossScopeMidFlightHaltReason('my-lane', FOREIGN, DEFAULT_SCOPE);
+    expect(reason).to.include('lane became cross-scope after it was mirrored onto my-lane');
+    expect(reason).to.include('can no longer be reconciled automatically');
   });
 });
 

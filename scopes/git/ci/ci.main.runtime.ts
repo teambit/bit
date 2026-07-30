@@ -40,8 +40,14 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import type { CiSyncConfig } from './sync/sync-config';
-import { branchToLaneName, resolveSyncConfig, shouldSyncLane } from './sync/sync-config';
-import { HALT_SUMMARY_PREFIX, LaneSyncExecutor } from './sync/lane-sync-executor';
+import {
+  branchToLaneName,
+  laneNameToBranch,
+  parseLaneTarget,
+  resolveSyncConfig,
+  shouldSyncLane,
+} from './sync/sync-config';
+import { HALT_SUMMARY_PREFIX, REFUSED_SUMMARY_PREFIX, LaneSyncExecutor } from './sync/lane-sync-executor';
 import { MainSyncExecutor } from './sync/main-sync-executor';
 import type { GitHostProvider } from './sync/git-host-provider';
 import { selectGitHostProvider } from './sync/git-host-provider';
@@ -470,8 +476,10 @@ export class CiMain {
    * *when* the reconciler runs, never what it does.
    *
    * Returns the collected per-target summary lines. If any target halted (its line starts with
-   * `HALT_SUMMARY_PREFIX`) the method **throws** the joined summary after the loop, so a CI run exits
-   * non-zero — while still having attempted, and reported on, every other target.
+   * `HALT_SUMMARY_PREFIX`) or was refused (`REFUSED_SUMMARY_PREFIX`) the method **throws** the joined
+   * summary after the loop, so a CI run exits non-zero — while still having attempted, and reported on,
+   * every other target. Note that a *skip* is neither: a target this repository legitimately has nothing
+   * to do for (a cross-scope lane met by `--all`) reports itself and leaves the run green.
    */
   async sync(
     opts: { lane?: string; branch?: string; all?: boolean; main?: boolean; dryRun?: boolean } = {}
@@ -568,15 +576,25 @@ export class CiMain {
       }
       const laneName = branchToLaneName(branch, cfg);
       if (!laneName) return `branch ${branch} is not lane-mapped; nothing to do`;
-      const skipReason = this.laneNotSyncableReason(laneName, cfg, mainLaneName);
+      const skipReason = this.laneNotSyncableReason(laneName, cfg, mainLaneName, defaultBranch);
       if (skipReason) return `${skipReason} (branch ${branch})`;
-      return this.summarizeSync([await laneSync.syncLane(laneName, { dryRun: opts.dryRun })]);
+      // A branch name carries no scope, so this path can only resolve the lane against `defaultScope`.
+      // A foreign-hosted lane is addressable by its scope-qualified id only (Stage 0) — see
+      // `assessBranchOwnership` for why resolving it here to the wrong scope is safe (no-op, never a
+      // deletion) rather than merely unhelpful.
+      return this.summarizeSync([
+        await laneSync.syncLane({ hostScope: defaultScope, name: laneName }, { dryRun: opts.dryRun }),
+      ]);
     }
 
     if (opts.lane) {
-      const skipReason = this.laneNotSyncableReason(opts.lane, cfg, mainLaneName);
+      // `[lane]` accepts both `my-lane` (hosted on defaultScope) and `other-scope/my-lane`. Every guard
+      // below is asked about the NAME: "main" is not a lane whichever scope hosts it, and the `lanes`
+      // patterns match lane names, not lane ids.
+      const target = parseLaneTarget(opts.lane, defaultScope);
+      const skipReason = this.laneNotSyncableReason(target.name, cfg, mainLaneName, defaultBranch);
       if (skipReason) return skipReason;
-      return this.summarizeSync([await laneSync.syncLane(opts.lane, { dryRun: opts.dryRun })]);
+      return this.summarizeSync([await laneSync.syncLane(target, { dryRun: opts.dryRun, explicitTarget: true })]);
     }
 
     // `--all`, which is also the no-arguments default: every mapped lane, then the main scope. The
@@ -591,21 +609,42 @@ export class CiMain {
       )
     );
     for (const laneName of lanesToSync) {
+      // `--all` enumerates this scope's own lanes and this repo's lane-mapped branches, so every target
+      // here is hosted on `defaultScope` by construction. Foreign-hosted lanes are explicit-target only
+      // in Stage 0; enumerating them needs the `laneSources` config designed for Stage 1.
       // eslint-disable-next-line no-await-in-loop
-      lines.push(await laneSync.syncLane(laneName, { dryRun: opts.dryRun }));
+      lines.push(await laneSync.syncLane({ hostScope: defaultScope, name: laneName }, { dryRun: opts.dryRun }));
     }
     lines.push(await mainSync.syncMain({ dryRun: opts.dryRun }));
     return this.summarizeSync(lines);
   }
 
-  /** Why this lane name must not be handed to the lane executor, or undefined when it's syncable. */
+  /**
+   * Why this lane name must not be handed to the lane executor, or undefined when it's syncable.
+   *
+   * The reserved names are checked against the lane **name** (never a scope-qualified id): "main" is not
+   * a lane whichever scope hosts it, and the `lanes` patterns match names. The branch a name maps to is
+   * checked too — reconciling a "lane" onto the default branch or onto the main sync branch would let the
+   * lane path write the two branches the main-scope path owns.
+   */
   private laneNotSyncableReason(
     laneName: string,
     cfg: Required<CiSyncConfig>,
-    mainLaneName: string
+    mainLaneName: string,
+    defaultBranch: string
   ): string | undefined {
     if (laneName === mainLaneName) {
       return `"${mainLaneName}" is not a lane — reconcile the main scope with "bit ci sync --main"; nothing to do`;
+    }
+    const branch = laneNameToBranch(laneName, cfg);
+    if (branch === defaultBranch) {
+      return (
+        `lane ${laneName} maps to the default branch ${branch} — reconcile it with "bit ci sync --main"; ` +
+        `nothing to do`
+      );
+    }
+    if (branch === cfg.mainSyncBranch) {
+      return `lane ${laneName} maps to ${branch}, the main sync branch maintained by this command; nothing to do`;
     }
     if (!shouldSyncLane(laneName, cfg)) {
       return `lane ${laneName} is not matched by the sync config (lanes: ${JSON.stringify(cfg.lanes)}); nothing to do`;
@@ -705,6 +744,14 @@ export class CiMain {
     const halted = lines.filter((line) => line.startsWith(HALT_SUMMARY_PREFIX));
     if (halted.length) {
       throw new BitError(`bit ci sync could not reconcile ${halted.length} target(s):\n${summary}`);
+    }
+    // A refusal is not a halt: nothing is mid-flight, no PR was labelled, and the repository is healthy —
+    // the reconciler simply will not do the specific thing that was asked for. So it exits non-zero (the
+    // request was not carried out) while saying exactly that, rather than reporting a sync conflict. Only
+    // an explicitly targeted single lane can produce one, so there is never a mix of both.
+    const refusals = lines.filter((line) => line.startsWith(REFUSED_SUMMARY_PREFIX));
+    if (refusals.length) {
+      throw new BitError(refusals.map((line) => line.slice(REFUSED_SUMMARY_PREFIX.length).trim()).join('\n'));
     }
     return summary;
   }

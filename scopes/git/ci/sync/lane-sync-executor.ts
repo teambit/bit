@@ -7,7 +7,7 @@ import { FileStatus } from '@teambit/component.modules.merge-helper';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { git } from '../git';
 import type { CiMain } from '../ci.main.runtime';
-import type { CiSyncConfig } from './sync-config';
+import type { CiSyncConfig, LaneTarget } from './sync-config';
 import { laneNameToBranch } from './sync-config';
 import type { BranchSyncState, SyncCommit } from './sync-state';
 import {
@@ -36,6 +36,19 @@ import {
  * the sync of every other lane in the run.
  */
 export const HALT_SUMMARY_PREFIX = 'HALTED';
+
+/**
+ * Prefix of the summary line returned when the reconciler **refuses** a target the user asked for by name.
+ *
+ * A refusal is not a halt. A halt means "this lane/branch pair is mid-flight and now needs a human", and it
+ * annotates the PR so the next run skips it. A refusal means "there is nothing here to reconcile, and you
+ * asked for it specifically, so here is why" — there is no branch and no PR to annotate, nothing is
+ * mid-flight, and no future run is affected. The two are separated because only one of them describes a
+ * repository that needs attention; conflating them would make a perfectly healthy repository report a
+ * conflict. Like `HALT_SUMMARY_PREFIX`, this makes the run exit non-zero (the user's explicit request was
+ * not carried out), but the command layer reports it as a plain refusal rather than as a sync conflict.
+ */
+export const REFUSED_SUMMARY_PREFIX = 'REFUSED';
 
 export type LaneSyncDeps = {
   lanes: LanesMain;
@@ -76,6 +89,89 @@ export function laneHeadFingerprint(components: LaneData['components']): string 
 }
 
 /**
+ * The lane's components that do **not** belong to `defaultScope`, i.e. the ones this repository does not
+ * map. An empty result means the lane's content is entirely this repository's business.
+ *
+ * A lane is an org-global change set: it is *hosted* on one scope but may *contain* components from many,
+ * so one lane can span several repositories. `bit ci sync` reconciles a lane as a whole — it fingerprints
+ * every component, materializes every component onto the branch, and snaps/exports every component back —
+ * so a lane with foreign content cannot be reconciled here without writing another repository's components
+ * into this one and releasing them without that repository's review. Until slicing exists (Stage 1 of the
+ * design), such a lane is refused; this is the predicate behind that refusal.
+ */
+export function foreignLaneComponents(components: LaneData['components'], defaultScope: string): string[] {
+  return components.filter((comp) => comp.id.scope !== defaultScope).map((comp) => comp.id.toStringWithoutVersion());
+}
+
+/** How many foreign component ids a cross-scope message names before it summarizes the rest. */
+const MAX_LISTED_FOREIGN_COMPONENTS = 5;
+
+/**
+ * The shared clause describing *why* a lane is cross-scope: the foreign **scopes** (which other
+ * repositories the change touches) and a bounded sample of the foreign **components** — enough for a human
+ * to see what the lane spans without pasting a hundred ids into a summary or a PR comment.
+ *
+ * The three outcomes below (skip, refusal, halt) each frame this clause differently, because they mean
+ * different things; the facts they report are the same.
+ */
+export function crossScopeDescription(foreignIds: string[], defaultScope: string): string {
+  // The scope is everything before the FIRST '/': a component id is `<scope>/<namespace…>/<name>`, so
+  // splitting at the last one would report `acme.shop/ui` as the scope of `acme.shop/ui/button`.
+  const scopes = [...new Set(foreignIds.map((id) => id.split('/', 1)[0]))].sort();
+  const listed = foreignIds.slice(0, MAX_LISTED_FOREIGN_COMPONENTS).join(', ');
+  const rest = foreignIds.length - MAX_LISTED_FOREIGN_COMPONENTS;
+  const sample = `${listed}${rest > 0 ? `, …and ${rest} more` : ''}`;
+  return (
+    `components from scope(s) ${scopes.join(', ')} (this repo maps scope ${defaultScope}); ` +
+    `foreign components: ${sample}`
+  );
+}
+
+/**
+ * A cross-scope lane that was merely **enumerated** (an `--all` run, a push/webhook-triggered reconcile).
+ *
+ * This is a *skip*, not a failure, and the run stays green. A cross-scope lane is a legitimate thing to
+ * create on bit.cloud — it is simply not something this repository can mirror yet, so no branch is created
+ * for it. A cron or webhook run that keeps finding one must keep reporting success, otherwise a standing,
+ * perfectly valid lane turns the pipeline permanently red and the repository learns to ignore its own CI.
+ */
+export function crossScopeSkipSummary(laneName: string, foreignIds: string[], defaultScope: string): string {
+  return (
+    `${laneName} -> skipped (cross-scope lane: ${crossScopeDescription(foreignIds, defaultScope)} — ` +
+    `no branch created; see the docs' Cross-scope lanes section)`
+  );
+}
+
+/**
+ * A cross-scope lane the user named **explicitly** (`bit ci sync <lane>`).
+ *
+ * The lane is still legitimate and there is still no branch to annotate — but a request for one specific
+ * lane that quietly does nothing is a worse answer than an error, so this exits non-zero and explains
+ * itself. It is a refusal, not a halt: nothing is mid-flight, nothing is labelled, and the next run is
+ * unaffected.
+ */
+export function crossScopeRefusal(foreignIds: string[], defaultScope: string): string {
+  return (
+    `cross-scope lane: ${crossScopeDescription(foreignIds, defaultScope)}; syncing cross-scope lanes is ` +
+    `not supported yet — see the docs' Cross-scope lanes section. No branch was created and nothing was written`
+  );
+}
+
+/**
+ * A lane that **became** cross-scope after this repository had already mirrored it onto a branch.
+ *
+ * This is the one cross-scope shape that is a genuine halt: the pair is mid-flight. A branch exists, its
+ * sync history names this lane, and there may be an open PR and dev commits on it — and the lane can no
+ * longer be reconciled with any of it. That needs a human, and the PR is exactly where to say so.
+ */
+export function crossScopeMidFlightHaltReason(branch: string, foreignIds: string[], defaultScope: string): string {
+  return (
+    `lane became cross-scope after it was mirrored onto ${branch}: ${crossScopeDescription(foreignIds, defaultScope)}; ` +
+    `the branch and the lane can no longer be reconciled automatically — see the docs' Cross-scope lanes section`
+  );
+}
+
+/**
  * Branches `executeClosePr` refuses to delete no matter what the ownership evidence concluded: the
  * repository's default branch and the main-scope sync branch. The planner should never route either here
  * (neither is treated as lane-mapped), so this is belt-and-braces against a wrong enumeration or evidence
@@ -101,19 +197,43 @@ export class LaneSyncExecutor {
    * Reconcile one lane with its git branch/PR.
    *
    * Returns a single human-readable summary line. On a halt the line starts with
-   * `HALT_SUMMARY_PREFIX` so the caller can aggregate failures and exit non-zero; **it does not
+   * `HALT_SUMMARY_PREFIX`, and on a refusal with `REFUSED_SUMMARY_PREFIX`, so the caller can aggregate
+   * them and exit non-zero; **it does not
    * throw** — that is the contract the `--all` loop is written against, and it has to hold for every
    * failure mode, not only the ones each step anticipates. The steps below route their own expected
    * failures to `executeHalt`; this wrapper is what covers the unexpected ones (a git command that
    * fails, a `checkout -B` that collides, a push the remote rejects, a git-host API that throws where
    * nobody expected it), any of which would otherwise abort the sync of every lane after this one.
    */
-  async syncLane(laneName: string, opts: { dryRun?: boolean } = {}): Promise<string> {
-    const { cfg, defaultScope, logger } = this.deps;
+  async syncLane(
+    target: LaneTarget,
+    opts: {
+      dryRun?: boolean;
+      /**
+       * The user named this lane on the command line, as opposed to it being enumerated by `--all` or
+       * resolved from a pushed branch. It changes nothing about what is written; it decides how a
+       * cross-scope lane is *reported* — see `crossScopeOutcome`.
+       */
+      explicitTarget?: boolean;
+    } = {}
+  ): Promise<string> {
+    const { cfg, logger } = this.deps;
+    const laneName = target.name;
+    // The BRANCH mapping is by lane NAME only — a lane hosted elsewhere still mirrors onto the branch its
+    // name maps to. Everything addressed to bit, by contrast, uses the lane's REAL id: reading it from the
+    // remote, snapping/exporting onto it, and the id recorded in the sync commit subject (which is what
+    // later attributes the branch to this lane). Deriving that id from `defaultScope` instead would make
+    // the reconciler read, write and claim a lane that does not exist.
     const branch = laneNameToBranch(laneName, cfg);
-    const laneIdStr = `${defaultScope}/${laneName}`;
+    const laneIdStr = `${target.hostScope}/${laneName}`;
     try {
-      return await this.reconcileLane({ laneName, laneIdStr, branch, dryRun: opts.dryRun });
+      return await this.reconcileLane({
+        target,
+        laneIdStr,
+        branch,
+        dryRun: opts.dryRun,
+        explicitTarget: opts.explicitTarget,
+      });
     } catch (e: any) {
       const reason = `unexpected error: ${e?.message || e}`;
       try {
@@ -131,22 +251,26 @@ export class LaneSyncExecutor {
   }
 
   private async reconcileLane({
-    laneName,
+    target,
     laneIdStr,
     branch,
     dryRun,
+    explicitTarget,
   }: {
-    laneName: string;
+    target: LaneTarget;
     laneIdStr: string;
     branch: string;
     dryRun?: boolean;
+    explicitTarget?: boolean;
   }): Promise<string> {
-    const { logger } = this.deps;
+    const { logger, defaultScope } = this.deps;
+    const laneName = target.name;
 
     await this.fetchOnce();
 
     const defaultBranch = await this.deps.ci.getDefaultBranchName();
-    const remoteLane = await this.getRemoteLane(laneName);
+    const remoteLane = await this.getRemoteLane(target);
+
     const laneHead = remoteLane ? laneHeadFingerprint(remoteLane.components) : undefined;
     const branchExists = await branchExistsOnRemote(branch);
     // No branch => no history to read (and `git log origin/<branch>` would throw). The planner
@@ -156,6 +280,33 @@ export class LaneSyncExecutor {
       : { syncCommit: undefined, hasDevCommits: false, tipMessage: '' };
     if (hasSyncMarker(branchState.tipMessage)) {
       logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
+    }
+
+    // RELEVANCE / PURITY. Everything above is a read; this is the last point before anything is planned or
+    // written. A lane whose content is not confined to this repository's scope cannot be reconciled here:
+    // `bit ci sync` has no notion of a partial lane yet — it fingerprints, materializes, snaps and exports
+    // the lane *whole* — so mirroring one would write another repository's components into this one, put
+    // them in a PR nobody in their scope reviews, and, in the release direction, export them from here.
+    //
+    // A cross-scope lane is nonetheless a perfectly legitimate thing for someone to create on bit.cloud, so
+    // the outcome depends on how this repository arrived at it — see `crossScopeOutcome`. The check lives
+    // in the executor because EVERY trigger (a bare lane argument, `--branch`, `--all`) funnels through
+    // here, and it needs the lane's content, which is only known once the lane has been read.
+    const foreign = remoteLane ? foreignLaneComponents(remoteLane.components, defaultScope) : [];
+    if (foreign.length) {
+      return this.crossScopeOutcome({
+        laneName,
+        laneIdStr,
+        branch,
+        foreign,
+        // Mid-flight: a branch exists AND its own sync history names THIS lane, i.e. this repository
+        // already mirrored the lane back when its content was single-scope. Attribution is required —
+        // a branch that merely shares the lane's name, or carries a trailer inherited from the default
+        // branch, is not ours to label.
+        midFlight: branchExists && branchState.syncCommit?.laneIdStr === laneIdStr,
+        explicit: Boolean(explicitTarget),
+        dryRun,
+      });
     }
     // "The lane is gone but the branch is still here" is the only situation whose outcome depends on the
     // claim, and the only one that can delete a branch — so the two extra git questions are asked there and
@@ -197,7 +348,7 @@ export class LaneSyncExecutor {
         // `laneHead` is always defined on this path — the planner only emits import-lane when the
         // lane exists on the remote. `remoteLane` is its LaneData (needed for the PR body).
         return this.executeImportLane({
-          laneName,
+          target,
           laneIdStr,
           branch,
           branchExists,
@@ -207,9 +358,9 @@ export class LaneSyncExecutor {
           pr,
         });
       case 'export-branch':
-        return this.executeExportBranch({ laneName, laneIdStr, branch, defaultBranch });
+        return this.executeExportBranch({ target, laneIdStr, branch, defaultBranch });
       case 'merge-diverged':
-        return this.executeMergeDiverged({ laneName, laneIdStr, branch, defaultBranch });
+        return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch });
       case 'close-pr':
         return this.executeClosePr({
           laneName,
@@ -231,12 +382,73 @@ export class LaneSyncExecutor {
   }
 
   /**
+   * What a cross-scope lane means *for this repository*, which is not one thing:
+   *
+   * 1. **Mid-flight halt.** A branch exists and its sync history names this lane: the pair was reconcilable
+   *    until the lane grew a foreign component, and there may be an open PR and dev commits on that branch
+   *    that can now never converge. That is a genuine conflict — label the PR, comment the reason, exit
+   *    non-zero. This case is checked first: it outranks how the lane was targeted, because the problem is
+   *    the state of the pair, not the phrasing of the request.
+   * 2. **Explicit refusal.** No branch of ours, and the user asked for this lane by name. Nothing is
+   *    mid-flight and there is nothing to label, but silently doing nothing would be a worse answer than an
+   *    error — so the run exits non-zero with the explanation. It is reported as a refusal, not a sync
+   *    conflict.
+   * 3. **Enumerated skip.** No branch of ours, and the lane was merely enumerated (`--all`, or a
+   *    push/webhook-triggered reconcile). A cross-scope lane is a legitimate thing to have on bit.cloud;
+   *    this repository just cannot mirror it yet. The run says so and **stays green** — otherwise one
+   *    standing cross-scope lane would make every scheduled run fail forever, and a permanently red
+   *    pipeline is one nobody reads.
+   */
+  private async crossScopeOutcome({
+    laneName,
+    laneIdStr,
+    branch,
+    foreign,
+    midFlight,
+    explicit,
+    dryRun,
+  }: {
+    laneName: string;
+    laneIdStr: string;
+    branch: string;
+    foreign: string[];
+    midFlight: boolean;
+    explicit: boolean;
+    dryRun?: boolean;
+  }): Promise<string> {
+    const { logger, defaultScope } = this.deps;
+
+    if (midFlight) {
+      const reason = crossScopeMidFlightHaltReason(branch, foreign, defaultScope);
+      // A dry run must not label or comment on the PR (that is the flag's contract), but it must still
+      // report the halt and still exit non-zero — the halt is the answer to "what would this run do?",
+      // not a side effect of doing it.
+      if (dryRun) {
+        logger.console(chalk.red(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
+        logger.console(chalk.yellow('🏃 Dry-run: the PR is not labelled or commented on'));
+        return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
+      }
+      return this.executeHalt({ laneName, laneIdStr, branch, reason, pr: await this.findPr(branch) });
+    }
+
+    if (explicit) {
+      const reason = crossScopeRefusal(foreign, defaultScope);
+      logger.console(chalk.red(`Cannot sync lane ${laneIdStr}: ${reason}`));
+      return `${REFUSED_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
+    }
+
+    const summary = crossScopeSkipSummary(laneName, foreign, defaultScope);
+    logger.console(chalk.yellow(summary));
+    return summary;
+  }
+
+  /**
    * Mirror the remote lane onto the branch: check the branch out, materialize the lane into the
    * workspace, and commit the result with a `Bit-Lane-Head` trailer that records which lane state
    * this commit represents.
    */
   private async executeImportLane({
-    laneName,
+    target,
     laneIdStr,
     branch,
     branchExists,
@@ -245,7 +457,7 @@ export class LaneSyncExecutor {
     remoteLane,
     pr,
   }: {
-    laneName: string;
+    target: LaneTarget;
     laneIdStr: string;
     branch: string;
     branchExists: boolean;
@@ -255,6 +467,7 @@ export class LaneSyncExecutor {
     pr?: PrInfo;
   }): Promise<string> {
     const { logger } = this.deps;
+    const laneName = target.name;
     logger.console(chalk.blue(`Importing lane ${laneIdStr} onto branch ${branch}`));
 
     // A brand-new lane branch forks from the default branch; an existing one is reset to whatever
@@ -285,7 +498,7 @@ export class LaneSyncExecutor {
 
       let prUrl = pr?.htmlUrl;
       if (!pr) {
-        prUrl = await this.openPrForLane({ laneName, laneIdStr, branch, defaultBranch, laneHead, remoteLane });
+        prUrl = await this.openPrForLane({ target, laneIdStr, branch, defaultBranch, laneHead, remoteLane });
       }
       return (
         `${laneName} -> import-lane (pushed ${branch} @ lane ${laneHead.slice(0, 9)}` +
@@ -302,17 +515,18 @@ export class LaneSyncExecutor {
    * next run sees the two sides as converged.
    */
   private async executeExportBranch({
-    laneName,
+    target,
     laneIdStr,
     branch,
     defaultBranch,
   }: {
-    laneName: string;
+    target: LaneTarget;
     laneIdStr: string;
     branch: string;
     defaultBranch: string;
   }): Promise<string> {
     const { logger } = this.deps;
+    const laneName = target.name;
     logger.console(chalk.blue(`Exporting branch ${branch} onto lane ${laneIdStr}`));
 
     const message = await this.lastNonSyncCommitMessage(branch, defaultBranch);
@@ -334,7 +548,7 @@ export class LaneSyncExecutor {
         });
       }
 
-      const laneHead = await this.recordLaneHeadOnBranch(laneName, laneIdStr, branch);
+      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
       if (!laneHead) {
         return await this.executeHalt({
           laneName,
@@ -376,17 +590,18 @@ export class LaneSyncExecutor {
    * lanes after it in the run.
    */
   private async executeMergeDiverged({
-    laneName,
+    target,
     laneIdStr,
     branch,
     defaultBranch,
   }: {
-    laneName: string;
+    target: LaneTarget;
     laneIdStr: string;
     branch: string;
     defaultBranch: string;
   }): Promise<string> {
     const { logger } = this.deps;
+    const laneName = target.name;
     logger.console(
       chalk.yellow(
         `Diverged: lane ${laneIdStr} and branch ${branch} both moved since the last sync — attempting to converge`
@@ -433,7 +648,7 @@ export class LaneSyncExecutor {
       }
 
       // ---- step 3: record the new lane head on the branch --------------------------------------
-      const laneHead = await this.recordLaneHeadOnBranch(laneName, laneIdStr, branch);
+      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
       if (!laneHead) {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
       }
@@ -494,11 +709,11 @@ export class LaneSyncExecutor {
    * from the remote — in which case the caller halts rather than committing a trailer it can't back.
    */
   private async recordLaneHeadOnBranch(
-    laneName: string,
+    target: LaneTarget,
     laneIdStr: string,
     branch: string
   ): Promise<string | undefined> {
-    const remoteLane = await this.getRemoteLane(laneName);
+    const remoteLane = await this.getRemoteLane(target);
     if (!remoteLane) return undefined;
     const laneHead = laneHeadFingerprint(remoteLane.components);
     await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
@@ -629,6 +844,18 @@ export class LaneSyncExecutor {
    * An unanswerable question resolves to `inherited-or-none`. That is not a fallback chosen for
    * convenience: every other answer permits deleting a branch, and a `merge-base` that failed (unrelated
    * histories, an unresolvable ref, a git hiccup) is not evidence of anything.
+   *
+   * **Foreign-hosted lanes (Stage 0).** Attribution compares the subject's lane id against `laneIdStr`,
+   * and both sides are now the lane's *real* id (`hostScope/name`) because `buildSyncCommitMessage` and
+   * this comparison are fed from the same place — so a branch synced from `other.scope/my-lane` is
+   * correctly attributed whenever that same target is passed again. What it deliberately does NOT do is
+   * attribute such a branch when it is reached *by branch name* (`--branch`, or the branch half of
+   * `--all`), because those paths derive the lane id from `defaultScope`: the expectation becomes
+   * `defaultScope/my-lane`, the subject says `other.scope/my-lane`, they differ, and the evidence is
+   * `inherited-or-none` — which the planner turns into a **no-op**. That asymmetry is the safe direction
+   * and is why it is acceptable for Stage 0: an unattributed branch is left alone, never retired, and
+   * `--all` does not enumerate foreign-hosted lanes anyway (they are explicit-target only). Stage 1's
+   * `laneSources` config is what will let branch-derived targeting know which scope hosts a lane.
    */
   private async assessBranchOwnership({
     laneIdStr,
@@ -856,14 +1083,20 @@ export class LaneSyncExecutor {
   /**
    * The remote lane's data, or undefined when the lane no longer exists on bit.cloud. Query by name
    * so the remote doesn't have to enumerate every lane in the scope.
+   *
+   * The remote queried is the lane's **hosting** scope, which is `defaultScope` for every lane this
+   * repository owns and something else for an explicitly targeted, foreign-hosted lane. Asking
+   * `defaultScope` for a lane it does not host answers "was not found", i.e. "the lane is gone" — the
+   * input that drives `close-pr`, which deletes branches. Querying the host is what keeps that answer
+   * truthful.
    */
-  private async getRemoteLane(laneName: string): Promise<LaneData | undefined> {
-    const { defaultScope } = this.deps;
-    const lanes = await this.deps.lanes.getLanes({ remote: defaultScope, name: laneName }).catch((e) => {
+  private async getRemoteLane(target: LaneTarget): Promise<LaneData | undefined> {
+    const { hostScope, name } = target;
+    const lanes = await this.deps.lanes.getLanes({ remote: hostScope, name }).catch((e) => {
       // "was not found" is the remote's way of saying the lane is gone — that's a legitimate state
       // (it drives the close-pr path), not an error.
       if (e.toString().includes('was not found')) return [];
-      throw new Error(`Failed to read lane ${defaultScope}/${laneName} from the remote: ${e.toString()}`);
+      throw new Error(`Failed to read lane ${hostScope}/${name} from the remote: ${e.toString()}`);
     });
     return lanes[0];
   }
@@ -916,26 +1149,28 @@ export class LaneSyncExecutor {
   }
 
   private async openPrForLane({
-    laneName,
+    target,
     laneIdStr,
     branch,
     defaultBranch,
     laneHead,
     remoteLane,
   }: {
-    laneName: string;
+    target: LaneTarget;
     laneIdStr: string;
     branch: string;
     defaultBranch: string;
     laneHead: string;
     remoteLane: LaneData;
   }): Promise<string | undefined> {
-    const { gitHost, logger, defaultScope } = this.deps;
+    const { gitHost, logger } = this.deps;
     if (!gitHost) {
       logger.console(chalk.yellow(`No configured git host provider — skipping PR creation for ${branch}`));
       return undefined;
     }
-    const laneUrl = `https://${getCloudDomain()}/${defaultScope.replace('.', '/')}/~lane/${laneName}`;
+    // The lane page lives under the scope that HOSTS the lane, which is not necessarily this
+    // repository's `defaultScope`.
+    const laneUrl = `https://${getCloudDomain()}/${target.hostScope.replace('.', '/')}/~lane/${target.name}`;
     const components = remoteLane.components
       .map((comp) => `- \`${comp.id.toStringWithoutVersion()}\` @ \`${comp.head.slice(0, 9)}\``)
       .join('\n');

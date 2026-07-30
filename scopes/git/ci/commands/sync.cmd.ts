@@ -7,8 +7,15 @@ type Options = { branch?: string; all?: boolean; main?: boolean; dryRun?: boolea
 
 export class CiSyncCmd implements Command {
   name = 'sync [lane]';
+  arguments = [
+    {
+      name: 'lane',
+      description:
+        'the lane to reconcile: either a lane name (hosted on the workspace\'s defaultScope) or a scope-qualified lane id, "other-org.other-scope/my-lane", for a lane hosted on another scope. Its components must still all live in this workspace\'s defaultScope',
+    },
+  ];
   description = 'Reconciles Bit lanes and the main scope with git branches and pull requests.';
-  extendedDescription = `Stateless reconciler: compares each mapped lane's remote head against the branch state recorded in git (Bit-Lane-Head commit trailer) and converges — importing lane changes onto the branch, exporting dev commits to the lane, or opening/closing PRs. The main scope is reconciled by checking the workspace out to its latest exported versions and proposing the result as a sync PR. Triggers (webhook, push, cron) only decide when it runs, never what it does. Safe to re-run at any time; converged state is a no-op. Configure mapping under "teambit.git/ci": { "sync": { ... } } in workspace.jsonc.`;
+  extendedDescription = `Stateless reconciler: compares each mapped lane's remote head against the branch state recorded in git (Bit-Lane-Head commit trailer) and converges — importing lane changes onto the branch, exporting dev commits to the lane, or opening/closing PRs. The main scope is reconciled by checking the workspace out to its latest exported versions and proposing the result as a sync PR. Triggers (webhook, push, cron) only decide when it runs, never what it does. Safe to re-run at any time; converged state is a no-op. A lane whose components are not all in this workspace's defaultScope is a cross-scope lane: no branch is created for it (it would leak another repository's components into this one) — enumerated runs skip it and stay green, an explicitly named one is refused, and a lane that became cross-scope after its branch existed is halted for a human. Configure mapping under "teambit.git/ci": { "sync": { ... } } in workspace.jsonc.`;
   group = 'collaborate';
 
   options: CommandOptions = [
