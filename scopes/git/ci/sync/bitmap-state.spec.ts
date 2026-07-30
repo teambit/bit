@@ -28,6 +28,15 @@ function bitmapContent({
   return `${prefix}${JSON.stringify(body, null, 4)}`;
 }
 
+/** a `.bitmap` carrying whatever `_bit_lane` value the caller wants to see rejected */
+function bitmapWithRawLaneKey(laneKey: any): string {
+  return JSON.stringify({
+    comp1: { name: 'comp1', scope: DEFAULT_SCOPE, version: SNAP_1, mainFile: 'index.js', rootDir: 'comp1' },
+    _bit_lane: laneKey,
+    '$schema-version': '17.0.0',
+  });
+}
+
 describe('parseBranchBitmap', () => {
   it('reads the lane pointer scope-qualified — the attribution the ownership rule is built on', () => {
     // Scope-qualified is the point: two lanes with the same NAME in different scopes map to the same
@@ -42,6 +51,80 @@ describe('parseBranchBitmap', () => {
     const state = parseBranchBitmap(bitmapContent(), DEFAULT_SCOPE);
     expect(state).to.not.equal(undefined);
     expect(state?.laneIdStr).to.equal(undefined);
+  });
+
+  /**
+   * THE unexported-lane guard. `bit lane create foo` writes `_bit_lane` with `exported: false` into the
+   * developer's `.bitmap` *before* the lane has ever been pushed. If that commit lands on a branch, honouring
+   * the pointer would make the reconciler read "this branch mirrors lane foo", fail to find foo on bit.cloud,
+   * conclude the lane was **removed**, and retire the branch — destroying a developer branch on the strength
+   * of a lane that never existed remotely. A lane that was never exported cannot have been removed.
+   */
+  describe('an unexported lane pointer is not attribution', () => {
+    it('ignores `_bit_lane` when bit marked it not exported', () => {
+      const state = parseBranchBitmap(
+        bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: false }),
+        DEFAULT_SCOPE
+      );
+      expect(state).to.not.equal(undefined);
+      expect(state?.laneIdStr).to.equal(undefined);
+    });
+
+    it('still reads the component versions — only the attribution is withheld', () => {
+      // The branch's bit state is still perfectly readable; what it must not do is claim to be some
+      // lane's mirror. Dropping the whole parse instead would be a heavier answer than the problem.
+      const state = parseBranchBitmap(
+        bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: false }),
+        DEFAULT_SCOPE
+      );
+      expect(state?.versions).to.deep.equal({ [`${DEFAULT_SCOPE}/comp1`]: SNAP_1 });
+    });
+
+    it('treats a missing `exported` key the same way — the safe direction', () => {
+      expect(
+        parseBranchBitmap(bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' } }), DEFAULT_SCOPE)?.laneIdStr
+      ).to.equal(undefined);
+    });
+
+    it('accepts the pointer once bit has marked the lane exported', () => {
+      // Non-vacuity for the three rows above: the same shape with `exported: true` DOES attribute, so they
+      // are testing the flag rather than some unrelated rejection.
+      expect(
+        parseBranchBitmap(
+          bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: true }),
+          DEFAULT_SCOPE
+        )?.laneIdStr
+      ).to.equal(`${DEFAULT_SCOPE}/foo`);
+    });
+  });
+
+  /**
+   * Malformed `_bit_lane` shapes. None of these can occur from bit itself; they are what a hand-edited or
+   * corrupted `.bitmap` can produce, and every one of them has to land on "no attribution" rather than on a
+   * lane id some comparison might accidentally match.
+   */
+  describe('malformed `_bit_lane` never yields attribution', () => {
+    it('an empty object', () => {
+      expect(parseBranchBitmap(bitmapWithRawLaneKey({}), DEFAULT_SCOPE)?.laneIdStr).to.equal(undefined);
+    });
+
+    it('an `id` that is a string rather than a {scope, name}', () => {
+      expect(
+        parseBranchBitmap(bitmapWithRawLaneKey({ id: `${DEFAULT_SCOPE}/foo`, exported: true }), DEFAULT_SCOPE)
+          ?.laneIdStr
+      ).to.equal(undefined);
+    });
+
+    it('a scopeless lane id, which could never match a scope-qualified target anyway', () => {
+      // `LaneId.toString()` falls back to the bare name when the scope is empty. Every target the reconciler
+      // compares against is `<hostScope>/<name>`, so a bare name can never attribute — but if it were
+      // returned it could still be read as "this branch mirrors some OTHER lane" and halt the run over a
+      // lane that does not exist. Withheld rather than passed through.
+      expect(
+        parseBranchBitmap(bitmapWithRawLaneKey({ id: { scope: '', name: 'foo' }, exported: true }), DEFAULT_SCOPE)
+          ?.laneIdStr
+      ).to.equal(undefined);
+    });
   });
 
   it('reads every component at the exact version the branch records', () => {

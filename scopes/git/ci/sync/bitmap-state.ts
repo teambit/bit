@@ -19,8 +19,8 @@ import { sha1 } from '@teambit/toolbox.crypto.sha1';
 export type BranchBitmapState = {
   /**
    * The scope-qualified lane id `.bitmap` points at (`<scope>/<name>`), or undefined when the file has no
-   * lane pointer at all — i.e. the branch is on main, which is what every ordinary developer branch cut from
-   * the default branch looks like.
+   * usable lane pointer — either no pointer at all (the branch is on main, which is what every ordinary
+   * developer branch cut from the default branch looks like) or one bit has marked **not exported**.
    */
   laneIdStr?: string;
   /** `<scope>/<name>` -> version (a snap hash, or a semver tag on main), exactly as `.bitmap` records it. */
@@ -42,9 +42,20 @@ export type BranchBitmapState = {
  * does. A `BitMap.parse(content, { defaultScope })` overload would express this properly.
  *
  * **Fail-safe.** Any failure — missing file, invalid JSON, a `.bitmap` entry bit refuses (a scope without a
- * version, duplicate rootDirs) — returns `undefined` rather than throwing or guessing. Every caller treats
- * that as "this branch is not ours", which is the answer that licenses nothing: no branch is retired, no
- * branch is treated as some lane's live mirror. A parse failure must never be able to authorize a deletion.
+ * version, duplicate rootDirs), a malformed `_bit_lane` — returns `undefined` rather than throwing or
+ * guessing. Every caller treats that as "this branch is not ours", which is the answer that licenses
+ * nothing: no branch is retired, no branch is treated as some lane's live mirror. A parse failure must never
+ * be able to authorize a deletion.
+ *
+ * **An unexported lane pointer is not attribution.** `bit lane create foo` writes `_bit_lane` with
+ * `exported: false` (`lanes.main.runtime.ts:528`) into the *developer's* `.bitmap`, before the lane has ever
+ * been pushed. If that commit reaches a branch, the pointer names a lane that has never existed on any
+ * remote — so the reconciler would read "this branch mirrors lane foo", find no lane foo on bit.cloud,
+ * conclude the lane was *removed*, and retire the branch. A lane that was never exported cannot have been
+ * "removed from the remote", so its pointer is ignored outright. (`bit switch` and `bit export` set
+ * `exported: true` — `switch-lanes.ts:188`, `export.main.runtime.ts:1000` — so every branch the reconciler
+ * itself writes carries a true one.) `BitMap` collapses a missing `exported` key to `false`, which errs in
+ * the same, safe direction.
  */
 export function parseBranchBitmap(content: string | undefined, defaultScope: string): BranchBitmapState | undefined {
   if (!content || !content.trim()) return undefined;
@@ -57,7 +68,14 @@ export function parseBranchBitmap(content: string | undefined, defaultScope: str
       // it can never be on a lane, so it contributes nothing to the fingerprint.
       if (version) versions[componentMap.id.toStringWithoutVersion()] = version;
     });
-    return { laneIdStr: bitMap.laneId?.toString(), versions };
+    // A lane id with no scope cannot be attribution either. `LaneId.toString()` falls back to the bare name
+    // when the scope is empty, and every target the reconciler compares against is scope-qualified
+    // (`<hostScope>/<name>`), so a bare name can never legitimately match — but it CAN be mistaken for "this
+    // branch is some *other* lane's live mirror" and trigger the branch-aliasing halt on a lane that does
+    // not exist. Requiring the scope is what the rest of the comparison already assumes.
+    const laneId = bitMap.isLaneExported ? bitMap.laneId : undefined;
+    const laneIdStr = laneId?.scope ? laneId.toString() : undefined;
+    return { laneIdStr, versions };
   } catch {
     return undefined;
   }

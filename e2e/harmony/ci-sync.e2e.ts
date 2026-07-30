@@ -728,6 +728,242 @@ describe('bit ci sync', function () {
         });
       });
     });
+
+    /**
+     * THE KNOWN STAGE-1 DELTA, locked deliberately rather than left undiscovered.
+     *
+     * `hasDevCommits` counts commits *above* the state commit, so a single commit that BOTH advances the
+     * branch's bit state (snap + export, rewriting `.bitmap`) AND carries a source edit nobody snapped is its
+     * own state commit — the edit rides along invisibly. The pair reads as converged at the bit level, which
+     * it genuinely is, while that edit has not reached the lane.
+     *
+     * It is neither lost nor permanent: the edit is committed in git, nothing is force-pushed, and the next
+     * commit on the branch makes `hasDevCommits` true and the export picks it up. The cell below locks both
+     * halves — the invisible round AND the self-heal — so the behavior is a documented property rather than a
+     * surprise, and so a future fix has something to change.
+     *
+     * The real fix is not a planner change: telling "the branch is ahead of the lane" from "the lane is ahead
+     * of the branch" needs snap-graph reachability (is the branch's snap a descendant of the lane's head?),
+     * which is a bit API question deferred to Stage 1. What the run CAN do cheaply — and now does — is stop
+     * claiming more than it knows, by saying out loud that the tip is not one of its own commits.
+     */
+    describe('an unsnapped edit riding along with a .bitmap commit is invisible for one round', () => {
+      let output: string;
+      let exitCode: number;
+      let laneAfterDevWork: string;
+      let branchTipAfterDevWork: string;
+
+      before(() => {
+        gitFetch();
+        helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+        // comp1 is snapped AND exported, so `.bitmap` moves and the branch's state matches the lane's ...
+        helper.fs.outputFile('comp1/index.js', comp1Src('snapped-and-exported'));
+        helper.command.runCmd('bit snap --message "dev snaps comp1"');
+        helper.command.runCmd('bit export');
+        // ... and only THEN comp2 is edited, so it is in the same git commit but in no snap.
+        helper.fs.outputFile('comp2/index.js', comp2Src('never-snapped-edit'));
+        helper.command.runCmd('git add -A');
+        helper.command.runCmd('git commit -m "feat: snap comp1, and edit comp2 without snapping it"');
+        helper.command.runCmd(`git push origin ${LANE}`);
+        helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+        gitFetch();
+
+        laneAfterDevWork = remoteLaneFingerprint(LANE);
+        branchTipAfterDevWork = branchTipSha(LANE);
+        ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
+        gitFetch();
+      });
+
+      it('should read as converged — which is true of the BIT state, and is the delta', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(`${LANE} -> noop (converged)`);
+        expect(branchTipSha(LANE)).to.equal(branchTipAfterDevWork);
+        expect(remoteLaneFingerprint(LANE)).to.equal(laneAfterDevWork);
+      });
+
+      it('should SAY that the tip is not one of its own commits, rather than claiming a bare convergence', () => {
+        // The cheap half of the honesty fix: no planner change, but the run stops implying it has seen
+        // everything on the branch when the tip is a commit it did not write.
+        expect(output).to.include(`${LANE}'s tip is not a bit ci sync commit`);
+        expect(output).to.include('never snapped stay invisible until the next commit');
+      });
+
+      it('should be non-vacuous: the unsnapped edit really is on the branch and really is NOT on the lane', () => {
+        expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('never-snapped-edit');
+        expect(laneTipFile(devPath, 'comp2/index.js')).to.not.include('never-snapped-edit');
+        // the snapped half DID reach the lane, so the two are genuinely being told apart
+        expect(laneTipFile(devPath, 'comp1/index.js')).to.include('snapped-and-exported');
+      });
+
+      describe('the next ordinary commit on the branch', () => {
+        let heal: { output: string; exitCode: number };
+        before(() => {
+          branchSideCommit(LANE, defaultBranch, 'docs/note.md', 'a plain commit\n', 'docs: an ordinary commit');
+          heal = runBit(`bit ci sync ${LANE}`);
+          gitFetch();
+        });
+
+        it('should self-heal: the export carries the previously invisible edit onto the lane', () => {
+          expect(heal.exitCode, `bit ci sync output:\n${heal.output}`).to.equal(0);
+          expect(heal.output).to.include(`${LANE} -> export-branch`);
+          expect(laneTipFile(devPath, 'comp2/index.js')).to.include('never-snapped-edit');
+        });
+      });
+    });
+  });
+
+  // =============================================================================================
+  // OWNERSHIP LAUNDERING. `close-pr` deletes branches, and the v2 evidence is `.bitmap`-derived — which means
+  // a DEVELOPER can write it. `bit create`, an unexported `bit snap`, `bit deps set`: each rewrites `.bitmap`,
+  // so the developer's own commit becomes the state commit, the tip IS the state commit (no dev commits above
+  // it), and the lane pointer they inherited is still in the file. Every structural test then reads
+  // `own-live` with nothing above it — the exact shape whose branch gets deleted when the lane goes away.
+  //
+  // Worse, `bit lane create foo` writes `_bit_lane` with `exported: false` before the lane has ever been
+  // pushed, so a developer branch can carry a pointer to a lane that has never existed on any remote — and
+  // "not on the remote" is precisely how the reconciler recognizes a REMOVED lane.
+  //
+  // Two independent defences, both locked here:
+  //   1. deletion requires bit-native attribution AND the `[bit-sync]` marker on the tip (the one place a
+  //      marker is consulted, and it can only ever withhold a deletion);
+  //   2. an unexported lane pointer is not attribution at all — a lane that was never exported cannot have
+  //      been removed.
+  // =============================================================================================
+  describe("a developer's own .bitmap commit must not launder a branch into deletion", () => {
+    const LANE = 'launder';
+    /** a developer branch whose `.bitmap` points at a lane that was never exported anywhere */
+    const UNEXPORTED_BRANCH = 'never-pushed';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setSyncConfig({ lanes: ['*'] });
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE}`, devPath);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('launder-snap'));
+      helper.command.runCmd('bit snap --message "launder lane snap"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      const first = runBit(`bit ci sync ${LANE}`);
+      expect(first.exitCode, `bit ci sync ${LANE} output:\n${first.output}`).to.equal(0);
+      gitFetch();
+    });
+
+    // -------------------------------------------------------------------------------------------
+    describe("the branch tip is a DEVELOPER's .bitmap commit and the lane is then removed", () => {
+      let output: string;
+      let exitCode: number;
+      let tipBefore: string;
+
+      before(() => {
+        // An unexported `bit snap` on the branch: it rewrites `.bitmap`, so this commit becomes the state
+        // commit AND the tip. The work exists only here — it was never exported to the lane.
+        gitFetch();
+        helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+        helper.fs.outputFile('comp2/index.js', comp2Src('unexported-local-snap'));
+        helper.command.runCmd('bit snap --message "dev snaps comp2 but never exports it"');
+        helper.command.runCmd('git add -A');
+        helper.command.runCmd('git commit -m "feat: local snap that was never exported"');
+        helper.command.runCmd(`git push origin ${LANE}`);
+        helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+        gitFetch();
+        tipBefore = branchTipSha(LANE);
+
+        helper.command.removeRemoteLane(LANE, '--force');
+        ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
+        gitFetch();
+      });
+
+      it('should be non-vacuous: the tip really is the state commit, and it still carries the lane pointer', () => {
+        // Without both of these the branch would be kept for an ordinary reason (dev commits above the
+        // state commit, or no attribution at all) and this test would prove nothing about the marker.
+        const changed = helper.command.runCmd(`git show --stat --format= origin/${LANE}`);
+        expect(changed, `files in the dev commit:\n${changed}`).to.include('.bitmap');
+        expect(branchTipMessage(LANE)).to.not.include('[bit-sync]');
+        expect(fileOnBranch(LANE, '.bitmap')).to.include('_bit_lane');
+      });
+
+      it('should close the PR but KEEP the branch, naming the tip as the reason', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(`${LANE} -> close-pr`);
+        expect(output).to.include(`branch ${LANE} kept: its tip was not written by bit ci sync`);
+        // and NOT the other keep reason, which would send a maintainer looking for the wrong thing
+        expect(output).to.not.include('branch carries unmerged commits');
+      });
+
+      it('should leave the branch and the never-exported work exactly in place', () => {
+        expect(remoteBranchExists(LANE), `origin/${LANE} must survive — its snap exists nowhere else`).to.be.true;
+        expect(branchTipSha(LANE)).to.equal(tipBefore);
+        expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('unexported-local-snap');
+      });
+
+      describe('re-running while the lane is still gone', () => {
+        let rerun: { output: string; exitCode: number };
+        before(() => {
+          rerun = runBit('bit ci sync --all');
+          gitFetch();
+        });
+        it('should keep keeping it — idempotent, and still never deleted', () => {
+          expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+          expect(rerun.output).to.include(`branch ${LANE} kept`);
+          expect(remoteBranchExists(LANE)).to.be.true;
+          expect(branchTipSha(LANE)).to.equal(tipBefore);
+        });
+      });
+    });
+
+    // -------------------------------------------------------------------------------------------
+    /**
+     * `bit lane create` marks the pointer `exported: false`. A branch carrying that commit names a lane that
+     * has never existed on any remote — so "the remote does not have it" means "it was never pushed", not
+     * "it was removed", and nothing about the branch may be retired on the strength of it.
+     */
+    describe('a developer branch whose .bitmap points at a lane that was never exported', () => {
+      let output: string;
+      let exitCode: number;
+      let tipBefore: string;
+
+      before(() => {
+        gitFetch();
+        helper.command.runCmd(`git checkout -f -B ${UNEXPORTED_BRANCH} origin/${defaultBranch}`);
+        helper.command.runCmd(`bit lane create ${UNEXPORTED_BRANCH}`);
+        helper.fs.outputFile('comp1/index.js', comp1Src('work-on-a-never-pushed-lane'));
+        helper.command.runCmd('git add -A');
+        helper.command.runCmd('git commit -m "feat: start a lane locally, never export it"');
+        helper.command.runCmd(`git push origin ${UNEXPORTED_BRANCH}`);
+        tipBefore = helper.command.runCmd('git rev-parse HEAD').trim();
+        // put the workspace back the way a fresh CI checkout would find it
+        helper.command.runCmd('bit switch main');
+        helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+        gitFetch();
+
+        ({ output, exitCode } = runBit('bit ci sync --all'));
+        gitFetch();
+      });
+
+      it('should be non-vacuous: the branch really does carry an UNEXPORTED lane pointer', () => {
+        const bitmap = fileOnBranch(UNEXPORTED_BRANCH, '.bitmap');
+        expect(bitmap).to.include('_bit_lane');
+        expect(bitmap).to.include(UNEXPORTED_BRANCH);
+        expect(bitmap.replace(/\s+/g, '')).to.include('"exported":false');
+      });
+
+      it('should ignore the branch entirely rather than read it as a removed lane', () => {
+        expect(exitCode, `bit ci sync --all output:\n${output}`).to.equal(0);
+        expect(output).to.include(`${UNEXPORTED_BRANCH} -> noop`);
+        expect(output).to.not.include(`${UNEXPORTED_BRANCH} -> close-pr`);
+      });
+
+      it('should leave the branch and its work exactly as the developer pushed them', () => {
+        expect(remoteBranchExists(UNEXPORTED_BRANCH), `origin/${UNEXPORTED_BRANCH} must still exist`).to.be.true;
+        expect(branchTipSha(UNEXPORTED_BRANCH)).to.equal(tipBefore);
+        expect(fileOnBranch(UNEXPORTED_BRANCH, 'comp1/index.js')).to.include('work-on-a-never-pushed-lane');
+      });
+    });
   });
 
   // =============================================================================================

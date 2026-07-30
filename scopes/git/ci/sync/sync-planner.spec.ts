@@ -7,6 +7,7 @@ const base: LaneSyncInput = {
   branchExists: true,
   lastSyncedHead: 'L1',
   hasDevCommits: false,
+  tipIsSyncCommit: true,
   conflictLabelPresent: false,
   ownership: 'own-live',
 };
@@ -39,17 +40,41 @@ describe('planLaneSync', () => {
    * "does it carry a trailer" boolean was not enough (an inherited trailer satisfies it).
    */
   describe('lane deleted remotely, branch still present: the claim on the branch decides', () => {
-    it("own-live with NO dev commits (the branch is exactly the lane's mirror) -> close-pr AND delete", () => {
+    it("own-live with NO dev commits and OUR tip (the branch is exactly the lane's mirror) -> close-pr AND delete", () => {
       expect(planLaneSync(laneGone('own-live'))).to.deep.equal({ type: 'close-pr', deleteBranch: true });
     });
 
-    it('own-live WITH dev commits (never-exported work above the sync commit) -> close-pr but KEEP the branch', () => {
-      // own-live means the sync PR was never merged, so commits above the sync commit reached neither the
+    /**
+     * THE laundering guard, and the reason deletion needs both halves.
+     *
+     * A developer on a lane branch who runs `bit create`, an unexported `bit snap`, or `bit deps set` and
+     * commits the result has written `.bitmap` themselves. Their commit becomes the state commit, so the tip
+     * IS the state commit (`hasDevCommits: false`), and the lane pointer they inherited is still in the file
+     * — every structural test says `own-live` with nothing above it. Deleting on that evidence destroys work
+     * that was never exported anywhere. The marker is what separates "our mirror" from "a developer's branch
+     * that happens to carry our pointer": it can only ever withhold a deletion, never authorize one.
+     */
+    it('own-live with NO dev commits but a tip WE DID NOT WRITE -> close-pr but KEEP the branch', () => {
+      expect(planLaneSync({ ...laneGone('own-live'), tipIsSyncCommit: false })).to.deep.equal({
+        type: 'close-pr',
+        deleteBranch: false,
+        keepReason: 'tip-not-a-sync-commit',
+      });
+    });
+
+    it('names the keep reason, because "unmerged commits" would send the reader after the wrong thing', () => {
+      const withWork = planLaneSync({ ...laneGone('own-live'), hasDevCommits: true, tipIsSyncCommit: false });
+      expect(withWork.type === 'close-pr' && withWork.keepReason).to.equal('unmerged-commits');
+    });
+
+    it('own-live WITH dev commits (never-exported work above the state commit) -> close-pr but KEEP the branch', () => {
+      // own-live means the sync PR was never merged, so commits above the state commit reached neither the
       // lane nor the default branch — they exist in no other ref, and deleting the branch would destroy
       // the only copy.
       expect(planLaneSync({ ...laneGone('own-live'), hasDevCommits: true })).to.deep.equal({
         type: 'close-pr',
         deleteBranch: false,
+        keepReason: 'unmerged-commits',
       });
     });
 
@@ -59,9 +84,25 @@ describe('planLaneSync', () => {
       expect(planLaneSync(laneGone('own-merged'))).to.deep.equal({ type: 'close-pr', deleteBranch: true });
     });
 
+    it('own-merged deletes even when we did not write the tip — reachability already proves it is safe', () => {
+      // The marker conjunction is NOT applied here, and that is deliberate rather than an oversight.
+      // `own-merged` means the branch TIP is an ancestor of the default branch, so every commit on the
+      // branch — whoever wrote it — is reachable from the default branch. That is an independent,
+      // unforgeable proof that deleting loses nothing, which is exactly what the marker stands in for on the
+      // `own-live` path where no such proof exists.
+      expect(planLaneSync({ ...laneGone('own-merged'), tipIsSyncCommit: false, hasDevCommits: true })).to.deep.equal({
+        type: 'close-pr',
+        deleteBranch: true,
+      });
+    });
+
     it('own-superseded (PR merged, then more commits pushed) -> close-pr but KEEP the branch', () => {
       // Those commits are in no other ref. Data preservation beats tidiness.
-      expect(planLaneSync(laneGone('own-superseded'))).to.deep.equal({ type: 'close-pr', deleteBranch: false });
+      expect(planLaneSync(laneGone('own-superseded'))).to.deep.equal({
+        type: 'close-pr',
+        deleteBranch: false,
+        keepReason: 'unmerged-commits',
+      });
     });
 
     it('inherited-or-none -> noop, and never close-pr', () => {

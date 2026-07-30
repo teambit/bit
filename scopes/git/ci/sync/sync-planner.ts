@@ -42,22 +42,41 @@ export type LaneSyncInput = {
   lastSyncedHead?: string;
   /** whether the branch carries commits on top of the commit that last wrote its `.bitmap` */
   hasDevCommits: boolean;
+  /**
+   * Whether the branch tip carries the `[bit-sync]` marker — i.e. whether the *reconciler itself* wrote the
+   * commit the branch currently ends on.
+   *
+   * **This is the one deliberate exception to "markers are annotations".** It is consulted on exactly one
+   * path — the decision to `git push origin --delete`, the single irreversible thing this command does — and
+   * only ever to WITHHOLD a deletion, never to authorize one. See the `own-live` case below for why bit-native
+   * attribution alone is not sufficient there.
+   */
+  tipIsSyncCommit: boolean;
   conflictLabelPresent: boolean;
   /** @see LaneOwnershipEvidence — consulted only on the "lane is gone" path. */
   ownership: LaneOwnershipEvidence;
 };
+
+/**
+ * Why a `close-pr` is keeping the branch rather than deleting it. The two reasons are told apart because they
+ * need different sentences: one says "there is work here that exists nowhere else", the other says "we did
+ * not write the tip, so we cannot vouch for what is in it" — and a reader who is told the wrong one will go
+ * looking for the wrong thing.
+ */
+export type BranchKeepReason = 'unmerged-commits' | 'tip-not-a-sync-commit';
 
 export type LaneSyncAction =
   | { type: 'noop'; reason: string }
   | { type: 'import-lane' }
   | { type: 'export-branch' }
   | { type: 'merge-diverged' }
-  /** `deleteBranch: false` closes the PR but leaves the branch — see `own-superseded`. */
-  | { type: 'close-pr'; deleteBranch: boolean }
+  /** `deleteBranch: false` closes the PR but leaves the branch — `keepReason` is then always set. */
+  | { type: 'close-pr'; deleteBranch: boolean; keepReason?: BranchKeepReason }
   | { type: 'halt'; reason: string };
 
 export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   const { laneHead, branchExists, lastSyncedHead, hasDevCommits, conflictLabelPresent, ownership } = input;
+  const { tipIsSyncCommit } = input;
   if (conflictLabelPresent) {
     return { type: 'noop', reason: 'PR is labeled bit-sync-conflict; resolve and remove the label to resume' };
   }
@@ -67,16 +86,41 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
     // the claim on the branch is — see `LaneOwnershipEvidence`, which is where the reasoning lives.
     switch (ownership) {
       case 'own-live':
-        // The sync commit never reached the default branch — the PR was never merged — so dev commits
-        // above it never reached the lane or the default branch either: that content exists in NO other
-        // ref, and deleting the branch would destroy it. Without dev commits the branch is exactly the
-        // lane's mirror, and removing the lane on bit.cloud is the human saying that content is done with.
-        return { type: 'close-pr', deleteBranch: !hasDevCommits };
+        // The state commit never reached the default branch — the PR was never merged — so anything above it
+        // never reached the lane or the default branch either: that content exists in NO other ref, and
+        // deleting the branch would destroy it.
+        //
+        // DELETION NEEDS BOTH HALVES. `.bitmap` attribution alone is not enough here, and this is the one
+        // place where that matters. A developer working on a lane branch who runs `bit create`, an
+        // unexported `bit snap`, or `bit deps set` and commits the result has written `.bitmap` themselves:
+        // their commit becomes the state commit, the tip IS the state commit (so `hasDevCommits` is false),
+        // and the lane pointer they inherited is still in the file. Every structural test then says
+        // "own-live, nothing above the state commit" — and the branch, carrying work that was never
+        // exported, gets deleted. The v1 subject-format check happened to exclude this because it only ever
+        // matched commits the reconciler itself wrote.
+        //
+        // So the branch is retired only when the reconciler can see BOTH that the branch is structurally
+        // ours (the `.bitmap` pointer, which no commit message can forge) AND that it wrote the tip itself
+        // (the marker). The marker is necessary but never sufficient: it cannot authorize a deletion on its
+        // own, it can only withhold one. The conjunction is strictly safer than either half alone, and it is
+        // deliberately asymmetric — a false "keep" leaves a stale branch for a human to delete, a false
+        // "delete" destroys the only copy of someone's work.
+        if (!hasDevCommits && tipIsSyncCommit) return { type: 'close-pr', deleteBranch: true };
+        return {
+          type: 'close-pr',
+          deleteBranch: false,
+          keepReason: hasDevCommits ? 'unmerged-commits' : 'tip-not-a-sync-commit',
+        };
       case 'own-merged':
+        // No conjunction here, and it is not an oversight: `own-merged` means the branch **tip** is already
+        // an ancestor of the default branch, so every commit on the branch — whoever wrote it — is reachable
+        // from the default branch. That is an independent, unforgeable proof that deleting loses nothing,
+        // which is exactly what the marker check exists to establish on the `own-live` path where no such
+        // proof is available.
         return { type: 'close-pr', deleteBranch: true };
       case 'own-superseded':
         // Data preservation beats tidiness: those commits are in no other ref.
-        return { type: 'close-pr', deleteBranch: false };
+        return { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' };
       default:
         return { type: 'noop', reason: 'branch maps to no lane and has no sync history of its own; ignoring' };
     }

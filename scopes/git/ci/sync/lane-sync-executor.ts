@@ -18,7 +18,7 @@ import {
 } from './sync-state';
 import { branchStateFingerprint, fingerprintIdVersions } from './bitmap-state';
 import type { GitHostProvider, PrInfo } from './git-host-provider';
-import type { LaneOwnershipEvidence } from './sync-planner';
+import type { BranchKeepReason, LaneOwnershipEvidence } from './sync-planner';
 import { planLaneSync } from './sync-planner';
 import {
   addAllExceptScopeAndModules,
@@ -465,11 +465,16 @@ export class LaneSyncExecutor {
         ? branchStateFingerprint(branchState.bitmap, laneComponentIds(remoteLane.components))
         : undefined;
 
+    // The one message-derived input, and it can only ever WITHHOLD a branch deletion — see
+    // `LaneSyncInput.tipIsSyncCommit` and the `own-live` case in the planner.
+    const tipIsSyncCommit = hasSyncMarker(branchState.tipMessage);
+
     const action = planLaneSync({
       laneHead,
       branchExists,
       lastSyncedHead,
       hasDevCommits: branchState.hasDevCommits,
+      tipIsSyncCommit,
       conflictLabelPresent,
       ownership,
     });
@@ -486,6 +491,31 @@ export class LaneSyncExecutor {
       const line = `${laneName} -> ${action.type}`;
       logger.console(chalk.yellow(`🏃 Dry-run: ${line}`));
       return line;
+    }
+
+    // A pair can be converged *at the bit level* while the branch tip still holds source edits nobody has
+    // snapped: a single commit that both rewrites `.bitmap` and carries an unsnapped edit is its own state
+    // commit, so `hasDevCommits` is false and the edit is invisible to this run. It is not lost and it is not
+    // permanent — the next commit on the branch makes `hasDevCommits` true and the export picks it up — but a
+    // bare "converged" would be a more confident sentence than the evidence supports, so say so out loud.
+    // See the docs' "known Stage-1 delta"; the real fix is snap-graph reachability, not a planner change.
+    //
+    // `laneHead` must be checked explicitly: with no lane AND no attribution both fingerprints are undefined,
+    // and `undefined === undefined` would fire this on every ordinary developer branch of every `--all` run —
+    // branches that are being ignored precisely because they are nothing to do with us.
+    if (
+      action.type === 'noop' &&
+      action.reason === 'converged' &&
+      !tipIsSyncCommit &&
+      laneHead &&
+      lastSyncedHead === laneHead
+    ) {
+      logger.console(
+        chalk.yellow(
+          `converged on bit state, but ${branch}'s tip is not a bit ci sync commit — any source edits it ` +
+            `carries that were never snapped stay invisible until the next commit on the branch`
+        )
+      );
     }
 
     switch (action.type) {
@@ -516,6 +546,7 @@ export class LaneSyncExecutor {
           defaultBranch,
           pr,
           deleteBranch: action.deleteBranch,
+          keepReason: action.keepReason,
         });
       case 'halt':
         return this.executeHalt({ laneName, laneIdStr, branch, reason: action.reason, pr });
@@ -1057,11 +1088,13 @@ export class LaneSyncExecutor {
   /**
    * The lane is gone from bit.cloud — close its PR, and retire the branch **if** the claim on it allows.
    *
-   * `deleteBranch: false` is the keep path, reached from two shapes: `own-superseded` (the sync PR was
-   * merged and then more commits were pushed to the branch) and `own-live` with dev commits (the PR was
-   * never merged, and the commits above the sync commit never reached the lane). Either way those commits
-   * are in no other ref, so the PR is closed and the branch is kept and said so out loud. Deleting it
-   * would be the one irreversible thing this command can do.
+   * `deleteBranch: false` is the keep path, reached from three shapes: `own-superseded` (the sync PR was
+   * merged and then more commits were pushed to the branch), `own-live` with dev commits (the PR was never
+   * merged, and the commits above the state commit never reached the lane), and `own-live` whose **tip the
+   * reconciler did not write** (a developer's own `.bitmap`-touching commit — see the planner's `own-live`
+   * case). The first two mean "there is work here that exists nowhere else"; the third means "we cannot
+   * vouch for what is in the tip", and `keepReason` is what keeps the two sentences apart. Deleting the
+   * branch would be the one irreversible thing this command can do.
    */
   private async executeClosePr({
     laneName,
@@ -1070,6 +1103,7 @@ export class LaneSyncExecutor {
     defaultBranch,
     pr,
     deleteBranch,
+    keepReason,
   }: {
     laneName: string;
     laneIdStr: string;
@@ -1077,12 +1111,17 @@ export class LaneSyncExecutor {
     defaultBranch: string;
     pr?: PrInfo;
     deleteBranch: boolean;
+    keepReason?: BranchKeepReason;
   }): Promise<string> {
     const { logger, gitHost } = this.deps;
+    const keptBecause =
+      keepReason === 'tip-not-a-sync-commit'
+        ? `its tip is not one of this reconciler's own commits, so the work in it may exist nowhere else`
+        : `it carries commits that are not in the default branch`;
     const closeComment = deleteBranch
       ? `Lane ${laneIdStr} was removed/archived on bit.cloud.`
-      : `Lane ${laneIdStr} was removed/archived on bit.cloud. The branch \`${branch}\` is being kept: it ` +
-        `carries commits that are not in the default branch.`;
+      : `Lane ${laneIdStr} was removed/archived on bit.cloud. The branch \`${branch}\` is being kept: ` +
+        `${keptBecause}.`;
     if (gitHost && pr) {
       logger.console(chalk.blue(`Closing PR #${pr.number} for removed lane ${laneIdStr}`));
       await gitHost.closePr(pr.number, closeComment);
@@ -1099,6 +1138,21 @@ export class LaneSyncExecutor {
     }
 
     if (!deleteBranch) {
+      // The two keep reasons get two different console lines on purpose: a maintainer reading CI output for
+      // "why is this branch still here" must not be told to go looking for unmerged commits when the real
+      // answer is that a developer, not the reconciler, wrote the tip.
+      if (keepReason === 'tip-not-a-sync-commit') {
+        logger.console(
+          chalk.yellow(
+            `lane removed remotely, but ${branch}'s tip is not a bit ci sync commit — a developer wrote the ` +
+              `branch's current bit state, so it is not safe to assume the branch is only our mirror; keeping it`
+          )
+        );
+        return (
+          `${laneName} -> close-pr (${pr ? `PR #${pr.number} closed` : 'no open PR'}, branch ${branch} kept: ` +
+          `its tip was not written by bit ci sync)`
+        );
+      }
       logger.console(
         chalk.yellow(`lane removed remotely but branch carries unmerged commits; keeping branch ${branch}`)
       );
