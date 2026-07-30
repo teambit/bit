@@ -50,6 +50,10 @@ export type LaneSyncInput = {
    * path — the decision to `git push origin --delete`, the single irreversible thing this command does — and
    * only ever to WITHHOLD a deletion, never to authorize one. See the `own-live` case below for why bit-native
    * attribution alone is not sufficient there.
+   *
+   * Callers must compute this with `isSyncAuthoredMessage` (the marker alone on its own line), not with the
+   * loop guard's `hasSyncMarker` substring match — a message that merely *quotes* the marker must not read as
+   * one we wrote.
    */
   tipIsSyncCommit: boolean;
   conflictLabelPresent: boolean;
@@ -70,8 +74,13 @@ export type LaneSyncAction =
   | { type: 'import-lane' }
   | { type: 'export-branch' }
   | { type: 'merge-diverged' }
-  /** `deleteBranch: false` closes the PR but leaves the branch — `keepReason` is then always set. */
-  | { type: 'close-pr'; deleteBranch: boolean; keepReason?: BranchKeepReason }
+  /**
+   * `deleteBranch: false` closes the PR but leaves the branch. Split into two variants rather than carrying
+   * an optional `keepReason` so the **type** enforces what the contract promises: a keep always says why. A
+   * future keep path that forgot to give a reason would otherwise silently inherit the wrong sentence.
+   */
+  | { type: 'close-pr'; deleteBranch: true }
+  | { type: 'close-pr'; deleteBranch: false; keepReason: BranchKeepReason }
   | { type: 'halt'; reason: string };
 
 export function planLaneSync(input: LaneSyncInput): LaneSyncAction {

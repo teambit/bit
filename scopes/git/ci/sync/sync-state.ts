@@ -16,8 +16,32 @@ export const LANE_HEAD_TRAILER = 'Bit-Lane-Head';
 export const SYNC_COMMIT_MARKER = '[bit-sync]';
 export const CONFLICT_LABEL = 'bit-sync-conflict';
 
+/**
+ * Cheap, permissive probe for "this looks machine-generated": a bare substring match.
+ *
+ * This is the LOOP GUARD, and permissive is right for it — the cost of a false positive is one skipped
+ * redundant run, and the `bit-git-sync` action repo's event router matches the same literal the same way.
+ * It must NOT be used to decide anything irreversible; see `isSyncAuthoredMessage`.
+ */
 export function hasSyncMarker(message: string): boolean {
   return message.includes(SYNC_COMMIT_MARKER);
+}
+
+/**
+ * Strict probe for "**we** wrote this commit" — the marker standing alone on its own line, which is where
+ * `buildSyncCommitMessage` puts it and the only place it appears in a message the reconciler authored.
+ *
+ * The distinction from `hasSyncMarker` is the whole point, and it exists because this predicate is the one
+ * message-derived input to a **branch deletion**. A substring match is satisfied by a message that merely
+ * *mentions* the marker — `revert the [bit-sync] bitmap churn` is a perfectly natural thing for a developer
+ * to write on a commit that also touches `.bitmap`, and that combination is exactly the laundering shape the
+ * deletion conjunction exists to stop. Quoting a marker must never amount to claiming authorship.
+ *
+ * `\r?` tolerates a message committed with CRLF endings. Note which way an anchoring failure errs: a sync
+ * commit we fail to recognize means the branch is *kept*, which is the harmless direction.
+ */
+export function isSyncAuthoredMessage(message: string): boolean {
+  return new RegExp(`^${SYNC_COMMIT_MARKER.replace(/[[\]]/g, '\\$&')}\\r?$`, 'm').test(message);
 }
 
 /**

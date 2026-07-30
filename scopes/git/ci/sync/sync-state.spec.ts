@@ -1,5 +1,11 @@
 import { expect } from 'chai';
-import { LANE_HEAD_TRAILER, SYNC_COMMIT_MARKER, buildSyncCommitMessage, hasSyncMarker } from './sync-state';
+import {
+  LANE_HEAD_TRAILER,
+  SYNC_COMMIT_MARKER,
+  buildSyncCommitMessage,
+  hasSyncMarker,
+  isSyncAuthoredMessage,
+} from './sync-state';
 
 /**
  * Under the v2 (bit-native) state model the sync commit's message is an **annotation**: a human audit trail
@@ -46,5 +52,57 @@ describe('hasSyncMarker as loop guard', () => {
 
   it('does not recognize an ordinary commit', () => {
     expect(hasSyncMarker('feat: something')).to.equal(false);
+  });
+});
+
+/**
+ * The STRICT probe, and the only message-derived input to a branch deletion.
+ *
+ * `hasSyncMarker` is a bare substring match, which is right for the loop guard (a false positive costs one
+ * skipped run) and wrong here (a false positive costs a developer's branch). The deletion conjunction exists
+ * to stop a developer's own `.bitmap`-touching commit from reading as ours; if merely *quoting* the marker
+ * satisfied it, the laundering shape would walk straight back in through the commit message.
+ */
+describe('isSyncAuthoredMessage as the deletion gate', () => {
+  it('accepts what buildSyncCommitMessage actually produces', () => {
+    expect(isSyncAuthoredMessage(buildSyncCommitMessage('acme.shop/my-lane', 'a'.repeat(40)))).to.equal(true);
+  });
+
+  it('accepts the raw `git log %B` shape, trailing newline and all', () => {
+    expect(isSyncAuthoredMessage(`${buildSyncCommitMessage('acme.shop/my-lane', 'b'.repeat(40))}\n`)).to.equal(true);
+  });
+
+  it('accepts the main-scope sync commit, whose marker is also its own line', () => {
+    expect(isSyncAuthoredMessage('chore(bit-sync): sync git to latest main scope versions\n\n[bit-sync]')).to.equal(
+      true
+    );
+  });
+
+  it('REJECTS a message that merely quotes the marker mid-line — the laundering hole', () => {
+    // A developer reverting sync churn writes exactly this, and `bit revert`-style commits touch `.bitmap`.
+    // Under a substring match this commit would claim authorship and license deleting the branch.
+    const quoted = 'revert the [bit-sync] bitmap churn';
+    expect(hasSyncMarker(quoted), 'the loop guard is deliberately permissive here').to.equal(true);
+    expect(isSyncAuthoredMessage(quoted)).to.equal(false);
+  });
+
+  it('REJECTS the marker quoted on its own line but with text around it', () => {
+    expect(isSyncAuthoredMessage('fix: undo\n\nthis reverts a [bit-sync] commit\n')).to.equal(false);
+    expect(isSyncAuthoredMessage('chore: mention [bit-sync] here')).to.equal(false);
+  });
+
+  it('REJECTS the inline-marker snap message, which is a LANE message and never a branch tip', () => {
+    // `executeMergeDiverged` puts the marker inline in the snap message it sends to bit. The git commit that
+    // run pushes is `buildSyncCommitMessage`'s, so no branch tip ever legitimately has this shape.
+    expect(isSyncAuthoredMessage('merge remote lane acme.shop/my-lane into my-lane [bit-sync]')).to.equal(false);
+  });
+
+  it('tolerates CRLF line endings', () => {
+    expect(isSyncAuthoredMessage(`subject\r\n\r\n${SYNC_COMMIT_MARKER}\r\n`)).to.equal(true);
+  });
+
+  it('rejects an ordinary commit', () => {
+    expect(isSyncAuthoredMessage('feat: something')).to.equal(false);
+    expect(isSyncAuthoredMessage(`${LANE_HEAD_TRAILER}: ${'c'.repeat(40)}`)).to.equal(false);
   });
 });

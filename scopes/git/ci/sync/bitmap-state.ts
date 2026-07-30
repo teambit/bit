@@ -41,11 +41,16 @@ export type BranchBitmapState = {
  * default, so a caller with a Buffer and no workspace has to pass `''` twice — the same thing `last-merged.ts`
  * does. A `BitMap.parse(content, { defaultScope })` overload would express this properly.
  *
- * **Fail-safe.** Any failure — missing file, invalid JSON, a `.bitmap` entry bit refuses (a scope without a
- * version, duplicate rootDirs), a malformed `_bit_lane` — returns `undefined` rather than throwing or
- * guessing. Every caller treats that as "this branch is not ours", which is the answer that licenses
- * nothing: no branch is retired, no branch is treated as some lane's live mirror. A parse failure must never
- * be able to authorize a deletion.
+ * **Fail-safe, in two degrees.** Anything that makes the *file* unreadable — missing, invalid JSON, or an
+ * entry bit itself refuses (a scope without a version, duplicate rootDirs), including a `_bit_lane` malformed
+ * badly enough to throw (`{}`, whose `id` cannot construct a `LaneId`) — returns `undefined`: the branch has
+ * no readable state at all. A `_bit_lane` that parses but cannot *attribute* (a string `id`, an empty scope,
+ * `exported: false`) is narrower: the state is returned with `laneIdStr` withheld, because the component
+ * versions are still perfectly readable and only the ownership claim is unusable.
+ *
+ * Both degrees land callers on the same answer where it matters — no lane id means `inherited-or-none`, which
+ * licenses nothing: no branch is retired, no branch is treated as some lane's live mirror. Neither a parse
+ * failure nor a malformed pointer can authorize a deletion.
  *
  * **An unexported lane pointer is not attribution.** `bit lane create foo` writes `_bit_lane` with
  * `exported: false` (`lanes.main.runtime.ts:528`) into the *developer's* `.bitmap`, before the lane has ever

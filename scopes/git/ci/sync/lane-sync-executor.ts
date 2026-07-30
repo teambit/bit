@@ -15,6 +15,7 @@ import {
   buildSyncCommitMessage,
   readBranchSyncState,
   hasSyncMarker,
+  isSyncAuthoredMessage,
 } from './sync-state';
 import { branchStateFingerprint, fingerprintIdVersions } from './bitmap-state';
 import type { GitHostProvider, PrInfo } from './git-host-provider';
@@ -467,7 +468,12 @@ export class LaneSyncExecutor {
 
     // The one message-derived input, and it can only ever WITHHOLD a branch deletion — see
     // `LaneSyncInput.tipIsSyncCommit` and the `own-live` case in the planner.
-    const tipIsSyncCommit = hasSyncMarker(branchState.tipMessage);
+    //
+    // `isSyncAuthoredMessage`, NOT `hasSyncMarker`: this feeds a branch deletion, and the loop guard's bare
+    // substring match is satisfied by a message that merely quotes the marker. "revert the [bit-sync] bitmap
+    // churn" is a natural thing to write on a commit that also touches `.bitmap` — which is precisely the
+    // laundering shape the conjunction exists to stop, so quoting must not amount to claiming authorship.
+    const tipIsSyncCommit = isSyncAuthoredMessage(branchState.tipMessage);
 
     const action = planLaneSync({
       laneHead,
@@ -546,7 +552,9 @@ export class LaneSyncExecutor {
           defaultBranch,
           pr,
           deleteBranch: action.deleteBranch,
-          keepReason: action.keepReason,
+          // `keepReason` exists only on the keep variant of the action — the union is what guarantees a keep
+          // can never reach `executeClosePr` without a reason to print.
+          keepReason: action.deleteBranch ? undefined : action.keepReason,
         });
       case 'halt':
         return this.executeHalt({ laneName, laneIdStr, branch, reason: action.reason, pr });

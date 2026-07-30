@@ -64,7 +64,9 @@ describe('planLaneSync', () => {
 
     it('names the keep reason, because "unmerged commits" would send the reader after the wrong thing', () => {
       const withWork = planLaneSync({ ...laneGone('own-live'), hasDevCommits: true, tipIsSyncCommit: false });
-      expect(withWork.type === 'close-pr' && withWork.keepReason).to.equal('unmerged-commits');
+      expect(withWork.type === 'close-pr' && !withWork.deleteBranch && withWork.keepReason).to.equal(
+        'unmerged-commits'
+      );
     });
 
     it('own-live WITH dev commits (never-exported work above the state commit) -> close-pr but KEEP the branch', () => {
