@@ -650,6 +650,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
+    "empty-env": {
+        "name": "empty-env",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/empty-env",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.0.4": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
+    },
     "entities/lane-diff": {
         "name": "entities/lane-diff",
         "scope": "teambit.lanes",
