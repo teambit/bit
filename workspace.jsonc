@@ -56,7 +56,6 @@
         "@pnpm/cli.default-reporter": "1100.3.13",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config.parse-overrides": "1100.0.2",
-        "@pnpm/config.reader": "1101.15.0",
         "@pnpm/deps.inspection.list": "1100.0.20",
         "@pnpm/deps.inspection.tree-builder": "1100.0.17",
         "@pnpm/deps.path": "1100.0.8",
@@ -723,7 +722,17 @@
       // https://github.com/garycourt/uri-js/pull/95
       // https://github.com/garycourt/uri-js/issues/97
       "uri-js": "npm:uri-js-replace",
-      "encoding": "-"
+      "encoding": "-",
+      // bit.cloud's mirror caps @pnpm/util.lex-comparator at 3.0.2, @pnpm/config.nerf-dart
+      // at 1.0.1, and @pnpm/config.env-replace at 3.0.2, but the latest 11xx @pnpm packages
+      // depend on newer majors. lex-comparator and nerf-dart are byte-identical across the
+      // bump (only `lexCompare` / `nerfDart` exports); env-replace is reached only through
+      // @pnpm/cli.default-reporter's type-only dependency on @pnpm/config.reader, so it is
+      // never loaded at runtime. Forcing the mirror-available versions keeps installs
+      // resolvable without a scoped-registry escape hatch.
+      "@pnpm/util.lex-comparator": "3.0.2",
+      "@pnpm/config.nerf-dart": "1.0.1",
+      "@pnpm/config.env-replace": "3.0.2"
     },
     "nodeVersion": "22.22.0",
     "engineStrict": true,

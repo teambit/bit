@@ -28,6 +28,9 @@ overrides:
   minio@7.0: 7.1.3
   uri-js: npm:uri-js-replace
   encoding: '-'
+  '@pnpm/util.lex-comparator': 3.0.2
+  '@pnpm/config.nerf-dart': 1.0.1
+  '@pnpm/config.env-replace': 3.0.2
 
 importers:
 
@@ -141,9 +144,6 @@ importers:
       '@pnpm/config.parse-overrides':
         specifier: 1100.0.2
         version: 1100.0.2
-      '@pnpm/config.reader':
-        specifier: 1101.15.0
-        version: 1101.15.0(@pnpm/logger@1100.0.0)
       '@pnpm/deps.inspection.list':
         specifier: 1100.0.20
         version: 1100.0.20(@pnpm/logger@1100.0.0)
@@ -2158,6 +2158,9 @@ importers:
         specifier: ^3.24.4
         version: 3.24.4
     devDependencies:
+      '@pnpm/config.reader':
+        specifier: 1101.15.0
+        version: 1101.15.0(@pnpm/logger@1100.0.0)
       '@teambit/cloud.envs.cloud-react':
         specifier: 0.1.13
         version: 0.1.13(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@rspack/dev-middleware@2.0.3)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(esbuild@0.14.29)(eslint@8.56.0)(jsdom@29.1.1)(less@4.2.1)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(terser@5.37.0)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.97.1)(yaml@1.10.2)
@@ -32010,9 +32013,9 @@ packages:
     resolution: {integrity: sha512-qP4E7mzmCBhB4so6szszeIdVDrcKGTTCxBazCKoiPUG34xLha6r57zJuFBkTmD65i3TB7++lf3BwpQruUwf/BQ==}
     engines: {node: '>=10'}
 
-  '@pnpm/config.env-replace@4.1.0':
-    resolution: {integrity: sha512-5sirJgdwgE8YU8RMSOZVkluCxCdVRV5a9vRbiLMJ7HBlEluG7jYRvLfLtZ/K3RCI8dckX7Lfpkz0VKpCLp9nug==}
-    engines: {node: '>=22.13'}
+  '@pnpm/config.env-replace@3.0.2':
+    resolution: {integrity: sha512-GD6nKLyKF+ev15Tj3pS8y6cTVPIuAqTyhPrUFMfmodFvhEDdYKN/gdGimkc9GJLfHVC/SuCVFg49YNJyoW7niA==}
+    engines: {node: '>=18.12'}
 
   '@pnpm/config.matcher@1100.0.1':
     resolution: {integrity: sha512-pW20KKYeI61nshCUa6QBGh4Zuwu2CgDmdzJ/7nI7jZAgfDqpLR55MMhgGJRbNfChF0H9p7SdmRrZu0GrHfMqVQ==}
@@ -32022,9 +32025,9 @@ packages:
     resolution: {integrity: sha512-eCn1f1iWHllUyLKX5IeVjnXw8p7KLdnpmfXYltsrAK7wFutMGERMwurCqt9G7GtOJ6uk1Edao4tjz1xtBgusDQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/config.nerf-dart@2.0.1':
-    resolution: {integrity: sha512-4jAXyUB1PyY6eETXojxYrXL2NWtcZVxQx8nHTkJjyy0aEx1quMxlIqwnlh8YZRaXcfiqM6VCIEc+BLZWwQq6yg==}
-    engines: {node: '>=22.13'}
+  '@pnpm/config.nerf-dart@1.0.1':
+    resolution: {integrity: sha512-03d2l21gAyzGVr9SR6rS5pvCTnZ4HaNdi8jB2Y/UGvszzrNbA+AJVObVw6SulNQ1Eah3SHB9wCezJwtP+jYIcA==}
+    engines: {node: '>=18.12'}
 
   '@pnpm/config.normalize-registries@1100.0.8':
     resolution: {integrity: sha512-oxWjBU53dOPXtiZRgU3w9w+4Qfz9pw4rDWheNNvEh7DUiPS3kSEjzDLCFPb3VHJyBERz2aP/rLVZ5rfWgV6R8A==}
@@ -32273,11 +32276,11 @@ packages:
     engines: {node: '>=18.*'}
 
   '@pnpm/network.agent@0.1.0':
-    resolution: {integrity: sha512-RurhhwXMdrKnr4swyx0E6g3tfsfP27kB7czoGTmEvSCgmrrZ5pGToZ0MahiwGRkpSRoTlUmVE97nwqjxCOfboA==}
+    resolution: {integrity: sha512-tmS86uPZossESBuk+MMG9niJtVoVGvKuxRYtP7c8cKbi6D54N7ZTclAqYUV+EdBREZ0hVlHdiGipOYH10v1nLw==}
     engines: {node: '>=12.22.0'}
 
   '@pnpm/network.ca-file@1.0.2':
-    resolution: {integrity: sha512-YcPQ8a0jwYU9bTdJDpXjMi7Brhkr1mXsXrUJvjqM2mQDgkRiz8jFaQGOdaLxgjtUfQgZhKy/O3cG/YwmgKaxLA==}
+    resolution: {integrity: sha1-kiz5rYFpF+6SDQXN7YadJbYmDaA=}
     engines: {node: '>=12.22.0'}
 
   '@pnpm/network.ca-file@3.0.3':
@@ -32299,7 +32302,7 @@ packages:
     engines: {node: '>=22.13'}
 
   '@pnpm/network.proxy-agent@0.1.0':
-    resolution: {integrity: sha512-nl7xLKiYlkTEpaM0U4JaZ1ce6JSYIzuorH+JVn33jry/k3ombpK1xbOzFFwfFhWptXFN9IMcZACjQxmvBbElgg==}
+    resolution: {integrity: sha512-FVVZf8tXXZMFp6ZA9kK8cnbjIEwMTR+RQfiUBpIeKrsEK11WHXNemYqN4UQvGAtNqckwA04/FxbRdD2L/8kvNA==}
     engines: {node: '>=12.22.0'}
 
   '@pnpm/node-fetch@1.0.0':
@@ -32425,9 +32428,9 @@ packages:
     resolution: {integrity: sha512-zhVxgx/hsVRi66qcbefFtH7Xnig36z2rIpIzDoV90iTbJ4r5CzsFulq9Y44Aa36Rn8IKeUPmwX0IJgHSfRGVQw==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/util.lex-comparator@4.0.1':
-    resolution: {integrity: sha512-EZ3aWU7ThppE3Xgq7/ftxq8J/nit6z8I2/wZbC/acea2Zw7KJ1k/fLkGBgyyVAE37CULFsOSmPl3EjYM18cB2Q==}
-    engines: {node: '>=22.13'}
+  '@pnpm/util.lex-comparator@3.0.2':
+    resolution: {integrity: sha512-blFO4Ws97tWv/SNE6N39ZdGmZBrocXnBOfVp0ln4kELmns4pGPZizqyRtR8EjfOLMLstbmNCTReBoDvLz1isVg==}
+    engines: {node: '>=18.12'}
 
   '@pnpm/workspace.project-manifest-reader@1100.0.14':
     resolution: {integrity: sha512-iK5RtD05hJXWsRr3NAy3C5kN8Ti4rQxQnB/ys4eBt+F+DdI763fFNuFORLUpRU4eIy2s4k5XrHfjQDfO8rVuvw==}
@@ -34135,8 +34138,8 @@ packages:
   '@teambit/base-ui.surfaces.drawer@1.1.3':
     resolution: {integrity: sha1-EmfvFFxPhsVm6B9oBq1W7S4wzLA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/drawer@1.1.3.tgz}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-ui.surfaces.split-pane.hover-splitter@1.0.0':
     resolution: {integrity: sha512-sbN1AgGvc3lzoeWg7KQrYD9lCa4V9s0EctfZSrPCwy/UcHGePgMipBOWJkcNwuq8GGhzSTzH8rP8McWCLUGdew==}
@@ -38770,8 +38773,8 @@ packages:
     resolution: {integrity: sha1-7X0x1qLPQV7ySEUh5Rs1iXt+AX4=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: 19.1.0
-      react-dom: 19.1.0
+      react: 19.2.7
+      react-dom: 19.2.7
 
   '@teambit/ui-foundation.ui.global-loader@0.0.497':
     resolution: {integrity: sha1-5fU/29iOW7vvZBaoyaRiSUCyl2I=}
@@ -57494,7 +57497,7 @@ snapshots:
       '@pnpm/installing.dedupe.types': 1100.0.2
       '@pnpm/logger': 1100.0.0
       '@pnpm/types': 1101.7.0
-      '@pnpm/util.lex-comparator': 4.0.1
+      '@pnpm/util.lex-comparator': 3.0.2
       ansi-diff: 1.2.0
       boxen: '@zkochan/boxen@5.1.2'
       chalk: 6.0.0
@@ -57522,7 +57525,7 @@ snapshots:
     dependencies:
       chalk: 4.1.2
 
-  '@pnpm/config.env-replace@4.1.0': {}
+  '@pnpm/config.env-replace@3.0.2': {}
 
   '@pnpm/config.matcher@1100.0.1':
     dependencies:
@@ -57532,7 +57535,7 @@ snapshots:
     dependencies:
       escape-string-regexp: 5.0.0
 
-  '@pnpm/config.nerf-dart@2.0.1': {}
+  '@pnpm/config.nerf-dart@1.0.1': {}
 
   '@pnpm/config.normalize-registries@1100.0.8':
     dependencies:
@@ -57564,9 +57567,9 @@ snapshots:
     dependencies:
       '@pnpm/catalogs.config': 1100.0.3
       '@pnpm/catalogs.types': 1100.0.1
-      '@pnpm/config.env-replace': 4.1.0
+      '@pnpm/config.env-replace': 3.0.2
       '@pnpm/config.matcher': 1100.0.2
-      '@pnpm/config.nerf-dart': 2.0.1
+      '@pnpm/config.nerf-dart': 1.0.1
       '@pnpm/constants': 1100.0.1
       '@pnpm/error': 1100.1.0
       '@pnpm/hooks.pnpmfile': 1100.0.23(@pnpm/logger@1100.0.0)
@@ -57640,7 +57643,7 @@ snapshots:
       '@pnpm/pkg-manifest.reader': 1100.0.9
       '@pnpm/text.tree-renderer': 1100.0.0
       '@pnpm/types': 1101.3.2
-      '@pnpm/util.lex-comparator': 4.0.1
+      '@pnpm/util.lex-comparator': 3.0.2
       '@pnpm/workspace.project-manifest-reader': 1100.0.14(@pnpm/logger@1100.0.0)
       chalk: 5.6.2
       p-limit: 7.3.1
@@ -57668,7 +57671,7 @@ snapshots:
       '@pnpm/store.cafs': 1100.1.11
       '@pnpm/store.index': 1100.2.1
       '@pnpm/types': 1101.3.2
-      '@pnpm/util.lex-comparator': 4.0.1
+      '@pnpm/util.lex-comparator': 3.0.2
       load-json-file: 7.0.1
       normalize-path: 3.0.0
       path-absolute: 2.0.0
@@ -57923,7 +57926,7 @@ snapshots:
 
   '@pnpm/network.fetch@1100.1.4(@pnpm/logger@1100.0.0)':
     dependencies:
-      '@pnpm/config.nerf-dart': 2.0.1
+      '@pnpm/config.nerf-dart': 1.0.1
       '@pnpm/core-loggers': 1100.2.1(@pnpm/logger@1100.0.0)
       '@pnpm/error': 1100.0.1
       '@pnpm/fetching.types': 1100.0.2
@@ -57967,7 +57970,7 @@ snapshots:
 
   '@pnpm/object.key-sorting@1100.0.1':
     dependencies:
-      '@pnpm/util.lex-comparator': 4.0.1
+      '@pnpm/util.lex-comparator': 3.0.2
       sort-keys: 6.0.1
 
   '@pnpm/patching.types@1100.0.0': {}
@@ -58090,7 +58093,7 @@ snapshots:
 
   '@pnpm/types@1101.7.0': {}
 
-  '@pnpm/util.lex-comparator@4.0.1': {}
+  '@pnpm/util.lex-comparator@3.0.2': {}
 
   '@pnpm/workspace.project-manifest-reader@1100.0.14(@pnpm/logger@1100.0.0)':
     dependencies:
@@ -72006,7 +72009,7 @@ snapshots:
       '@teambit/legacy.extension-data': 0.0.51(graphql@15.8.0)
       '@teambit/legacy.logger': 0.0.19
       '@teambit/legacy.scope': 0.0.49(graphql@15.8.0)
-      '@teambit/pkg.modules.component-package-name': 0.0.56(graphql@15.8.0)
+      '@teambit/pkg.modules.component-package-name': 0.0.56
       '@teambit/toolbox.fs.link-or-symlink': 0.0.20
       '@teambit/toolbox.fs.remove-empty-dir': 0.0.5
       '@teambit/toolbox.path.path': 0.0.8
@@ -97893,7 +97896,7 @@ snapshots:
 
   '@teambit/pkg.entities.registry@0.0.4': {}
 
-  '@teambit/pkg.modules.component-package-name@0.0.56(graphql@15.8.0)':
+  '@teambit/pkg.modules.component-package-name@0.0.56':
     dependencies:
       '@teambit/component-id': 1.2.4
       '@teambit/legacy.constants': 0.0.11
@@ -97902,10 +97905,7 @@ snapshots:
       '@teambit/legacy.utils': 0.0.21
       '@teambit/toolbox.path.path': 0.0.8
     transitivePeerDependencies:
-      - domexception
       - encoding
-      - graphql
-      - supports-color
 
   '@teambit/pkg.modules.component-package-name@file:components/modules/component-package-name(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
