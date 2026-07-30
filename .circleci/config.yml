@@ -226,7 +226,7 @@ commands:
     steps:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      - run: bvm upgrade
+      - run: bvm upgrade --method tar
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
