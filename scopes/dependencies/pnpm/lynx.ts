@@ -42,7 +42,6 @@ import { readConfig } from './read-config';
 const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-js-pure', 'core-js'];
 
 const installsRunning: Record<string, Promise<any>> = {};
-let peerDependencyIssuesUnimplementedWarned = false;
 type LockfileFsModule = typeof LockfileFs;
 let lockfileFsPromise: Promise<LockfileFsModule> | undefined;
 
@@ -224,26 +223,6 @@ export async function getPeerDependencyIssues(
       virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
     });
   } catch (err: any) {
-    if (err?.code === 'ERR_PNPM_NAPI_UNIMPLEMENTED') {
-      // TODO: getPeerDependencyIssues not yet implemented in the Rust engine.
-      // Returning an empty, expected shape keeps installs working until the
-      // binding lands it, while still surfacing that peer detection is absent.
-      if (!peerDependencyIssuesUnimplementedWarned) {
-        peerDependencyIssuesUnimplementedWarned = true;
-        process.emitWarning(
-          'pnpm N-API peer-dependency issue detection is not implemented; missing peer dependencies cannot be calculated.',
-          { code: 'BIT_PNPM_PEER_ISSUES_UNIMPLEMENTED' }
-        );
-      }
-      return {
-        '.': {
-          missing: {},
-          bad: {},
-          conflicts: [],
-          intersections: {},
-        },
-      };
-    }
     throw pnpmErrorToBitError(err);
   }
 }
@@ -379,9 +358,7 @@ export async function install(
     emitLogEvent(event);
   };
 
-  // Keep this structural extension until Bit consumes the @pnpm/napi release
-  // whose public InstallOptions type includes trustLockfile and dedupePeers.
-  const installOptions: nodeApi.InstallOptions & { trustLockfile?: boolean; dedupePeers?: boolean } = {
+  const installOptions: nodeApi.InstallOptions = {
     dir: rootDir,
     projects,
     storeDir,

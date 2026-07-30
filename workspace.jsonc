@@ -68,7 +68,7 @@
         "@pnpm/logger": "1100.0.0",
         "@pnpm/network.ca-file": "3.0.3",
         "@pnpm/network.fetch": "1100.1.4",
-        "@pnpm/napi": "12.0.0-beta.0",
+        "@pnpm/napi": "12.0.0-beta.1",
         "@pnpm/node-fetch": "^1.0.0",
         "@pnpm/plugin-trusted-deps": "0.2.2",
         "@pnpm/registry-mock": "3.48.0",
@@ -723,14 +723,7 @@
       // https://github.com/garycourt/uri-js/pull/95
       // https://github.com/garycourt/uri-js/issues/97
       "uri-js": "npm:uri-js-replace",
-      "encoding": "-",
-      // bit.cloud's mirror also caps @pnpm/util.lex-comparator at 3.0.2 and
-      // @pnpm/config.nerf-dart at 1.0.1, but the latest 11xx @pnpm packages depend on
-      // ^4.0.1 / ^2.0.1 respectively. Their implementations are byte-identical across the
-      // major bump (only `lexCompare` / `nerfDart` exports), so forcing the available
-      // versions is safe and lets the rest of the @pnpm/* deps install at their latest.
-      "@pnpm/util.lex-comparator": "3.0.2",
-      "@pnpm/config.nerf-dart": "1.0.1"
+      "encoding": "-"
     },
     "nodeVersion": "22.22.0",
     "engineStrict": true,
