@@ -98,6 +98,13 @@ export function laneHeadFingerprint(components: LaneData['components']): string 
  * so a lane with foreign content cannot be reconciled here without writing another repository's components
  * into this one and releasing them without that repository's review. Until slicing exists (Stage 1 of the
  * design), such a lane is refused; this is the predicate behind that refusal.
+ *
+ * **What it does not see.** `LaneData.components` is the lane's visible component list: soft-deleted
+ * components are filtered out by the remote, and `updateDependents` — the hidden cascade entries — is a
+ * separate field this deliberately does not read. Either can carry a foreign scope. Neither is ever
+ * materialized onto a branch, snapped, or exported by the reconciler, so neither can leak through the paths
+ * this predicate guards; the boundary is stated here so a future reader knows it was considered rather than
+ * missed. If a later stage starts acting on those entries, this predicate has to grow with it.
  */
 export function foreignLaneComponents(components: LaneData['components'], defaultScope: string): string[] {
   return components.filter((comp) => comp.id.scope !== defaultScope).map((comp) => comp.id.toStringWithoutVersion());
@@ -150,19 +157,43 @@ export function crossScopeSkipSummary(laneName: string, foreignIds: string[], de
  * itself. It is a refusal, not a halt: nothing is mid-flight, nothing is labelled, and the next run is
  * unaffected.
  */
-export function crossScopeRefusal(foreignIds: string[], defaultScope: string): string {
+export function crossScopeRefusal(foreignIds: string[], defaultScope: string, existingBranch?: string): string {
+  // The promise at the end has to be true of what actually happened. A branch may already exist here —
+  // someone else's, or one this repository made before the lane grew a foreign component and whose claim
+  // has since lapsed — and claiming "no branch was created" would be a different (false) statement from
+  // "nothing was written".
+  const outcome = existingBranch
+    ? `Nothing was written; the existing branch ${existingBranch} was left untouched`
+    : 'No branch was created and nothing was written';
   return (
     `cross-scope lane: ${crossScopeDescription(foreignIds, defaultScope)}; syncing cross-scope lanes is ` +
-    `not supported yet — see the docs' Cross-scope lanes section. No branch was created and nothing was written`
+    `not supported yet — see the docs' Cross-scope lanes section. ${outcome}`
+  );
+}
+
+/**
+ * The halt reason for a branch that is the **live mirror of a different lane** than the one being
+ * reconciled — two lanes with the same name in different scopes map to the same branch, because the branch
+ * mapping is keyed on the name. Naming both ids is the whole point: it tells the human which of the two
+ * lanes owns the branch and which one was refused.
+ */
+export function branchMirrorsOtherLaneReason(branch: string, mirroredLaneIdStr: string, laneIdStr: string): string {
+  return (
+    `branch ${branch} mirrors lane ${mirroredLaneIdStr}; refusing to plan for ${laneIdStr} — two lanes ` +
+    `with the same name in different scopes map to the same branch, and reconciling this one would ` +
+    `overwrite the other lane's mirror`
   );
 }
 
 /**
  * A lane that **became** cross-scope after this repository had already mirrored it onto a branch.
  *
- * This is the one cross-scope shape that is a genuine halt: the pair is mid-flight. A branch exists, its
- * sync history names this lane, and there may be an open PR and dev commits on it — and the lane can no
- * longer be reconciled with any of it. That needs a human, and the PR is exactly where to say so.
+ * This is the one cross-scope shape that is a genuine halt: the pair is mid-flight. The branch is the
+ * lane's *live* mirror — a sync commit naming this lane which the default branch does not yet contain — so
+ * there may be an open PR and dev commits on it that can no longer converge with the lane. That needs a
+ * human, and the PR is exactly where to say so. Liveness is not a detail: a merged sync PR's commit lands
+ * on the default branch's first-parent line, so every branch cut from it afterwards carries one, and
+ * attribution by subject alone would label ordinary developer branches.
  */
 export function crossScopeMidFlightHaltReason(branch: string, foreignIds: string[], defaultScope: string): string {
   return (
@@ -263,12 +294,34 @@ export class LaneSyncExecutor {
     dryRun?: boolean;
     explicitTarget?: boolean;
   }): Promise<string> {
-    const { logger, defaultScope } = this.deps;
+    const { logger, defaultScope, cfg } = this.deps;
     const laneName = target.name;
 
     await this.fetchOnce();
 
     const defaultBranch = await this.deps.ci.getDefaultBranchName();
+
+    // RESERVED BRANCHES. The default branch and the main sync branch belong to the main-scope path, which
+    // proposes its changes as a PR and never writes to the default branch directly. A `branches` override
+    // (or a lane literally named after the default branch) can map a lane onto one of them, and the lane
+    // path would then force-checkout it, commit and push — the one thing the whole design refuses to do.
+    // The guard lives here, not only in the command layer, for the same reason the purity check does: this
+    // is the single funnel every trigger passes through, and `--all` reaches it without passing the
+    // command layer's name checks at all.
+    if (isProtectedBranch(branch, defaultBranch, cfg.mainSyncBranch)) {
+      const reason =
+        `lane ${laneIdStr} maps to ${branch}, which is ` +
+        `${branch === defaultBranch ? "the repository's default branch" : 'the main sync branch maintained by this command'}; ` +
+        `the main scope is reconciled by "bit ci sync --main", never as a lane. Nothing was written`;
+      if (explicitTarget) {
+        logger.console(chalk.red(`Cannot sync lane ${laneIdStr}: ${reason}`));
+        return `${REFUSED_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
+      }
+      const summary = `${laneName} -> skipped (${reason})`;
+      logger.console(chalk.yellow(summary));
+      return summary;
+    }
+
     const remoteLane = await this.getRemoteLane(target);
 
     const laneHead = remoteLane ? laneHeadFingerprint(remoteLane.components) : undefined;
@@ -280,6 +333,54 @@ export class LaneSyncExecutor {
       : { syncCommit: undefined, hasDevCommits: false, tipMessage: '' };
     if (hasSyncMarker(branchState.tipMessage)) {
       logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
+    }
+
+    // The PR is read *before* any refusal below, because `bit-sync-conflict` is how a human silences a
+    // halt: every halt the reconciler reports must be suppressible by that label, or a standing problem
+    // re-comments on the same PR on every scheduled run and the label becomes a lie.
+    const pr = await this.findPr(branch);
+    const conflictLabelPresent = pr?.labels.includes(CONFLICT_LABEL) ?? false;
+    const suppressedByLabel = `${laneName} -> noop (PR is labeled ${CONFLICT_LABEL}; resolve and remove the label to resume)`;
+
+    // Which lane, if any, this branch's own *live* sync history mirrors.
+    //
+    // "Live" is doing the load-bearing work: a sync commit naming lane X proves nothing on its own, because
+    // once X's sync PR is squash-, rebase- or fast-forward-merged that commit sits on the default branch's
+    // own first-parent line and every branch cut from the default branch afterwards inherits it. Only a sync
+    // commit the default branch does NOT contain (`own-live`) says "this branch is X's mirror, right now".
+    // The evidence is computed once here and reused for the lane-gone path below, so a branch with a sync
+    // commit costs one or two extra `merge-base` calls per run — the price of not confusing an inherited
+    // trailer for a claim.
+    const claim: LaneOwnershipEvidence = branchState.syncCommit?.laneIdStr
+      ? await this.assessBranchOwnership({
+          laneIdStr: branchState.syncCommit.laneIdStr,
+          branch,
+          defaultBranch,
+          syncCommit: branchState.syncCommit,
+        })
+      : 'inherited-or-none';
+    const mirroredLaneIdStr = claim === 'own-live' ? branchState.syncCommit?.laneIdStr : undefined;
+
+    // TWO LANES, ONE BRANCH. The branch mapping is keyed on the lane NAME, so `other.scope/release` and
+    // `<defaultScope>/release` map to the same branch. If this branch is the live mirror of a *different*
+    // lane, planning against it would hijack it: `import-lane` would materialize this lane over the other
+    // lane's content under a trailer claiming otherwise, and `merge-diverged` would snap one lane's work
+    // onto the other. Halt instead — the pair really is mid-flight, and its PR is where to say so.
+    //
+    // Only when this lane actually exists: with no lane there is nothing to write onto the branch, and the
+    // one destructive action left (`close-pr`, which deletes it) already refuses without attribution to
+    // *this* lane. Halting there instead would turn a branch this repository simply cannot resolve — a
+    // foreign-hosted lane's branch met by name, which the docs describe as a no-op — into a permanently red
+    // scheduled run with no PR to label.
+    if (laneHead && mirroredLaneIdStr && mirroredLaneIdStr !== laneIdStr) {
+      if (conflictLabelPresent) return suppressedByLabel;
+      return this.executeHalt({
+        laneName,
+        laneIdStr,
+        branch,
+        reason: branchMirrorsOtherLaneReason(branch, mirroredLaneIdStr, laneIdStr),
+        pr,
+      });
     }
 
     // RELEVANCE / PURITY. Everything above is a read; this is the last point before anything is planned or
@@ -298,25 +399,27 @@ export class LaneSyncExecutor {
         laneName,
         laneIdStr,
         branch,
+        branchExists,
         foreign,
-        // Mid-flight: a branch exists AND its own sync history names THIS lane, i.e. this repository
-        // already mirrored the lane back when its content was single-scope. Attribution is required —
-        // a branch that merely shares the lane's name, or carries a trailer inherited from the default
-        // branch, is not ours to label.
-        midFlight: branchExists && branchState.syncCommit?.laneIdStr === laneIdStr,
+        // Mid-flight: this branch is the LIVE mirror of THIS lane — this repository reconciled the pair
+        // back when the lane's content was single-scope, so an open PR and any dev commits on the branch
+        // are now stranded. `mirroredLaneIdStr` has already excluded the two impostors: a branch that
+        // merely shares the lane's name, and one carrying a sync trailer inherited from the default branch.
+        midFlight: mirroredLaneIdStr === laneIdStr,
         explicit: Boolean(explicitTarget),
+        conflictLabelPresent,
+        suppressedByLabel,
+        pr,
         dryRun,
       });
     }
     // "The lane is gone but the branch is still here" is the only situation whose outcome depends on the
-    // claim, and the only one that can delete a branch — so the two extra git questions are asked there and
-    // nowhere else, and the value is reported only where it meant something.
+    // claim, and the only one that can delete a branch — so the answer is reported only where it meant
+    // something. Attribution to *this* lane is still required: the claim above was computed for whichever
+    // lane the sync commit names, and a claim on someone else's behalf licenses nothing here.
     const laneIsGone = branchExists && !laneHead;
-    const ownership: LaneOwnershipEvidence = laneIsGone
-      ? await this.assessBranchOwnership({ laneIdStr, branch, defaultBranch, syncCommit: branchState.syncCommit })
-      : 'inherited-or-none';
-    const pr = await this.findPr(branch);
-    const conflictLabelPresent = pr?.labels.includes(CONFLICT_LABEL) ?? false;
+    const ownership: LaneOwnershipEvidence =
+      laneIsGone && branchState.syncCommit?.laneIdStr === laneIdStr ? claim : 'inherited-or-none';
 
     const action = planLaneSync({
       laneHead,
@@ -403,22 +506,35 @@ export class LaneSyncExecutor {
     laneName,
     laneIdStr,
     branch,
+    branchExists,
     foreign,
     midFlight,
     explicit,
+    conflictLabelPresent,
+    suppressedByLabel,
+    pr,
     dryRun,
   }: {
     laneName: string;
     laneIdStr: string;
     branch: string;
+    branchExists: boolean;
     foreign: string[];
     midFlight: boolean;
     explicit: boolean;
+    conflictLabelPresent: boolean;
+    suppressedByLabel: string;
+    pr?: PrInfo;
     dryRun?: boolean;
   }): Promise<string> {
     const { logger, defaultScope } = this.deps;
 
     if (midFlight) {
+      // Self-suppression, exactly as the planner does for every other halt: once a human has acknowledged
+      // the conflict by labelling the PR, the reconciler goes quiet. Without this a lane that became
+      // cross-scope would post a fresh comment on the same PR on every scheduled run, forever, and the
+      // label — the documented way to silence it — would do nothing.
+      if (conflictLabelPresent) return suppressedByLabel;
       const reason = crossScopeMidFlightHaltReason(branch, foreign, defaultScope);
       // A dry run must not label or comment on the PR (that is the flag's contract), but it must still
       // report the halt and still exit non-zero — the halt is the answer to "what would this run do?",
@@ -428,11 +544,11 @@ export class LaneSyncExecutor {
         logger.console(chalk.yellow('🏃 Dry-run: the PR is not labelled or commented on'));
         return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
       }
-      return this.executeHalt({ laneName, laneIdStr, branch, reason, pr: await this.findPr(branch) });
+      return this.executeHalt({ laneName, laneIdStr, branch, reason, pr });
     }
 
     if (explicit) {
-      const reason = crossScopeRefusal(foreign, defaultScope);
+      const reason = crossScopeRefusal(foreign, defaultScope, branchExists ? branch : undefined);
       logger.console(chalk.red(`Cannot sync lane ${laneIdStr}: ${reason}`));
       return `${REFUSED_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
     }

@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import {
+  branchMirrorsOtherLaneReason,
   crossScopeDescription,
   crossScopeMidFlightHaltReason,
   crossScopeRefusal,
@@ -135,10 +136,31 @@ describe('cross-scope outcome messages', () => {
     expect(refusal).to.include('No branch was created and nothing was written');
   });
 
+  it('the refusal does not claim it created no branch when a branch already exists', () => {
+    // The closing promise has to describe what actually happened. "No branch was created" would be a
+    // different — and false — statement about a branch that was sitting there before the run.
+    const refusal = crossScopeRefusal(FOREIGN, DEFAULT_SCOPE, 'my-lane');
+    expect(refusal).to.include('Nothing was written; the existing branch my-lane was left untouched');
+    expect(refusal).to.not.include('No branch was created');
+  });
+
   it('a lane that became cross-scope mid-flight names the branch it can no longer converge with', () => {
     const reason = crossScopeMidFlightHaltReason('my-lane', FOREIGN, DEFAULT_SCOPE);
     expect(reason).to.include('lane became cross-scope after it was mirrored onto my-lane');
     expect(reason).to.include('can no longer be reconciled automatically');
+  });
+});
+
+/**
+ * Two lanes with the same name in different scopes map to the same branch, because the branch mapping is
+ * keyed on the name. The halt has to name both ids, or the human cannot tell which lane owns the branch.
+ */
+describe('branchMirrorsOtherLaneReason', () => {
+  it('names the branch, the lane that owns it, and the lane that was refused', () => {
+    const reason = branchMirrorsOtherLaneReason('release', 'other.scope/release', 'acme.shop/release');
+    expect(reason).to.include('branch release mirrors lane other.scope/release');
+    expect(reason).to.include('refusing to plan for acme.shop/release');
+    expect(reason).to.include("overwrite the other lane's mirror");
   });
 });
 

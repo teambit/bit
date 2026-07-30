@@ -353,11 +353,11 @@ But a cross-scope lane is a **legitimate thing to create** on bit.cloud — it i
 repository. What the reconciler reports therefore depends on how it arrived at the lane. The check itself
 runs on **every** trigger; only the reporting differs:
 
-| How the lane was reached                                                   | Outcome   | Exit | PR touched                   |
-| -------------------------------------------------------------------------- | --------- | ---- | ---------------------------- |
-| **Enumerated** — `--all`, or a push/webhook-triggered `--branch` reconcile | `skipped` | 0    | no (there is no branch)      |
-| **Explicitly named** — `bit ci sync my-lane`                               | refusal   | ≠ 0  | no (there is no branch)      |
-| **Became cross-scope after this repo already mirrored it onto a branch**   | `HALTED`  | ≠ 0  | yes — labelled and commented |
+| How the lane was reached                                                   | Outcome   | Exit | PR touched                         |
+| -------------------------------------------------------------------------- | --------- | ---- | ---------------------------------- |
+| **Enumerated** — `--all`, or a push/webhook-triggered `--branch` reconcile | `skipped` | 0    | no                                 |
+| **Explicitly named** — `bit ci sync my-lane`                               | refusal   | ≠ 0  | no                                 |
+| **Became cross-scope while this repo was actively mirroring it**           | `HALTED`  | ≠ 0  | yes — labelled and commented, once |
 
 ```
 # enumerated: a healthy, green run that simply has nothing to do for this lane
@@ -371,12 +371,20 @@ explicitly named lane is different — the user asked for that lane and must lea
 exits non-zero, but as a plain refusal, not as a sync conflict (there is no branch or PR to label, and no
 future run is affected).
 
-The **mid-flight** case is the one true halt: a branch exists, its sync history names this lane, and the lane
-has since grown a foreign component — so an open PR and any dev commits on that branch can never converge
-again. That is annotated the usual way (`bit-sync-conflict` label plus a comment), leaves the other lanes in
-the run to be reconciled, and exits non-zero. Attribution is required before anything is labelled: a branch
-that merely shares the lane's name, or carries a trailer inherited from the default branch, is not ours to
-touch.
+The **mid-flight** case is the one true halt: the branch is this lane's **live mirror** and the lane has since
+grown a foreign component — so an open PR and any dev commits on that branch can never converge again. It is
+annotated the usual way (`bit-sync-conflict` label plus a comment), leaves the other lanes in the run to be
+reconciled, and exits non-zero. Like every other halt it **self-suppresses**: once the PR carries the
+`bit-sync-conflict` label the lane is a no-op, so a scheduled run cannot re-comment on it forever. Remove the
+label to hear about it again.
+
+"Live mirror" is a stronger claim than "the branch has a sync commit naming this lane", and the difference
+matters: a squash-, rebase- or fast-forward-merged sync PR leaves its commit on the **default branch's own
+first-parent line**, so every branch cut from the default branch afterwards inherits one. The reconciler
+therefore also requires that the sync commit is **not yet contained in the default branch** — the same
+`own-live` evidence that gates branch deletion (see [which branches may be retired](#which-branches-may-be-retired)).
+A branch that merely shares the lane's name, or carries an inherited trailer, is never labelled and never
+touched.
 
 There is no flag to override any of the three.
 
@@ -389,6 +397,21 @@ Two consequences worth knowing:
   resolves the lane against `defaultScope`. For a foreign-hosted lane that lookup finds nothing and the
   branch's sync history names a different lane id, which the reconciler reads as "not our branch" — a no-op.
   Safe, but it means a foreign-hosted lane must be re-targeted by its full id.
+
+Two refusals fall out of the same "the branch mapping is keyed on the lane **name**" fact, and both are
+checked before anything is planned:
+
+- **Two lanes, one branch.** `other.scope/release` and `<defaultScope>/release` map to the same branch. If the
+  branch is the **live mirror** of one of them, reconciling the other is a halt
+  (`branch release mirrors lane other.scope/release; refusing to plan for …`) rather than a hijack — an
+  `import-lane` would otherwise materialize the second lane over the first one's content under a trailer
+  claiming the opposite. The check only applies when the lane being reconciled actually exists: with no lane
+  there is nothing to write, and the one destructive action left (`close-pr`) already refuses without
+  attribution to that lane.
+- **Reserved branches.** A `branches` override (or a lane named after the default branch) can map a lane onto
+  the default branch or `<mainSyncBranch>`. Those belong to the main-scope path, which never writes to the
+  default branch directly, so the lane path refuses them — skipped when enumerated, a refusal when named
+  explicitly. This is enforced inside the per-lane reconciler, so `--all` is covered too.
 
 Support for lanes that genuinely span scopes is designed in two later stages: **Stage 1** slices a lane by
 scope (per-repository fingerprint, materialization, export and PR, plus a `laneSources` config so foreign-hosted
