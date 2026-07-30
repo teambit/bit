@@ -15,10 +15,8 @@ import type {
 } from '@pnpm/types';
 import * as nodeApi from '@pnpm/napi';
 import type { PeerDependencyIssuesByProjects } from '@pnpm/napi';
-import { DEFAULT_REGISTRY_SCOPE } from '@pnpm/types';
-import { getNetworkConfigs, getDefaultCreds } from '@pnpm/config.reader';
 import type { Registries } from '@teambit/pkg.entities.registry';
-import { getAuthConfig } from '@teambit/pkg.config.auth';
+import toNerfDart from 'nerf-dart';
 import type {
   ResolvedPackageVersion,
   PackageManagerProxyConfig,
@@ -100,42 +98,26 @@ function toNodeApiNetworkConfig(networkConfig: PackageManagerNetworkConfig): nod
 }
 
 /**
- * Turn one registry's parsed credentials into an `Authorization` header value.
- * `_authToken` becomes `Bearer <token>`; `_auth` (parsed into username/password)
- * becomes `Basic <base64(user:pass)>`. Token helpers are not supported.
+ * Pre-computed `Authorization` headers keyed by nerf-darted registry URI
+ * (plus `''` for the default registry) — the shape `@pnpm/napi` applies
+ * directly. Bit's registries model already carries ready-to-send header
+ * values (from the engine's `readConfig` plus Bit's own cloud token), so no
+ * npmrc-style credential round-trip is needed.
  */
-function credsToAuthHeader(
-  creds: { authToken?: string; basicAuth?: { username: string; password: string } } | undefined
-): string | undefined {
-  if (!creds) return undefined;
-  if (creds.authToken) return `Bearer ${creds.authToken}`;
-  if (creds.basicAuth) {
-    const { username, password } = creds.basicAuth;
-    return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-  }
-  return undefined;
-}
-
-/**
- * Resolve the raw nerf-darted `.npmrc`-style `authConfig` into pre-computed
- * `Authorization` headers keyed by nerf-darted registry URI (plus `''` for the
- * default registry) — the shape `@pnpm/napi` applies directly. The npmrc
- * auth parsing (`_authToken` / `_auth` / `username`+`_password`) is done here
- * with the kept `@pnpm/config.reader`, so the Rust engine never reparses it.
- */
-function buildAuthHeaderByUri(authConfig: Record<string, unknown>): Record<string, string> {
+function buildAuthHeaderByUri(registries: Registries): Record<string, string> {
   const result: Record<string, string> = {};
-  const { configByUri } = getNetworkConfigs(authConfig);
-  for (const [uri, config] of Object.entries(configByUri ?? {})) {
-    // `@pnpm/config.reader` >=1101.9.0 keys each registry's credentials by
-    // package scope (`@` for registry-wide); older versions nest them under
-    // `creds`. Read both so the auth headers survive either version.
-    const creds = (config as Record<string, any>)[DEFAULT_REGISTRY_SCOPE] ?? (config as Record<string, any>).creds;
-    const header = credsToAuthHeader(creds);
-    if (header) result[uri] = header;
+  for (const registry of Object.values(registries.scopes)) {
+    if (registry.uri && registry.authHeaderValue) {
+      result[toNerfDart(registry.uri)] = registry.authHeaderValue;
+    }
   }
-  const defaultHeader = credsToAuthHeader(getDefaultCreds(authConfig));
-  if (defaultHeader) result[''] = defaultHeader;
+  const { defaultRegistry } = registries;
+  if (defaultRegistry?.authHeaderValue) {
+    if (defaultRegistry.uri) {
+      result[toNerfDart(defaultRegistry.uri)] = defaultRegistry.authHeaderValue;
+    }
+    result[''] = defaultRegistry.authHeaderValue;
+  }
   return result;
 }
 
@@ -176,9 +158,9 @@ export async function generateResolverAndFetcher({
   fullMetadata?: boolean;
 }): Promise<{ resolve: ResolveFunction }> {
   const pnpmConfig = await readConfig();
-  const authConfig = getAuthConfig(registries);
-  const mergedAuthConfig = Object.assign({}, pnpmConfig.config.authConfig, authConfig) as Record<string, unknown>;
-  const authHeaderByUri = buildAuthHeaderByUri(mergedAuthConfig);
+  // The engine-resolved `.npmrc` headers first; Bit's own registries model
+  // (which carries the cloud token) wins on conflict.
+  const authHeaderByUri = { ...pnpmConfig.config.authHeaderByUri, ...buildAuthHeaderByUri(registries) };
   const registriesMap = registries.toMap();
   const resolve: ResolveFunction = (wantedDep, resolveOpts) =>
     nodeApi.resolveDependency(wantedDep, {
@@ -364,7 +346,7 @@ export async function install(
     storeDir,
     cacheDir,
     registries: registries.toMap(),
-    authHeaderByUri: buildAuthHeaderByUri(getAuthConfig(registries) as Record<string, unknown>),
+    authHeaderByUri: buildAuthHeaderByUri(registries),
     proxyConfig: toNodeApiProxyConfig(proxyConfig),
     networkConfig: toNodeApiNetworkConfig(networkConfig),
     overrides,

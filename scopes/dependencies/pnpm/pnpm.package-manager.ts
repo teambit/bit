@@ -19,7 +19,7 @@ import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import type { PeerDependencyIssuesByProjects } from '@pnpm/napi';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
-import type { Config } from '@pnpm/config.reader';
+import type { ResolvedConfig } from '@pnpm/napi';
 import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
 import type * as LockfileFs from '@pnpm/lockfile.fs';
 import type { Modules } from '@pnpm/installing.modules-yaml';
@@ -50,7 +50,7 @@ export interface InstallResult {
   depsRequiringBuild?: DepPath[];
 }
 
-type ReadConfigResult = Promise<{ config: Config; warnings: string[] }>;
+type ReadConfigResult = Promise<{ config: ResolvedConfig; warnings: string[] }>;
 type LockfileFsModule = typeof LockfileFs;
 type ModulesYamlModule = typeof ModulesYaml;
 let pnpmEsmPromise: Promise<{ lockfileFs: LockfileFsModule; modulesYaml: ModulesYamlModule }> | undefined;
@@ -310,10 +310,7 @@ export class PnpmPackageManager implements PackageManager {
 
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
-    const rawConfig = (config as Config & { rawConfig?: Record<string, unknown> }).rawConfig;
-    const configuredUserAgent =
-      (rawConfig?.['user-agent'] as string | undefined) ??
-      (config.explicitlySetKeys?.has('user-agent') ? config.userAgent : undefined);
+    const configuredUserAgent = config.userAgent;
     if (!configuredUserAgent && !this.username) {
       this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
     }

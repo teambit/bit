@@ -1,19 +1,13 @@
-import { getConfig } from '@pnpm/config.reader';
+import { readConfig as napiReadConfig } from '@pnpm/napi';
+import type { ResolvedConfig } from '@pnpm/napi';
 import path from 'path';
 
-export async function readConfig(dir?: string) {
-  const workspaceDir = dir ? path.resolve(dir) : undefined;
-  const pnpmConfig = await getConfig({
-    cliOptions: {
-      dir,
-      // 'global': true,
-      // 'link-workspace-packages': true,
-    },
-    workspaceDir,
-    packageManager: {
-      name: 'pnpm',
-      version: '1.0.0',
-    },
-  });
-  return pnpmConfig;
+/**
+ * Resolve the configuration the pnpm engine's own installs use — the
+ * `.npmrc` / `pnpm-workspace.yaml` cascade — through `@pnpm/napi`, so Bit
+ * needs no JavaScript config reader.
+ */
+export async function readConfig(dir?: string): Promise<{ config: ResolvedConfig; warnings: string[] }> {
+  const config = napiReadConfig({ dir: path.resolve(dir ?? process.cwd()) });
+  return { config, warnings: [] };
 }
