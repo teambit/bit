@@ -607,7 +607,7 @@
         "react-error-overlay": "6.0.9",
         "react-syntax-highlighter": "^15.6.1",
         "react-tabs": "3.2.0",
-        "react-test-renderer": "19.1.0",
+        "react-test-renderer": "19.2.7",
         "reactflow": "^11.11.3",
         "read-pkg-up": "7.0.1",
         "regenerator-runtime": "0.13.7",
@@ -683,8 +683,8 @@
         "core-js": "^3.10.0",
         "graphql": "15.8.0",
         "mz": "2.7.0",
-        "react": "19.1.0",
-        "react-dom": "19.1.0",
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
         "react-router-dom": "^6.22.3"
       }
     },
@@ -692,12 +692,23 @@
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
+      // unify all React-19 contexts on a single exact version; react-dom throws on any
+      // react/react-dom mismatch, which breaks env-aspect loading. v17 (react 17) contexts are unaffected.
+      "react@19": "19.2.7",
+      "react-dom@19": "19.2.7",
       "react-router-dom@6": "^6.30.1",
       "subscriptions-transport-ws@0.9": "^0.9.19",
       "@teambit/base-react.navigation.link@2": "2.0.33",
       "lodash@4": "4.17.21",
       "trim@0": "0.0.3",
       "@teambit/harmony": "0.4.12",
+      // bit-component-meta@0.0.44 is a broken publish: its package.json is CJS
+      // (main: dist/index.js, no "type":"module") but dist/index.js contains ESM
+      // ("export { ... }"). react.babel.bit-react-transformer require()s it during
+      // GeneratePreview, so the cold-install resolution of 0.0.44 throws
+      // "SyntaxError: Unexpected token 'export'". bit-react-transformer still
+      // transitively hard-pins 0.0.44, so force it to the CJS-restored 0.0.45.
+      "@teambit/react.ui.highlighter.component-metadata.bit-component-meta": "0.0.45",
       "@types/fs-capacitor": "2.0.0",
       // @types/node is used as a peer dependency, so to reduce duplication,
       // we force the version installed in the root.
@@ -839,8 +850,8 @@
             "reflect-metadata": "0.1.13",
             "monaco-editor": "0.52.2",
             "mz": "2.7.0",
-            "react": "19.1.0",
-            "react-dom": "19.1.0",
+            "react": "19.2.7",
+            "react-dom": "19.2.7",
             "core-js": "3.13.0",
             // Those are here to make sure we have them in the root with specific versions when installing with bvm
             "postcss": "8.4.18",
