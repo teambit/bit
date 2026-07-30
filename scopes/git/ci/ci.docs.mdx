@@ -272,9 +272,13 @@ webhook, a `push` event, a cron schedule — only decides _when_ it runs, never 
 The reconciler reads git history and compares refs, so the checkout it runs in must be **complete**:
 
 - **Full history.** On GitHub Actions that means `actions/checkout` with `fetch-depth: 0`. A `--depth=1`
-  (shallow) clone is **not supported**: the sync state of a branch is the `Bit-Lane-Head` trailer on its
-  newest `[bit-sync]` commit, and the dev-commit count is a revision range — neither is answerable from a
-  truncated history, and a branch that has been synced many times reads as never-synced.
+  (shallow) clone is **not supported**: the branch's state is the `.bitmap` at the newest commit on its own
+  first-parent line that changed that file, and the dev-commit count is a revision range measured from that
+  commit — neither is answerable from a truncated history, and a branch that has been synced many times reads
+  as never-synced.
+- **A cold local scope is fine.** The reconciler is designed for an ephemeral runner: it imports the lane
+  objects it needs, and reads every piece of branch state from git and `.bitmap` rather than from whatever
+  the local scope happens to have cached. `bit init` on a fresh clone is a supported starting state.
 - **All branches.** A single-branch clone (`--single-branch`, or a `refspec` narrowed to one branch) is
   likewise unsupported: `--all` reconciles every mapped lane and every lane-mapped branch, and the
   main-scope path needs the default branch and `<mainSyncBranch>` too.
@@ -300,27 +304,36 @@ never had a lane is enumerated too — and it reaches the reconciler in the same
 lane was just deleted, whose action (`close-pr`) **deletes the branch**. Retiring is therefore gated on how
 good the command's claim on the branch is, judged from git history alone:
 
-1. **Attribution — the sync commit must name this lane.** The newest `[bit-sync]` commit on the branch's own
-   (first-parent) history has to carry the lane id in its subject, matching the lane being reconciled.
-   Trailer presence is _not_ sufficient: when a sync PR is squash-, rebase- or fast-forward-merged, its
-   `Bit-Lane-Head` trailer ends up on the default branch's own history, so **every branch cut from the
-   default branch afterwards inherits one**. The subject is what tells "written for this pair" apart from
-   "inherited".
-2. **Reachability — deleting must not lose commits.** Either that sync commit is **not** in the default
-   branch yet (a live lane branch of ours) _and nothing was committed on top of it_, or the branch **tip**
-   already is in the default branch (everything on the branch is in the default branch, so deletion loses
-   nothing). A live lane branch carrying dev commits above its sync commit is never deleted: the PR was
-   never merged, so that work reached neither the lane nor the default branch and exists in no other ref.
+1. **Attribution — the branch's `.bitmap` must point at this lane.** The `.bitmap` committed on the branch
+   carries bit's own lane pointer, scope-qualified, and it has to name the lane being reconciled. This is
+   structural: it survives a git host rewriting commit messages on squash-merge, and no one can produce it by
+   writing text into a message. A pointer bit marked **not exported** does not count — `bit lane create`
+   writes one before the lane has been pushed anywhere, and a lane that was never exported cannot have been
+   "removed from the remote".
+2. **Reachability — deleting must not lose commits.** Either the commit that wrote that `.bitmap` is **not**
+   in the default branch yet (a live lane branch of ours) _and nothing was committed on top of it_, or the
+   branch **tip** already is in the default branch (everything on the branch is in the default branch, so
+   deletion loses nothing). A live lane branch carrying dev commits above its state commit is never deleted:
+   the PR was never merged, so that work reached neither the lane nor the default branch and exists in no
+   other ref.
+3. **Authorship — the reconciler must have written the branch tip.** For the live-branch case only, the tip
+   must carry the `[bit-sync]` marker on a line of its own. This is the one place a commit message is
+   consulted for anything but display, and it is deliberate: `.bitmap` is a file a **developer** can commit
+   too. `bit create`, an unexported `bit snap` or `bit deps set` all rewrite it, so a developer's own commit
+   can satisfy both tests above while carrying work that exists nowhere else. The marker is necessary but
+   never sufficient — it can only ever withhold a deletion, never authorize one — and it is not required for
+   the already-merged case, where reachability alone proves nothing can be lost.
 
 The outcomes:
 
-| Branch                                                                         | Outcome                                                                                               |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| sync commit names this lane, not yet in the default branch, tip is it          | PR closed, branch deleted                                                                             |
-| sync commit names this lane, not yet in the default branch, dev commits on top | PR closed, **branch kept** — those commits reached neither the lane nor the default branch            |
-| sync commit names this lane, branch tip already in the default branch          | PR closed, branch deleted (the just-merged lane whose branch the host didn't auto-delete)             |
-| sync commit names this lane and is merged, but the tip is **not**              | PR closed, **branch kept** — commits were pushed after the merge and exist in no other ref            |
-| no sync commit of its own, or one naming a different lane                      | `noop (branch maps to no lane and has no sync history of its own; ignoring)` — nothing written at all |
+| Branch                                                                                | Outcome                                                                                              |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `.bitmap` names this lane, not yet in the default branch, tip is our own sync commit   | PR closed, branch deleted                                                                            |
+| same, but with dev commits on top                                                     | PR closed, **branch kept** — those commits reached neither the lane nor the default branch           |
+| same, but the tip is a commit **we** did not write                                    | PR closed, **branch kept** — a developer wrote the branch's current state, so it may exist nowhere else |
+| `.bitmap` names this lane, branch tip already in the default branch                    | PR closed, branch deleted (the just-merged lane whose branch the host didn't auto-delete)            |
+| `.bitmap` names this lane and its commit is merged, but the tip is **not**              | PR closed, **branch kept** — commits were pushed after the merge and exist in no other ref           |
+| no lane pointer, one naming a different lane, an unexported one, or an unreadable `.bitmap` | `noop (branch maps to no lane and has no sync history of its own; ignoring)` — nothing written at all |
 
 A **kept** branch stays visible to the reconciler: every later run re-reports `close-pr` for it until the
 branch is deleted by hand (or its commits reach the default branch, which makes it deletable). That is
@@ -331,8 +344,8 @@ branches at all.
 
 ### Per-lane reconciliation
 
-For each mapped lane it compares the lane's remote head against the state recorded on the branch (the
-`Bit-Lane-Head` trailer on the last `[bit-sync]` commit) and picks exactly one action:
+For each mapped lane it compares the lane's remote head against the state recorded on the branch — the
+lane's components at the versions the branch's committed `.bitmap` gives them — and picks exactly one action:
 
 | Situation                                       | Action           | Effect                                                                         |
 | ----------------------------------------------- | ---------------- | ------------------------------------------------------------------------------ |
@@ -370,8 +383,8 @@ bit ci sync other-org.other-scope/my-lane # hosted elsewhere, content still in t
 
 The branch mapping always uses the lane **name** (`branchPrefix` / `branches` are applied to the name), so a
 foreign-hosted lane mirrors onto the same branch it would if this scope hosted it. Everything addressed to
-Bit — reading the lane, snapping, exporting, and the lane id written into the `[bit-sync]` commit subject —
-uses the lane's real `hostScope/name` id.
+Bit — reading the lane, snapping, exporting, and the lane pointer bit writes into the branch's `.bitmap`,
+which is what attributes the branch to that lane on the next run — uses the lane's real `hostScope/name` id.
 
 **A lane with components outside `defaultScope` is never mirrored.** The reconciler treats a lane as a whole:
 it fingerprints, materializes, snaps and exports every component on it. Mirroring a cross-scope lane here
@@ -411,13 +424,13 @@ reconciled, and exits non-zero. Like every other halt it **self-suppresses**: on
 `bit-sync-conflict` label the lane is a no-op, so a scheduled run cannot re-comment on it forever. Remove the
 label to hear about it again.
 
-"Live mirror" is a stronger claim than "the branch has a sync commit naming this lane", and the difference
-matters: a squash-, rebase- or fast-forward-merged sync PR leaves its commit on the **default branch's own
-first-parent line**, so every branch cut from the default branch afterwards inherits one. The reconciler
-therefore also requires that the sync commit is **not yet contained in the default branch** — the same
-`own-live` evidence that gates branch deletion (see [which branches may be retired](#which-branches-may-be-retired)).
-A branch that merely shares the lane's name, or carries an inherited trailer, is never labelled and never
-touched.
+"Live mirror" is a stronger claim than "the branch's `.bitmap` names this lane", and the difference matters:
+a squash-, rebase- or fast-forward-merged sync PR leaves the `.bitmap` it wrote on the **default branch's own
+first-parent line**, so every branch cut from the default branch afterwards inherits it. The reconciler
+therefore also requires that the commit which wrote that `.bitmap` is **not yet contained in the default
+branch** — the same `own-live` evidence that gates branch deletion
+(see [which branches may be retired](#which-branches-may-be-retired)). A branch that merely shares the lane's
+name, or carries inherited state, is never labelled and never touched.
 
 There is no flag to override any of the three.
 
@@ -437,8 +450,8 @@ checked before anything is planned:
 - **Two lanes, one branch.** `other.scope/release` and `<defaultScope>/release` map to the same branch. If the
   branch is the **live mirror** of one of them, reconciling the other is a halt
   (`branch release mirrors lane other.scope/release; refusing to plan for …`) rather than a hijack — an
-  `import-lane` would otherwise materialize the second lane over the first one's content under a trailer
-  claiming the opposite. The check only applies when the lane being reconciled actually exists: with no lane
+  `import-lane` would otherwise materialize the second lane over the first one's content and repoint the
+  branch's `.bitmap` at it. The check only applies when the lane being reconciled actually exists: with no lane
   there is nothing to write, and the one destructive action left (`close-pr`) already refuses without
   attribution to that lane.
 
@@ -459,10 +472,10 @@ checked before anything is planned:
 **Known gap in the collision check.** It fires only while the branch is the other lane's **live** mirror. Once
 that lane's sync PR has been merged and further commits pushed to the branch (`own-superseded`), the branch is
 no longer anybody's live mirror, and a same-named lane reconciled against it will read the _other_ lane's
-`Bit-Lane-Head` as its own last-synced state and plan from there. This is pre-existing behaviour, not
-introduced by the collision check, and it is left alone on purpose: tightening it means attributing branches
-on subject alone again, which is precisely what makes inherited trailers look like claims and gets ordinary
-developer branches labelled. Give colliding lanes distinct names or distinct `branches` entries.
+recorded component versions as its own last-synced state and plan from there. This is pre-existing behaviour,
+not introduced by the collision check, and it is left alone on purpose: tightening it means treating an
+inherited `.bitmap` as a claim, which is precisely what gets ordinary developer branches labelled. Give
+colliding lanes distinct names or distinct `branches` entries.
 
 Support for lanes that genuinely span scopes is designed in two later stages: **Stage 1** slices a lane by
 scope (per-repository fingerprint, materialization, export and PR, plus a `laneSources` config so foreign-hosted
