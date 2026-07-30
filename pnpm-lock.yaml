@@ -1725,9 +1725,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
@@ -2227,6 +2224,9 @@ importers:
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   components/bit/get-bit-version:
     dependencies:
@@ -26104,9 +26104,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       mini-css-extract-plugin:
         specifier: 2.2.2
         version: 2.2.2(webpack@5.97.1)
@@ -26237,6 +26234,9 @@ importers:
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(esbuild@0.14.29)
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   scopes/react/ui/compositions-app:
     dependencies:
@@ -31754,8 +31754,8 @@ packages:
     resolution: {integrity: sha512-Gr3uz3LYf33wlFE3eRnta4RxP5FSNxiIV9ENn2D2/rN8KgGAD8ecvcITRtsbbyuOuNkwbuHYxfeaz2Vr+CtyFA==}
     peerDependencies:
       monaco-editor: '>= 0.25.0 < 1'
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@monaco-editor/react@4.7.0':
     resolution: {integrity: sha512-cyzXQCtO47ydzxpQtCGSQGOC8Gk3ZUeBXFAxD+CWXYFo5OqZyZUonFl0DwUlTyAfRHntBfw2p3w4s9R6oe1eCA==}
@@ -34201,8 +34201,8 @@ packages:
     resolution: {integrity: sha512-3BDZhE3lT5RqFXM3dnA880tdrZ+j/KRBgET6nl3LAHlLs52KD9k57mturDJrB+4qeZiyzZdsP5VpGzFtw5t8xg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: 19.1.0
-      react-dom: 19.1.0
+      react: 19.2.7
+      react-dom: 19.2.7
 
   '@teambit/api-reference.renderers.schema-node-member-summary@0.0.80':
     resolution: {integrity: sha512-inwqLx8SQXNbPPzt6K6W6ijFq/ajHs/63hwRZmgO1bVGT0eQoicxaRtI9UV54Df2zvPQmoHBaq2roY3O47Psqg==}
@@ -34438,8 +34438,8 @@ packages:
     resolution: {integrity: sha1-CBX15Vnm/ZI8JgjJKI170gnN0r8=}
     deprecated: No longer maintained, use teambit.base-react/themes/theme-provider
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-react.themes.theme-switcher@1.0.2':
     resolution: {integrity: sha1-ohfnPt23FmLPqATiPMmBwSeIpIA=}
@@ -34462,8 +34462,8 @@ packages:
   '@teambit/base-ui.css-components.elevation@1.0.0':
     resolution: {integrity: sha512-6hC8vHh0PmHU8fOUM81NXLML7rx9SYpzKkEMz1eS5sIrY/cFIdhLKupo01sARPVwcWTQ0VkVYI1fOO3Q4vi3yg==, tarball: https://registry.npmjs.org/@teambit/base-ui.css-components.elevation/-/base-ui.css-components.elevation-1.0.0.tgz}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-ui.css-components.elevation@1.0.1':
     resolution: {integrity: sha1-1s1wcfF6LWUdqQJ4VqwO5uqJ3Go=}
@@ -34523,8 +34523,8 @@ packages:
   '@teambit/base-ui.graph.tree.inflate-paths@1.0.0':
     resolution: {integrity: sha512-GAsT6a06E6Loj0n3UlHpoynSLTD56IAGX3dspM4fq0H5JaOzEb88EGemhN2Ksk9C9MgzqpLzRNBttenJ6TnAyQ==}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-ui.graph.tree.inflate-paths@1.0.1':
     resolution: {integrity: sha512-9tLR6kZXcFNCFqSKgSTenqbPNRdz9/pbVWPfseKQp38dzI5Fr1lptowvkyLyu6WLldvKzlYuvTUItqwjkC+rRQ==}
@@ -34535,8 +34535,8 @@ packages:
   '@teambit/base-ui.graph.tree.recursive-tree@1.0.0':
     resolution: {integrity: sha512-jPsjiwd51/yqQ/gj4nSHn2uX0bILV/5UdC0F5/WEpMb9IVNJaTmUAwZA9wAFIjydvH+fkWCT1c2Ua2/7xkvrdw==}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-ui.graph.tree.recursive-tree@1.0.1':
     resolution: {integrity: sha512-mXaEy4qYLUKWgUDoS50vO7rI6mOjn5nqcCXtJmLSMWq2XM6FndiEo5VuQ+zozfPkDAKQvag+sDurn6pV26SsHA==}
@@ -34698,8 +34698,8 @@ packages:
   '@teambit/base-ui.surfaces.abs-container@1.0.0':
     resolution: {integrity: sha512-Gzoj5H/OeIetATQt/zf9qmW2mqEovCNbuqR5JE9Isovjt6oHhXnB0tUC2+bXBn7OIiLySTOg63R7CymWC43w6g==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.abs-container/-/base-ui.surfaces.abs-container-1.0.0.tgz}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-ui.surfaces.abs-container@1.0.1':
     resolution: {integrity: sha1-51b87xnd65dXa3utstNjz7HXmtM=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/abs-container@1.0.1.tgz}
@@ -34734,8 +34734,8 @@ packages:
   '@teambit/base-ui.surfaces.drawer@1.0.0':
     resolution: {integrity: sha512-4eSIGZGllXif9vXmZjMbV++HjA9EU2MzHL9gud+4NXZgj8JCoplqbvkk1Ptbhvs4BLDwPuujY28+dlAosOpXXQ==, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.drawer/-/base-ui.surfaces.drawer-1.0.0.tgz}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-ui.surfaces.drawer@1.0.1':
     resolution: {integrity: sha1-NGtL6iO8yNoadw8lq3L6rLtvdxw=}
@@ -34746,8 +34746,8 @@ packages:
   '@teambit/base-ui.surfaces.drawer@1.1.3':
     resolution: {integrity: sha1-EmfvFFxPhsVm6B9oBq1W7S4wzLA=, tarball: https://node-registry.bit.cloud/tarballs/teambit.base-ui/surfaces/drawer@1.1.3.tgz}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-ui.surfaces.split-pane.hover-splitter@1.0.0':
     resolution: {integrity: sha512-sbN1AgGvc3lzoeWg7KQrYD9lCa4V9s0EctfZSrPCwy/UcHGePgMipBOWJkcNwuq8GGhzSTzH8rP8McWCLUGdew==}
@@ -34800,8 +34800,8 @@ packages:
   '@teambit/base-ui.text.muted-text@1.0.1':
     resolution: {integrity: sha512-xawuhA+NqttmKRqj0xoDqNAVCmryIUQBpJjIp8LC/0iT7Xo/QAcm5EmrpalCFLhNbcUnQzPK/bwXETz+jFAcrA==}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-ui.text.muted-text@1.0.3':
     resolution: {integrity: sha1-Lo8alVavvYuDJ5I1cqccl7d1KnU=}
@@ -34920,8 +34920,8 @@ packages:
   '@teambit/base-ui.utils.string.affix@1.0.0':
     resolution: {integrity: sha512-cuXL6MNfP7XPJtJZUVUCj50JJpzF/+pS0RRlnWE1B/rNB9tKyu+QfdZQ+kmSAGwQMT1ZfTufo50Gow/suzZavw==}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/base-ui.utils.string.affix@1.0.1':
     resolution: {integrity: sha512-jED0/Q4LPDPjJo0r01NuQhcBnlQY4nam1b6jekF0L5NhsCWxVk4pZxnpUfkVi6A6x61lWoMAHvCf2oLEMhPBKQ==}
@@ -35212,8 +35212,8 @@ packages:
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@apollo/client': ^3.6.0
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/code.ui.queries.get-component-code@0.0.503':
     resolution: {integrity: sha512-KwdnJxvesKy2VKmn3rMCLDOLFOnlPZp9RwgTQ8HKKMb41cUfld0q9kBSPpQqBli59snJjnEM/LDEW8wkQvxraA==}
@@ -35327,7 +35327,7 @@ packages:
     peerDependencies:
       '@teambit/community.ui.community-highlighter': 1.96.7
       '@testing-library/react': 12.1.5
-      react: 19.2.7
+      react: 19.1.0
 
   '@teambit/community@file:scopes/community/community':
     resolution: {directory: scopes/community/community, type: directory}
@@ -35634,8 +35634,8 @@ packages:
     resolution: {integrity: sha512-GuJBb2O8IgtkyaaWN8VscgJ4sgYM7fB4qwyrB19X9vHUDzDmopxRm8C+xWmNwrjnP9SYDAnmuNuFeOySFwoTYg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/component.ui.component-compare.changelog@file:components/ui/component-compare/changelog':
     resolution: {directory: components/ui/component-compare/changelog, type: directory}
@@ -36343,8 +36343,8 @@ packages:
   '@teambit/design.elements.icon@1.0.5':
     resolution: {integrity: sha1-blViHnlGeQASLRUR/mum3QbdXoY=}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/design.inputs.date-picker@0.0.3':
     resolution: {integrity: sha512-N3e+SXJWNhiLmVxgqXZNw+DHPSIjxhnEVle5/mkqA3WAZrU85hY0itt2urAw7gsmJNmS9O7jeXopzHrSsZUxTA==}
@@ -36721,8 +36721,8 @@ packages:
   '@teambit/design.ui.icon-button@1.0.16':
     resolution: {integrity: sha1-4guwxtPII430l1WuK5krEgo4PUY=}
     peerDependencies:
-      react: 19.1.0
-      react-dom: 19.1.0
+      react: 19.2.7
+      react-dom: 19.2.7
 
   '@teambit/design.ui.icon-button@1.1.15':
     resolution: {integrity: sha1-t2miG1hmgZa2WhYHCra9krURC9U=}
@@ -36733,7 +36733,7 @@ packages:
     resolution: {integrity: sha1-C61/K4G66Rob3jjVJzIyseN08Vs=}
     peerDependencies:
       '@testing-library/react': ^12.1.5
-      react: 19.1.0
+      react: 19.2.7
 
   '@teambit/design.ui.icon-button@1.1.25':
     resolution: {integrity: sha512-XjytQvCYHhuFhMEEYgY1/MeMn1u0ArVlDzjYYEFik+sS8ACNJ67wxlSeL2g+I98iuit0WSIkqBRLyLWksG+fdA==}
@@ -36951,8 +36951,8 @@ packages:
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@testing-library/react': ^12.1.5
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/design.ui.time-ago@0.0.382':
     resolution: {integrity: sha512-/nO87IalKJwK133mQtN/QSaSp8g3w6wak30vRpf0rENyekETvMHXlslXX1Wgf/lPBK01d6itOEtOfg/CIlo2Jw==}
@@ -37199,8 +37199,8 @@ packages:
   '@teambit/documenter.ui.copied-message@4.1.6':
     resolution: {integrity: sha1-M5pctQny1uKI9T6rUQIR4Nv4iSE=}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/documenter.ui.copied-message@4.1.8':
     resolution: {integrity: sha512-pJUcMhiaAhtIjw9o80IEl+MtKLNoHU+K7OeVnmqFCCzFYUJuDHeSOXzFDLPDe0hpaTj1vV4KMHq/z2OEZqW2Lw==}
@@ -37300,8 +37300,8 @@ packages:
   '@teambit/documenter.ui.separator@4.1.1':
     resolution: {integrity: sha512-ItYHPk2tfpOCb8GvNTBzLCOWD3hXRQrnG1ZhKnvcKkBqRb351+MLWQy0vVo971pFIgI4ei6DV3fM62eJ8/oxXA==}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/documenter.ui.separator@4.1.7':
     resolution: {integrity: sha512-bJQby0KjoiZn6rtpeDV41+ONgKfS377hIRv7NDYQGAQEVruuu89fUjCr+2hY7AKxibEvN/L7z+Z/6UiY+8gwDg==}
@@ -37573,8 +37573,8 @@ packages:
   '@teambit/explorer.ui.gallery.component-grid@0.0.0-b73e73aa7b968a4a6b0d24ad1c052a888ffb62a7':
     resolution: {integrity: sha512-rLNnuqb94r2T5Jo/j8ttRT06MdMioQZ929C8C/Oq/+fkMe5D1Oltevfo2jWa2aA3DfcUEFdfn0XX4xajcFHtYA==}
     peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
+      react: 19.1.0
+      react-dom: 19.1.0
 
   '@teambit/explorer.ui.gallery.component-grid@0.0.484':
     resolution: {integrity: sha1-1JJr4vIMX4zfPor98vVev8V5g/c=}
@@ -38629,8 +38629,8 @@ packages:
   '@teambit/react.rendering.ssr@1.0.3':
     resolution: {integrity: sha512-qhLKUgN8Hht7/5oZGALVPZoSVSUbDwmmIwOKVChQTmPm9PzsJlP4TfcsKD5kjiLk4qYfCWO0bXt5RsUm01G7wQ==}
     peerDependencies:
-      react: 19.1.0
-      react-dom: 19.1.0
+      react: 19.2.7
+      react-dom: 19.2.7
 
   '@teambit/react.rendering.ssr@1.0.4':
     resolution: {integrity: sha512-iwWjnGGQFfdtLLwhx82J7ajWuSfHSTN8qvkMhIp1RjMuPNy3NTdu3+4Shu7YQEaKtQr6nUWtASC1HEqctW5hSw==}
@@ -39636,15 +39636,15 @@ packages:
     resolution: {integrity: sha1-wLxfPsjKW+2sB5juwlbAA60Oirk=}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: 19.1.0
-      react-dom: 19.1.0
+      react: 19.2.7
+      react-dom: 19.2.7
 
   '@teambit/ui-foundation.ui.rendering.html@0.0.95':
     resolution: {integrity: sha512-gmiGqXXRtA9rA3VES2fH+Gbx1Oxb+owJMsn9HbdJaez7DpvGqfZBUWNpIAAkKsotNdSyn6akeXrsLQpK8Kr7Lg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      react: 19.1.0
-      react-dom: 19.1.0
+      react: 19.2.7
+      react-dom: 19.2.7
 
   '@teambit/ui-foundation.ui.rendering.html@file:components/ui/rendering/html':
     resolution: {directory: components/ui/rendering/html, type: directory}
@@ -96873,7 +96873,7 @@ snapshots:
       '@teambit/legacy.cli.error': 0.0.19
       '@teambit/legacy.constants': 0.0.11
       '@teambit/legacy.consumer': 0.0.49(graphql@15.8.0)
-      '@teambit/legacy.consumer-config': 0.0.49(graphql@15.8.0)
+      '@teambit/legacy.consumer-config': 0.0.49
       '@teambit/legacy.extension-data': 0.0.51(graphql@15.8.0)
       '@teambit/legacy.loader': 0.0.7
       '@teambit/legacy.logger': 0.0.19
@@ -97026,7 +97026,7 @@ snapshots:
       - react-dom
       - supports-color
 
-  '@teambit/legacy.consumer-config@0.0.49(graphql@15.8.0)':
+  '@teambit/legacy.consumer-config@0.0.49':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
@@ -97043,9 +97043,7 @@ snapshots:
       lodash: 4.17.21
       p-map-series: 2.1.0
     transitivePeerDependencies:
-      - domexception
       - encoding
-      - graphql
       - supports-color
 
   '@teambit/legacy.consumer-config@file:components/legacy/consumer-config(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)':
@@ -97140,7 +97138,7 @@ snapshots:
       '@teambit/legacy.bit-map': 0.0.106(graphql@15.8.0)
       '@teambit/legacy.constants': 0.0.11
       '@teambit/legacy.consumer-component': 0.0.50(graphql@15.8.0)
-      '@teambit/legacy.consumer-config': 0.0.49(graphql@15.8.0)
+      '@teambit/legacy.consumer-config': 0.0.49
       '@teambit/legacy.logger': 0.0.19
       '@teambit/legacy.scope': 0.0.49(graphql@15.8.0)
       '@teambit/legacy.utils': 0.0.21
@@ -97904,7 +97902,7 @@ snapshots:
       '@teambit/legacy.constants': 0.0.11
       '@teambit/legacy.consumer': 0.0.49(graphql@15.8.0)
       '@teambit/legacy.consumer-component': 0.0.50(graphql@15.8.0)
-      '@teambit/legacy.consumer-config': 0.0.49(graphql@15.8.0)
+      '@teambit/legacy.consumer-config': 0.0.49
       '@teambit/legacy.dependency-graph': 0.0.52(graphql@15.8.0)
       '@teambit/legacy.extension-data': 0.0.51(graphql@15.8.0)
       '@teambit/legacy.loader': 0.0.7
@@ -101040,12 +101038,13 @@ snapshots:
     dependencies:
       '@teambit/component-id': 1.2.4
       '@teambit/legacy.constants': 0.0.11
-      '@teambit/legacy.consumer-config': 0.0.49(graphql@15.8.0)
+      '@teambit/legacy.consumer-config': 0.0.49
       '@teambit/legacy.extension-data': 0.0.51(graphql@15.8.0)
       '@teambit/legacy.utils': 0.0.21
       '@teambit/toolbox.path.path': 0.0.8
     transitivePeerDependencies:
       - encoding
+      - supports-color
 
   '@teambit/pkg.modules.component-package-name@file:components/modules/component-package-name(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
@@ -108134,7 +108133,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -108274,7 +108272,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -108414,7 +108411,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -108554,7 +108550,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
