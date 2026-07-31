@@ -315,6 +315,14 @@ export class LaneSyncExecutor {
       });
     } catch (e: any) {
       const reason = `unexpected error: ${e?.message || e}`;
+      // `--dry-run` promises no pull request is created, closed, labelled or commented on, and this
+      // catch fires for exceptions thrown BEFORE `reconcileLane`'s own dry-run handling gets a say —
+      // so without the guard, the one lane that crashes early is exactly the one whose "no writes" run
+      // labels a PR and freezes its syncs. Route through `haltOrReport` (which owns the dry-run
+      // wording) without even reading the PR: the lookup is only needed to annotate it.
+      if (opts.dryRun) {
+        return this.haltOrReport({ laneName, laneIdStr, branch, reason, dryRun: true });
+      }
       try {
         // Halt properly where we can: label the PR and comment the resolution steps, so the lane is
         // visibly handed to a human rather than only mentioned in the run's summary.

@@ -9,8 +9,10 @@ import {
   foreignLaneComponents,
   isProtectedBranch,
   laneHeadFingerprint,
+  LaneSyncExecutor,
   laneSyncPrBody,
 } from './lane-sync-executor';
+import { resolveSyncConfig } from './sync-config';
 
 type LaneComponents = Parameters<typeof laneHeadFingerprint>[0];
 
@@ -226,6 +228,71 @@ describe('branchMirrorsOtherLaneReason', () => {
     // the way out, so the comment is actionable rather than only a warning
     expect(note).to.include('rename one of the two lanes');
     expect(note).to.include('`branches`');
+  });
+});
+
+/**
+ * The `syncLane` outer catch — the wrapper that turns an exception nobody anticipated into a halt. Under
+ * `--dry-run` that halt must NOT touch the PR: `executeHalt` labels and comments it, which freezes the
+ * lane's syncs until a human removes the label — a lasting side effect of a command that promised none.
+ * `reconcileLane`'s own dry-run handling sits deeper, so an exception thrown early is exactly the path
+ * where the promise used to break.
+ *
+ * The executor is real; only its collaborators are stubs. `getDefaultBranchName` throwing is the seam:
+ * it is the first dependency `reconcileLane` awaits after the fetch, so the throw reaches the outer
+ * catch without any git or network work — the stubbed git host then records whether the PR was read,
+ * labelled or commented on.
+ */
+describe('syncLane outer catch under --dry-run', () => {
+  function throwingExecutor(gitHostCalls: string[]): LaneSyncExecutor {
+    const noopLogger = { console: () => {}, consoleWarning: () => {}, error: () => {}, debug: () => {} };
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {
+        getDefaultBranchName: async () => {
+          throw new Error('boom');
+        },
+      } as any,
+      logger: noopLogger as any,
+      gitHost: {
+        name: 'stub',
+        findPrByBranch: async () => {
+          gitHostCalls.push('findPrByBranch');
+          return { number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] };
+        },
+        addLabel: async () => {
+          gitHostCalls.push('addLabel');
+        },
+        comment: async () => {
+          gitHostCalls.push('comment');
+        },
+      } as any,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    // The first thing `reconcileLane` awaits is a real `git fetch`; mark it already done so the
+    // unexpected error is the stubbed one and the spec never touches a repository or the network.
+    (executor as any).fetched = true;
+    return executor;
+  }
+
+  it('reports the halt without reading, labelling or commenting on the PR', async () => {
+    const gitHostCalls: string[] = [];
+    const summary = await throwingExecutor(gitHostCalls).syncLane(
+      { hostScope: 'acme.shop', name: 'my-lane' },
+      { dryRun: true }
+    );
+    // Same HALTED line the real halt produces: the halt is the *answer* to "what would this run do?",
+    // so the run still exits non-zero.
+    expect(summary).to.equal('HALTED my-lane -> unexpected error: boom');
+    expect(gitHostCalls).to.deep.equal([]);
+  });
+
+  it('is non-vacuous: without --dry-run the same failure does read, label and comment the PR', async () => {
+    const gitHostCalls: string[] = [];
+    const summary = await throwingExecutor(gitHostCalls).syncLane({ hostScope: 'acme.shop', name: 'my-lane' });
+    expect(summary).to.equal('HALTED my-lane -> unexpected error: boom');
+    expect(gitHostCalls).to.deep.equal(['findPrByBranch', 'addLabel', 'comment']);
   });
 });
 
