@@ -331,6 +331,44 @@ describe('convertLockfileToGraph simple case', () => {
   });
 });
 
+describe('convertLockfileToGraph with a link: importer dependency', () => {
+  it('should skip importer deps whose ref has no registry form', () => {
+    const lockfile: BitLockfileFile = {
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          devDependencies: {
+            linked: { version: 'link:../linked', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp1@file:comps/comp1': {},
+      },
+      packages: {
+        'comp1@file:comps/comp1': {
+          resolution: { directory: 'comps/comp1', type: 'directory' },
+        },
+      },
+    } as BitLockfileFile;
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    });
+    const rootNeighbourIds = graph.edges.find((edge) => edge.id === '.')!.neighbours.map(({ id }) => id);
+    expect(rootNeighbourIds).to.not.include(null);
+    expect(rootNeighbourIds).to.not.include('null');
+  });
+});
+
 describe('convertLockfileToGraph with a circular workspace dependency back to the component being processed', () => {
   // Reproduces the "No matching version found for <workspace-comp>@0.0.0-<hash>"
   // failure: comp1 (the component being processed) is removed from snapshots

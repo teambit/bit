@@ -83,7 +83,10 @@ function importerDepsToNeighbours(
 ): DependencyNeighbour[] {
   const neighbours: DependencyNeighbour[] = [];
   for (const [name, { version, specifier }] of Object.entries(importerDependencies) as any) {
-    const id = dp.refToRelative(version, name)!;
+    // `refToRelative` yields null for non-registry refs (`link:` and
+    // friends) — those are workspace wiring, not graph nodes.
+    const id = dp.refToRelative(version, name);
+    if (id == null) continue;
     neighbours.push({ name, specifier, id, lifecycle, optional });
   }
   return neighbours;
@@ -112,7 +115,8 @@ export function convertLockfileToGraph(
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
     const optional = depType === 'optionalDependencies';
     for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
-      const id = dp.refToRelative(version, name)!;
+      const id = dp.refToRelative(version, name);
+      if (id == null) continue;
       directDependencies.push({
         name,
         specifier: componentDevImporter[depType]?.[name]?.specifier ?? '*',
