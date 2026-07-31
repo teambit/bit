@@ -17,6 +17,24 @@ describe('sync-config', () => {
     expect(cfg.lanes).to.deep.equal(['*']);
     expect(cfg.mainSyncBranch).to.equal('bit-sync/main');
     expect(cfg.autoMergeMainSyncPr).to.equal(false);
+    expect(cfg.mainSync).to.equal('pr');
+  });
+
+  /**
+   * `mainSync` decides whether the default branch gets written, so a value that is neither mode must
+   * fail at startup naming the key — not fall through to whichever mode a comparison happens to miss.
+   */
+  describe('mainSync', () => {
+    it('accepts both modes explicitly', () => {
+      expect(resolveSyncConfig({ mainSync: 'pr' }).mainSync).to.equal('pr');
+      expect(resolveSyncConfig({ mainSync: 'direct-push' }).mainSync).to.equal('direct-push');
+    });
+
+    it('refuses any other value, naming the key, the value and the valid options', () => {
+      expect(() => resolveSyncConfig({ mainSync: 'direct' as any })).to.throw(
+        /sync\.mainSync.*"direct".*"pr".*"direct-push"/
+      );
+    });
   });
 
   it('maps lane to branch via prefix', () => {

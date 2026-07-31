@@ -45,10 +45,15 @@ export type MainSyncDeps = {
  * whole operation idempotent and stateless — no trailer, no fingerprint, nothing to keep in sync with
  * the lane-side bookkeeping.
  *
- * The convergence is proposed rather than applied: the result is a commit on `cfg.mainSyncBranch` and
- * a pull request against the default branch. The default branch is never written to directly, and
- * nothing is ever force-pushed.
+ * Under the default `mainSync: 'pr'` the convergence is proposed rather than applied: the result is a
+ * commit on `cfg.mainSyncBranch` and a pull request against the default branch, which is never written
+ * to directly. Under `mainSync: 'direct-push'` the same drift commit lands on the default branch itself
+ * and is pushed — plain push, so a default branch that moved mid-run rejects it rather than being
+ * clobbered. Nothing is ever force-pushed in either mode.
  */
+/** the "nothing to do" line, shared by both modes so a converged run reads the same either way */
+const CONVERGED_SUMMARY = 'main -> converged (checkout head produced no changes)';
+
 export class MainSyncExecutor {
   constructor(private deps: MainSyncDeps) {}
 
@@ -60,9 +65,13 @@ export class MainSyncExecutor {
    */
   async syncMain(opts: { dryRun?: boolean } = {}): Promise<string> {
     const { cfg, defaultBranch, defaultScope, logger } = this.deps;
-    const branch = cfg.mainSyncBranch;
+    const directPush = cfg.mainSync === 'direct-push';
+    // In direct-push mode the drift is committed where it is measured: on the default branch. The sync
+    // branch (and its PR) is not consulted, moved or deleted — a leftover `mainSyncBranch` from a
+    // previous 'pr'-mode run is a human's to deal with, not this run's.
+    const branch = directPush ? defaultBranch : cfg.mainSyncBranch;
 
-    if (cfg.autoMergeMainSyncPr) {
+    if (cfg.autoMergeMainSyncPr && !directPush) {
       // Say so rather than silently ignoring the setting: enabling auto-merge is host-specific
       // (on GitHub, the `enablePullRequestAutoMerge` GraphQL mutation) and is not part of the
       // `GitHostProvider` contract, so the provider-agnostic engine has no way to ask for it.
@@ -77,12 +86,21 @@ export class MainSyncExecutor {
       // `origin/<defaultBranch>` and `origin/<mainSyncBranch>`, and a single-branch clone gives a
       // remote-tracking ref for at most one of them.
       await fetchRemoteHeads();
-      const syncBranchExists = await branchExistsOnRemote(branch);
+      // Direct-push always starts from `origin/<defaultBranch>` — the very tip the plain push must
+      // fast-forward, so drift measured against anything else (a stale local default branch included)
+      // would either be rejected or, worse, quietly re-propose already-pushed state.
+      const syncBranchExists = directPush ? false : await branchExistsOnRemote(branch);
       // Start from the existing sync branch when there is one, so its history (and any review
       // discussion attached to the open PR) survives across runs; otherwise fork from the default
       // branch.
       const startPoint = syncBranchExists ? `origin/${branch}` : `origin/${defaultBranch}`;
-      logger.console(chalk.blue(`main -> checking the main scope against ${defaultBranch} (sync branch ${branch})`));
+      logger.console(
+        chalk.blue(
+          directPush
+            ? `main -> checking the main scope against ${defaultBranch} (direct-push)`
+            : `main -> checking the main scope against ${defaultBranch} (sync branch ${branch})`
+        )
+      );
 
       await this.resetToStartPoint(branch, startPoint);
 
@@ -159,15 +177,27 @@ export class MainSyncExecutor {
       }
 
       const drift = await this.driftFiles();
-      if (!drift.length) return await this.convergedSummary(branch);
+      // The direct-push converged line stays bare: the PR annotation exists because in 'pr' mode a
+      // converged sync branch can still differ from the default branch until the PR merges — a gap
+      // direct-push does not have, and asking the host about `mainSyncBranch`'s PR here would be the
+      // one interaction with it this mode promises not to make.
+      if (!drift.length) return directPush ? CONVERGED_SUMMARY : await this.convergedSummary(branch);
 
       logger.console(chalk.yellow(`main -> drift in ${drift.length} file(s): ${drift.slice(0, 20).join(', ')}`));
 
       if (opts.dryRun) {
         // Nothing is committed, pushed, or reported to the git host. The working tree *was* written (a
         // diff-based check has no other way to learn the answer) and `finally` restores it.
-        logger.console(chalk.yellow(`🏃 Dry-run: main -> would push ${branch} and open a sync PR`));
-        return `main -> drift detected in ${drift.length} file(s) — would open sync PR`;
+        logger.console(
+          chalk.yellow(
+            directPush
+              ? `🏃 Dry-run: main -> would push the drift directly onto ${branch}`
+              : `🏃 Dry-run: main -> would push ${branch} and open a sync PR`
+          )
+        );
+        return directPush
+          ? `main -> drift detected in ${drift.length} file(s) — would push ${branch} directly`
+          : `main -> drift detected in ${drift.length} file(s) — would open sync PR`;
       }
 
       await ensureGitIdentity();
@@ -175,11 +205,17 @@ export class MainSyncExecutor {
       await git.commit(mainSyncCommitMessage(drift.length));
       // Never force: we started from the branch tip we fetched and only added commits on top, so a
       // rejected push means a concurrent run pushed in between — the next run re-plans from the new
-      // state rather than clobbering it.
+      // state rather than clobbering it. In direct-push mode that rejection is the whole safety story
+      // (the branch being written is the default branch), so it surfaces as a HALTED summary and is
+      // never retried or forced.
       // Unambiguous refspec — see the matching push in `lane-sync-executor.commitAllAndPush`.
       await git.push(['origin', `HEAD:refs/heads/${branch}`]);
       logger.console(chalk.green(`Pushed ${branch}`));
 
+      if (directPush) {
+        const shortSha = (await git.revparse(['--short', 'HEAD'])).trim();
+        return `main -> direct-push (pushed ${branch} @ ${shortSha})`;
+      }
       const prUrl = await this.ensureSyncPr({ branch, driftCount: drift.length, newFromScope });
       return `main -> pushed sync commit to ${branch}${prUrl ? ` (PR ${prUrl})` : ''}`;
     } catch (e: any) {
@@ -243,11 +279,10 @@ export class MainSyncExecutor {
    * pull request awaiting review.
    */
   private async convergedSummary(branch: string): Promise<string> {
-    const base = 'main -> converged (checkout head produced no changes)';
     const { gitHost } = this.deps;
-    if (!gitHost) return base;
+    if (!gitHost) return CONVERGED_SUMMARY;
     const pr = await gitHost.findPrByBranch(branch).catch(() => undefined);
-    return pr ? `${base} — open sync PR #${pr.number} still awaits review/merge` : base;
+    return pr ? `${CONVERGED_SUMMARY} — open sync PR #${pr.number} still awaits review/merge` : CONVERGED_SUMMARY;
   }
 
   /**

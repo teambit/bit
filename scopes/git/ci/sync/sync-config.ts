@@ -12,6 +12,14 @@ export interface CiSyncConfig {
   lanes?: string[];
   /** branch used for main-scope drift sync PRs */
   mainSyncBranch?: string;
+  /**
+   * How the main-scope drift reaches the default branch. `'pr'` (the default) proposes the convergence:
+   * the drift is committed to `mainSyncBranch` and a pull request is opened against the default branch,
+   * which is never written directly. `'direct-push'` commits the drift straight onto the default branch
+   * and pushes it — for mirror-style setups where the scope is the source of truth for main and the PR
+   * ceremony is unwanted. Under `'direct-push'`, `mainSyncBranch` is unused.
+   */
+  mainSync?: 'pr' | 'direct-push';
   /** enable GitHub auto-merge on the main sync PR */
   autoMergeMainSyncPr?: boolean;
 }
@@ -33,7 +41,18 @@ export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
     lanes: raw?.lanes ?? ['*'],
     mainSyncBranch: raw?.mainSyncBranch ?? 'bit-sync/main',
     autoMergeMainSyncPr: raw?.autoMergeMainSyncPr ?? false,
+    mainSync: raw?.mainSync ?? 'pr',
   };
+  // Validated for the same startup-failure reason as the branch names: a typo here ('direct', 'push',
+  // 'PR') would otherwise silently fall through to whichever mode the executor's comparison happens to
+  // miss, and the difference between the two modes is whether the default branch gets written.
+  if (resolved.mainSync !== 'pr' && resolved.mainSync !== 'direct-push') {
+    throw new BitError(
+      `sync.mainSync: "${resolved.mainSync}" is not a valid value. Use "pr" (propose the main-scope drift ` +
+        `as a pull request from sync.mainSyncBranch) or "direct-push" (push the drift straight onto the ` +
+        `default branch)`
+    );
+  }
   assertValidBranchPrefix(resolved.branchPrefix, 'sync.branchPrefix');
   assertValidBranchName(resolved.mainSyncBranch, 'sync.mainSyncBranch');
   Object.entries(resolved.branches).forEach(([laneName, branch]) =>

@@ -603,6 +603,84 @@ describe('bit ci sync', function () {
   });
 
   // =============================================================================================
+  // `mainSync: 'direct-push'` — the main-scope drift lands on the default branch itself, no sync
+  // branch and no PR. The load-bearing half of the coverage is the negative: this mode's contract is
+  // that `bit-sync/main` is never created or touched, and the negative is checked both on the run
+  // that pushes and on the converged rerun.
+  // =============================================================================================
+  describe('main-scope direct push (mainSync: direct-push)', () => {
+    const SYNC_BRANCH = 'bit-sync/main';
+    let defaultBranch: string;
+    let output: string;
+    let exitCode: number;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setSyncConfig({ lanes: ['*'], mainSync: 'direct-push' });
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      // The same drift recipe as scenario E: the main scope moves ahead of the repository — comp1 is
+      // tagged and exported from a second clone, nothing is committed to git.
+      const devMainPath = helper.scopeHelper.cloneWorkspace();
+      fs.outputFileSync(path.join(devMainPath, 'comp1', 'index.js'), comp1Src('direct-push-v2'));
+      helper.command.runCmd('bit tag --message "bump comp1 on main"', devMainPath);
+      helper.command.runCmd('bit export', devMainPath);
+
+      ({ output, exitCode } = runBit('bit ci sync --main'));
+      gitFetch();
+    });
+
+    it('should succeed and report the direct push with the pushed tip', () => {
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      const summary = output.match(/main -> direct-push \(pushed (\S+) @ ([0-9a-f]{7,40})\)/);
+      expect(summary, `expected a direct-push summary in:\n${output}`).to.not.be.null;
+      expect(summary![1]).to.equal(defaultBranch);
+      // the sha in the summary is the tip that was actually pushed
+      expect(branchTipSha(defaultBranch).startsWith(summary![2])).to.be.true;
+    });
+
+    it('should tip the DEFAULT branch with a sync-authored commit carrying the drift', () => {
+      const message = branchTipMessage(defaultBranch);
+      expect(message).to.include('[bit-sync]');
+      expect(message).to.include('chore(bit-sync): sync git to latest main scope versions');
+      expect(fileOnBranch(defaultBranch, 'comp1/index.js')).to.include('direct-push-v2');
+    });
+
+    it(`should never create ${SYNC_BRANCH} on the remote, nor mention PR operations`, () => {
+      expect(remoteBranchExists(SYNC_BRANCH)).to.be.false;
+      // 'pr' mode's PR-less runs still announce the skipped PR work; direct-push has none to skip.
+      expect(output).to.not.include('skipping PR operations');
+      expect(output).to.not.include('sync PR');
+    });
+
+    it('should leave the workspace restored: git on the default branch, bit on main', () => {
+      expect(helper.command.runCmd('git branch --show-current').trim()).to.equal(defaultBranch);
+      expect(helper.command.listLanesParsed().currentLane).to.equal('main');
+    });
+
+    describe('re-running once the drift has been pushed', () => {
+      let rerun: { output: string; exitCode: number };
+      let shaBefore: string;
+      before(() => {
+        shaBefore = branchTipSha(defaultBranch);
+        rerun = runBit('bit ci sync --main');
+        gitFetch();
+      });
+
+      it('should report convergence and not move the default branch', () => {
+        expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+        expect(rerun.output).to.include('main -> converged');
+        expect(branchTipSha(defaultBranch)).to.equal(shaBefore);
+      });
+
+      it(`should still not have created ${SYNC_BRANCH}`, () => {
+        expect(remoteBranchExists(SYNC_BRANCH)).to.be.false;
+      });
+    });
+  });
+
+  // =============================================================================================
   // Two lanes in ONE `--all` run. Three properties live only at the loop level — a single-lane run
   // cannot express any of them — and each one was a real defect:
   //

@@ -505,7 +505,17 @@ document's _Cross-scope lanes_ section.
    marker, pushed to `<mainSyncBranch>` (never force-pushed), and a pull request is opened against the
    default branch.
 
-The default branch is never written to directly — the convergence is always proposed as a PR.
+Under the default `mainSync: "pr"` the default branch is never written to directly — the convergence is
+always proposed as a PR.
+
+**`mainSync: "direct-push"`** skips the proposal: steps 1–3 run on the default branch itself
+(`git checkout -B <defaultBranch> origin/<defaultBranch>`, then `bit checkout head`), and the drift commit —
+same `[bit-sync]`-marked message — is pushed straight to the default branch. No sync branch is created and no
+PR is opened, closed or looked at; an existing `<mainSyncBranch>` from earlier `"pr"`-mode runs is left
+untouched. The push is a plain push, never forced: if the default branch moved mid-run, the push is rejected
+and the run halts, and the next run recomputes the drift against the new tip. Use `"direct-push"` when the
+scope is the source of truth for main and git is a mirror of it (release on bit → the default branch follows);
+keep `"pr"` when humans review what lands on the default branch.
 
 **Conflict resolution is one-sided, on purpose.** The whole point of the main sync PR is to show what
 the repository looks like at the scope's latest exported versions, so the checkout runs with
@@ -648,6 +658,7 @@ bit ci merge --build  # → automatically uses minor version bump
       "branches": { "design-system": "feature/design-system" },
       "lanes": ["*"],
       "mainSyncBranch": "bit-sync/main",
+      "mainSync": "pr",
       "autoMergeMainSyncPr": false
     }
   }
@@ -660,7 +671,8 @@ bit ci merge --build  # → automatically uses minor version bump
 | `branchPrefix`        | `""`                  | Prefix for lane-mapped branches, e.g. `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                                                                                                                                                                                                                                  |
 | `branches`            | `{}`                  | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                                                                                                                                                                                                                                     |
 | `lanes`               | `["*"]`               | Glob patterns (`*` only) of lane names to sync. `[]` disables lane mirroring entirely, leaving main-scope sync.                                                                                                                                                                                                                               |
-| `mainSyncBranch`      | `"bit-sync/main"`     | Branch used for the main-scope drift PR.                                                                                                                                                                                                                                                                                                      |
+| `mainSyncBranch`      | `"bit-sync/main"`     | Branch used for the main-scope drift PR. Unused under `mainSync: "direct-push"`.                                                                                                                                                                                                                                                              |
+| `mainSync`            | `"pr"`                | How main-scope drift reaches the default branch. `"pr"` commits it to `mainSyncBranch` and opens a PR — the default branch is never written directly. `"direct-push"` commits the drift straight onto the default branch and pushes it (plain push, never forced) — for mirror-style setups where the scope is the source of truth for main.  |
 | `autoMergeMainSyncPr` | `false`               | Reserved: enabling GitHub auto-merge on the sync PR is not implemented yet — the command warns if it is set. Use a repository rule.                                                                                                                                                                                                           |
 
 The default branch and `mainSyncBranch` are never treated as lane-mapped, even when `branchPrefix` is
