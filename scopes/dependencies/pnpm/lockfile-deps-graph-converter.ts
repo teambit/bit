@@ -505,16 +505,23 @@ function getPkgsToResolve(lockfile: BitLockfileFile, manifests: Record<string, P
 function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
   const reachablePackages = new Set<string>();
   const reachableSnapshots = new Set<string>();
+  // An explicit stack: deep dependency chains would overflow the call
+  // stack with a recursive walk.
+  const stack: string[] = [];
   const visit = (depPath: string) => {
-    if (reachableSnapshots.has(depPath)) return;
-    reachableSnapshots.add(depPath);
-    reachablePackages.add(dp.removeSuffix(depPath));
-    const snapshot = lockfile.snapshots?.[depPath];
-    if (!snapshot) return;
-    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
-      for (const [name, ref] of Object.entries(snapshot[depType] ?? {})) {
-        if (ref.startsWith('link:') || ref.startsWith('file:')) continue;
-        visit(`${name}@${ref}`);
+    stack.push(depPath);
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (reachableSnapshots.has(current)) continue;
+      reachableSnapshots.add(current);
+      reachablePackages.add(dp.removeSuffix(current));
+      const snapshot = lockfile.snapshots?.[current];
+      if (!snapshot) continue;
+      for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+        for (const [name, ref] of Object.entries(snapshot[depType] ?? {})) {
+          if (ref.startsWith('link:') || ref.startsWith('file:')) continue;
+          stack.push(`${name}@${ref}`);
+        }
       }
     }
   };
