@@ -1746,6 +1746,14 @@ describe('bit ci sync', function () {
       let exitCode: number;
       before(() => {
         setSyncConfig({ lanes: ['*'], onConflict: 'lane-wins' });
+        // `setSyncConfig` only edits the tracked `workspace.jsonc` in the working tree, and
+        // `branchSideCommit` below opens with a forced checkout that discards uncommitted tracked
+        // edits — so without committing, the run would silently read the git-wins config the
+        // parent describe committed on the default branch (exactly what a CI clone reads: the
+        // DEFAULT branch's committed config, never a working-tree edit).
+        helper.command.runCmd('git add workspace.jsonc');
+        helper.command.runCmd('git commit -m "config: onConflict lane-wins"');
+        helper.command.runCmd(`git push origin ${defaultBranch}`);
         laneSideEdit(devPath, 'comp1/index.js', comp1Src('lane-take-2'), 'lane conflicting snap 2');
         branchSideCommit(
           LANE,
