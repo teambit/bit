@@ -145,12 +145,13 @@ export function deleteBranchArgs(branch: string, expectedTipSha: string): string
 }
 
 /**
- * Whether a failed push was the lease refusing. Two shapes: git's own client-side check ("stale info")
- * and the server's ("cannot lock ref … is at X but expected Y"). Over-matching is the safe direction —
- * the only consequence is reporting a branch as kept.
+ * Whether a failed push was the lease refusing. The wording varies by git version and transport:
+ * "stale info" (client-side check), "is at X but expected Y" (receive-pack), and "incorrect old value
+ * provided" (the local/file transport, which is what CI's e2e remotes use). Over-matching is the safe
+ * direction — the only consequence is reporting a branch as kept rather than as a failed delete.
  */
 export function isStaleLeaseRejection(message: string): boolean {
-  return /stale info|force-with-lease|but expected/i.test(message);
+  return /stale info|force-with-lease|but expected|incorrect old value/i.test(message);
 }
 
 /** Whether `origin` has the given branch. Assumes a `git fetch` isn't required (uses `ls-remote`). */

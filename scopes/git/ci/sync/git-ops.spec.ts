@@ -210,11 +210,16 @@ describe('deleteBranchArgs', () => {
     ]);
   });
 
-  // Both refusal shapes must read as a race: git's own check, and the server's when the client's passed.
-  it('recognizes the lease refusal, and not an unrelated push failure', () => {
+  // Every refusal wording must read as a race. The third one is why this row exists: the local/file
+  // transport says "incorrect old value provided", and matching only the first two reported a refused
+  // delete as a failed one — caught by CI, whose e2e remotes use that transport.
+  it('recognizes every lease-refusal wording, and not an unrelated push failure', () => {
     expect(isStaleLeaseRejection('! [rejected] (delete) -> my-lane (stale info)')).to.equal(true);
     expect(
       isStaleLeaseRejection(`remote: error: cannot lock ref 'refs/heads/my-lane': is at ${SHA} but expected abc123`)
+    ).to.equal(true);
+    expect(
+      isStaleLeaseRejection('!\t:refs/heads/race-lane\t[remote rejected] (incorrect old value provided)')
     ).to.equal(true);
     expect(isStaleLeaseRejection('remote: GH006: Protected branch update failed')).to.equal(false);
   });
