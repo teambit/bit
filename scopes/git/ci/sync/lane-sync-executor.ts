@@ -249,7 +249,7 @@ export class LaneSyncExecutor {
       const reason = `unexpected error: ${e?.message || e}`;
       // No branch => nothing to annotate: report-only, but still HALT-prefixed so the run exits non-zero.
       if (branch === undefined) {
-        logger.console(chalk.red(`Cannot sync lane ${laneIdStr}: ${reason}`));
+        logger.console(formatWarningSummary(`Cannot sync lane ${laneIdStr}: ${reason}`));
         return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
       }
       // This catch fires for exceptions thrown before `reconcileLane`'s own dry-run handling gets a
@@ -297,11 +297,11 @@ export class LaneSyncExecutor {
         `${branch === defaultBranch ? "the repository's default branch" : 'the main sync branch maintained by this command'}; ` +
         `the main scope is reconciled by "bit ci sync --main", never as a lane. Nothing was written`;
       if (explicitTarget) {
-        logger.console(chalk.red(`Cannot sync lane ${laneIdStr}: ${reason}`));
+        logger.console(formatWarningSummary(`Cannot sync lane ${laneIdStr}: ${reason}`));
         return `${REFUSED_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
       }
       const summary = `${laneName} -> skipped (${reason})`;
-      logger.console(chalk.yellow(summary));
+      logger.console(formatWarningSummary(summary));
       return summary;
     }
 
@@ -422,7 +422,7 @@ export class LaneSyncExecutor {
       lastSyncedHead === laneHead
     ) {
       logger.console(
-        chalk.yellow(
+        formatWarningSummary(
           `converged on bit state, but ${branch}'s tip is not a bit ci sync commit — any source edits it ` +
             `carries that were never snapped stay invisible until the next commit on the branch`
         )
@@ -517,12 +517,12 @@ export class LaneSyncExecutor {
 
     if (explicit) {
       const reason = crossScopeRefusal(foreign, defaultScope, branchExists ? branch : undefined);
-      logger.console(chalk.red(`Cannot sync lane ${laneIdStr}: ${reason}`));
+      logger.console(formatWarningSummary(`Cannot sync lane ${laneIdStr}: ${reason}`));
       return `${REFUSED_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
     }
 
     const summary = crossScopeSkipSummary(laneName, foreign, defaultScope);
-    logger.console(chalk.yellow(summary));
+    logger.console(formatWarningSummary(summary));
     return summary;
   }
 
@@ -660,7 +660,7 @@ export class LaneSyncExecutor {
     const { logger } = this.deps;
     const laneName = target.name;
     logger.console(
-      chalk.yellow(
+      formatWarningSummary(
         `Diverged: lane ${laneIdStr} and branch ${branch} both moved since the last sync — attempting to converge`
       )
     );
@@ -692,7 +692,7 @@ export class LaneSyncExecutor {
         // incoming lane head (lane-wins).
         const strategy: MergeStrategy = this.deps.cfg.onConflict === 'git-wins' ? 'ours' : 'theirs';
         logger.console(
-          chalk.yellow(
+          formatWarningSummary(
             `Merge conflicts in ${capEntries(merge.conflicts).join(', ')} — resolving by policy ` +
               `sync.onConflict "${this.deps.cfg.onConflict}" (bit merge strategy: ${strategy})`
           )
@@ -970,16 +970,18 @@ export class LaneSyncExecutor {
     } else if (gitHost) {
       // Not an error: the PR may have been merged or closed by hand already, or never existed.
       logger.console(
-        chalk.yellow(`No open PR found for ${branch} — ${deleteAt ? 'only retiring the branch' : 'nothing to close'}`)
+        formatWarningSummary(
+          `No open PR found for ${branch} — ${deleteAt ? 'only retiring the branch' : 'nothing to close'}`
+        )
       );
     } else {
-      logger.console(chalk.yellow(`No configured git host provider — skipping PR close for ${branch}`));
+      logger.console(formatWarningSummary(`No configured git host provider — skipping PR close for ${branch}`));
     }
 
     if (!deleteAt) {
       if (keep === 'tip-not-a-sync-commit') {
         logger.console(
-          chalk.yellow(
+          formatWarningSummary(
             `lane removed remotely, but ${branch}'s tip is not a bit ci sync commit — a developer wrote the ` +
               `branch's current bit state, so it is not safe to assume the branch is only our mirror; keeping it`
           )
@@ -990,7 +992,7 @@ export class LaneSyncExecutor {
         return `${laneName} -> close-pr (${prClause}, branch ${branch} kept: ${keptBecause})`;
       }
       logger.console(
-        chalk.yellow(`lane removed remotely but branch carries unmerged commits; keeping branch ${branch}`)
+        formatWarningSummary(`lane removed remotely but branch carries unmerged commits; keeping branch ${branch}`)
       );
       return (
         `${laneName} -> close-pr (${prClause}, branch ${branch} kept: ` +
@@ -1064,7 +1066,7 @@ export class LaneSyncExecutor {
   }): Promise<string> {
     if (dryRun) {
       const { logger } = this.deps;
-      logger.console(chalk.red(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
+      logger.console(formatWarningSummary(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
       logger.console(formatWarningSummary('Dry-run: the PR is not labelled or commented on'));
       return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
     }
@@ -1091,7 +1093,7 @@ export class LaneSyncExecutor {
     commentNote?: string;
   }): Promise<string> {
     const { logger, gitHost } = this.deps;
-    logger.console(chalk.red(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
+    logger.console(formatWarningSummary(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
     if (gitHost && pr) {
       try {
         await gitHost.addLabel(pr.number, CONFLICT_LABEL);
@@ -1101,9 +1103,13 @@ export class LaneSyncExecutor {
         logger.consoleWarning(`Failed to annotate PR #${pr.number} with the sync conflict: ${e?.message || e}`);
       }
     } else if (gitHost) {
-      logger.console(chalk.yellow(`No open PR found for ${branch} — the halt is recorded in this run's summary only`));
+      logger.console(
+        formatWarningSummary(`No open PR found for ${branch} — the halt is recorded in this run's summary only`)
+      );
     } else {
-      logger.console(chalk.yellow(`No configured git host provider — skipping conflict label/comment for ${branch}`));
+      logger.console(
+        formatWarningSummary(`No configured git host provider — skipping conflict label/comment for ${branch}`)
+      );
     }
     return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
   }
@@ -1125,7 +1131,9 @@ export class LaneSyncExecutor {
 
     if (isOnTarget()) {
       logger.console(
-        chalk.yellow(`Workspace is already on ${laneIdStr} — stepping off to main so the re-import actually runs`)
+        formatWarningSummary(
+          `Workspace is already on ${laneIdStr} — stepping off to main so the re-import actually runs`
+        )
       );
       const toMainErr = await this.deps.ci.switchToLaneForSync('main');
       if (toMainErr) return toMainErr;
@@ -1227,7 +1235,7 @@ export class LaneSyncExecutor {
   }): Promise<string | undefined> {
     const { gitHost, logger } = this.deps;
     if (!gitHost) {
-      logger.console(chalk.yellow(`No configured git host provider — skipping PR creation for ${branch}`));
+      logger.console(formatWarningSummary(`No configured git host provider — skipping PR creation for ${branch}`));
       return undefined;
     }
     // The lane page lives under the scope that HOSTS the lane, not necessarily `defaultScope`.

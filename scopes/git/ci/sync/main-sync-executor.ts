@@ -129,7 +129,9 @@ export class MainSyncExecutor {
       // interaction with it this mode promises not to make.
       if (!drift.length) return directPush ? CONVERGED_SUMMARY : await this.convergedSummary(branch);
 
-      logger.console(chalk.yellow(`main -> drift in ${drift.length} file(s): ${drift.slice(0, 20).join(', ')}`));
+      logger.console(
+        formatWarningSummary(`main -> drift in ${drift.length} file(s): ${drift.slice(0, 20).join(', ')}`)
+      );
 
       if (opts.dryRun) {
         // The working tree WAS written (a diff-based check has no other way); `finally` restores it. Safe
