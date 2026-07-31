@@ -275,7 +275,9 @@ export class DependenciesGraph {
 function isSameDirectDependency(dep1: DependencyNeighbour, dep2: DependencyNeighbour): boolean {
   if (!dep1.name || !dep2.name) return dep1.id === dep2.id;
   if (dep1.name !== dep2.name) return false;
-  return dep1.specifier === dep2.specifier || isWildcardSpecifier(dep1.specifier) || isWildcardSpecifier(dep2.specifier);
+  return (
+    dep1.specifier === dep2.specifier || isWildcardSpecifier(dep1.specifier) || isWildcardSpecifier(dep2.specifier)
+  );
 }
 
 function isWildcardSpecifier(specifier?: string): boolean {
