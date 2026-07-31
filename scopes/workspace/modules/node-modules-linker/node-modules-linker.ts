@@ -31,6 +31,7 @@ export default class NodeModuleLinker {
   consumer: Consumer;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   dataToPersist: DataToPersist;
+  absoluteSymlinks: Symlink[];
   existingLinks: NodeModulesLinksResult[];
   packageJsonCreated: boolean;
 
@@ -41,6 +42,7 @@ export default class NodeModuleLinker {
     this.consumer = this.workspace.consumer;
     this.bitMap = this.consumer.bitMap;
     this.dataToPersist = new DataToPersist();
+    this.absoluteSymlinks = [];
     this.existingLinks = [];
     this.packageJsonCreated = false;
   }
@@ -58,6 +60,7 @@ export default class NodeModuleLinker {
     const workspacePath = this.workspace.path;
     links.addBasePath(workspacePath);
     await links.persistAllToFS();
+    await this.persistAbsoluteSymlinks();
     // Only clear cache if new package.json of components were created
     if (this.packageJsonCreated) {
       await Promise.all(
@@ -88,6 +91,7 @@ export default class NodeModuleLinker {
   }
   async getLinks(): Promise<DataToPersist> {
     this.dataToPersist = new DataToPersist();
+    this.absoluteSymlinks = [];
     await pMapSeries(this.components, async (component) => {
       const componentId = component.id.toString();
       logger.debug(`linking component to node_modules: ${componentId}`);
@@ -96,6 +100,11 @@ export default class NodeModuleLinker {
 
     return this.dataToPersist;
   }
+
+  private async persistAbsoluteSymlinks() {
+    await Promise.all(this.absoluteSymlinks.map((symlink) => symlink.write()));
+  }
+
   private addLinkResult(
     linksResults: NodeModulesLinksResult[],
     id: ComponentID | null | undefined,
@@ -115,6 +124,9 @@ export default class NodeModuleLinker {
   getLinksResults(): NodeModulesLinksResult[] {
     const linksResults: NodeModulesLinksResult[] = [];
     this.dataToPersist.symlinks.forEach((symlink: Symlink) => {
+      this.addLinkResult(linksResults, symlink.componentId, symlink.src, symlink.dest, false);
+    });
+    this.absoluteSymlinks.forEach((symlink: Symlink) => {
       this.addLinkResult(linksResults, symlink.componentId, symlink.src, symlink.dest, false);
     });
     this.existingLinks.forEach((link: NodeModulesLinksResult) => {
@@ -170,6 +182,10 @@ export default class NodeModuleLinker {
         }
         if (stat && stat.isSymbolicLink()) {
           this.addLinkResult(this.existingLinks, component.id, fileWithRootDir, dest, true);
+        } else if (path.isAbsolute(dest)) {
+          this.absoluteSymlinks.push(
+            Symlink.makeInstance(path.join(this.workspace.path, fileWithRootDir), dest, component.id, true)
+          );
         } else {
           this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id, true));
         }
@@ -291,7 +307,14 @@ export default class NodeModuleLinker {
     const injectedDirs = await this.workspace.getInjectedDirs(component);
     const src = path.join(dest, 'package.json');
     for (const injectedDir of injectedDirs) {
-      this.dataToPersist.addSymlink(Symlink.makeInstance(src, path.join(injectedDir, 'package.json')));
+      const injectedPackageJson = path.join(injectedDir, PACKAGE_JSON);
+      if (path.isAbsolute(injectedPackageJson)) {
+        this.absoluteSymlinks.push(
+          Symlink.makeInstance(path.join(this.workspace.path, src), injectedPackageJson, component.id)
+        );
+        continue;
+      }
+      this.dataToPersist.addSymlink(Symlink.makeInstance(src, injectedPackageJson));
     }
   }
 
