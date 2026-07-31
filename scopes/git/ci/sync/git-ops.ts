@@ -60,6 +60,17 @@ export async function cleanUntrackedScoped(run: GitArgsRunner = realGitRaw): Pro
  * the default branch or reset to `origin/<branch>`; omitted, it is a plain switch to a branch that
  * already exists locally, which is how both restore paths get back to the default branch.
  *
+ * **The `-B` is guarded.** `checkout -B` MOVES an existing local ref, and a local branch holding
+ * commits no remote branch contains — a developer's unpushed work, in an interactive run — would be
+ * orphaned to the reflog by that move. That exceeds the command's announced contract (discarding
+ * *uncommitted* changes), so the reset is refused and the target halts instead: push the commits,
+ * delete the local branch, or run from a clean clone. The predicate is remote containment, not
+ * ancestry of the start point, because the reconciler moves branches in two legitimate shapes the
+ * start point cannot distinguish: resetting a branch to its own `origin/<branch>` AND forking a
+ * branch fresh from `origin/<defaultBranch>` over a stale local one — in both, a fully *pushed*
+ * local tip loses nothing (its commits stay reachable through the remote-tracking ref). A CI clone
+ * never hits the guard at all: the branch does not exist locally there.
+ *
  * `reload` is passed in rather than imported because the workspace reload lives on the ci aspect, which
  * this module deliberately does not depend on.
  */
@@ -69,19 +80,32 @@ export async function checkoutPristine(
   reload: () => Promise<void>,
   run: GitArgsRunner = realGitRaw
 ): Promise<void> {
+  if (startPoint && (await localBranchExists(branch, run))) {
+    const containedIn = String((await run(['branch', '-r', '--contains', `refs/heads/${branch}`])) ?? '').trim();
+    if (!containedIn) {
+      throw new Error(
+        `local branch "${branch}" has commits that no remote branch contains — resetting it would ` +
+          `orphan them (recoverable only from the reflog). Push or back up the local branch, delete ` +
+          `it, or run from a clean checkout`
+      );
+    }
+  }
   await run(startPoint ? ['checkout', '-f', '-B', branch, startPoint] : ['checkout', '-f', branch]);
   await cleanUntrackedScoped(run);
   await reload();
 }
 
-/** Whether `refs/heads/<branch>` exists — i.e. the branch exists *locally*, not just on a remote. */
+/**
+ * Whether `refs/heads/<branch>` exists — i.e. the branch exists *locally*, not just on a remote.
+ *
+ * Judged by OUTPUT (`rev-parse --verify` prints the sha or nothing), never by whether the call threw:
+ * simple-git's `raw` resolves with empty output on some non-zero exits instead of rejecting, so an
+ * exception-based check reports every missing branch as existing under the real runner while passing
+ * against unit fakes that throw — the exact divergence that let a broken check through once already.
+ */
 export async function localBranchExists(branch: string, run: GitArgsRunner = realGitRaw): Promise<boolean> {
-  try {
-    await run(['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]);
-    return true;
-  } catch {
-    return false;
-  }
+  const out = await run(['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]).catch(() => '');
+  return String(out ?? '').trim().length > 0;
 }
 
 /**

@@ -214,6 +214,10 @@ describe('checkoutPristine', () => {
     const steps: string[] = [];
     const run = async (args: string[]) => {
       steps.push(args.join(' '));
+      // an existing, pushed branch: the guard's rev-parse gets a sha, its containment probe a remote
+      if (args[0] === 'rev-parse') return 'abc123\n';
+      if (args[0] === 'branch') return '  origin/some-branch\n';
+      return undefined;
     };
     const reload = async () => {
       steps.push('<reload>');
@@ -223,10 +227,69 @@ describe('checkoutPristine', () => {
 
   const CLEAN = 'clean -fd -e .bit -e node_modules';
 
-  it('with a startPoint: creates-or-resets the branch there, then cleans, then reloads', async () => {
+  it('with a startPoint: proves the reset is safe, creates-or-resets the branch, cleans, reloads', async () => {
     const { steps, run, reload } = recorder();
     await checkoutPristine('bit-sync/main', 'origin/main', reload, run);
-    expect(steps).to.deep.equal(['checkout -f -B bit-sync/main origin/main', CLEAN, '<reload>']);
+    expect(steps).to.deep.equal([
+      'rev-parse --verify --quiet refs/heads/bit-sync/main',
+      'branch -r --contains refs/heads/bit-sync/main',
+      'checkout -f -B bit-sync/main origin/main',
+      CLEAN,
+      '<reload>',
+    ]);
+  });
+
+  /**
+   * `checkout -B` MOVES an existing local ref. A local branch holding commits the start point lacks —
+   * a developer's unpushed work in an interactive run — would be orphaned to the reflog by that move,
+   * which exceeds the command's announced "discards uncommitted changes" contract. So the reset is
+   * refused (the target halts) rather than performed.
+   */
+  it('REFUSES to reset a local branch whose commits no remote contains, before touching the tree', async () => {
+    const steps: string[] = [];
+    const run = async (args: string[]) => {
+      steps.push(args.join(' '));
+      if (args[0] === 'rev-parse') return 'abc123\n';
+      if (args[0] === 'branch') return '\n';
+      return undefined;
+    };
+    let message = '';
+    await checkoutPristine('my-lane', 'origin/my-lane', async () => {}, run).catch((e) => {
+      message = e.message;
+    });
+    expect(message).to.contain('local branch "my-lane" has commits that no remote branch contains');
+    expect(steps.some((step) => step.startsWith('checkout'))).to.equal(false);
+    expect(steps.some((step) => step.startsWith('clean'))).to.equal(false);
+  });
+
+  /**
+   * The two legitimate reconciler shapes the predicate must PASS: a branch at its own pushed tip
+   * being reset to `origin/<branch>`, and a stale-but-pushed local branch being re-forked from the
+   * default branch (its tip lives on `origin/<branch>`, not on the start point) — remote containment
+   * admits both, where start-point ancestry wrongly refused the second.
+   */
+  it('allows the reset when any remote branch contains the local tip — even a different one than the start point', async () => {
+    const steps: string[] = [];
+    const run = async (args: string[]) => {
+      steps.push(args.join(' '));
+      if (args[0] === 'rev-parse') return 'abc123\n';
+      if (args[0] === 'branch') return '  origin/policy-lane\n';
+      return undefined;
+    };
+    await checkoutPristine('policy-lane', 'origin/main', async () => {}, run);
+    expect(steps.some((step) => step === 'checkout -f -B policy-lane origin/main')).to.equal(true);
+  });
+
+  it('skips the safety proof when the branch does not exist locally (every CI clone)', async () => {
+    const steps: string[] = [];
+    const run = async (args: string[]) => {
+      steps.push(args.join(' '));
+      if (args[0] === 'rev-parse') return '';
+      return undefined;
+    };
+    await checkoutPristine('my-lane', 'origin/my-lane', async () => {}, run);
+    expect(steps.filter((step) => step.startsWith('branch -r'))).to.deep.equal([]);
+    expect(steps.some((step) => step === 'checkout -f -B my-lane origin/my-lane')).to.equal(true);
   });
 
   it('without a startPoint: plain forced switch to an existing branch, then cleans, then reloads', async () => {
@@ -243,7 +306,8 @@ describe('checkoutPristine', () => {
     for (const startPoint of ['origin/lane/x', undefined]) {
       const { steps, run, reload } = recorder();
       await checkoutPristine('lane/x', startPoint, reload, run);
-      expect(steps[0].startsWith('checkout -f ')).to.equal(true);
+      const checkout = steps.find((step) => step.startsWith('checkout'));
+      expect(checkout?.startsWith('checkout -f ')).to.equal(true);
     }
   });
 
@@ -303,12 +367,21 @@ describe('localBranchExists', () => {
     const argv: string[][] = [];
     await localBranchExists('main', async (args) => {
       argv.push(args);
+      return 'abc123';
     });
     expect(argv).to.deep.equal([['rev-parse', '--verify', '--quiet', 'refs/heads/main']]);
   });
 
-  it('true when the ref resolves, false when git exits non-zero', async () => {
-    expect(await localBranchExists('main', async () => 'abc123')).to.equal(true);
+  /**
+   * Judged by OUTPUT, never by whether the call threw: simple-git's `raw` resolves with EMPTY output
+   * on some non-zero exits instead of rejecting, so an exception-based check reported every missing
+   * branch as existing under the real runner — while passing against fakes that throw. All three
+   * runner behaviors for a missing branch (empty resolve, undefined resolve, rejection) must be false.
+   */
+  it('true only when the ref prints a sha; false for empty, undefined, or throwing runners', async () => {
+    expect(await localBranchExists('main', async () => 'abc123\n')).to.equal(true);
+    expect(await localBranchExists('main', async () => '')).to.equal(false);
+    expect(await localBranchExists('main', async () => undefined)).to.equal(false);
     expect(
       await localBranchExists('main', async () => {
         throw new Error('exit 1');
@@ -328,7 +401,10 @@ describe('checkoutPristineRestore', () => {
     const steps: string[] = [];
     const run = async (args: string[]) => {
       steps.push(args.join(' '));
-      if (args[0] === 'rev-parse' && !localBranchIsPresent) throw new Error('exit 1');
+      // model the REAL runner: a missing ref resolves with empty output rather than rejecting
+      if (args[0] === 'rev-parse') return localBranchIsPresent ? 'abc123\n' : '';
+      if (args[0] === 'branch') return '  origin/some-branch\n';
+      return undefined;
     };
     const reload = async () => {
       steps.push('<reload>');
@@ -350,7 +426,10 @@ describe('checkoutPristineRestore', () => {
   it('local branch absent (detached-HEAD CI): forks it from origin/<branch> instead of failing', async () => {
     const { steps, run, reload } = restoreRecorder(false);
     await checkoutPristineRestore('main', reload, run);
+    // the second rev-parse is checkoutPristine's own reset guard re-proving what restore just learned —
+    // redundant but harmless, and cheaper than giving the guard a bypass parameter
     expect(steps).to.deep.equal([
+      'rev-parse --verify --quiet refs/heads/main',
       'rev-parse --verify --quiet refs/heads/main',
       'checkout -f -B main origin/main',
       'clean -fd -e .bit -e node_modules',
