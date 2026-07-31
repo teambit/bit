@@ -37,6 +37,7 @@ chai.use(chaiFs);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
       npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -65,6 +66,7 @@ chai.use(chaiFs);
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.import(`${helper.scopes.remote}/comp1@0.0.1 ${helper.scopes.remote}/comp2@latest`);
 
@@ -96,6 +98,7 @@ chai.use(chaiFs);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
       npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -128,6 +131,7 @@ chai.use(chaiFs);
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.fs.createFile('foo', 'foo.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('foo');
       helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env@0.0.1`, {});
@@ -143,6 +147,7 @@ chai.use(chaiFs);
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.fs.createFile('baz', 'baz.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('baz');
       helper.extensions.addExtensionToVariant('baz', `${helper.scopes.remote}/custom-env/env@0.0.1`, {});
@@ -153,6 +158,7 @@ chai.use(chaiFs);
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.command.import(
         `${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest ${helper.scopes.remote}/baz@latest`
       );
@@ -170,14 +176,6 @@ chai.use(chaiFs);
     it('should include the highest version of the shared peer dependency across all three graphs', () => {
       expect(lockfile.packages).to.have.property('@pnpm.e2e/abc@2.0.0');
       expect(lockfile.packages).to.have.property('@pnpm.e2e/peer-a@1.0.1');
-    });
-    // Documents a known limitation of the merge: highest-wins is applied only to the root
-    // edge. Transitive snapshots from lower-version graphs still reference the older
-    // versions of non-peer packages, so pnpm retains them in the lockfile. (Peer versions
-    // get reconciled across the workspace at install time, so they don't leak; regular
-    // dependencies do.)
-    it('currently leaves the lower version of non-peer transitives in the lockfile', () => {
-      expect(lockfile.packages).to.have.property('@pnpm.e2e/abc@1.0.0');
     });
   });
 });

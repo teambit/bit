@@ -1,19 +1,10 @@
 import type { PackageManagerProxyConfig } from '@teambit/dependency-resolver';
-import type { Config } from '@pnpm/config';
+import type { ResolvedConfig } from '@pnpm/napi';
 
-export function getProxyConfig(config: Config): PackageManagerProxyConfig {
-  const httpProxy = config.httpProxy;
-  const httpsProxy = config.httpsProxy || httpProxy;
-  const proxyConfig: PackageManagerProxyConfig = {
-    httpProxy,
-    httpsProxy,
-    noProxy: config.rawConfig.noproxy,
+export function getProxyConfig(config: ResolvedConfig): PackageManagerProxyConfig {
+  return {
+    httpProxy: config.httpProxy,
+    httpsProxy: config.httpsProxy ?? config.httpProxy,
+    noProxy: config.noProxy,
   };
-  return proxyConfig;
 }
-
-export type ProxyConfig = {
-  httpProxy?: string;
-  httpsProxy?: string;
-  noProxy?: boolean | string;
-};
