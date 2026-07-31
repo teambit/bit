@@ -20,6 +20,16 @@ export interface CiSyncConfig {
    * ceremony is unwanted. Under `'direct-push'`, `mainSyncBranch` is unused.
    */
   mainSync?: 'pr' | 'direct-push';
+  /**
+   * What `merge-diverged` does when the lane and the branch changed the same lines. `'halt'` (the
+   * default) stops that lane: the PR is labelled `bit-sync-conflict` with the resolution steps
+   * commented, and a human resolves — a silent policy pick rewrites someone's work, so silence is
+   * opt-in. `'git-wins'` resolves conflicting hunks to the branch's version; `'lane-wins'` resolves
+   * them to the lane's version. Non-conflicting hunks always merge (union) regardless of policy — the
+   * policy only decides who wins where the two sides genuinely collide. (Bit resolves at component
+   * granularity: every file of a component that conflicted takes the winning side.)
+   */
+  onConflict?: 'halt' | 'git-wins' | 'lane-wins';
   /** enable GitHub auto-merge on the main sync PR */
   autoMergeMainSyncPr?: boolean;
 }
@@ -42,6 +52,7 @@ export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
     mainSyncBranch: raw?.mainSyncBranch ?? 'bit-sync/main',
     autoMergeMainSyncPr: raw?.autoMergeMainSyncPr ?? false,
     mainSync: raw?.mainSync ?? 'pr',
+    onConflict: raw?.onConflict ?? 'halt',
   };
   // Validated for the same startup-failure reason as the branch names: a typo here ('direct', 'push',
   // 'PR') would otherwise silently fall through to whichever mode the executor's comparison happens to
@@ -51,6 +62,16 @@ export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
       `sync.mainSync: "${resolved.mainSync}" is not a valid value. Use "pr" (propose the main-scope drift ` +
         `as a pull request from sync.mainSyncBranch) or "direct-push" (push the drift straight onto the ` +
         `default branch)`
+    );
+  }
+  // Same startup-failure idiom as mainSync: this key decides whether a conflicted merge halts for a
+  // human or silently picks a side, so a typo ('git', 'ours', 'lane') must not fall through to any
+  // behaviour at all — least of all to the two values that rewrite one side's work without asking.
+  if (resolved.onConflict !== 'halt' && resolved.onConflict !== 'git-wins' && resolved.onConflict !== 'lane-wins') {
+    throw new BitError(
+      `sync.onConflict: "${resolved.onConflict}" is not a valid value. Use "halt" (stop the conflicted ` +
+        `lane, label the PR and let a human resolve — the default), "git-wins" (conflicting hunks keep ` +
+        `the branch's version) or "lane-wins" (conflicting hunks take the lane's version)`
     );
   }
   assertValidBranchPrefix(resolved.branchPrefix, 'sync.branchPrefix');

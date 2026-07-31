@@ -18,6 +18,7 @@ describe('sync-config', () => {
     expect(cfg.mainSyncBranch).to.equal('bit-sync/main');
     expect(cfg.autoMergeMainSyncPr).to.equal(false);
     expect(cfg.mainSync).to.equal('pr');
+    expect(cfg.onConflict).to.equal('halt');
   });
 
   /**
@@ -33,6 +34,30 @@ describe('sync-config', () => {
     it('refuses any other value, naming the key, the value and the valid options', () => {
       expect(() => resolveSyncConfig({ mainSync: 'direct' as any })).to.throw(
         /sync\.mainSync.*"direct".*"pr".*"direct-push"/
+      );
+    });
+  });
+
+  /**
+   * `onConflict` decides whether a same-line lane/branch divergence halts for a human (the default) or
+   * silently rewrites one side's work. A typo must fail at startup naming the key, the value and the
+   * valid options — falling through to *any* behaviour would either block runs nobody meant to block or
+   * pick a side nobody chose.
+   */
+  describe('onConflict', () => {
+    it('defaults to halt — a silent policy pick rewrites someone’s work, so silence is opt-in', () => {
+      expect(resolveSyncConfig({}).onConflict).to.equal('halt');
+    });
+
+    it('accepts all three policies explicitly', () => {
+      expect(resolveSyncConfig({ onConflict: 'halt' }).onConflict).to.equal('halt');
+      expect(resolveSyncConfig({ onConflict: 'git-wins' }).onConflict).to.equal('git-wins');
+      expect(resolveSyncConfig({ onConflict: 'lane-wins' }).onConflict).to.equal('lane-wins');
+    });
+
+    it('refuses any other value, naming the key, the value and the valid options', () => {
+      expect(() => resolveSyncConfig({ onConflict: 'ours' as any })).to.throw(
+        /sync\.onConflict.*"ours".*"halt".*"git-wins".*"lane-wins"/
       );
     });
   });

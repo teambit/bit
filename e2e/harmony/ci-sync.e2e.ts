@@ -1638,6 +1638,145 @@ describe('bit ci sync', function () {
   });
 
   // =============================================================================================
+  // `sync.onConflict` — the policy that lets a same-line lane/branch divergence resolve without a
+  // human. Scenario D2 above proves the DEFAULT (halt, nothing written) with no `onConflict` in the
+  // config; this block proves the two automatic policies on the same divergence shape. The load-
+  // bearing assertions are on file bytes, exactly as in D1/D2: the contested line must hold one
+  // side's version with no conflict markers, the non-conflicting lane change must survive, and the
+  // lane must receive the merged snap — a policy that "succeeded" while dropping either half would
+  // pass any summary-line check.
+  // =============================================================================================
+  describe('sync.onConflict resolves a same-line divergence without a human (git-wins / lane-wins)', () => {
+    const LANE = 'policy-lane';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setSyncConfig({ lanes: ['*'], onConflict: 'git-wins' });
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE}`, devPath);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('lane-snap-1'));
+      helper.command.runCmd('bit snap --message "lane snap 1"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      // First sync mirrors the lane onto its branch, so the pair has a shared state to diverge FROM —
+      // without it there is no last-synced base and no merge-diverged.
+      const first = runBit(`bit ci sync ${LANE}`);
+      if (first.exitCode !== 0) throw new Error(`setup sync failed:\n${first.output}`);
+      gitFetch();
+    });
+
+    // -------------------------------------------------------------------------------------------
+    describe('git-wins: the branch keeps the contested line, the lane still contributes the rest', () => {
+      let output: string;
+      let exitCode: number;
+      let laneBefore: string;
+      before(() => {
+        // Same-line conflict on comp1: both sides rewrite the marker line...
+        laneSideEdit(devPath, 'comp1/index.js', comp1Src('lane-take'), 'lane conflicting snap');
+        // ...and the lane ALSO moves comp2, which the branch never touched — the non-conflicting
+        // change the policy must not throw away (the policy decides conflicts, never the whole merge).
+        laneSideEdit(devPath, 'comp2/index.js', comp2Src('lane-side-2'), 'lane edits comp2');
+        branchSideCommit(
+          LANE,
+          defaultBranch,
+          'comp1/index.js',
+          comp1Src('branch-take'),
+          'feat: dev edits the same comp1 line on the branch'
+        );
+        laneBefore = remoteLaneFingerprint(LANE);
+        ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
+        gitFetch();
+      });
+
+      it('should succeed, naming the policy and the resolved file count in the summary', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(
+          `${LANE} -> merge-diverged (conflicts auto-resolved: git-wins on 1 file(s); ` +
+            `merged lane into branch, then exported;`
+        );
+      });
+
+      it("should keep the BRANCH's version of the contested line, with no conflict markers", () => {
+        const onBranch = fileOnBranch(LANE, 'comp1/index.js');
+        expect(onBranch, `comp1/index.js on origin/${LANE}:\n${onBranch}`).to.include('branch-take');
+        expect(onBranch).to.not.include('lane-take');
+        expect(onBranch).to.not.include('<<<<<<<');
+      });
+
+      it("should still take the lane's non-conflicting change onto the branch", () => {
+        expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('lane-side-2');
+      });
+
+      it('should advance the lane to the merged snap — the resolution is a normal sync commit', () => {
+        expect(remoteLaneFingerprint(LANE)).to.not.equal(laneBefore);
+        // The lane tip holds the policy's answer for the contested line AND its own comp2 edit: the
+        // snap is the merge, exactly as on the clean merge-diverged path.
+        expect(laneTipFile(devPath, 'comp1/index.js')).to.include('branch-take');
+        expect(laneTipFile(devPath, 'comp2/index.js')).to.include('lane-side-2');
+      });
+
+      it('should tip the branch with a reconciler-authored sync commit', () => {
+        expect(branchTipMessage(LANE)).to.include('[bit-sync]');
+      });
+
+      describe('re-running right after the policy resolution', () => {
+        let rerun: { output: string; exitCode: number };
+        let shaBefore: string;
+        before(() => {
+          shaBefore = branchTipSha(LANE);
+          rerun = runBit(`bit ci sync ${LANE}`);
+          gitFetch();
+        });
+        it('should be a converged no-op', () => {
+          expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+          expect(rerun.output).to.include(`${LANE} -> noop (converged)`);
+          expect(branchTipSha(LANE)).to.equal(shaBefore);
+        });
+      });
+    });
+
+    // -------------------------------------------------------------------------------------------
+    describe('lane-wins: the lane keeps the contested line', () => {
+      let output: string;
+      let exitCode: number;
+      before(() => {
+        setSyncConfig({ lanes: ['*'], onConflict: 'lane-wins' });
+        laneSideEdit(devPath, 'comp1/index.js', comp1Src('lane-take-2'), 'lane conflicting snap 2');
+        branchSideCommit(
+          LANE,
+          defaultBranch,
+          'comp1/index.js',
+          comp1Src('branch-take-2'),
+          'feat: dev edits the same comp1 line again'
+        );
+        ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
+        gitFetch();
+      });
+
+      it('should succeed, naming the policy in the summary', () => {
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include('conflicts auto-resolved: lane-wins on 1 file(s)');
+      });
+
+      it("should take the LANE's version of the contested line onto the branch, with no markers", () => {
+        const onBranch = fileOnBranch(LANE, 'comp1/index.js');
+        expect(onBranch, `comp1/index.js on origin/${LANE}:\n${onBranch}`).to.include('lane-take-2');
+        expect(onBranch).to.not.include('branch-take-2');
+        expect(onBranch).to.not.include('<<<<<<<');
+      });
+
+      it("should keep the lane's own version on the lane tip", () => {
+        expect(laneTipFile(devPath, 'comp1/index.js')).to.include('lane-take-2');
+      });
+    });
+  });
+
+  // =============================================================================================
   // `bit ci sync --init` — one-command onboarding scaffolding. Unlike every other scenario in this
   // file, this never touches bit.cloud or a lane: it is pure local scaffolding (two workflow files
   // plus the workspace.jsonc config block), so the setup only needs a workspace with a git remote.

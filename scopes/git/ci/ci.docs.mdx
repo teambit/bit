@@ -371,6 +371,16 @@ lanes are still synced, and the command exits non-zero. Remove the label to resu
 The isolation is unconditional — a lane that fails in a way nobody anticipated is halted too, never
 allowed to abort the lanes after it.
 
+For the merge-conflict halt specifically, the `onConflict` config offers an automatic way out. By default
+(`"halt"`) a same-line divergence stops that lane as described above — either alternative rewrites one
+side's work without review, so silence is opt-in. `"git-wins"` resolves the conflicting hunks to the
+branch's version and `"lane-wins"` to the lane's; non-conflicting hunks merge as usual either way, and the
+run then continues through the normal merge-diverged tail (snap the merged tree onto the lane, export,
+update the branch — a reconciler-authored sync commit like any other). The summary names the policy and
+what it rewrote: `merge-diverged (conflicts auto-resolved: git-wins on 3 file(s); merged lane into branch,
+then exported; …)`. Resolution is at component granularity — every file of a component that conflicted
+takes the winning side.
+
 ### Cross-scope lanes
 
 A lane has **two** scope relations, and they are not the same thing:
@@ -659,21 +669,23 @@ bit ci merge --build  # → automatically uses minor version bump
       "lanes": ["*"],
       "mainSyncBranch": "bit-sync/main",
       "mainSync": "pr",
+      "onConflict": "halt",
       "autoMergeMainSyncPr": false
     }
   }
 }
 ```
 
-| Field                 | Default               | Description                                                                                                                                                                                                                                                                                                                                   |
-| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`                | `git-source-of-truth` | **Reserved: accepted but not implemented** — every run behaves as `git-source-of-truth`, and the command warns when another value is configured. Intended semantics: `git-source-of-truth` (today's behaviour) keeps merges on the git host and mirrors lanes to PRs; `mirror` would allow merges on bit.cloud and have git track the result. |
-| `branchPrefix`        | `""`                  | Prefix for lane-mapped branches, e.g. `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                                                                                                                                                                                                                                  |
-| `branches`            | `{}`                  | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                                                                                                                                                                                                                                     |
-| `lanes`               | `["*"]`               | Glob patterns (`*` only) of lane names to sync. `[]` disables lane mirroring entirely, leaving main-scope sync.                                                                                                                                                                                                                               |
-| `mainSyncBranch`      | `"bit-sync/main"`     | Branch used for the main-scope drift PR. Unused under `mainSync: "direct-push"`.                                                                                                                                                                                                                                                              |
-| `mainSync`            | `"pr"`                | How main-scope drift reaches the default branch. `"pr"` commits it to `mainSyncBranch` and opens a PR — the default branch is never written directly. `"direct-push"` commits the drift straight onto the default branch and pushes it (plain push, never forced) — for mirror-style setups where the scope is the source of truth for main.  |
-| `autoMergeMainSyncPr` | `false`               | Reserved: enabling GitHub auto-merge on the sync PR is not implemented yet — the command warns if it is set. Use a repository rule.                                                                                                                                                                                                           |
+| Field                 | Default               | Description                                                                                                                                                                                                                                                                                                                                                                       |
+| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`                | `git-source-of-truth` | **Reserved: accepted but not implemented** — every run behaves as `git-source-of-truth`, and the command warns when another value is configured. Intended semantics: `git-source-of-truth` (today's behaviour) keeps merges on the git host and mirrors lanes to PRs; `mirror` would allow merges on bit.cloud and have git track the result.                                     |
+| `branchPrefix`        | `""`                  | Prefix for lane-mapped branches, e.g. `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                                                                                                                                                                                                                                                                      |
+| `branches`            | `{}`                  | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                                                                                                                                                                                                                                                                         |
+| `lanes`               | `["*"]`               | Glob patterns (`*` only) of lane names to sync. `[]` disables lane mirroring entirely, leaving main-scope sync.                                                                                                                                                                                                                                                                   |
+| `mainSyncBranch`      | `"bit-sync/main"`     | Branch used for the main-scope drift PR. Unused under `mainSync: "direct-push"`.                                                                                                                                                                                                                                                                                                  |
+| `mainSync`            | `"pr"`                | How main-scope drift reaches the default branch. `"pr"` commits it to `mainSyncBranch` and opens a PR — the default branch is never written directly. `"direct-push"` commits the drift straight onto the default branch and pushes it (plain push, never forced) — for mirror-style setups where the scope is the source of truth for main.                                      |
+| `onConflict`          | `"halt"`              | What `merge-diverged` does when the lane and the branch changed the same lines. `"halt"` (the default) stops that lane — the PR is labelled `bit-sync-conflict` with resolution steps commented, and a human resolves. `"git-wins"` resolves conflicting hunks to the branch's version; `"lane-wins"` to the lane's. Non-conflicting hunks always merge, whichever policy is set. |
+| `autoMergeMainSyncPr` | `false`               | Reserved: enabling GitHub auto-merge on the sync PR is not implemented yet — the command warns if it is set. Use a repository rule.                                                                                                                                                                                                                                               |
 
 The default branch and `mainSyncBranch` are never treated as lane-mapped, even when `branchPrefix` is
 empty (which otherwise maps every branch to a same-named lane).

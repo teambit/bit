@@ -3,7 +3,7 @@ import type { Logger } from '@teambit/logger';
 import type { LanesMain } from '@teambit/lanes';
 import type { LaneData } from '@teambit/legacy.scope';
 import { getCloudDomain } from '@teambit/legacy.constants';
-import { FileStatus } from '@teambit/component.modules.merge-helper';
+import { FileStatus, type MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { git } from '../git';
 import type { CiMain } from '../ci.main.runtime';
 import type { CiSyncConfig, LaneTarget } from './sync-config';
@@ -807,7 +807,11 @@ export class LaneSyncExecutor {
    * *before* anything is written to either side, in this order:
    *
    * 1. **Merge the lane into the branch's working tree** (`mergeLaneIntoBranchWorkingTree`, i.e.
-   *    `bit checkout head --manual`). Conflicts → discard the marker writes and halt for a human.
+   *    `bit checkout head --manual`). Conflicts → discard the marker writes, then either halt for a
+   *    human (`sync.onConflict: 'halt'`, the default) or — under 'git-wins'/'lane-wins' — re-run the
+   *    merge with the configured side winning and continue exactly as a clean merge would; the
+   *    resulting sync commit is reconciler-authored like any other, so the deletion-gate and
+   *    ownership semantics are unchanged.
    * 2. **Snap + export the merged tree** onto the lane. Only now does the lane advance, and it
    *    advances to a snap that contains *both* sides — the snap *is* the merge.
    * 3. **Record the resulting state on the branch** — commit the `.bitmap` the snap produced, and push,
@@ -859,17 +863,66 @@ export class LaneSyncExecutor {
       if (merge.error) {
         return await halt(`failed to merge lane ${laneIdStr} into branch ${branch}: ${merge.error.message}`);
       }
+      // Names the policy and the file count in the summary when conflicts were auto-resolved; stays
+      // empty on the clean-merge path so that path's summary is untouched.
+      let policyClause = '';
       if (merge.conflicts.length) {
-        // The merge left conflict markers in the working tree. Discard them before halting so the
-        // workspace (and any later push from this run) can never carry a half-merged tree.
+        // The merge left conflict markers in the working tree. Discard them before ANY next step: on a
+        // halt so the workspace (and any later push from this run) can never carry a half-merged tree,
+        // and under a policy because the re-merge below three-way-merges against the files on disk —
+        // markers left in place would be read as the branch's own content and merged INTO the result.
         await this.checkoutFromRemote(branch, `origin/${branch}`);
-        // Bounded: this reason is posted as the halt PR comment, and a lane-wide conflict can name every
-        // component on the lane.
-        return await halt(`merge conflicts in: ${capEntries(merge.conflicts).join(', ')}`);
+        if (this.deps.cfg.onConflict === 'halt') {
+          // Bounded: this reason is posted as the halt PR comment, and a lane-wide conflict can name every
+          // component on the lane.
+          return await halt(`merge conflicts in: ${capEntries(merge.conflicts).join(', ')}`);
+        }
+        // POLICY SIDE MAPPING — read off bit's checkout, not assumed. `checkout head` merges the lane's
+        // (incoming) head INTO the workspace, whose tree `checkoutFromRemote` just set to the BRANCH's
+        // content, so:
+        //   - 'ours'  = the workspace side = the branch. The interactive prompt spells it out ("ours -
+        //     use the current modified files", merge-version.ts), and `applyVersion`
+        //     (checkout-version.ts:66) leaves the filesystem untouched for a conflicted component under
+        //     'ours' — the branch's version stays => git-wins.
+        //   - 'theirs' = the incoming version. Prompt: "theirs - use the specified version (and override
+        //     the modification)"; `applyVersion` writes the component loaded from the model at the
+        //     checked-out version — the lane head that `head: true` resolved => lane-wins.
+        const strategy: MergeStrategy = this.deps.cfg.onConflict === 'git-wins' ? 'ours' : 'theirs';
+        logger.console(
+          chalk.yellow(
+            `Merge conflicts in ${capEntries(merge.conflicts).join(', ')} — resolving by policy ` +
+              `sync.onConflict "${this.deps.cfg.onConflict}" (bit merge strategy: ${strategy})`
+          )
+        );
+        const resolved = await this.mergeLaneIntoBranchWorkingTree(laneIdStr, strategy);
+        if (resolved.error) {
+          return await halt(
+            `failed to merge lane ${laneIdStr} into branch ${branch} under sync.onConflict ` +
+              `"${this.deps.cfg.onConflict}": ${resolved.error.message}`
+          );
+        }
+        if (resolved.conflicts.length) {
+          // 'ours'/'theirs' cannot leave a conflict behind by construction; if bit ever reports one
+          // anyway, exporting it as if it were resolved is the one unacceptable outcome — reset and halt.
+          await this.checkoutFromRemote(branch, `origin/${branch}`);
+          return await halt(
+            `merge conflicts in ${capEntries(resolved.conflicts).join(', ')} survived the ` +
+              `"${this.deps.cfg.onConflict}" auto-resolution`
+          );
+        }
+        // The count comes from the manual pass: the policy pass, by design, no longer sees a conflict.
+        policyClause = `conflicts auto-resolved: ${this.deps.cfg.onConflict} on ${merge.conflictedFileCount} file(s); `;
+        logger.console(
+          chalk.green(
+            `Resolved ${merge.conflictedFileCount} conflicted file(s) by "${this.deps.cfg.onConflict}" — ` +
+              `snapping the merged tree`
+          )
+        );
+      } else {
+        logger.console(
+          chalk.green(`Merged lane ${laneIdStr} into ${branch} with no conflicts — snapping the merged tree`)
+        );
       }
-      logger.console(
-        chalk.green(`Merged lane ${laneIdStr} into ${branch} with no conflicts — snapping the merged tree`)
-      );
 
       // ---- step 2: snap + export the merged tree onto the lane ---------------------------------
       // The working tree now holds both sides, so this snap is the merge commit on the lane. Any
@@ -892,7 +945,7 @@ export class LaneSyncExecutor {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
       }
       return (
-        `${laneName} -> merge-diverged (merged lane into branch, then exported; lane ${laneIdStr} @ ` +
+        `${laneName} -> merge-diverged (${policyClause}merged lane into branch, then exported; lane ${laneIdStr} @ ` +
         `${laneHead.slice(0, 9)}, branch ${branch} updated)`
       );
     } catch (e: any) {
@@ -989,9 +1042,15 @@ export class LaneSyncExecutor {
    * - a component that is only on the lane is added to the workspace (`getNewComponentsFromLane`,
    *   which is why `workspaceOnly` must stay false).
    *
-   * Returns the ids whose merge left conflicts, so the caller can halt with them. It returns errors
+   * Returns the ids whose merge left conflicts (plus how many files they conflicted in, which is what
+   * the `onConflict` policy summary reports), so the caller can halt with them. It returns errors
    * rather than throwing; `bit checkout` throws for any component it refuses to touch (e.g. a
    * merge-pending one), which is a halt, not a crash.
+   *
+   * `mergeStrategy` defaults to `'manual'` — detect conflicts, write the markers, let the caller decide.
+   * `'ours'`/`'theirs'` are the `onConflict` policies' auto-resolution; the side mapping is stated and
+   * evidenced at the call site in `executeMergeDiverged`. Under either, bit reports no conflict statuses
+   * (the side is picked, not marked), so the returned `conflicts` is empty by construction.
    *
    * Why not `mergeLanes.mergeLane(...)`: both "sides" of this divergence are the *same lane id* (the
    * lane on bit.cloud vs. the state the branch was last synced from), and `validateMergeFlags` throws
@@ -1002,7 +1061,10 @@ export class LaneSyncExecutor {
    * snap/tag it first`), which is exactly the branch's state here. `checkout head` is the operation
    * bit's own error message points at, and it keeps the correct merge base.
    */
-  private async mergeLaneIntoBranchWorkingTree(laneIdStr: string): Promise<{ conflicts: string[]; error?: Error }> {
+  private async mergeLaneIntoBranchWorkingTree(
+    laneIdStr: string,
+    mergeStrategy: MergeStrategy = 'manual'
+  ): Promise<{ conflicts: string[]; conflictedFileCount: number; error?: Error }> {
     const { logger, lanes } = this.deps;
     try {
       // `checkout head` merges into *the current lane*, so the workspace must already be on the lane —
@@ -1021,6 +1083,7 @@ export class LaneSyncExecutor {
       if (current !== target.toString()) {
         return {
           conflicts: [],
+          conflictedFileCount: 0,
           error: new Error(
             `the branch's .bitmap points at "${current ?? 'main'}" ` +
               `rather than ${laneIdStr}, so the lane's snaps cannot be merged into the branch's working tree`
@@ -1033,30 +1096,46 @@ export class LaneSyncExecutor {
       await ensureCurrentLaneObject(lanes);
 
       logger.console(
-        chalk.blue(`Merging lane ${laneIdStr} into the branch's working tree (bit checkout head --manual)`)
+        chalk.blue(
+          `Merging lane ${laneIdStr} into the branch's working tree (bit checkout head ` +
+            `${mergeStrategy === 'manual' ? '--manual' : `--auto-merge-resolve ${mergeStrategy}`})`
+        )
       );
       // `checkoutByCLIValues` (rather than `checkout`) because it runs `importer.importCurrentObjects()`
       // first, which fetches the remote lane object and its new components — without it, `head` would
       // resolve to the lane heads this workspace already had, i.e. to no merge at all.
       const results = await lanes.checkout.checkoutByCLIValues('', {
         head: true,
-        // 'manual' writes conflict markers and reports the files as conflicted instead of prompting or
-        // silently picking a side. We detect the conflicts below and halt.
-        mergeStrategy: 'manual',
+        // 'manual' (the default) writes conflict markers and reports the files as conflicted instead
+        // of prompting or silently picking a side; the caller detects the conflicts and decides.
+        // 'ours'/'theirs' pick a side per the onConflict policy — see executeMergeDiverged.
+        mergeStrategy,
         promptMergeOptions: false,
         skipNpmInstall: true,
         workspaceOnly: false,
       });
 
-      const conflicts = (results.components || [])
-        .filter((comp) => Object.values(comp.filesStatus || {}).some(isConflictFileStatus))
-        .map((comp) => comp.id.toStringWithoutVersion());
+      // Per-file, aggregated per component: the halt reason names components (bounded, human-sized),
+      // while the policy summary reports the file count — "git-wins on 3 file(s)" is the honest unit,
+      // since that is what the policy actually rewrote.
+      let conflictedFileCount = 0;
+      const conflicts: string[] = [];
+      (results.components || []).forEach((comp) => {
+        const conflictedFiles = Object.values(comp.filesStatus || {}).filter(isConflictFileStatus);
+        if (!conflictedFiles.length) return;
+        conflictedFileCount += conflictedFiles.length;
+        conflicts.push(comp.id.toStringWithoutVersion());
+      });
       // Belt and braces: `leftUnresolvedConflicts` is bit's own summary flag. If it disagrees with the
       // per-file scan, trust it — a missed conflict would get exported as if it were resolved.
       if (!conflicts.length && results.leftUnresolvedConflicts) conflicts.push('(component not reported)');
-      return { conflicts };
+      return { conflicts, conflictedFileCount };
     } catch (e: any) {
-      return { conflicts: [], error: e instanceof Error ? e : new Error(String(e?.message ?? e)) };
+      return {
+        conflicts: [],
+        conflictedFileCount: 0,
+        error: e instanceof Error ? e : new Error(String(e?.message ?? e)),
+      };
     }
   }
 
