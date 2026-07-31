@@ -8,6 +8,7 @@ import {
   crossScopeSkipSummary,
   dryRunSummaryLine,
   foreignLaneComponents,
+  haltCommentBody,
   isProtectedBranch,
   laneHeadFingerprint,
   LaneSyncExecutor,
@@ -252,6 +253,37 @@ describe('syncLane outer catch under --dry-run', () => {
     const summary = await throwingExecutor(gitHostCalls).syncLane({ hostScope: 'acme.shop', name: '-hostile' });
     expect(summary).to.match(/^HALTED -hostile -> unexpected error: .*not a valid git branch name/);
     expect(gitHostCalls).to.deep.equal([]);
+  });
+});
+
+// bit's lane-name charset admits `$`, `-`, `_` and `!`, so an unquoted runbook shell-expands when pasted.
+describe('haltCommentBody', () => {
+  const LANE_NAME = 'fix-$home-and-!bang';
+
+  it('single-quotes every value it interpolates into a command', () => {
+    const body = haltCommentBody({
+      reason: 'merge conflicts in: acme.shop/comp1',
+      branch: LANE_NAME,
+      laneId: `acme.shop/${LANE_NAME}`,
+    });
+    expect(body).to.include(`git fetch origin && git checkout '${LANE_NAME}'`);
+    expect(body).to.include(`bit lane import 'acme.shop/${LANE_NAME}'`);
+    expect(body).to.include(`git push origin '${LANE_NAME}'`);
+    // the reason is prose, not a command, and the runbook still reads as one
+    expect(body).to.include('merge conflicts in: acme.shop/comp1');
+    expect(body).to.include('Remove the `bit-sync-conflict` label to resume syncing.');
+  });
+
+  // A configured `branches` override only has to be a valid git ref, and git accepts a quote in one.
+  it('escapes a value that itself contains a quote, rather than ending the quoting early', () => {
+    const body = haltCommentBody({ reason: 'x', branch: "it's-a-branch", laneId: 'acme.shop/lane' });
+    expect(body).to.include(`git checkout 'it'\\''s-a-branch'`);
+  });
+
+  it('leaves an overriding note alone: it carries no commands to quote', () => {
+    const body = haltCommentBody({ reason: 'x', branch: LANE_NAME, laneId: 'acme.shop/lane', note: 'nothing to do' });
+    expect(body).to.include('nothing to do');
+    expect(body).to.not.include('git checkout');
   });
 });
 

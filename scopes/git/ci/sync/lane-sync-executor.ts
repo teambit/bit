@@ -1317,10 +1317,18 @@ export function laneSyncPrBody({
 }
 
 /**
+ * Single-quote a value interpolated into a copy-pasteable shell command. Lane names may contain `$` and
+ * `!`, and a configured branch name may contain anything git accepts as a ref — including a quote.
+ */
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+/**
  * Resolution instructions posted on a halted PR. `note` replaces the default steps for halts where
  * they do not apply (the branch-aliasing halt, whose PR belongs to a different lane).
  */
-function haltCommentBody({
+export function haltCommentBody({
   reason,
   branch,
   laneId,
@@ -1334,10 +1342,10 @@ function haltCommentBody({
   const resolution =
     note ??
     `To resolve locally:
-  git fetch origin && git checkout ${branch}
-  bit lane import ${laneId}
+  git fetch origin && git checkout ${shellQuote(branch)}
+  bit lane import ${shellQuote(laneId)}
   # resolve conflicts, commit the result, then:
-  git push origin ${branch}`;
+  git push origin ${shellQuote(branch)}`;
   return `bit-git-sync could not reconcile this branch automatically: ${reason}
 
 ${resolution}
