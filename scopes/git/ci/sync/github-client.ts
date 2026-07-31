@@ -1,7 +1,21 @@
 import type { GitHostProvider, PrInfo } from './git-host-provider';
 
+/**
+ * The `owner/repo` out of a github.com remote URL, or undefined when the URL does not name one.
+ *
+ * Case-insensitive (DNS is), port-tolerant, and anchored to the *authority*: `github.com` must sit
+ * right after the scheme's `//` or a `user@`, never as a path segment of some other host. The port is
+ * the subtle part — in a scheme URL (`ssh://git@github.com:22/owner/repo`) a `:digits` after the host
+ * is a port, but in the scp-like form (`git@github.com:12345/repo`) the colon starts the PATH and an
+ * all-digits owner is a legal GitHub username — so `:digits` is stripped only when a scheme says it
+ * is a port.
+ */
 export function parseGitHubRepo(remoteUrl: string): string | undefined {
-  const match = remoteUrl.match(/github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/);
+  const url = remoteUrl.trim();
+  const hasScheme = /^[a-z+]+:\/\//i.test(url);
+  const match = hasScheme
+    ? url.match(/(?:\/\/|@)github\.com(?::\d+)?\/([^/]+\/[^/]+?)(?:\.git)?$/i)
+    : url.match(/(?:^|@)github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/i);
   return match?.[1];
 }
 
@@ -88,9 +102,8 @@ export class GitHubClient implements GitHostProvider {
     // direction also matches how `origin` outranks `GITHUB_REPOSITORY` above.
     const token = process.env.BIT_GITHUB_TOKEN || process.env.GITHUB_TOKEN;
     // The remote is only allowed to name the repository once it is established to *be* a github.com
-    // remote. `parseGitHubRepo` is unanchored (it searches for `github.com/<owner>/<repo>` anywhere in
-    // the string), so without this guard `https://mygithub.com/acme/shop` would yield `acme/shop` and
-    // mint a client pointed at api.github.com for a repository on an entirely different host.
+    // remote. `parseGitHubRepo` anchors github.com to the URL authority itself, but the claim decision
+    // stays here, on `isGitHubRemote` — one host test, one extraction, neither trusting the other.
     // A remote we can see and that is demonstrably NOT github's is a hard no, whatever the environment
     // says. `GITHUB_REPOSITORY` is set for every job on GitHub Actions, including ones whose `origin` is
     // a GitLab/Bitbucket mirror — without this, such a run mints a client for the env var's repository

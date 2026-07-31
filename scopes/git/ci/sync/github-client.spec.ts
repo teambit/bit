@@ -8,6 +8,30 @@ describe('parseGitHubRepo', () => {
     expect(parseGitHubRepo('https://github.com/acme/shop')).to.equal('acme/shop');
     expect(parseGitHubRepo('https://gitlab.com/acme/shop.git')).to.equal(undefined);
   });
+
+  /**
+   * `isGitHubRemote` lower-cases and port-strips its host test, so it CLAIMS these remotes — and a
+   * claim is exclusive. A parse that then fails leaves the provider "claimed but unconfigured" and the
+   * whole run silently degrades to PR-less mode: every create/close/label/comment skipped.
+   */
+  it('parses what the claim test claims: mixed-case hosts and explicit ports', () => {
+    expect(parseGitHubRepo('https://GitHub.com/acme/shop.git')).to.equal('acme/shop');
+    expect(parseGitHubRepo('https://github.com:443/acme/shop.git')).to.equal('acme/shop');
+    expect(parseGitHubRepo('ssh://git@github.com:22/acme/shop.git')).to.equal('acme/shop');
+  });
+
+  /**
+   * In the scp-like form the colon starts the PATH, and an all-digits owner is a legal GitHub
+   * username — `:digits` may only be read as a port when a scheme says it is one.
+   */
+  it('keeps an all-digits scp owner as the owner, never a port', () => {
+    expect(parseGitHubRepo('git@github.com:12345/shop.git')).to.equal('12345/shop');
+  });
+
+  it('rejects github.com as a path segment of another host, in both URL forms', () => {
+    expect(parseGitHubRepo('https://gitlab.example.com/mirrors/github.com/acme/repo.git')).to.equal(undefined);
+    expect(parseGitHubRepo('git@gitlab.example.com:mirrors/github.com/acme/repo.git')).to.equal(undefined);
+  });
 });
 
 describe('isGitHubRemote', () => {
