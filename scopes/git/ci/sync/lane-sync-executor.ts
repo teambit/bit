@@ -22,7 +22,7 @@ import {
 } from './sync-state';
 import { currentLaneIdStr, ensureCurrentLaneObject } from './workspace-lane';
 import type { GitHostProvider, PrInfo } from './git-host-provider';
-import type { BranchKeepReason, LaneOwnershipEvidence } from './sync-planner';
+import type { BranchKeepReason, LaneOwnershipEvidence, LaneSyncAction } from './sync-planner';
 import { planLaneSync } from './sync-planner';
 import {
   addAllExceptScopeAndModules,
@@ -189,6 +189,17 @@ export function crossScopeMidFlightHaltReason(branch: string, foreignIds: string
  */
 export function isProtectedBranch(branch: string, defaultBranch: string, mainSyncBranch: string): boolean {
   return branch === defaultBranch || branch === mainSyncBranch;
+}
+
+/**
+ * The summary line a dry run reports for a planned action. A planned halt carries the same prefix the
+ * real run would: `summarizeSync` recognizes that prefix and nothing else, so without it a `--dry-run`
+ * exits 0 on a plan that needs a human. Refusals never reach here — they are returned before planning.
+ */
+export function dryRunSummaryLine(laneName: string, action: LaneSyncAction): string {
+  return action.type === 'halt'
+    ? `${HALT_SUMMARY_PREFIX} ${laneName} -> ${action.reason}`
+    : `${laneName} -> ${action.type}`;
 }
 
 /** Why each `BranchKeepReason` withheld the deletion — one wording for the PR comment and the summary. */
@@ -394,7 +405,7 @@ export class LaneSyncExecutor {
     );
 
     if (dryRun) {
-      const line = `${laneName} -> ${action.type}`;
+      const line = dryRunSummaryLine(laneName, action);
       logger.console(formatWarningSummary(`Dry-run: ${line}`));
       return line;
     }

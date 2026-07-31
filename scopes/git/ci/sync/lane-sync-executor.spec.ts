@@ -6,6 +6,7 @@ import {
   crossScopeMidFlightHaltReason,
   crossScopeRefusal,
   crossScopeSkipSummary,
+  dryRunSummaryLine,
   foreignLaneComponents,
   isProtectedBranch,
   laneHeadFingerprint,
@@ -251,6 +252,26 @@ describe('syncLane outer catch under --dry-run', () => {
     const summary = await throwingExecutor(gitHostCalls).syncLane({ hostScope: 'acme.shop', name: '-hostile' });
     expect(summary).to.match(/^HALTED -hostile -> unexpected error: .*not a valid git branch name/);
     expect(gitHostCalls).to.deep.equal([]);
+  });
+});
+
+// `summarizeSync` decides the exit code by scanning for the prefix and nothing else, so a prefix-less
+// line makes a dry run report success on a plan the real run would have halted on.
+describe('dryRunSummaryLine', () => {
+  it('carries the HALTED prefix and the reason for a planned halt, so the run exits non-zero', () => {
+    const line = dryRunSummaryLine('my-lane', { type: 'halt', reason: 'cannot tell which side is newer' });
+    expect(line).to.equal('HALTED my-lane -> cannot tell which side is newer');
+  });
+
+  it('leaves every other planned action unprefixed — those runs are healthy', () => {
+    (['import-lane', 'export-branch', 'merge-diverged'] as const).forEach((type) => {
+      const line = dryRunSummaryLine('my-lane', { type });
+      expect(line, type).to.equal(`my-lane -> ${type}`);
+      expect(line, type).to.not.contain('HALTED');
+      expect(line, type).to.not.contain('REFUSED');
+    });
+    expect(dryRunSummaryLine('my-lane', { type: 'noop', reason: 'converged' })).to.equal('my-lane -> noop');
+    expect(dryRunSummaryLine('my-lane', { type: 'close-pr', deleteBranch: true })).to.equal('my-lane -> close-pr');
   });
 });
 

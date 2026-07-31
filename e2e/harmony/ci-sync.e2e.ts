@@ -256,6 +256,32 @@ describe('bit ci sync', function () {
       expect(remoteBranchExists(SYNC_BRANCH)).to.be.false;
     });
 
+    // A planned halt must exit non-zero exactly as the real run would — `summarizeSync` recognizes the
+    // HALTED prefix and nothing else. The shape: the lane's branch carries dev commits but records no bit
+    // state for it, so the planner cannot tell which side is newer.
+    it('F2: a --dry-run whose PLAN is a halt exits non-zero, with the prefix the real run uses', () => {
+      const refsBefore = remoteRefs();
+      helper.command.runCmd(`git checkout -f -b ${LANE} origin/${defaultBranch}`);
+      helper.fs.outputFile('docs/plan.md', 'dev work this repository never gave bit any state for\n');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "docs: dev work on a lane-mapped branch"');
+      helper.command.runCmd(`git push origin ${LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+      try {
+        const { output, exitCode } = syncRun(`${LANE} --dry-run`);
+        expect(exitCode, `bit ci sync --dry-run output:\n${output}`).to.not.equal(0);
+        expect(output).to.include(`HALTED ${LANE} -> branch has commits but its .bitmap records no state`);
+        expect(output).to.include('bit ci sync could not reconcile 1 target(s)');
+        expect(output).to.include('Dry-run:');
+      } finally {
+        // leave the block's refs as F found them — the local branch too, or the next run refuses to reset it
+        helper.command.runCmd(`git push origin :refs/heads/${LANE}`);
+        helper.command.runCmd(`git branch -D ${LANE}`);
+        gitFetch();
+      }
+      expect(remoteRefs()).to.equal(refsBefore);
+    });
+
     it('E: --main pushes the scope-resolved drift onto the sync branch, never the default branch, then converges', () => {
       const { output, exitCode } = syncRun('--main');
       // unexported source drift on the default branch must not halt the run
