@@ -98,6 +98,25 @@ export class SyncOrchestrator {
       );
     }
 
+    // A lane argument, `--branch` and `--main` are three spellings of "reconcile exactly this one
+    // target", so any two of them contradict each other. They used to be resolved by code order —
+    // `--main` first, then `--branch`, then the lane argument: the winner ran, the loser was silently
+    // dropped, and the run reported success while a target the operator named was never even looked at.
+    // Refuse and name both, for the same reason the `--all` guard above does.
+    const selectors = [
+      opts.lane && `a lane argument ("${opts.lane}")`,
+      opts.branch && `--branch ("${opts.branch}")`,
+      opts.main && '--main',
+    ].filter((selector): selector is string => Boolean(selector));
+    if (selectors.length > 1) {
+      const winner = opts.main ? '--main' : `--branch ("${opts.branch}")`;
+      throw new BitError(
+        `${selectors[0]} cannot be combined with ${selectors.slice(1).join(' or with ')}: each selects ` +
+          `the single target this run reconciles, and only ${winner} would have run — the rest would be ` +
+          `silently dropped, leaving a run that reports success while a target you named was never visited`
+      );
+    }
+
     const cfg = resolveSyncConfig(this.deps.config.sync);
     const defaultScope = this.deps.workspace.defaultScope;
     const defaultBranch = await this.deps.ci.getDefaultBranchName();

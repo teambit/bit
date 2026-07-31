@@ -53,6 +53,58 @@ describe('SyncOrchestrator target guards', () => {
     expect(message).to.contain('--main');
   });
 
+  /**
+   * {lane argument, --branch, --main} are three spellings of "reconcile exactly this one target". Any
+   * two used to be resolved by code order (--main, then --branch, then the lane argument): the winner
+   * ran and the loser was silently dropped — same failure shape as the --all gap above, a target the
+   * operator explicitly named that was never visited, with no message saying so.
+   */
+  it('refuses a lane argument with --branch, naming both and the selector that would have silently won', async () => {
+    let message = '';
+    await orchestrator()
+      .sync({ lane: 'my-lane', branch: 'my-branch' })
+      .catch((err) => {
+        message = err.message;
+      });
+    expect(message).to.contain('a lane argument ("my-lane") cannot be combined with --branch ("my-branch")');
+    expect(message).to.contain('only --branch ("my-branch") would have run');
+  });
+
+  it('refuses a lane argument with --main', async () => {
+    let message = '';
+    await orchestrator()
+      .sync({ lane: 'my-lane', main: true })
+      .catch((err) => {
+        message = err.message;
+      });
+    expect(message).to.contain('a lane argument ("my-lane") cannot be combined with --main');
+    expect(message).to.contain('only --main would have run');
+  });
+
+  it('refuses --branch with --main', async () => {
+    let message = '';
+    await orchestrator()
+      .sync({ branch: 'my-branch', main: true })
+      .catch((err) => {
+        message = err.message;
+      });
+    expect(message).to.contain('--branch ("my-branch") cannot be combined with --main');
+    expect(message).to.contain('only --main would have run');
+  });
+
+  it('refuses all three together, naming every selector', async () => {
+    let message = '';
+    await orchestrator()
+      .sync({ lane: 'my-lane', branch: 'my-branch', main: true })
+      .catch((err) => {
+        message = err.message;
+      });
+    expect(message).to.contain(
+      'a lane argument ("my-lane") cannot be combined with --branch ("my-branch") or with --main'
+    );
+    expect(message).to.contain('only --main would have run');
+  });
+
   it('refuses --init combined with any other target, since it only scaffolds', async () => {
     let message = '';
     await orchestrator()
