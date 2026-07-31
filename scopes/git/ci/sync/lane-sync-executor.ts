@@ -298,14 +298,22 @@ export class LaneSyncExecutor {
   ): Promise<string> {
     const { cfg, logger } = this.deps;
     const laneName = target.name;
-    // The BRANCH mapping is by lane NAME only — a lane hosted elsewhere still mirrors onto the branch its
-    // name maps to. Everything addressed to bit, by contrast, uses the lane's REAL id: reading it from the
-    // remote, snapping/exporting onto it, and the id bit writes into the branch's `.bitmap` lane pointer
-    // (which is what later attributes the branch to this lane). Deriving that id from `defaultScope`
-    // instead would make the reconciler read, write and claim a lane that does not exist.
-    const branch = laneNameToBranch(laneName, cfg);
     const laneIdStr = `${target.hostScope}/${laneName}`;
+    // Declared outside the try so the catch can tell "reconciling failed" from "the name never mapped
+    // to a branch at all". The mapping itself must run INSIDE the try: `laneNameToBranch` throws on a
+    // lane name git cannot accept as a ref (a bit lane may legally start with '-', which a command line
+    // reads as an option — see ref-name.ts), and this method's contract is that it never throws — an
+    // unmappable lane met by an `--all` run would otherwise abort every lane after it plus the main
+    // sync. The orchestrator's enumeration does pre-filter such names, but that is a convention two
+    // files away, not a guarantee, and explicitly named targets never pass through it.
+    let branch: string | undefined;
     try {
+      // The BRANCH mapping is by lane NAME only — a lane hosted elsewhere still mirrors onto the branch its
+      // name maps to. Everything addressed to bit, by contrast, uses the lane's REAL id: reading it from the
+      // remote, snapping/exporting onto it, and the id bit writes into the branch's `.bitmap` lane pointer
+      // (which is what later attributes the branch to this lane). Deriving that id from `defaultScope`
+      // instead would make the reconciler read, write and claim a lane that does not exist.
+      branch = laneNameToBranch(laneName, cfg);
       return await this.reconcileLane({
         target,
         laneIdStr,
@@ -315,6 +323,14 @@ export class LaneSyncExecutor {
       });
     } catch (e: any) {
       const reason = `unexpected error: ${e?.message || e}`;
+      // The lane's name never resolved to a branch, so there is no branch to look a PR up by, nothing
+      // mid-flight, and nothing to annotate: report-only, on dry and wet runs alike. The line still
+      // carries the HALT prefix — the run must exit non-zero, because a lane the user maps is going
+      // unreconciled on every run until the name or the mapping changes.
+      if (branch === undefined) {
+        logger.console(chalk.red(`Cannot sync lane ${laneIdStr}: ${reason}`));
+        return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
+      }
       // `--dry-run` promises no pull request is created, closed, labelled or commented on, and this
       // catch fires for exceptions thrown BEFORE `reconcileLane`'s own dry-run handling gets a say —
       // so without the guard, the one lane that crashes early is exactly the one whose "no writes" run

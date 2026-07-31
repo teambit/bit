@@ -294,6 +294,22 @@ describe('syncLane outer catch under --dry-run', () => {
     expect(summary).to.equal('HALTED my-lane -> unexpected error: boom');
     expect(gitHostCalls).to.deep.equal(['findPrByBranch', 'addLabel', 'comment']);
   });
+
+  /**
+   * The branch mapping itself can throw: '-hostile' is a legal bit lane name (the charset allows a
+   * leading '-') but `laneNameToBranch` refuses it as a branch name, since a command line would read it
+   * as an option. That throw used to happen BEFORE the try — so one unmappable lane on the remote
+   * aborted every lane after it plus the main sync, violating the documented "does not throw" contract.
+   * The orchestrator's `--all` enumeration pre-filters such names, but that is a convention two files
+   * away, and explicit targets never pass through it.
+   */
+  it('a lane whose name cannot map to a branch halts report-only instead of throwing', async () => {
+    const gitHostCalls: string[] = [];
+    const summary = await throwingExecutor(gitHostCalls).syncLane({ hostScope: 'acme.shop', name: '-hostile' });
+    expect(summary).to.match(/^HALTED -hostile -> unexpected error: .*not a valid git branch name/);
+    // No branch was ever resolved, so there is no branch to look a PR up by and nothing to annotate.
+    expect(gitHostCalls).to.deep.equal([]);
+  });
 });
 
 /**
