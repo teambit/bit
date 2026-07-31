@@ -50270,19 +50270,7 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 bit:
-  depsRequiringBuild:
-    - '@apollo/protobufjs@1.2.2'
-    - '@parcel/watcher@2.5.1'
-    - bufferutil@4.0.3
-    - core-js-pure@3.39.0
-    - core-js@3.13.0
-    - core-js@3.37.1
-    - core-js@3.39.0
-    - core-js@3.9.0
-    - es5-ext@0.10.64
-    - esbuild@0.14.29
-    - msgpackr-extract@3.0.4
-    - utf-8-validate@5.0.5
+  depsRequiringBuild: []
 
 snapshots:
 
