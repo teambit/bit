@@ -32,12 +32,9 @@
     "api-server": {
         "name": "api-server",
         "scope": "teambit.harmony",
-        "version": "1.0.1117",
+        "version": "1.0.1118",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/api-server",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.4": {}
-        }
+        "rootDir": "scopes/harmony/api-server"
     },
     "application": {
         "name": "application",
@@ -302,12 +299,9 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "2.0.54",
+        "version": "2.0.55",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.4": {}
-        }
+        "rootDir": "scopes/harmony/bit"
     },
     "bit-map": {
         "name": "bit-map",
@@ -382,12 +376,9 @@
     "ci": {
         "name": "ci",
         "scope": "teambit.git",
-        "version": "1.0.476",
+        "version": "1.0.477",
         "mainFile": "index.ts",
-        "rootDir": "scopes/git/ci",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.4": {}
-        }
+        "rootDir": "scopes/git/ci"
     },
     "clear-cache": {
         "name": "clear-cache",
@@ -452,12 +443,9 @@
     "cloud": {
         "name": "cloud",
         "scope": "teambit.cloud",
-        "version": "0.0.1384",
+        "version": "0.0.1385",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/cloud",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.4": {}
-        }
+        "rootDir": "scopes/cloud/cloud"
     },
     "code": {
         "name": "code",
@@ -699,7 +687,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1162",
+        "version": "2.0.1163",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -1257,12 +1245,9 @@
     "lanes": {
         "name": "lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.1106",
+        "version": "1.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/lanes",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.4": {}
-        }
+        "rootDir": "scopes/lanes/lanes"
     },
     "legacy-component-log": {
         "name": "legacy-component-log",
@@ -1324,12 +1309,9 @@
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.1106",
+        "version": "1.0.1107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/merge-lanes",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.4": {}
-        }
+        "rootDir": "scopes/lanes/merge-lanes"
     },
     "merging": {
         "name": "merging",
@@ -1908,12 +1890,9 @@
     "pnpm": {
         "name": "pnpm",
         "scope": "teambit.dependencies",
-        "version": "1.0.1123",
+        "version": "1.0.1124",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/pnpm",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.4": {}
-        }
+        "rootDir": "scopes/dependencies/pnpm"
     },
     "prettier": {
         "name": "prettier",
@@ -2053,12 +2032,9 @@
     "ripple": {
         "name": "ripple",
         "scope": "teambit.cloud",
-        "version": "0.0.171",
+        "version": "0.0.172",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/ripple",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.4": {}
-        }
+        "rootDir": "scopes/cloud/ripple"
     },
     "schema": {
         "name": "schema",
@@ -2143,12 +2119,9 @@
     "status": {
         "name": "status",
         "scope": "teambit.component",
-        "version": "1.0.1110",
+        "version": "1.0.1111",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/status",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.4": {}
-        }
+        "rootDir": "scopes/component/status"
     },
     "string/capitalize": {
         "name": "string/capitalize",
@@ -2392,16 +2365,9 @@
     "ui/compare/lane-compare": {
         "name": "ui/compare/lane-compare",
         "scope": "teambit.lanes",
-        "version": "0.0.208",
+        "version": "0.0.209",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            },
-            "teambit.react/v17/react-env@1.1.82": "-"
-        }
+        "rootDir": "components/ui/compare/lane-compare"
     },
     "ui/compare/lane-compare-hooks/use-lane-diff-status": {
         "name": "ui/compare/lane-compare-hooks/use-lane-diff-status",
@@ -2413,15 +2379,9 @@
     "ui/compare/lane-compare-page": {
         "name": "ui/compare/lane-compare-page",
         "scope": "teambit.lanes",
-        "version": "0.0.176",
+        "version": "0.0.177",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/compare/lane-compare-page",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
+        "rootDir": "components/ui/compare/lane-compare-page"
     },
     "ui/component-compare/changelog": {
         "name": "ui/component-compare/changelog",
