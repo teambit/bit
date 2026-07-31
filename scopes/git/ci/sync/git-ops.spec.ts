@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import type { GitConfigIO } from './git-ops';
 import {
   ALL_HEADS_REFSPEC,
+  assertCheckoutableBranch,
   checkoutPristine,
   checkoutPristineRestore,
   commitWithIdentity,
@@ -351,6 +352,41 @@ describe('parseLsRemoteSymref / remoteHeadBranch', () => {
         throw new Error('could not read from remote repository');
       })
     ).to.equal(undefined);
+  });
+});
+
+/**
+ * The default branch is derived from the remote, not from validated config, so the primitive that
+ * builds the checkout argv is the last line of defence against an option-like name.
+ */
+describe('assertCheckoutableBranch', () => {
+  it('refuses a name git would read as an option, or reject as a ref, before any argv is built', () => {
+    ['-x', '--force', '', 'has space', 'a..b', 'refs/heads/main', 'ends.lock'].forEach((name) => {
+      expect(() => assertCheckoutableBranch(name), name).to.throw(/cannot check out/);
+    });
+  });
+
+  it('accepts ordinary names, slashed names included', () => {
+    ['main', 'master', 'release/main', 'feature/a-b_c', 'trunk'].forEach((name) => {
+      expect(() => assertCheckoutableBranch(name), name).to.not.throw();
+    });
+  });
+
+  it('is enforced by checkoutPristine itself, so every caller inherits it', async () => {
+    const steps: string[] = [];
+    let threw = false;
+    await checkoutPristine(
+      '-x',
+      undefined,
+      async () => {},
+      async (args) => {
+        steps.push(args.join(' '));
+      }
+    ).catch(() => {
+      threw = true;
+    });
+    expect(threw).to.equal(true);
+    expect(steps).to.deep.equal([]);
   });
 });
 

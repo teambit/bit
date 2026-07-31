@@ -1,4 +1,6 @@
+import { BitError } from '@teambit/bit-error';
 import { git } from '../git';
+import { validateBranchName } from './sync-config';
 
 /**
  * Git primitives shared by the lane and main sync executors; each encodes a decision that must stay
@@ -26,6 +28,22 @@ export async function cleanUntrackedScoped(run: GitArgsRunner = realGitRaw): Pro
 }
 
 /**
+ * Refuse a branch name git would read as an option or reject as a ref. Not every branch reaching the
+ * checkout comes from validated config: the default branch is derived from the remote
+ * (`getDefaultBranchName`), so the primitive that builds the argv is where the guard belongs — every
+ * caller inherits it.
+ */
+export function assertCheckoutableBranch(branch: string): void {
+  const problem = validateBranchName(branch);
+  if (problem) {
+    throw new BitError(
+      `bit ci sync cannot check out "${branch}": ${problem}. Rename the branch, or set the intended name ` +
+        `explicitly in the "teambit.git/ci" sync config.`
+    );
+  }
+}
+
+/**
  * Put the working tree on `branch` holding nothing but that commit's content, then make the workspace
  * re-read the checked-out `.bitmap`. Order matters: `checkout -f` (leftover tracked changes must not
  * abort the target), then the scoped clean (a forced checkout leaves untracked files in place, and
@@ -40,6 +58,7 @@ export async function checkoutPristine(
   reload: () => Promise<void>,
   run: GitArgsRunner = realGitRaw
 ): Promise<void> {
+  assertCheckoutableBranch(branch);
   if (startPoint && (await localBranchExists(branch, run))) {
     const containedIn = String((await run(['branch', '-r', '--contains', `refs/heads/${branch}`])) ?? '').trim();
     if (!containedIn) {

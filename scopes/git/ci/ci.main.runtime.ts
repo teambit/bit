@@ -44,6 +44,7 @@ import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider } from './sync/github-client';
 import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
+import { isValidGitBranchName } from './sync/sync-config';
 
 /**
  * Registered git hosts (GitHub ships built-in; others register from their own aspect).
@@ -313,12 +314,15 @@ export class CiMain {
     try {
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
       const local = parseOriginHeadRef(result);
-      if (local) return local;
+      // Every candidate is validated before it is returned: this value becomes a checkout target and a
+      // push refspec, and an option-like name ("-x") would be read by git as a flag. An unusable answer
+      // falls through to the next source rather than reaching the argv.
+      if (local && isValidGitBranchName(local)) return local;
     } catch {
       // no local origin/HEAD — normal in a fresh CI clone; ask the remote itself below.
     }
     const remote = await remoteHeadBranch();
-    if (remote) return remote;
+    if (remote && isValidGitBranchName(remote)) return remote;
     return this.probeDefaultBranchName();
   }
 
