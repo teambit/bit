@@ -2,7 +2,9 @@ import { expect } from 'chai';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { load as yamlLoad } from 'js-yaml';
+import YAML from 'yaml';
+
+const yamlLoad = (src: string) => YAML.parse(src);
 import {
   WORKFLOW_RELATIVE_PATHS,
   renderBitSyncWorkflow,
@@ -91,7 +93,7 @@ describe('init-scaffold', () => {
   // `branches: [a,b]c]` parses as a DIFFERENT two-element sequence with trailing garbage — a scaffolded
   // workflow that watches the wrong branches, or does not load at all.
   //
-  // Parsed with `js-yaml`, which is what makes these rows able to catch that: it is already a dependency
+  // Parsed with `yaml`, which is what makes these rows able to catch that: it is already a dependency
   // used by several e2e suites in this repo, and GitHub Actions itself consumes these files as YAML, so
   // "does a YAML parser agree" is the property that actually matters.
   // ---------------------------------------------------------------------------------------------
@@ -99,7 +101,7 @@ describe('init-scaffold', () => {
     /** `on:` — quoted here because YAML 1.1 parsers read a bare `on` key as the boolean `true`. */
     function onSection(rendered: string): any {
       const doc = yamlLoad(rendered) as any;
-      // js-yaml (YAML 1.1 core schema) resolves the plain scalar key `on` to `true`, so accept either.
+      // YAML 1.1-schema parsers resolve the plain scalar key `on` to `true`, so accept either key.
       return doc.on ?? doc[true as any];
     }
 
