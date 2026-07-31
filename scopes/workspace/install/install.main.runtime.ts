@@ -548,15 +548,19 @@ export class InstallMain {
    * while no longer tracked there. The scan reads already-loaded in-memory dep data (no fetch).
    */
   private enrichUnpublishedSnapDepError(err: Error, components: Component[]): Error {
-    // only act on the package manager's "no matching version" failure. other codes (auth, network, FETCH_404,
-    // registry outages) can mention the same package but signal a real problem we must not mask. the repo treats
-    // only ERR_PNPM_NO_MATCHING_VERSION as the "unpublished snap" signal (see lockfile-deps-graph-converter).
-    // pnpm errors are wrapped by pnpmErrorToBitError, which keeps the original error (with its code) on `cause`.
+    // only act on package manager failures that can be produced by an unpublished snap package. other codes
+    // (auth, network, FETCH_404, registry outages) can mention the same package but signal a real problem we must
+    // not mask. pnpm errors are wrapped by pnpmErrorToBitError, which keeps the original error on `cause`.
+    // `@pnpm/napi` can report the old TS engine's "No matching version found" path as
+    // SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER (or its prefixed ERR_PNPM_* form) for snap-versioned Bit package specs.
     const pnpmCode = (err as any)?.cause?.code ?? (err as any)?.code;
     const errMessage = err.message || '';
-    const isNoMatchingVersion =
-      pnpmCode === 'ERR_PNPM_NO_MATCHING_VERSION' || (!pnpmCode && errMessage.includes('No matching version found'));
-    if (!isNoMatchingVersion) return err;
+    const isUnpublishedSnapCandidate =
+      pnpmCode === 'ERR_PNPM_NO_MATCHING_VERSION' ||
+      pnpmCode === 'SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER' ||
+      pnpmCode === 'ERR_PNPM_SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER' ||
+      (!pnpmCode && errMessage.includes('No matching version found'));
+    if (!isUnpublishedSnapCandidate) return err;
 
     // checked-out components are linked from source, so they're never fetched from the registry.
     const workspaceIds = this.workspace.listIds();
@@ -1082,6 +1086,7 @@ export class InstallMain {
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
             const envId = await this.envs.calculateEnvId(app);
+            const appWorkspaceDeps = await this._getAppWorkspaceDeps(app, workspaceDeps);
             return [
               await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, app.id),
               {
@@ -1089,7 +1094,7 @@ export class InstallMain {
                 dependencies: {
                   ...(await this._getEnvDependencies(envId, workspaceDeps)),
                   ...appManifest.dependencies,
-                  ...workspaceDeps,
+                  ...appWorkspaceDeps,
                 },
                 installConfig: {
                   hoistingLimits: 'workspaces',
@@ -1100,6 +1105,41 @@ export class InstallMain {
         )
       )
     );
+  }
+
+  private async _getAppWorkspaceDeps(
+    app: Component,
+    workspaceDeps: Record<string, string>
+  ): Promise<Record<string, string>> {
+    const workspaceComponents = await this.workspace.list();
+    const workspaceComponentsById = new Map(
+      workspaceComponents.map((component) => [component.id.toStringWithoutVersion(), component])
+    );
+    const appWorkspaceDeps: Record<string, string> = {};
+    const visited = new Set<string>();
+
+    const addComponent = (component: Component) => {
+      const componentId = component.id.toStringWithoutVersion();
+      if (visited.has(componentId)) return;
+      visited.add(componentId);
+
+      const packageName = this.dependencyResolver.getPackageName(component);
+      if (workspaceDeps[packageName]) {
+        appWorkspaceDeps[packageName] = workspaceDeps[packageName];
+      }
+
+      for (const dep of this.dependencyResolver.getComponentDependencies(component)) {
+        const depComponent = workspaceComponentsById.get(dep.componentId.toStringWithoutVersion());
+        if (depComponent) {
+          addComponent(depComponent);
+        } else if (workspaceDeps[dep.packageName]) {
+          appWorkspaceDeps[dep.packageName] = workspaceDeps[dep.packageName];
+        }
+      }
+    };
+
+    addComponent(app);
+    return appWorkspaceDeps;
   }
 
   /**

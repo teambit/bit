@@ -1,100 +1,33 @@
-import getCredentialsByURI from 'credentials-by-uri';
 import type { RegistriesMap } from '@teambit/dependency-resolver';
-import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
-import type { Config } from '@pnpm/config';
-import { isEmpty } from 'lodash';
-import toNerfDart from 'nerf-dart';
+import type { ResolvedConfig } from '@pnpm/napi';
 
-type OriginalAuthConfig = {
-  originalAuthType: string;
-  originalAuthValue: string;
-};
-
-export function getRegistries(config: Config): RegistriesMap {
+export function getRegistries(config: ResolvedConfig): RegistriesMap {
   const registriesMap: RegistriesMap = {};
-
-  Object.keys(config.registries).forEach((regName) => {
-    const uri = config.registries[regName];
-    let credentials = getCredentialsByURI(config.rawConfig, uri);
-    let originalAuthConfig = getOriginalAuthConfigByUri(config.rawConfig, uri);
-    if (isEmpty(credentials)) {
-      credentials = getCredentialsByURI(config.rawConfig, switchTrailingSlash(uri));
-      originalAuthConfig = getOriginalAuthConfigByUri(config.rawConfig, switchTrailingSlash(uri));
-    }
-    registriesMap[regName] = {
-      uri,
-      alwaysAuth: !!credentials.alwaysAuth,
-      authHeaderValue: credentials.authHeaderValue,
-      ...originalAuthConfig,
+  for (const { name, url, authHeader } of config.registries) {
+    registriesMap[name] = {
+      uri: url,
+      alwaysAuth: !!authHeader,
+      authHeaderValue: authHeader,
+      ...originalAuthFromHeader(authHeader),
     };
-  });
+  }
   return registriesMap;
 }
 
-// based on https://github.com/pnpm/credentials-by-uri/blob/master/index.js
-function getOriginalAuthConfigByUri(config: Record<string, any>, uri: string): OriginalAuthConfig {
-  const nerfed = toNerfDart(uri);
-  const defnerf = toNerfDart(config.registry);
-
-  const creds = getScopedCredentials(nerfed, `${nerfed}:`, config);
-  if (nerfed !== defnerf) return creds;
-  const defaultCredentials = getScopedCredentials(nerfed, '', config);
-  return {
-    originalAuthType: creds.originalAuthType || defaultCredentials.originalAuthType,
-    originalAuthValue: creds.originalAuthValue || defaultCredentials.originalAuthValue,
-  };
-}
-
-function getScopedCredentials(nerfed: string, scope: string, config: Record<string, any>): OriginalAuthConfig {
-  const token = config[`${scope}_authToken`];
-  // Check for bearer token
-  if (token) {
-    return {
-      originalAuthType: `authToken`,
-      originalAuthValue: token,
-    };
+/**
+ * Reconstruct the npmrc-style credential a header came from, for consumers
+ * that regenerate `.npmrc` entries from Bit's registry model: `Bearer` is an
+ * `_authToken` credential and `Basic` an `_auth` (base64 `user:password`) one.
+ */
+function originalAuthFromHeader(authHeader: string | undefined): {
+  originalAuthType: string;
+  originalAuthValue: string;
+} {
+  if (authHeader?.startsWith('Bearer ')) {
+    return { originalAuthType: 'authToken', originalAuthValue: authHeader.slice('Bearer '.length) };
   }
-
-  const auth = config[`${scope}_auth`];
-
-  // Check for basic auth token
-  if (auth) {
-    return {
-      originalAuthType: `auth`,
-      originalAuthValue: auth,
-    };
+  if (authHeader?.startsWith('Basic ')) {
+    return { originalAuthType: 'auth', originalAuthValue: authHeader.slice('Basic '.length) };
   }
-
-  // Check for username/password auth
-  let username;
-  let password;
-  if (config[`${scope}username`]) {
-    username = config[`${scope}username`];
-  }
-  if (config[`${scope}_password`]) {
-    if (scope === '') {
-      password = config[`${scope}_password`];
-    } else {
-      password = Buffer.from(config[`${scope}_password`], 'base64').toString('utf8');
-    }
-  }
-
-  if (username && password) {
-    return {
-      originalAuthType: `auth`,
-      originalAuthValue: Buffer.from(`${username}:${password}`).toString('base64'),
-    };
-  }
-
-  return {
-    originalAuthType: '',
-    originalAuthValue: '',
-  };
-}
-
-function switchTrailingSlash(uri: string): string {
-  if (!uri.endsWith('/')) {
-    return `${uri}/`;
-  }
-  return stripTrailingChar(uri, '/');
+  return { originalAuthType: '', originalAuthValue: '' };
 }
