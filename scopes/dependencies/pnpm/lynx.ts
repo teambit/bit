@@ -455,16 +455,8 @@ export async function install(
       installsRunning[rootDir] = installPromise;
       const installResult: nodeApi.InstallResult = await installPromise;
       resolvedStoreDir = installResult.storeDir;
-      // `depsRequiringBuild` is undefined when the install did not compute
-      // the list (it was served from the frozen-lockfile path, or the engine
-      // predates `returnListOfDepsRequiringBuild`) — keep the previously
-      // recorded list then, rather than wiping it with an empty one.
-      const sortedDepsRequiringBuild =
-        installResult.depsRequiringBuild == null ? undefined : [...installResult.depsRequiringBuild].sort();
-      const bitAttrs =
-        sortedDepsRequiringBuild == null
-          ? preInstallBitAttrs
-          : { ...preInstallBitAttrs, depsRequiringBuild: sortedDepsRequiringBuild };
+      const sortedDepsRequiringBuild = sortDepsRequiringBuild(installResult.depsRequiringBuild);
+      const bitAttrs = mergeBitLockfileAttrs(preInstallBitAttrs, sortedDepsRequiringBuild);
       if (bitAttrs != null) {
         await addBitAttributesToLockfile(rootDir, bitAttrs);
       }
@@ -800,6 +792,30 @@ export async function resolveRemoteVersion(
       manifest,
     };
   }
+}
+
+/**
+ * Sort the engine's `depsRequiringBuild` for a stable lockfile block, or
+ * return undefined when the install did not compute the list at all —
+ * it was served from the frozen-lockfile path, or the engine predates
+ * `returnListOfDepsRequiringBuild`. Undefined is not an empty list: the
+ * install has no answer, so the recorded one has to stand.
+ */
+export function sortDepsRequiringBuild(depsRequiringBuild: string[] | undefined): string[] | undefined {
+  return depsRequiringBuild == null ? undefined : [...depsRequiringBuild].sort();
+}
+
+/**
+ * The `bit:` attributes to re-assert after an install, or undefined when
+ * there is nothing to write. See {@link sortDepsRequiringBuild} for why
+ * an uncomputed list leaves the recorded one untouched.
+ */
+export function mergeBitLockfileAttrs(
+  preInstallAttrs: Partial<BitLockfileAttributes> | undefined,
+  sortedDepsRequiringBuild: string[] | undefined
+): Partial<BitLockfileAttributes> | undefined {
+  if (sortedDepsRequiringBuild == null) return preInstallAttrs;
+  return { ...preInstallAttrs, depsRequiringBuild: sortedDepsRequiringBuild };
 }
 
 /**
