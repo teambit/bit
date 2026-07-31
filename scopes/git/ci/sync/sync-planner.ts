@@ -34,8 +34,11 @@ export type LaneSyncInput = {
   ownership: LaneOwnershipEvidence;
 };
 
-/** Why a `close-pr` is keeping the branch rather than deleting it. */
-export type BranchKeepReason = 'unmerged-commits' | 'tip-not-a-sync-commit';
+/**
+ * Why a `close-pr` is keeping the branch rather than deleting it. `tip-advanced-during-run` is the one
+ * the planner never emits: it is discovered when the executor re-reads the branch just before deleting.
+ */
+export type BranchKeepReason = 'unmerged-commits' | 'tip-not-a-sync-commit' | 'tip-advanced-during-run';
 
 export type LaneSyncAction =
   | { type: 'noop'; reason: string }

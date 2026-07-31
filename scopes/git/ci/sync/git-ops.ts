@@ -115,6 +115,44 @@ export async function fetchRemoteHeads(run: GitArgsRunner = realGitRaw): Promise
   await run(['fetch', 'origin', ALL_HEADS_REFSPEC]);
 }
 
+/** Refspec that updates exactly one remote-tracking ref — a mid-run re-read of a single branch. */
+export function singleHeadRefspec(branch: string): string {
+  return `+refs/heads/${branch}:refs/remotes/origin/${branch}`;
+}
+
+/**
+ * `origin/<branch>`'s tip as the remote has it NOW: every other ref a run reads comes from one fetch at
+ * its start. Undefined when the branch is gone or unreadable — never a stale sha, because the answer
+ * decides whether a branch deletion is still safe.
+ */
+export async function refetchBranchTip(branch: string, run: GitArgsRunner = realGitRaw): Promise<string | undefined> {
+  try {
+    await run(['fetch', 'origin', singleHeadRefspec(branch)]);
+    const out = await run(['rev-parse', `refs/remotes/origin/${branch}`]);
+    return String(out ?? '').trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * `git push` argv that deletes a remote branch only while its tip is still `expectedTipSha`. Full
+ * `:refs/heads/<b>` refspec so the branch name can never be read as an option; the lease makes the server
+ * itself refuse a racing update rather than lose it.
+ */
+export function deleteBranchArgs(branch: string, expectedTipSha: string): string[] {
+  return ['origin', `--force-with-lease=refs/heads/${branch}:${expectedTipSha}`, `:refs/heads/${branch}`];
+}
+
+/**
+ * Whether a failed push was the lease refusing. Two shapes: git's own client-side check ("stale info")
+ * and the server's ("cannot lock ref … is at X but expected Y"). Over-matching is the safe direction —
+ * the only consequence is reporting a branch as kept.
+ */
+export function isStaleLeaseRejection(message: string): boolean {
+  return /stale info|force-with-lease|but expected/i.test(message);
+}
+
 /** Whether `origin` has the given branch. Assumes a `git fetch` isn't required (uses `ls-remote`). */
 export async function branchExistsOnRemote(branch: string): Promise<boolean> {
   const out = await git.raw(['ls-remote', '--heads', 'origin', branch]);

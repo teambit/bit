@@ -254,6 +254,76 @@ describe('syncLane outer catch under --dry-run', () => {
   });
 });
 
+// The deletion decision is computed from refs fetched once per run; on an `--all` run the branch can
+// advance while earlier lanes are reconciled. Both seams are stubbed, so no repository is touched.
+describe('close-pr re-verifies the tip before retiring a branch', () => {
+  const EVIDENCE_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
+  const MOVED_SHA = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2';
+
+  function retirer(currentTip: string | undefined, pushError?: Error) {
+    const warnings: string[] = [];
+    const pushes: string[][] = [];
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {} as any,
+      logger: { console: () => {}, consoleWarning: (msg: string) => warnings.push(msg), error: () => {} } as any,
+      gitHost: undefined,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    (executor as any).currentBranchTip = async () => currentTip;
+    (executor as any).pushBranchDeletion = async (branch: string, sha: string) => {
+      pushes.push([branch, sha]);
+      if (pushError) throw pushError;
+    };
+    const closePr = () =>
+      (executor as any).executeClosePr({
+        laneName: 'my-lane',
+        laneIdStr: 'acme.shop/my-lane',
+        branch: 'my-lane',
+        defaultBranch: 'main',
+        deleteBranch: true,
+        expectedTipSha: EVIDENCE_SHA,
+      }) as Promise<string>;
+    return { closePr, warnings, pushes };
+  }
+
+  it('deletes at the evidence sha while the branch is still there', async () => {
+    const { closePr, pushes } = retirer(EVIDENCE_SHA);
+    expect(await closePr()).to.equal('my-lane -> close-pr (no open PR, branch my-lane deleted)');
+    expect(pushes).to.deep.equal([['my-lane', EVIDENCE_SHA]]);
+  });
+
+  it('KEEPS the branch when the tip moved during the run, pushing nothing at all', async () => {
+    const { closePr, warnings, pushes } = retirer(MOVED_SHA);
+    const summary = await closePr();
+    expect(summary).to.contain('branch my-lane kept: its tip advanced after the ownership evidence was read');
+    expect(pushes).to.deep.equal([]);
+    expect(warnings.join('\n')).to.contain(`its tip is now ${MOVED_SHA} rather than the ${EVIDENCE_SHA}`);
+  });
+
+  it('keeps the branch when the tip cannot be re-read at all, rather than trusting the stale answer', async () => {
+    const { closePr, pushes } = retirer(undefined);
+    expect(await closePr()).to.contain('branch my-lane kept: its tip advanced');
+    expect(pushes).to.deep.equal([]);
+  });
+
+  // The re-read and the push are not atomic; the server gets the last word, and it is not a crash.
+  it('reports a lease refusal as the same kept outcome', async () => {
+    const { closePr, warnings } = retirer(
+      EVIDENCE_SHA,
+      new Error('! [rejected] (delete) -> my-lane (stale info)\nerror: failed to push some refs')
+    );
+    expect(await closePr()).to.contain('branch my-lane kept: its tip advanced');
+    expect(warnings.join('\n')).to.contain('the remote refused the lease');
+  });
+
+  it('an unrelated push failure still reads as "left in place", not as a race', async () => {
+    const { closePr } = retirer(EVIDENCE_SHA, new Error('remote: GH006: Protected branch update failed'));
+    expect(await closePr()).to.equal('my-lane -> close-pr (no open PR, branch my-lane left in place)');
+  });
+});
+
 describe('isProtectedBranch', () => {
   it('refuses the default branch and the main sync branch', () => {
     expect(isProtectedBranch('develop', 'develop', 'bit-sync/main')).to.equal(true);

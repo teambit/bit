@@ -5,15 +5,19 @@ import {
   checkoutPristine,
   checkoutPristineRestore,
   commitWithIdentity,
+  deleteBranchArgs,
   localBranchExists,
   DEFAULT_GIT_USER_EMAIL,
   DEFAULT_GIT_USER_NAME,
   fetchRemoteHeads,
   isNonContentPath,
+  isStaleLeaseRejection,
   parseLsRemoteSymref,
   parseOriginHeadRef,
+  refetchBranchTip,
   remoteHeadBranch,
   resolveGitIdentity,
+  singleHeadRefspec,
 } from './git-ops';
 
 /** A read-only stand-in for `git config --get`. There is no setter: nothing may write the config. */
@@ -153,6 +157,66 @@ describe('fetchRemoteHeads', () => {
     });
     expect(calls).to.deep.equal([['fetch', 'origin', ALL_HEADS_REFSPEC]]);
     expect(ALL_HEADS_REFSPEC).to.equal('+refs/heads/*:refs/remotes/origin/*');
+  });
+});
+
+// A branch deletion is the one irreversible thing the reconciler does, and every input to it was read
+// from refs fetched once per run — so the tip is re-read here, and leased on in the push itself.
+describe('refetchBranchTip', () => {
+  it('re-fetches exactly that one head, then reads the remote-tracking ref it just wrote', async () => {
+    const argv: string[][] = [];
+    const tip = await refetchBranchTip('my-lane', async (args) => {
+      argv.push(args);
+      return args[0] === 'rev-parse' ? 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1\n' : '';
+    });
+    expect(argv).to.deep.equal([
+      ['fetch', 'origin', '+refs/heads/my-lane:refs/remotes/origin/my-lane'],
+      ['rev-parse', 'refs/remotes/origin/my-lane'],
+    ]);
+    expect(tip).to.equal('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
+    expect(singleHeadRefspec('my-lane')).to.equal('+refs/heads/my-lane:refs/remotes/origin/my-lane');
+  });
+
+  // A stale sha here would license deleting a commit that is no longer the tip; undefined keeps the branch.
+  it('is undefined — never a stale sha — when the fetch fails, the ref is gone, or the output is empty', async () => {
+    expect(
+      await refetchBranchTip('my-lane', async (args) => {
+        if (args[0] === 'fetch') throw new Error("couldn't find remote ref refs/heads/my-lane");
+        return 'staaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaale';
+      })
+    ).to.equal(undefined);
+    expect(await refetchBranchTip('my-lane', async () => '')).to.equal(undefined);
+    expect(await refetchBranchTip('my-lane', async () => undefined)).to.equal(undefined);
+  });
+});
+
+describe('deleteBranchArgs', () => {
+  const SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
+
+  it('leases the delete on the expected sha, keeping the full delete refspec', () => {
+    expect(deleteBranchArgs('my-lane', SHA)).to.deep.equal([
+      'origin',
+      `--force-with-lease=refs/heads/my-lane:${SHA}`,
+      ':refs/heads/my-lane',
+    ]);
+  });
+
+  // A bare `--delete <branch>` or a short lease ref would let a branch name be read as an option.
+  it('never passes the branch name as a bare argument', () => {
+    expect(deleteBranchArgs('-hostile', SHA)).to.deep.equal([
+      'origin',
+      `--force-with-lease=refs/heads/-hostile:${SHA}`,
+      ':refs/heads/-hostile',
+    ]);
+  });
+
+  // Both refusal shapes must read as a race: git's own check, and the server's when the client's passed.
+  it('recognizes the lease refusal, and not an unrelated push failure', () => {
+    expect(isStaleLeaseRejection('! [rejected] (delete) -> my-lane (stale info)')).to.equal(true);
+    expect(
+      isStaleLeaseRejection(`remote: error: cannot lock ref 'refs/heads/my-lane': is at ${SHA} but expected abc123`)
+    ).to.equal(true);
+    expect(isStaleLeaseRejection('remote: GH006: Protected branch update failed')).to.equal(false);
   });
 });
 

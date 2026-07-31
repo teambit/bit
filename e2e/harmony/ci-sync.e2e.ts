@@ -610,6 +610,8 @@ describe('bit ci sync', function () {
       expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('after-the-merge');
     });
 
+    // Also the end-to-end proof that the leased delete refspec is one a real server accepts: a wrong
+    // argv or a wrong expected sha leaves the branch in place, which the next line would catch.
     it('own-merged (fully merged into the default branch): should close the PR and delete the branch', () => {
       mergeLaneBranchIntoDefault();
       const { output, exitCode } = syncRun('--all');
@@ -620,6 +622,54 @@ describe('bit ci sync', function () {
       // still not the ordinary developer branch, on any of the three runs
       expect(remoteBranchExists(PLAIN_BRANCH)).to.be.true;
       expect(branchTipSha(PLAIN_BRANCH)).to.equal(plainBranchSha);
+    });
+  });
+
+  // Every input to the deletion decision is read from refs fetched once at the start of the run, so a
+  // branch can advance before the delete lands. A `pre-push` hook is the only way to interleave a remote
+  // update into the command's own push, i.e. to reach the window between the re-read and the delete.
+  describe('a branch that advances between the ownership read and the delete is kept, not deleted', () => {
+    const LANE = 'race-lane';
+    let defaultBranch: string;
+    let bareRepoPath: string;
+    let hookPath: string;
+
+    before(() => {
+      ({ defaultBranch, bareRepoPath } = setupSyncWorkspace({ lanes: ['*'] }));
+      createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('race-lane-snap') }, 'race lane snap');
+      seedSync(LANE);
+      // own-merged, so the plan really is a delete: `-s ours` records the merge without moving the tree.
+      gitFetch();
+      helper.command.runCmd(`git checkout -f -B ${defaultBranch} origin/${defaultBranch}`);
+      helper.command.runCmd(`git merge -s ours --no-edit origin/${LANE}`);
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      gitFetch();
+      helper.command.removeRemoteLane(LANE, '--force');
+      hookPath = path.join(helper.scopes.localPath, '.git', 'hooks', 'pre-push');
+      // insurance against a global core.hooksPath on the machine running the suite
+      helper.command.runCmd('git config core.hooksPath .git/hooks');
+    });
+
+    it('should keep the branch, name the race, and leave the racing commit as the tip', () => {
+      const racedTo = branchTipSha(defaultBranch);
+      // Runs while the delete push is in flight — after the command re-read the tip, before it lands.
+      fs.outputFileSync(
+        hookPath,
+        `#!/bin/sh\ngit --git-dir='${bareRepoPath}' update-ref refs/heads/${LANE} ${racedTo}\nexit 0\n`
+      );
+      fs.chmodSync(hookPath, 0o755);
+      try {
+        const { output, exitCode } = syncRun('--all');
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(`${LANE} -> close-pr`);
+        expect(output).to.include(`branch ${LANE} kept`);
+        expect(output).to.include('its tip advanced after the ownership evidence was read');
+        expect(output).to.not.include(`branch ${LANE} deleted`);
+        expect(remoteBranchExists(LANE), `origin/${LANE} must survive a racing update`).to.be.true;
+        expect(branchTipSha(LANE)).to.equal(racedTo);
+      } finally {
+        fs.removeSync(hookPath);
+      }
     });
   });
 

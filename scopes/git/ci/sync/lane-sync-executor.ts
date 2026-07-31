@@ -30,8 +30,11 @@ import {
   checkoutPristine,
   checkoutPristineRestore,
   commitWithIdentity,
+  deleteBranchArgs,
   fetchRemoteHeads,
   isAncestor,
+  isStaleLeaseRejection,
+  refetchBranchTip,
 } from './git-ops';
 
 /**
@@ -187,6 +190,13 @@ export function crossScopeMidFlightHaltReason(branch: string, foreignIds: string
 export function isProtectedBranch(branch: string, defaultBranch: string, mainSyncBranch: string): boolean {
   return branch === defaultBranch || branch === mainSyncBranch;
 }
+
+/** Why each `BranchKeepReason` withheld the deletion — one wording for the PR comment and the summary. */
+export const KEPT_BECAUSE: Record<BranchKeepReason, string> = {
+  'unmerged-commits': `it carries commits that are not in the default branch`,
+  'tip-not-a-sync-commit': `its tip is not one of this reconciler's own commits, so the work in it may exist nowhere else`,
+  'tip-advanced-during-run': `its tip advanced after the ownership evidence was read, so it may carry work this run never saw`,
+};
 
 export class LaneSyncExecutor {
   constructor(private deps: LaneSyncDeps) {}
@@ -436,6 +446,7 @@ export class LaneSyncExecutor {
           pr,
           deleteBranch: action.deleteBranch,
           keepReason: action.deleteBranch ? undefined : action.keepReason,
+          expectedTipSha: branchState.tipSha,
         });
       case 'halt':
         return this.executeHalt({ laneName, laneIdStr, branch, reason: action.reason, pr });
@@ -905,6 +916,7 @@ export class LaneSyncExecutor {
     pr,
     deleteBranch,
     keepReason,
+    expectedTipSha,
   }: {
     laneName: string;
     laneIdStr: string;
@@ -913,13 +925,31 @@ export class LaneSyncExecutor {
     pr?: PrInfo;
     deleteBranch: boolean;
     keepReason?: BranchKeepReason;
+    /** the tip every input to the deletion decision was read from; the delete leases on it */
+    expectedTipSha?: string;
   }): Promise<string> {
     const { logger, gitHost } = this.deps;
-    const keptBecause =
-      keepReason === 'tip-not-a-sync-commit'
-        ? `its tip is not one of this reconciler's own commits, so the work in it may exist nowhere else`
-        : `it carries commits that are not in the default branch`;
-    const closeComment = deleteBranch
+    const prClause = pr ? `PR #${pr.number} closed` : 'no open PR';
+
+    // Every input to the deletion decision — tip-is-sync-commit, dev commits, ownership — comes from refs
+    // fetched once at the start of the run, and an `--all` run can spend minutes on earlier lanes. Re-read
+    // this one branch first: the evidence licensed deleting THAT commit, not whatever the branch holds now.
+    let keep = keepReason;
+    let deleteAt: string | undefined;
+    if (deleteBranch) {
+      const currentTip = expectedTipSha ? await this.currentBranchTip(branch) : undefined;
+      if (currentTip && currentTip === expectedTipSha) deleteAt = currentTip;
+      else {
+        keep = 'tip-advanced-during-run';
+        logger.consoleWarning(
+          `Not retiring branch ${branch}: its tip is now ${currentTip ?? 'unreadable'} rather than the ` +
+            `${expectedTipSha ?? 'unknown'} its ownership evidence was read from — it advanced during this run`
+        );
+      }
+    }
+
+    const keptBecause = KEPT_BECAUSE[keep ?? 'unmerged-commits'];
+    const closeComment = deleteAt
       ? `Lane ${laneIdStr} was removed/archived on bit.cloud.`
       : `Lane ${laneIdStr} was removed/archived on bit.cloud. The branch \`${branch}\` is being kept: ` +
         `${keptBecause}.`;
@@ -929,32 +959,30 @@ export class LaneSyncExecutor {
     } else if (gitHost) {
       // Not an error: the PR may have been merged or closed by hand already, or never existed.
       logger.console(
-        chalk.yellow(
-          `No open PR found for ${branch} — ${deleteBranch ? 'only retiring the branch' : 'nothing to close'}`
-        )
+        chalk.yellow(`No open PR found for ${branch} — ${deleteAt ? 'only retiring the branch' : 'nothing to close'}`)
       );
     } else {
       logger.console(chalk.yellow(`No configured git host provider — skipping PR close for ${branch}`));
     }
 
-    if (!deleteBranch) {
-      if (keepReason === 'tip-not-a-sync-commit') {
+    if (!deleteAt) {
+      if (keep === 'tip-not-a-sync-commit') {
         logger.console(
           chalk.yellow(
             `lane removed remotely, but ${branch}'s tip is not a bit ci sync commit — a developer wrote the ` +
               `branch's current bit state, so it is not safe to assume the branch is only our mirror; keeping it`
           )
         );
-        return (
-          `${laneName} -> close-pr (${pr ? `PR #${pr.number} closed` : 'no open PR'}, branch ${branch} kept: ` +
-          `its tip was not written by bit ci sync)`
-        );
+        return `${laneName} -> close-pr (${prClause}, branch ${branch} kept: its tip was not written by bit ci sync)`;
+      }
+      if (keep === 'tip-advanced-during-run') {
+        return `${laneName} -> close-pr (${prClause}, branch ${branch} kept: ${keptBecause})`;
       }
       logger.console(
         chalk.yellow(`lane removed remotely but branch carries unmerged commits; keeping branch ${branch}`)
       );
       return (
-        `${laneName} -> close-pr (${pr ? `PR #${pr.number} closed` : 'no open PR'}, branch ${branch} kept: ` +
+        `${laneName} -> close-pr (${prClause}, branch ${branch} kept: ` +
         `it carries commits missing from the default branch)`
       );
     }
@@ -966,25 +994,39 @@ export class LaneSyncExecutor {
           branch === defaultBranch ? 'the default branch' : 'the main sync branch'
         }, whatever the ownership evidence concluded`
       );
-      return (
-        `${laneName} -> close-pr (${pr ? `PR #${pr.number} closed` : 'no open PR'}, branch ${branch} kept: ` +
-        `deleting it is never allowed)`
-      );
+      return `${laneName} -> close-pr (${prClause}, branch ${branch} kept: deleting it is never allowed)`;
     }
 
     // Best-effort: the branch may be protected, or already removed by hand.
     let branchDeleted = true;
+    let leaseRefused = false;
     try {
-      // `:refs/heads/<branch>` rather than `--delete <branch>`: the full delete refspec means the
-      // branch name can never be read as an option however it was configured.
-      await git.push(['origin', `:refs/heads/${branch}`]);
+      await this.pushBranchDeletion(branch, deleteAt);
     } catch (e: any) {
+      const message = String(e?.message || e);
       branchDeleted = false;
-      logger.consoleWarning(`Could not delete remote branch ${branch}: ${e?.message || e}`);
+      // The second belt: the re-read above and this push are not atomic, so the server gets the last word.
+      leaseRefused = isStaleLeaseRejection(message);
+      logger.consoleWarning(
+        leaseRefused
+          ? `Not retiring branch ${branch}: the remote refused the lease on ${deleteAt} — it advanced ` +
+              `between the re-read and the delete`
+          : `Could not delete remote branch ${branch}: ${message}`
+      );
     }
-    return `${laneName} -> close-pr (${pr ? `PR #${pr.number} closed` : 'no open PR'}, branch ${branch} ${
-      branchDeleted ? 'deleted' : 'left in place'
-    })`;
+    if (leaseRefused) {
+      return `${laneName} -> close-pr (${prClause}, branch ${branch} kept: ${KEPT_BECAUSE['tip-advanced-during-run']})`;
+    }
+    return `${laneName} -> close-pr (${prClause}, branch ${branch} ${branchDeleted ? 'deleted' : 'left in place'})`;
+  }
+
+  /** Seams for the retirement path, so the one irreversible outcome is unit-testable without a remote. */
+  private currentBranchTip(branch: string): Promise<string | undefined> {
+    return refetchBranchTip(branch);
+  }
+
+  private async pushBranchDeletion(branch: string, expectedTipSha: string): Promise<void> {
+    await git.push(deleteBranchArgs(branch, expectedTipSha));
   }
 
   /**

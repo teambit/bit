@@ -121,6 +121,11 @@ export type BranchSyncState = {
   hasDevCommits: boolean;
   /** The branch tip's full commit message (subject + body), for the sync-marker loop-guard probe. */
   tipMessage: string;
+  /**
+   * The tip sha every field above was read from. The retirement path re-reads the branch and refuses to
+   * delete anything else — the evidence licensed deleting THIS commit, not a later one.
+   */
+  tipSha?: string;
 };
 
 /**
@@ -134,6 +139,7 @@ export async function readBranchSyncState(
   defaultScope: string
 ): Promise<BranchSyncState> {
   const revision = `origin/${branch}`;
+  const tipSha = (await git.raw(['rev-parse', revision])).trim() || undefined;
   const tipMessage = (await git.raw(['log', revision, '-n', '1', '--format=%B'])).trimEnd();
   const stateCommit =
     (await git.raw(['log', revision, '--first-parent', '-n', '1', '--format=%H', '--', BIT_MAP])).trim() || undefined;
@@ -143,7 +149,7 @@ export async function readBranchSyncState(
   const range = stateCommit ? `${stateCommit}..${revision}` : `origin/${defaultBranch}..${revision}`;
   const count = await git.raw(['rev-list', range, '--count']);
 
-  return { stateCommit, bitmap, hasDevCommits: parseInt(count.trim(), 10) > 0, tipMessage };
+  return { stateCommit, bitmap, hasDevCommits: parseInt(count.trim(), 10) > 0, tipMessage, tipSha };
 }
 
 /**
