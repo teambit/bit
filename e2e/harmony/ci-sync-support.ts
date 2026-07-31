@@ -82,6 +82,30 @@ export function syncE2eHelpers(getHelper: () => Helper) {
   }
 
   /**
+   * The environment every suite block starts from. `sync` omitted => no config block at all (what the
+   * `--init` block needs). `bareRepoPath` is only interesting to the single-branch-clone block.
+   */
+  function setupSyncWorkspace(sync?: Record<string, any>): { defaultBranch: string; bareRepoPath: string } {
+    h().scopeHelper.setWorkspaceWithRemoteScope();
+    const bareRepoPath = setupGitRemote();
+    if (sync) setSyncConfig(sync);
+    return { defaultBranch: setupComponentsAndInitialCommit(), bareRepoPath };
+  }
+
+  /**
+   * A "developer on bit.cloud": a workspace clone that creates `lane`, snaps `files` onto it and
+   * exports. Returns the clone's path — the handle `laneSideEdit` / `laneTipFile` take.
+   */
+  function createLaneWithSnap(lane: string, files: Record<string, string>, message: string, laneArgs = ''): string {
+    const devPath = h().scopeHelper.cloneWorkspace();
+    h().command.runCmd(`bit lane create ${lane} ${laneArgs}`.trim(), devPath);
+    Object.entries(files).forEach(([filePath, content]) => fs.outputFileSync(path.join(devPath, filePath), content));
+    h().command.runCmd(`bit snap --message "${message}"`, devPath);
+    h().command.runCmd('bit export', devPath);
+    return devPath;
+  }
+
+  /**
    * Run a bit command capturing stdout, stderr AND the exit code — `bit ci sync` reports halts by
    * exiting non-zero with the summary on stderr, and `runCmd` throws on non-zero.
    */
@@ -94,6 +118,19 @@ export function syncE2eHelpers(getHelper: () => Helper) {
 
   function gitFetch() {
     h().command.runCmd('git fetch origin --prune');
+  }
+
+  /** `bit ci sync <args>`, then the fetch every branch assertion needs to see the pushed refs. */
+  function syncRun(args: string): { output: string; exitCode: number } {
+    const res = runBit(`bit ci sync ${args}`);
+    gitFetch();
+    return res;
+  }
+
+  /** A sync run that is fixture setup rather than an assertion target: it must succeed. */
+  function seedSync(args: string) {
+    const res = syncRun(args);
+    if (res.exitCode !== 0) throw new Error(`setup run "bit ci sync ${args}" failed:\n${res.output}`);
   }
 
   function remoteBranchExists(branch: string): boolean {
@@ -219,8 +256,12 @@ export function syncE2eHelpers(getHelper: () => Helper) {
     setupGitRemote,
     setupComponentsAndInitialCommit,
     setSyncConfig,
+    setupSyncWorkspace,
+    createLaneWithSnap,
     runBit,
     gitFetch,
+    syncRun,
+    seedSync,
     remoteBranchExists,
     remoteRefs,
     branchTipSha,
