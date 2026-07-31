@@ -74,6 +74,37 @@ export async function checkoutPristine(
   await reload();
 }
 
+/** Whether `refs/heads/<branch>` exists — i.e. the branch exists *locally*, not just on a remote. */
+export async function localBranchExists(branch: string, run: GitArgsRunner = realGitRaw): Promise<boolean> {
+  try {
+    await run(['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * `checkoutPristine` for the two `restoreWorkspace` paths, which differ from every other checkout in
+ * one way: whether a start point is safe depends on where the run is happening.
+ *
+ * - The local branch exists (a developer's repo, a full CI checkout): plain forced switch, **no**
+ *   start point. Passing `origin/<branch>` here would `-B`-reset the developer's default branch to
+ *   the remote's — silently discarding their unpushed local commits on it.
+ * - The local branch does not exist (detached-HEAD or single-branch CI checkout of some other ref):
+ *   fork it from `origin/<branch>`, which `fetchRemoteHeads` guarantees is present. There is no
+ *   local state to preserve, and the plain switch would fail — caught as a warn-only error that
+ *   strands the workspace on the last sync branch.
+ */
+export async function checkoutPristineRestore(
+  branch: string,
+  reload: () => Promise<void>,
+  run: GitArgsRunner = realGitRaw
+): Promise<void> {
+  const startPoint = (await localBranchExists(branch, run)) ? undefined : `origin/${branch}`;
+  await checkoutPristine(branch, startPoint, reload, run);
+}
+
 /**
  * Stage every change except the two paths `cleanUntrackedScoped` refuses to touch. Excluding them
  * matters because all three commit paths stage with `-A`: in a workspace whose `.gitignore` lacks

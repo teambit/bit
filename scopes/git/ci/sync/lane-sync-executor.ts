@@ -26,6 +26,7 @@ import {
   addAllExceptScopeAndModules,
   branchExistsOnRemote,
   checkoutPristine,
+  checkoutPristineRestore,
   ensureGitIdentity,
   fetchRemoteHeads,
   isAncestor,
@@ -1561,7 +1562,7 @@ export class LaneSyncExecutor {
         const switchErr = await this.deps.ci.switchToLaneForSync('main');
         if (switchErr) logger.consoleWarning(`Could not switch the workspace back to main: ${switchErr.message}`);
       }
-      await checkoutPristine(defaultBranch, undefined, () => this.deps.ci.reloadWorkspaceFromDisk());
+      await checkoutPristineRestore(defaultBranch, () => this.deps.ci.reloadWorkspaceFromDisk());
     } catch (e: any) {
       logger.consoleWarning(`Could not restore the workspace after sync: ${e?.message || e}`);
     }

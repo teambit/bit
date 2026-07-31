@@ -3,6 +3,8 @@ import type { GitConfigIO } from './git-ops';
 import {
   ALL_HEADS_REFSPEC,
   checkoutPristine,
+  checkoutPristineRestore,
+  localBranchExists,
   DEFAULT_GIT_USER_EMAIL,
   DEFAULT_GIT_USER_NAME,
   ensureGitIdentity,
@@ -257,5 +259,66 @@ describe('checkoutPristine', () => {
     await checkoutPristine('lane/x', 'origin/lane/x', reload, run);
     expect(steps.indexOf('<reload>')).to.equal(steps.length - 1);
     expect(steps.indexOf(CLEAN)).to.be.lessThan(steps.indexOf('<reload>'));
+  });
+});
+
+describe('localBranchExists', () => {
+  it('asks for the LOCAL ref, quietly verified — never a remote-tracking one', async () => {
+    const argv: string[][] = [];
+    await localBranchExists('main', async (args) => {
+      argv.push(args);
+    });
+    expect(argv).to.deep.equal([['rev-parse', '--verify', '--quiet', 'refs/heads/main']]);
+  });
+
+  it('true when the ref resolves, false when git exits non-zero', async () => {
+    expect(await localBranchExists('main', async () => 'abc123')).to.equal(true);
+    expect(
+      await localBranchExists('main', async () => {
+        throw new Error('exit 1');
+      })
+    ).to.equal(false);
+  });
+});
+
+/**
+ * The restore variant's whole content is WHICH `checkoutPristine` shape it picks, because each shape
+ * is wrong in the other environment: `-B origin/<branch>` in a developer's repo silently resets their
+ * default branch (discarding unpushed commits on it), and the plain switch in a detached-HEAD CI
+ * checkout fails outright — caught warn-only, stranding the workspace on the last sync branch.
+ */
+describe('checkoutPristineRestore', () => {
+  function restoreRecorder(localBranchIsPresent: boolean) {
+    const steps: string[] = [];
+    const run = async (args: string[]) => {
+      steps.push(args.join(' '));
+      if (args[0] === 'rev-parse' && !localBranchIsPresent) throw new Error('exit 1');
+    };
+    const reload = async () => {
+      steps.push('<reload>');
+    };
+    return { steps, run, reload };
+  }
+
+  it('local branch present: plain forced switch — never a -B that would reset it to origin', async () => {
+    const { steps, run, reload } = restoreRecorder(true);
+    await checkoutPristineRestore('main', reload, run);
+    expect(steps).to.deep.equal([
+      'rev-parse --verify --quiet refs/heads/main',
+      'checkout -f main',
+      'clean -fd -e .bit -e node_modules',
+      '<reload>',
+    ]);
+  });
+
+  it('local branch absent (detached-HEAD CI): forks it from origin/<branch> instead of failing', async () => {
+    const { steps, run, reload } = restoreRecorder(false);
+    await checkoutPristineRestore('main', reload, run);
+    expect(steps).to.deep.equal([
+      'rev-parse --verify --quiet refs/heads/main',
+      'checkout -f -B main origin/main',
+      'clean -fd -e .bit -e node_modules',
+      '<reload>',
+    ]);
   });
 });
