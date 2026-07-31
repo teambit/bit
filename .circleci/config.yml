@@ -688,7 +688,14 @@ jobs:
       - run: cd bit && bbit init
       - run:
           name: bbit install
-          command: cd bit && bbit install
+          # pnpm v12 stores the project user-agent in pnpm-workspace.yaml. Override the tracked
+          # local marker only in this CI worktree, then keep the temporary change out of later
+          # commits made from the persisted checkout (notably the release version bump).
+          command: >
+            cd bit &&
+            pnpm config set --location=project userAgent bit-repo-circleci &&
+            git update-index --skip-worktree pnpm-workspace.yaml &&
+            bbit install
       # `bbit install` compiles as part of the install, but that pass can fall back to the
       # default TypeScript compiler for components whose env is still being imported - notably
       # the node-babel-mocha ones (legacy.scope, legacy.consumer, scope.network, ...). tsc emits
