@@ -38,6 +38,7 @@ import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
+import { isPullRequestRef } from './pull-request-ref';
 import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
@@ -248,9 +249,55 @@ export class CiMain {
       if (process.env.GITHUB_HEAD_REF) return process.env.GITHUB_HEAD_REF;
 
       const branch = await git.branch();
+      if (branch.current && !isPullRequestRef(branch.current)) return branch.current;
+
+      // CircleCI can check out GitHub PRs as refs like "pull/10293". In that case the real source
+      // branch is the stable lane name we also use for post-merge cleanup. Do not prefer these env
+      // vars over a normal git branch; e2e tests intentionally create local feature branches while
+      // running under CircleCI.
+      if (process.env.CIRCLE_BRANCH && !isPullRequestRef(process.env.CIRCLE_BRANCH)) {
+        return process.env.CIRCLE_BRANCH;
+      }
+      const circlePullRequestBranch = await this.getCirclePullRequestBranchName();
+      if (circlePullRequestBranch) return circlePullRequestBranch;
+
       return branch.current;
     } catch (e: any) {
       throw new Error(`Unable to read branch: ${e.toString()}`);
+    }
+  }
+
+  private async getCirclePullRequestBranchName(): Promise<string | undefined> {
+    const pullRequestUrl = process.env.CIRCLE_PULL_REQUEST || process.env.CIRCLE_PULL_REQUESTS?.split(',')[0];
+    if (!pullRequestUrl) return undefined;
+
+    try {
+      const { pathname } = new URL(pullRequestUrl);
+      const [, owner, repo, pullSegment, pullNumber] = pathname.split('/');
+      if (!owner || !repo || pullSegment !== 'pull' || !pullNumber) return undefined;
+
+      const headers: Record<string, string> = {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      };
+      if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5_000);
+      try {
+        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`, {
+          headers,
+          signal: controller.signal,
+        });
+        if (!response.ok) return undefined;
+
+        const pullRequest = (await response.json()) as { head?: { ref?: string } };
+        return pullRequest.head?.ref;
+      } finally {
+        clearTimeout(timeout);
+      }
+    } catch {
+      return undefined;
     }
   }
 

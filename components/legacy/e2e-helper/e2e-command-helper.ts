@@ -116,7 +116,11 @@ export default class CommandHelper {
     if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
     const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
     const cmdWithFeatures = featuresTogglePrefix + cmd;
-    const env = envVariables ? { ...process.env, ...envVariables } : undefined;
+    const env = {
+      ...process.env,
+      ...envVariables,
+      ...childNodeOptions(envVariables?.NODE_OPTIONS ?? process.env.NODE_OPTIONS),
+    };
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmdWithFeatures); // eslint-disable-line no-console
     // `spawnSync` gets the data from stderr, `shell: true` is needed for Windows to get the output.
     const cmdOutput = getStderrAsPartOfTheOutput
@@ -1032,4 +1036,26 @@ export default class CommandHelper {
     const result = this.runCmd(`bit pattern "${pattern}" --json ${flags}`);
     return JSON.parse(result);
   }
+}
+
+/**
+ * The e2e runner is started with a large `--max-old-space-size` (5GB on CI),
+ * and spawned `bit` children inherit it through NODE_OPTIONS. V8 grows its
+ * heap toward whatever it is allowed before applying real GC pressure, so a
+ * single child can balloon past the CI container's memory limit and get
+ * OOM-killed even though it runs fine in a fraction of that. Cap children to
+ * a size that fits the container instead of the runner's allowance.
+ */
+function childNodeOptions(nodeOptions: string | undefined): { NODE_OPTIONS: string } {
+  const tokens = (nodeOptions ?? '').split(/\s+/).filter(Boolean);
+  const withoutHeapCap: string[] = [];
+  for (let i = 0; i < tokens.length; i += 1) {
+    if (tokens[i] === '--max-old-space-size') {
+      i += 1; // the split flag form carries its value in the next token
+      continue;
+    }
+    if (tokens[i].startsWith('--max-old-space-size=')) continue;
+    withoutHeapCap.push(tokens[i]);
+  }
+  return { NODE_OPTIONS: [...withoutHeapCap, '--max-old-space-size=2048'].join(' ') };
 }

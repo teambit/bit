@@ -41,7 +41,6 @@ import fs from 'fs-extra';
 import { assign, parse } from 'comment-json';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
-import { parseBareSpecifier } from '@pnpm/npm-resolver';
 import type { SourceFile } from '@teambit/component.sources';
 import type { ProjectManifest, DependencyManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
@@ -1453,7 +1452,9 @@ export class DependencyResolverMain {
 as an alternative, you can use "+" to keep the same version installed in the workspace`;
       }
       const isVersionValid = Boolean(
-        this.isValidVersionSpecifier(policyVersion) || allowedSpecialChars.includes(policyVersion)
+        this.isValidVersionSpecifier(policyVersion) ||
+          allowedSpecialChars.includes(policyVersion) ||
+          allowedPrefixes.some((prefix) => policyVersion.startsWith(prefix))
       );
       if (isVersionValid) return;
       errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not a valid semver version or range`;
@@ -1474,14 +1475,22 @@ as an alternative, you can use "+" to keep the same version installed in the wor
    *   E.g.: https://registry.npmjs.org/is-odd/-/is-odd-0.1.0.tgz)
    */
   isValidVersionSpecifier(spec: string): boolean {
-    return (
-      parseBareSpecifier(
-        spec,
-        'pkgname', // This argument is the package but we don't need it
-        'latest',
-        'https://registry.npmjs.org/'
-      ) != null
-    );
+    const trimmedSpec = spec.trim();
+    if (!trimmedSpec) return false;
+    if (semver.valid(trimmedSpec) || semver.validRange(trimmedSpec)) return true;
+    if (/^(?:workspace|file|link|git|git\+(?:https?|ssh)|ssh):/.test(trimmedSpec)) return true;
+    if (/^https?:\/\/registry\.npmjs\.org\/.+\/-.+\.tgz(?:[#?].*)?$/.test(trimmedSpec)) return true;
+    if (trimmedSpec.startsWith('npm:')) {
+      const alias = trimmedSpec.slice('npm:'.length);
+      // The version separator is the first `@` past a scope prefix — a
+      // scoped alias's leading `@` is part of the package name, and the
+      // version is optional (`npm:pkg` aliases the latest version).
+      const versionStart = alias.indexOf('@', alias.startsWith('@') ? 1 : 0);
+      const aliasName = versionStart === -1 ? alias : alias.slice(0, versionStart);
+      if (!/^(?:@[^/@\s]+\/)?[^/@\s]+$/.test(aliasName)) return false;
+      return versionStart === -1 || this.isValidVersionSpecifier(alias.slice(versionStart + 1));
+    }
+    return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(trimmedSpec);
   }
 
   /**
