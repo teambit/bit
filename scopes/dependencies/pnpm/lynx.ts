@@ -343,7 +343,11 @@ export async function install(
     emitLogEvent(event);
   };
 
-  const installOptions: nodeApi.InstallOptions = {
+  // `returnListOfDepsRequiringBuild` lands in `@pnpm/napi`'s InstallOptions
+  // type in the release that ships it; the intersection bridges the older
+  // published typing. Engines without the option ignore it and return
+  // `depsRequiringBuild` only for blocked builds.
+  const installOptions: nodeApi.InstallOptions & { returnListOfDepsRequiringBuild?: boolean } = {
     dir: rootDir,
     projects,
     storeDir,
@@ -412,6 +416,10 @@ export async function install(
     // Bit reports the deps requiring a build in the lockfile instead of failing.
     strictDepBuilds: false,
     pnpmHomeDir: options.pnpmHomeDir,
+    // Report every package with install scripts (not just blocked ones) in
+    // `depsRequiringBuild`, so the `bit:` lockfile block lists them even
+    // though Bit allows the builds to run.
+    returnListOfDepsRequiringBuild: true,
   };
 
   let dependenciesChanged = false;
@@ -447,16 +455,20 @@ export async function install(
       installsRunning[rootDir] = installPromise;
       const installResult: nodeApi.InstallResult = await installPromise;
       resolvedStoreDir = installResult.storeDir;
-      const sortedDepsRequiringBuild = [...(installResult.depsRequiringBuild ?? [])].sort();
-      if (sortedDepsRequiringBuild.length > 0 || preInstallBitAttrs != null) {
-        await addBitAttributesToLockfile(rootDir, {
-          ...preInstallBitAttrs,
-          depsRequiringBuild: sortedDepsRequiringBuild,
-        });
+      // `depsRequiringBuild` is undefined when the install did not compute
+      // the list (it was served from the frozen-lockfile path, or the engine
+      // predates `returnListOfDepsRequiringBuild`) — keep the previously
+      // recorded list then, rather than wiping it with an empty one.
+      const sortedDepsRequiringBuild =
+        installResult.depsRequiringBuild == null ? undefined : [...installResult.depsRequiringBuild].sort();
+      const bitAttrs =
+        sortedDepsRequiringBuild == null
+          ? preInstallBitAttrs
+          : { ...preInstallBitAttrs, depsRequiringBuild: sortedDepsRequiringBuild };
+      if (bitAttrs != null) {
+        await addBitAttributesToLockfile(rootDir, bitAttrs);
       }
-      if (sortedDepsRequiringBuild.length > 0) {
-        depsRequiringBuild = sortedDepsRequiringBuild as unknown as DepPath[];
-      }
+      depsRequiringBuild = sortedDepsRequiringBuild as unknown as DepPath[] | undefined;
       dependenciesChanged =
         installResult.stats.added + installResult.stats.removed + installResult.stats.linkedToRoot > 0;
     } catch (err: any) {
