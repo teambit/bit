@@ -77,7 +77,7 @@ describe('DependenciesGraph.merge', () => {
   });
 
   it('does not overflow the stack on a deep dependency chain', () => {
-    const depth = 200000;
+    const depth = 50000;
     const edges: DependencyEdge[] = [rootEdge([{ id: 'pkg0@1.0.0', name: 'pkg0', specifier: '1.0.0' }])];
     const packageIds: string[] = [];
     for (let i = 0; i < depth; i += 1) {

@@ -11,7 +11,9 @@ export async function readConfig(dir?: string): Promise<{ config: ResolvedConfig
   // `bit` process at startup — only commands that actually read the pnpm
   // config pay for it (same convention as the `./lynx` require sites).
   // eslint-disable-next-line global-require, import/no-dynamic-require
-  const { readConfig: napiReadConfig } = require('@pnpm/napi') as typeof import('@pnpm/napi');
+  const { readConfig: napiReadConfig } = require('@pnpm/napi') as {
+    readConfig: (options: { dir: string }) => ResolvedConfig;
+  };
   const config = napiReadConfig({ dir: path.resolve(dir ?? process.cwd()) });
   return { config, warnings: [] };
 }
