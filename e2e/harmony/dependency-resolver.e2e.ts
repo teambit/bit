@@ -504,7 +504,9 @@ describe('dependency-resolver extension', function () {
         const envPkgJson = helper.fs.readJsonFile(envPkgJsonPath);
         expect(envPkgJson.dependencies[examplePkg]).to.equal('*');
 
-        const lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')) as any;
+        const lockfile = yaml.load(
+          fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')
+        ) as any;
         const envSnapshot = Object.entries(lockfile.snapshots).find(([depPath]) =>
           depPath.startsWith(`${envPackageName}@0.0.2`)
         )?.[1] as any;
