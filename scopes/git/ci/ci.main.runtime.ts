@@ -205,7 +205,7 @@ export class CiMain {
     // public slot any other host aspect uses (mirroring how the generator aspect self-registers its
     // own templates). `GitHubHostProvider` resolves its credentials lazily, so registering here —
     // at aspect load, with no env and no git remote read yet — is always safe.
-    ci.registerGitHostProvider(new GitHubHostProvider());
+    ci.registerGitHostProvider(new GitHubHostProvider((message) => logger.consoleWarning(message)));
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),

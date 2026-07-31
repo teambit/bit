@@ -37,6 +37,13 @@ export function validateBranchName(name: string): string | undefined {
   if (name.includes('..')) return 'it contains ".."';
   if (name.includes('@{')) return 'it contains "@{"';
   if (name === '@') return 'it is "@", which git reserves';
+  // A *leading* `refs/` only. `git check-ref-format --branch` accepts `refs/heads/foo` as a branch name,
+  // but every push this code builds interpolates the value into a full ref — `HEAD:refs/heads/<b>` to
+  // push, `:refs/heads/<b>` to delete — so such a name becomes `refs/heads/refs/heads/foo`: a real ref,
+  // in the wrong place, that no `git checkout foo` will ever find. Mid-string `/refs/` is git-legal and
+  // unambiguous (`feature/refs/foo` doubles nothing) and stays accepted.
+  if (name.startsWith('refs/'))
+    return 'it starts with "refs/" — configure the bare branch name ("main", not "refs/heads/main")';
   if (name.startsWith('/') || name.endsWith('/')) return 'it starts or ends with "/"';
   if (name.includes('//')) return 'it contains an empty path component ("//")';
   if (name.endsWith('.')) return 'it ends with "."';

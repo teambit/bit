@@ -32,6 +32,25 @@ describe('isValidGitBranchName', () => {
     );
   });
 
+  /**
+   * `git check-ref-format --branch` accepts `refs/heads/foo`, so this is stricter than git on purpose:
+   * every push here interpolates the configured value into a full refspec (`HEAD:refs/heads/<b>`,
+   * `:refs/heads/<b>`), which would make that name `refs/heads/refs/heads/foo` — a ref that really is
+   * created, in a place no `git checkout foo` will ever look.
+   */
+  it('rejects a leading "refs/", and says to configure the bare branch name', () => {
+    ['refs/heads/foo', 'refs/foo', 'refs/remotes/origin/foo'].forEach((name) =>
+      expect(isValidGitBranchName(name), name).to.equal(false)
+    );
+    expect(validateBranchName('refs/heads/main')).to.contain('bare branch name');
+  });
+
+  it('accepts "refs/" in the middle, which git allows and no refspec here doubles', () => {
+    ['feature/refs/foo', 'my-refs/foo', 'lane/refs', 'refs'].forEach((name) =>
+      expect(isValidGitBranchName(name), name).to.equal(true)
+    );
+  });
+
   it('rejects control characters', () => {
     expect(isValidGitBranchName('a\u0001b')).to.equal(false);
     expect(isValidGitBranchName('a\u007fb')).to.equal(false);
@@ -87,6 +106,12 @@ describe('resolveSyncConfig validates branch names up front', () => {
 
   it('rejects a branchPrefix that could never start a valid name', () => {
     expect(() => resolveSyncConfig({ branchPrefix: '-x' })).to.throw('sync.branchPrefix');
+    // a `refs/`-rooted prefix double-prefixes every derived branch, not just one configured name
+    expect(() => resolveSyncConfig({ branchPrefix: 'refs/heads/' })).to.throw('sync.branchPrefix');
+  });
+
+  it('rejects a fully-qualified ref where a branch name belongs', () => {
+    expect(() => resolveSyncConfig({ mainSyncBranch: 'refs/heads/bit-sync/main' })).to.throw('sync.mainSyncBranch');
   });
 
   it('accepts the documented defaults unchanged', () => {

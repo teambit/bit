@@ -9,6 +9,7 @@ import {
   foreignLaneComponents,
   isProtectedBranch,
   laneHeadFingerprint,
+  laneSyncPrBody,
 } from './lane-sync-executor';
 
 type LaneComponents = Parameters<typeof laneHeadFingerprint>[0];
@@ -107,6 +108,54 @@ describe('crossScopeDescription', () => {
 
   it('does not append a count when everything is listed', () => {
     expect(crossScopeDescription(['other.scope/comp1'], DEFAULT_SCOPE)).to.not.include('more');
+  });
+});
+
+/**
+ * The PR body is posted to a git host, and every host caps it — GitHub rejects a pull request whose body
+ * exceeds 65,536 characters, and rejects the *whole* request rather than truncating. A lane has no size
+ * limit, so an unbounded enumeration meant the largest lanes were exactly the ones whose PR failed to
+ * open.
+ */
+describe('laneSyncPrBody', () => {
+  const LANE_HEAD = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
+
+  function body(componentCount: number) {
+    return laneSyncPrBody({
+      laneIdStr: 'acme.shop/my-lane',
+      laneUrl: 'https://bit.cloud/acme/shop/~lane/my-lane',
+      branch: 'my-lane',
+      laneHead: LANE_HEAD,
+      components: Array.from({ length: componentCount }, (_, index) =>
+        comp(`acme.shop/namespace/component-with-a-realistic-name-${index}`, `${'0'.repeat(39)}${index % 10}`)
+      ),
+    });
+  }
+
+  it('lists at most twenty components and summarizes the rest, keeping the exact total', () => {
+    const rendered = body(100);
+    expect(rendered).to.include('component-with-a-realistic-name-19');
+    expect(rendered).to.not.include('component-with-a-realistic-name-20');
+    expect(rendered).to.include('and 80 more');
+    // the count is of the WHOLE lane — a capped list must not be readable as a complete one
+    expect(rendered).to.include('Components on the lane (100):');
+    expect(rendered).to.include(`lane head: \`${LANE_HEAD}\``);
+  });
+
+  it('stays far inside a git host body limit for a lane of any size', () => {
+    expect(body(100).length).to.be.below(60000);
+    expect(body(5000).length).to.be.below(60000);
+  });
+
+  it('lists a small lane in full, with no summary line', () => {
+    const rendered = body(3);
+    expect(rendered).to.include('component-with-a-realistic-name-2');
+    expect(rendered).to.not.include('more');
+    expect(rendered).to.include('Components on the lane (3):');
+  });
+
+  it('says so explicitly when the lane has no components', () => {
+    expect(body(0)).to.include('_none_');
   });
 });
 

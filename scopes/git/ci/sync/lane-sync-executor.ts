@@ -111,6 +111,33 @@ export function foreignLaneComponents(components: LaneData['components'], defaul
 const MAX_LISTED_FOREIGN_COMPONENTS = 5;
 
 /**
+ * How many component ids a pull-request body or comment enumerates before it summarizes the rest.
+ *
+ * A lane is not bounded in size, and neither was any of these enumerations: a 2,000-component lane
+ * produced a PR body of a couple of hundred kilobytes. GitHub caps a pull request body (and an issue
+ * comment) at 65,536 characters and rejects the *whole* request over it, so the PR simply failed to open
+ * — for the largest lanes, which are exactly the ones a reviewer most needs a PR for. Twenty is roughly
+ * where a list stops being read item by item and the count starts doing the work instead.
+ */
+const MAX_LISTED_COMPONENTS = 20;
+
+/**
+ * `entries`, capped at `max`, with a final "…and K more" entry standing in for the remainder.
+ *
+ * The bound is on the *entries*, not on the rendered length, deliberately: a body truncated to a
+ * character budget can cut a markdown list mid-line, and the reader cannot tell a truncated document from
+ * a complete one. Dropping whole entries and stating how many were dropped is always readable, and it
+ * keeps the number the reader needs — how much they are not seeing — in the text itself.
+ *
+ * `overflowPrefix` carries the caller's list marker ('- ', '  - ') onto the summary line so it renders as
+ * part of the same list rather than as a stray paragraph; inline callers pass nothing.
+ */
+export function capEntries(entries: string[], overflowPrefix = '', max: number = MAX_LISTED_COMPONENTS): string[] {
+  if (entries.length <= max) return entries;
+  return [...entries.slice(0, max), `${overflowPrefix}…and ${entries.length - max} more`];
+}
+
+/**
  * The shared clause describing *why* a lane is cross-scope: the foreign **scopes** (which other
  * repositories the change touches) and a bounded sample of the foreign **components** — enough for a human
  * to see what the lane spans without pasting a hundred ids into a summary or a PR comment.
@@ -122,9 +149,7 @@ export function crossScopeDescription(foreignIds: string[], defaultScope: string
   // The scope is everything before the FIRST '/': a component id is `<scope>/<namespace…>/<name>`, so
   // splitting at the last one would report `acme.shop/ui` as the scope of `acme.shop/ui/button`.
   const scopes = [...new Set(foreignIds.map((id) => id.split('/', 1)[0]))].sort();
-  const listed = foreignIds.slice(0, MAX_LISTED_FOREIGN_COMPONENTS).join(', ');
-  const rest = foreignIds.length - MAX_LISTED_FOREIGN_COMPONENTS;
-  const sample = `${listed}${rest > 0 ? `, …and ${rest} more` : ''}`;
+  const sample = capEntries(foreignIds, '', MAX_LISTED_FOREIGN_COMPONENTS).join(', ');
   return (
     `components from scope(s) ${scopes.join(', ')} (this repo maps scope ${defaultScope}); ` +
     `foreign components: ${sample}`
@@ -828,7 +853,9 @@ export class LaneSyncExecutor {
         // The merge left conflict markers in the working tree. Discard them before halting so the
         // workspace (and any later push from this run) can never carry a half-merged tree.
         await this.resetToRemoteBranch(branch);
-        return await halt(`merge conflicts in: ${merge.conflicts.join(', ')}`);
+        // Bounded: this reason is posted as the halt PR comment, and a lane-wide conflict can name every
+        // component on the lane.
+        return await halt(`merge conflicts in: ${capEntries(merge.conflicts).join(', ')}`);
       }
       logger.console(
         chalk.green(`Merged lane ${laneIdStr} into ${branch} with no conflicts — snapping the merged tree`)
@@ -1492,20 +1519,7 @@ export class LaneSyncExecutor {
     // `export.main.runtime.ts`; `ScopeUrl` is not imported here because its barrel pulls in React
     // context, and it hardcodes bit.cloud where this must honour `getCloudDomain()`.
     const laneUrl = `https://${getCloudDomain()}/${target.hostScope.replace('.', '/')}/~lane/${target.name}`;
-    const components = remoteLane.components
-      .map((comp) => `- \`${comp.id.toStringWithoutVersion()}\` @ \`${comp.head.slice(0, 9)}\``)
-      .join('\n');
-    const body = [
-      `Mirrors the Bit lane [\`${laneIdStr}\`](${laneUrl}) onto \`${branch}\`.`,
-      '',
-      `- lane: ${laneUrl}`,
-      `- lane head: \`${laneHead}\``,
-      '',
-      `Components on the lane (${remoteLane.components.length}):`,
-      components || '_none_',
-      '',
-      'This PR is maintained by `bit ci sync` — push to the branch to send changes back to the lane.',
-    ].join('\n');
+    const body = laneSyncPrBody({ laneIdStr, laneUrl, branch, laneHead, components: remoteLane.components });
     try {
       const created = await gitHost.createPr({
         head: branch,
@@ -1579,6 +1593,47 @@ export class LaneSyncExecutor {
  */
 function isConflictFileStatus(status: string): boolean {
   return status === FileStatus.manual || status === FileStatus.binaryConflict || status === FileStatus.deletedConflict;
+}
+
+/**
+ * The body of the pull request that mirrors a lane onto a branch.
+ *
+ * A pure function of the lane, separate from `openPrForLane`, because its one non-obvious property — that
+ * the body stays well inside a git host's size limit however large the lane is — is worth asserting
+ * directly, and cannot be if it is only reachable through a method that needs a workspace and a network.
+ *
+ * The component list is capped; the **total** next to it is not, and neither is the lane head, so a
+ * reader of a truncated list can still tell how much they are not seeing and follow the lane link for the
+ * rest.
+ */
+export function laneSyncPrBody({
+  laneIdStr,
+  laneUrl,
+  branch,
+  laneHead,
+  components,
+}: {
+  laneIdStr: string;
+  laneUrl: string;
+  branch: string;
+  laneHead: string;
+  components: LaneData['components'];
+}): string {
+  const listed = capEntries(
+    components.map((comp) => `- \`${comp.id.toStringWithoutVersion()}\` @ \`${comp.head.slice(0, 9)}\``),
+    '- '
+  ).join('\n');
+  return [
+    `Mirrors the Bit lane [\`${laneIdStr}\`](${laneUrl}) onto \`${branch}\`.`,
+    '',
+    `- lane: ${laneUrl}`,
+    `- lane head: \`${laneHead}\``,
+    '',
+    `Components on the lane (${components.length}):`,
+    listed || '_none_',
+    '',
+    'This PR is maintained by `bit ci sync` — push to the branch to send changes back to the lane.',
+  ].join('\n');
 }
 
 /**

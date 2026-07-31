@@ -35,6 +35,78 @@ describe('isGitHubRemote', () => {
   });
 });
 
+/**
+ * Which repository a run talks to when the environment and `origin` name different ones.
+ *
+ * `GITHUB_REPOSITORY` used to win outright, which is the wrong way round: every PR operation names a
+ * *branch* (`createPr({head})`, `findPrByBranch`, the halt label and comment), and that branch only exists
+ * on the repository the run pushed it to — `origin`. Env-first meant pushing `lane/x` to one repository
+ * and asking a different one to open a pull request from it.
+ */
+describe('GitHubClient.fromEnv', () => {
+  const envKeys = ['GITHUB_TOKEN', 'BIT_GITHUB_TOKEN', 'GITHUB_REPOSITORY'] as const;
+  const saved: Record<string, string | undefined> = {};
+
+  beforeEach(() => {
+    envKeys.forEach((key) => {
+      saved[key] = process.env[key];
+      delete process.env[key];
+    });
+    process.env.GITHUB_TOKEN = 'tok';
+  });
+
+  afterEach(() => {
+    envKeys.forEach((key) => {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    });
+  });
+
+  it('uses the agreed repository when the remote and the environment say the same thing', () => {
+    process.env.GITHUB_REPOSITORY = 'acme/shop';
+    expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')?.repo).to.equal('acme/shop');
+  });
+
+  it('prefers the ORIGIN-parsed repository when the two disagree, and warns naming both', () => {
+    process.env.GITHUB_REPOSITORY = 'other-org/other-repo';
+    const warnings: string[] = [];
+    const client = GitHubClient.fromEnv('git@github.com:acme/shop.git', (message) => warnings.push(message));
+    // origin hosts the branches this run pushes, so origin is the repository the PRs must live on
+    expect(client?.repo).to.equal('acme/shop');
+    expect(warnings).to.have.lengthOf(1);
+    expect(warnings[0]).to.contain('other-org/other-repo');
+    expect(warnings[0]).to.contain('acme/shop');
+  });
+
+  it('is silent when the two differ only in case — GitHub repository names are case-insensitive', () => {
+    process.env.GITHUB_REPOSITORY = 'Acme/Shop';
+    const warnings: string[] = [];
+    const client = GitHubClient.fromEnv('git@github.com:acme/shop.git', (message) => warnings.push(message));
+    expect(client?.repo).to.equal('acme/shop');
+    expect(warnings).to.deep.equal([]);
+  });
+
+  it('falls back to the environment when there is no remote to parse', () => {
+    process.env.GITHUB_REPOSITORY = 'acme/shop';
+    expect(GitHubClient.fromEnv()?.repo).to.equal('acme/shop');
+    // ...and when the remote is a github.com URL nothing can be parsed out of
+    expect(GitHubClient.fromEnv('https://github.com/')?.repo).to.equal('acme/shop');
+  });
+
+  /** The Task 24 guard, restated here so the preference above can never be read as loosening it. */
+  it('still refuses a remote that is demonstrably not github, however complete the environment looks', () => {
+    process.env.GITHUB_REPOSITORY = 'acme/shop';
+    expect(GitHubClient.fromEnv('https://gitlab.com/acme/shop.git')).to.equal(undefined);
+    expect(GitHubClient.fromEnv('https://mygithub.com/acme/shop')).to.equal(undefined);
+  });
+
+  it('needs a token: a repository on its own configures nothing', () => {
+    delete process.env.GITHUB_TOKEN;
+    process.env.GITHUB_REPOSITORY = 'acme/shop';
+    expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')).to.equal(undefined);
+  });
+});
+
 describe('GitHubClient', () => {
   it('createPr posts to the pulls endpoint with auth', async () => {
     const calls: Array<{ url: string; init: any }> = [];

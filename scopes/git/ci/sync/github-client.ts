@@ -37,11 +37,23 @@ export function isGitHubRemote(remoteUrl: string): boolean {
 
 const API = 'https://api.github.com';
 
+/**
+ * Where a one-line operational warning goes.
+ *
+ * A plain callback rather than a `Logger`, so this module keeps no dependency on the logger aspect and
+ * stays unit-testable without one. Production wiring is a single call site: `ci.main.runtime.ts` hands
+ * `GitHubHostProvider` a sink backed by `logger.consoleWarning`.
+ */
+export type WarnFn = (message: string) => void;
+
+const noopWarn: WarnFn = () => {};
+
 export class GitHubClient implements GitHostProvider {
   readonly name = 'github';
 
   private token: string;
-  private repo: string;
+  /** `owner/repo`. Readable so callers (and tests) can see *which* repository a resolved client speaks to. */
+  readonly repo: string;
   private fetchImpl: typeof fetch;
 
   constructor(opts: { token: string; repo: string; fetchImpl?: typeof fetch }) {
@@ -50,7 +62,23 @@ export class GitHubClient implements GitHostProvider {
     this.fetchImpl = opts.fetchImpl ?? fetch;
   }
 
-  static fromEnv(gitRemoteUrl?: string): GitHubClient | undefined {
+  /**
+   * The client this environment describes, or undefined when it describes none.
+   *
+   * **`origin` outranks `GITHUB_REPOSITORY`.** The repository this client talks to has to be the one the
+   * sync *pushes branches to*, because every PR operation names a branch: `createPr({head})`,
+   * `findPrByBranch`, the label and the halt comment all address a ref that only exists on `origin`. If
+   * the two disagree and the environment wins, the run pushes `lane/x` to one repository and then asks a
+   * different one to open a pull request from a branch it has never heard of — at best a 422, at worst a
+   * pull request opened against a same-named branch that belongs to somebody else's work. So the
+   * origin-parsed repository is preferred and the disagreement is reported once, naming both, since a
+   * mismatch is nearly always a misconfigured workflow (a checkout of another repository, a stale
+   * `GITHUB_REPOSITORY` in a reusable workflow) that the operator needs to see.
+   *
+   * `GITHUB_REPOSITORY` remains the only source when the remote is absent or unparseable — the ordinary
+   * GitHub Actions case where nothing was passed down to us.
+   */
+  static fromEnv(gitRemoteUrl?: string, warn: WarnFn = noopWarn): GitHubClient | undefined {
     const token = process.env.GITHUB_TOKEN || process.env.BIT_GITHUB_TOKEN;
     // The remote is only allowed to name the repository once it is established to *be* a github.com
     // remote. `parseGitHubRepo` is unanchored (it searches for `github.com/<owner>/<repo>` anywhere in
@@ -62,8 +90,17 @@ export class GitHubClient implements GitHostProvider {
     // and aims this repository's pull requests at a completely different one.
     if (gitRemoteUrl && !isGitHubRemote(gitRemoteUrl)) return undefined;
     const repoFromRemote = gitRemoteUrl ? parseGitHubRepo(gitRemoteUrl) : undefined;
-    const repo = process.env.GITHUB_REPOSITORY || repoFromRemote;
+    const repoFromEnv = process.env.GITHUB_REPOSITORY;
+    const repo = repoFromRemote || repoFromEnv;
     if (!token || !repo) return undefined;
+    // Compared case-insensitively: GitHub owner and repository names are case-insensitive, so
+    // `Acme/Shop` and `acme/shop` are the same repository and warning about them would be noise.
+    if (repoFromRemote && repoFromEnv && repoFromRemote.toLowerCase() !== repoFromEnv.toLowerCase()) {
+      warn(
+        `bit ci sync: GITHUB_REPOSITORY is "${repoFromEnv}" but the "origin" remote points at ` +
+          `"${repoFromRemote}" — using "${repoFromRemote}", the repository this run pushes its branches to.`
+      );
+    }
     return new GitHubClient({ token, repo });
   }
 
@@ -156,6 +193,13 @@ export class GitHubHostProvider implements GitHostProvider {
    */
   private remoteHint: string | undefined;
 
+  /**
+   * The warning sink is optional so the provider stays constructible from anywhere (tests, a consumer
+   * registering it by hand). The aspect passes a real one; without it the client resolves exactly as it
+   * otherwise would and only the advisory warning is lost.
+   */
+  constructor(private onWarning: WarnFn = noopWarn) {}
+
   matchesRemote(remoteUrl: string): boolean {
     const matches = isGitHubRemote(remoteUrl);
     // Only remember a remote that is actually ours. The hint is what `resolveClient` falls back to when a
@@ -211,7 +255,7 @@ export class GitHubHostProvider implements GitHostProvider {
    * than silently losing the origin-parse path and reporting "not configured".
    */
   private resolveClient(remoteUrl?: string): GitHubClient | undefined {
-    if (!this.client) this.client = GitHubClient.fromEnv(remoteUrl ?? this.remoteHint);
+    if (!this.client) this.client = GitHubClient.fromEnv(remoteUrl ?? this.remoteHint, this.onWarning);
     return this.client;
   }
 

@@ -8,7 +8,7 @@ import type { CiSyncConfig } from './sync-config';
 import { SYNC_COMMIT_MARKER } from './sync-state';
 import { currentLaneIdStr } from './workspace-lane';
 import type { GitHostProvider } from './git-host-provider';
-import { HALT_SUMMARY_PREFIX } from './lane-sync-executor';
+import { HALT_SUMMARY_PREFIX, capEntries } from './lane-sync-executor';
 import {
   addAllExceptScopeAndModules,
   branchExistsOnRemote,
@@ -354,8 +354,13 @@ function mainSyncPrBody({ driftCount, newFromScope }: { driftCount: number; newF
   ];
   if (newFromScope.length) {
     lines.push(
-      `- components added from the scope (not previously in this repository's \`.bitmap\`):`,
-      ...newFromScope.map((id) => `  - \`${id}\``)
+      `- components added from the scope (${newFromScope.length}, not previously in this repository's \`.bitmap\`):`,
+      // Bounded for the same reason as the lane PR body: a first sync of a large scope adds every
+      // component at once, and an over-long body is rejected by the host outright.
+      ...capEntries(
+        newFromScope.map((id) => `  - \`${id}\``),
+        '  - '
+      )
     );
   }
   lines.push(
