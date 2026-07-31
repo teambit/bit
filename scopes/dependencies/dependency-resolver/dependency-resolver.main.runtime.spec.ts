@@ -52,6 +52,28 @@ describe('DepenendencyResolverMain.validateAspectData()', () => {
   });
 });
 
+describe('DepenendencyResolverMain.isValidVersionSpecifier()', () => {
+  const depResolver = createDependencyResolverMain();
+  for (const spec of [
+    'npm:uri-js-replace',
+    'npm:@scope/pkg',
+    'npm:@scope/pkg@1.0.0',
+    'npm:pkg@^1.0.0',
+    '1.2.3',
+    '^1.0.0',
+    'latest',
+  ]) {
+    it(`should accept ${spec}`, () => {
+      expect(depResolver.isValidVersionSpecifier(spec)).to.equal(true);
+    });
+  }
+  for (const spec of ['npm:', 'npm:@scope', 'npm:pkg name', '']) {
+    it(`should reject "${spec}"`, () => {
+      expect(depResolver.isValidVersionSpecifier(spec)).to.equal(false);
+    });
+  }
+});
+
 describe('DepenendencyResolverMain.getNetworkConfig()', () => {
   let httpStub: sinon.SinonStub;
   let packageManagerSlot: any;

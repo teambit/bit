@@ -1481,8 +1481,14 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     if (/^(?:workspace|file|link|git|git\+(?:https?|ssh)|ssh):/.test(trimmedSpec)) return true;
     if (/^https?:\/\/registry\.npmjs\.org\/.+\/-.+\.tgz(?:[#?].*)?$/.test(trimmedSpec)) return true;
     if (trimmedSpec.startsWith('npm:')) {
-      const versionStart = trimmedSpec.lastIndexOf('@');
-      return versionStart > 'npm:'.length && this.isValidVersionSpecifier(trimmedSpec.slice(versionStart + 1));
+      const alias = trimmedSpec.slice('npm:'.length);
+      // The version separator is the first `@` past a scope prefix — a
+      // scoped alias's leading `@` is part of the package name, and the
+      // version is optional (`npm:pkg` aliases the latest version).
+      const versionStart = alias.indexOf('@', alias.startsWith('@') ? 1 : 0);
+      const aliasName = versionStart === -1 ? alias : alias.slice(0, versionStart);
+      if (!/^(?:@[^/@\s]+\/)?[^/@\s]+$/.test(aliasName)) return false;
+      return versionStart === -1 || this.isValidVersionSpecifier(alias.slice(versionStart + 1));
     }
     return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(trimmedSpec);
   }
