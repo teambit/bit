@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import ssri from 'ssri';
 import _ from 'lodash';
-import * as nodeApi from '@pnpm/napi';
+import type { PackResult as NapiPackResult } from '@pnpm/napi';
 import type { ComponentFactory } from '@teambit/component';
 import type { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import type { Capsule, IsolatorMain } from '@teambit/isolator';
@@ -133,6 +133,13 @@ export class Packer {
         warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
         return { warnings, startTime, endTime: Date.now() };
       }
+      // Required lazily so the native engine binary is not mapped into
+      // every process that loads the pkg aspect — only pack pays for it
+      // (same convention as the `@pnpm/napi` require in read-config).
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const nodeApi = require('@pnpm/napi') as {
+        pack: (options: { dir: string }) => Promise<NapiPackResult>;
+      };
       const packResult = await nodeApi.pack({ dir: cwd });
       const tgzName = path.basename(packResult.tarballPath);
       this.logger.debug(`successfully packed tarball at ${cwd}`);
