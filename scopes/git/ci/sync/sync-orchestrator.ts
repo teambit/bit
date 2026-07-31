@@ -23,12 +23,7 @@ import { selectGitHostProvider } from './git-host-provider';
 import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
 import { deriveOwnerRepo, renderInitChecklist, scaffoldWorkflowFiles } from './init-scaffold';
 
-/**
- * Everything the sync orchestration needs from `CiMain`, passed explicitly rather than reached through
- * `this`. `ci` is the aspect itself, which the two executors need (they call back into it for
- * `snapPrCommit`, `switchToLaneForSync`, `reloadWorkspaceFromDisk` and the default-branch lookup) — the
- * rest are the collaborators the orchestration reads directly.
- */
+/** Everything the sync orchestration needs from `CiMain`, passed explicitly. */
 export type SyncOrchestratorDeps = {
   ci: CiMain;
   workspace: Workspace;
@@ -39,40 +34,22 @@ export type SyncOrchestratorDeps = {
 };
 
 /**
- * Routing and aggregation for `bit ci sync`, lifted out of `CiMain` so the aspect's runtime file stays
- * readable (and under the repo's max-lines rule).
- *
- * This layer decides *which* targets a run visits and how their summaries combine; it decides nothing
- * about what reconciling a target means. Every such decision lives in the two executors
- * (`LaneSyncExecutor` per lane, `MainSyncExecutor` for the main scope), both of which are stateless and
- * idempotent, so the trigger that invoked the command only ever decides *when* the reconciler runs.
- *
- * `CiMain.sync()` delegates here and is otherwise unchanged: the aspect's public API and provider
- * signature are exactly what they were.
+ * Routing and aggregation for `bit ci sync`: decides which targets a run visits and how their
+ * summaries combine. What reconciling a target means lives in the two executors, both stateless and
+ * idempotent, so the trigger only ever decides when the reconciler runs.
  */
 export class SyncOrchestrator {
   constructor(private deps: SyncOrchestratorDeps) {}
 
   /**
    * `bit ci sync` — reconcile Bit lanes and the main scope with git branches and pull requests.
-   *
-   * This is only routing and aggregation: every decision about *what* to do lives in the two
-   * executors (`LaneSyncExecutor` per lane, `MainSyncExecutor` for the main scope), and every
-   * executor is stateless and idempotent. The trigger that invoked the command therefore only decides
-   * *when* the reconciler runs, never what it does.
-   *
-   * Returns the collected per-target summary lines. If any target halted (its line starts with
-   * `HALT_SUMMARY_PREFIX`) or was refused (`REFUSED_SUMMARY_PREFIX`) the method **throws** the joined
-   * summary after the loop, so a CI run exits non-zero — while still having attempted, and reported on,
-   * every other target. Note that a *skip* is neither: a target this repository legitimately has nothing
-   * to do for (a cross-scope lane met by `--all`) reports itself and leaves the run green.
+   * Returns the per-target summary lines; throws the joined summary after the loop when any target
+   * halted or was refused, so CI exits non-zero while every other target was still attempted. A skip
+   * is neither — it reports itself and leaves the run green.
    */
   async sync(
     opts: { lane?: string; branch?: string; all?: boolean; main?: boolean; dryRun?: boolean; init?: boolean } = {}
   ): Promise<string> {
-    // `--init` is a one-shot onboarding scaffold, not a reconcile: it writes files and exits. Combining
-    // it with any other flag (a lane, --branch, --all, --main, --dry-run) is always a mistake about what
-    // will run, so refuse rather than silently ignoring the other flag or silently skipping the scaffold.
     if (opts.init) {
       if (opts.lane || opts.branch || opts.all || opts.main || opts.dryRun) {
         throw new BitError(
@@ -84,10 +61,7 @@ export class SyncOrchestrator {
       return this.syncInit();
     }
 
-    // `--all` is the default, so combining it with a narrower target is always a mistake about what the
-    // command will do. Refuse instead of silently letting the narrower target win — which is what used to
-    // happen with `--all --branch x`: the branch path returns early, so `--all` was silently dropped and
-    // the run reconciled one branch while the operator believed everything had been visited.
+    // Refuse contradictory flag combinations rather than silently letting one target win.
     const narrower = opts.lane
       ? `a lane argument ("${opts.lane}")`
       : (opts.branch && `--branch ("${opts.branch}")`) || (opts.main && '--main') || undefined;
@@ -98,11 +72,7 @@ export class SyncOrchestrator {
       );
     }
 
-    // A lane argument, `--branch` and `--main` are three spellings of "reconcile exactly this one
-    // target", so any two of them contradict each other. They used to be resolved by code order —
-    // `--main` first, then `--branch`, then the lane argument: the winner ran, the loser was silently
-    // dropped, and the run reported success while a target the operator named was never even looked at.
-    // Refuse and name both, for the same reason the `--all` guard above does.
+    // A lane argument, `--branch` and `--main` each select the single target; any two contradict.
     const selectors = [
       opts.lane && `a lane argument ("${opts.lane}")`,
       opts.branch && `--branch ("${opts.branch}")`,
@@ -123,22 +93,16 @@ export class SyncOrchestrator {
     const mainLaneName = this.deps.lanes.getDefaultLaneId().name;
 
     if (cfg.mode !== 'git-source-of-truth') {
-      // `mode` is accepted and resolved but nothing reads it yet — every path behaves as
-      // 'git-source-of-truth'. Say so rather than letting a configured 'mirror' look effective.
+      // `mode` is accepted but nothing reads it yet; a configured 'mirror' must not look effective.
       this.deps.logger.consoleWarning(
         `sync.mode is set to "${cfg.mode}", but mode is not implemented yet — this run behaves as ` +
           `"git-source-of-truth" (git wins on conflict, merges happen on the git host)`
       );
     }
 
-    // Both executors force-checkout branches and remove untracked files, so anything uncommitted in
-    // this workspace is discarded. That is the right behaviour in a CI clone (its tree is pristine by
-    // definition) and destructive when someone runs the command interactively — so say it out loud
-    // before doing any of it, naming the files at stake.
+    // The executors force-checkout branches and remove untracked files; warn up front, naming the
+    // files at stake, before an interactive run discards anything.
     const statusAtStart = await git.status().catch(() => undefined);
-    // `.bit/` and `node_modules/` are filtered out because the executors never touch them — and in a
-    // workspace whose `.gitignore` lacks Bit's block, `git status` lists every file under them,
-    // which would make this warning claim tens of thousands of files are about to be discarded.
     const dirtyFiles = (statusAtStart?.files ?? []).map((file) => file.path).filter((file) => !isNonContentPath(file));
     if (dirtyFiles.length) {
       this.deps.logger.consoleWarning(
@@ -148,20 +112,13 @@ export class SyncOrchestrator {
       );
     }
 
-    // Which git host serves this repository is a *registration* question, not a hard-coded one: the
-    // engine only knows the `GitHostProvider` contract, and picks among the providers registered into
-    // the slot (GitHub among them) by the `origin` remote. An unreadable remote or a host nobody
-    // claims and no credentials is not fatal — it degrades to "no git host", which each executor
-    // reports and works around (git-only sync).
     const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
     const { provider: gitHost, reason: noGitHostReason } = selectGitHostProvider(
       this.deps.ci.listGitHostProviders(),
       typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined
     );
     if (gitHost) this.deps.logger.debug(`bit ci sync: using the "${gitHost.name}" git host provider`);
-    // Warn once, up front, with the specific reason — the executors' per-action lines can only say
-    // that PR operations were skipped, not why. This is where "the github provider claims origin but
-    // has no token" becomes visible instead of looking like a deliberately git-only run.
+    // Warn once, up front — the executors' per-action lines can only say PRs were skipped, not why.
     else if (noGitHostReason) this.deps.logger.consoleWarning(noGitHostReason);
 
     const laneSync = new LaneSyncExecutor({
@@ -189,44 +146,36 @@ export class SyncOrchestrator {
 
     if (opts.branch) {
       const branch = opts.branch;
-      // With the default config (`branchPrefix: ''`) every branch name maps to a same-named lane, so
-      // these two would otherwise resolve to the lanes "main" / "bit-sync/main" and sync nonsense.
-      // Both branches are reconciled by the main-scope path, not as lanes.
+      // Under the default `branchPrefix: ''` these two would resolve to the bogus lanes "main" /
+      // "bit-sync/main"; both are reconciled by the main-scope path, never as lanes.
       if (branch === defaultBranch) {
         return `branch ${branch} is the default branch — reconcile it with "bit ci sync --main"; nothing to do`;
       }
       if (branch === cfg.mainSyncBranch) {
         return `branch ${branch} is the main sync branch maintained by this command; nothing to do`;
       }
-      // The same mapped-AND-valid check `--all` enumeration applies (`listLanesToSync`): with the
-      // default `branchPrefix: ''` a branch like `feature/foo` maps to the string "feature/foo",
-      // which can never be a lane name (lane names carry no `/`) — passing it to `syncLane` would
-      // violate the `LaneTarget.name` invariant and halt the run instead of cleanly skipping.
       const laneName = syncableLaneNameForBranch(branch, cfg);
       if (!laneName) return `branch ${branch} does not map to a valid lane name; nothing to do`;
       const skipReason = this.laneNotSyncableReason(laneName, cfg, mainLaneName, defaultBranch);
       if (skipReason) return `${skipReason} (branch ${branch})`;
-      // A branch name carries no scope, so this path can only resolve the lane against `defaultScope`.
-      // A foreign-hosted lane is addressable by its scope-qualified id only (Stage 0) — see
-      // `assessBranchOwnership` for why resolving it here to the wrong scope is safe (no-op, never a
-      // deletion) rather than merely unhelpful.
+      // A branch name carries no scope, so this path can only resolve the lane against `defaultScope`;
+      // resolving a foreign-hosted lane to the wrong scope is safe (no-op, never a deletion).
       return this.summarizeSync([
         await laneSync.syncLane({ hostScope: defaultScope, name: laneName }, { dryRun: opts.dryRun }),
       ]);
     }
 
     if (opts.lane) {
-      // `[lane]` accepts both `my-lane` (hosted on defaultScope) and `other-scope/my-lane`. Every guard
-      // below is asked about the NAME: "main" is not a lane whichever scope hosts it, and the `lanes`
-      // patterns match lane names, not lane ids.
+      // Every guard below is asked about the NAME: "main" is not a lane whichever scope hosts it, and
+      // the `lanes` patterns match lane names, not lane ids.
       const target = parseLaneTarget(opts.lane, defaultScope);
       const skipReason = this.laneNotSyncableReason(target.name, cfg, mainLaneName, defaultBranch);
       if (skipReason) return skipReason;
       return this.summarizeSync([await laneSync.syncLane(target, { dryRun: opts.dryRun, explicitTarget: true })]);
     }
 
-    // `--all`, which is also the no-arguments default: every mapped lane, then the main scope. The
-    // lanes are synced sequentially on purpose — they share one workspace and one git checkout.
+    // `--all` (also the no-arguments default): every mapped lane, then the main scope. Sequential on
+    // purpose — the lanes share one workspace and one git checkout.
     const lines: string[] = [];
     const { lanes: lanesToSync, errors } = await this.listLanesToSync(cfg, mainLaneName, defaultBranch);
     lines.push(...errors);
@@ -237,9 +186,8 @@ export class SyncOrchestrator {
       )
     );
     for (const laneName of lanesToSync) {
-      // `--all` enumerates this scope's own lanes and this repo's lane-mapped branches, so every target
-      // here is hosted on `defaultScope` by construction. Foreign-hosted lanes are explicit-target only
-      // in Stage 0; enumerating them needs the `laneSources` config designed for Stage 1.
+      // Every enumerated target is hosted on `defaultScope` by construction; foreign-hosted lanes are
+      // explicit-target only.
       // oxlint-disable-next-line no-await-in-loop
       lines.push(await laneSync.syncLane({ hostScope: defaultScope, name: laneName }, { dryRun: opts.dryRun }));
     }
@@ -248,24 +196,15 @@ export class SyncOrchestrator {
   }
 
   /**
-   * `bit ci sync --init` — one-command onboarding. Scaffolds `.github/workflows/bit-sync.yml` and
-   * `bit-release.yml` (with this repository's actual default branch substituted), adds the
-   * `"teambit.git/ci": { "sync": {} }` config block to `workspace.jsonc` if it's not there yet, and
-   * prints the checklist of steps that still need a human (secrets, the bit.cloud webhook, and the
-   * `fetch-depth: 0` requirement — none of which this command can do on its own).
-   *
-   * Never throws on an "already there" outcome: an existing workflow file is skipped (not
-   * overwritten — this must be safe to re-run) and an existing `sync` config block is left alone. It
-   * only writes; it never reconciles.
+   * `bit ci sync --init` — one-command onboarding: scaffolds the two workflow files, adds the sync
+   * config block to workspace.jsonc if missing, and prints the manual-steps checklist. Safe to
+   * re-run: existing files are skipped, an existing config block is left alone; it never reconciles.
    */
   private async syncInit(): Promise<string> {
     const defaultBranch = await this.deps.ci.getDefaultBranchName();
 
-    // WORKFLOWS BELONG TO THE REPOSITORY, NOT THE WORKSPACE. GitHub only discovers workflows at
-    // `<repo-root>/.github/workflows`; a bit workspace is frequently a subdirectory of its repository
-    // (a monorepo package, an app folder), and scaffolding relative to the workspace there produces two
-    // files that look completely correct and never run — the worst shape of failure for an onboarding
-    // command, because nothing reports an error and the user concludes sync is broken.
+    // Workflows belong to the repository, not the workspace: GitHub only discovers them at
+    // `<repo-root>/.github/workflows`, and a bit workspace may be a subdirectory.
     const repoRoot = await gitRepoRoot();
     const scaffoldRoot = repoRoot ?? this.deps.workspace.path;
     if (!repoRoot) {
@@ -277,9 +216,7 @@ export class SyncOrchestrator {
     }
 
     const fileOutcomes = scaffoldWorkflowFiles(scaffoldRoot, defaultBranch);
-    // Report the path actually written, relative to where the user is standing: when the workspace is a
-    // subdirectory, a bare `.github/workflows/bit-sync.yml` would be read as workspace-relative and send
-    // them looking in the wrong place.
+    // Report the path relative to where the user is standing, not to the workspace.
     const displayPath = (relativePath: string) => {
       const abs = path.join(scaffoldRoot, relativePath);
       const fromCwd = path.relative(process.cwd(), abs);
@@ -305,16 +242,9 @@ export class SyncOrchestrator {
   }
 
   /**
-   * Add `"sync": {}` under `"teambit.git/ci"` in `workspace.jsonc` if that key isn't there yet.
-   * Returns whether it actually wrote anything.
-   *
-   * Uses the same comment-preserving `WorkspaceConfig` API `scope-trust.ts` uses for its own
-   * workspace.jsonc patches (`getWorkspaceConfig().setExtension(..., { mergeIntoExisting: true,
-   * ignoreVersion: true })` then `.write()`), rather than printing the block for the user to paste:
-   * it merges into whatever `teambit.git/ci` config already exists (e.g. `commitMessageScript`)
-   * instead of clobbering it, and preserves comments elsewhere in the file. `mergeIntoExisting` also
-   * makes this safe to call when the extension key doesn't exist at all yet — `setExtension` just sets
-   * it fresh in that case.
+   * Add `"sync": {}` under `"teambit.git/ci"` in workspace.jsonc if that key isn't there yet; returns
+   * whether it wrote. The comment-preserving `WorkspaceConfig` API merges into existing
+   * `teambit.git/ci` config rather than clobbering it.
    */
   private async ensureSyncConfigBlock(): Promise<boolean> {
     const wsConfig = this.deps.workspace.getWorkspaceConfig();
@@ -326,12 +256,9 @@ export class SyncOrchestrator {
   }
 
   /**
-   * Why this lane name must not be handed to the lane executor, or undefined when it's syncable.
-   *
-   * The reserved names are checked against the lane **name** (never a scope-qualified id): "main" is not
-   * a lane whichever scope hosts it, and the `lanes` patterns match names. The branch a name maps to is
-   * checked too — reconciling a "lane" onto the default branch or onto the main sync branch would let the
-   * lane path write the two branches the main-scope path owns.
+   * Why this lane name must not be handed to the lane executor, or undefined when it's syncable. The
+   * mapped branch is checked too — the lane path must never write the two branches the main-scope
+   * path owns.
    */
   private laneNotSyncableReason(
     laneName: string,
@@ -359,26 +286,11 @@ export class SyncOrchestrator {
   }
 
   /**
-   * The lane names to reconcile on an `--all` run, sorted for a deterministic run order, plus one
-   * HALTED summary line per enumeration failure.
-   *
-   * The list is the **union of two sources**, and the second half is not redundant:
-   *
-   * - **the lanes on the default scope's remote** — the lanes that still exist, and may need mirroring
-   *   onto a branch;
-   * - **the lane-mapped branches on `origin`** — a lane that was merged, archived or deleted on
-   *   bit.cloud is *gone* from the first list, so enumerating lanes alone can never visit its branch and
-   *   the whole `close-pr` action (close the PR, delete the branch) would never fire for the one state
-   *   that needs it. A branch-only entry resolves `laneHead === undefined` in `syncLane`, which is
-   *   exactly the input `planLaneSync` turns into `close-pr`.
-   *
-   * Both halves are filtered by the same rules (never the main lane, must match `sync.lanes`) and
-   * deduplicated by lane name, so a lane that exists on both sides is reconciled once.
-   *
-   * A failure to enumerate either source is reported as a HALTED line rather than thrown, so the half
-   * that *did* enumerate is still reconciled and the run still exits non-zero. Silently syncing a subset
-   * would look like a successful run while lanes (or orphaned branches) went untouched. A remote that
-   * reports it has no lanes at all is not a failure.
+   * The lane names to reconcile on an `--all` run (sorted), plus one HALTED line per enumeration
+   * failure. The list is the union of the remote's lanes AND the lane-mapped branches on `origin` —
+   * a lane deleted on bit.cloud is gone from the first source, and only the branch side can make
+   * `close-pr` fire for it. An enumeration failure is reported rather than thrown, so the half that
+   * did enumerate is still reconciled while the run exits non-zero.
    */
   private async listLanesToSync(
     cfg: Required<CiSyncConfig>,
@@ -415,16 +327,10 @@ export class SyncOrchestrator {
 
     try {
       for (const branch of await listRemoteBranches()) {
-        // Both of these are reconciled by the main-scope path, never as lanes. The exclusion is
-        // load-bearing under the default `branchPrefix: ''`, where every branch name maps to a
-        // same-named lane: without it they would resolve to the bogus lanes "main" / "bit-sync/main".
+        // Reconciled by the main-scope path, never as lanes — under the default `branchPrefix: ''`
+        // they would otherwise resolve to the bogus lanes "main" / "bit-sync/main".
         if (branch === defaultBranch || branch === cfg.mainSyncBranch) continue;
-        // Mapped AND checked: the mapping alone is a string transform, so under the default
-        // `branchPrefix: ''` an ordinary `feature/foo` would otherwise be queued as a "lane" whose name
-        // contains a slash — which no lane can have, which breaks `LaneTarget.name`'s invariant, and which
-        // scope-qualified parsing would mis-split. Every branch on `origin` reaches this loop, so most of
-        // what it rejects is simply ordinary developer branches: skipped at debug level, never as a summary
-        // line, or the summary would fill with noise about branches the reconciler was never meant to touch.
+        // Ordinary developer branches are skipped at debug level, never as a summary line.
         const laneName = syncableLaneNameForBranch(branch, cfg);
         if (!laneName) {
           this.deps.logger.debug(
@@ -450,13 +356,9 @@ export class SyncOrchestrator {
   }
 
   /**
-   * Join the per-target summary lines, and turn any halt into a non-zero exit. Throwing is
-   * deliberate: the executors never throw (one unreconcilable target must not abort the targets after
-   * it), so this is the single place where "something needs a human" becomes visible to CI.
-   *
-   * `BitError` rather than `Error`: a halt is a *user-actionable* outcome (resolve a conflict, remove a
-   * label, unstick a lane), and bit's error handler reports a plain `Error` as an internal failure —
-   * printing a stack trace and shipping it to Sentry as FATAL. The message is the whole payload here.
+   * Join the per-target summary lines, and turn any halt into a non-zero exit — the executors never
+   * throw, so this is the single place "needs a human" becomes visible to CI. `BitError` rather than
+   * `Error`: bit reports a plain `Error` as an internal failure (stack trace, Sentry FATAL).
    */
   private summarizeSync(lines: string[]): string {
     const summary = lines.join('\n');
@@ -464,10 +366,8 @@ export class SyncOrchestrator {
     if (halted.length) {
       throw new BitError(`bit ci sync could not reconcile ${halted.length} target(s):\n${summary}`);
     }
-    // A refusal is not a halt: nothing is mid-flight, no PR was labelled, and the repository is healthy —
-    // the reconciler simply will not do the specific thing that was asked for. So it exits non-zero (the
-    // request was not carried out) while saying exactly that, rather than reporting a sync conflict. Only
-    // an explicitly targeted single lane can produce one, so there is never a mix of both.
+    // A refusal is not a halt: the repository is healthy, the reconciler simply will not do what was
+    // asked — exit non-zero saying that, rather than reporting a sync conflict.
     const refusals = lines.filter((line) => line.startsWith(REFUSED_SUMMARY_PREFIX));
     if (refusals.length) {
       throw new BitError(refusals.map((line) => line.slice(REFUSED_SUMMARY_PREFIX.length).trim()).join('\n'));

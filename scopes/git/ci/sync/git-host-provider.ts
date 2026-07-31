@@ -1,15 +1,7 @@
 /**
- * The git-host contract `bit ci sync` is written against.
- *
- * The sync engine (both executors) reconciles Bit lanes with git branches and *pull requests*. The git
- * half is plain git — every host speaks it — but the pull-request half is host-specific API surface.
- * This interface is that half, and nothing in the engine may reach past it: GitHub is one
- * implementation (`GitHubClient`, shipped built-in and registered by the ci aspect itself), and a
- * GitLab/Bitbucket/Gitea aspect can add its own by calling `ci.registerGitHostProvider(...)` — the
- * same shape as a package manager registering into the dependency-resolver's slot.
- *
- * Every method here is the *whole* PR vocabulary of the engine. Adding to it is a breaking change for
- * out-of-tree providers, so prefer expressing new behaviour in terms of these primitives.
+ * The git-host (pull request) contract `bit ci sync` is written against; nothing in the engine may
+ * reach past it. Other hosts register via `ci.registerGitHostProvider(...)`. Adding a method is a
+ * breaking change for out-of-tree providers.
  */
 export type PrInfo = {
   number: number;
@@ -23,23 +15,12 @@ export interface GitHostProvider {
   /** Stable identifier, used in logs and to tell registered providers apart. E.g. `'github'`. */
   name: string;
 
-  /**
-   * Does this provider serve the repository at `remoteUrl` (the `origin` remote)? A host test, not a
-   * credentials test — see `isConfigured`.
-   */
+  /** Does this provider serve the repository at `remoteUrl`? A host test, not a credentials test. */
   matchesRemote(remoteUrl: string): boolean;
 
   /**
-   * Can this provider actually talk to its API right now — token *and* repository resolvable?
-   *
-   * `remoteUrl` is passed by `selectGitHostProvider` because for some hosts the repository is derived
-   * from the remote when the environment doesn't name it (GitHub: `GITHUB_REPOSITORY` if set,
-   * otherwise parsed from `origin`). Providers that resolve everything from the environment ignore it.
-   *
-   * Must not throw: an unconfigured provider is a normal, expected state — the engine degrades to
-   * PR-less (git-only) sync and says which credentials were missing. Keep it **cheap and idempotent**:
-   * selection may call it more than once per run (once per candidate pass), and it must never perform
-   * network I/O — memoize whatever resolution it does, as `GitHubHostProvider` does.
+   * Token and repository resolvable? Must not throw (unconfigured is a normal state — the engine
+   * degrades to git-only sync), must be cheap and idempotent, and must never perform network I/O.
    */
   isConfigured(remoteUrl?: string): boolean;
 
@@ -54,43 +35,19 @@ export interface GitHostProvider {
   addLabel(prNumber: number, label: string): Promise<void>;
 }
 
-/**
- * The outcome of `selectGitHostProvider`: the git host to use this run, or nothing plus a
- * log-friendly explanation of why PR operations are being skipped.
- */
+/** The git host to use this run, or nothing plus the reason PR operations are being skipped. */
 export type GitHostSelection = {
   /** The host to use. undefined => PR-less (git-only) sync. */
   provider?: GitHostProvider;
-  /**
-   * Why no provider was selected — set exactly when `provider` is undefined, and phrased for a
-   * one-line console warning. The caller surfaces it once per run so "no PRs this time" is never a
-   * silent outcome.
-   */
+  /** Set exactly when `provider` is undefined; surfaced once per run so PR-less is never silent. */
   reason?: string;
 };
 
 /**
  * Pick the provider that serves `remoteUrl`, or nothing (PR-less sync) plus the reason why.
- *
- * Pure and synchronous on purpose — it is the one place the "which host is this?" decision lives, so
- * it has to be testable without a network, a git repo, or a workspace.
- *
- * 1. **A claim is exclusive.** If *any* registered provider claims the remote (`matchesRemote`), the
- *    answer can only be one of the claimants — the first that is also configured, or nothing at all.
- *    Configuration never overrides a claim: routing a GitHub repository's pull requests to a GitLab
- *    provider merely because that one happens to hold a token would create, close and comment on the
- *    wrong host's PRs. So a claimed-but-unconfigured remote degrades to PR-less sync, naming the
- *    provider that claimed it. Among claimants, registration order breaks ties — exactly like the
- *    dependency-resolver's package-manager slot.
- * 2. **Sole configured provider is the fallback — only when nobody claims.** With no remote URL (no
- *    `origin`, or reading it failed) or a remote no provider claims (a self-hosted GitLab on a custom
- *    domain, a mirror, an `insteadOf` rewrite), one configured provider is unambiguous: use it rather
- *    than silently dropping to PR-less sync. Two or more in that situation are ambiguous, and guessing
- *    between them could comment on the wrong host's PR.
- * 3. **Otherwise nothing**, which every caller treats as "no PR operations this run".
- *
- * Together, 1 and 2 are what make the documented guarantee true: registering a provider cannot change
- * how a repository *another* provider claims is handled.
+ * A claim is exclusive: configuration never overrides `matchesRemote`, because routing to whichever
+ * provider holds a token would act on the wrong host's PRs. A sole configured provider is the fallback
+ * only when no provider claims the remote; two or more unclaimed-but-configured is too ambiguous.
  */
 export function selectGitHostProvider(providers: GitHostProvider[], remoteUrl: string | undefined): GitHostSelection {
   if (!providers.length) {

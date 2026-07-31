@@ -15,11 +15,7 @@ import {
   remoteHeadBranch,
 } from './git-ops';
 
-/**
- * A recording stand-in for the two `git config` operations, so the decision can be tested without a git
- * repository — which is the point: the bug being locked here only shows up in checkouts whose config is
- * *partially* set, and constructing those for real is far more machinery than the rule deserves.
- */
+/** A recording stand-in for the two `git config` operations. */
 function fakeConfig(initial: Record<string, string> = {}) {
   const values: Record<string, string> = { ...initial };
   const sets: Array<{ key: string; value: string }> = [];
@@ -34,10 +30,7 @@ function fakeConfig(initial: Record<string, string> = {}) {
 }
 
 describe('ensureGitIdentity', () => {
-  /**
-   * An empty environment, passed explicitly wherever the *defaults* are the thing under test — otherwise
-   * these rows read `process.env` and a developer who happens to export `GIT_USER_NAME` fails the suite.
-   */
+  // Passed explicitly — otherwise a developer who exports GIT_USER_NAME fails the suite.
   const NO_ENV = {};
 
   it('sets both halves in a fresh CI checkout that has neither', async () => {
@@ -47,22 +40,12 @@ describe('ensureGitIdentity', () => {
     expect(values['user.name']).to.equal(DEFAULT_GIT_USER_NAME);
   });
 
-  /**
-   * The defaults are a cross-repository contract: the `--init` templates document them verbatim and the
-   * GitHub Action applies the same pair. Pinning the literals here (rather than only comparing against the
-   * constants, which would pass for any value) is what makes a drift show up as a failing test.
-   */
+  // Pinning the literals (not the constants) makes cross-repo drift show up as a failing test.
   it('defaults to the identity the scaffolded workflows and the action both document', () => {
     expect(DEFAULT_GIT_USER_NAME).to.equal('bit-sync[bot]');
     expect(DEFAULT_GIT_USER_EMAIL).to.equal('bit-sync[bot]@users.noreply.github.com');
   });
 
-  /**
-   * THE regression. The check used to test `user.email` alone and return early on it, so a checkout with
-   * an email but no name — a half-populated global config, a container that sets only `EMAIL`, a
-   * `.gitconfig` carrying `[user] email` and nothing else — passed and then died at `git commit` with
-   * `*** Please tell me who you are`, aborting every lane in the run. git needs both.
-   */
   it('sets the NAME when only the email is configured', async () => {
     const { io, sets, values } = fakeConfig({ 'user.email': 'dev@example.com' });
     await ensureGitIdentity(io, NO_ENV);
@@ -93,12 +76,6 @@ describe('ensureGitIdentity', () => {
     expect(values['user.name']).to.equal(DEFAULT_GIT_USER_NAME);
   });
 
-  /**
-   * `GIT_USER_NAME` / `GIT_USER_EMAIL` are advertised by the workflow templates `bit ci sync --init`
-   * scaffolds. They were read only by the GitHub Action (which runs its own `git config` before invoking
-   * `bit`), so a standalone `bit ci sync` — a from-source rig, GitLab CI, Jenkins, a local run — silently
-   * ignored a variable the user had been told to set, and the commits carried the wrong author.
-   */
   describe('GIT_USER_NAME / GIT_USER_EMAIL', () => {
     it('uses the env vars when git has no identity configured', async () => {
       const { io, values } = fakeConfig();
@@ -130,11 +107,6 @@ describe('ensureGitIdentity', () => {
   });
 });
 
-/**
- * A bare `git fetch origin` honours the checkout's `remote.origin.fetch`. In a single-branch clone that
- * refspec names one branch, so every other branch is enumerated by `ls-remote` (which asks the remote
- * directly) and then read through a `refs/remotes/origin/<branch>` that the fetch never created.
- */
 describe('fetchRemoteHeads', () => {
   it('passes the all-heads refspec explicitly, overriding whatever the checkout configured', async () => {
     const calls: string[][] = [];
@@ -142,7 +114,6 @@ describe('fetchRemoteHeads', () => {
       calls.push(args);
     });
     expect(calls).to.deep.equal([['fetch', 'origin', ALL_HEADS_REFSPEC]]);
-    // the refspec itself is the whole content of the fix — force-update every head into origin/*
     expect(ALL_HEADS_REFSPEC).to.equal('+refs/heads/*:refs/remotes/origin/*');
   });
 });
@@ -160,23 +131,13 @@ describe('isNonContentPath', () => {
   });
 });
 
-/**
- * The default branch name is what the sync flow *protects*: the reserved-branch guard refuses to let a lane
- * write to it, every `isAncestor` reachability test measures against it, and it is what gets merged into a
- * sync branch to keep the PR mergeable. A wrong value here does not fail loudly — it protects the wrong
- * branch and leaves the real one unguarded.
- */
+// A wrong default-branch name does not fail loudly — it protects the wrong branch.
 describe('parseOriginHeadRef', () => {
   it('reads the ordinary case', () => {
     expect(parseOriginHeadRef('refs/remotes/origin/main\n')).to.equal('main');
     expect(parseOriginHeadRef('refs/remotes/origin/master')).to.equal('master');
   });
 
-  /**
-   * THE regression. The old implementation was `result.trim().split('/').pop()`, which reduced
-   * `refs/remotes/origin/release/main` to `main` — so a repository whose default branch really is
-   * `release/main` had an unrelated `main` protected in its place.
-   */
   it('keeps a slash-containing branch name whole', () => {
     expect(parseOriginHeadRef('refs/remotes/origin/release/main')).to.equal('release/main');
     expect(parseOriginHeadRef('refs/remotes/origin/team/x/main\n')).to.equal('team/x/main');
@@ -184,7 +145,6 @@ describe('parseOriginHeadRef', () => {
   });
 
   it('returns undefined for a shape it does not recognise, so the caller can fall back', () => {
-    // Guessing here would be worse than probing: a wrong name protects the wrong branch.
     expect(parseOriginHeadRef('refs/heads/main')).to.equal(undefined);
     expect(parseOriginHeadRef('fatal: ref refs/remotes/origin/HEAD is not a symbolic ref')).to.equal(undefined);
     expect(parseOriginHeadRef('')).to.equal(undefined);
@@ -196,18 +156,8 @@ describe('parseOriginHeadRef', () => {
   });
 });
 
-/**
- * The three-step sequence every working-tree move needs. The finding this covers was a *missing middle
- * step*: `LaneSyncExecutor.checkoutFromRemote` did `checkout -f -B` + reload with no clean, while its
- * two siblings cleaned. Since a forced checkout leaves untracked files in place and every commit path
- * stages with `add -A`, untracked leftovers — a halted lane's materialized components, a warn-only
- * `restoreWorkspace`'s residue, or a developer's own stray files in a local run — were committed and
- * pushed onto a sync branch as part of a state that did not describe them.
- *
- * So these rows assert the **order**, not merely the presence, of the three steps: a clean that ran
- * after the reload would leave the workspace holding a `.bitmap` view of a tree that no longer exists,
- * and a clean that never ran is the original bug.
- */
+// These rows assert the ORDER of the three steps: a clean after the reload would leave the workspace
+// holding a `.bitmap` view of a tree that no longer exists.
 describe('checkoutPristine', () => {
   /** Records git argv and the reload interleaved, so ordering between the two is assertable. */
   function recorder() {
@@ -239,12 +189,7 @@ describe('checkoutPristine', () => {
     ]);
   });
 
-  /**
-   * `checkout -B` MOVES an existing local ref. A local branch holding commits the start point lacks —
-   * a developer's unpushed work in an interactive run — would be orphaned to the reflog by that move,
-   * which exceeds the command's announced "discards uncommitted changes" contract. So the reset is
-   * refused (the target halts) rather than performed.
-   */
+  // `checkout -B` moves an existing local ref; unpushed commits would be orphaned to the reflog.
   it('REFUSES to reset a local branch whose commits no remote contains, before touching the tree', async () => {
     const steps: string[] = [];
     const run = async (args: string[]) => {
@@ -262,12 +207,7 @@ describe('checkoutPristine', () => {
     expect(steps.some((step) => step.startsWith('clean'))).to.equal(false);
   });
 
-  /**
-   * The two legitimate reconciler shapes the predicate must PASS: a branch at its own pushed tip
-   * being reset to `origin/<branch>`, and a stale-but-pushed local branch being re-forked from the
-   * default branch (its tip lives on `origin/<branch>`, not on the start point) — remote containment
-   * admits both, where start-point ancestry wrongly refused the second.
-   */
+  // Remote containment admits both legitimate reset shapes; start-point ancestry wrongly refuses one.
   it('allows the reset when any remote branch contains the local tip — even a different one than the start point', async () => {
     const steps: string[] = [];
     const run = async (args: string[]) => {
@@ -298,10 +238,6 @@ describe('checkoutPristine', () => {
     expect(steps).to.deep.equal(['checkout -f main', CLEAN, '<reload>']);
   });
 
-  /**
-   * `-f` is what keeps a target *halting* rather than *aborting* when the workspace carries a tracked
-   * modification, so it is asserted rather than left to the argv comparison above.
-   */
   it('always forces the checkout, in both shapes', async () => {
     for (const startPoint of ['origin/lane/x', undefined]) {
       const { steps, run, reload } = recorder();
@@ -311,7 +247,7 @@ describe('checkoutPristine', () => {
     }
   });
 
-  /** The clean is the step the defect omitted; the exclusions are what stop it eating the local scope. */
+  // The exclusions are what stop the clean eating the local scope.
   it('cleans with the scoped exclusions, never -x', async () => {
     const { steps, run, reload } = recorder();
     await checkoutPristine('lane/x', 'origin/lane/x', reload, run);
@@ -372,12 +308,8 @@ describe('localBranchExists', () => {
     expect(argv).to.deep.equal([['rev-parse', '--verify', '--quiet', 'refs/heads/main']]);
   });
 
-  /**
-   * Judged by OUTPUT, never by whether the call threw: simple-git's `raw` resolves with EMPTY output
-   * on some non-zero exits instead of rejecting, so an exception-based check reported every missing
-   * branch as existing under the real runner — while passing against fakes that throw. All three
-   * runner behaviors for a missing branch (empty resolve, undefined resolve, rejection) must be false.
-   */
+  // simple-git's `raw` can resolve with empty output on non-zero exits, so all three missing-branch
+  // runner behaviors (empty resolve, undefined resolve, rejection) must be false.
   it('true only when the ref prints a sha; false for empty, undefined, or throwing runners', async () => {
     expect(await localBranchExists('main', async () => 'abc123\n')).to.equal(true);
     expect(await localBranchExists('main', async () => '')).to.equal(false);
@@ -390,12 +322,8 @@ describe('localBranchExists', () => {
   });
 });
 
-/**
- * The restore variant's whole content is WHICH `checkoutPristine` shape it picks, because each shape
- * is wrong in the other environment: `-B origin/<branch>` in a developer's repo silently resets their
- * default branch (discarding unpushed commits on it), and the plain switch in a detached-HEAD CI
- * checkout fails outright — caught warn-only, stranding the workspace on the last sync branch.
- */
+// Each shape is wrong in the other environment: `-B origin/<branch>` in a developer's repo resets
+// their default branch; a plain switch in a detached-HEAD CI checkout fails outright.
 describe('checkoutPristineRestore', () => {
   function restoreRecorder(localBranchIsPresent: boolean) {
     const steps: string[] = [];

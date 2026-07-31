@@ -5,11 +5,7 @@ const DEFAULT_SCOPE = 'acme.shop';
 const SNAP_1 = 'a'.repeat(40);
 const SNAP_2 = 'b'.repeat(40);
 
-/**
- * A `.bitmap` in the exact shape bit writes it (schema 17, `_bit_lane` last-but-one, `$schema-version`
- * last), because that shape — not a hand-simplified one — is what `git show origin/<branch>:.bitmap`
- * hands the parser.
- */
+/** A `.bitmap` in the exact shape bit writes it (schema 17) — what `git show` hands the parser. */
 function bitmapContent({
   lane,
   components = { comp1: SNAP_1, comp2: SNAP_2 },
@@ -39,27 +35,18 @@ function bitmapWithRawLaneKey(laneKey: any): string {
 
 describe('parseBranchBitmap', () => {
   it('reads the lane pointer scope-qualified — the attribution the ownership rule is built on', () => {
-    // Scope-qualified is the point: two lanes with the same NAME in different scopes map to the same
-    // branch, and telling them apart is what the branch-aliasing halt does.
     const state = parseBranchBitmap(bitmapContent({ lane: { scope: 'other.scope', name: 'my-lane' } }), DEFAULT_SCOPE);
     expect(state?.laneIdStr).to.equal('other.scope/my-lane');
   });
 
   it('reports no lane pointer for a `.bitmap` on main — every ordinary developer branch looks like this', () => {
-    // The inherited-state case: a branch cut from the default branch carries the default branch's
-    // `.bitmap`, which has no `_bit_lane` at all. That is what makes it `inherited-or-none` and untouchable.
     const state = parseBranchBitmap(bitmapContent(), DEFAULT_SCOPE);
     expect(state).to.not.equal(undefined);
     expect(state?.laneIdStr).to.equal(undefined);
   });
 
-  /**
-   * THE unexported-lane guard. `bit lane create foo` writes `_bit_lane` with `exported: false` into the
-   * developer's `.bitmap` *before* the lane has ever been pushed. If that commit lands on a branch, honouring
-   * the pointer would make the reconciler read "this branch mirrors lane foo", fail to find foo on bit.cloud,
-   * conclude the lane was **removed**, and retire the branch — destroying a developer branch on the strength
-   * of a lane that never existed remotely. A lane that was never exported cannot have been removed.
-   */
+  // Honouring an unexported pointer would read "lane removed" for a lane that never existed remotely
+  // and retire a developer branch.
   describe('an unexported lane pointer is not attribution', () => {
     it('ignores `_bit_lane` when bit marked it not exported', () => {
       const state = parseBranchBitmap(
@@ -71,8 +58,6 @@ describe('parseBranchBitmap', () => {
     });
 
     it('still reads the component versions — only the attribution is withheld', () => {
-      // The branch's bit state is still perfectly readable; what it must not do is claim to be some
-      // lane's mirror. Dropping the whole parse instead would be a heavier answer than the problem.
       const state = parseBranchBitmap(
         bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: false }),
         DEFAULT_SCOPE
@@ -87,8 +72,7 @@ describe('parseBranchBitmap', () => {
     });
 
     it('accepts the pointer once bit has marked the lane exported', () => {
-      // Non-vacuity for the three rows above: the same shape with `exported: true` DOES attribute, so they
-      // are testing the flag rather than some unrelated rejection.
+      // Non-vacuity for the rows above: they test the flag, not some unrelated rejection.
       expect(
         parseBranchBitmap(
           bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: true }),
@@ -98,11 +82,6 @@ describe('parseBranchBitmap', () => {
     });
   });
 
-  /**
-   * Malformed `_bit_lane` shapes. None of these can occur from bit itself; they are what a hand-edited or
-   * corrupted `.bitmap` can produce, and every one of them has to land on "no attribution" rather than on a
-   * lane id some comparison might accidentally match.
-   */
   describe('malformed `_bit_lane` never yields attribution', () => {
     it('an empty object', () => {
       expect(parseBranchBitmap(bitmapWithRawLaneKey({}), DEFAULT_SCOPE)?.laneIdStr).to.equal(undefined);
@@ -116,10 +95,7 @@ describe('parseBranchBitmap', () => {
     });
 
     it('a scopeless lane id, which could never match a scope-qualified target anyway', () => {
-      // `LaneId.toString()` falls back to the bare name when the scope is empty. Every target the reconciler
-      // compares against is `<hostScope>/<name>`, so a bare name can never attribute — but if it were
-      // returned it could still be read as "this branch mirrors some OTHER lane" and halt the run over a
-      // lane that does not exist. Withheld rather than passed through.
+      // A returned bare name could still trigger the branch-aliasing halt over a lane that does not exist.
       expect(
         parseBranchBitmap(bitmapWithRawLaneKey({ id: { scope: '', name: 'foo' }, exported: true }), DEFAULT_SCOPE)
           ?.laneIdStr
@@ -136,9 +112,7 @@ describe('parseBranchBitmap', () => {
   });
 
   it('survives the comment header bit prefixes every `.bitmap` with', () => {
-    // `.bitmap` is JSON-with-comments; a plain `JSON.parse` would throw on the generated header, and a
-    // throw here degrades the branch to "not ours" — i.e. silently stops the reconciler from ever
-    // recognizing its own branches.
+    // `.bitmap` is JSON-with-comments; a throw here silently degrades every branch to "not ours".
     const state = parseBranchBitmap(
       bitmapContent({ lane: { scope: DEFAULT_SCOPE, name: 'my-lane' }, prefix: '/* generated, do not edit */\n' }),
       DEFAULT_SCOPE
@@ -146,11 +120,7 @@ describe('parseBranchBitmap', () => {
     expect(state?.laneIdStr).to.equal(`${DEFAULT_SCOPE}/my-lane`);
   });
 
-  /**
-   * FAIL-SAFE. Attribution is half of what licenses `close-pr` to run `git push origin --delete`, so every
-   * way of *not knowing* has to resolve to the answer that licenses nothing. `undefined` is read by every
-   * caller as `inherited-or-none`: no branch is retired, and the branch is not treated as any lane's mirror.
-   */
+  // Every way of not knowing must resolve to the answer that licenses nothing (no branch retired).
   describe('degrades to undefined rather than guessing', () => {
     it('for a `.bitmap` that is not valid JSON', () => {
       expect(parseBranchBitmap('{ this is not json', DEFAULT_SCOPE)).to.equal(undefined);
@@ -181,10 +151,7 @@ describe('parseBranchBitmap', () => {
   });
 
   it('falls back to the repository default scope for a component `.bitmap` does not scope', () => {
-    // A never-exported component has no `scope` of its own; bit resolves it against the workspace's
-    // defaultScope and records its version as `latest`. It must not blow the whole parse up — and `latest`
-    // can never equal a lane component's snap hash, so if such a component ever did appear in a lane's id
-    // set the pair would read as not-converged, which is the safe direction.
+    // `latest` can never equal a snap hash, so such a pair reads as not-converged — the safe direction.
     const content = JSON.stringify({
       comp1: { name: 'comp1', scope: '', defaultScope: DEFAULT_SCOPE, mainFile: 'index.js', rootDir: 'comp1' },
       '$schema-version': '17.0.0',
@@ -206,10 +173,6 @@ describe('fingerprintIdVersions', () => {
   });
 });
 
-/**
- * S — what the branch reflects. This is the value the planner compares against the lane's own fingerprint,
- * so the rows below are the definition of "converged" and of every way a pair can be out of step.
- */
 describe('branchStateFingerprint', () => {
   const laneIds = [`${DEFAULT_SCOPE}/comp1`, `${DEFAULT_SCOPE}/comp2`];
   const onLane = parseBranchBitmap(
@@ -218,8 +181,7 @@ describe('branchStateFingerprint', () => {
   ) as NonNullable<ReturnType<typeof parseBranchBitmap>>;
 
   it('equals the lane fingerprint when the branch records every lane component at the lane head', () => {
-    // Deliberately computed the way `laneHeadFingerprint` computes it, because "the two agree" is the
-    // whole contract: one side reads `LaneData`, the other reads `.bitmap`, and they must be comparable.
+    // Computed the way `laneHeadFingerprint` computes it — the two sides must be comparable.
     const laneSide = fingerprintIdVersions([`${DEFAULT_SCOPE}/comp1@${SNAP_1}`, `${DEFAULT_SCOPE}/comp2@${SNAP_2}`]);
     expect(branchStateFingerprint(onLane, laneIds)).to.equal(laneSide);
   });
@@ -232,11 +194,6 @@ describe('branchStateFingerprint', () => {
     expect(branchStateFingerprint(onLane, laneIds)).to.not.equal(laneMoved);
   });
 
-  /**
-   * A lane component missing from the branch must PARTICIPATE in the fingerprint rather than be skipped.
-   * If it were skipped, "the lane grew a component" would fingerprint identically to "converged", and the
-   * reconciler would never import it.
-   */
   it('counts a lane component the branch does not have at all', () => {
     const grown = [...laneIds, `${DEFAULT_SCOPE}/comp3`];
     expect(branchStateFingerprint(onLane, grown)).to.not.equal(branchStateFingerprint(onLane, laneIds));
@@ -249,11 +206,6 @@ describe('branchStateFingerprint', () => {
     );
   });
 
-  /**
-   * The branch's `.bitmap` also carries every component that is NOT on the lane, sitting at its main
-   * version. Those move whenever main moves; counting them would make an untouched pair read as diverged
-   * after any unrelated release.
-   */
   it('ignores components the branch has that are not on the lane', () => {
     const withExtra = parseBranchBitmap(
       bitmapContent({

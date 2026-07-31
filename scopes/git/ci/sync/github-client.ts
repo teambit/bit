@@ -1,14 +1,9 @@
 import type { GitHostProvider, PrInfo } from './git-host-provider';
 
 /**
- * The `owner/repo` out of a github.com remote URL, or undefined when the URL does not name one.
- *
- * Case-insensitive (DNS is), port-tolerant, and anchored to the *authority*: `github.com` must sit
- * right after the scheme's `//` or a `user@`, never as a path segment of some other host. The port is
- * the subtle part — in a scheme URL (`ssh://git@github.com:22/owner/repo`) a `:digits` after the host
- * is a port, but in the scp-like form (`git@github.com:12345/repo`) the colon starts the PATH and an
- * all-digits owner is a legal GitHub username — so `:digits` is stripped only when a scheme says it
- * is a port.
+ * The `owner/repo` out of a github.com remote URL, anchored to the URL authority. `:digits` is a port
+ * only under a scheme; in the scp-like form (`git@github.com:12345/repo`) the colon starts the PATH
+ * and an all-digits owner is a legal GitHub username.
  */
 export function parseGitHubRepo(remoteUrl: string): string | undefined {
   const url = remoteUrl.trim();
@@ -19,14 +14,7 @@ export function parseGitHubRepo(remoteUrl: string): string | undefined {
   return match?.[1];
 }
 
-/**
- * The host a git remote URL points at, lower-cased, or undefined when the URL has no authority (a local
- * path, a `file://` URL).
- *
- * Matches the authority component of every remote form git accepts and nothing else: an optional scheme
- * (`https://`, `ssh://`, `git+ssh://`), optional `user@` credentials, then the host up to the first `:`
- * (port, or the scp-like path separator in `git@github.com:owner/repo`) or `/`.
- */
+/** The host a git remote URL points at, lower-cased, or undefined when the URL has no authority. */
 function remoteHost(remoteUrl: string): string | undefined {
   return remoteUrl
     .trim()
@@ -35,15 +23,8 @@ function remoteHost(remoteUrl: string): string | undefined {
 }
 
 /**
- * Does this remote point at GitHub? A *host* test and nothing more: `matchesRemote` answers "whose host
- * is this", while resolving the `owner/repo` is `isConfigured`'s job — a github.com remote we can't parse
- * is still GitHub's to claim, and must not fall through to another provider.
- *
- * The host is parsed out and compared for equality rather than searched for in the URL, because
- * `github.com` is a perfectly ordinary *path* segment on another host: a substring test claims
- * `https://gitlab.example.com/mirrors/github.com/acme/repo.git` for GitHub, and this provider then
- * exclusively owns a remote it cannot talk to — every PR operation for that repository is either skipped
- * or, with a token in the environment, aimed at api.github.com for a repository that lives elsewhere.
+ * Does this remote point at GitHub? A host test only — an unparseable github.com remote is still
+ * GitHub's to claim. Host equality, not substring: `github.com` can be a path segment on another host.
  */
 export function isGitHubRemote(remoteUrl: string): boolean {
   return remoteHost(remoteUrl) === 'github.com';
@@ -51,13 +32,7 @@ export function isGitHubRemote(remoteUrl: string): boolean {
 
 const API = 'https://api.github.com';
 
-/**
- * Where a one-line operational warning goes.
- *
- * A plain callback rather than a `Logger`, so this module keeps no dependency on the logger aspect and
- * stays unit-testable without one. Production wiring is a single call site: `ci.main.runtime.ts` hands
- * `GitHubHostProvider` a sink backed by `logger.consoleWarning`.
- */
+/** Warning sink; a plain callback rather than a `Logger` so this module needs no logger aspect. */
 export type WarnFn = (message: string) => void;
 
 const noopWarn: WarnFn = () => {};
@@ -77,44 +52,21 @@ export class GitHubClient implements GitHostProvider {
   }
 
   /**
-   * The client this environment describes, or undefined when it describes none.
-   *
-   * **`origin` outranks `GITHUB_REPOSITORY`.** The repository this client talks to has to be the one the
-   * sync *pushes branches to*, because every PR operation names a branch: `createPr({head})`,
-   * `findPrByBranch`, the label and the halt comment all address a ref that only exists on `origin`. If
-   * the two disagree and the environment wins, the run pushes `lane/x` to one repository and then asks a
-   * different one to open a pull request from a branch it has never heard of — at best a 422, at worst a
-   * pull request opened against a same-named branch that belongs to somebody else's work. So the
-   * origin-parsed repository is preferred and the disagreement is reported once, naming both, since a
-   * mismatch is nearly always a misconfigured workflow (a checkout of another repository, a stale
-   * `GITHUB_REPOSITORY` in a reusable workflow) that the operator needs to see.
-   *
-   * `GITHUB_REPOSITORY` remains the only source when the remote is absent or unparseable — the ordinary
-   * GitHub Actions case where nothing was passed down to us.
+   * The client this environment describes, or undefined when it describes none. `origin` outranks
+   * `GITHUB_REPOSITORY`: every PR operation names a branch that only exists on `origin`, so if the two
+   * disagree the origin-parsed repository wins and the mismatch is warned about once.
    */
   static fromEnv(gitRemoteUrl?: string, warn: WarnFn = noopWarn): GitHubClient | undefined {
-    // `BIT_GITHUB_TOKEN` outranks `GITHUB_TOKEN`, because it is the **override** and the other is the
-    // ambient default. GitHub Actions injects `GITHUB_TOKEN` into every job, so with the old order the
-    // override was dead exactly where it is needed: a user who set `BIT_GITHUB_TOKEN` to a PAT — the
-    // documented way to get permissions the workflow token does not have, and to make sync pushes
-    // trigger downstream CI — silently kept authenticating as the workflow token. Nothing announced it;
-    // the run just failed on permissions, or opened PRs no check ever ran on. The specific-over-ambient
-    // direction also matches how `origin` outranks `GITHUB_REPOSITORY` above.
+    // BIT_GITHUB_TOKEN is the override; GITHUB_TOKEN is the ambient default Actions injects everywhere.
     const token = process.env.BIT_GITHUB_TOKEN || process.env.GITHUB_TOKEN;
-    // The remote is only allowed to name the repository once it is established to *be* a github.com
-    // remote. `parseGitHubRepo` anchors github.com to the URL authority itself, but the claim decision
-    // stays here, on `isGitHubRemote` — one host test, one extraction, neither trusting the other.
-    // A remote we can see and that is demonstrably NOT github's is a hard no, whatever the environment
-    // says. `GITHUB_REPOSITORY` is set for every job on GitHub Actions, including ones whose `origin` is
-    // a GitLab/Bitbucket mirror — without this, such a run mints a client for the env var's repository
-    // and aims this repository's pull requests at a completely different one.
+    // A remote that is demonstrably not GitHub's is a hard no, whatever the environment says —
+    // GITHUB_REPOSITORY is set on every Actions job, including ones whose origin is another host.
     if (gitRemoteUrl && !isGitHubRemote(gitRemoteUrl)) return undefined;
     const repoFromRemote = gitRemoteUrl ? parseGitHubRepo(gitRemoteUrl) : undefined;
     const repoFromEnv = process.env.GITHUB_REPOSITORY;
     const repo = repoFromRemote || repoFromEnv;
     if (!token || !repo) return undefined;
-    // Compared case-insensitively: GitHub owner and repository names are case-insensitive, so
-    // `Acme/Shop` and `acme/shop` are the same repository and warning about them would be noise.
+    // GitHub owner/repo names are case-insensitive.
     if (repoFromRemote && repoFromEnv && repoFromRemote.toLowerCase() !== repoFromEnv.toLowerCase()) {
       warn(
         `bit ci sync: GITHUB_REPOSITORY is "${repoFromEnv}" but the "origin" remote points at ` +
@@ -186,61 +138,32 @@ export class GitHubClient implements GitHostProvider {
 }
 
 /**
- * The registrable GitHub provider: a `GitHostProvider` that resolves its `GitHubClient` from the
- * environment lazily, on first use.
- *
- * Registration happens when the ci aspect loads — long before anyone knows whether this run has a
- * token, or what `origin` points at. So the registered object cannot *be* a `GitHubClient`
- * (`fromEnv` returns undefined without credentials, and there'd be nothing to register). Instead it's
- * this shell: always registrable, never throws at registration time, and simply reports
- * `isConfigured() === false` when the credentials aren't there — which the engine reads as PR-less
- * sync.
- *
- * A successfully resolved client is memoized — `fromEnv` is a pure function of `process.env` plus the
- * remote URL, both fixed for the life of a command — while an unresolved one is retried, so a later
- * call that *does* carry the remote URL can still succeed. That keeps `isConfigured` cheap and
- * idempotent, which the interface requires of it.
+ * The registrable GitHub provider: resolves its `GitHubClient` from the environment lazily, since
+ * registration happens at aspect load, before credentials are known. A resolved client is memoized;
+ * an unresolved one is retried so a later call that does carry the remote URL can still succeed.
  */
 export class GitHubHostProvider implements GitHostProvider {
   readonly name = 'github';
 
   private client: GitHubClient | undefined;
 
-  /**
-   * The last `origin` URL this provider was asked about, remembered so a PR method can still recover
-   * `owner/repo` from it. Both interface methods that receive the remote record it, because either can
-   * be the first (or only) one the engine calls.
-   */
+  /** The last `origin` URL seen, so a PR method can still recover `owner/repo` from it. */
   private remoteHint: string | undefined;
 
-  /**
-   * The warning sink is optional so the provider stays constructible from anywhere (tests, a consumer
-   * registering it by hand). The aspect passes a real one; without it the client resolves exactly as it
-   * otherwise would and only the advisory warning is lost.
-   */
   constructor(private onWarning: WarnFn = noopWarn) {}
 
   matchesRemote(remoteUrl: string): boolean {
     const matches = isGitHubRemote(remoteUrl);
-    // Only remember a remote that is actually ours. The hint is what `resolveClient` falls back to when a
-    // PR method is called without one, so remembering a GitLab URL here would let it be combined with
-    // `GITHUB_REPOSITORY` later and produce a client for the wrong repository.
+    // Only remember a remote that is ours — a foreign hint could later pair with GITHUB_REPOSITORY
+    // into a client for the wrong repository.
     if (matches) this.remoteHint = remoteUrl;
     return matches;
   }
 
   /**
-   * **A known non-GitHub remote can never count as configured**, however complete the environment looks.
-   *
-   * This is not the same question as `matchesRemote`, and the difference is where the bug was.
-   * `selectGitHostProvider` only consults claimants when *someone* claims the remote; when nobody does —
-   * a GitLab origin, a self-hosted host, an `insteadOf` rewrite — it falls back to "the sole configured
-   * provider". On GitHub Actions `GITHUB_TOKEN` and `GITHUB_REPOSITORY` are both set for every job, so
-   * this provider answered "configured" for a repository it had just declined to claim, became the sole
-   * candidate, and the run created pull requests on the wrong host's repository.
-   *
-   * With no URL at all the behaviour is unchanged: nothing has been established about the remote, and the
-   * sole-configured fallback is exactly what should apply.
+   * A known non-GitHub remote can never count as configured, however complete the environment looks:
+   * on Actions the env is always set, so answering "configured" for a remote this provider declined to
+   * claim would make it the sole-configured fallback and aim PRs at the wrong host's repository.
    */
   isConfigured(remoteUrl?: string): boolean {
     if (remoteUrl && !isGitHubRemote(remoteUrl)) return false;
@@ -268,12 +191,6 @@ export class GitHubHostProvider implements GitHostProvider {
     return this.requireClient().addLabel(prNumber, label);
   }
 
-  /**
-   * The remote URL is how `owner/repo` is recovered when `GITHUB_REPOSITORY` isn't set (any CI that
-   * isn't GitHub Actions). Selection normally supplies it via `isConfigured` before any PR method runs,
-   * but a consumer holding this provider directly may not — so fall back to the remembered hint rather
-   * than silently losing the origin-parse path and reporting "not configured".
-   */
   private resolveClient(remoteUrl?: string): GitHubClient | undefined {
     if (!this.client) this.client = GitHubClient.fromEnv(remoteUrl ?? this.remoteHint, this.onWarning);
     return this.client;

@@ -3,39 +3,13 @@ import path from 'path';
 import { parseGitHubRepo, isGitHubRemote } from './github-client';
 
 /**
- * `bit ci sync --init` — pure scaffolding logic (template rendering, file writes, checklist text).
+ * `bit ci sync --init` — pure scaffolding logic, unit-testable without a live workspace/git checkout.
  *
- * Kept separate from `ci.main.runtime.ts` so the substitution and checklist logic can be unit-tested
- * without a live `Workspace`/git checkout. The one part that genuinely needs the live workspace
- * instance — writing `"teambit.git/ci": { "sync": {} }` into workspace.jsonc through the
- * comment-preserving `WorkspaceConfig` API (see `workspace/scope-trust/scope-trust.ts` for the same
- * pattern: `getWorkspaceConfig().setExtension(..., { mergeIntoExisting: true })` then `.write()`) —
- * stays in `ci.main.runtime.ts`, the only place that already holds a `Workspace` reference. That is
- * the "robust path" chosen over printing the config block for the user to paste: it preserves existing
- * comments/keys under `teambit.git/ci` and is idempotent by construction (skips when `sync` already
- * exists).
- *
- * TEMPLATE SOURCE OF TRUTH: `BIT_SYNC_WORKFLOW_RAW` and `BIT_RELEASE_WORKFLOW_RAW` below are copied
- * VERBATIM (byte-for-byte, including every comment) from the `bit-git-sync` action workspace's
- * canonical templates:
- *   git-sync/git-sync/workflows/templates/bit-sync.yml
- *   git-sync/git-sync/workflows/templates/bit-release.yml
- *
- * They MUST be kept in sync with those files. The ONLY departure from a byte-for-byte copy is the two
- * `DEFAULT_BRANCH_MARKER` substitution points below — everything else, including the CHANGE-ME
- * comments and the placeholder `uses: luvktest/bit-git-sync@v1` action ref, is left untouched on
- * purpose:
- *   - the action ref has no way to be auto-detected (per the design contract, it stays the placeholder
- *     with its own CHANGE-ME comment);
- *   - rewriting prose that mentions `main` in passing (the header comment, the CHANGE-ME comment text)
- *     is not a "hardcoded main branch literal" in the sense the contract means — it is documentation
- *     for a human hand-copying the file, and touching it risks this generator silently drifting from
- *     the canonical template's wording on the next update. Only the two functional YAML values that
- *     actually gate which branch triggers/skips a workflow are substituted;
- *   - `bit-sync/main` (the `mainSyncBranch` config default) is left as-is everywhere it appears — it is
- *     a *config* default, not the repository's default branch, and stays correct unless the customer's
- *     `sync.mainSyncBranch` override make it wrong (in which case they were always going to hand-edit
- *     the CHANGE-ME lines that name it).
+ * TEMPLATE SOURCE OF TRUTH: `BIT_SYNC_WORKFLOW_RAW` / `BIT_RELEASE_WORKFLOW_RAW` are byte-for-byte
+ * copies of the canonical templates in the `bit-git-sync` action workspace
+ * (git-sync/git-sync/workflows/templates/) and MUST be kept in sync with them. The ONLY departure is
+ * the two `DEFAULT_BRANCH_MARKER` substitution points; everything else — CHANGE-ME comments, the
+ * placeholder action ref, `bit-sync/main` config defaults — stays untouched.
  */
 
 /** Where `scaffoldWorkflowFiles` writes each file, relative to the workspace root. */
@@ -229,11 +203,8 @@ jobs:
 `;
 
 /**
- * The exact substring in each raw template that encodes "the repository's default branch", and
- * nothing else. Substituting by exact substring rather than a blanket `main` regex is deliberate:
- * `\bmain\b` also matches inside `bit-main-export` / `main-export` (the dispatch-type alias and the
- * comment describing it) and inside `bit-sync/main` (the `mainSyncBranch` default) — none of which
- * are the repository's default branch, and a blanket replace would corrupt them.
+ * The exact substring in each template that encodes the repository's default branch. Exact substring,
+ * never a blanket `main` regex — that would also corrupt `bit-main-export` and `bit-sync/main`.
  */
 const DEFAULT_BRANCH_MARKER = {
   sync: "branches-ignore: [main, 'bit-sync/**']",
@@ -241,27 +212,18 @@ const DEFAULT_BRANCH_MARKER = {
 } as const;
 
 /**
- * A YAML single-quoted scalar of `value` — the only escape inside single quotes is a doubled `''`.
- *
- * Both substitution points land the branch name inside a YAML **flow sequence** (`[a, b]`), where `,`
- * and `]` are structural. A branch name may legally contain both: git's own `check-ref-format` rejects
- * only a specific list of characters (space, `~^:?*[\`, `..`, `@{`, a trailing `.` or `.lock`), and
- * `validateBranchName` deliberately mirrors that rather than inventing a stricter grammar — so `a,b]c`
- * is a branch this command can be pointed at. Unquoted, it renders
- * `branches: [a,b]c]`, which is a *different* two-element sequence with trailing garbage, and the
- * scaffolded workflow either fails to parse or silently watches the wrong branches. Quoting is
- * unconditional rather than only-when-needed: a conditional quote is a second code path that the common
- * case never exercises, and `branches: ['main']` is exactly as correct as `branches: [main]`.
+ * A YAML single-quoted scalar of `value` (the only escape inside single quotes is a doubled `''`).
+ * Both substitution points land inside a YAML flow sequence, where `,` and `]` are structural — and a
+ * branch name may legally contain both, so quoting is unconditional.
  */
 function yamlSingleQuoted(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
 }
 
 /**
- * Replace the single default-branch literal inside `marker` with `defaultBranch`, inside `raw`.
- * Throws rather than silently no-op-ing if the marker has drifted out of the template — a change to
- * the canonical workflow that moves or rewords this line must fail this substitution loudly instead of
- * shipping a scaffolded workflow that still says `main` on the wrong line.
+ * Replace the default-branch literal inside `marker` with `defaultBranch`, inside `raw`. Throws when
+ * the marker has drifted out of the template — a reworded canonical workflow must fail loudly, not
+ * ship a scaffold that still says `main`.
  */
 function substituteDefaultBranch(raw: string, marker: string, defaultBranch: string): string {
   if (!raw.includes(marker)) {
@@ -271,11 +233,8 @@ function substituteDefaultBranch(raw: string, marker: string, defaultBranch: str
         `BIT_RELEASE_WORKFLOW_RAW; update the copy and this substitution point together`
     );
   }
-  // Both replacements pass a **function**, not a string. `String.replace` gives `$&`, `$'`, `` $` ``
-  // and `$$` their special meanings inside a *string* replacement, and all four can occur in a branch
-  // name (`$` is git-legal) — or be manufactured by the `''` escaping above, which turns `a$'b` into
-  // `a$''b` and would then splice in the text following the match. A function replacement is inserted
-  // verbatim.
+  // Function replacements, not strings: `$&`/`$'`/`$$` are special in string replacements and `$` is
+  // git-legal in a branch name. A function replacement is inserted verbatim.
   const substitutedMarker = marker.replace('main', () => yamlSingleQuoted(defaultBranch));
   return raw.replace(marker, () => substitutedMarker);
 }
@@ -296,11 +255,7 @@ export interface ScaffoldFileOutcome {
   status: 'written' | 'skipped';
 }
 
-/**
- * Write one workflow file under `workspaceDir`, refusing to overwrite a file that already exists —
- * `--init` must be safe to re-run (e.g. after a customer hand-edited the CHANGE-ME lines, or just to
- * pick up the other file after fixing a typo in one of them).
- */
+// Never overwrites an existing file — `--init` must be safe to re-run after hand-edits.
 function writeIfAbsent(workspaceDir: string, relativePath: string, content: string): ScaffoldFileOutcome {
   const absPath = path.join(workspaceDir, relativePath);
   if (fs.existsSync(absPath)) {
@@ -325,11 +280,9 @@ export interface OwnerRepo {
 }
 
 /**
- * Derive `{owner, repo}` from the `origin` remote URL when it is a parseable GitHub remote, else
- * `undefined` (a non-GitHub host, a local/`file://` remote used in tests, or no remote at all) — the
- * checklist falls back to a `<owner>/<repo>` placeholder in that case. Reuses the same parsing
- * `github-client.ts` uses to pick the git host provider, so the two never disagree about what counts
- * as "this remote is GitHub, and this is its owner/repo".
+ * Derive `{owner, repo}` from the `origin` remote when it is a parseable GitHub remote, else
+ * undefined (the checklist falls back to a placeholder). Reuses `github-client.ts`'s parsing so the
+ * two never disagree.
  */
 export function deriveOwnerRepo(remoteUrl: string | undefined): OwnerRepo | undefined {
   if (!remoteUrl || !isGitHubRemote(remoteUrl)) return undefined;
@@ -341,18 +294,15 @@ export function deriveOwnerRepo(remoteUrl: string | undefined): OwnerRepo | unde
 }
 
 /**
- * The bit.cloud custom webhook payload template, verified byte-perfect against a live delivery (see
- * the design spec's §3, "bit.cloud webhook events"). Discriminates lane vs. main export on the
- * receiving end by whether `laneId` is empty.
+ * The bit.cloud custom webhook payload template, verified byte-perfect against a live delivery.
+ * Lane vs. main export is discriminated by whether `laneId` is empty.
  */
 const WEBHOOK_PAYLOAD_TEMPLATE =
   '{"event_type":"bit-export","client_payload":{"laneId":"{{laneId}}","componentIds":"{{componentIds}}","owner":"{{owner}}","actor":"{{username}}"}}';
 
 /**
- * The manual-steps checklist `bit ci sync --init` prints after scaffolding: everything the command
- * itself cannot do (secrets live in GitHub settings; the webhook lives on bit.cloud). Content is fixed
- * by the "Zero-touch onboarding" design contract — secrets, the permissions note, the bit.cloud webhook
- * recipe (URL, headers, payload template, the header-drop warning), and the fetch-depth:0 requirement.
+ * The manual-steps checklist `bit ci sync --init` prints: everything the command itself cannot do
+ * (secrets live in GitHub settings; the webhook lives on bit.cloud).
  */
 export function renderInitChecklist(ownerRepo: OwnerRepo | undefined): string {
   const repoSegment = ownerRepo ? `${ownerRepo.owner}/${ownerRepo.repo}` : '<owner>/<repo>';

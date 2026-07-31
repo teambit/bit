@@ -7,20 +7,9 @@ import { comp1Src, comp2Src, createGitHostEnvGuard, syncE2eHelpers } from './ci-
 chai.use(chaiFs);
 
 /**
- * e2e coverage for the **state model v2** behaviours of `bit ci sync` — the ones that are about *where the
- * reconciler's state comes from* rather than about the reconcile cycle itself:
- *
- *   - a developer who snaps and exports from the branch has advanced the branch's own state, and the pair
- *     reads as converged instead of manufacturing a round of merge churn;
- *   - the known Stage-1 delta, where an unsnapped edit riding along with a `.bitmap` commit is invisible
- *     for exactly one round (and self-heals on the next);
- *   - a developer's own `.bitmap` commit must not launder a branch into deletion, in either of its shapes;
- *   - a cold runner — fresh clone, empty local scope — which is what every production run actually is.
- *
- * Split out of `ci-sync.e2e.ts` when that file outgrew the repo's max-lines rule. The fixture drivers are
- * shared via `./ci-sync-support`, so "a dev commit" and "the file on the branch" mean the same thing in both
- * halves. Same environment contract as the sibling suite: a local bare git repo as `origin`, a file://
- * remote scope, and no git-host credentials, so every run takes the PR-less path.
+ * e2e coverage for the state-model-v2 behaviours of `bit ci sync` — where the reconciler's state comes
+ * from, rather than the reconcile cycle itself. Same environment contract as `ci-sync.e2e.ts`: a local
+ * bare git repo as `origin`, a file:// remote scope, and no git-host credentials (PR-less path).
  */
 describe('bit ci sync — state model v2', function () {
   this.timeout(0);
@@ -56,21 +45,8 @@ describe('bit ci sync — state model v2', function () {
     helper.scopeHelper.destroy();
   });
 
-  // =============================================================================================
-  // THE STATE-MODEL-V2 CELL. A developer who works on the branch *with bit* — `bit snap`, `bit export`,
-  // then commit the resulting `.bitmap` — has legitimately advanced the branch's own bit state to the
-  // lane's. Since the reconciler derives that state from `.bitmap` rather than from what it last wrote in
-  // a commit trailer, it sees the pair as CONVERGED.
-  //
-  // Under the trailer-derived model the same branch read as "the lane moved (it did — the developer
-  // exported) AND the branch has dev commits", i.e. `merge-diverged`: a full lane-into-branch merge, a
-  // snap, an export and a push, all to arrive back where the developer already was. That is the churn this
-  // model removes, and it is not cosmetic — every one of those rounds advances the lane and rewrites the
-  // branch under a developer who did nothing wrong.
-  //
-  // The second half of the block is the guard on the first: dev commits must still be *detected* on top of
-  // the newly advanced state, or "converged" would just be a synonym for "blind".
-  // =============================================================================================
+  // The second half of the block guards the first: dev commits must still be detected on top of the
+  // newly advanced state, or "converged" would just be a synonym for "blind".
   describe("a developer who snaps and exports from the branch advances the branch's own state", () => {
     const LANE = 'dev-snap';
     let defaultBranch: string;
@@ -101,9 +77,6 @@ describe('bit ci sync — state model v2', function () {
       let branchTipAfterDevWork: string;
 
       before(() => {
-        // Exactly what a developer does on a lane branch: check it out (its committed `.bitmap` puts the
-        // workspace on the lane), edit, snap, export, then commit — `.bitmap` included, because the snap
-        // rewrote it.
         gitFetch();
         helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
         helper.fs.outputFile('comp2/index.js', comp2Src('dev-snapped-on-branch'));
@@ -123,9 +96,6 @@ describe('bit ci sync — state model v2', function () {
       });
 
       it('should be non-vacuous: the dev commit really did move .bitmap, and it is the branch tip', () => {
-        // Both halves matter. If the commit had not touched `.bitmap` this would be scenario C
-        // (`export-branch`) wearing a different hat; if it were not the tip, `hasDevCommits` would be true
-        // for an unrelated reason.
         const changed = helper.command.runCmd(`git show --stat --format= origin/${LANE}`);
         expect(changed, `files in the dev commit:\n${changed}`).to.include('.bitmap');
         expect(branchTipAfterDevWork).to.equal(devCommitSha);
@@ -134,7 +104,6 @@ describe('bit ci sync — state model v2', function () {
       it('should read the pair as CONVERGED — the developer already did the sync', () => {
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
         expect(output).to.include(`${LANE} -> noop (converged)`);
-        // The v1 outcome this replaces. Naming it keeps the test honest about what regressed if it fires.
         expect(output).to.not.include(`${LANE} -> merge-diverged`);
         expect(output).to.not.include(`${LANE} -> export-branch`);
         expect(output).to.not.include(`${LANE} -> import-lane`);
@@ -171,9 +140,6 @@ describe('bit ci sync — state model v2', function () {
       });
 
       it('should export the branch onto the lane: the state commit is the baseline, not the sync commit', () => {
-        // The baseline the dev commit sits on top of is the DEVELOPER's `.bitmap` commit from the previous
-        // block — a commit the reconciler never wrote. Anchoring on "the last commit we wrote" would have
-        // counted the developer's own commit as a dev commit forever.
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
         expect(output).to.include(`${LANE} -> export-branch`);
       });
@@ -200,24 +166,7 @@ describe('bit ci sync — state model v2', function () {
       });
     });
 
-    /**
-     * THE KNOWN STAGE-1 DELTA, locked deliberately rather than left undiscovered.
-     *
-     * `hasDevCommits` counts commits *above* the state commit, so a single commit that BOTH advances the
-     * branch's bit state (snap + export, rewriting `.bitmap`) AND carries a source edit nobody snapped is its
-     * own state commit — the edit rides along invisibly. The pair reads as converged at the bit level, which
-     * it genuinely is, while that edit has not reached the lane.
-     *
-     * It is neither lost nor permanent: the edit is committed in git, nothing is force-pushed, and the next
-     * commit on the branch makes `hasDevCommits` true and the export picks it up. The cell below locks both
-     * halves — the invisible round AND the self-heal — so the behavior is a documented property rather than a
-     * surprise, and so a future fix has something to change.
-     *
-     * The real fix is not a planner change: telling "the branch is ahead of the lane" from "the lane is ahead
-     * of the branch" needs snap-graph reachability (is the branch's snap a descendant of the lane's head?),
-     * which is a bit API question deferred to Stage 1. What the run CAN do cheaply — and now does — is stop
-     * claiming more than it knows, by saying out loud that the tip is not one of its own commits.
-     */
+    // The known Stage-1 delta, locked deliberately: both the invisible round AND the self-heal.
     describe('an unsnapped edit riding along with a .bitmap commit is invisible for one round', () => {
       let output: string;
       let exitCode: number;
@@ -253,8 +202,6 @@ describe('bit ci sync — state model v2', function () {
       });
 
       it('should SAY that the tip is not one of its own commits, rather than claiming a bare convergence', () => {
-        // The cheap half of the honesty fix: no planner change, but the run stops implying it has seen
-        // everything on the branch when the tip is a commit it did not write.
         expect(output).to.include(`${LANE}'s tip is not a bit ci sync commit`);
         expect(output).to.include('never snapped stay invisible until the next commit');
       });
@@ -262,7 +209,6 @@ describe('bit ci sync — state model v2', function () {
       it('should be non-vacuous: the unsnapped edit really is on the branch and really is NOT on the lane', () => {
         expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('never-snapped-edit');
         expect(laneTipFile(devPath, 'comp2/index.js')).to.not.include('never-snapped-edit');
-        // the snapped half DID reach the lane, so the two are genuinely being told apart
         expect(laneTipFile(devPath, 'comp1/index.js')).to.include('snapped-and-exported');
       });
 
@@ -283,23 +229,8 @@ describe('bit ci sync — state model v2', function () {
     });
   });
 
-  // =============================================================================================
-  // OWNERSHIP LAUNDERING. `close-pr` deletes branches, and the v2 evidence is `.bitmap`-derived — which means
-  // a DEVELOPER can write it. `bit create`, an unexported `bit snap`, `bit deps set`: each rewrites `.bitmap`,
-  // so the developer's own commit becomes the state commit, the tip IS the state commit (no dev commits above
-  // it), and the lane pointer they inherited is still in the file. Every structural test then reads
-  // `own-live` with nothing above it — the exact shape whose branch gets deleted when the lane goes away.
-  //
-  // Worse, `bit lane create foo` writes `_bit_lane` with `exported: false` before the lane has ever been
-  // pushed, so a developer branch can carry a pointer to a lane that has never existed on any remote — and
-  // "not on the remote" is precisely how the reconciler recognizes a REMOVED lane.
-  //
-  // Two independent defences, both locked here:
-  //   1. deletion requires bit-native attribution AND the `[bit-sync]` marker on the tip (the one place a
-  //      marker is consulted, and it can only ever withhold a deletion);
-  //   2. an unexported lane pointer is not attribution at all — a lane that was never exported cannot have
-  //      been removed.
-  // =============================================================================================
+  // Two independent defences: deletion requires attribution AND the marker on the tip; an unexported
+  // lane pointer is not attribution at all.
   describe("a developer's own .bitmap commit must not launder a branch into deletion", () => {
     const LANE = 'launder';
     /** a developer branch whose `.bitmap` points at a lane that was never exported anywhere */
@@ -324,15 +255,14 @@ describe('bit ci sync — state model v2', function () {
       gitFetch();
     });
 
-    // -------------------------------------------------------------------------------------------
     describe("the branch tip is a DEVELOPER's .bitmap commit and the lane is then removed", () => {
       let output: string;
       let exitCode: number;
       let tipBefore: string;
 
       before(() => {
-        // An unexported `bit snap` on the branch: it rewrites `.bitmap`, so this commit becomes the state
-        // commit AND the tip. The work exists only here — it was never exported to the lane.
+        // An unexported snap: this commit becomes the state commit AND the tip, and the work exists
+        // only here.
         gitFetch();
         helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
         helper.fs.outputFile('comp2/index.js', comp2Src('unexported-local-snap'));
@@ -350,8 +280,6 @@ describe('bit ci sync — state model v2', function () {
       });
 
       it('should be non-vacuous: the tip really is the state commit, and it still carries the lane pointer', () => {
-        // Without both of these the branch would be kept for an ordinary reason (dev commits above the
-        // state commit, or no attribution at all) and this test would prove nothing about the marker.
         const changed = helper.command.runCmd(`git show --stat --format= origin/${LANE}`);
         expect(changed, `files in the dev commit:\n${changed}`).to.include('.bitmap');
         expect(branchTipMessage(LANE)).to.not.include('[bit-sync]');
@@ -362,7 +290,6 @@ describe('bit ci sync — state model v2', function () {
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
         expect(output).to.include(`${LANE} -> close-pr`);
         expect(output).to.include(`branch ${LANE} kept: its tip was not written by bit ci sync`);
-        // and NOT the other keep reason, which would send a maintainer looking for the wrong thing
         expect(output).to.not.include('branch carries unmerged commits');
       });
 
@@ -387,12 +314,6 @@ describe('bit ci sync — state model v2', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
-    /**
-     * `bit lane create` marks the pointer `exported: false`. A branch carrying that commit names a lane that
-     * has never existed on any remote — so "the remote does not have it" means "it was never pushed", not
-     * "it was removed", and nothing about the branch may be retired on the strength of it.
-     */
     describe('a developer branch whose .bitmap points at a lane that was never exported', () => {
       let output: string;
       let exitCode: number;
@@ -437,25 +358,8 @@ describe('bit ci sync — state model v2', function () {
     });
   });
 
-  // =============================================================================================
-  // COLD START — the state every production run is actually in.
-  //
-  // `bit ci sync` runs on an ephemeral GitHub runner: fresh clone, `bit init`, local scope that has never
-  // imported a thing. This suite's other 40-odd scenarios all run against one long-lived warm workspace, so
-  // a dependency on a cached lane object is invisible to every one of them — which is exactly what happened.
-  // On a cold runner `bit ci sync <lane>` classified the pair as merge-diverged and then halted with
-  //
-  //     failed to merge lane <scope>/<lane> into branch <lane>:
-  //     the branch's .bitmap points at "main" rather than <scope>/<lane>
-  //
-  // about a branch whose committed `.bitmap` provably carried the lane pointer. The guard was asking
-  // `lanes.getCurrentLane()`, which reads the pointer from `.bitmap` and then resolves it through the LOCAL
-  // SCOPE's copy of the lane object; with no object it answered "main" and the guard reported a fact about
-  // the scope cache as a fact about the branch. See `workspace-lane.ts`.
-  //
-  // This block is the regression lock, and its value is entirely in the `makeLocalScopeCold()` call: run the
-  // same fixture warm and it passes against the broken code too.
-  // =============================================================================================
+  // The value of this block is entirely in the `makeLocalScopeCold()` call: run the same fixture warm
+  // and it passes against broken code too (see `workspace-lane.ts`).
   describe('a cold runner (fresh clone, empty local scope) reconciles a diverged pair', () => {
     const LANE = 'cold-start';
     let defaultBranch: string;
@@ -482,13 +386,11 @@ describe('bit ci sync — state model v2', function () {
       expect(first.exitCode, `bit ci sync ${LANE} output:\n${first.output}`).to.equal(0);
       gitFetch();
 
-      // Diverge on DIFFERENT files, so a correct merge is conflict-free and the only thing that can fail
-      // is the cold-start machinery itself.
+      // Diverge on DIFFERENT files, so a correct merge is conflict-free and only the cold-start
+      // machinery can fail.
       laneSideEdit(devPath, 'comp1/index.js', comp1Src('cold-lane-snap-2'), 'cold lane snap 2');
       branchSideCommit(LANE, defaultBranch, 'comp2/index.js', comp2Src('cold-branch-dev'), 'feat: dev edits comp2');
 
-      // THE POINT OF THE BLOCK. Everything above built the fixture on a warm workspace; the run below is
-      // the first one that starts where production starts.
       makeLocalScopeCold();
       objectsWhenCold = scopeObjectCount();
       bitmapOnBranch = fileOnBranch(LANE, '.bitmap');
@@ -499,17 +401,12 @@ describe('bit ci sync — state model v2', function () {
     });
 
     it('should be non-vacuous: the scope really is cold, and the branch really does name the lane', () => {
-      // Without the first assertion this is just scenario D1 again. Without the second, a halt would be
-      // *correct* and the test would be locking the wrong thing — this is the exact pair of facts that
-      // made the production failure a bug rather than a true refusal.
       expect(objectsWhenCold, 'the local scope must hold no objects at all when the run starts').to.equal(0);
       expect(bitmapOnBranch, `.bitmap on origin/${LANE}:\n${bitmapOnBranch}`).to.include(LANE);
       expect(bitmapOnBranch).to.include('_bit_lane');
     });
 
     it('should have had to fetch everything it used, which is what "cold" costs', () => {
-      // The other half of the coldness claim: the run cannot have been reading a cached lane object,
-      // because there was nothing cached to read.
       expect(objectsAfterRun, 'the run must have imported objects into the empty scope').to.be.greaterThan(0);
     });
 
@@ -517,7 +414,6 @@ describe('bit ci sync — state model v2', function () {
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
       expect(output).to.include(`${LANE} -> merge-diverged`);
       expect(output).to.not.include('HALTED');
-      // the exact production symptom, named so a regression is unmistakable in the failure output
       expect(output).to.not.include(`the branch's .bitmap points at "main"`);
     });
 
@@ -547,13 +443,6 @@ describe('bit ci sync — state model v2', function () {
       });
     });
 
-    /**
-     * The other half of the audit: `import-lane` onto an EXISTING branch reads the current lane too, to
-     * decide whether it must step off to main before re-importing. Cold, the scope-object read said "main"
-     * for a branch already on the lane, so it skipped the step-off, `switchLanes` threw "already checked
-     * out" (which `switchToLane` reports as success), nothing was materialized, and the run halted blaming
-     * the switch. That is the commonest action there is, broken on every fresh runner.
-     */
     describe('and import-lane onto an existing branch, also cold', () => {
       let importOutput: string;
       let importExit: number;
@@ -577,21 +466,6 @@ describe('bit ci sync — state model v2', function () {
       });
     });
 
-    /**
-     * The third cold path, and the one whose trap is subtlest: `export-branch`.
-     *
-     * `snapPrCommit` reuses the remote lane through `switchToLane`, which is documented as fetching the
-     * latest lane head. On this path it never does: the workspace is ALREADY on the lane (the branch's
-     * `.bitmap` put it there), so `switchLanes` throws "already checked out" from
-     * `throwForSwitchingToCurrentLane` — inside `populatePropsAccordingToLocalLane`, i.e. **before any
-     * fetch** — and `switchToLane` reports that throw as success. Nothing is imported, the `landedOnLane`
-     * probe then asks the local scope for a lane object that isn't there, and `noDestructiveRecovery` turns
-     * the phantom "failed to switch" into a halt. The developer's commit never reaches the lane.
-     *
-     * This is why "the switch has just warmed the scope" is not a safe assumption: a switch that no-ops
-     * warms nothing. The fix imports the lane before delegating, so the probe passes because the lane is
-     * really there and the snap/export runs against the lane's real remote state.
-     */
     describe('and export-branch, also cold', () => {
       let exportOutput: string;
       let exportExit: number;
@@ -617,13 +491,10 @@ describe('bit ci sync — state model v2', function () {
         expect(exportExit, `bit ci sync output:\n${exportOutput}`).to.equal(0);
         expect(exportOutput).to.include(`${LANE} -> export-branch`);
         expect(exportOutput).to.not.include('HALTED');
-        // the exact pre-fix symptom, named so a regression is unmistakable
         expect(exportOutput).to.not.include('Refusing destructive recovery');
       });
 
       it("should carry the dev commit's content onto the LANE tip", () => {
-        // The whole point of export-branch. A halt here loses the developer's work silently until a human
-        // notices the red run.
         expect(laneTipFile(devPath, 'comp2/index.js')).to.include('cold-branch-dev-2');
       });
 
@@ -636,29 +507,9 @@ describe('bit ci sync — state model v2', function () {
     });
   });
 
-  // =============================================================================================
-  // A NARROWED REFSPEC — the second way a real checkout differs from this suite's fixture workspace.
-  //
-  // `git clone --single-branch` (and `git remote set-branches`, a mirror, an `actions/checkout` whose
-  // refspec names one branch) writes `remote.origin.fetch = +refs/heads/<one>:refs/remotes/origin/<one>`.
-  // A bare `git fetch origin` then updates exactly one remote-tracking ref.
-  //
-  // That collides with how the reconciler enumerates work. Enumeration goes through `ls-remote`, which asks
-  // the remote directly and therefore sees EVERY branch — deliberately, so a stale lane branch cannot go
-  // unnoticed. The reconciler then reads the branch it was just told exists through
-  // `refs/remotes/origin/<branch>`: `git log` for the state commit, `git show` for the committed `.bitmap`,
-  // `checkout -f -B <branch> origin/<branch>` to materialize it. None of those refs existed, so a lane whose
-  // branch had just been enumerated died on a git "unknown revision" — on every run, for every branch but
-  // the one the clone tracked.
-  //
-  // This was documented as an unsupported configuration ("single-branch clones are not supported"). It is
-  // now supported, because every sync fetch passes `+refs/heads/*:refs/remotes/origin/*` on the command
-  // line and git ignores the configured refspec when one is given. SHALLOW clones remain unsupported —
-  // that is a different axis (missing commits, not missing refs) and no refspec can fix it.
-  //
-  // The value of this block is entirely in the `--single-branch` flag: run the same fixture off a normal
-  // clone and it passes against the broken code too.
-  // =============================================================================================
+  // The value of this block is entirely in the `--single-branch` flag: run the same fixture off a
+  // normal clone and it passes against broken code too. Shallow clones remain unsupported (a different
+  // axis: missing commits, not missing refs).
   describe('a single-branch clone reconciles a lane branch its refspec never tracked', () => {
     const LANE = 'narrow-clone';
     let defaultBranch: string;
@@ -677,8 +528,7 @@ describe('bit ci sync — state model v2', function () {
       setSyncConfig({ lanes: ['*'] });
       defaultBranch = setupComponentsAndInitialCommit();
 
-      // Seed the fixture from a NORMAL checkout, so `origin` genuinely has two branches by the time the
-      // narrowed clone is taken — the lane branch has to pre-exist for its absence to be observable.
+      // Seed from a normal checkout: the lane branch must pre-exist for its absence to be observable.
       devPath = helper.scopeHelper.cloneWorkspace();
       helper.command.runCmd(`bit lane create ${LANE}`, devPath);
       fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('narrow-snap-1'));
@@ -687,16 +537,13 @@ describe('bit ci sync — state model v2', function () {
       const seed = runBit(`bit ci sync ${LANE}`);
       expect(seed.exitCode, `seeding bit ci sync ${LANE} output:\n${seed.output}`).to.equal(0);
 
-      // Move the lane on, so the narrowed run has real work to do (import-lane onto the existing branch)
-      // rather than reaching a converged no-op that could pass without ever resolving `origin/<lane>`.
+      // Move the lane on, so the narrowed run has real work to do rather than a converged no-op that
+      // could pass without ever resolving `origin/<lane>`.
       laneSideEdit(devPath, 'comp1/index.js', comp1Src('narrow-snap-2'), 'narrow snap 2');
 
-      // THE POINT OF THE BLOCK: a checkout that has only ever tracked the default branch.
       clonePath = path.join(helper.scopes.e2eDir, `narrow-clone-${Date.now()}`);
       helper.command.runCmd(`git clone --single-branch --branch ${defaultBranch} ${bareRepoPath} ${clonePath}`);
-      // A fresh clone carries the committed workspace files but no local scope and no installed packages —
-      // exactly a runner after `git clone`. `node_modules` is copied rather than installed because what is
-      // under test is ref availability, and a real `bit install` here would add minutes for nothing.
+      // node_modules is copied rather than installed: ref availability is what is under test.
       const modules = path.join(helper.scopes.localPath, 'node_modules');
       if (fs.existsSync(modules)) fs.copySync(modules, path.join(clonePath, 'node_modules'));
       helper.command.runCmd('bit init', clonePath);
@@ -711,8 +558,6 @@ describe('bit ci sync — state model v2', function () {
     });
 
     it('should be non-vacuous: the clone is really narrowed, and really cannot see the lane branch', () => {
-      // Without these three the block is just another reconcile scenario. Together they are the exact
-      // mismatch that made this a bug: the refspec hides the branch, and `ls-remote` shows it anyway.
       expect(configuredRefspec).to.equal(`+refs/heads/${defaultBranch}:refs/remotes/origin/${defaultBranch}`);
       expect(remoteTrackingBeforeRun, `git branch -r in the clone:\n${remoteTrackingBeforeRun}`).to.not.include(LANE);
       expect(laneVisibleToLsRemote, 'the remote really does have the lane branch').to.not.equal('');
@@ -722,7 +567,6 @@ describe('bit ci sync — state model v2', function () {
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
       expect(output).to.include(`${LANE} ->`);
       expect(output).to.not.include('HALTED');
-      // the shape of the pre-fix failure, named so a regression is unmistakable in the output
       expect(output.toLowerCase()).to.not.include('unknown revision');
       expect(output.toLowerCase()).to.not.include('ambiguous argument');
     });
@@ -733,31 +577,12 @@ describe('bit ci sync — state model v2', function () {
     });
 
     it('should have carried the lane move onto the branch, from the narrowed checkout', () => {
-      // The reconcile really happened — a run that silently did nothing would pass every assertion above.
       expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('narrow-snap-2');
     });
   });
-  // =============================================================================================
-  // WORKSPACE CONTAMINATION — an untracked file must never ride along onto a sync branch.
-  //
-  // A forced checkout replaces TRACKED files and leaves untracked ones exactly where they are. Every
-  // commit path then stages with `git add -A` (scoped only against `.bit/` and `node_modules/`). So any
-  // untracked file sitting in the workspace when a target starts gets committed and pushed onto that
-  // target's branch, as part of a state that does not describe it.
-  //
-  // Three real ways one gets there: a lane that HALTED after materializing its components never
-  // committed them and they survive into the next lane of an `--all` run; `restoreWorkspace` is
-  // deliberately warn-only, so its failure leaves the previous target's residue behind; and in a local
-  // interactive run the files are simply the developer's own. `checkoutPristine`'s clean is what closes
-  // all three, and the orchestrator already promises exactly this out loud at startup ("removes
-  // untracked files (except .bit/ and node_modules/), so these will be discarded").
-  //
-  // This exercises the IMPORT-LANE path specifically, because that is where the missing clean was:
-  // `checkoutFromRemote` did `checkout -f -B` + reload with no clean in between, while both of its
-  // siblings cleaned. The junk is planted BEFORE the run, so it is untracked at the moment
-  // `checkoutFromRemote` runs — which is the whole point, and is why the warning assertion below
-  // (git really did see these as uncommitted at start) is what keeps the cell non-vacuous.
-  // =============================================================================================
+
+  // Exercises the import-lane path: the junk is planted BEFORE the run so it is untracked at the
+  // moment `checkoutFromRemote` runs, and the startup-warning assertion keeps the cell non-vacuous.
   describe('untracked files in the workspace are discarded rather than pushed onto the branch', () => {
     const LANE = 'no-contamination';
     const JUNK_FILE = 'leftover-note.txt';
@@ -780,9 +605,8 @@ describe('bit ci sync — state model v2', function () {
       helper.command.runCmd('bit snap --message "contamination guard"', devPath);
       helper.command.runCmd('bit export', devPath);
 
-      // THE PLANT. Two shapes: a loose file, and a directory of the kind a halted lane leaves behind.
-      // Neither is ignored and neither is under `.bit/` or `node_modules/`, so both are squarely inside
-      // what the clean is supposed to remove and what `add -A` would otherwise stage.
+      // Two shapes: a loose file, and a directory of the kind a halted lane leaves behind. Neither is
+      // ignored and neither is under `.bit/` or `node_modules/`.
       fs.outputFileSync(path.join(helper.scopes.localPath, JUNK_FILE), 'not part of any lane state\n');
       fs.outputFileSync(path.join(helper.scopes.localPath, JUNK_DIR_FILE), 'export const stale = true;\n');
 
@@ -791,8 +615,6 @@ describe('bit ci sync — state model v2', function () {
     });
 
     it('should be non-vacuous: git really saw the planted files as uncommitted when the run started', () => {
-      // Without this the cell proves nothing — a plant that git never noticed was never at risk. This
-      // is the orchestrator's own startup warning, which enumerates the files it is about to discard.
       expect(output).to.include('uncommitted change');
       expect(output).to.include(JUNK_FILE);
     });
@@ -801,7 +623,7 @@ describe('bit ci sync — state model v2', function () {
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
       expect(output).to.include(`${LANE} ->`);
       expect(output).to.not.include('HALTED');
-      // and the branch really carries the lane's content, i.e. the clean did not eat the sync itself
+      // the clean did not eat the sync itself
       expect(fileOnBranch(branch, 'comp1/index.js')).to.include('contamination-guard');
     });
 
@@ -812,14 +634,11 @@ describe('bit ci sync — state model v2', function () {
     });
 
     it('should have removed them from the working tree too', () => {
-      // The same clean, observed from the other side: the files are gone, not merely unstaged.
       expect(path.join(helper.scopes.localPath, JUNK_FILE)).to.not.be.a.path();
       expect(path.join(helper.scopes.localPath, JUNK_DIR_FILE)).to.not.be.a.path();
     });
 
     it('should have left the local scope and node_modules alone — the clean is scoped, never -x', () => {
-      // The exclusions are the reason this clean is safe to run at all: an unscoped `git clean -fdx`
-      // in a workspace whose `.gitignore` lacks Bit's block deletes `.bit/objects` mid-run.
       expect(path.join(helper.scopes.localPath, '.bit')).to.be.a.directory();
     });
   });

@@ -15,9 +15,6 @@ import {
 } from './init-scaffold';
 
 describe('init-scaffold', () => {
-  // ---------------------------------------------------------------------------------------------
-  // template substitution — the pure part `bit ci sync --init` is built on
-  // ---------------------------------------------------------------------------------------------
   describe('renderBitSyncWorkflow', () => {
     it('substitutes the detected default branch into the push branches-ignore list', () => {
       const rendered = renderBitSyncWorkflow('develop');
@@ -26,7 +23,6 @@ describe('init-scaffold', () => {
     });
 
     it('is a no-op substitution when the default branch really is "main"', () => {
-      // The common case: substituting "main" for "main" must not corrupt anything else in the file.
       const rendered = renderBitSyncWorkflow('main');
       expect(rendered).to.contain("branches-ignore: ['main', 'bit-sync/**']");
     });
@@ -37,8 +33,6 @@ describe('init-scaffold', () => {
     });
 
     it('leaves unrelated identifiers containing "main" untouched (bit-main-export, main-export)', () => {
-      // A blanket `\bmain\b` replace would also hit these — the substitution must be exact-substring,
-      // not a word-boundary regex, or the dispatch types and their doc comment would be corrupted.
       const rendered = renderBitSyncWorkflow('develop');
       expect(rendered).to.contain('bit-main-export');
       expect(rendered).to.contain('main export)'); // the comment describing the alias
@@ -80,25 +74,9 @@ describe('init-scaffold', () => {
     });
   });
 
-  // ---------------------------------------------------------------------------------------------
-  // THE EMITTED YAML IS PARSED, not substring-matched.
-  //
-  // Every assertion above is `to.contain` on a rendered string, which cannot tell a valid workflow from
-  // a broken one — the substitution point sits inside a YAML **flow sequence** (`[a, b]`), where `,` and
-  // `]` are structural, and a substring match is blind to exactly the damage an unquoted value does.
-  //
-  // Branch names can contain both characters: git's `check-ref-format` forbids a specific list (space,
-  // `~^:?*[\`, `..`, `@{`, trailing `.`/`.lock`) and `validateBranchName` deliberately mirrors it rather
-  // than inventing a stricter grammar, so `a,b]c` is a name this command can be pointed at. Unquoted,
-  // `branches: [a,b]c]` parses as a DIFFERENT two-element sequence with trailing garbage — a scaffolded
-  // workflow that watches the wrong branches, or does not load at all.
-  //
-  // Parsed with `yaml`, which is what makes these rows able to catch that: it is already a dependency
-  // used by several e2e suites in this repo, and GitHub Actions itself consumes these files as YAML, so
-  // "does a YAML parser agree" is the property that actually matters.
-  // ---------------------------------------------------------------------------------------------
+  // Parsed, not substring-matched: the substitution point sits inside a YAML flow sequence, where `,`
+  // and `]` are structural, and a substring match is blind to exactly the damage an unquoted value does.
   describe('the rendered workflows are valid YAML with the branch as one list element', () => {
-    /** `on:` — quoted here because YAML 1.1 parsers read a bare `on` key as the boolean `true`. */
     function onSection(rendered: string): any {
       const doc = yamlLoad(rendered) as any;
       // YAML 1.1-schema parsers resolve the plain scalar key `on` to `true`, so accept either key.
@@ -120,10 +98,6 @@ describe('init-scaffold', () => {
       expect(on.pull_request.branches).to.deep.equal(['release/main']);
     });
 
-    /**
-     * THE REGRESSION. Unquoted, this rendered `branches-ignore: [a,b]c, 'bit-sync/**']` — which is not
-     * the intended sequence and is not even the same shape.
-     */
     it('survives a branch name containing a comma and a closing bracket', () => {
       const hostile = 'a,b]c';
       const on = onSection(renderBitSyncWorkflow(hostile));
@@ -133,7 +107,6 @@ describe('init-scaffold', () => {
       expect(releaseOn.pull_request.branches).to.deep.equal([hostile]);
     });
 
-    /** A single quote is the one character the quoting style itself has to escape, by doubling it. */
     it('survives a branch name containing a single quote', () => {
       const hostile = "it's/a-branch";
       expect(renderBitSyncWorkflow(hostile)).to.contain("'it''s/a-branch'");
@@ -141,11 +114,8 @@ describe('init-scaffold', () => {
       expect(on.push['branches-ignore']).to.deep.equal([hostile, 'bit-sync/**']);
     });
 
-    /**
-     * `$` is git-legal, and `$&` / `$'` / `` $` `` / `$$` are all special inside a **string** replacement
-     * passed to `String.replace` — `$'` splices in the text following the match. The substitution uses
-     * function replacements precisely so these arrive verbatim.
-     */
+    // `$` is git-legal and `$&`/`$'`/`$$` are special in a string replacement; function replacements
+    // make these arrive verbatim.
     it('survives a branch name containing String.replace substitution patterns', () => {
       for (const hostile of ["a$'b", 'a$&b', 'a$$b', 'a$`b']) {
         const on = onSection(renderBitSyncWorkflow(hostile));
@@ -156,14 +126,10 @@ describe('init-scaffold', () => {
     it('keeps the rest of the workflow intact — the quoting touches one value, not the document', () => {
       const doc = yamlLoad(renderBitSyncWorkflow('release/main')) as any;
       expect(doc.jobs).to.be.an('object');
-      // the mainSyncBranch default is a different `main` and must survive verbatim
       expect(renderBitSyncWorkflow('release/main')).to.contain('main-sync-branch: bit-sync/main');
     });
   });
 
-  // ---------------------------------------------------------------------------------------------
-  // file writing — never overwrites, creates .github/workflows as needed
-  // ---------------------------------------------------------------------------------------------
   describe('scaffoldWorkflowFiles', () => {
     let workspaceDir: string;
 
@@ -206,14 +172,10 @@ describe('init-scaffold', () => {
         { relativePath: WORKFLOW_RELATIVE_PATHS.sync, status: 'skipped' },
         { relativePath: WORKFLOW_RELATIVE_PATHS.release, status: 'written' },
       ]);
-      // and the hand-edited file must be untouched
       expect(fs.readFileSync(syncAbsPath, 'utf8')).to.equal('hand-edited content, do not touch\n');
     });
   });
 
-  // ---------------------------------------------------------------------------------------------
-  // owner/repo derivation for the checklist's webhook URL
-  // ---------------------------------------------------------------------------------------------
   describe('deriveOwnerRepo', () => {
     it('parses an ssh-form GitHub remote', () => {
       expect(deriveOwnerRepo('git@github.com:acme/shop.git')).to.deep.equal({ owner: 'acme', repo: 'shop' });
@@ -238,9 +200,6 @@ describe('init-scaffold', () => {
     });
   });
 
-  // ---------------------------------------------------------------------------------------------
-  // checklist rendering — owner/repo present vs. absent
-  // ---------------------------------------------------------------------------------------------
   describe('renderInitChecklist', () => {
     it('renders a real dispatch URL when owner/repo were derived', () => {
       const checklist = renderInitChecklist({ owner: 'acme', repo: 'shop' });

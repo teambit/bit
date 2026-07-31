@@ -7,23 +7,11 @@ import { NO_GIT_HOST_WARNING, comp1Src, comp2Src, createGitHostEnvGuard, syncE2e
 chai.use(chaiFs);
 
 /**
- * e2e coverage for `bit ci sync` — the stateless lane <-> branch/PR reconciler.
- *
- * Every scenario runs against a *local bare git repo* as `origin` and a file:// remote scope, with no
- * git-host credentials in the environment. That is deliberate: it exercises the PR-less path (the git
- * half of the sync runs, PR operations are logged and skipped), which is the half these tests can
- * assert on without a network. The suite unsets `GITHUB_TOKEN`/`BIT_GITHUB_TOKEN`/`GITHUB_REPOSITORY`
- * for its whole duration so a developer's shell environment can't silently turn these runs into
- * PR-creating ones (and make them fail against a real repository).
- *
- * The assertions are deliberately about *file content on the pushed branch and on the lane tip*, not
- * just about commits existing. Two bugs found during implementation were invisible to
- * commit-existence checks:
- *   - `switchToLane`'s `forceOurs: true` default made the import direction a `.bitmap`-only commit whose
- *     recorded state claimed the branch mirrored the lane (it didn't).
- *   - the diverged path used to snap *before* merging, so the lane tip silently reverted every
- *     lane-side file edit to the branch's content.
- * Scenarios A and D1 lock those two respectively, by asserting on real file bytes.
+ * e2e coverage for `bit ci sync`. Every scenario runs against a local bare git repo as `origin` and a
+ * file:// remote scope, with the git-host env unset for the suite's duration — the PR-less path, which
+ * is the half these tests can assert on without a network. Assertions are deliberately about file
+ * content on the pushed branch and lane tip, not just about commits existing: a `.bitmap`-only commit
+ * or a snap-before-merge both pass any commit-existence check.
  */
 describe('bit ci sync', function () {
   this.timeout(0);
@@ -59,12 +47,8 @@ describe('bit ci sync', function () {
     helper.scopeHelper.destroy();
   });
 
-  // =============================================================================================
-  // Scenarios A, B, C, D1, D2 and the lane-deleted path all describe *successive states of the same
-  // lane/branch pair*, so they share one workspace and run in order. That is not just a speed
-  // optimization: the reconciler is stateless, and the only way to prove that is to drive one pair
-  // through a whole lifecycle and assert at each step.
-  // =============================================================================================
+  // Successive states of the same lane/branch pair: one workspace, run in order — the only way to
+  // prove the reconciler is stateless is to drive one pair through a whole lifecycle.
   describe('lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted)', () => {
     const LANE = 'sync-cycle';
     let defaultBranch: string;
@@ -76,8 +60,7 @@ describe('bit ci sync', function () {
       setSyncConfig({ lanes: ['*'] });
       defaultBranch = setupComponentsAndInitialCommit();
 
-      // A second workspace sharing the same remote scope and the same bare git repo — the
-      // "developer on bit.cloud" whose lane the reconciler mirrors.
+      // The "developer on bit.cloud" whose lane the reconciler mirrors.
       devPath = helper.scopeHelper.cloneWorkspace();
       helper.command.runCmd(`bit lane create ${LANE}`, devPath);
       fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('lane-snap-1'));
@@ -85,7 +68,6 @@ describe('bit ci sync', function () {
       helper.command.runCmd('bit export', devPath);
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('scenario A: remote lane, no branch -> import-lane creates the branch', () => {
       let output: string;
       let exitCode: number;
@@ -100,8 +82,6 @@ describe('bit ci sync', function () {
       });
 
       it('should run PR-less: no git host provider configured, PR creation skipped', () => {
-        // Locks the environment these tests assert against. A bare local remote is claimed by nobody,
-        // and no provider holds credentials, so the run degrades to git-only and says so.
         expect(output).to.include(NO_GIT_HOST_WARNING);
         expect(output).to.include(`skipping PR creation for ${LANE}`);
       });
@@ -117,25 +97,17 @@ describe('bit ci sync', function () {
         expect(laneHeadTrailer(LANE)).to.be.a('string').with.lengthOf(40);
       });
 
-      /**
-       * THE materialization lock. `switchToLane` defaults to `forceOurs: true`, under which
-       * `applyVersion` marks every file `unchanged` and only moves `.bitmap` — producing a commit whose
-       * `Bit-Lane-Head` trailer asserts the branch mirrors the lane while the files still hold the
-       * default branch's content. Asserting on the trailer or on the commit's existence cannot see that;
-       * asserting on the file bytes can.
-       */
+      // A `forceOurs` switch produces a `.bitmap`-only commit whose files still hold the default
+      // branch's content; only asserting on file bytes can see that.
       it("should put the LANE's file content in the branch's tree, not just a .bitmap bump", () => {
         const onBranch = fileOnBranch(LANE, 'comp1/index.js');
         expect(onBranch, `comp1/index.js on origin/${LANE}:\n${onBranch}`).to.include('lane-snap-1');
         expect(onBranch).to.not.include('comp1: initial');
-        // non-vacuous: the default branch (the branch's fork point) still holds the pre-lane content,
-        // so 'lane-snap-1' can only have come from materializing the lane.
+        // non-vacuous: the fork point still holds the pre-lane content.
         expect(fileOnBranch(defaultBranch, 'comp1/index.js')).to.include('comp1: initial');
       });
 
       it('should commit the lane pointer in .bitmap so later runs can merge into the branch', () => {
-        // `executeMergeDiverged` refuses to run unless the branch's committed `.bitmap` says the
-        // workspace is on the lane — without this the diverged path can never fire.
         expect(fileOnBranch(LANE, '.bitmap')).to.include(LANE);
       });
 
@@ -145,7 +117,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('scenario B: re-run with nothing moved -> converged no-op', () => {
       let output: string;
       let exitCode: number;
@@ -173,7 +144,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('scenario C: dev commit on the branch -> export-branch snaps it onto the lane', () => {
       let output: string;
       let exitCode: number;
@@ -237,7 +207,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('scenario D1: both sides moved on DIFFERENT files -> merge-diverged converges', () => {
       let output: string;
       let exitCode: number;
@@ -273,12 +242,7 @@ describe('bit ci sync', function () {
         expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('branch-dev-2');
       });
 
-      /**
-       * THE merge-first lock. The diverged path used to snap the branch's tree onto the lane and only
-       * then merge; because `snapPrCommit`'s switch uses `forceOurs`, that snap recorded the *branch's*
-       * files against the new lane head — silently reverting the lane-side edit on the lane tip while
-       * pushing a trailer asserting the two sides had converged.
-       */
+      // A snap-before-merge would silently revert the lane-side edit on the lane tip.
       it('should keep the lane-side edit alive on the LANE tip (merge before snap)', () => {
         const laneComp1 = laneTipFile(devPath, 'comp1/index.js');
         expect(laneComp1, `comp1/index.js at the lane tip:\n${laneComp1}`).to.include('lane-snap-2');
@@ -307,7 +271,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('scenario D2: both sides edited the SAME line -> halt, nothing written', () => {
       let output: string;
       let exitCode: number;
@@ -340,9 +303,6 @@ describe('bit ci sync', function () {
       });
 
       it('should report skipping the bit-sync-conflict label because there is no git host', () => {
-        // With a git host the halt labels the PR `bit-sync-conflict` (which the planner then treats as
-        // a hard no-op) and comments the resolution steps. PR-less, that is announced and skipped —
-        // this is the observable trace of that path.
         expect(output).to.include(`skipping conflict label/comment for ${LANE}`);
       });
 
@@ -367,23 +327,15 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
-    /**
-     * THE unexported-work lock on `close-pr`. D2 left the branch tip at a dev commit the conflict kept
-     * from ever being exported — its content is on no lane (the lane is being deleted right here) and
-     * not in the default branch (the sync PR was never merged): it exists in NO other ref. The evidence
-     * is `own-live` *with dev commits*, and deleting the branch would destroy the only copy. The
-     * genuine-deletion coverage lives in the two-lane block (own-live, no dev commits) and in the
-     * ownership block (own-merged).
-     */
+    // D2 left the tip at a dev commit whose content exists in NO other ref: own-live with dev
+    // commits, so the branch must be kept. Genuine-deletion coverage lives in the later blocks.
     describe('lane removed from the remote while the branch holds unexported work -> close-pr keeps the branch', () => {
       let output: string;
       let exitCode: number;
       let tipBefore: string;
       before(() => {
         tipBefore = branchTipSha(LANE);
-        // --force: the lane carries snaps that were never merged into main, which is the whole point
-        // of a lane the reconciler was mirroring. Without it `bit lane remove --remote` refuses.
+        // --force: the lane carries snaps never merged into main; without it the remove refuses.
         helper.command.removeRemoteLane(LANE, '--force');
         ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
         gitFetch();
@@ -416,8 +368,6 @@ describe('bit ci sync', function () {
           gitFetch();
         });
         it('should re-report close-pr, keep the branch again, and write nothing', () => {
-          // The kept branch stays visible to every later run until a human deletes it (or merges it).
-          // Idempotent by construction: closing an already-closed PR and keeping a branch write nothing.
           expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
           expect(rerun.output).to.include(`branch ${LANE} kept`);
           expect(remoteBranchExists(LANE)).to.be.true;
@@ -427,11 +377,8 @@ describe('bit ci sync', function () {
     });
   });
 
-  // =============================================================================================
-  // Scenario F (dry-run writes nothing to the remote) and scenario E (main-scope drift -> sync PR
-  // branch) share a workspace: F must observe pristine remote refs *while drift exists*, which is
-  // exactly the state E needs before it runs. F therefore runs first, and E right after it.
-  // =============================================================================================
+  // F must observe pristine remote refs WHILE drift exists — exactly the state E needs before it
+  // runs — so F runs first and E right after it.
   describe('main-scope sync and --dry-run (scenarios E, F)', () => {
     const LANE = 'dry-lane';
     const SYNC_BRANCH = 'bit-sync/main';
@@ -460,10 +407,8 @@ describe('bit ci sync', function () {
       helper.command.runCmd('bit tag --message "bump both components on main"', devMainPath);
       helper.command.runCmd('bit export', devMainPath);
 
-      // AND, on the default branch of the repository, a source change that was never exported to bit.
-      // comp1 is therefore *modified* relative to its `.bitmap` version AND its head moved in the
-      // scope — the exact state that makes `bit checkout head` compute a real three-way merge and,
-      // without `mergeStrategy: 'theirs'`, throw `please use "--auto-merge-resolve"` and halt the run.
+      // AND unexported source drift on the default branch: comp1 is modified relative to `.bitmap`
+      // AND its head moved in the scope — the state that forces a real three-way merge.
       helper.fs.outputFile('comp1/index.js', comp1Src('unexported-git-drift'));
       helper.command.runCmd('git add -A');
       helper.command.runCmd('git commit -m "chore: source drift that was never exported"');
@@ -471,7 +416,6 @@ describe('bit ci sync', function () {
       gitFetch();
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('scenario F: --all --dry-run writes nothing to the git remote', () => {
       let output: string;
       let exitCode: number;
@@ -502,7 +446,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('scenario E: --main pushes the drift onto the sync branch', () => {
       let output: string;
       let exitCode: number;
@@ -512,9 +455,6 @@ describe('bit ci sync', function () {
       });
 
       it('should NOT halt despite unexported source drift on the default branch', () => {
-        // The 'theirs' resolution. Without it, `checkout head` throws
-        // `automatic merge has failed … please use "--auto-merge-resolve"` and the run exits non-zero
-        // pointing at a flag `bit ci sync` does not have.
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
         expect(output).to.not.include('HALTED');
         expect(output).to.not.include('auto-merge-resolve');
@@ -544,8 +484,7 @@ describe('bit ci sync', function () {
         const onBranch = fileOnBranch(SYNC_BRANCH, 'comp1/index.js');
         expect(onBranch, `comp1/index.js on origin/${SYNC_BRANCH}:\n${onBranch}`).to.include('main-scope-v2');
         expect(onBranch).to.not.include('unexported-git-drift');
-        // non-vacuous: the default branch still holds the drift, so this branch's content is a result
-        // of the sync, not of the checkout it forked from.
+        // non-vacuous: the default branch still holds the drift.
         expect(fileOnBranch(defaultBranch, 'comp1/index.js')).to.include('unexported-git-drift');
       });
 
@@ -573,7 +512,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('--all reconciles the lane and the main scope in one run', () => {
       let output: string;
       let exitCode: number;
@@ -602,12 +540,8 @@ describe('bit ci sync', function () {
     });
   });
 
-  // =============================================================================================
-  // `mainSync: 'direct-push'` — the main-scope drift lands on the default branch itself, no sync
-  // branch and no PR. The load-bearing half of the coverage is the negative: this mode's contract is
-  // that `bit-sync/main` is never created or touched, and the negative is checked both on the run
-  // that pushes and on the converged rerun.
-  // =============================================================================================
+  // The load-bearing half is the negative: `bit-sync/main` is never created or touched, checked both
+  // on the run that pushes and on the converged rerun.
   describe('main-scope direct push (mainSync: direct-push)', () => {
     const SYNC_BRANCH = 'bit-sync/main';
     let defaultBranch: string;
@@ -620,8 +554,7 @@ describe('bit ci sync', function () {
       setSyncConfig({ lanes: ['*'], mainSync: 'direct-push' });
       defaultBranch = setupComponentsAndInitialCommit();
 
-      // The same drift recipe as scenario E: the main scope moves ahead of the repository — comp1 is
-      // tagged and exported from a second clone, nothing is committed to git.
+      // The same drift recipe as scenario E.
       const devMainPath = helper.scopeHelper.cloneWorkspace();
       fs.outputFileSync(path.join(devMainPath, 'comp1', 'index.js'), comp1Src('direct-push-v2'));
       helper.command.runCmd('bit tag --message "bump comp1 on main"', devMainPath);
@@ -649,7 +582,6 @@ describe('bit ci sync', function () {
 
     it(`should never create ${SYNC_BRANCH} on the remote, nor mention PR operations`, () => {
       expect(remoteBranchExists(SYNC_BRANCH)).to.be.false;
-      // 'pr' mode's PR-less runs still announce the skipped PR work; direct-push has none to skip.
       expect(output).to.not.include('skipping PR operations');
       expect(output).to.not.include('sync PR');
     });
@@ -680,26 +612,9 @@ describe('bit ci sync', function () {
     });
   });
 
-  // =============================================================================================
-  // Two lanes in ONE `--all` run. Three properties live only at the loop level — a single-lane run
-  // cannot express any of them — and each one was a real defect:
-  //
-  //   1. **A deleted lane is still visited.** `--all` used to enumerate only the lanes that exist on
-  //      the remote. A lane merged/archived/deleted on bit.cloud is by definition *not* in that list, so
-  //      its branch was never visited and `close-pr` could never fire for the one state it exists for:
-  //      every merged lane left an orphan branch and an open PR behind, forever. The enumeration is now
-  //      the union of the remote's lanes and the lane-mapped branches on `origin`.
-  //   2. **One halted lane must not abort the lanes after it.** `syncLane` documents that contract and
-  //      had no top-level try/catch, so any unanticipated throw took the rest of the run with it.
-  //   3. **Lanes must not contaminate each other.** A lane's components are materialized into the shared
-  //      workspace; anything left behind is picked up by the next lane's `git add -A` and lands on its
-  //      branch under a `Bit-Lane-Head` trailer that does not describe it. `comp3` — a component that
-  //      exists on lane A and nowhere else — is what makes that observable.
-  //   4. **An ordinary branch must survive the run.** With the union enumeration and the documented
-  //      defaults, *every* branch on `origin` lane-maps, so a developer branch that never had a lane
-  //      reaches the reconciler looking exactly like a lane branch whose lane was deleted — and that
-  //      action deletes the branch. `PLAIN_BRANCH` is the branch that must still be there afterwards.
-  // =============================================================================================
+  // Properties that live only at the loop level: a deleted lane is still visited (via the branch half
+  // of the enumeration), one halted lane must not abort the rest, lanes must not contaminate each
+  // other (comp3 exists on lane A only), and an ordinary branch must survive the run.
   describe('--all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation)', () => {
     const LANE_A = 'sync-a';
     const LANE_B = 'sync-b';
@@ -718,8 +633,7 @@ describe('bit ci sync', function () {
       setSyncConfig({ lanes: ['*'] });
       defaultBranch = setupComponentsAndInitialCommit();
 
-      // The ordinary developer branch. It is pushed before anything else so it is present for *every*
-      // run below — its survival is asserted on the first run and again after the deleted-lane cleanup.
+      // Pushed before anything else so it is present for every run below.
       helper.command.runCmd(`git checkout -b ${PLAIN_BRANCH}`);
       helper.fs.outputFile('docs/notes.md', 'unmerged developer work that must not be destroyed\n');
       helper.command.runCmd('git add -A');
@@ -737,8 +651,7 @@ describe('bit ci sync', function () {
       helper.command.runCmd('bit snap --message "lane a snap 1"', devA);
       helper.command.runCmd('bit export', devA);
 
-      // lane B moves a *different* component, so the two lanes never contend for the same file and any
-      // content crossing between them can only be contamination.
+      // lane B moves a different component, so any content crossing between them is contamination.
       devB = helper.scopeHelper.cloneWorkspace();
       helper.command.runCmd(`bit lane create ${LANE_B}`, devB);
       fs.outputFileSync(path.join(devB, 'comp2', 'index.js'), comp2Src('lane-b-snap-1'));
@@ -746,7 +659,6 @@ describe('bit ci sync', function () {
       helper.command.runCmd('bit export', devB);
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('first --all run: both lanes are imported onto their own branches', () => {
       let output: string;
       let exitCode: number;
@@ -766,12 +678,8 @@ describe('bit ci sync', function () {
         expect(fileOnBranch(LANE_B, 'comp2/index.js')).to.include('lane-b-snap-1');
       });
 
-      /**
-       * THE branch-destruction lock. `feature-x` has no lane, so `laneHead` is undefined; it exists on
-       * `origin`, so `branchExists` is true — the same planner input as a lane branch whose lane was
-       * deleted, whose action is `git push origin --delete`. Only the *absence of a lane pointer in its
-       * committed `.bitmap`* distinguishes them, and that is what makes it a no-op.
-       */
+      // `feature-x` reaches the planner with the same input as a deleted lane's branch; only the
+      // absence of a lane pointer in its committed `.bitmap` makes it a no-op.
       it('should visit an ordinary developer branch and leave it completely alone', () => {
         expect(output, `bit ci sync output:\n${output}`).to.include(
           `${PLAIN_BRANCH} -> noop (branch maps to no lane and has no sync history`
@@ -782,10 +690,7 @@ describe('bit ci sync', function () {
       });
 
       it("should materialize lane A's exclusive component onto lane A's branch, and only there", () => {
-        // lane A is reconciled first (the run order is sorted), so its materialized comp3 files sit in
-        // the shared workspace when lane B's turn comes. Without the restore between lanes cleaning up
-        // after itself, lane B's `git add -A` commits them under lane B's `Bit-Lane-Head` trailer —
-        // content that trailer does not describe.
+        // Lane A runs first; without the restore cleaning up, lane B's `add -A` would commit comp3.
         const onA = branchPathsMatching(LANE_A, 'comp3');
         expect(onA, `paths mentioning comp3 on origin/${LANE_A}`).to.not.have.lengthOf(0);
         expect(fileOnBranch(LANE_A, onA.find((p) => p.endsWith('index.js')) as string)).to.include('lane-a-only');
@@ -798,7 +703,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('a conflicting lane halts, and the lane after it still syncs', () => {
       let output: string;
       let exitCode: number;
@@ -843,21 +747,14 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
-    // THE `--all` deleted-lane lock. Nothing about lane A exists on bit.cloud any more, so enumerating
-    // the remote's lanes yields lane B alone — the branch would be visited only if the run also
-    // enumerates the lane-mapped branches on `origin`.
+    // Lane A no longer exists on bit.cloud, so it can only be visited through the branch half of the
+    // enumeration.
     describe('a lane deleted on bit.cloud is retired by --all, and the surviving lane still syncs', () => {
       let output: string;
       let exitCode: number;
       before(() => {
-        // First, resolve lane A's halted divergence the way a developer would and let one sync run
-        // converge the pair: put comp1 back to the branch's last-synced content (so only the lane still
-        // holds a change to it — the merge is then conflict-free) and push fresh comp2 work for the run
-        // to export. That leaves the branch tip a sync commit with nothing above it, so the deletion
-        // below exercises `close-pr`'s genuine delete path (own-live, NO unexported work). A branch
-        // still carrying unexported dev commits is *kept*, which has its own scenario in the
-        // reconcile-cycle block.
+        // Resolve lane A's halted divergence and converge the pair, leaving the tip a sync commit with
+        // nothing above it — so the deletion below exercises close-pr's genuine delete path.
         branchSideCommit(
           LANE_A,
           defaultBranch,
@@ -879,18 +776,13 @@ describe('bit ci sync', function () {
           '[bit-sync]'
         );
 
-        // --force: the lane carries snaps never merged into main, which is the normal state of a lane
-        // the reconciler was mirroring.
         helper.command.removeRemoteLane(LANE_A, '--force');
         ({ output, exitCode } = runBit('bit ci sync --all'));
         gitFetch();
       });
 
       it('should still visit the deleted lane, taking it from its branch', () => {
-        // Non-vacuous by construction: only lane B exists as a lane on the remote now, so lane A can only
-        // have been reached through the branch half of the enumeration. The count is 3 because every
-        // branch on `origin` lane-maps under the default config — lane A (branch only), lane B (lane), and
-        // the ordinary developer branch, which is visited and then ignored.
+        // 3 = lane A (branch only), lane B (lane), and the ordinary developer branch.
         expect(output, `bit ci sync output:\n${output}`).to.include('Reconciling 3 mapped lane(s)');
         expect(output).to.include(`${LANE_A} -> close-pr`);
       });
@@ -915,7 +807,6 @@ describe('bit ci sync', function () {
       });
 
       it('should still not have touched the ordinary developer branch', () => {
-        // The run that deletes one branch must not have deleted this one on the way past.
         expect(remoteBranchExists(PLAIN_BRANCH)).to.be.true;
         expect(branchTipSha(PLAIN_BRANCH)).to.equal(plainBranchSha);
       });
@@ -936,26 +827,9 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
-    /**
-     * A sync-shaped commit that arrives on the branch through a **merge** must not be mistaken for the
-     * branch's own state.
-     *
-     * Two independent defences are exercised here, and this scenario proves both:
-     *
-     *   1. **Message text is not state.** The decoy carries our exact subject, `Bit-Lane-Head` trailer and
-     *      `[bit-sync]` marker, with a bogus fingerprint (`ffff…`). Under the v2 (bit-native) model those
-     *      are annotations and nothing reads them, so adopting the forged value is impossible by
-     *      construction — where the trailer-derived model would have read the lane as moved.
-     *   2. **`--first-parent` on the state walk.** `git log` orders by commit date across *all* parents, so
-     *      any state-bearing commit merged in from elsewhere is newer than this branch's own and would
-     *      outrank it. `readBranchSyncState` walks `--first-parent -- .bitmap`, which is this branch's own
-     *      line of development — the only line whose state describes this pair.
-     *
-     * The decoy is built with plain git rather than by driving a second lane through a merge: it needs to be
-     * a commit that is (a) newer than the branch's own and (b) reachable only through a second parent, and
-     * forging exactly that is one commit and one merge.
-     */
+    // Two defences proved at once: message text is not state (the decoy's forged trailer is never
+    // read), and the state walk is `--first-parent` (a merged-in state-bearing commit is newer than
+    // the branch's own and would otherwise outrank it).
     describe('a Bit-Lane-Head commit merged in from elsewhere must not outrank the branch’s own', () => {
       let output: string;
       let exitCode: number;
@@ -969,8 +843,8 @@ describe('bit ci sync', function () {
         helper.command.runCmd(
           `git commit -m "chore(bit-sync): decoy from another pair" -m "Bit-Lane-Head: ${'f'.repeat(40)}" -m "[bit-sync]"`
         );
-        // Merge it into lane B's branch: --no-ff guarantees the decoy stays on the *second* parent, which
-        // is exactly where `--first-parent` refuses to look and where default ordering happily looks.
+        // --no-ff guarantees the decoy stays on the SECOND parent — where `--first-parent` refuses to
+        // look and default ordering happily looks.
         helper.command.runCmd(`git checkout -f -B ${LANE_B} origin/${LANE_B}`);
         helper.command.runCmd('git merge --no-ff --no-edit decoy-src');
         helper.command.runCmd(`git push origin ${LANE_B}`);
@@ -980,8 +854,7 @@ describe('bit ci sync', function () {
       });
 
       it("should read the branch's OWN sync commit, so the lane does not look moved", () => {
-        // The lane never moved; only the branch did. That is `export-branch`. Reading the decoy instead
-        // makes the lane look moved and yields `merge-diverged` — the observable pre-fix outcome.
+        // Only the branch moved => export-branch; reading the decoy yields merge-diverged.
         expect(output, `bit ci sync output:\n${output}`).to.include(`${LANE_B} -> export-branch`);
         expect(output).to.not.include(`${LANE_B} -> merge-diverged`);
         expect(output).to.not.include(`${LANE_B} -> import-lane`);
@@ -989,7 +862,6 @@ describe('bit ci sync', function () {
 
       it('should succeed and converge, leaving the decoy trailer unused', () => {
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
-        // The fresh trailer the run pushed describes the real lane, never the forged value.
         expect(laneHeadTrailer(LANE_B)).to.not.equal('f'.repeat(40));
       });
 
@@ -1007,21 +879,8 @@ describe('bit ci sync', function () {
     });
   });
 
-  // =============================================================================================
-  // Branch ownership: WHICH branches `close-pr` is allowed to delete.
-  //
-  // `close-pr` is the one irreversible thing this command does — `git push origin --delete`. It fires
-  // when the lane is gone and the branch is not, and under the default config *every* branch on `origin`
-  // lane-maps, so that shape is reached by ordinary developer branches too. Nothing about how a branch
-  // *looks* separates them: once a sync PR is squash-, rebase- or ff-merged, both the message it carried
-  // and the `.bitmap` it wrote live on the **default branch's own first-parent line**, so every branch cut
-  // from the default branch afterwards inherits them.
-  //
-  // The real rule has two parts — the branch's committed `.bitmap` must *point at this lane*, and either the
-  // commit that wrote it is not yet in the default branch (a live lane branch) or the branch tip is
-  // (nothing to lose). This block walks one lane branch through all three outcomes, plus the branch with
-  // inherited history that must never be touched.
-  // =============================================================================================
+  // Walks one lane branch through all three ownership outcomes, plus the branch with inherited
+  // history that must never be touched.
   describe('branch ownership decides what close-pr may delete', () => {
     const LANE = 'own-lane';
     /** an ordinary developer branch, forked from a default branch that already carries a sync trailer */
@@ -1047,10 +906,8 @@ describe('bit ci sync', function () {
       expect(first.exitCode, `bit ci sync ${LANE} output:\n${first.output}`).to.equal(0);
       gitFetch();
 
-      // Now simulate what a squash-, rebase- or fast-forward-merged sync PR leaves behind: a commit with
-      // our exact sync shape — subject, `Bit-Lane-Head` trailer, `[bit-sync]` marker — sitting on the
-      // DEFAULT branch's own first-parent line. It names a different lane, because that is what a merged
-      // sync PR for some other lane looks like. Empty on purpose, so it cannot show up as main-scope drift.
+      // Simulate what a squash/rebase/ff-merged sync PR leaves behind: a sync-shaped commit on the
+      // default branch's first-parent line. Empty on purpose, so it cannot show up as main-scope drift.
       helper.command.runCmd(`git checkout -f -B ${defaultBranch} origin/${defaultBranch}`);
       helper.command.runCmd(
         `git commit --allow-empty ` +
@@ -1059,8 +916,7 @@ describe('bit ci sync', function () {
       );
       helper.command.runCmd(`git push origin ${defaultBranch}`);
 
-      // The developer branch is cut from THAT tip, so it inherits the trailer, and then carries work of
-      // its own that exists nowhere else.
+      // The developer branch is cut from THAT tip, so it inherits the trailer.
       helper.command.runCmd(`git checkout -b ${PLAIN_BRANCH}`);
       helper.fs.outputFile('docs/plan.md', 'unmerged developer work that must not be destroyed\n');
       helper.command.runCmd('git add -A');
@@ -1075,23 +931,13 @@ describe('bit ci sync', function () {
     function mergeLaneBranchIntoDefault() {
       gitFetch();
       helper.command.runCmd(`git checkout -f -B ${defaultBranch} origin/${defaultBranch}`);
-      // `-s ours` records the merge — which is all the ownership check reads, since it asks only about
-      // reachability — while leaving the default branch's tree (and `.bitmap`, which must stay on main)
-      // exactly as it was. A content merge here would put the lane pointer on the default branch and the
-      // main-scope sync would rightly refuse to run.
+      // `-s ours` records the merge (all the ownership check reads) while leaving the default branch's
+      // tree — and `.bitmap`, which must stay on main — exactly as it was.
       helper.command.runCmd(`git merge -s ours --no-edit origin/${LANE}`);
       helper.command.runCmd(`git push origin ${defaultBranch}`);
       gitFetch();
     }
 
-    // -------------------------------------------------------------------------------------------
-    /**
-     * THE inherited-history lock — the reviewer's live repro. `feature-x` has a `Bit-Lane-Head` trailer on
-     * its own first-parent line, inherited from the default branch, and no lane. A trailer-presence check
-     * calls that "lane-managed" and deletes the branch. Under the v2 model the trailer is not consulted at
-     * all, and the structural answer agrees: `feature-x` carries the default branch's `.bitmap`, which has
-     * no lane pointer.
-     */
     describe('an ordinary branch that INHERITED a sync trailer from the default branch', () => {
       let output: string;
       let exitCode: number;
@@ -1112,18 +958,12 @@ describe('bit ci sync', function () {
       });
 
       it('should have been non-vacuous: the branch really does carry an inherited trailer', () => {
-        // Without this the test could pass because the trailer never landed. The trailer is on the
-        // branch's own first-parent line and names a lane that is NOT this branch's.
         const log = helper.command.runCmd(`git log origin/${PLAIN_BRANCH} --first-parent --format=%B`);
         expect(log).to.include('Bit-Lane-Head:');
         expect(log).to.include(`sync lane ${helper.scopes.remote}/other-lane`);
       });
 
       it('should be ignored on the STRUCTURAL evidence: its .bitmap points at no lane', () => {
-        // The v2 reason the branch is untouchable, asserted directly rather than inferred from the outcome:
-        // `feature-x` carries the default branch's `.bitmap`, which is on main. The forged trailer above is
-        // exactly the channel that is no longer consulted — this is what it is no longer consulted in
-        // favour of.
         expect(fileOnBranch(PLAIN_BRANCH, '.bitmap')).to.not.include('_bit_lane');
       });
 
@@ -1142,11 +982,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
-    /**
-     * The lane's own branch, whose sync PR was merged and which then received more commits. The PR should
-     * be closed, but those commits are in no other ref — so the branch must survive.
-     */
     describe('our own branch whose sync history is merged but whose tip is not (own-superseded)', () => {
       let output: string;
       let exitCode: number;
@@ -1177,17 +1012,10 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
-    /**
-     * The legitimate cleanup: the lane is gone and the branch is fully contained in the default branch, so
-     * retiring it cannot lose anything. This is the just-merged lane whose branch the git host did not
-     * auto-delete — the case the ownership rule must keep working.
-     */
     describe('our own branch that is fully merged into the default branch (own-merged)', () => {
       let output: string;
       let exitCode: number;
       before(() => {
-        // The remaining commits reach the default branch, so nothing on the branch is unique to it.
         mergeLaneBranchIntoDefault();
         ({ output, exitCode } = runBit('bit ci sync --all'));
         gitFetch();
@@ -1201,24 +1029,14 @@ describe('bit ci sync', function () {
       });
 
       it('should still not have touched the ordinary developer branch', () => {
-        // The run that legitimately deletes one branch must not take the other with it.
         expect(remoteBranchExists(PLAIN_BRANCH)).to.be.true;
         expect(branchTipSha(PLAIN_BRANCH)).to.equal(plainBranchSha);
       });
     });
   });
 
-  // =============================================================================================
-  // Cross-scope lanes (Stage 0). A lane has two independent scope relations: the scope that HOSTS the
-  // lane object, and the scopes its COMPONENTS belong to. The reconciler maps one repository to one
-  // scope, and it reconciles a lane WHOLE — it fingerprints, materializes, snaps and exports every
-  // component on it. So:
-  //   - foreign CONTENT is refused outright (it would write, PR and export another repo's components
-  //     from this one), and
-  //   - a foreign HOST is fine, as long as the content is this repo's — it just has to be addressed by
-  //     its scope-qualified id, because a branch/lane name carries no scope.
-  // These two blocks lock exactly that split.
-  // =============================================================================================
+  // The cross-scope split: foreign CONTENT is refused outright; a foreign HOST is fine as long as the
+  // content is this repo's, addressed by its scope-qualified id.
   describe('a lane whose components span two scopes is refused, never half-mirrored', () => {
     const LANE = 'cross-scope';
     let otherScope: string;
@@ -1228,8 +1046,7 @@ describe('bit ci sync', function () {
 
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      // A second remote scope, mutually reachable with this workspace's defaultScope, so one lane can
-      // legitimately carry components of both — which is what a real org-global lane looks like.
+      // A second remote scope, mutually reachable, so one lane can carry components of both.
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope('-other-scope');
       otherScope = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
@@ -1238,8 +1055,7 @@ describe('bit ci sync', function () {
       setupGitRemote();
       setSyncConfig({ lanes: ['*'] });
 
-      // comp1 belongs to this repository's scope; comp2 to the other one. (The variant has to be set
-      // before `bit add`, so the component is tracked with the right defaultScope from the start.)
+      // comp1 belongs to this repository's scope; comp2 to the other one (variant set before `bit add`).
       helper.fs.outputFile('comp1/index.js', comp1Src('initial'));
       helper.fs.outputFile('comp2/index.js', comp2Src('initial'));
       helper.workspaceJsonc.addToVariant('comp2', 'defaultScope', otherScope);
@@ -1264,8 +1080,6 @@ describe('bit ci sync', function () {
     });
 
     it('should have produced a genuinely cross-scope lane (setup sanity)', () => {
-      // Non-vacuity: if the fixture failed to place comp2 in the other scope, the halt below would be
-      // asserting nothing at all.
       const parsed = helper.command.listRemoteLanesParsed();
       const lane = parsed.lanes.find((l: any) => (l.id?.name ?? l.name) === LANE);
       const ids = (lane?.components ?? []).map((c: any) => (typeof c.id === 'string' ? c.id : c.id.toString()));
@@ -1283,8 +1097,6 @@ describe('bit ci sync', function () {
       });
 
       it('should refuse and exit non-zero, naming the foreign scope and components', () => {
-        // The user asked for THIS lane, so silence would be the wrong answer — but it is a refusal, not a
-        // sync conflict: there is no branch and no PR, and nothing about the repository needs fixing.
         expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
         expect(output).to.include('cross-scope lane: components from scope(s)');
         expect(output).to.include(otherScope);
@@ -1300,8 +1112,7 @@ describe('bit ci sync', function () {
       });
 
       it('should refuse BEFORE planning, so no action was ever chosen', () => {
-        // The check runs between reading the lane/branch state and planning: the lane moved and the branch
-        // is absent, which is exactly the shape that would otherwise plan `import-lane`.
+        // This shape would otherwise plan `import-lane`.
         expect(output).to.not.include('import-lane');
       });
 
@@ -1319,12 +1130,6 @@ describe('bit ci sync', function () {
         gitFetch();
       });
 
-      /**
-       * The green-run lock. A cross-scope lane is a legitimate thing for someone to have created, and this
-       * repository simply has no branch to make for it. If an enumerated encounter failed the run, one
-       * standing cross-scope lane would turn every scheduled sync permanently red — and a pipeline that is
-       * always red is one nobody reads.
-       */
       it('should SKIP it and keep the run green', () => {
         expect(exitCode, `bit ci sync --all output:\n${output}`).to.equal(0);
         expect(output).to.include(`${LANE} -> skipped (cross-scope lane:`);
@@ -1338,11 +1143,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    /**
-     * The one cross-scope shape that IS a halt: the pair was reconcilable — this repository had already
-     * mirrored the lane onto a branch — and the lane then grew a foreign component. The branch, its open PR
-     * and any dev commits on it can never converge with the lane again, so it is handed to a human.
-     */
     describe('a lane that became cross-scope AFTER its branch existed', () => {
       const MID_FLIGHT_LANE = 'mid-flight';
       let output: string;
@@ -1350,9 +1150,8 @@ describe('bit ci sync', function () {
       let shaBefore: string;
 
       before(() => {
-        // Phase 1: an ordinary single-scope lane, mirrored onto its branch by this repository.
-        // Step off the cross-scope lane first — a lane forked from another lane inherits its components,
-        // and both files are restored to main's content so only the edit below counts as modified.
+        // Step off the cross-scope lane first — a lane forked from another lane inherits its
+        // components — and restore both files so only the edit below counts as modified.
         helper.command.runCmd('bit switch main', devPath);
         fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('initial'));
         fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), comp2Src('initial'));
@@ -1385,11 +1184,7 @@ describe('bit ci sync', function () {
         expect(branchTipSha(MID_FLIGHT_LANE)).to.equal(shaBefore);
       });
 
-      /**
-       * The two cross-scope outcomes in one run: the lane that never had a branch is skipped and stays
-       * green, the mid-flight one halts and makes the run non-zero. A single `--all` has to be able to
-       * report both without either one swallowing the other.
-       */
+      // A single --all must report both cross-scope outcomes without either swallowing the other.
       describe('the same pair met by an --all run', () => {
         let allOutput: string;
         let allExit: number;
@@ -1407,13 +1202,8 @@ describe('bit ci sync', function () {
       });
     });
 
-    /**
-     * A `branches` override can map a lane onto the repository's **default branch**, which belongs to the
-     * main-scope path — the one path that never writes to it directly, always proposing a PR instead. The
-     * lane path would force-checkout that branch, commit and push. `--all` reaches the per-lane reconciler
-     * without passing the command layer's name checks, so the guard has to live in the reconciler itself;
-     * this is what proves it does.
-     */
+    // `--all` reaches the per-lane reconciler without the command layer's name checks, so the
+    // reserved-branch guard has to live in the reconciler itself; this proves it does.
     describe('a lane whose configured branch is the default branch', () => {
       let output: string;
       let exitCode: number;
@@ -1438,21 +1228,16 @@ describe('bit ci sync', function () {
       });
 
       it('should refuse before even reading the lane, so the cross-scope check never gets a say', () => {
-        // Ordering lock: the reserved-branch guard is the first thing the reconciler does. If it ran after
-        // the purity check, this line would report the cross-scope skip instead.
         expect(output).to.not.include(`${LANE} -> skipped (cross-scope lane:`);
       });
 
       it('should not have written to the default branch', () => {
-        // The main-scope path may legitimately push its own sync branch during this run; the default
-        // branch itself must be untouched by anything.
         expect(branchTipSha(defaultBranch)).to.equal(defaultBranchShaBefore);
         expect(exitCode, `bit ci sync --all output:\n${output}`).to.not.equal(0); // the mid-flight lane still halts
       });
     });
   });
 
-  // ---------------------------------------------------------------------------------------------
   describe('a lane hosted on another scope, with content in this repo scope, syncs when targeted by its id', () => {
     const LANE = 'hosted-elsewhere';
     let hostScope: string;
@@ -1498,9 +1283,7 @@ describe('bit ci sync', function () {
       });
 
       it("should record the lane's REAL, scope-qualified id in the branch's .bitmap", () => {
-        // THE attribution lock. The next run recognizes this branch as this lane's mirror by the `.bitmap`
-        // lane pointer, and that pointer is scope-qualified — exactly what the branch-aliasing halt below
-        // compares. A pointer at `<defaultScope>/<name>` would name a lane that does not exist.
+        // A pointer at `<defaultScope>/<name>` would name a lane that does not exist.
         const bitmap = fileOnBranch(LANE, '.bitmap');
         expect(bitmap).to.include('_bit_lane');
         expect(bitmap).to.include(hostScope);
@@ -1547,13 +1330,8 @@ describe('bit ci sync', function () {
         gitFetch();
       });
 
-      /**
-       * A branch name carries no scope, so this path resolves the lane against `defaultScope` — where it
-       * does not exist. The branch's `.bitmap` points at `<hostScope>/<lane>`, so it does not match either,
-       * and the evidence is `inherited-or-none`. The documented Stage-0 trade: a foreign-hosted lane must
-       * be re-targeted by its full id, and in exchange the fallback direction is the safe one — the
-       * branch is left alone, never retired on the strength of a lane the reconciler failed to find.
-       */
+      // A branch name carries no scope, so this resolves against `defaultScope`, mismatches the
+      // pointer, and reads `inherited-or-none` — the safe direction of the Stage-0 trade.
       it('should leave the branch alone rather than retire it', () => {
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
         expect(output).to.include(`${LANE} -> noop`);
@@ -1563,13 +1341,6 @@ describe('bit ci sync', function () {
       });
     });
 
-    /**
-     * THE branch-aliasing lock. The branch mapping is keyed on the lane NAME, so a lane of the SAME NAME in
-     * this repository's own scope maps onto the branch that already mirrors the foreign-hosted one. Planning
-     * for it would hijack the branch: `import-lane` would materialize this lane's content over the other
-     * lane's and repoint its `.bitmap`, and the other lane's PR would silently become a diff of somebody
-     * else's work.
-     */
     describe('a same-named lane in THIS scope must not hijack the foreign-hosted lane’s branch', () => {
       let output: string;
       let exitCode: number;
@@ -1581,20 +1352,16 @@ describe('bit ci sync', function () {
 
       before(() => {
         shaBefore = branchTipSha(LANE);
-        // A second developer workspace, so the same lane NAME can be created in this repository's own
-        // scope (one workspace cannot hold two lanes with the same local alias).
         rivalDevPath = helper.scopeHelper.cloneWorkspace();
-        // Same lane NAME, this repository's own scope. `--alias` because the workspace already tracks the
-        // foreign-hosted lane under that name locally; the lane id (`<defaultScope>/<name>`) is what the
-        // reconciler resolves, and it is genuinely a different lane.
+        // Same lane NAME, this repository's own scope; `--alias` because the workspace already tracks
+        // the foreign-hosted lane under that name locally.
         helper.command.runCmd(`bit lane create ${LANE} --alias rival`, rivalDevPath);
         fs.outputFileSync(path.join(rivalDevPath, 'comp2', 'index.js'), comp2Src('rival-lane-snap'));
         helper.command.runCmd('bit snap --message "rival lane snap"', rivalDevPath);
         helper.command.runCmd('bit export', rivalDevPath);
 
-        // The dry run goes FIRST, because the thing it must not do is permanent: labelling the branch
-        // owner's PR freezes that lane's syncs until a human removes the label. Running it after the real
-        // halt would prove nothing — the label would already be there.
+        // The dry run goes FIRST: run after the real halt, the label would already be there and the
+        // no-write claim would prove nothing.
         refsBeforeDryRun = remoteRefs();
         ({ output: dryRunOutput, exitCode: dryRunExit } = runBit(`bit ci sync ${LANE} --dry-run`));
         gitFetch();
@@ -1604,17 +1371,10 @@ describe('bit ci sync', function () {
         gitFetch();
       });
 
-      /**
-       * `--dry-run` promises no pull request is created, closed, labelled or commented on. This halt is the
-       * one that would break that promise most expensively: the PR it annotates belongs to the *other*
-       * lane — the branch's owner — whose own lane is perfectly healthy, and the label would stop its syncs
-       * until a human intervened. A dry run must therefore report the halt and touch nothing.
-       */
       it('should report the halt under --dry-run without annotating the owner’s PR', () => {
         expect(dryRunExit, `bit ci sync --dry-run output:\n${dryRunOutput}`).to.not.equal(0);
         expect(dryRunOutput).to.include(`HALTED ${LANE} -> branch ${LANE} mirrors lane ${hostScope}/${LANE}`);
-        // The marker only the dry-run path prints — proof the PR-writing branch was skipped rather than
-        // merely having had no PR to write to.
+        // Proof the PR-writing branch was skipped rather than merely having had no PR to write to.
         expect(dryRunOutput).to.include('Dry-run: the PR is not labelled or commented on');
       });
 
@@ -1637,15 +1397,9 @@ describe('bit ci sync', function () {
     });
   });
 
-  // =============================================================================================
-  // `sync.onConflict` — the policy that lets a same-line lane/branch divergence resolve without a
-  // human. Scenario D2 above proves the DEFAULT (halt, nothing written) with no `onConflict` in the
-  // config; this block proves the two automatic policies on the same divergence shape. The load-
-  // bearing assertions are on file bytes, exactly as in D1/D2: the contested line must hold one
-  // side's version with no conflict markers, the non-conflicting lane change must survive, and the
-  // lane must receive the merged snap — a policy that "succeeded" while dropping either half would
-  // pass any summary-line check.
-  // =============================================================================================
+  // D2 proves the default (halt); this block proves the two automatic policies on the same shape.
+  // The load-bearing assertions are on file bytes — a policy that "succeeded" while dropping either
+  // half would pass any summary-line check.
   describe('sync.onConflict resolves a same-line divergence without a human (git-wins / lane-wins)', () => {
     const LANE = 'policy-lane';
     let defaultBranch: string;
@@ -1663,23 +1417,20 @@ describe('bit ci sync', function () {
       helper.command.runCmd('bit snap --message "lane snap 1"', devPath);
       helper.command.runCmd('bit export', devPath);
 
-      // First sync mirrors the lane onto its branch, so the pair has a shared state to diverge FROM —
-      // without it there is no last-synced base and no merge-diverged.
+      // First sync gives the pair a shared state to diverge FROM.
       const first = runBit(`bit ci sync ${LANE}`);
       if (first.exitCode !== 0) throw new Error(`setup sync failed:\n${first.output}`);
       gitFetch();
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('git-wins: the branch keeps the contested line, the lane still contributes the rest', () => {
       let output: string;
       let exitCode: number;
       let laneBefore: string;
       before(() => {
-        // Same-line conflict on comp1: both sides rewrite the marker line...
+        // Same-line conflict on comp1, plus a non-conflicting comp2 move the policy must not throw
+        // away — the policy decides conflicts, never the whole merge.
         laneSideEdit(devPath, 'comp1/index.js', comp1Src('lane-take'), 'lane conflicting snap');
-        // ...and the lane ALSO moves comp2, which the branch never touched — the non-conflicting
-        // change the policy must not throw away (the policy decides conflicts, never the whole merge).
         laneSideEdit(devPath, 'comp2/index.js', comp2Src('lane-side-2'), 'lane edits comp2');
         branchSideCommit(
           LANE,
@@ -1714,8 +1465,6 @@ describe('bit ci sync', function () {
 
       it('should advance the lane to the merged snap — the resolution is a normal sync commit', () => {
         expect(remoteLaneFingerprint(LANE)).to.not.equal(laneBefore);
-        // The lane tip holds the policy's answer for the contested line AND its own comp2 edit: the
-        // snap is the merge, exactly as on the clean merge-diverged path.
         expect(laneTipFile(devPath, 'comp1/index.js')).to.include('branch-take');
         expect(laneTipFile(devPath, 'comp2/index.js')).to.include('lane-side-2');
       });
@@ -1740,17 +1489,13 @@ describe('bit ci sync', function () {
       });
     });
 
-    // -------------------------------------------------------------------------------------------
     describe('lane-wins: the lane keeps the contested line', () => {
       let output: string;
       let exitCode: number;
       before(() => {
         setSyncConfig({ lanes: ['*'], onConflict: 'lane-wins' });
-        // `setSyncConfig` only edits the tracked `workspace.jsonc` in the working tree, and
-        // `branchSideCommit` below opens with a forced checkout that discards uncommitted tracked
-        // edits — so without committing, the run would silently read the git-wins config the
-        // parent describe committed on the default branch (exactly what a CI clone reads: the
-        // DEFAULT branch's committed config, never a working-tree edit).
+        // Must be committed: the run reads the DEFAULT branch's committed config, never a
+        // working-tree edit (which the forced checkout below discards).
         helper.command.runCmd('git add workspace.jsonc');
         helper.command.runCmd('git commit -m "config: onConflict lane-wins"');
         helper.command.runCmd(`git push origin ${defaultBranch}`);
@@ -1784,11 +1529,6 @@ describe('bit ci sync', function () {
     });
   });
 
-  // =============================================================================================
-  // `bit ci sync --init` — one-command onboarding scaffolding. Unlike every other scenario in this
-  // file, this never touches bit.cloud or a lane: it is pure local scaffolding (two workflow files
-  // plus the workspace.jsonc config block), so the setup only needs a workspace with a git remote.
-  // =============================================================================================
   describe('bit ci sync --init (onboarding scaffolding)', () => {
     let defaultBranch: string;
 
@@ -1811,8 +1551,7 @@ describe('bit ci sync', function () {
 
       const syncYml = fs.readFileSync(workflowPath('bit-sync.yml'), 'utf8');
       const releaseYml = fs.readFileSync(workflowPath('bit-release.yml'), 'utf8');
-      // single-quoted: the value lands inside a YAML flow sequence, where `,` and `]` are structural and
-      // are both git-legal in a branch name. See `yamlSingleQuoted` in init-scaffold.ts.
+      // single-quoted: see `yamlSingleQuoted` in init-scaffold.ts.
       expect(syncYml).to.include(`branches-ignore: ['${defaultBranch}', 'bit-sync/**']`);
       expect(releaseYml).to.include(`branches: ['${defaultBranch}']`);
       // the mainSyncBranch default must survive the substitution untouched
@@ -1848,17 +1587,8 @@ describe('bit ci sync', function () {
       expect(fs.readFileSync(workflowPath('bit-release.yml'), 'utf8')).to.equal(releaseYmlBefore);
     });
 
-    /**
-     * WORKFLOWS BELONG TO THE REPOSITORY, NOT THE WORKSPACE. GitHub only discovers workflows at
-     * `<repo-root>/.github/workflows`, and a bit workspace is frequently a subdirectory of its repository
-     * (a monorepo package, an app folder). Scaffolding relative to the workspace there produced two files
-     * that look completely correct and never run — the worst failure shape for an onboarding command,
-     * because nothing errors and the user concludes sync is broken.
-     *
-     * The fixture is built by hand rather than through the scope helper because that is the only way to get
-     * the real shape: bit refuses to `init` a workspace inside another workspace, so the repository root
-     * has to be a plain git repo that is NOT itself a workspace — which is exactly how a monorepo looks.
-     */
+    // Built by hand because bit refuses to `init` a workspace inside another workspace — the repo
+    // root must be a plain git repo that is NOT itself a workspace, exactly how a monorepo looks.
     describe('a workspace in a subdirectory of the git repository', () => {
       let repoRoot: string;
       let wsDir: string;
@@ -1875,13 +1605,10 @@ describe('bit ci sync', function () {
       });
 
       it('should be non-vacuous: the run really used the SUBDIRECTORY workspace', () => {
-        // Without this the cell could pass for the wrong reason — e.g. if bit had resolved some other
-        // workspace, or the command had not run at all.
         expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
         expect(fs.existsSync(path.join(wsDir, 'workspace.jsonc')), 'the subdir must be its own workspace').to.be.true;
         expect(output).to.include('added "teambit.git/ci": { "sync": {} } to workspace.jsonc');
         expect(fs.readFileSync(path.join(wsDir, 'workspace.jsonc'), 'utf8')).to.include('teambit.git/ci');
-        // and the repository root is deliberately NOT a workspace, which is the shape being tested
         expect(fs.existsSync(path.join(repoRoot, 'workspace.jsonc'))).to.be.false;
       });
 
@@ -1898,8 +1625,6 @@ describe('bit ci sync', function () {
       });
 
       it('should report a path that resolves from where the user is standing', () => {
-        // Run from the subdirectory, a bare ".github/workflows/..." would read as workspace-relative and
-        // send the reader looking in a directory that deliberately does not exist.
         expect(output).to.match(/wrote .*\.github[/\\]workflows[/\\]bit-sync\.yml/);
         expect(output).to.not.match(/wrote \.github[/\\]workflows[/\\]bit-sync\.yml/);
       });

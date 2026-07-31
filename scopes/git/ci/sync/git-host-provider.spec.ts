@@ -37,9 +37,7 @@ describe('selectGitHostProvider', () => {
   });
 
   it('never routes a claimed remote to a different provider, even the only configured one', () => {
-    // THE guarantee: github claims this remote but has no credentials, and gitlab holds a token. Using
-    // gitlab here would create/close/comment on pull requests on the wrong host — so the run goes
-    // PR-less instead, and says which provider claimed the remote without being configured.
+    // Using gitlab here would act on the wrong host's PRs — the run goes PR-less instead.
     const selection = selectGitHostProvider([github(false), gitlab(true)], 'https://github.com/acme/shop');
     expect(selection.provider).to.equal(undefined);
     expect(selection.reason).to.contain('"github"');
@@ -107,8 +105,6 @@ describe('selectGitHostProvider', () => {
   });
 
   it('passes the remote url to isConfigured, so a host can derive its repo from it', () => {
-    // GitHub's real behaviour: without GITHUB_REPOSITORY the repo comes from the origin url, so
-    // "configured" is a function of the remote — not of the environment alone.
     const seen: Array<string | undefined> = [];
     const derivesRepoFromRemote = fakeProvider({
       name: 'github',
@@ -183,22 +179,14 @@ describe('GitHubHostProvider', () => {
   it('remembers the remote url it was asked about, so a later call without one still resolves', () => {
     process.env.BIT_GITHUB_TOKEN = 'tok';
     const provider = new GitHubHostProvider();
-    // only `matchesRemote` carried the url; the origin-parse path (and therefore what a PR method
-    // reaches through `requireClient`) must survive that
     expect(provider.matchesRemote('git@github.com:acme/shop.git')).to.equal(true);
     expect(provider.isConfigured()).to.equal(true);
     // without that hint the same call cannot resolve a repository
     expect(new GitHubHostProvider().isConfigured()).to.equal(false);
   });
 
-  /**
-   * THE wrong-host guard. `selectGitHostProvider` falls back to "the sole configured provider" whenever
-   * *nobody* claims the remote — a GitLab origin, a self-hosted host, an `insteadOf` rewrite. On GitHub
-   * Actions `GITHUB_TOKEN` and `GITHUB_REPOSITORY` are set for every job, including ones whose `origin`
-   * is a mirror, so this provider used to answer "configured" for a repository it had just declined to
-   * claim — becoming the sole candidate and aiming that repository's pull requests at whatever
-   * `GITHUB_REPOSITORY` named.
-   */
+  // On Actions the env is always set, so answering "configured" for an unclaimed remote would make
+  // this the sole-configured fallback and aim PRs at whatever GITHUB_REPOSITORY named.
   it('is NOT configured for a remote it does not claim, however complete the environment looks', () => {
     process.env.BIT_GITHUB_TOKEN = 'tok';
     process.env.GITHUB_REPOSITORY = 'acme/shop';
@@ -217,8 +205,6 @@ describe('GitHubHostProvider', () => {
   });
 
   it('does not let a non-github remote poison the remembered hint', () => {
-    // `matchesRemote` is called for every provider on every run, so it sees other hosts' URLs routinely.
-    // Remembering one would let it combine with GITHUB_REPOSITORY on a later argument-less call.
     process.env.BIT_GITHUB_TOKEN = 'tok';
     const provider = new GitHubHostProvider();
     expect(provider.matchesRemote('https://gitlab.com/acme/shop.git')).to.equal(false);

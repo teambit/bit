@@ -202,10 +202,8 @@ export class CiMain {
       config,
       gitHostProviderSlot
     );
-    // GitHub ships built-in, but it is not privileged: the ci aspect registers it through the same
-    // public slot any other host aspect uses (mirroring how the generator aspect self-registers its
-    // own templates). `GitHubHostProvider` resolves its credentials lazily, so registering here —
-    // at aspect load, with no env and no git remote read yet — is always safe.
+    // GitHub ships built-in but is not privileged: registered through the same public slot any other
+    // host aspect uses. Credentials resolve lazily, so registering at aspect load is always safe.
     ci.registerGitHostProvider(new GitHubHostProvider((message) => logger.consoleWarning(message)));
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
@@ -220,18 +218,10 @@ export class CiMain {
   }
 
   /**
-   * Register a git host (GitHub, GitLab, Bitbucket, …) that `bit ci sync` can use for its
-   * pull-request operations. Call this from your aspect's `provider()`:
-   *
-   * ```ts
-   * ci.registerGitHostProvider(new GitLabHostProvider());
-   * ```
-   *
-   * On each `bit ci sync` run exactly one registered provider is selected, by the `origin` remote —
-   * see `selectGitHostProvider`. A provider that claims the remote is the only candidate for it
-   * (registration order breaks ties among claimants), so registering a provider never changes how a
-   * repository claimed by a *different* provider is handled: at worst the run skips pull-request
-   * operations and says which provider claimed the remote without being configured.
+   * Register a git host (GitHub, GitLab, …) that `bit ci sync` can use for its pull-request
+   * operations. Exactly one provider is selected per run, by the `origin` remote (see
+   * `selectGitHostProvider`); registering a provider never changes how a repository claimed by a
+   * different provider is handled.
    */
   registerGitHostProvider(provider: GitHostProvider) {
     this.gitHostProviderSlot.register(provider);
@@ -311,19 +301,13 @@ export class CiMain {
    * @example convertBranchToLaneId("feature/New-Component") => "my-scope/feature-new-component"
    */
   convertBranchToLaneId(branchName: string): string {
-    // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
-    // and converting to lowercase
     const sanitizedBranch = branchName.replace(/[/.]/g, '-').toLowerCase();
     return `${this.workspace.defaultScope}/${sanitizedBranch}`;
   }
 
   /**
-   * The repository's default branch name, **whole** — slashes included.
-   *
-   * `refs/remotes/origin/HEAD` is the authority when it resolves; the prefix is stripped and whatever
-   * follows is the name (see `parseOriginHeadRef` for why this must not `split('/')`). Anything else —
-   * an unrecognised shape, or no `origin/HEAD` at all, which is normal in a fresh CI clone — falls through
-   * to probing the remote branches.
+   * The repository's default branch name, whole — slashes included (see `parseOriginHeadRef`).
+   * Local `origin/HEAD` symref first, then the remote's own answer, then the conventional probe.
    */
   async getDefaultBranchName(): Promise<string> {
     try {
@@ -333,24 +317,14 @@ export class CiMain {
     } catch {
       // no local origin/HEAD — normal in a fresh CI clone; ask the remote itself below.
     }
-    // The remote's own answer outranks any local guess: `ls-remote --symref origin HEAD` names the
-    // true default branch (`trunk`, `develop`, `release/main`, ...) even in narrow or single-branch
-    // clones where the local symref is unset and `origin/*` enumeration is misleading.
     const remote = await remoteHeadBranch();
     if (remote) return remote;
     return this.probeDefaultBranchName();
   }
 
   /**
-   * The last-resort fallback when neither the local `origin/HEAD` symref nor the remote itself
-   * (`remoteHeadBranch`, e.g. offline) can answer: look for the two conventional names among the remote
-   * branches, then give up on `master`.
-   *
-   * Deliberately still only `main`/`master`. A repository whose default branch is neither *and* whose
-   * `origin/HEAD` is unset *and* whose remote is unreachable cannot be distinguished from one with
-   * several long-lived branches, and guessing wrong here means protecting the wrong branch — the same
-   * failure the two paths above exist to avoid. The conventional pair is the only safe guess, and
-   * `bit ci sync` says which branch it settled on in every run's output.
+   * Last-resort fallback: the two conventional names among the remote branches, then `master`.
+   * Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
    */
   private async probeDefaultBranchName(originalError?: Error): Promise<string> {
     try {
@@ -500,46 +474,24 @@ export class CiMain {
   }
 
   /**
-   * Public entry point onto `switchToLane` for `bit ci sync`'s lane-sync executor, which lives in its
-   * own module (`sync/lane-sync-executor.ts`) but needs the same lane-switch plumbing. Like
-   * `switchToLane` it *returns* the error instead of throwing — the executor turns a failed switch
-   * into a halt rather than aborting the whole sync run.
-   *
-   * NOTE on `options`: `switchToLane` spreads caller options *after* its defaults, so every default
-   * (including `forceOurs: true`) is overridable — and the sync executor depends on that. The two
-   * directions want opposite conflict resolutions: `bit ci pr` keeps the working tree (`forceOurs`,
-   * since git is the source of truth), while `bit ci sync`'s import direction must write the lane's
-   * files over the branch (`forceOurs: false, forceTheirs: true`, since the lane is the source of
-   * truth). Do not reorder that spread.
+   * Public entry point onto `switchToLane` for the lane-sync executor; returns the error instead of
+   * throwing. `switchToLane` spreads caller options AFTER its defaults, so `forceOurs: true` is
+   * overridable — the sync import direction depends on that. Do not reorder that spread.
    */
   async switchToLaneForSync(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
     return this.switchToLane(laneName, options);
   }
 
   /**
-   * Re-read `.bitmap` from disk into the live workspace (and drop the caches derived from it).
-   *
-   * `bit ci sync` moves the git checkout underneath a running process: `git checkout <branch>` swaps
-   * `.bitmap` on disk, but the workspace keeps the copy it loaded at startup. Until it is reloaded,
-   * `getCurrentLane()` reports the lane of the *starting* checkout, `bit checkout head` resolves ids
-   * and versions from it, and the next `.bitmap` write persists that stale state over the branch's
-   * file. The lane-sync executor calls this after any git checkout whose `.bitmap` a subsequent bit
-   * operation must see — notably before merging a lane into a branch's working tree.
-   *
-   * `_reloadConsumer` is the workspace's own (rarely-used) hook for exactly this; the watcher uses it
-   * to pick up `.bitmap` edits made behind its back.
+   * Re-read `.bitmap` from disk into the live workspace. `bit ci sync` moves the git checkout
+   * underneath a running process, and until the reload every bit operation resolves against the
+   * `.bitmap` loaded at startup — and the next write would persist that stale state.
    */
   async reloadWorkspaceFromDisk(): Promise<void> {
     await this.workspace._reloadConsumer();
   }
 
-  /**
-   * `bit ci sync` — reconcile Bit lanes and the main scope with git branches and pull requests.
-   *
-   * The routing and aggregation live in `SyncOrchestrator`; this method exists so the aspect's public
-   * API is unchanged. See that class for what a run visits and how summaries combine, and the two
-   * executors for what reconciling a target actually does.
-   */
+  /** `bit ci sync` — reconcile Bit lanes and the main scope with git branches and PRs (see `SyncOrchestrator`). */
   async sync(
     opts: { lane?: string; branch?: string; all?: boolean; main?: boolean; dryRun?: boolean; init?: boolean } = {}
   ): Promise<string> {

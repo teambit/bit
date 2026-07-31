@@ -9,11 +9,6 @@ describe('isValidGitBranchName', () => {
     );
   });
 
-  /**
-   * THE rule the rest exist to protect. A configured name starting with `-` is not a name once it reaches
-   * a command line — it is an option — so it has to be refused before it is interpolated into any git
-   * invocation, not after.
-   */
   it('rejects an option-like leading dash', () => {
     expect(isValidGitBranchName('--force')).to.equal(false);
     expect(isValidGitBranchName('-delete')).to.equal(false);
@@ -32,12 +27,7 @@ describe('isValidGitBranchName', () => {
     );
   });
 
-  /**
-   * `git check-ref-format --branch` accepts `refs/heads/foo`, so this is stricter than git on purpose:
-   * every push here interpolates the configured value into a full refspec (`HEAD:refs/heads/<b>`,
-   * `:refs/heads/<b>`), which would make that name `refs/heads/refs/heads/foo` — a ref that really is
-   * created, in a place no `git checkout foo` will ever look.
-   */
+  // Stricter than git on purpose: every push interpolates the value into `refs/heads/<b>`.
   it('rejects a leading "refs/", and says to configure the bare branch name', () => {
     ['refs/heads/foo', 'refs/foo', 'refs/remotes/origin/foo'].forEach((name) =>
       expect(isValidGitBranchName(name), name).to.equal(false)
@@ -91,10 +81,6 @@ describe('assertValidBranchPrefix', () => {
   });
 });
 
-/**
- * The validation has to happen where it fails the run *before* any git command, otherwise a bad name is
- * discovered halfway through — after commits have been made and other lanes already pushed.
- */
 describe('resolveSyncConfig validates branch names up front', () => {
   it('rejects a mainSyncBranch git could not accept', () => {
     expect(() => resolveSyncConfig({ mainSyncBranch: '--force' })).to.throw('sync.mainSyncBranch');

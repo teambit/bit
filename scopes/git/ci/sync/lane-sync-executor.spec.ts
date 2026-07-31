@@ -16,11 +16,7 @@ import { resolveSyncConfig } from './sync-config';
 
 type LaneComponents = Parameters<typeof laneHeadFingerprint>[0];
 
-/**
- * A stand-in for `LaneData`'s component entry. The helpers under test only ever read
- * `id.toStringWithoutVersion()`, `id.scope` and `head`, so the test doesn't need a real `ComponentID` —
- * and not building one keeps this spec independent of the workspace/scope machinery.
- */
+/** A stand-in for `LaneData`'s component entry; the helpers only read the id string, scope and head. */
 function comp(id: string, head: string): LaneComponents[number] {
   return {
     id: { toStringWithoutVersion: () => id, scope: id.split('/', 1)[0] },
@@ -52,17 +48,10 @@ describe('laneHeadFingerprint', () => {
   });
 
   it('does not depend on the lane object, only on its content', () => {
-    // Two different lanes holding the same component heads fingerprint identically. That is the point:
-    // `LaneData.hash` is minted randomly at creation time and never moves when the lane advances, so it
-    // cannot answer "did this lane change since the last sync?".
     expect(laneHeadFingerprint([a, b])).to.equal(laneHeadFingerprint([comp('acme.shop/comp1', a.head), b]));
   });
 });
 
-/**
- * The Stage-0 relevance/purity check: a lane may be *hosted* anywhere, but its content must live in the
- * one scope this repository maps, because the reconciler has no notion of a partial lane yet.
- */
 describe('foreignLaneComponents', () => {
   const DEFAULT_SCOPE = 'acme.shop';
   const ours = comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
@@ -84,8 +73,6 @@ describe('foreignLaneComponents', () => {
   });
 
   it('treats a lane hosted elsewhere but filled with our components as ours (hosting != content)', () => {
-    // This is the case Stage 0 explicitly supports: `bit ci sync other.scope/my-lane` syncs normally as
-    // long as the content is single-scope and that scope is this repository's.
     expect(foreignLaneComponents([ours], DEFAULT_SCOPE)).to.deep.equal([]);
   });
 });
@@ -113,12 +100,7 @@ describe('crossScopeDescription', () => {
   });
 });
 
-/**
- * The PR body is posted to a git host, and every host caps it — GitHub rejects a pull request whose body
- * exceeds 65,536 characters, and rejects the *whole* request rather than truncating. A lane has no size
- * limit, so an unbounded enumeration meant the largest lanes were exactly the ones whose PR failed to
- * open.
- */
+// GitHub rejects a PR whose body exceeds 65,536 characters, whole-request; a lane has no size limit.
 describe('laneSyncPrBody', () => {
   const LANE_HEAD = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
 
@@ -139,7 +121,6 @@ describe('laneSyncPrBody', () => {
     expect(rendered).to.include('component-with-a-realistic-name-19');
     expect(rendered).to.not.include('component-with-a-realistic-name-20');
     expect(rendered).to.include('and 80 more');
-    // the count is of the WHOLE lane — a capped list must not be readable as a complete one
     expect(rendered).to.include('Components on the lane (100):');
     expect(rendered).to.include(`lane head: \`${LANE_HEAD}\``);
   });
@@ -161,10 +142,6 @@ describe('laneSyncPrBody', () => {
   });
 });
 
-/**
- * The three ways a cross-scope lane can reach this repository. They report the same facts and mean three
- * different things, so the wording — and, downstream, the exit code — differs on purpose.
- */
 describe('cross-scope outcome messages', () => {
   const DEFAULT_SCOPE = 'acme.shop';
   const FOREIGN = ['other.scope/comp2'];
@@ -173,8 +150,7 @@ describe('cross-scope outcome messages', () => {
     const summary = crossScopeSkipSummary('my-lane', FOREIGN, DEFAULT_SCOPE);
     expect(summary).to.match(/^my-lane -> skipped \(cross-scope lane: /);
     expect(summary).to.include('no branch created');
-    // It must not read as a failure: this line is returned as-is on a green run, so a HALTED/REFUSED
-    // marker in it would flip the exit code of a repository that has nothing wrong with it.
+    // A HALTED/REFUSED marker in this line would flip the exit code of a healthy repository.
     expect(summary).to.not.include('HALTED');
     expect(summary).to.not.include('REFUSED');
   });
@@ -187,8 +163,6 @@ describe('cross-scope outcome messages', () => {
   });
 
   it('the refusal does not claim it created no branch when a branch already exists', () => {
-    // The closing promise has to describe what actually happened. "No branch was created" would be a
-    // different — and false — statement about a branch that was sitting there before the run.
     const refusal = crossScopeRefusal(FOREIGN, DEFAULT_SCOPE, 'my-lane');
     expect(refusal).to.include('Nothing was written; the existing branch my-lane was left untouched');
     expect(refusal).to.not.include('No branch was created');
@@ -201,10 +175,6 @@ describe('cross-scope outcome messages', () => {
   });
 });
 
-/**
- * Two lanes with the same name in different scopes map to the same branch, because the branch mapping is
- * keyed on the name. The halt has to name both ids, or the human cannot tell which lane owns the branch.
- */
 describe('branchMirrorsOtherLaneReason', () => {
   it('names the branch, the lane that owns it, and the lane that was refused', () => {
     const reason = branchMirrorsOtherLaneReason('release', 'other.scope/release', 'acme.shop/release');
@@ -213,36 +183,19 @@ describe('branchMirrorsOtherLaneReason', () => {
     expect(reason).to.include("overwrite the other lane's mirror");
   });
 
-  /**
-   * This is the one halt whose PR belongs to a *different* lane than the one that failed, so the comment
-   * has to tell that PR's reviewers their own lane is fine — and must not carry the default
-   * "bit lane import <lane>" steps, which name the refused lane and would perform the very overwrite the
-   * halt prevented.
-   */
   it('the PR comment tells the branch owner their lane is fine, and not to run the usual steps', () => {
     const note = branchMirrorsOtherLaneNote('other.scope/release', 'acme.shop/release');
     expect(note).to.include('belongs to lane `other.scope/release`');
     expect(note).to.include('nothing is wrong with it');
     expect(note).to.include('acme.shop/release');
     expect(note).to.match(/Do NOT run the usual "bit lane import" resolution steps/);
-    // the way out, so the comment is actionable rather than only a warning
     expect(note).to.include('rename one of the two lanes');
     expect(note).to.include('`branches`');
   });
 });
 
-/**
- * The `syncLane` outer catch — the wrapper that turns an exception nobody anticipated into a halt. Under
- * `--dry-run` that halt must NOT touch the PR: `executeHalt` labels and comments it, which freezes the
- * lane's syncs until a human removes the label — a lasting side effect of a command that promised none.
- * `reconcileLane`'s own dry-run handling sits deeper, so an exception thrown early is exactly the path
- * where the promise used to break.
- *
- * The executor is real; only its collaborators are stubs. `getDefaultBranchName` throwing is the seam:
- * it is the first dependency `reconcileLane` awaits after the fetch, so the throw reaches the outer
- * catch without any git or network work — the stubbed git host then records whether the PR was read,
- * labelled or commented on.
- */
+// The executor is real; `getDefaultBranchName` throwing is the seam — the first dependency
+// `reconcileLane` awaits after the fetch, so the throw reaches the outer catch with no git/network work.
 describe('syncLane outer catch under --dry-run', () => {
   function throwingExecutor(gitHostCalls: string[]): LaneSyncExecutor {
     const noopLogger = { console: () => {}, consoleWarning: () => {}, error: () => {}, debug: () => {} };
@@ -270,8 +223,7 @@ describe('syncLane outer catch under --dry-run', () => {
       cfg: resolveSyncConfig({}),
       defaultScope: 'acme.shop',
     });
-    // The first thing `reconcileLane` awaits is a real `git fetch`; mark it already done so the
-    // unexpected error is the stubbed one and the spec never touches a repository or the network.
+    // Mark the fetch done so the spec never touches a repository or the network.
     (executor as any).fetched = true;
     return executor;
   }
@@ -282,8 +234,6 @@ describe('syncLane outer catch under --dry-run', () => {
       { hostScope: 'acme.shop', name: 'my-lane' },
       { dryRun: true }
     );
-    // Same HALTED line the real halt produces: the halt is the *answer* to "what would this run do?",
-    // so the run still exits non-zero.
     expect(summary).to.equal('HALTED my-lane -> unexpected error: boom');
     expect(gitHostCalls).to.deep.equal([]);
   });
@@ -295,28 +245,15 @@ describe('syncLane outer catch under --dry-run', () => {
     expect(gitHostCalls).to.deep.equal(['findPrByBranch', 'addLabel', 'comment']);
   });
 
-  /**
-   * The branch mapping itself can throw: '-hostile' is a legal bit lane name (the charset allows a
-   * leading '-') but `laneNameToBranch` refuses it as a branch name, since a command line would read it
-   * as an option. That throw used to happen BEFORE the try — so one unmappable lane on the remote
-   * aborted every lane after it plus the main sync, violating the documented "does not throw" contract.
-   * The orchestrator's `--all` enumeration pre-filters such names, but that is a convention two files
-   * away, and explicit targets never pass through it.
-   */
+  // '-hostile' is a legal bit lane name (the charset allows a leading '-') that can never be a branch.
   it('a lane whose name cannot map to a branch halts report-only instead of throwing', async () => {
     const gitHostCalls: string[] = [];
     const summary = await throwingExecutor(gitHostCalls).syncLane({ hostScope: 'acme.shop', name: '-hostile' });
     expect(summary).to.match(/^HALTED -hostile -> unexpected error: .*not a valid git branch name/);
-    // No branch was ever resolved, so there is no branch to look a PR up by and nothing to annotate.
     expect(gitHostCalls).to.deep.equal([]);
   });
 });
 
-/**
- * The last-resort guard at `executeClosePr`'s `git push origin --delete` site. The planner can never
- * route the default branch or the main sync branch to `close-pr` (neither is treated as lane-mapped), so
- * these rows lock the belt-and-braces refusal that must hold even when everything upstream is wrong.
- */
 describe('isProtectedBranch', () => {
   it('refuses the default branch and the main sync branch', () => {
     expect(isProtectedBranch('develop', 'develop', 'bit-sync/main')).to.equal(true);

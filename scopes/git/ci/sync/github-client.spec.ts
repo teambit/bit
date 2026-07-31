@@ -9,21 +9,13 @@ describe('parseGitHubRepo', () => {
     expect(parseGitHubRepo('https://gitlab.com/acme/shop.git')).to.equal(undefined);
   });
 
-  /**
-   * `isGitHubRemote` lower-cases and port-strips its host test, so it CLAIMS these remotes — and a
-   * claim is exclusive. A parse that then fails leaves the provider "claimed but unconfigured" and the
-   * whole run silently degrades to PR-less mode: every create/close/label/comment skipped.
-   */
+  // A claimed remote the parse then fails on silently degrades the whole run to PR-less mode.
   it('parses what the claim test claims: mixed-case hosts and explicit ports', () => {
     expect(parseGitHubRepo('https://GitHub.com/acme/shop.git')).to.equal('acme/shop');
     expect(parseGitHubRepo('https://github.com:443/acme/shop.git')).to.equal('acme/shop');
     expect(parseGitHubRepo('ssh://git@github.com:22/acme/shop.git')).to.equal('acme/shop');
   });
 
-  /**
-   * In the scp-like form the colon starts the PATH, and an all-digits owner is a legal GitHub
-   * username — `:digits` may only be read as a port when a scheme says it is one.
-   */
   it('keeps an all-digits scp owner as the owner, never a port', () => {
     expect(parseGitHubRepo('git@github.com:12345/shop.git')).to.equal('12345/shop');
   });
@@ -45,8 +37,6 @@ describe('isGitHubRemote', () => {
   });
 
   it('rejects another host that merely has "github.com" in its path', () => {
-    // A claim is exclusive: claiming this remote would hand every PR operation for a GitLab-hosted
-    // mirror to the GitHub provider, which cannot serve it.
     expect(isGitHubRemote('https://gitlab.example.com/mirrors/github.com/acme/repo.git')).to.equal(false);
     expect(isGitHubRemote('git@gitlab.example.com:mirrors/github.com/acme/repo.git')).to.equal(false);
   });
@@ -59,14 +49,6 @@ describe('isGitHubRemote', () => {
   });
 });
 
-/**
- * Which repository a run talks to when the environment and `origin` name different ones.
- *
- * `GITHUB_REPOSITORY` used to win outright, which is the wrong way round: every PR operation names a
- * *branch* (`createPr({head})`, `findPrByBranch`, the halt label and comment), and that branch only exists
- * on the repository the run pushed it to — `origin`. Env-first meant pushing `lane/x` to one repository
- * and asking a different one to open a pull request from it.
- */
 describe('GitHubClient.fromEnv', () => {
   const envKeys = ['GITHUB_TOKEN', 'BIT_GITHUB_TOKEN', 'GITHUB_REPOSITORY'] as const;
   const saved: Record<string, string | undefined> = {};
@@ -95,7 +77,6 @@ describe('GitHubClient.fromEnv', () => {
     process.env.GITHUB_REPOSITORY = 'other-org/other-repo';
     const warnings: string[] = [];
     const client = GitHubClient.fromEnv('git@github.com:acme/shop.git', (message) => warnings.push(message));
-    // origin hosts the branches this run pushes, so origin is the repository the PRs must live on
     expect(client?.repo).to.equal('acme/shop');
     expect(warnings).to.have.lengthOf(1);
     expect(warnings[0]).to.contain('other-org/other-repo');
@@ -117,7 +98,6 @@ describe('GitHubClient.fromEnv', () => {
     expect(GitHubClient.fromEnv('https://github.com/')?.repo).to.equal('acme/shop');
   });
 
-  /** The Task 24 guard, restated here so the preference above can never be read as loosening it. */
   it('still refuses a remote that is demonstrably not github, however complete the environment looks', () => {
     process.env.GITHUB_REPOSITORY = 'acme/shop';
     expect(GitHubClient.fromEnv('https://gitlab.com/acme/shop.git')).to.equal(undefined);
@@ -130,19 +110,8 @@ describe('GitHubClient.fromEnv', () => {
     expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')).to.equal(undefined);
   });
 
-  /**
-   * **`BIT_GITHUB_TOKEN` outranks `GITHUB_TOKEN`.** The old order was `GITHUB_TOKEN || BIT_GITHUB_TOKEN`,
-   * which made the override *dead on GitHub Actions* — the runner injects `GITHUB_TOKEN` into every job,
-   * so it always won. And Actions is the one place people set `BIT_GITHUB_TOKEN`: it is the documented
-   * way to supply a PAT with permissions the workflow token does not have, and to make sync pushes
-   * trigger downstream CI (pushes authenticated with the default `GITHUB_TOKEN` deliberately do not).
-   * The failure was silent — the run authenticated as the workflow token and either 403'd or opened pull
-   * requests no check ever ran on.
-   *
-   * Asserted through the `authorization` header rather than a field, so what is pinned is the token the
-   * client actually *sends*, not merely the one it stored. `fetchImpl` defaults to the global `fetch` at
-   * construction time, so the stub has to be installed before `fromEnv` runs.
-   */
+  // Asserted through the `authorization` header, so what is pinned is the token the client actually
+  // sends. The fetch stub must be installed before `fromEnv` runs.
   describe('token precedence', () => {
     let realFetch: typeof fetch;
     let calls: Array<{ url: string; init: any }>;
@@ -191,7 +160,6 @@ describe('GitHubClient.fromEnv', () => {
       expect(calls).to.have.lengthOf(0);
     });
 
-    /** An empty value is not a token; it must fall through exactly like an unset variable. */
     it('falls through an EMPTY BIT_GITHUB_TOKEN to GITHUB_TOKEN', async () => {
       process.env.GITHUB_TOKEN = 'workflow-token';
       process.env.BIT_GITHUB_TOKEN = '';

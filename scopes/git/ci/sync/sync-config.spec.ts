@@ -21,10 +21,6 @@ describe('sync-config', () => {
     expect(cfg.onConflict).to.equal('halt');
   });
 
-  /**
-   * `mainSync` decides whether the default branch gets written, so a value that is neither mode must
-   * fail at startup naming the key — not fall through to whichever mode a comparison happens to miss.
-   */
   describe('mainSync', () => {
     it('accepts both modes explicitly', () => {
       expect(resolveSyncConfig({ mainSync: 'pr' }).mainSync).to.equal('pr');
@@ -38,12 +34,6 @@ describe('sync-config', () => {
     });
   });
 
-  /**
-   * `onConflict` decides whether a same-line lane/branch divergence halts for a human (the default) or
-   * silently rewrites one side's work. A typo must fail at startup naming the key, the value and the
-   * valid options — falling through to *any* behaviour would either block runs nobody meant to block or
-   * pick a side nobody chose.
-   */
   describe('onConflict', () => {
     it('defaults to halt — a silent policy pick rewrites someone’s work, so silence is opt-in', () => {
       expect(resolveSyncConfig({}).onConflict).to.equal('halt');
@@ -84,10 +74,6 @@ describe('sync-config', () => {
     expect(branchToLaneName('some-lane', cfg)).to.equal('some-lane');
   });
 
-  /**
-   * The `[lane]` argument's two forms. The scope-qualified one exists because a lane is hosted on one
-   * scope while this repository maps another — the hosting scope is administrative and need not match.
-   */
   describe('parseLaneTarget', () => {
     const DEFAULT_SCOPE = 'acme.shop';
 
@@ -103,7 +89,6 @@ describe('sync-config', () => {
     });
 
     it('accepts a hosting scope without a dot (self-hosted and test scopes are bare names)', () => {
-      // The '/' is the boundary, not the dot: a dot requirement would reject legitimate scope ids.
       expect(parseLaneTarget('bare-scope/my-lane', DEFAULT_SCOPE)).to.deep.equal({
         hostScope: 'bare-scope',
         name: 'my-lane',
@@ -118,8 +103,6 @@ describe('sync-config', () => {
     });
 
     it('refuses malformed targets rather than guessing at them', () => {
-      // Guessing could reconcile the wrong lane onto a branch, so every shape that isn't one of the two
-      // accepted forms is an error.
       ['', '   ', '/', '/my-lane', 'scope/', 'a/b/c', 'scope//lane'].forEach((input) => {
         expect(() => parseLaneTarget(input, DEFAULT_SCOPE), `input: "${input}"`).to.throw();
       });
@@ -135,12 +118,7 @@ describe('sync-config', () => {
   });
 });
 
-/**
- * The rule bit itself enforces when a lane is created (`isValidLaneName` in
- * `scopes/lanes/modules/create-lane/create-lane.ts`). Pinned here because this module re-states it rather
- * than importing it, so a divergence from bit's copy shows up as a failure rather than as a lane that
- * silently stops syncing.
- */
+// Pins bit's own rule (create-lane.ts), which this module re-states rather than imports.
 describe('isValidLaneName', () => {
   it('accepts what bit accepts: lowercase alphanumerics plus - _ $ !', () => {
     ['my-lane', 'lane_1', 'a', 'x$y', 'w!', 'release-2'].forEach((name) =>
@@ -148,13 +126,6 @@ describe('isValidLaneName', () => {
     );
   });
 
-  /**
-   * THE case that motivated this. Under the default `branchPrefix: ''` every branch name maps to a
-   * same-named "lane", so an ordinary `feature/foo` becomes a lane name containing `/` — which bit forbids
-   * (its own TODO in create-lane notes the collision with the `scope/lane` delimiter), which breaks
-   * `LaneTarget.name`'s no-slash invariant, and which `parseLaneTarget` would mis-split into a bogus
-   * scope.
-   */
   it('rejects a slash, which is what an ordinary branch name brings in', () => {
     expect(isValidLaneName('feature/foo')).to.equal(false);
     expect(isValidLaneName('a/b/c')).to.equal(false);

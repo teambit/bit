@@ -19,25 +19,10 @@ export class CiSyncCmd implements Command {
   group = 'collaborate';
 
   /**
-   * **Changing any user-facing text on this command — `description`, `extendedDescription`, an option
-   * description, an argument description — requires regenerating the CLI reference**, or the
-   * `check_generated_reference` CI job fails on the diff:
-   *
-   * ```
-   * npm run generate-cli-reference && npm run generate-cli-reference-json &&
-   * npm run generate-cli-reference-docs && npm run generate-cli-skill &&
-   * npm run generate-core-aspects-ids
-   * ```
-   *
-   * Two traps, both of which have already cost a red build:
-   *
-   * 1. **Those scripts invoke a bare `bit`, i.e. whatever is on `PATH`.** CI symlinks that to the repo's
-   *    own `bin/bit.js` (`bit_global_for_npm`), so generating with a globally installed release produces
-   *    output for a different command set entirely. Put `<repo>/bin/bit.js` first on `PATH`.
-   * 2. **A local workspace may register commands CI's does not** (`apply`, `get-deps`, `sign` have all
-   *    leaked in this way). The generated diff must contain *only* the text that actually changed —
-   *    inspect it line by line before committing, and drop any command blocks the branch did not add.
-   *    `cli-reference.docs.mdx`'s embedded version line is release-time state; leave it alone.
+   * Changing any user-facing text on this command requires regenerating the CLI reference (the
+   * `generate-cli-reference*` npm scripts), or the `check_generated_reference` CI job fails. The
+   * scripts invoke whatever `bit` is on PATH — put `<repo>/bin/bit.js` first — and a local workspace
+   * may register extra commands, so inspect the generated diff and keep only the text that changed.
    */
   options: CommandOptions = [
     [
@@ -73,10 +58,8 @@ export class CiSyncCmd implements Command {
     private ci: CiMain
   ) {}
 
-  // `[lane]: [string]` (rather than `[string?]`) follows the convention of every other command in the
-  // repo with an optional positional argument — `CLIArgs` is `Array<string | string[]>`, so an
-  // `undefined`-carrying tuple isn't assignable to it. The argument is genuinely optional at runtime,
-  // hence the `|| undefined` below.
+  // `[lane]: [string]` rather than `[string?]`: `CLIArgs` does not admit an undefined-carrying tuple.
+  // The argument is genuinely optional at runtime, hence the `|| undefined` below.
   async report([lane]: [string], options: Options) {
     this.logger.console('\n\n');
     this.logger.console('Initializing sync command');

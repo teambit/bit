@@ -13,21 +13,14 @@ export interface CiSyncConfig {
   /** branch used for main-scope drift sync PRs */
   mainSyncBranch?: string;
   /**
-   * How the main-scope drift reaches the default branch. `'pr'` (the default) proposes the convergence:
-   * the drift is committed to `mainSyncBranch` and a pull request is opened against the default branch,
-   * which is never written directly. `'direct-push'` commits the drift straight onto the default branch
-   * and pushes it — for mirror-style setups where the scope is the source of truth for main and the PR
-   * ceremony is unwanted. Under `'direct-push'`, `mainSyncBranch` is unused.
+   * How main-scope drift reaches the default branch: 'pr' (default) via `mainSyncBranch` + a PR;
+   * 'direct-push' commits straight onto the default branch (`mainSyncBranch` unused).
    */
   mainSync?: 'pr' | 'direct-push';
   /**
-   * What `merge-diverged` does when the lane and the branch changed the same lines. `'halt'` (the
-   * default) stops that lane: the PR is labelled `bit-sync-conflict` with the resolution steps
-   * commented, and a human resolves — a silent policy pick rewrites someone's work, so silence is
-   * opt-in. `'git-wins'` resolves conflicting hunks to the branch's version; `'lane-wins'` resolves
-   * them to the lane's version. Non-conflicting hunks always merge (union) regardless of policy — the
-   * policy only decides who wins where the two sides genuinely collide. (Bit resolves at component
-   * granularity: every file of a component that conflicted takes the winning side.)
+   * What `merge-diverged` does on a genuine conflict: 'halt' (default) labels the PR and leaves it to
+   * a human; 'git-wins'/'lane-wins' resolve conflicting hunks to that side. Non-conflicting hunks
+   * always merge regardless of policy.
    */
   onConflict?: 'halt' | 'git-wins' | 'lane-wins';
   /** enable GitHub auto-merge on the main sync PR */
@@ -35,13 +28,8 @@ export interface CiSyncConfig {
 }
 
 /**
- * Resolve the configured sync options, **validating every branch name before anything runs**.
- *
- * The validation lives here because this is the first thing `sync()` does and it happens before a single
- * git command: a branch name that git cannot accept should fail the run at startup, naming the config key,
- * rather than halfway through — after commits have been made and other lanes already pushed — with git's
- * own error about a ref. The leading-`-` rule matters most: such a name is not a name at all by the time
- * it reaches a command line, it is an option.
+ * Resolve the configured sync options, validating every branch name before anything runs — a bad name
+ * must fail at startup naming the config key, not mid-run with git's own ref error.
  */
 export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
   const resolved: Required<CiSyncConfig> = {
@@ -54,9 +42,8 @@ export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
     mainSync: raw?.mainSync ?? 'pr',
     onConflict: raw?.onConflict ?? 'halt',
   };
-  // Validated for the same startup-failure reason as the branch names: a typo here ('direct', 'push',
-  // 'PR') would otherwise silently fall through to whichever mode the executor's comparison happens to
-  // miss, and the difference between the two modes is whether the default branch gets written.
+  // Config comes from workspace.jsonc, so the union types are not enforced at runtime; a typo must
+  // fail at startup rather than fall through to whichever mode a comparison happens to miss.
   if (resolved.mainSync !== 'pr' && resolved.mainSync !== 'direct-push') {
     throw new BitError(
       `sync.mainSync: "${resolved.mainSync}" is not a valid value. Use "pr" (propose the main-scope drift ` +
@@ -64,9 +51,6 @@ export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
         `default branch)`
     );
   }
-  // Same startup-failure idiom as mainSync: this key decides whether a conflicted merge halts for a
-  // human or silently picks a side, so a typo ('git', 'ours', 'lane') must not fall through to any
-  // behaviour at all — least of all to the two values that rewrite one side's work without asking.
   if (resolved.onConflict !== 'halt' && resolved.onConflict !== 'git-wins' && resolved.onConflict !== 'lane-wins') {
     throw new BitError(
       `sync.onConflict: "${resolved.onConflict}" is not a valid value. Use "halt" (stop the conflicted ` +
@@ -83,9 +67,8 @@ export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
 }
 
 /**
- * The branch a lane name maps to. The derived result is validated too, not just the configured pieces: a
- * `branchPrefix` that is fine on its own can still combine with a lane name into something git refuses,
- * and this is the last point before the name is handed to a git command.
+ * The branch a lane name maps to. The derived result is validated too: a prefix that is fine on its
+ * own can still combine with a lane name into something git refuses.
  */
 export function laneNameToBranch(laneName: string, cfg: Required<CiSyncConfig>): string {
   const override = cfg.branches[laneName];
@@ -105,14 +88,8 @@ export function branchToLaneName(branch: string, cfg: Required<CiSyncConfig>): s
 }
 
 /**
- * A lane the reconciler was asked to sync, split into the two scope relations a lane actually has:
- * the scope that **hosts** the lane object (where it is read from and exported to) and the lane's
- * bare **name** (which is what maps to a branch).
- *
- * Keeping them apart is what lets a lane hosted on another scope be addressed at all. Note the
- * asymmetry, and it is deliberate: the branch mapping uses the NAME only — a lane is mirrored onto the
- * branch its name maps to, whichever scope hosts it — while every *bit* operation (reading the lane,
- * snapping, exporting, the id written into the sync commit subject) uses the full `hostScope/name`.
+ * A lane to sync, split into the scope hosting the lane object and the bare name. The branch mapping
+ * uses the NAME only; every bit operation uses the full `hostScope/name`.
  */
 export type LaneTarget = {
   /** the scope hosting the lane object; the workspace's defaultScope unless the target said otherwise */
@@ -122,21 +99,9 @@ export type LaneTarget = {
 };
 
 /**
- * Parse the `[lane]` argument of `bit ci sync` into a {@link LaneTarget}.
- *
- * Two accepted forms:
- * - `my-lane` — a lane hosted on this workspace's `defaultScope` (the historical form);
- * - `some-org.some-scope/my-lane` — a lane hosted on another scope. A lane is an org-global change
- *   set, so the scope that hosts it need not be the scope this repository maps to.
- *
- * The split is unambiguous because a lane **name** cannot contain `/` (bit rejects it at creation),
- * so the single `/` in a scope-qualified id is always the boundary. A scope id is *usually*
- * `owner.scope`, but the dot is NOT required (self-hosted and test scopes are frequently bare names),
- * so it is not validated here — the remote answers "lane was not found" if the scope is wrong, which
- * is a far better error than a syntax rule that rejects legitimate ids.
- *
- * Anything else (`a/b/c`, `/x`, `x/`, blank) is refused rather than coerced: guessing at a malformed
- * target could silently reconcile the *wrong* lane onto a branch.
+ * Parse the `[lane]` argument (`my-lane` or `some-org.some-scope/my-lane`) into a {@link LaneTarget}.
+ * A lane name cannot contain `/`, so the single `/` is always the scope/name boundary. The dot in a
+ * scope id is not required (self-hosted scopes can be bare names), so it is not validated here.
  */
 export function parseLaneTarget(input: string, defaultScope: string): LaneTarget {
   const trimmed = input.trim();
@@ -155,38 +120,21 @@ export function parseLaneTarget(input: string, defaultScope: string): LaneTarget
 }
 
 /**
- * The lane name a branch maps to, **only if that name could actually be a lane** — otherwise undefined.
- *
- * This is the pairing `--all`'s branch enumeration needs, and the two halves are not interchangeable:
- * `branchToLaneName` is a string transform (under the default `branchPrefix: ''` it is the identity), so
- * on its own it happily reports that `feature/foo` maps to the "lane" `feature/foo`. No lane can be called
- * that — bit forbids `/` in a lane name precisely because it is the `scope/lane` delimiter — so such a
- * branch cannot correspond to any lane and must not be queued as one.
+ * The lane name a branch maps to, only if that name could actually be a lane. `branchToLaneName` alone
+ * is a string transform (the identity under the default empty prefix), so it would report `feature/foo`
+ * as a "lane" — a name bit forbids.
  */
 export function syncableLaneNameForBranch(branch: string, cfg: Required<CiSyncConfig>): string | undefined {
   const laneName = branchToLaneName(branch, cfg);
   return laneName && isValidLaneName(laneName) ? laneName : undefined;
 }
 
-/**
- * bit's own maximum lane-name length (`create-lane.ts`'s `MAX_LANE_NAME_LENGTH`).
- */
+/** bit's own maximum lane-name length (`create-lane.ts`'s `MAX_LANE_NAME_LENGTH`). */
 const MAX_LANE_NAME_LENGTH = 800;
 
 /**
- * Could this string be a bit lane name at all?
- *
- * Mirrors `isValidLaneName` in `scopes/lanes/modules/create-lane/create-lane.ts` — the rule
- * `throwForInvalidLaneName` enforces when a lane is created: lowercase alphanumerics plus `- _ $ !`, and
- * **no `/`** (bit's own TODO there notes that allowing a slash would collide with the `scope/lane`
- * delimiter, which is exactly the collision this guards).
- *
- * Re-stated here rather than imported, deliberately. `isValidLaneName` is module-private — only the
- * throwing wrapper is exported — so using bit's copy would mean importing `create-lane` (a heavy module,
- * and a new aspect-level dependency edge) purely to run a regex, and then using exceptions as control
- * flow for something that is a *filter*. The drift risk is one-directional and safe: if bit ever loosened
- * the rule, this would skip a branch that could now be a lane, which shows up as "that lane never synced"
- * rather than as anything destructive. `sync-config.spec.ts` pins the rule so a divergence is visible.
+ * Could this string be a bit lane name at all? Mirrors the module-private `isValidLaneName` in
+ * `create-lane.ts`; drift errs toward skipping a branch, and `sync-config.spec.ts` pins the rule.
  */
 export function isValidLaneName(name: string): boolean {
   if (!name || name.length > MAX_LANE_NAME_LENGTH) return false;
