@@ -202,6 +202,9 @@ export async function getPeerDependencyIssues(
       overrides: opts.overrides,
       peersSuffixMaxLength: 1000,
       registries: opts.registries.toMap(),
+      authHeaderByUri: buildAuthHeaderByUri(opts.registries),
+      proxyConfig: toNodeApiProxyConfig(opts.proxyConfig),
+      networkConfig: toNodeApiNetworkConfig(opts.networkConfig),
       virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
     });
   } catch (err: any) {

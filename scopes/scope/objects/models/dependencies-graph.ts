@@ -123,19 +123,19 @@ export class DependenciesGraph {
     }
     const reachableEdges = new Set<string>();
     const reachablePackages = new Set<string>();
-    const visit = (nodeId: string) => {
-      const pkgId = nodeIdWithoutPeerSuffix(nodeId);
-      reachablePackages.add(pkgId);
+    // An explicit stack: deep dependency chains would overflow the call
+    // stack with a recursive walk.
+    const stack = rootEdge.neighbours.map((neighbour) => neighbour.id);
+    while (stack.length > 0) {
+      const nodeId = stack.pop()!;
+      reachablePackages.add(nodeIdWithoutPeerSuffix(nodeId));
       const edge = edgesById.get(nodeId);
-      if (!edge || reachableEdges.has(nodeId)) return;
+      if (!edge || reachableEdges.has(nodeId)) continue;
       reachableEdges.add(nodeId);
       if (edge.attr?.pkgId) reachablePackages.add(edge.attr.pkgId);
       for (const neighbour of edge.neighbours) {
-        visit(neighbour.id);
+        stack.push(neighbour.id);
       }
-    };
-    for (const neighbour of rootEdge.neighbours) {
-      visit(neighbour.id);
     }
     this.edges = [rootEdge, ...Array.from(edgesById.values()).filter((edge) => reachableEdges.has(edge.id))];
     for (const pkgId of this.packages.keys()) {
