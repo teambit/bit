@@ -1,5 +1,4 @@
-import { readConfig as napiReadConfig } from '@pnpm/napi';
-import type { ResolvedConfig } from '@pnpm/napi';
+import { readConfig as napiReadConfig, type ResolvedConfig } from '@pnpm/napi';
 import path from 'path';
 
 /**

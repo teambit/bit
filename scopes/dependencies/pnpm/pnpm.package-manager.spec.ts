@@ -1,42 +1,30 @@
 import { expect } from 'chai';
-import type { Config } from '@pnpm/config.reader';
+import type { ResolvedConfig } from '@pnpm/napi';
 import { PnpmPackageManager } from './pnpm.package-manager';
 
 describe('PnpmPackageManager.getNetworkConfig', () => {
-  it('uses the Bit user agent when rawConfig is unavailable', async () => {
-    const packageManager = createPackageManager({
-      userAgent: 'pnpm/1.0.0',
-      explicitlySetKeys: new Set(),
-    });
+  it('uses the Bit user agent when no user agent is configured', async () => {
+    const packageManager = createPackageManager({});
 
-    expect(await packageManager.getNetworkConfig()).to.include({
+    const networkConfig = await packageManager.getNetworkConfig?.();
+    expect(networkConfig).to.include({
       userAgent: 'bit user/test-user',
     });
   });
 
-  it('uses an explicitly configured user agent', async () => {
+  it('uses the explicitly configured user agent', async () => {
     const packageManager = createPackageManager({
       userAgent: 'custom-user-agent',
-      explicitlySetKeys: new Set(['user-agent']),
     });
 
-    expect(await packageManager.getNetworkConfig()).to.include({
+    const networkConfig = await packageManager.getNetworkConfig?.();
+    expect(networkConfig).to.include({
       userAgent: 'custom-user-agent',
-    });
-  });
-
-  it('supports the legacy rawConfig shape', async () => {
-    const packageManager = createPackageManager({
-      rawConfig: { 'user-agent': 'legacy-user-agent' },
-    });
-
-    expect(await packageManager.getNetworkConfig()).to.include({
-      userAgent: 'legacy-user-agent',
     });
   });
 });
 
-function createPackageManager(config: Partial<Config> & { rawConfig?: Record<string, unknown> }) {
+function createPackageManager(config: Partial<ResolvedConfig>) {
   const packageManager = new PnpmPackageManager(
     {} as any,
     {} as any,
@@ -45,7 +33,7 @@ function createPackageManager(config: Partial<Config> & { rawConfig?: Record<str
     } as any
   );
   packageManager.readConfig = async () => ({
-    config: config as Config,
+    config: config as ResolvedConfig,
     warnings: [],
   });
   return packageManager;
