@@ -1,5 +1,12 @@
 import { expect } from 'chai';
-import { resolveSyncConfig, laneNameToBranch, branchToLaneName, parseLaneTarget, shouldSyncLane } from './sync-config';
+import {
+  resolveSyncConfig,
+  laneNameToBranch,
+  branchToLaneName,
+  isValidLaneName,
+  parseLaneTarget,
+  shouldSyncLane,
+} from './sync-config';
 
 describe('sync-config', () => {
   it('applies defaults', () => {
@@ -82,5 +89,42 @@ describe('sync-config', () => {
     expect(shouldSyncLane('feature-x', cfg)).to.equal(true);
     expect(shouldSyncLane('hotfix-y', cfg)).to.equal(false);
     expect(shouldSyncLane('anything', resolveSyncConfig({ lanes: [] }))).to.equal(false);
+  });
+});
+
+/**
+ * The rule bit itself enforces when a lane is created (`isValidLaneName` in
+ * `scopes/lanes/modules/create-lane/create-lane.ts`). Pinned here because this module re-states it rather
+ * than importing it, so a divergence from bit's copy shows up as a failure rather than as a lane that
+ * silently stops syncing.
+ */
+describe('isValidLaneName', () => {
+  it('accepts what bit accepts: lowercase alphanumerics plus - _ $ !', () => {
+    ['my-lane', 'lane_1', 'a', 'x$y', 'w!', 'release-2'].forEach((name) =>
+      expect(isValidLaneName(name), name).to.equal(true)
+    );
+  });
+
+  /**
+   * THE case that motivated this. Under the default `branchPrefix: ''` every branch name maps to a
+   * same-named "lane", so an ordinary `feature/foo` becomes a lane name containing `/` — which bit forbids
+   * (its own TODO in create-lane notes the collision with the `scope/lane` delimiter), which breaks
+   * `LaneTarget.name`'s no-slash invariant, and which `parseLaneTarget` would mis-split into a bogus
+   * scope.
+   */
+  it('rejects a slash, which is what an ordinary branch name brings in', () => {
+    expect(isValidLaneName('feature/foo')).to.equal(false);
+    expect(isValidLaneName('a/b/c')).to.equal(false);
+  });
+
+  it('rejects uppercase, spaces, dots and the empty string', () => {
+    ['FEATURE', 'Feature', 'a b', 'a.b', '', 'a+b', 'café'].forEach((name) =>
+      expect(isValidLaneName(name), JSON.stringify(name)).to.equal(false)
+    );
+  });
+
+  it("rejects a name past bit's length limit", () => {
+    expect(isValidLaneName('a'.repeat(800))).to.equal(true);
+    expect(isValidLaneName('a'.repeat(801))).to.equal(false);
   });
 });

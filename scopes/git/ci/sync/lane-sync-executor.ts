@@ -1480,6 +1480,17 @@ export class LaneSyncExecutor {
     }
     // The lane page lives under the scope that HOSTS the lane, which is not necessarily this
     // repository's `defaultScope`.
+    //
+    // `replace('.', '/')` replaces only the FIRST dot, and that is correct rather than a latent bug: a
+    // scope id may contain **at most one** dot. The grammar is
+    // `@teambit/legacy-bit-id/utils/is-valid-scope-name.ts` — `/^[$\-_!a-z0-9]+[.]?[$\-_!a-z0-9]+$/`,
+    // whose own comment reads "the '.' can be in the middle, not at the beginning and not at the end and
+    // only once" — and it is enforced on every path that can introduce one (`BitId.parse`,
+    // `bit init --default-scope`, workspace variants, the remote resolver). So there is never a second
+    // dot to replace. This is also the platform's canonical spelling of the same conversion, used by
+    // `ScopeUrl.toPathname` (`scopes/component/component-url/scope-url.ts`), `lane.cmd.ts` and
+    // `export.main.runtime.ts`; `ScopeUrl` is not imported here because its barrel pulls in React
+    // context, and it hardcodes bit.cloud where this must honour `getCloudDomain()`.
     const laneUrl = `https://${getCloudDomain()}/${target.hostScope.replace('.', '/')}/~lane/${target.name}`;
     const components = remoteLane.components
       .map((comp) => `- \`${comp.id.toStringWithoutVersion()}\` @ \`${comp.head.slice(0, 9)}\``)

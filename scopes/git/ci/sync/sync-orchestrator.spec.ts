@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { SyncOrchestrator } from './sync-orchestrator';
+import { branchToLaneName, resolveSyncConfig, syncableLaneNameForBranch } from './sync-config';
 
 /**
  * The target-selection guards, which are the only part of the orchestration that decides anything before
@@ -60,5 +61,41 @@ describe('SyncOrchestrator target guards', () => {
         message = err.message;
       });
     expect(message).to.contain('--init cannot be combined');
+  });
+});
+
+/**
+ * The branch half of `--all` enumeration. Every branch on `origin` reaches it, and under the documented
+ * default (`branchPrefix: ''`) the branch->lane mapping is an identity transform — so without a validity
+ * filter an ordinary `feature/foo` is queued as a "lane" whose name contains a slash, which no lane can
+ * have and which `parseLaneTarget` would later mis-split into the scope `feature`.
+ *
+ * `syncableLaneNameForBranch` is the exact function the enumeration calls, so these rows exercise the
+ * shipped decision rather than a restatement of it.
+ */
+describe('branch -> lane enumeration filter', () => {
+  it('is testing something: the default mapping really is the identity', () => {
+    // If this stopped being an identity transform the rows below would be asserting nothing.
+    expect(branchToLaneName('feature/foo', resolveSyncConfig({}))).to.equal('feature/foo');
+  });
+
+  it('queues only the branches whose mapped name could actually be a lane', () => {
+    const cfg = resolveSyncConfig({});
+    const queued = ['feature/foo', 'FEATURE', 'ok-lane']
+      .map((branch) => syncableLaneNameForBranch(branch, cfg))
+      .filter(Boolean);
+    expect(queued).to.deep.equal(['ok-lane']);
+  });
+
+  it('keeps a prefixed mapping working — the prefix is stripped before the name is checked', () => {
+    const cfg = resolveSyncConfig({ branchPrefix: 'lane/' });
+    expect(syncableLaneNameForBranch('lane/my-lane', cfg)).to.equal('my-lane');
+    // outside the prefix is not lane-mapped at all, which is a different reason for the same outcome
+    expect(syncableLaneNameForBranch('feature/foo', cfg)).to.equal(undefined);
+  });
+
+  it('still honours an explicit branches override whose lane name is valid', () => {
+    const cfg = resolveSyncConfig({ branches: { 'my-lane': 'custom/branch' } });
+    expect(syncableLaneNameForBranch('custom/branch', cfg)).to.equal('my-lane');
   });
 });

@@ -8,7 +8,14 @@ import { CiAspect } from '../ci.aspect';
 import type { CiMain, CiWorkspaceConfig } from '../ci.main.runtime';
 import { git } from '../git';
 import type { CiSyncConfig } from './sync-config';
-import { branchToLaneName, laneNameToBranch, parseLaneTarget, resolveSyncConfig, shouldSyncLane } from './sync-config';
+import {
+  branchToLaneName,
+  laneNameToBranch,
+  parseLaneTarget,
+  resolveSyncConfig,
+  shouldSyncLane,
+  syncableLaneNameForBranch,
+} from './sync-config';
 import { HALT_SUMMARY_PREFIX, REFUSED_SUMMARY_PREFIX, LaneSyncExecutor } from './lane-sync-executor';
 import { MainSyncExecutor } from './main-sync-executor';
 import { selectGitHostProvider } from './git-host-provider';
@@ -364,8 +371,21 @@ export class SyncOrchestrator {
         // load-bearing under the default `branchPrefix: ''`, where every branch name maps to a
         // same-named lane: without it they would resolve to the bogus lanes "main" / "bit-sync/main".
         if (branch === defaultBranch || branch === cfg.mainSyncBranch) continue;
-        const laneName = branchToLaneName(branch, cfg);
-        if (laneName) names.add(laneName);
+        // Mapped AND checked: the mapping alone is a string transform, so under the default
+        // `branchPrefix: ''` an ordinary `feature/foo` would otherwise be queued as a "lane" whose name
+        // contains a slash — which no lane can have, which breaks `LaneTarget.name`'s invariant, and which
+        // scope-qualified parsing would mis-split. Every branch on `origin` reaches this loop, so most of
+        // what it rejects is simply ordinary developer branches: skipped at debug level, never as a summary
+        // line, or the summary would fill with noise about branches the reconciler was never meant to touch.
+        const laneName = syncableLaneNameForBranch(branch, cfg);
+        if (!laneName) {
+          this.deps.logger.debug(
+            `bit ci sync: branch "${branch}" does not map to a name any lane could have ` +
+              `(mapped to "${branchToLaneName(branch, cfg) ?? '<not lane-mapped>'}") — skipping it`
+          );
+          continue;
+        }
+        names.add(laneName);
       }
     } catch (e: any) {
       errors.push(

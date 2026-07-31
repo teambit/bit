@@ -114,6 +114,45 @@ export function parseLaneTarget(input: string, defaultScope: string): LaneTarget
   return { hostScope, name };
 }
 
+/**
+ * The lane name a branch maps to, **only if that name could actually be a lane** — otherwise undefined.
+ *
+ * This is the pairing `--all`'s branch enumeration needs, and the two halves are not interchangeable:
+ * `branchToLaneName` is a string transform (under the default `branchPrefix: ''` it is the identity), so
+ * on its own it happily reports that `feature/foo` maps to the "lane" `feature/foo`. No lane can be called
+ * that — bit forbids `/` in a lane name precisely because it is the `scope/lane` delimiter — so such a
+ * branch cannot correspond to any lane and must not be queued as one.
+ */
+export function syncableLaneNameForBranch(branch: string, cfg: Required<CiSyncConfig>): string | undefined {
+  const laneName = branchToLaneName(branch, cfg);
+  return laneName && isValidLaneName(laneName) ? laneName : undefined;
+}
+
+/**
+ * bit's own maximum lane-name length (`create-lane.ts`'s `MAX_LANE_NAME_LENGTH`).
+ */
+const MAX_LANE_NAME_LENGTH = 800;
+
+/**
+ * Could this string be a bit lane name at all?
+ *
+ * Mirrors `isValidLaneName` in `scopes/lanes/modules/create-lane/create-lane.ts` — the rule
+ * `throwForInvalidLaneName` enforces when a lane is created: lowercase alphanumerics plus `- _ $ !`, and
+ * **no `/`** (bit's own TODO there notes that allowing a slash would collide with the `scope/lane`
+ * delimiter, which is exactly the collision this guards).
+ *
+ * Re-stated here rather than imported, deliberately. `isValidLaneName` is module-private — only the
+ * throwing wrapper is exported — so using bit's copy would mean importing `create-lane` (a heavy module,
+ * and a new aspect-level dependency edge) purely to run a regex, and then using exceptions as control
+ * flow for something that is a *filter*. The drift risk is one-directional and safe: if bit ever loosened
+ * the rule, this would skip a branch that could now be a lane, which shows up as "that lane never synced"
+ * rather than as anything destructive. `sync-config.spec.ts` pins the rule so a divergence is visible.
+ */
+export function isValidLaneName(name: string): boolean {
+  if (!name || name.length > MAX_LANE_NAME_LENGTH) return false;
+  return /^[$\-_!a-z0-9]+$/.test(name);
+}
+
 /** minimal glob: '*' wildcard only (matches the lanes list use-case; avoids a new dep) */
 function globToRegExp(glob: string): RegExp {
   const escaped = glob.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
