@@ -10,6 +10,14 @@ import { git } from '../git';
 export const SYNC_EXCLUDED_PATHS = ['.bit', 'node_modules'];
 
 /**
+ * How a raw git invocation is run, injectable so a helper whose whole content is its argv can be unit
+ * tested without a repository. Production always uses {@link realGitRaw}.
+ */
+export type GitArgsRunner = (args: string[]) => Promise<unknown>;
+
+export const realGitRaw: GitArgsRunner = (args) => git.raw(args);
+
+/**
  * Remove untracked files, leaving the local bit scope and installed packages alone.
  *
  * `-x` is deliberately NOT passed (so ignored files are untouched) **and** `.bit` / `node_modules`
@@ -64,6 +72,43 @@ export async function addAllExceptScopeAndModules(): Promise<void> {
  */
 export function isNonContentPath(path: string): boolean {
   return SYNC_EXCLUDED_PATHS.some((excluded) => path === excluded || path.startsWith(`${excluded}/`));
+}
+
+/**
+ * The refspec every sync fetch passes **explicitly**, overriding whatever `remote.origin.fetch` this
+ * checkout was configured with.
+ */
+export const ALL_HEADS_REFSPEC = '+refs/heads/*:refs/remotes/origin/*';
+
+/**
+ * Fetch `origin` so that **every** branch it has is available as `refs/remotes/origin/<branch>`.
+ *
+ * A bare `git fetch origin` honours the checkout's configured `remote.origin.fetch`. In a single-branch
+ * clone — `git clone --single-branch`, `git remote set-branches`, a mirror, or an `actions/checkout`
+ * configured to narrow the refspec — that config is `+refs/heads/<one>:refs/remotes/origin/<one>`, so the
+ * fetch updates exactly one remote-tracking ref and silently leaves every other branch with none.
+ *
+ * That is a *silent* mismatch with how the reconciler enumerates work, which is what made it a bug rather
+ * than an unsupported configuration. Enumeration goes through `ls-remote` (`listRemoteBranches`,
+ * `branchExistsOnRemote`), which asks the remote directly and therefore **sees every branch** regardless of
+ * refspec — deliberately, so a stale lane branch cannot go unnoticed. The reconciler then reads the branch
+ * it was told exists through `refs/remotes/origin/<branch>`: `git log` for the state commit, `git show` for
+ * the committed `.bitmap`, `checkout -f -B <branch> origin/<branch>` to materialize it. In a narrowed
+ * checkout those refs do not exist, so a lane whose branch the run had just enumerated halted with a git
+ * "unknown revision" error — on every run, for every lane but one.
+ *
+ * Passing the refspec on the command line is what fixes it: git ignores the configured refspec entirely
+ * when one is given, so this is correct in a narrowed checkout and identical to the previous behaviour in
+ * an ordinary one. The cost is the same as a normal full fetch — the objects behind those branches are
+ * what a default clone would already have.
+ *
+ * **This does not make shallow clones work.** Depth is a different axis: `--depth` truncates history, and
+ * the state model needs ancestry (`isAncestor`, merge-base, "the newest commit on the first-parent line
+ * that changed `.bitmap`"). Fetching more *refs* cannot supply commits that were never transferred. See
+ * the checkout-requirements section of `ci.docs.mdx`.
+ */
+export async function fetchRemoteHeads(run: GitArgsRunner = realGitRaw): Promise<void> {
+  await run(['fetch', 'origin', ALL_HEADS_REFSPEC]);
 }
 
 /** Whether `origin` has the given branch. Assumes a `git fetch` isn't required (uses `ls-remote`). */
@@ -178,6 +223,19 @@ export const realGitConfigIO: GitConfigIO = {
 };
 
 /**
+ * The identity the sync commits with when nothing else says otherwise.
+ *
+ * These two strings are a **contract**, not an implementation detail: the workflow templates
+ * `bit ci sync --init` scaffolds document them verbatim as the defaults behind `GIT_USER_NAME` /
+ * `GIT_USER_EMAIL` (`init-scaffold.ts`), and the GitHub Action applies the same pair before it invokes
+ * `bit` (`action.ts`'s `DEFAULT_GIT_USER_NAME` / `DEFAULT_GIT_USER_EMAIL`). All three have to agree, or
+ * the same repository produces commits under two different authors depending on which entry point ran —
+ * and `git log --author` stops being a way to find the sync's own commits.
+ */
+export const DEFAULT_GIT_USER_NAME = 'bit-sync[bot]';
+export const DEFAULT_GIT_USER_EMAIL = 'bit-sync[bot]@users.noreply.github.com';
+
+/**
  * `git commit` fails outright when no identity is configured, which is the norm in a fresh CI
  * checkout. Only set what is missing, so an interactive run keeps the developer's own identity.
  *
@@ -188,8 +246,23 @@ export const realGitConfigIO: GitConfigIO = {
  * `*** Please tell me who you are`, aborting the sync of every lane in the run. The two keys are also
  * set independently rather than as a pair, so the developer's own name survives a missing email and
  * vice versa.
+ *
+ * **`GIT_USER_NAME` / `GIT_USER_EMAIL` are honoured**, because the scaffolded workflows advertise them.
+ * They were read only by the GitHub Action, which does its own `git config` before invoking `bit` — so
+ * the mechanism worked on exactly one of the entry points that document it, and a standalone
+ * `bit ci sync` (a from-source rig, GitLab CI, Jenkins, a local run) ignored a variable the user had been
+ * told to set. Nothing announced that; the commits simply carried the wrong author.
+ *
+ * The precedence is **configured git identity > env var > default**, in that order. An existing
+ * `user.email` still wins over `GIT_USER_EMAIL`: the env var says "commit as this when there is nobody
+ * else", not "commit as this instead of whoever is configured", and inverting that would make a
+ * developer's local run rewrite its own identity from an exported variable. Each key resolves
+ * independently, so `GIT_USER_NAME` alone is a coherent thing to set.
  */
-export async function ensureGitIdentity(io: GitConfigIO = realGitConfigIO): Promise<void> {
-  if (!(await io.get('user.email'))) await io.set('user.email', 'bit-ci[bot]@bit.cloud');
-  if (!(await io.get('user.name'))) await io.set('user.name', 'Bit CI');
+export async function ensureGitIdentity(
+  io: GitConfigIO = realGitConfigIO,
+  env: NodeJS.ProcessEnv = process.env
+): Promise<void> {
+  if (!(await io.get('user.email'))) await io.set('user.email', env.GIT_USER_EMAIL || DEFAULT_GIT_USER_EMAIL);
+  if (!(await io.get('user.name'))) await io.set('user.name', env.GIT_USER_NAME || DEFAULT_GIT_USER_NAME);
 }

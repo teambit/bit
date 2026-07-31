@@ -362,9 +362,10 @@ export function renderInitChecklist(ownerRepo: OwnerRepo | undefined): string {
     '   change later, delete the webhook and create a new one rather than editing it.',
     '',
     '4. Checkout depth -- both scaffolded workflows already check out with `fetch-depth: 0`. This is',
-    '   required: the reconciler reads full git history and compares refs, and both a shallow',
-    '   (--depth=1) and a single-branch clone fail sync safely but uselessly (HALTED, no writes). Keep',
-    '   `fetch-depth: 0` if you customize the workflow.',
+    '   required: the reconciler reads full git history, and a shallow (--depth=1) clone fails sync',
+    '   safely but uselessly (HALTED, no writes). Keep `fetch-depth: 0` if you customize the workflow.',
+    '   Narrowing the REFSPEC is fine, though -- a single-branch clone is supported, because every',
+    '   fetch sync performs names +refs/heads/*:refs/remotes/origin/* explicitly.',
     '',
   ].join('\n');
 }

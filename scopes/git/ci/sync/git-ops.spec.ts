@@ -1,6 +1,14 @@
 import { expect } from 'chai';
 import type { GitConfigIO } from './git-ops';
-import { ensureGitIdentity, isNonContentPath, parseOriginHeadRef } from './git-ops';
+import {
+  ALL_HEADS_REFSPEC,
+  DEFAULT_GIT_USER_EMAIL,
+  DEFAULT_GIT_USER_NAME,
+  ensureGitIdentity,
+  fetchRemoteHeads,
+  isNonContentPath,
+  parseOriginHeadRef,
+} from './git-ops';
 
 /**
  * A recording stand-in for the two `git config` operations, so the decision can be tested without a git
@@ -21,11 +29,27 @@ function fakeConfig(initial: Record<string, string> = {}) {
 }
 
 describe('ensureGitIdentity', () => {
+  /**
+   * An empty environment, passed explicitly wherever the *defaults* are the thing under test — otherwise
+   * these rows read `process.env` and a developer who happens to export `GIT_USER_NAME` fails the suite.
+   */
+  const NO_ENV = {};
+
   it('sets both halves in a fresh CI checkout that has neither', async () => {
     const { io, values } = fakeConfig();
-    await ensureGitIdentity(io);
-    expect(values['user.email']).to.equal('bit-ci[bot]@bit.cloud');
-    expect(values['user.name']).to.equal('Bit CI');
+    await ensureGitIdentity(io, NO_ENV);
+    expect(values['user.email']).to.equal(DEFAULT_GIT_USER_EMAIL);
+    expect(values['user.name']).to.equal(DEFAULT_GIT_USER_NAME);
+  });
+
+  /**
+   * The defaults are a cross-repository contract: the `--init` templates document them verbatim and the
+   * GitHub Action applies the same pair. Pinning the literals here (rather than only comparing against the
+   * constants, which would pass for any value) is what makes a drift show up as a failing test.
+   */
+  it('defaults to the identity the scaffolded workflows and the action both document', () => {
+    expect(DEFAULT_GIT_USER_NAME).to.equal('bit-sync[bot]');
+    expect(DEFAULT_GIT_USER_EMAIL).to.equal('bit-sync[bot]@users.noreply.github.com');
   });
 
   /**
@@ -36,32 +60,85 @@ describe('ensureGitIdentity', () => {
    */
   it('sets the NAME when only the email is configured', async () => {
     const { io, sets, values } = fakeConfig({ 'user.email': 'dev@example.com' });
-    await ensureGitIdentity(io);
-    expect(values['user.name']).to.equal('Bit CI');
+    await ensureGitIdentity(io, NO_ENV);
+    expect(values['user.name']).to.equal(DEFAULT_GIT_USER_NAME);
     // and it leaves the configured half alone — an interactive run keeps the developer's own identity
     expect(values['user.email']).to.equal('dev@example.com');
-    expect(sets).to.deep.equal([{ key: 'user.name', value: 'Bit CI' }]);
+    expect(sets).to.deep.equal([{ key: 'user.name', value: DEFAULT_GIT_USER_NAME }]);
   });
 
   it('sets the EMAIL when only the name is configured', async () => {
     const { io, sets, values } = fakeConfig({ 'user.name': 'A Developer' });
-    await ensureGitIdentity(io);
-    expect(values['user.email']).to.equal('bit-ci[bot]@bit.cloud');
+    await ensureGitIdentity(io, NO_ENV);
+    expect(values['user.email']).to.equal(DEFAULT_GIT_USER_EMAIL);
     expect(values['user.name']).to.equal('A Developer');
-    expect(sets).to.deep.equal([{ key: 'user.email', value: 'bit-ci[bot]@bit.cloud' }]);
+    expect(sets).to.deep.equal([{ key: 'user.email', value: DEFAULT_GIT_USER_EMAIL }]);
   });
 
   it('writes nothing when both are already configured', async () => {
     const { io, sets } = fakeConfig({ 'user.email': 'dev@example.com', 'user.name': 'A Developer' });
-    await ensureGitIdentity(io);
+    await ensureGitIdentity(io, NO_ENV);
     expect(sets).to.deep.equal([]);
   });
 
   it('treats an empty configured value as missing, because git does too', async () => {
     const { io, values } = fakeConfig({ 'user.email': '', 'user.name': '' });
-    await ensureGitIdentity(io);
-    expect(values['user.email']).to.equal('bit-ci[bot]@bit.cloud');
-    expect(values['user.name']).to.equal('Bit CI');
+    await ensureGitIdentity(io, NO_ENV);
+    expect(values['user.email']).to.equal(DEFAULT_GIT_USER_EMAIL);
+    expect(values['user.name']).to.equal(DEFAULT_GIT_USER_NAME);
+  });
+
+  /**
+   * `GIT_USER_NAME` / `GIT_USER_EMAIL` are advertised by the workflow templates `bit ci sync --init`
+   * scaffolds. They were read only by the GitHub Action (which runs its own `git config` before invoking
+   * `bit`), so a standalone `bit ci sync` — a from-source rig, GitLab CI, Jenkins, a local run — silently
+   * ignored a variable the user had been told to set, and the commits carried the wrong author.
+   */
+  describe('GIT_USER_NAME / GIT_USER_EMAIL', () => {
+    it('uses the env vars when git has no identity configured', async () => {
+      const { io, values } = fakeConfig();
+      await ensureGitIdentity(io, { GIT_USER_NAME: 'Release Bot', GIT_USER_EMAIL: 'release@acme.example' });
+      expect(values['user.name']).to.equal('Release Bot');
+      expect(values['user.email']).to.equal('release@acme.example');
+    });
+
+    /** Configured identity outranks the environment: the var says "when there is nobody else". */
+    it('is IGNORED when git already has an identity — a local run is never rewritten', async () => {
+      const { io, sets } = fakeConfig({ 'user.email': 'dev@example.com', 'user.name': 'A Developer' });
+      await ensureGitIdentity(io, { GIT_USER_NAME: 'Release Bot', GIT_USER_EMAIL: 'release@acme.example' });
+      expect(sets).to.deep.equal([]);
+    });
+
+    it('resolves each key independently, so setting one of the pair is coherent', async () => {
+      const { io, values } = fakeConfig();
+      await ensureGitIdentity(io, { GIT_USER_NAME: 'Release Bot' });
+      expect(values['user.name']).to.equal('Release Bot');
+      expect(values['user.email']).to.equal(DEFAULT_GIT_USER_EMAIL);
+    });
+
+    it('falls back to the default for an env var set to empty, as for one not set at all', async () => {
+      const { io, values } = fakeConfig();
+      await ensureGitIdentity(io, { GIT_USER_NAME: '', GIT_USER_EMAIL: '' });
+      expect(values['user.name']).to.equal(DEFAULT_GIT_USER_NAME);
+      expect(values['user.email']).to.equal(DEFAULT_GIT_USER_EMAIL);
+    });
+  });
+});
+
+/**
+ * A bare `git fetch origin` honours the checkout's `remote.origin.fetch`. In a single-branch clone that
+ * refspec names one branch, so every other branch is enumerated by `ls-remote` (which asks the remote
+ * directly) and then read through a `refs/remotes/origin/<branch>` that the fetch never created.
+ */
+describe('fetchRemoteHeads', () => {
+  it('passes the all-heads refspec explicitly, overriding whatever the checkout configured', async () => {
+    const calls: string[][] = [];
+    await fetchRemoteHeads(async (args) => {
+      calls.push(args);
+    });
+    expect(calls).to.deep.equal([['fetch', 'origin', ALL_HEADS_REFSPEC]]);
+    // the refspec itself is the whole content of the fix — force-update every head into origin/*
+    expect(ALL_HEADS_REFSPEC).to.equal('+refs/heads/*:refs/remotes/origin/*');
   });
 });
 

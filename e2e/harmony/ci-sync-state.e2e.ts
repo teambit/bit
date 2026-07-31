@@ -634,4 +634,106 @@ describe('bit ci sync — state model v2', function () {
       });
     });
   });
+
+  // =============================================================================================
+  // A NARROWED REFSPEC — the second way a real checkout differs from this suite's fixture workspace.
+  //
+  // `git clone --single-branch` (and `git remote set-branches`, a mirror, an `actions/checkout` whose
+  // refspec names one branch) writes `remote.origin.fetch = +refs/heads/<one>:refs/remotes/origin/<one>`.
+  // A bare `git fetch origin` then updates exactly one remote-tracking ref.
+  //
+  // That collides with how the reconciler enumerates work. Enumeration goes through `ls-remote`, which asks
+  // the remote directly and therefore sees EVERY branch — deliberately, so a stale lane branch cannot go
+  // unnoticed. The reconciler then reads the branch it was just told exists through
+  // `refs/remotes/origin/<branch>`: `git log` for the state commit, `git show` for the committed `.bitmap`,
+  // `checkout -f -B <branch> origin/<branch>` to materialize it. None of those refs existed, so a lane whose
+  // branch had just been enumerated died on a git "unknown revision" — on every run, for every branch but
+  // the one the clone tracked.
+  //
+  // This was documented as an unsupported configuration ("single-branch clones are not supported"). It is
+  // now supported, because every sync fetch passes `+refs/heads/*:refs/remotes/origin/*` on the command
+  // line and git ignores the configured refspec when one is given. SHALLOW clones remain unsupported —
+  // that is a different axis (missing commits, not missing refs) and no refspec can fix it.
+  //
+  // The value of this block is entirely in the `--single-branch` flag: run the same fixture off a normal
+  // clone and it passes against the broken code too.
+  // =============================================================================================
+  describe('a single-branch clone reconciles a lane branch its refspec never tracked', () => {
+    const LANE = 'narrow-clone';
+    let defaultBranch: string;
+    let bareRepoPath: string;
+    let devPath: string;
+    let clonePath: string;
+    let configuredRefspec: string;
+    let remoteTrackingBeforeRun: string;
+    let laneVisibleToLsRemote: string;
+    let output: string;
+    let exitCode: number;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      bareRepoPath = setupGitRemote();
+      setSyncConfig({ lanes: ['*'] });
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      // Seed the fixture from a NORMAL checkout, so `origin` genuinely has two branches by the time the
+      // narrowed clone is taken — the lane branch has to pre-exist for its absence to be observable.
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE}`, devPath);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('narrow-snap-1'));
+      helper.command.runCmd('bit snap --message "narrow snap 1"', devPath);
+      helper.command.runCmd('bit export', devPath);
+      const seed = runBit(`bit ci sync ${LANE}`);
+      expect(seed.exitCode, `seeding bit ci sync ${LANE} output:\n${seed.output}`).to.equal(0);
+
+      // Move the lane on, so the narrowed run has real work to do (import-lane onto the existing branch)
+      // rather than reaching a converged no-op that could pass without ever resolving `origin/<lane>`.
+      laneSideEdit(devPath, 'comp1/index.js', comp1Src('narrow-snap-2'), 'narrow snap 2');
+
+      // THE POINT OF THE BLOCK: a checkout that has only ever tracked the default branch.
+      clonePath = path.join(helper.scopes.e2eDir, `narrow-clone-${Date.now()}`);
+      helper.command.runCmd(`git clone --single-branch --branch ${defaultBranch} ${bareRepoPath} ${clonePath}`);
+      // A fresh clone carries the committed workspace files but no local scope and no installed packages —
+      // exactly a runner after `git clone`. `node_modules` is copied rather than installed because what is
+      // under test is ref availability, and a real `bit install` here would add minutes for nothing.
+      const modules = path.join(helper.scopes.localPath, 'node_modules');
+      if (fs.existsSync(modules)) fs.copySync(modules, path.join(clonePath, 'node_modules'));
+      helper.command.runCmd('bit init', clonePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, clonePath);
+
+      configuredRefspec = helper.command.runCmd('git config --get-all remote.origin.fetch', clonePath).trim();
+      remoteTrackingBeforeRun = helper.command.runCmd('git branch -r', clonePath);
+      laneVisibleToLsRemote = helper.command.runCmd(`git ls-remote --heads origin ${LANE}`, clonePath).trim();
+
+      ({ output, exitCode } = runBit(`bit ci sync ${LANE}`, clonePath));
+      gitFetch();
+    });
+
+    it('should be non-vacuous: the clone is really narrowed, and really cannot see the lane branch', () => {
+      // Without these three the block is just another reconcile scenario. Together they are the exact
+      // mismatch that made this a bug: the refspec hides the branch, and `ls-remote` shows it anyway.
+      expect(configuredRefspec).to.equal(`+refs/heads/${defaultBranch}:refs/remotes/origin/${defaultBranch}`);
+      expect(remoteTrackingBeforeRun, `git branch -r in the clone:\n${remoteTrackingBeforeRun}`).to.not.include(LANE);
+      expect(laneVisibleToLsRemote, 'the remote really does have the lane branch').to.not.equal('');
+    });
+
+    it('should CONVERGE rather than halt on a remote-tracking ref the refspec omitted', () => {
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} ->`);
+      expect(output).to.not.include('HALTED');
+      // the shape of the pre-fix failure, named so a regression is unmistakable in the output
+      expect(output.toLowerCase()).to.not.include('unknown revision');
+      expect(output.toLowerCase()).to.not.include('ambiguous argument');
+    });
+
+    it('should have populated the remote-tracking ref the narrowed refspec left out', () => {
+      const remoteBranches = helper.command.runCmd('git branch -r', clonePath);
+      expect(remoteBranches, `git branch -r after the run:\n${remoteBranches}`).to.include(LANE);
+    });
+
+    it('should have carried the lane move onto the branch, from the narrowed checkout', () => {
+      // The reconcile really happened — a run that silently did nothing would pass every assertion above.
+      expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('narrow-snap-2');
+    });
+  });
 });

@@ -14,6 +14,7 @@ import {
   branchExistsOnRemote,
   cleanUntrackedScoped,
   ensureGitIdentity,
+  fetchRemoteHeads,
   isNonContentPath,
 } from './git-ops';
 
@@ -71,7 +72,10 @@ export class MainSyncExecutor {
     }
 
     try {
-      await git.fetch(['origin']);
+      // Explicit refspec, never the checkout's configured one — see `fetchRemoteHeads`. This path reads
+      // `origin/<defaultBranch>` and `origin/<mainSyncBranch>`, and a single-branch clone gives a
+      // remote-tracking ref for at most one of them.
+      await fetchRemoteHeads();
       const syncBranchExists = await branchExistsOnRemote(branch);
       // Start from the existing sync branch when there is one, so its history (and any review
       // discussion attached to the open PR) survives across runs; otherwise fork from the default

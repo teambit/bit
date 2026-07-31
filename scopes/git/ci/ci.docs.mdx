@@ -269,19 +269,28 @@ webhook, a `push` event, a cron schedule — only decides _when_ it runs, never 
 
 ### Repository checkout requirements
 
-The reconciler reads git history and compares refs, so the checkout it runs in must be **complete**:
+The reconciler reads git history and compares refs. Two different things can be missing from a checkout —
+**history** and **refs** — and only one of them is a requirement:
 
-- **Full history.** On GitHub Actions that means `actions/checkout` with `fetch-depth: 0`. A `--depth=1`
-  (shallow) clone is **not supported**: the branch's state is the `.bitmap` at the newest commit on its own
-  first-parent line that changed that file, and the dev-commit count is a revision range measured from that
-  commit — neither is answerable from a truncated history, and a branch that has been synced many times reads
-  as never-synced.
+- **Full history is required.** On GitHub Actions that means `actions/checkout` with `fetch-depth: 0`. A
+  `--depth=1` (shallow) clone is **not supported**: the branch's state is the `.bitmap` at the newest commit
+  on its own first-parent line that changed that file, and the dev-commit count is a revision range measured
+  from that commit — neither is answerable from a truncated history, and a branch that has been synced many
+  times reads as never-synced. Fetching more refs cannot help here: the commits were never transferred.
+- **A narrowed refspec is fine.** A single-branch clone (`git clone --single-branch`,
+  `git remote set-branches`, a mirror, or an `actions/checkout` whose refspec names one branch) **is
+  supported**: every fetch the sync performs passes `+refs/heads/*:refs/remotes/origin/*` on the command
+  line, and git ignores the configured `remote.origin.fetch` when a refspec is given explicitly. So the run
+  populates `refs/remotes/origin/<branch>` for every branch `origin` has, however the clone was narrowed —
+  which it must, because `--all` reconciles every mapped lane and every lane-mapped branch, and the
+  main-scope path needs both the default branch and `<mainSyncBranch>`. The cost is that of an ordinary
+  full fetch.
 - **A cold local scope is fine.** The reconciler is designed for an ephemeral runner: it imports the lane
   objects it needs, and reads every piece of branch state from git and `.bitmap` rather than from whatever
   the local scope happens to have cached. `bit init` on a fresh clone is a supported starting state.
-- **All branches.** A single-branch clone (`--single-branch`, or a `refspec` narrowed to one branch) is
-  likewise unsupported: `--all` reconciles every mapped lane and every lane-mapped branch, and the
-  main-scope path needs the default branch and `<mainSyncBranch>` too.
+
+In short: **depth matters, breadth does not.** Keep `fetch-depth: 0`; `--single-branch` no longer needs
+undoing.
 
 ### Which targets an `--all` run visits
 

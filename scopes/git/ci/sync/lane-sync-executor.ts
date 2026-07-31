@@ -27,6 +27,7 @@ import {
   branchExistsOnRemote,
   cleanUntrackedScoped,
   ensureGitIdentity,
+  fetchRemoteHeads,
   isAncestor,
 } from './git-ops';
 
@@ -1408,7 +1409,10 @@ export class LaneSyncExecutor {
 
   private async fetchOnce() {
     if (this.fetched) return;
-    await git.fetch(['origin']);
+    // Explicit refspec, never the checkout's configured one — see `fetchRemoteHeads`. Everything below
+    // reads branches through `origin/<branch>`, and this run enumerates them with `ls-remote`, which sees
+    // branches a narrowed `remote.origin.fetch` would never give a remote-tracking ref.
+    await fetchRemoteHeads();
     this.fetched = true;
   }
 
