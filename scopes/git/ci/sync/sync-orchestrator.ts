@@ -198,8 +198,12 @@ export class SyncOrchestrator {
       if (branch === cfg.mainSyncBranch) {
         return `branch ${branch} is the main sync branch maintained by this command; nothing to do`;
       }
-      const laneName = branchToLaneName(branch, cfg);
-      if (!laneName) return `branch ${branch} is not lane-mapped; nothing to do`;
+      // The same mapped-AND-valid check `--all` enumeration applies (`listLanesToSync`): with the
+      // default `branchPrefix: ''` a branch like `feature/foo` maps to the string "feature/foo",
+      // which can never be a lane name (lane names carry no `/`) — passing it to `syncLane` would
+      // violate the `LaneTarget.name` invariant and halt the run instead of cleanly skipping.
+      const laneName = syncableLaneNameForBranch(branch, cfg);
+      if (!laneName) return `branch ${branch} does not map to a valid lane name; nothing to do`;
       const skipReason = this.laneNotSyncableReason(laneName, cfg, mainLaneName, defaultBranch);
       if (skipReason) return `${skipReason} (branch ${branch})`;
       // A branch name carries no scope, so this path can only resolve the lane against `defaultScope`.

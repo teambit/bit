@@ -15,6 +15,26 @@ function orchestrator(): SyncOrchestrator {
 
 describe('SyncOrchestrator target guards', () => {
   /**
+   * `--branch` must apply the same mapped-AND-valid check `--all` enumeration does
+   * (`syncableLaneNameForBranch`): with the default `branchPrefix: ''` a branch like `feature/foo`
+   * maps to the string "feature/foo", which can never be a lane name (lane names carry no `/`).
+   * The old `branchToLaneName`-only path passed it into `syncLane`, violating the `LaneTarget.name`
+   * invariant — the run halted (and outside dry-run went looking for a PR to annotate) instead of
+   * cleanly reporting the branch as not lane-mapped.
+   */
+  it('reports a branch whose mapped name is not a valid lane name, instead of syncing it', async () => {
+    const deps = {
+      config: { sync: {} },
+      workspace: { defaultScope: 'org.scope' },
+      ci: { getDefaultBranchName: async () => 'main', listGitHostProviders: () => [] },
+      lanes: { getDefaultLaneId: () => ({ name: 'main' }) },
+      logger: { console() {}, consoleWarning() {}, debug() {} },
+    };
+    const result = await new SyncOrchestrator(deps as any).sync({ branch: 'feature/foo' });
+    expect(result).to.equal('branch feature/foo does not map to a valid lane name; nothing to do');
+  });
+
+  /**
    * `--all` is the default, so pairing it with a narrower target is always a mistake about what will run.
    * `--branch` was the gap: the branch path returns early, so `bit ci sync --all --branch x` silently
    * dropped `--all` and reconciled exactly one branch while the operator believed everything had been
