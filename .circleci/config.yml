@@ -688,17 +688,7 @@ jobs:
       - run: cd bit && bbit init
       - run:
           name: bbit install
-          # the user-agent append labels registry requests from CI installs (the committed .npmrc
-          # says bit-repo-local). skip-worktree keeps the mutation out of any later commit made
-          # from this workspace (e.g. the version-bump commit of `bit ci merge`, which stages all
-          # tracked changes) — without it, a duplicate user-agent line lands on master every
-          # release and, being last in the file, overrides bit-repo-local for local installs too.
-          # the flag lives in .git/index, so it survives persist_to_workspace into later jobs.
-          command: >
-            cd bit &&
-            echo "user-agent=bit-repo-circleci" >> .npmrc &&
-            git update-index --skip-worktree .npmrc &&
-            bbit install
+          command: cd bit && bbit install
       # `bbit install` compiles as part of the install, but that pass can fall back to the
       # default TypeScript compiler for components whose env is still being imported - notably
       # the node-babel-mocha ones (legacy.scope, legacy.consumer, scope.network, ...). tsc emits
