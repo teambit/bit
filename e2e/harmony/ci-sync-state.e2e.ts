@@ -37,6 +37,7 @@ describe('bit ci sync — state model v2', function () {
     branchTipSha,
     branchTipMessage,
     fileOnBranch,
+    branchPathsMatching,
     remoteLaneFingerprint,
     laneTipFile,
     laneSideEdit,
@@ -734,6 +735,92 @@ describe('bit ci sync — state model v2', function () {
     it('should have carried the lane move onto the branch, from the narrowed checkout', () => {
       // The reconcile really happened — a run that silently did nothing would pass every assertion above.
       expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('narrow-snap-2');
+    });
+  });
+  // =============================================================================================
+  // WORKSPACE CONTAMINATION — an untracked file must never ride along onto a sync branch.
+  //
+  // A forced checkout replaces TRACKED files and leaves untracked ones exactly where they are. Every
+  // commit path then stages with `git add -A` (scoped only against `.bit/` and `node_modules/`). So any
+  // untracked file sitting in the workspace when a target starts gets committed and pushed onto that
+  // target's branch, as part of a state that does not describe it.
+  //
+  // Three real ways one gets there: a lane that HALTED after materializing its components never
+  // committed them and they survive into the next lane of an `--all` run; `restoreWorkspace` is
+  // deliberately warn-only, so its failure leaves the previous target's residue behind; and in a local
+  // interactive run the files are simply the developer's own. `checkoutPristine`'s clean is what closes
+  // all three, and the orchestrator already promises exactly this out loud at startup ("removes
+  // untracked files (except .bit/ and node_modules/), so these will be discarded").
+  //
+  // This exercises the IMPORT-LANE path specifically, because that is where the missing clean was:
+  // `checkoutFromRemote` did `checkout -f -B` + reload with no clean in between, while both of its
+  // siblings cleaned. The junk is planted BEFORE the run, so it is untracked at the moment
+  // `checkoutFromRemote` runs — which is the whole point, and is why the warning assertion below
+  // (git really did see these as uncommitted at start) is what keeps the cell non-vacuous.
+  // =============================================================================================
+  describe('untracked files in the workspace are discarded rather than pushed onto the branch', () => {
+    const LANE = 'no-contamination';
+    const JUNK_FILE = 'leftover-note.txt';
+    const JUNK_DIR_FILE = 'leftover-residue/from-a-previous-lane.js';
+    let devPath: string;
+    let output: string;
+    let exitCode: number;
+    // the default `branchPrefix` is '', so the branch is named exactly after the lane
+    const branch = LANE;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      setSyncConfig({ lanes: ['*'] });
+      setupComponentsAndInitialCommit();
+
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE}`, devPath);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('contamination-guard'));
+      helper.command.runCmd('bit snap --message "contamination guard"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      // THE PLANT. Two shapes: a loose file, and a directory of the kind a halted lane leaves behind.
+      // Neither is ignored and neither is under `.bit/` or `node_modules/`, so both are squarely inside
+      // what the clean is supposed to remove and what `add -A` would otherwise stage.
+      fs.outputFileSync(path.join(helper.scopes.localPath, JUNK_FILE), 'not part of any lane state\n');
+      fs.outputFileSync(path.join(helper.scopes.localPath, JUNK_DIR_FILE), 'export const stale = true;\n');
+
+      ({ output, exitCode } = runBit(`bit ci sync ${LANE}`));
+      gitFetch();
+    });
+
+    it('should be non-vacuous: git really saw the planted files as uncommitted when the run started', () => {
+      // Without this the cell proves nothing — a plant that git never noticed was never at risk. This
+      // is the orchestrator's own startup warning, which enumerates the files it is about to discard.
+      expect(output).to.include('uncommitted change');
+      expect(output).to.include(JUNK_FILE);
+    });
+
+    it('should still reconcile the lane, so the guard is not just a broken run', () => {
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} ->`);
+      expect(output).to.not.include('HALTED');
+      // and the branch really carries the lane's content, i.e. the clean did not eat the sync itself
+      expect(fileOnBranch(branch, 'comp1/index.js')).to.include('contamination-guard');
+    });
+
+    it('should NOT have committed either planted path onto the branch', () => {
+      const tree = helper.command.runCmd(`git ls-tree -r --name-only origin/${branch}`);
+      expect(branchPathsMatching(branch, 'leftover-note'), `branch tree:\n${tree}`).to.deep.equal([]);
+      expect(branchPathsMatching(branch, 'leftover-residue'), `branch tree:\n${tree}`).to.deep.equal([]);
+    });
+
+    it('should have removed them from the working tree too', () => {
+      // The same clean, observed from the other side: the files are gone, not merely unstaged.
+      expect(path.join(helper.scopes.localPath, JUNK_FILE)).to.not.be.a.path();
+      expect(path.join(helper.scopes.localPath, JUNK_DIR_FILE)).to.not.be.a.path();
+    });
+
+    it('should have left the local scope and node_modules alone — the clean is scoped, never -x', () => {
+      // The exclusions are the reason this clean is safe to run at all: an unscoped `git clean -fdx`
+      // in a workspace whose `.gitignore` lacks Bit's block deletes `.bit/objects` mid-run.
+      expect(path.join(helper.scopes.localPath, '.bit')).to.be.a.directory();
     });
   });
 });

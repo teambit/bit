@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import type { GitConfigIO } from './git-ops';
 import {
   ALL_HEADS_REFSPEC,
+  checkoutPristine,
   DEFAULT_GIT_USER_EMAIL,
   DEFAULT_GIT_USER_NAME,
   ensureGitIdentity,
@@ -188,5 +189,73 @@ describe('parseOriginHeadRef', () => {
 
   it('returns undefined for the prefix with nothing after it', () => {
     expect(parseOriginHeadRef('refs/remotes/origin/')).to.equal(undefined);
+  });
+});
+
+/**
+ * The three-step sequence every working-tree move needs. The finding this covers was a *missing middle
+ * step*: `LaneSyncExecutor.checkoutFromRemote` did `checkout -f -B` + reload with no clean, while its
+ * two siblings cleaned. Since a forced checkout leaves untracked files in place and every commit path
+ * stages with `add -A`, untracked leftovers — a halted lane's materialized components, a warn-only
+ * `restoreWorkspace`'s residue, or a developer's own stray files in a local run — were committed and
+ * pushed onto a sync branch as part of a state that did not describe them.
+ *
+ * So these rows assert the **order**, not merely the presence, of the three steps: a clean that ran
+ * after the reload would leave the workspace holding a `.bitmap` view of a tree that no longer exists,
+ * and a clean that never ran is the original bug.
+ */
+describe('checkoutPristine', () => {
+  /** Records git argv and the reload interleaved, so ordering between the two is assertable. */
+  function recorder() {
+    const steps: string[] = [];
+    const run = async (args: string[]) => {
+      steps.push(args.join(' '));
+    };
+    const reload = async () => {
+      steps.push('<reload>');
+    };
+    return { steps, run, reload };
+  }
+
+  const CLEAN = 'clean -fd -e .bit -e node_modules';
+
+  it('with a startPoint: creates-or-resets the branch there, then cleans, then reloads', async () => {
+    const { steps, run, reload } = recorder();
+    await checkoutPristine('bit-sync/main', 'origin/main', reload, run);
+    expect(steps).to.deep.equal(['checkout -f -B bit-sync/main origin/main', CLEAN, '<reload>']);
+  });
+
+  it('without a startPoint: plain forced switch to an existing branch, then cleans, then reloads', async () => {
+    const { steps, run, reload } = recorder();
+    await checkoutPristine('main', undefined, reload, run);
+    expect(steps).to.deep.equal(['checkout -f main', CLEAN, '<reload>']);
+  });
+
+  /**
+   * `-f` is what keeps a target *halting* rather than *aborting* when the workspace carries a tracked
+   * modification, so it is asserted rather than left to the argv comparison above.
+   */
+  it('always forces the checkout, in both shapes', async () => {
+    for (const startPoint of ['origin/lane/x', undefined]) {
+      const { steps, run, reload } = recorder();
+      await checkoutPristine('lane/x', startPoint, reload, run);
+      expect(steps[0].startsWith('checkout -f ')).to.equal(true);
+    }
+  });
+
+  /** The clean is the step the defect omitted; the exclusions are what stop it eating the local scope. */
+  it('cleans with the scoped exclusions, never -x', async () => {
+    const { steps, run, reload } = recorder();
+    await checkoutPristine('lane/x', 'origin/lane/x', reload, run);
+    const clean = steps.find((step) => step.startsWith('clean'));
+    expect(clean).to.equal(CLEAN);
+    expect(clean).to.not.include('-x');
+  });
+
+  it('reloads LAST, so the workspace reads the pristine tree rather than the pre-clean one', async () => {
+    const { steps, run, reload } = recorder();
+    await checkoutPristine('lane/x', 'origin/lane/x', reload, run);
+    expect(steps.indexOf('<reload>')).to.equal(steps.length - 1);
+    expect(steps.indexOf(CLEAN)).to.be.lessThan(steps.indexOf('<reload>'));
   });
 });

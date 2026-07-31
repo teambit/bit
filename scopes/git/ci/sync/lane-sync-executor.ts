@@ -25,7 +25,7 @@ import { planLaneSync } from './sync-planner';
 import {
   addAllExceptScopeAndModules,
   branchExistsOnRemote,
-  cleanUntrackedScoped,
+  checkoutPristine,
   ensureGitIdentity,
   fetchRemoteHeads,
   isAncestor,
@@ -843,7 +843,7 @@ export class LaneSyncExecutor {
       // Force-checkout `origin/<branch>` and reload `.bitmap` into the live workspace: the merge below
       // depends on that file for both the lane pointer (which lane is "current") and the merge base
       // (which snap each component is on), and a stale local branch must never leak into the result.
-      await this.resetToRemoteBranch(branch);
+      await this.checkoutFromRemote(branch, `origin/${branch}`);
 
       // ---- step 1: merge the lane's snaps into the branch's working tree -----------------------
       const merge = await this.mergeLaneIntoBranchWorkingTree(laneIdStr);
@@ -853,7 +853,7 @@ export class LaneSyncExecutor {
       if (merge.conflicts.length) {
         // The merge left conflict markers in the working tree. Discard them before halting so the
         // workspace (and any later push from this run) can never carry a half-merged tree.
-        await this.resetToRemoteBranch(branch);
+        await this.checkoutFromRemote(branch, `origin/${branch}`);
         // Bounded: this reason is posted as the halt PR comment, and a lane-wide conflict can name every
         // component on the lane.
         return await halt(`merge conflicts in: ${capEntries(merge.conflicts).join(', ')}`);
@@ -998,7 +998,7 @@ export class LaneSyncExecutor {
     try {
       // `checkout head` merges into *the current lane*, so the workspace must already be on the lane —
       // which it is, because the branch's committed `.bitmap` carries the lane pointer written by the
-      // previous sync and `resetToRemoteBranch` just loaded that file. If it doesn't (an untracked
+      // previous sync and `checkoutFromRemote` just loaded that file. If it doesn't (an untracked
       // `.bitmap`, a hand-edited branch, a failed reload), the merge would silently resolve to main's
       // heads and write main's content over the dev work — so refuse and let a human look.
       //
@@ -1052,47 +1052,29 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * Check `branch` out at `startPoint` (a remote-tracking ref) and reload the `.bitmap` it brings.
+   * Put the working tree on `branch` at a pristine copy of `startPoint` (a remote-tracking ref) and
+   * reload the `.bitmap` it brings. See `checkoutPristine` for why each of its three steps is
+   * load-bearing; what the three mean *here* is:
    *
-   * `-f` is not optional. Without it a single tracked modification left in the workspace — by an
-   * earlier lane in the same `--all` run, by a warn-only `restoreWorkspace`, or by a developer running
-   * this interactively — makes git refuse with "local changes would be overwritten", and the lane
-   * *aborts* instead of halting. Nothing is lost: `bit ci sync` announces up front that it discards
-   * uncommitted changes, and this is only ever a checkout — the executor never force-pushes.
-   *
-   * The reload is the same invariant `resetToRemoteBranch` documents: the git checkout swaps `.bitmap`
-   * on disk, and until the workspace re-reads it, every following bit operation resolves "current lane"
-   * and per-component versions against the checkout the process started on.
-   *
-   * (`resetToRemoteBranch` cannot simply call this: its `cleanUntrackedScoped` has to run *between* the
-   * checkout and the reload, so the merge that follows sees neither stale files nor a stale `.bitmap`.)
-   */
-  private async checkoutFromRemote(branch: string, startPoint: string) {
-    await git.raw(['checkout', '-f', '-B', branch, startPoint]);
-    await this.deps.ci.reloadWorkspaceFromDisk();
-  }
-
-  /**
-   * Put both sides back exactly on the fetched branch tip: the working tree and `.bitmap` in git, and
-   * the workspace's in-memory view of that `.bitmap`.
-   *
-   * The checkout is forced because a merge (or a failed attempt) may have left rewritten component
-   * files and a rewritten `.bitmap`; the clean then removes whatever files that merge *added*, which
-   * are untracked and so survive a checkout. The clean is scoped — see `cleanUntrackedScoped`, which
-   * documents why `.bit` and `node_modules` must be excluded.
+   * - a stale local copy of the branch, or a tracked modification an earlier lane left behind, can
+   *   never leak into this lane's sync commit;
+   * - neither can an untracked leftover: a lane that halted after materializing its components never
+   *   committed them, and `commitAllAndPush` stages with `add -A`, so without the clean those files land
+   *   on *this* lane's branch as part of a state that does not describe them. This is also the path a
+   *   developer's own stray files take in a local run;
+   * - and the following bit operation — the `materializeLane` on the import path, the snap on the export
+   *   path, or a merge — resolves "current lane" and per-component versions against *this* branch's
+   *   `.bitmap` rather than the one the process loaded at startup, which is the default branch's.
    *
    * Nothing is lost: everything worth keeping is on `origin/<branch>` already, and this is a checkout —
    * the executor never force-pushes.
    *
-   * The reload is what makes the following bit operation see the *branch's* `.bitmap` (its lane pointer
-   * and its per-component versions) instead of the one this process loaded at startup, which is the
-   * default branch's. Without it a merge into the branch's working tree would silently resolve
-   * "current lane" and "which versions am I on" against the wrong checkout.
+   * This is also the recovery used after a merge (or a failed attempt) has rewritten component files
+   * and `.bitmap`: resetting to `origin/<branch>` puts both sides back exactly on the fetched tip. That
+   * used to be a separate `resetToRemoteBranch`, identical but for the clean this one was missing.
    */
-  private async resetToRemoteBranch(branch: string) {
-    await git.raw(['checkout', '-f', '-B', branch, `origin/${branch}`]);
-    await cleanUntrackedScoped();
-    await this.deps.ci.reloadWorkspaceFromDisk();
+  private async checkoutFromRemote(branch: string, startPoint: string) {
+    await checkoutPristine(branch, startPoint, () => this.deps.ci.reloadWorkspaceFromDisk());
   }
 
   /**
@@ -1579,9 +1561,7 @@ export class LaneSyncExecutor {
         const switchErr = await this.deps.ci.switchToLaneForSync('main');
         if (switchErr) logger.consoleWarning(`Could not switch the workspace back to main: ${switchErr.message}`);
       }
-      await git.raw(['checkout', '-f', defaultBranch]);
-      await cleanUntrackedScoped();
-      await this.deps.ci.reloadWorkspaceFromDisk();
+      await checkoutPristine(defaultBranch, undefined, () => this.deps.ci.reloadWorkspaceFromDisk());
     } catch (e: any) {
       logger.consoleWarning(`Could not restore the workspace after sync: ${e?.message || e}`);
     }

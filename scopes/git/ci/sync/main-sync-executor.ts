@@ -12,7 +12,7 @@ import { HALT_SUMMARY_PREFIX, capEntries } from './lane-sync-executor';
 import {
   addAllExceptScopeAndModules,
   branchExistsOnRemote,
-  cleanUntrackedScoped,
+  checkoutPristine,
   ensureGitIdentity,
   fetchRemoteHeads,
   isNonContentPath,
@@ -203,9 +203,7 @@ export class MainSyncExecutor {
    * per-component versions and lane pointer) rather than the copy the process loaded at startup.
    */
   private async resetToStartPoint(branch: string, startPoint: string) {
-    await git.raw(['checkout', '-f', '-B', branch, startPoint]);
-    await cleanUntrackedScoped();
-    await this.deps.ci.reloadWorkspaceFromDisk();
+    await checkoutPristine(branch, startPoint, () => this.deps.ci.reloadWorkspaceFromDisk());
   }
 
   /**
@@ -324,9 +322,7 @@ export class MainSyncExecutor {
         const switchErr = await this.deps.ci.switchToLaneForSync('main');
         if (switchErr) logger.consoleWarning(`Could not switch the workspace back to main: ${switchErr.message}`);
       }
-      await git.raw(['checkout', '-f', defaultBranch]);
-      await cleanUntrackedScoped();
-      await this.deps.ci.reloadWorkspaceFromDisk();
+      await checkoutPristine(defaultBranch, undefined, () => this.deps.ci.reloadWorkspaceFromDisk());
     } catch (e: any) {
       logger.consoleWarning(`Could not restore the workspace after the main sync: ${e?.message || e}`);
     }

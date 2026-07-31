@@ -29,8 +29,49 @@ export const realGitRaw: GitArgsRunner = (args) => git.raw(args);
  * `git clean` runs in `process.cwd()` — `simpleGit()` is constructed with no `baseDir` (`../git.ts`) —
  * which for `bit ci sync` is the workspace root.
  */
-export async function cleanUntrackedScoped(): Promise<void> {
-  await git.raw(['clean', '-fd', ...SYNC_EXCLUDED_PATHS.flatMap((path) => ['-e', path])]);
+export async function cleanUntrackedScoped(run: GitArgsRunner = realGitRaw): Promise<void> {
+  await run(['clean', '-fd', ...SYNC_EXCLUDED_PATHS.flatMap((path) => ['-e', path])]);
+}
+
+/**
+ * Put the working tree on `branch` holding **nothing but** that commit's content, and make the
+ * workspace re-read the `.bitmap` the checkout brought with it.
+ *
+ * Three steps, and every executor that moves the working tree needs all three. They are here, in one
+ * function, because they were previously copied per call site — and the copy that dropped the middle
+ * step was a real defect (below), which is exactly the divergence this module exists to prevent.
+ *
+ * - **`checkout -f`** — the `-f` is not optional. Without it a single tracked modification left in the
+ *   workspace (by an earlier target in the same `--all` run, by a warn-only `restoreWorkspace`, or by a
+ *   developer running this interactively) makes git refuse with "local changes would be overwritten",
+ *   and the target *aborts* instead of halting. Nothing is lost: `bit ci sync` announces up front that
+ *   it discards uncommitted changes, and this is only ever a checkout — the executor never force-pushes.
+ * - **`cleanUntrackedScoped`** — a forced checkout replaces tracked files but **leaves untracked ones
+ *   in place**, and every commit path stages with `git add -A` (see `addAllExceptScopeAndModules`). So
+ *   an untracked file that outlived a previous target — a lane that halted after materializing its
+ *   components, a `restoreWorkspace` that warn-only failed — or a file a developer simply had lying
+ *   around in a local run, gets staged by the *next* target and pushed onto that target's branch as
+ *   part of a state that does not describe it. Scoped, so it can never delete the local bit scope.
+ * - **the reload** — the checkout swaps `.bitmap` on disk, and until the workspace re-reads it every
+ *   following bit operation resolves "current lane" and per-component versions against the checkout the
+ *   process started on. It must run *after* the clean, so what it reads is the pristine tree.
+ *
+ * `startPoint` given creates-or-resets `branch` there (`-B`), which is how a sync branch is forked from
+ * the default branch or reset to `origin/<branch>`; omitted, it is a plain switch to a branch that
+ * already exists locally, which is how both restore paths get back to the default branch.
+ *
+ * `reload` is passed in rather than imported because the workspace reload lives on the ci aspect, which
+ * this module deliberately does not depend on.
+ */
+export async function checkoutPristine(
+  branch: string,
+  startPoint: string | undefined,
+  reload: () => Promise<void>,
+  run: GitArgsRunner = realGitRaw
+): Promise<void> {
+  await run(startPoint ? ['checkout', '-f', '-B', branch, startPoint] : ['checkout', '-f', branch]);
+  await cleanUntrackedScoped(run);
+  await reload();
 }
 
 /**
