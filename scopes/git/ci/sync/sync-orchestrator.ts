@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { formatTitle, formatWarningSummary } from '@teambit/cli';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
