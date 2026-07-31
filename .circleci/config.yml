@@ -116,6 +116,8 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
             pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/util.lex-comparator']='3.0.2'" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/config.nerf-dart']='1.0.1'" &&
             pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
 
   # Bundle installation for Windows (with Windows-specific configs)
@@ -147,6 +149,8 @@ commands:
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
             pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/util.lex-comparator']='3.0.2'" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/config.nerf-dart']='1.0.1'" &&
             pnpm add @teambit/bit --os=win32 --cpu=<<parameters.cpu>>
 
   verify_pnpm_napi_bundle:
