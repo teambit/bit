@@ -1586,8 +1586,10 @@ describe('bit ci sync', function () {
 
       const syncYml = fs.readFileSync(workflowPath('bit-sync.yml'), 'utf8');
       const releaseYml = fs.readFileSync(workflowPath('bit-release.yml'), 'utf8');
-      expect(syncYml).to.include(`branches-ignore: [${defaultBranch}, 'bit-sync/**']`);
-      expect(releaseYml).to.include(`branches: [${defaultBranch}]`);
+      // single-quoted: the value lands inside a YAML flow sequence, where `,` and `]` are structural and
+      // are both git-legal in a branch name. See `yamlSingleQuoted` in init-scaffold.ts.
+      expect(syncYml).to.include(`branches-ignore: ['${defaultBranch}', 'bit-sync/**']`);
+      expect(releaseYml).to.include(`branches: ['${defaultBranch}']`);
       // the mainSyncBranch default must survive the substitution untouched
       expect(syncYml).to.include('main-sync-branch: bit-sync/main');
       expect(releaseYml).to.include("github.event.pull_request.head.ref != 'bit-sync/main'");

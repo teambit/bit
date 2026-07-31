@@ -277,7 +277,7 @@ export class MainSyncExecutor {
     const { gitHost, logger, defaultBranch } = this.deps;
     if (!gitHost) {
       logger.consoleWarning(
-        'No configured git host provider (for GitHub: GITHUB_TOKEN/BIT_GITHUB_TOKEN plus a repository) — ' +
+        'No configured git host provider (for GitHub: BIT_GITHUB_TOKEN or GITHUB_TOKEN, plus a repository) — ' +
           'pushed sync branch, skipping PR operations'
       );
       return undefined;

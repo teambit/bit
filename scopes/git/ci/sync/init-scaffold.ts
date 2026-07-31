@@ -241,6 +241,23 @@ const DEFAULT_BRANCH_MARKER = {
 } as const;
 
 /**
+ * A YAML single-quoted scalar of `value` — the only escape inside single quotes is a doubled `''`.
+ *
+ * Both substitution points land the branch name inside a YAML **flow sequence** (`[a, b]`), where `,`
+ * and `]` are structural. A branch name may legally contain both: git's own `check-ref-format` rejects
+ * only a specific list of characters (space, `~^:?*[\`, `..`, `@{`, a trailing `.` or `.lock`), and
+ * `validateBranchName` deliberately mirrors that rather than inventing a stricter grammar — so `a,b]c`
+ * is a branch this command can be pointed at. Unquoted, it renders
+ * `branches: [a,b]c]`, which is a *different* two-element sequence with trailing garbage, and the
+ * scaffolded workflow either fails to parse or silently watches the wrong branches. Quoting is
+ * unconditional rather than only-when-needed: a conditional quote is a second code path that the common
+ * case never exercises, and `branches: ['main']` is exactly as correct as `branches: [main]`.
+ */
+function yamlSingleQuoted(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+/**
  * Replace the single default-branch literal inside `marker` with `defaultBranch`, inside `raw`.
  * Throws rather than silently no-op-ing if the marker has drifted out of the template — a change to
  * the canonical workflow that moves or rewords this line must fail this substitution loudly instead of
@@ -254,7 +271,13 @@ function substituteDefaultBranch(raw: string, marker: string, defaultBranch: str
         `BIT_RELEASE_WORKFLOW_RAW; update the copy and this substitution point together`
     );
   }
-  return raw.replace(marker, marker.replace('main', defaultBranch));
+  // Both replacements pass a **function**, not a string. `String.replace` gives `$&`, `$'`, `` $` ``
+  // and `$$` their special meanings inside a *string* replacement, and all four can occur in a branch
+  // name (`$` is git-legal) — or be manufactured by the `''` escaping above, which turns `a$'b` into
+  // `a$''b` and would then splice in the text following the match. A function replacement is inserted
+  // verbatim.
+  const substitutedMarker = marker.replace('main', () => yamlSingleQuoted(defaultBranch));
+  return raw.replace(marker, () => substitutedMarker);
 }
 
 /** Render `bit-sync.yml` with the repository's actual default branch substituted. */

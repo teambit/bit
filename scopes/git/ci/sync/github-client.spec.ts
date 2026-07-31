@@ -105,6 +105,75 @@ describe('GitHubClient.fromEnv', () => {
     process.env.GITHUB_REPOSITORY = 'acme/shop';
     expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')).to.equal(undefined);
   });
+
+  /**
+   * **`BIT_GITHUB_TOKEN` outranks `GITHUB_TOKEN`.** The old order was `GITHUB_TOKEN || BIT_GITHUB_TOKEN`,
+   * which made the override *dead on GitHub Actions* — the runner injects `GITHUB_TOKEN` into every job,
+   * so it always won. And Actions is the one place people set `BIT_GITHUB_TOKEN`: it is the documented
+   * way to supply a PAT with permissions the workflow token does not have, and to make sync pushes
+   * trigger downstream CI (pushes authenticated with the default `GITHUB_TOKEN` deliberately do not).
+   * The failure was silent — the run authenticated as the workflow token and either 403'd or opened pull
+   * requests no check ever ran on.
+   *
+   * Asserted through the `authorization` header rather than a field, so what is pinned is the token the
+   * client actually *sends*, not merely the one it stored. `fetchImpl` defaults to the global `fetch` at
+   * construction time, so the stub has to be installed before `fromEnv` runs.
+   */
+  describe('token precedence', () => {
+    let realFetch: typeof fetch;
+    let calls: Array<{ url: string; init: any }>;
+
+    beforeEach(() => {
+      realFetch = globalThis.fetch;
+      calls = [];
+      globalThis.fetch = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        return new Response(JSON.stringify([]), { status: 200, headers: { 'content-type': 'application/json' } });
+      }) as typeof fetch;
+    });
+
+    afterEach(() => {
+      globalThis.fetch = realFetch;
+    });
+
+    /** The token a client built from this environment puts on the wire. */
+    async function sentToken(): Promise<string | undefined> {
+      const client = GitHubClient.fromEnv('git@github.com:acme/shop.git');
+      await client?.findPrByBranch('lane-x');
+      return calls[0]?.init?.headers?.authorization;
+    }
+
+    it('prefers BIT_GITHUB_TOKEN when both are set — the override beats the ambient default', async () => {
+      process.env.GITHUB_TOKEN = 'workflow-token';
+      process.env.BIT_GITHUB_TOKEN = 'user-pat';
+      expect(await sentToken()).to.equal('Bearer user-pat');
+    });
+
+    it('uses GITHUB_TOKEN when it is the only one set — the ordinary Actions job', async () => {
+      process.env.GITHUB_TOKEN = 'workflow-token';
+      expect(await sentToken()).to.equal('Bearer workflow-token');
+    });
+
+    it('uses BIT_GITHUB_TOKEN when it is the only one set — any CI that is not Actions', async () => {
+      delete process.env.GITHUB_TOKEN;
+      process.env.BIT_GITHUB_TOKEN = 'user-pat';
+      expect(await sentToken()).to.equal('Bearer user-pat');
+    });
+
+    it('is not configured when neither is set, however complete the rest of the environment is', async () => {
+      delete process.env.GITHUB_TOKEN;
+      process.env.GITHUB_REPOSITORY = 'acme/shop';
+      expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')).to.equal(undefined);
+      expect(calls).to.have.lengthOf(0);
+    });
+
+    /** An empty value is not a token; it must fall through exactly like an unset variable. */
+    it('falls through an EMPTY BIT_GITHUB_TOKEN to GITHUB_TOKEN', async () => {
+      process.env.GITHUB_TOKEN = 'workflow-token';
+      process.env.BIT_GITHUB_TOKEN = '';
+      expect(await sentToken()).to.equal('Bearer workflow-token');
+    });
+  });
 });
 
 describe('GitHubClient', () => {

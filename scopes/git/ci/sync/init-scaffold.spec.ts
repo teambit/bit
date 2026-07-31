@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { load as yamlLoad } from 'js-yaml';
 import {
   WORKFLOW_RELATIVE_PATHS,
   renderBitSyncWorkflow,
@@ -18,14 +19,14 @@ describe('init-scaffold', () => {
   describe('renderBitSyncWorkflow', () => {
     it('substitutes the detected default branch into the push branches-ignore list', () => {
       const rendered = renderBitSyncWorkflow('develop');
-      expect(rendered).to.contain("branches-ignore: [develop, 'bit-sync/**']");
+      expect(rendered).to.contain("branches-ignore: ['develop', 'bit-sync/**']");
       expect(rendered).to.not.contain('branches-ignore: [main,');
     });
 
     it('is a no-op substitution when the default branch really is "main"', () => {
       // The common case: substituting "main" for "main" must not corrupt anything else in the file.
       const rendered = renderBitSyncWorkflow('main');
-      expect(rendered).to.contain("branches-ignore: [main, 'bit-sync/**']");
+      expect(rendered).to.contain("branches-ignore: ['main', 'bit-sync/**']");
     });
 
     it('leaves the mainSyncBranch default ("bit-sync/main") untouched regardless of the default branch', () => {
@@ -54,14 +55,14 @@ describe('init-scaffold', () => {
 
     it('accepts a slashed default branch name (e.g. a release/x convention)', () => {
       const rendered = renderBitSyncWorkflow('release/2026');
-      expect(rendered).to.contain("branches-ignore: [release/2026, 'bit-sync/**']");
+      expect(rendered).to.contain("branches-ignore: ['release/2026', 'bit-sync/**']");
     });
   });
 
   describe('renderBitReleaseWorkflow', () => {
     it('substitutes the detected default branch into the pull_request branches filter', () => {
       const rendered = renderBitReleaseWorkflow('develop');
-      expect(rendered).to.contain('branches: [develop]');
+      expect(rendered).to.contain("branches: ['develop']");
       expect(rendered).to.not.contain('branches: [main]');
     });
 
@@ -73,7 +74,88 @@ describe('init-scaffold', () => {
 
     it('is a no-op substitution when the default branch really is "main"', () => {
       const rendered = renderBitReleaseWorkflow('main');
-      expect(rendered).to.contain('branches: [main]');
+      expect(rendered).to.contain("branches: ['main']");
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------
+  // THE EMITTED YAML IS PARSED, not substring-matched.
+  //
+  // Every assertion above is `to.contain` on a rendered string, which cannot tell a valid workflow from
+  // a broken one — the substitution point sits inside a YAML **flow sequence** (`[a, b]`), where `,` and
+  // `]` are structural, and a substring match is blind to exactly the damage an unquoted value does.
+  //
+  // Branch names can contain both characters: git's `check-ref-format` forbids a specific list (space,
+  // `~^:?*[\`, `..`, `@{`, trailing `.`/`.lock`) and `validateBranchName` deliberately mirrors it rather
+  // than inventing a stricter grammar, so `a,b]c` is a name this command can be pointed at. Unquoted,
+  // `branches: [a,b]c]` parses as a DIFFERENT two-element sequence with trailing garbage — a scaffolded
+  // workflow that watches the wrong branches, or does not load at all.
+  //
+  // Parsed with `js-yaml`, which is what makes these rows able to catch that: it is already a dependency
+  // used by several e2e suites in this repo, and GitHub Actions itself consumes these files as YAML, so
+  // "does a YAML parser agree" is the property that actually matters.
+  // ---------------------------------------------------------------------------------------------
+  describe('the rendered workflows are valid YAML with the branch as one list element', () => {
+    /** `on:` — quoted here because YAML 1.1 parsers read a bare `on` key as the boolean `true`. */
+    function onSection(rendered: string): any {
+      const doc = yamlLoad(rendered) as any;
+      // js-yaml (YAML 1.1 core schema) resolves the plain scalar key `on` to `true`, so accept either.
+      return doc.on ?? doc[true as any];
+    }
+
+    it('parses at all, for both templates and an ordinary branch name', () => {
+      expect(() => yamlLoad(renderBitSyncWorkflow('main'))).to.not.throw();
+      expect(() => yamlLoad(renderBitReleaseWorkflow('main'))).to.not.throw();
+    });
+
+    it('puts a slashed branch name in as exactly one element of branches-ignore', () => {
+      const on = onSection(renderBitSyncWorkflow('release/main'));
+      expect(on.push['branches-ignore']).to.deep.equal(['release/main', 'bit-sync/**']);
+    });
+
+    it('puts a slashed branch name in as exactly one element of the pull_request branches filter', () => {
+      const on = onSection(renderBitReleaseWorkflow('release/main'));
+      expect(on.pull_request.branches).to.deep.equal(['release/main']);
+    });
+
+    /**
+     * THE REGRESSION. Unquoted, this rendered `branches-ignore: [a,b]c, 'bit-sync/**']` — which is not
+     * the intended sequence and is not even the same shape.
+     */
+    it('survives a branch name containing a comma and a closing bracket', () => {
+      const hostile = 'a,b]c';
+      const on = onSection(renderBitSyncWorkflow(hostile));
+      expect(on.push['branches-ignore']).to.deep.equal([hostile, 'bit-sync/**']);
+
+      const releaseOn = onSection(renderBitReleaseWorkflow(hostile));
+      expect(releaseOn.pull_request.branches).to.deep.equal([hostile]);
+    });
+
+    /** A single quote is the one character the quoting style itself has to escape, by doubling it. */
+    it('survives a branch name containing a single quote', () => {
+      const hostile = "it's/a-branch";
+      expect(renderBitSyncWorkflow(hostile)).to.contain("'it''s/a-branch'");
+      const on = onSection(renderBitSyncWorkflow(hostile));
+      expect(on.push['branches-ignore']).to.deep.equal([hostile, 'bit-sync/**']);
+    });
+
+    /**
+     * `$` is git-legal, and `$&` / `$'` / `` $` `` / `$$` are all special inside a **string** replacement
+     * passed to `String.replace` — `$'` splices in the text following the match. The substitution uses
+     * function replacements precisely so these arrive verbatim.
+     */
+    it('survives a branch name containing String.replace substitution patterns', () => {
+      for (const hostile of ["a$'b", 'a$&b', 'a$$b', 'a$`b']) {
+        const on = onSection(renderBitSyncWorkflow(hostile));
+        expect(on.push['branches-ignore'], `branch ${hostile}`).to.deep.equal([hostile, 'bit-sync/**']);
+      }
+    });
+
+    it('keeps the rest of the workflow intact — the quoting touches one value, not the document', () => {
+      const doc = yamlLoad(renderBitSyncWorkflow('release/main')) as any;
+      expect(doc.jobs).to.be.an('object');
+      // the mainSyncBranch default is a different `main` and must survive verbatim
+      expect(renderBitSyncWorkflow('release/main')).to.contain('main-sync-branch: bit-sync/main');
     });
   });
 
@@ -99,8 +181,8 @@ describe('init-scaffold', () => {
       ]);
       const syncContent = fs.readFileSync(path.join(workspaceDir, WORKFLOW_RELATIVE_PATHS.sync), 'utf8');
       const releaseContent = fs.readFileSync(path.join(workspaceDir, WORKFLOW_RELATIVE_PATHS.release), 'utf8');
-      expect(syncContent).to.contain("branches-ignore: [develop, 'bit-sync/**']");
-      expect(releaseContent).to.contain('branches: [develop]');
+      expect(syncContent).to.contain("branches-ignore: ['develop', 'bit-sync/**']");
+      expect(releaseContent).to.contain("branches: ['develop']");
     });
 
     it('is idempotent: a second run skips both files rather than overwriting them', () => {

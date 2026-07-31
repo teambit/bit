@@ -79,7 +79,14 @@ export class GitHubClient implements GitHostProvider {
    * GitHub Actions case where nothing was passed down to us.
    */
   static fromEnv(gitRemoteUrl?: string, warn: WarnFn = noopWarn): GitHubClient | undefined {
-    const token = process.env.GITHUB_TOKEN || process.env.BIT_GITHUB_TOKEN;
+    // `BIT_GITHUB_TOKEN` outranks `GITHUB_TOKEN`, because it is the **override** and the other is the
+    // ambient default. GitHub Actions injects `GITHUB_TOKEN` into every job, so with the old order the
+    // override was dead exactly where it is needed: a user who set `BIT_GITHUB_TOKEN` to a PAT — the
+    // documented way to get permissions the workflow token does not have, and to make sync pushes
+    // trigger downstream CI — silently kept authenticating as the workflow token. Nothing announced it;
+    // the run just failed on permissions, or opened PRs no check ever ran on. The specific-over-ambient
+    // direction also matches how `origin` outranks `GITHUB_REPOSITORY` above.
+    const token = process.env.BIT_GITHUB_TOKEN || process.env.GITHUB_TOKEN;
     // The remote is only allowed to name the repository once it is established to *be* a github.com
     // remote. `parseGitHubRepo` is unanchored (it searches for `github.com/<owner>/<repo>` anywhere in
     // the string), so without this guard `https://mygithub.com/acme/shop` would yield `acme/shop` and
@@ -263,7 +270,7 @@ export class GitHubHostProvider implements GitHostProvider {
     const client = this.resolveClient();
     if (!client) {
       throw new Error(
-        `the github host provider is not configured: set GITHUB_TOKEN or BIT_GITHUB_TOKEN, and either ` +
+        `the github host provider is not configured: set BIT_GITHUB_TOKEN (or GITHUB_TOKEN), and either ` +
           `GITHUB_REPOSITORY or a github.com "origin" remote`
       );
     }

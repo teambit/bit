@@ -546,8 +546,12 @@ skips only the pull-request operations.
 
 ### GitHub credentials
 
-PR operations need `GITHUB_TOKEN` or `BIT_GITHUB_TOKEN`, plus a repository — taken from
-`GITHUB_REPOSITORY` when present, otherwise parsed from the `origin` remote. Without them the command
+PR operations need a token, plus a repository. **`BIT_GITHUB_TOKEN` is checked first and
+`GITHUB_TOKEN` second**, because the first is the override and the second is the ambient default: GitHub
+Actions sets `GITHUB_TOKEN` on every job, so a `BIT_GITHUB_TOKEN` that did not outrank it could never
+take effect there — which is the one place people set it, to supply a PAT with permissions the workflow
+token lacks (and to make sync pushes trigger downstream CI). The repository is taken from
+`GITHUB_REPOSITORY` when present, otherwise parsed from the `origin` remote. Without a token the command
 still does all of its git and Bit work and logs the PR operations it skipped.
 
 ---
