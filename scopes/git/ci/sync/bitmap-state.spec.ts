@@ -33,79 +33,18 @@ function bitmapWithRawLaneKey(laneKey: any): string {
   });
 }
 
+const onLane = (name = 'my-lane', scope = DEFAULT_SCOPE) =>
+  parseBranchBitmap(bitmapContent({ lane: { scope, name } }), DEFAULT_SCOPE) as NonNullable<
+    ReturnType<typeof parseBranchBitmap>
+  >;
+
 describe('parseBranchBitmap', () => {
   it('reads the lane pointer scope-qualified — the attribution the ownership rule is built on', () => {
-    const state = parseBranchBitmap(bitmapContent({ lane: { scope: 'other.scope', name: 'my-lane' } }), DEFAULT_SCOPE);
-    expect(state?.laneIdStr).to.equal('other.scope/my-lane');
-  });
-
-  it('reports no lane pointer for a `.bitmap` on main — every ordinary developer branch looks like this', () => {
-    const state = parseBranchBitmap(bitmapContent(), DEFAULT_SCOPE);
-    expect(state).to.not.equal(undefined);
-    expect(state?.laneIdStr).to.equal(undefined);
-  });
-
-  // Honouring an unexported pointer would read "lane removed" for a lane that never existed remotely
-  // and retire a developer branch.
-  describe('an unexported lane pointer is not attribution', () => {
-    it('ignores `_bit_lane` when bit marked it not exported', () => {
-      const state = parseBranchBitmap(
-        bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: false }),
-        DEFAULT_SCOPE
-      );
-      expect(state).to.not.equal(undefined);
-      expect(state?.laneIdStr).to.equal(undefined);
-    });
-
-    it('still reads the component versions — only the attribution is withheld', () => {
-      const state = parseBranchBitmap(
-        bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: false }),
-        DEFAULT_SCOPE
-      );
-      expect(state?.versions).to.deep.equal({ [`${DEFAULT_SCOPE}/comp1`]: SNAP_1 });
-    });
-
-    it('treats a missing `exported` key the same way — the safe direction', () => {
-      expect(
-        parseBranchBitmap(bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' } }), DEFAULT_SCOPE)?.laneIdStr
-      ).to.equal(undefined);
-    });
-
-    it('accepts the pointer once bit has marked the lane exported', () => {
-      // Non-vacuity for the rows above: they test the flag, not some unrelated rejection.
-      expect(
-        parseBranchBitmap(
-          bitmapWithRawLaneKey({ id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: true }),
-          DEFAULT_SCOPE
-        )?.laneIdStr
-      ).to.equal(`${DEFAULT_SCOPE}/foo`);
-    });
-  });
-
-  describe('malformed `_bit_lane` never yields attribution', () => {
-    it('an empty object', () => {
-      expect(parseBranchBitmap(bitmapWithRawLaneKey({}), DEFAULT_SCOPE)?.laneIdStr).to.equal(undefined);
-    });
-
-    it('an `id` that is a string rather than a {scope, name}', () => {
-      expect(
-        parseBranchBitmap(bitmapWithRawLaneKey({ id: `${DEFAULT_SCOPE}/foo`, exported: true }), DEFAULT_SCOPE)
-          ?.laneIdStr
-      ).to.equal(undefined);
-    });
-
-    it('a scopeless lane id, which could never match a scope-qualified target anyway', () => {
-      // A returned bare name could still trigger the branch-aliasing halt over a lane that does not exist.
-      expect(
-        parseBranchBitmap(bitmapWithRawLaneKey({ id: { scope: '', name: 'foo' }, exported: true }), DEFAULT_SCOPE)
-          ?.laneIdStr
-      ).to.equal(undefined);
-    });
+    expect(onLane('my-lane', 'other.scope').laneIdStr).to.equal('other.scope/my-lane');
   });
 
   it('reads every component at the exact version the branch records', () => {
-    const state = parseBranchBitmap(bitmapContent({ lane: { scope: DEFAULT_SCOPE, name: 'my-lane' } }), DEFAULT_SCOPE);
-    expect(state?.versions).to.deep.equal({
+    expect(onLane().versions).to.deep.equal({
       [`${DEFAULT_SCOPE}/comp1`]: SNAP_1,
       [`${DEFAULT_SCOPE}/comp2`]: SNAP_2,
     });
@@ -120,33 +59,64 @@ describe('parseBranchBitmap', () => {
     expect(state?.laneIdStr).to.equal(`${DEFAULT_SCOPE}/my-lane`);
   });
 
-  // Every way of not knowing must resolve to the answer that licenses nothing (no branch retired).
-  describe('degrades to undefined rather than guessing', () => {
-    it('for a `.bitmap` that is not valid JSON', () => {
-      expect(parseBranchBitmap('{ this is not json', DEFAULT_SCOPE)).to.equal(undefined);
-    });
+  /**
+   * Only a pointer bit marked exported, carrying a scoped id, is attribution. Honouring anything else
+   * would read "lane removed" for a lane that never existed remotely and retire a developer branch —
+   * and a bare name could still trigger the branch-aliasing halt over a lane that does not exist.
+   */
+  const POINTERS: Array<[string, any, string | undefined]> = [
+    ['bit marked it not exported', { id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: false }, undefined],
+    ['`exported` is missing entirely', { id: { scope: DEFAULT_SCOPE, name: 'foo' } }, undefined],
+    ['it is an empty object', {}, undefined],
+    ['`id` is a string rather than a {scope, name}', { id: `${DEFAULT_SCOPE}/foo`, exported: true }, undefined],
+    ['the lane id has no scope', { id: { scope: '', name: 'foo' }, exported: true }, undefined],
+    // non-vacuity for the rows above: a well-formed pointer through the same helper DOES attribute
+    [
+      'bit has marked the lane exported',
+      { id: { scope: DEFAULT_SCOPE, name: 'foo' }, exported: true },
+      `${DEFAULT_SCOPE}/foo`,
+    ],
+  ];
 
-    it('for a file git could not produce at all', () => {
-      expect(parseBranchBitmap(undefined, DEFAULT_SCOPE)).to.equal(undefined);
-      expect(parseBranchBitmap('', DEFAULT_SCOPE)).to.equal(undefined);
-      expect(parseBranchBitmap('   \n ', DEFAULT_SCOPE)).to.equal(undefined);
+  POINTERS.forEach(([name, laneKey, laneIdStr]) => {
+    it(`withholds attribution unless the pointer is usable: ${name}`, () => {
+      const state = parseBranchBitmap(bitmapWithRawLaneKey(laneKey), DEFAULT_SCOPE);
+      expect(state?.laneIdStr).to.equal(laneIdStr);
     });
+  });
 
-    it('for an entry bit itself refuses — a scoped component with no version', () => {
-      const broken = JSON.stringify({
+  it('reports no lane pointer at all for a `.bitmap` on main — every ordinary developer branch', () => {
+    const state = parseBranchBitmap(bitmapContent(), DEFAULT_SCOPE);
+    expect(state).to.not.equal(undefined);
+    expect(state?.laneIdStr).to.equal(undefined);
+  });
+
+  /** Every way of not knowing must resolve to the answer that licenses nothing (no branch retired). */
+  const UNREADABLE: Array<[string, string | undefined]> = [
+    ['a `.bitmap` that is not valid JSON', '{ this is not json'],
+    ['a file git could not produce at all', undefined],
+    ['an empty file', ''],
+    ['a whitespace-only file', '   \n '],
+    [
+      'an entry bit itself refuses — a scoped component with no version',
+      JSON.stringify({
         comp1: { name: 'comp1', scope: DEFAULT_SCOPE, mainFile: 'index.js', rootDir: 'comp1' },
         '$schema-version': '17.0.0',
-      });
-      expect(parseBranchBitmap(broken, DEFAULT_SCOPE)).to.equal(undefined);
-    });
-
-    it('for two components claiming the same rootDir', () => {
-      const broken = JSON.stringify({
+      }),
+    ],
+    [
+      'two components claiming the same rootDir',
+      JSON.stringify({
         comp1: { name: 'comp1', scope: DEFAULT_SCOPE, version: SNAP_1, mainFile: 'index.js', rootDir: 'shared' },
         comp2: { name: 'comp2', scope: DEFAULT_SCOPE, version: SNAP_2, mainFile: 'index.js', rootDir: 'shared' },
         '$schema-version': '17.0.0',
-      });
-      expect(parseBranchBitmap(broken, DEFAULT_SCOPE)).to.equal(undefined);
+      }),
+    ],
+  ];
+
+  UNREADABLE.forEach(([name, content]) => {
+    it(`degrades to undefined rather than guessing, for ${name}`, () => {
+      expect(parseBranchBitmap(content, DEFAULT_SCOPE)).to.equal(undefined);
     });
   });
 
@@ -156,34 +126,30 @@ describe('parseBranchBitmap', () => {
       comp1: { name: 'comp1', scope: '', defaultScope: DEFAULT_SCOPE, mainFile: 'index.js', rootDir: 'comp1' },
       '$schema-version': '17.0.0',
     });
-    const state = parseBranchBitmap(content, DEFAULT_SCOPE);
-    expect(state?.versions).to.deep.equal({ [`${DEFAULT_SCOPE}/comp1`]: 'latest' });
+    expect(parseBranchBitmap(content, DEFAULT_SCOPE)?.versions).to.deep.equal({
+      [`${DEFAULT_SCOPE}/comp1`]: 'latest',
+    });
   });
 });
 
 describe('fingerprintIdVersions', () => {
-  it('is a single 40-hex token, so it survives being written into a commit trailer as an annotation', () => {
-    expect(fingerprintIdVersions([`${DEFAULT_SCOPE}/comp1@${SNAP_1}`])).to.match(/^[0-9a-f]{40}$/);
-  });
-
-  it('is stable under reordering: neither listing order can look like a state change', () => {
+  it('is a single 40-hex token, and stable under reordering', () => {
+    // A single token survives being written into a commit trailer; order-stability keeps neither
+    // listing order looking like a state change.
     const a = `${DEFAULT_SCOPE}/comp1@${SNAP_1}`;
     const b = `${DEFAULT_SCOPE}/comp2@${SNAP_2}`;
+    expect(fingerprintIdVersions([a])).to.match(/^[0-9a-f]{40}$/);
     expect(fingerprintIdVersions([a, b])).to.equal(fingerprintIdVersions([b, a]));
   });
 });
 
 describe('branchStateFingerprint', () => {
   const laneIds = [`${DEFAULT_SCOPE}/comp1`, `${DEFAULT_SCOPE}/comp2`];
-  const onLane = parseBranchBitmap(
-    bitmapContent({ lane: { scope: DEFAULT_SCOPE, name: 'my-lane' } }),
-    DEFAULT_SCOPE
-  ) as NonNullable<ReturnType<typeof parseBranchBitmap>>;
 
   it('equals the lane fingerprint when the branch records every lane component at the lane head', () => {
     // Computed the way `laneHeadFingerprint` computes it — the two sides must be comparable.
     const laneSide = fingerprintIdVersions([`${DEFAULT_SCOPE}/comp1@${SNAP_1}`, `${DEFAULT_SCOPE}/comp2@${SNAP_2}`]);
-    expect(branchStateFingerprint(onLane, laneIds)).to.equal(laneSide);
+    expect(branchStateFingerprint(onLane(), laneIds)).to.equal(laneSide);
   });
 
   it('differs when the lane moved a component the branch has not caught up with', () => {
@@ -191,13 +157,14 @@ describe('branchStateFingerprint', () => {
       `${DEFAULT_SCOPE}/comp1@${SNAP_1}`,
       `${DEFAULT_SCOPE}/comp2@${'c'.repeat(40)}`,
     ]);
-    expect(branchStateFingerprint(onLane, laneIds)).to.not.equal(laneMoved);
+    expect(branchStateFingerprint(onLane(), laneIds)).to.not.equal(laneMoved);
   });
 
   it('counts a lane component the branch does not have at all', () => {
+    // Without the placeholder, "the lane grew a component" would fingerprint identically to "converged".
     const grown = [...laneIds, `${DEFAULT_SCOPE}/comp3`];
-    expect(branchStateFingerprint(onLane, grown)).to.not.equal(branchStateFingerprint(onLane, laneIds));
-    expect(branchStateFingerprint(onLane, grown)).to.equal(
+    expect(branchStateFingerprint(onLane(), grown)).to.not.equal(branchStateFingerprint(onLane(), laneIds));
+    expect(branchStateFingerprint(onLane(), grown)).to.equal(
       fingerprintIdVersions([
         `${DEFAULT_SCOPE}/comp1@${SNAP_1}`,
         `${DEFAULT_SCOPE}/comp2@${SNAP_2}`,
@@ -207,6 +174,8 @@ describe('branchStateFingerprint', () => {
   });
 
   it('ignores components the branch has that are not on the lane', () => {
+    // The `.bitmap` also carries non-lane components at their main versions; counting those would make
+    // an untouched pair read as diverged after any unrelated release.
     const withExtra = parseBranchBitmap(
       bitmapContent({
         lane: { scope: DEFAULT_SCOPE, name: 'my-lane' },
@@ -214,6 +183,6 @@ describe('branchStateFingerprint', () => {
       }),
       DEFAULT_SCOPE
     ) as NonNullable<ReturnType<typeof parseBranchBitmap>>;
-    expect(branchStateFingerprint(withExtra, laneIds)).to.equal(branchStateFingerprint(onLane, laneIds));
+    expect(branchStateFingerprint(withExtra, laneIds)).to.equal(branchStateFingerprint(onLane(), laneIds));
   });
 });

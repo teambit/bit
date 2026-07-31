@@ -1,51 +1,40 @@
 import { expect } from 'chai';
 import { GitHubClient, isGitHubRemote, parseGitHubRepo } from './github-client';
 
-describe('parseGitHubRepo', () => {
-  it('parses ssh and https remote urls', () => {
-    expect(parseGitHubRepo('git@github.com:acme/shop.git')).to.equal('acme/shop');
-    expect(parseGitHubRepo('https://github.com/acme/shop.git')).to.equal('acme/shop');
-    expect(parseGitHubRepo('https://github.com/acme/shop')).to.equal('acme/shop');
-    expect(parseGitHubRepo('https://gitlab.com/acme/shop.git')).to.equal(undefined);
-  });
+/**
+ * A claimed remote the parse then fails on silently degrades the whole run to PR-less mode, so the two
+ * predicates are pinned over the same remote shapes: whatever `isGitHubRemote` claims must parse.
+ */
+const REMOTES: Array<[string, string | undefined, boolean]> = [
+  // url, parseGitHubRepo, isGitHubRemote
+  ['git@github.com:acme/shop.git', 'acme/shop', true],
+  ['https://github.com/acme/shop.git', 'acme/shop', true],
+  ['https://github.com/acme/shop', 'acme/shop', true],
+  ['ssh://git@github.com/acme/shop.git', 'acme/shop', true],
+  // mixed-case host, an explicit port, and credentials in the url are all still github.com
+  ['https://GitHub.com/acme/shop.git', 'acme/shop', true],
+  ['https://github.com:443/acme/shop.git', 'acme/shop', true],
+  ['ssh://git@github.com:22/acme/shop.git', 'acme/shop', true],
+  ['https://x-access-token:tok@github.com/acme/shop.git', 'acme/shop', true],
+  // an all-digits scp owner is an owner, never a port
+  ['git@github.com:12345/shop.git', '12345/shop', true],
+  // another host that merely has "github.com" in its path, in both url forms
+  ['https://gitlab.example.com/mirrors/github.com/acme/repo.git', undefined, false],
+  ['git@gitlab.example.com:mirrors/github.com/acme/repo.git', undefined, false],
+  // look-alike and unrelated hosts
+  ['https://mygithub.com/acme/shop', undefined, false],
+  ['https://github.company.com/acme/shop', undefined, false],
+  ['git@gitlab.com:acme/shop.git', undefined, false],
+  ['https://gitlab.com/acme/shop.git', undefined, false],
+  ['/srv/git/github.com/acme/shop.git', undefined, false],
+];
 
-  // A claimed remote the parse then fails on silently degrades the whole run to PR-less mode.
-  it('parses what the claim test claims: mixed-case hosts and explicit ports', () => {
-    expect(parseGitHubRepo('https://GitHub.com/acme/shop.git')).to.equal('acme/shop');
-    expect(parseGitHubRepo('https://github.com:443/acme/shop.git')).to.equal('acme/shop');
-    expect(parseGitHubRepo('ssh://git@github.com:22/acme/shop.git')).to.equal('acme/shop');
-  });
-
-  it('keeps an all-digits scp owner as the owner, never a port', () => {
-    expect(parseGitHubRepo('git@github.com:12345/shop.git')).to.equal('12345/shop');
-  });
-
-  it('rejects github.com as a path segment of another host, in both URL forms', () => {
-    expect(parseGitHubRepo('https://gitlab.example.com/mirrors/github.com/acme/repo.git')).to.equal(undefined);
-    expect(parseGitHubRepo('git@gitlab.example.com:mirrors/github.com/acme/repo.git')).to.equal(undefined);
-  });
-});
-
-describe('isGitHubRemote', () => {
-  it('accepts every remote form git accepts for github.com', () => {
-    expect(isGitHubRemote('git@github.com:acme/shop.git')).to.equal(true);
-    expect(isGitHubRemote('ssh://git@github.com/acme/shop.git')).to.equal(true);
-    expect(isGitHubRemote('https://github.com/acme/shop.git')).to.equal(true);
-    // credentials in the URL, an explicit port, and a capitalized host are all still github.com
-    expect(isGitHubRemote('https://x-access-token:tok@github.com/acme/shop.git')).to.equal(true);
-    expect(isGitHubRemote('https://GitHub.com/acme/shop')).to.equal(true);
-  });
-
-  it('rejects another host that merely has "github.com" in its path', () => {
-    expect(isGitHubRemote('https://gitlab.example.com/mirrors/github.com/acme/repo.git')).to.equal(false);
-    expect(isGitHubRemote('git@gitlab.example.com:mirrors/github.com/acme/repo.git')).to.equal(false);
-  });
-
-  it('rejects a lookalike host and a non-github host', () => {
-    expect(isGitHubRemote('https://mygithub.com/acme/shop')).to.equal(false);
-    expect(isGitHubRemote('https://github.company.com/acme/shop')).to.equal(false);
-    expect(isGitHubRemote('git@gitlab.com:acme/shop.git')).to.equal(false);
-    expect(isGitHubRemote('/srv/git/github.com/acme/shop.git')).to.equal(false);
+describe('parseGitHubRepo / isGitHubRemote', () => {
+  it('agree on every remote form git accepts, and on every host that is not github.com', () => {
+    REMOTES.forEach(([url, repo, isGitHub]) => {
+      expect(parseGitHubRepo(url), url).to.equal(repo);
+      expect(isGitHubRemote(url), url).to.equal(isGitHub);
+    });
   });
 });
 
@@ -68,40 +57,30 @@ describe('GitHubClient.fromEnv', () => {
     });
   });
 
-  it('uses the agreed repository when the remote and the environment say the same thing', () => {
-    process.env.GITHUB_REPOSITORY = 'acme/shop';
-    expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')?.repo).to.equal('acme/shop');
-  });
+  const OURS = 'git@github.com:acme/shop.git';
+  /** [case, GITHUB_REPOSITORY, remote, resolved repo, warning fragments]. */
+  const RESOLUTION: Array<[string, string, string | undefined, string | undefined, string[]?]> = [
+    ['the remote and the environment agree', 'acme/shop', OURS, 'acme/shop'],
+    // the ORIGIN-parsed repository outranks GITHUB_REPOSITORY, and the disagreement must be reported
+    ['they disagree', 'other-org/other-repo', OURS, 'acme/shop', ['other-org/other-repo', 'acme/shop']],
+    // GitHub repository names are case-insensitive, so a case-only difference is not a disagreement
+    ['they differ only in case', 'Acme/Shop', OURS, 'acme/shop'],
+    ['there is no remote to parse', 'acme/shop', undefined, 'acme/shop'],
+    ['the remote is a github url nothing parses out of', 'acme/shop', 'https://github.com/', 'acme/shop'],
+    // a remote that is demonstrably not github stays unconfigured however complete the environment is
+    ['the remote is another host', 'acme/shop', 'https://gitlab.com/acme/shop.git', undefined],
+    ['the remote is a look-alike host', 'acme/shop', 'https://mygithub.com/acme/shop', undefined],
+  ];
 
-  it('prefers the ORIGIN-parsed repository when the two disagree, and warns naming both', () => {
-    process.env.GITHUB_REPOSITORY = 'other-org/other-repo';
-    const warnings: string[] = [];
-    const client = GitHubClient.fromEnv('git@github.com:acme/shop.git', (message) => warnings.push(message));
-    expect(client?.repo).to.equal('acme/shop');
-    expect(warnings).to.have.lengthOf(1);
-    expect(warnings[0]).to.contain('other-org/other-repo');
-    expect(warnings[0]).to.contain('acme/shop');
-  });
-
-  it('is silent when the two differ only in case — GitHub repository names are case-insensitive', () => {
-    process.env.GITHUB_REPOSITORY = 'Acme/Shop';
-    const warnings: string[] = [];
-    const client = GitHubClient.fromEnv('git@github.com:acme/shop.git', (message) => warnings.push(message));
-    expect(client?.repo).to.equal('acme/shop');
-    expect(warnings).to.deep.equal([]);
-  });
-
-  it('falls back to the environment when there is no remote to parse', () => {
-    process.env.GITHUB_REPOSITORY = 'acme/shop';
-    expect(GitHubClient.fromEnv()?.repo).to.equal('acme/shop');
-    // ...and when the remote is a github.com URL nothing can be parsed out of
-    expect(GitHubClient.fromEnv('https://github.com/')?.repo).to.equal('acme/shop');
-  });
-
-  it('still refuses a remote that is demonstrably not github, however complete the environment looks', () => {
-    process.env.GITHUB_REPOSITORY = 'acme/shop';
-    expect(GitHubClient.fromEnv('https://gitlab.com/acme/shop.git')).to.equal(undefined);
-    expect(GitHubClient.fromEnv('https://mygithub.com/acme/shop')).to.equal(undefined);
+  RESOLUTION.forEach(([name, repository, remote, repo, warns]) => {
+    it(`resolves the repository when ${name}`, () => {
+      process.env.GITHUB_REPOSITORY = repository;
+      const warnings: string[] = [];
+      const client = GitHubClient.fromEnv(remote, (message) => warnings.push(message));
+      expect(client?.repo).to.equal(repo);
+      (warns ?? []).forEach((fragment) => expect(warnings.join('\n')).to.contain(fragment));
+      if (!warns) expect(warnings).to.deep.equal([]);
+    });
   });
 
   it('needs a token: a repository on its own configures nothing', () => {
@@ -136,40 +115,37 @@ describe('GitHubClient.fromEnv', () => {
       return calls[0]?.init?.headers?.authorization;
     }
 
-    it('prefers BIT_GITHUB_TOKEN when both are set — the override beats the ambient default', async () => {
-      process.env.GITHUB_TOKEN = 'workflow-token';
-      process.env.BIT_GITHUB_TOKEN = 'user-pat';
-      expect(await sentToken()).to.equal('Bearer user-pat');
+    const PRECEDENCE: Array<[string, Record<string, string | undefined>, string]> = [
+      // the override beats the ambient default
+      ['both set', { GITHUB_TOKEN: 'workflow-token', BIT_GITHUB_TOKEN: 'user-pat' }, 'Bearer user-pat'],
+      // the ordinary Actions job
+      ['only GITHUB_TOKEN', { GITHUB_TOKEN: 'workflow-token' }, 'Bearer workflow-token'],
+      // any CI that is not Actions
+      ['only BIT_GITHUB_TOKEN', { BIT_GITHUB_TOKEN: 'user-pat' }, 'Bearer user-pat'],
+      ['an EMPTY override', { GITHUB_TOKEN: 'workflow-token', BIT_GITHUB_TOKEN: '' }, 'Bearer workflow-token'],
+    ];
+
+    PRECEDENCE.forEach(([name, env, expected]) => {
+      it(`sends the right token with ${name}`, async () => {
+        delete process.env.GITHUB_TOKEN;
+        Object.entries(env).forEach(([key, value]) => {
+          process.env[key] = value;
+        });
+        expect(await sentToken()).to.equal(expected);
+      });
     });
 
-    it('uses GITHUB_TOKEN when it is the only one set — the ordinary Actions job', async () => {
-      process.env.GITHUB_TOKEN = 'workflow-token';
-      expect(await sentToken()).to.equal('Bearer workflow-token');
-    });
-
-    it('uses BIT_GITHUB_TOKEN when it is the only one set — any CI that is not Actions', async () => {
-      delete process.env.GITHUB_TOKEN;
-      process.env.BIT_GITHUB_TOKEN = 'user-pat';
-      expect(await sentToken()).to.equal('Bearer user-pat');
-    });
-
-    it('is not configured when neither is set, however complete the rest of the environment is', async () => {
+    it('is not configured when neither token is set, and puts nothing on the wire', async () => {
       delete process.env.GITHUB_TOKEN;
       process.env.GITHUB_REPOSITORY = 'acme/shop';
       expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')).to.equal(undefined);
       expect(calls).to.have.lengthOf(0);
     });
-
-    it('falls through an EMPTY BIT_GITHUB_TOKEN to GITHUB_TOKEN', async () => {
-      process.env.GITHUB_TOKEN = 'workflow-token';
-      process.env.BIT_GITHUB_TOKEN = '';
-      expect(await sentToken()).to.equal('Bearer workflow-token');
-    });
   });
 });
 
 describe('GitHubClient', () => {
-  it('createPr posts to the pulls endpoint with auth', async () => {
+  it('createPr posts the pull-request payload to the pulls endpoint', async () => {
     const calls: Array<{ url: string; init: any }> = [];
     const fakeFetch = (async (url: any, init: any) => {
       calls.push({ url: String(url), init });
@@ -183,7 +159,6 @@ describe('GitHubClient', () => {
     expect(pr.number).to.equal(7);
     expect(calls[0].url).to.equal('https://api.github.com/repos/acme/shop/pulls');
     expect(calls[0].init.method).to.equal('POST');
-    expect(calls[0].init.headers.authorization).to.equal('Bearer tok');
     expect(JSON.parse(calls[0].init.body)).to.deep.equal({ head: 'lane-x', base: 'main', title: 't', body: 'b' });
   });
 

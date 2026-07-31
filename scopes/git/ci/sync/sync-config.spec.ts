@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import type { CiSyncConfig, LaneTarget } from './sync-config';
 import {
   resolveSyncConfig,
   laneNameToBranch,
@@ -8,104 +9,74 @@ import {
   shouldSyncLane,
 } from './sync-config';
 
+const DEFAULT_SCOPE = 'acme.shop';
+
 describe('sync-config', () => {
   it('applies defaults', () => {
-    const cfg = resolveSyncConfig(undefined);
-    expect(cfg.mode).to.equal('git-source-of-truth');
-    expect(cfg.branchPrefix).to.equal('');
-    expect(cfg.branches).to.deep.equal({});
-    expect(cfg.lanes).to.deep.equal(['*']);
-    expect(cfg.mainSyncBranch).to.equal('bit-sync/main');
-    expect(cfg.autoMergeMainSyncPr).to.equal(false);
-    expect(cfg.mainSync).to.equal('pr');
-    expect(cfg.onConflict).to.equal('halt');
-  });
-
-  describe('mainSync', () => {
-    it('accepts both modes explicitly', () => {
-      expect(resolveSyncConfig({ mainSync: 'pr' }).mainSync).to.equal('pr');
-      expect(resolveSyncConfig({ mainSync: 'direct-push' }).mainSync).to.equal('direct-push');
-    });
-
-    it('refuses any other value, naming the key, the value and the valid options', () => {
-      expect(() => resolveSyncConfig({ mainSync: 'direct' as any })).to.throw(
-        /sync\.mainSync.*"direct".*"pr".*"direct-push"/
-      );
+    expect(resolveSyncConfig(undefined)).to.deep.equal({
+      mode: 'git-source-of-truth',
+      branchPrefix: '',
+      branches: {},
+      lanes: ['*'],
+      mainSyncBranch: 'bit-sync/main',
+      autoMergeMainSyncPr: false,
+      mainSync: 'pr',
+      // a silent policy pick rewrites someone's work, so silence is opt-in
+      onConflict: 'halt',
     });
   });
 
-  describe('onConflict', () => {
-    it('defaults to halt — a silent policy pick rewrites someone’s work, so silence is opt-in', () => {
-      expect(resolveSyncConfig({}).onConflict).to.equal('halt');
-    });
+  it('accepts every documented value of the union-typed options', () => {
+    (['pr', 'direct-push'] as const).forEach((v) => expect(resolveSyncConfig({ mainSync: v }).mainSync).to.equal(v));
+    (['halt', 'git-wins', 'lane-wins'] as const).forEach((v) =>
+      expect(resolveSyncConfig({ onConflict: v }).onConflict).to.equal(v)
+    );
+  });
 
-    it('accepts all three policies explicitly', () => {
-      expect(resolveSyncConfig({ onConflict: 'halt' }).onConflict).to.equal('halt');
-      expect(resolveSyncConfig({ onConflict: 'git-wins' }).onConflict).to.equal('git-wins');
-      expect(resolveSyncConfig({ onConflict: 'lane-wins' }).onConflict).to.equal('lane-wins');
-    });
+  // Config comes from workspace.jsonc, so the union types are not enforced at runtime: a typo must fail
+  // at startup naming the key, the value and the options, not fall through to whichever mode a
+  // comparison happens to miss.
+  const REJECTED: Array<[CiSyncConfig, RegExp]> = [
+    [{ mainSync: 'direct' as any }, /sync\.mainSync.*"direct".*"pr".*"direct-push"/],
+    [{ onConflict: 'ours' as any }, /sync\.onConflict.*"ours".*"halt".*"git-wins".*"lane-wins"/],
+  ];
 
-    it('refuses any other value, naming the key, the value and the valid options', () => {
-      expect(() => resolveSyncConfig({ onConflict: 'ours' as any })).to.throw(
-        /sync\.onConflict.*"ours".*"halt".*"git-wins".*"lane-wins"/
-      );
+  REJECTED.forEach(([raw, expected]) => {
+    it(`refuses ${JSON.stringify(raw)}, naming the key, the value and the valid options`, () => {
+      expect(() => resolveSyncConfig(raw)).to.throw(expected);
     });
   });
 
-  it('maps lane to branch via prefix', () => {
-    const cfg = resolveSyncConfig({ branchPrefix: 'lane/' });
-    expect(laneNameToBranch('my-lane', cfg)).to.equal('lane/my-lane');
-  });
-
-  it('explicit branches override wins over prefix', () => {
+  it('maps lane <-> branch: an explicit override outranks the prefix in both directions', () => {
     const cfg = resolveSyncConfig({ branchPrefix: 'lane/', branches: { 'my-lane': 'custom' } });
     expect(laneNameToBranch('my-lane', cfg)).to.equal('custom');
-  });
-
-  it('maps branch back to lane (override, then prefix strip)', () => {
-    const cfg = resolveSyncConfig({ branchPrefix: 'lane/', branches: { 'my-lane': 'custom' } });
     expect(branchToLaneName('custom', cfg)).to.equal('my-lane');
     expect(branchToLaneName('lane/other', cfg)).to.equal('other');
     expect(branchToLaneName('unrelated-branch', cfg)).to.equal(undefined);
-  });
-
-  it('when no prefix and no override, branch maps to same-named lane', () => {
-    const cfg = resolveSyncConfig({});
-    expect(branchToLaneName('some-lane', cfg)).to.equal('some-lane');
+    // with no prefix and no override, a branch maps to the same-named lane
+    expect(branchToLaneName('some-lane', resolveSyncConfig({}))).to.equal('some-lane');
   });
 
   describe('parseLaneTarget', () => {
-    const DEFAULT_SCOPE = 'acme.shop';
+    // A lane name cannot contain '/', so the single '/' is always the scope/name boundary; a hosting
+    // scope needs no dot (self-hosted and test scopes are bare names).
+    const PARSED: Array<[string, LaneTarget]> = [
+      ['my-lane', { hostScope: DEFAULT_SCOPE, name: 'my-lane' }],
+      ['other-org.other-scope/my-lane', { hostScope: 'other-org.other-scope', name: 'my-lane' }],
+      ['bare-scope/my-lane', { hostScope: 'bare-scope', name: 'my-lane' }],
+      ['  my-lane  ', { hostScope: DEFAULT_SCOPE, name: 'my-lane' }],
+    ];
 
-    it('resolves a bare lane name against the workspace defaultScope', () => {
-      expect(parseLaneTarget('my-lane', DEFAULT_SCOPE)).to.deep.equal({ hostScope: DEFAULT_SCOPE, name: 'my-lane' });
-    });
-
-    it('splits a scope-qualified lane id into hosting scope and name', () => {
-      expect(parseLaneTarget('other-org.other-scope/my-lane', DEFAULT_SCOPE)).to.deep.equal({
-        hostScope: 'other-org.other-scope',
-        name: 'my-lane',
-      });
-    });
-
-    it('accepts a hosting scope without a dot (self-hosted and test scopes are bare names)', () => {
-      expect(parseLaneTarget('bare-scope/my-lane', DEFAULT_SCOPE)).to.deep.equal({
-        hostScope: 'bare-scope',
-        name: 'my-lane',
-      });
-    });
-
-    it('trims surrounding whitespace', () => {
-      expect(parseLaneTarget('  my-lane  ', DEFAULT_SCOPE)).to.deep.equal({
-        hostScope: DEFAULT_SCOPE,
-        name: 'my-lane',
-      });
+    it('resolves a bare name against defaultScope and splits a scope-qualified id', () => {
+      PARSED.forEach(([input, expected]) =>
+        expect(parseLaneTarget(input, DEFAULT_SCOPE), input).to.deep.equal(expected)
+      );
     });
 
     it('refuses malformed targets rather than guessing at them', () => {
-      ['', '   ', '/', '/my-lane', 'scope/', 'a/b/c', 'scope//lane'].forEach((input) => {
-        expect(() => parseLaneTarget(input, DEFAULT_SCOPE), `input: "${input}"`).to.throw();
-      });
+      ['', '   ', '/', '/my-lane', 'scope/', 'a/b/c', 'scope//lane'].forEach((input) =>
+        expect(() => parseLaneTarget(input, DEFAULT_SCOPE), `input: "${input}"`).to.throw()
+      );
     });
   });
 
@@ -126,13 +97,8 @@ describe('isValidLaneName', () => {
     );
   });
 
-  it('rejects a slash, which is what an ordinary branch name brings in', () => {
-    expect(isValidLaneName('feature/foo')).to.equal(false);
-    expect(isValidLaneName('a/b/c')).to.equal(false);
-  });
-
-  it('rejects uppercase, spaces, dots and the empty string', () => {
-    ['FEATURE', 'Feature', 'a b', 'a.b', '', 'a+b', 'café'].forEach((name) =>
+  it('rejects uppercase, spaces, dots, the empty string, and the slash a branch name brings in', () => {
+    ['FEATURE', 'Feature', 'a b', 'a.b', '', 'a+b', 'café', 'feature/foo', 'a/b/c'].forEach((name) =>
       expect(isValidLaneName(name), JSON.stringify(name)).to.equal(false)
     );
   });
