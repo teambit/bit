@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { formatTitle, formatWarningSummary } from '@teambit/cli';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
@@ -231,7 +232,7 @@ export class SyncOrchestrator {
     const { lanes: lanesToSync, errors } = await this.listLanesToSync(cfg, mainLaneName, defaultBranch);
     lines.push(...errors);
     this.deps.logger.console(
-      chalk.blue(
+      formatTitle(
         `Reconciling ${lanesToSync.length} mapped lane(s) of ${defaultScope}` +
           `${lanesToSync.length ? `: ${lanesToSync.join(', ')}` : ''}`
       )
@@ -240,7 +241,7 @@ export class SyncOrchestrator {
       // `--all` enumerates this scope's own lanes and this repo's lane-mapped branches, so every target
       // here is hosted on `defaultScope` by construction. Foreign-hosted lanes are explicit-target only
       // in Stage 0; enumerating them needs the `laneSources` config designed for Stage 1.
-      // eslint-disable-next-line no-await-in-loop
+      // oxlint-disable-next-line no-await-in-loop
       lines.push(await laneSync.syncLane({ hostScope: defaultScope, name: laneName }, { dryRun: opts.dryRun }));
     }
     lines.push(await mainSync.syncMain({ dryRun: opts.dryRun }));
@@ -387,7 +388,7 @@ export class SyncOrchestrator {
   ): Promise<{ lanes: string[]; errors: string[] }> {
     if (!cfg.lanes.length) {
       this.deps.logger.console(
-        chalk.yellow('sync.lanes is empty — lane mirroring is disabled, reconciling the main scope only')
+        formatWarningSummary('sync.lanes is empty — lane mirroring is disabled, reconciling the main scope only')
       );
       return { lanes: [], errors: [] };
     }
@@ -406,7 +407,7 @@ export class SyncOrchestrator {
       // A scope with no lanes at all: the remote answers "not found" rather than an empty list.
       if (msg.includes('was not found') || msg.includes('not found')) {
         this.deps.logger.console(
-          chalk.yellow(`No lanes found on ${remote} — reconciling lane-mapped branches and the main scope only`)
+          formatWarningSummary(`No lanes found on ${remote} — reconciling lane-mapped branches and the main scope only`)
         );
       } else {
         errors.push(`${HALT_SUMMARY_PREFIX} lanes -> could not list the lanes of ${remote}: ${msg}`);

@@ -79,7 +79,7 @@ export class CiSyncCmd implements Command {
   // hence the `|| undefined` below.
   async report([lane]: [string], options: Options) {
     this.logger.console('\n\n');
-    this.logger.console('🔄 Initializing sync command');
+    this.logger.console('Initializing sync command');
     if (!this.workspace) throw new OutsideWorkspaceError();
 
     return this.ci.sync({

@@ -31,7 +31,7 @@ export function validateBranchName(name: string): string | undefined {
   if (!name) return 'it is empty';
   if (name.startsWith('-')) return 'it starts with "-", which git would read as a command-line option';
   if (/\s/.test(name)) return 'it contains whitespace';
-  // eslint-disable-next-line no-control-regex
+  // oxlint-disable-next-line no-control-regex
   if (/[\x00-\x1f\x7f]/.test(name)) return 'it contains a control character';
   if (/[~^:?*[\\]/.test(name)) return 'it contains one of the characters git forbids in a ref: ~ ^ : ? * [ \\';
   if (name.includes('..')) return 'it contains ".."';

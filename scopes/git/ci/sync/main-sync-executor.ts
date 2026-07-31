@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { formatWarningSummary } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { LanesMain } from '@teambit/lanes';
 import type { CheckoutMain } from '@teambit/checkout';
@@ -189,10 +190,10 @@ export class MainSyncExecutor {
         // Nothing is committed, pushed, or reported to the git host. The working tree *was* written (a
         // diff-based check has no other way to learn the answer) and `finally` restores it.
         logger.console(
-          chalk.yellow(
+          formatWarningSummary(
             directPush
-              ? `🏃 Dry-run: main -> would push the drift directly onto ${branch}`
-              : `🏃 Dry-run: main -> would push ${branch} and open a sync PR`
+              ? `Dry-run: main -> would push the drift directly onto ${branch}`
+              : `Dry-run: main -> would push ${branch} and open a sync PR`
           )
         );
         return directPush

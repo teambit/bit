@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { formatWarningSummary } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { LanesMain } from '@teambit/lanes';
 import type { LaneData } from '@teambit/legacy.scope';
@@ -547,7 +548,7 @@ export class LaneSyncExecutor {
 
     if (dryRun) {
       const line = `${laneName} -> ${action.type}`;
-      logger.console(chalk.yellow(`🏃 Dry-run: ${line}`));
+      logger.console(formatWarningSummary(`Dry-run: ${line}`));
       return line;
     }
 
@@ -1376,7 +1377,7 @@ export class LaneSyncExecutor {
     if (dryRun) {
       const { logger } = this.deps;
       logger.console(chalk.red(`Cannot sync lane ${laneIdStr} automatically: ${reason}`));
-      logger.console(chalk.yellow('🏃 Dry-run: the PR is not labelled or commented on'));
+      logger.console(formatWarningSummary('Dry-run: the PR is not labelled or commented on'));
       return `${HALT_SUMMARY_PREFIX} ${laneName} -> ${reason}`;
     }
     return this.executeHalt({ laneName, laneIdStr, branch, reason, pr, commentNote });
