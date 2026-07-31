@@ -129,16 +129,22 @@ export class DependenciesGraph {
     const reachableEdges = new Set<string>();
     const reachablePackages = new Set<string>();
     // An explicit stack: deep dependency chains would overflow the call
-    // stack with a recursive walk.
+    // stack with a recursive walk. Every node id is processed once — the
+    // guard must sit before the suffix pushes, or a node referenced by M
+    // edges re-pushes its suffix ids M times and nested suffixes multiply
+    // that per level.
+    const visited = new Set<string>();
     const stack = rootEdge.neighbours.map((neighbour) => neighbour.id);
     while (stack.length > 0) {
       const nodeId = stack.pop()!;
+      if (visited.has(nodeId)) continue;
+      visited.add(nodeId);
       reachablePackages.add(nodeIdWithoutPeerSuffix(nodeId));
       for (const peerId of splitPeerIds(nodeId)) {
         if (!isPatchHashSegment(peerId)) stack.push(peerId);
       }
       const edge = edgesById.get(nodeId);
-      if (!edge || reachableEdges.has(nodeId)) continue;
+      if (!edge) continue;
       reachableEdges.add(nodeId);
       if (edge.attr?.pkgId) reachablePackages.add(edge.attr.pkgId);
       for (const neighbour of edge.neighbours) {
