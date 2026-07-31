@@ -253,6 +253,39 @@ export function parseOriginHeadRef(symbolicRefOutput: string): string | undefine
   return ref.slice(ORIGIN_HEAD_REF_PREFIX.length) || undefined;
 }
 
+/** The prefix a symref answer from `git ls-remote --symref origin HEAD` puts before the branch name. */
+const LS_REMOTE_SYMREF_PREFIX = 'ref: refs/heads/';
+
+/**
+ * The default branch name out of `git ls-remote --symref origin HEAD` output, or undefined when no
+ * symref line is present (some servers, and all of them under protocol v0, omit it).
+ *
+ * Same slash discipline as {@link parseOriginHeadRef}: strip the fixed prefix, never `split('/')` —
+ * `ref: refs/heads/release/main\tHEAD` names the branch `release/main`, whole.
+ */
+export function parseLsRemoteSymref(lsRemoteOutput: string): string | undefined {
+  const line = lsRemoteOutput.split('\n').find((l) => l.startsWith(LS_REMOTE_SYMREF_PREFIX));
+  if (!line) return undefined;
+  const name = line.slice(LS_REMOTE_SYMREF_PREFIX.length).split('\t')[0].trim();
+  return name || undefined;
+}
+
+/**
+ * The remote's own answer for its default branch — `git ls-remote --symref origin HEAD` asks the server
+ * for the branch HEAD points at. Unlike the local `refs/remotes/origin/HEAD` symref (unset in most CI
+ * clones) or enumerating `origin/*` (narrowed by single-branch refspecs), this cannot be stale or
+ * narrowed; it can only be unanswered (offline, or a server that omits the symref capability), in which
+ * case undefined hands the caller on to its conventional-name fallback.
+ */
+export async function remoteHeadBranch(run: GitArgsRunner = realGitRaw): Promise<string | undefined> {
+  try {
+    const out = await run(['ls-remote', '--symref', 'origin', 'HEAD']);
+    return parseLsRemoteSymref(String(out ?? ''));
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * The absolute path of the git repository's root (its top-level working directory), or undefined when the
  * current directory is not inside a git repository.

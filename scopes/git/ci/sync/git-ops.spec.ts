@@ -10,7 +10,9 @@ import {
   ensureGitIdentity,
   fetchRemoteHeads,
   isNonContentPath,
+  parseLsRemoteSymref,
   parseOriginHeadRef,
+  remoteHeadBranch,
 } from './git-ops';
 
 /**
@@ -259,6 +261,40 @@ describe('checkoutPristine', () => {
     await checkoutPristine('lane/x', 'origin/lane/x', reload, run);
     expect(steps.indexOf('<reload>')).to.equal(steps.length - 1);
     expect(steps.indexOf(CLEAN)).to.be.lessThan(steps.indexOf('<reload>'));
+  });
+});
+
+describe('parseLsRemoteSymref / remoteHeadBranch', () => {
+  const SYMREF_OUT = 'ref: refs/heads/main\tHEAD\n1234abcd\tHEAD\n';
+
+  it('reads the branch out of the symref line', () => {
+    expect(parseLsRemoteSymref(SYMREF_OUT)).to.equal('main');
+  });
+
+  /** Same slash discipline as parseOriginHeadRef: `release/main` is a NAME, not a path to shorten. */
+  it('keeps a slashed branch name whole', () => {
+    expect(parseLsRemoteSymref('ref: refs/heads/release/main\tHEAD\nabc\tHEAD\n')).to.equal('release/main');
+  });
+
+  it('returns undefined when the server omits the symref line (protocol v0), rather than guessing', () => {
+    expect(parseLsRemoteSymref('1234abcd\tHEAD\n')).to.equal(undefined);
+    expect(parseLsRemoteSymref('')).to.equal(undefined);
+  });
+
+  it('asks the remote, not the local refs — and swallows an offline failure into undefined', async () => {
+    const argv: string[][] = [];
+    expect(
+      await remoteHeadBranch(async (args) => {
+        argv.push(args);
+        return SYMREF_OUT;
+      })
+    ).to.equal('main');
+    expect(argv).to.deep.equal([['ls-remote', '--symref', 'origin', 'HEAD']]);
+    expect(
+      await remoteHeadBranch(async () => {
+        throw new Error('could not read from remote repository');
+      })
+    ).to.equal(undefined);
   });
 });
 

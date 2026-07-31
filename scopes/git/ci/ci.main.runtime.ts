@@ -43,7 +43,7 @@ import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider } from './sync/github-client';
-import { addAllExceptScopeAndModules, parseOriginHeadRef } from './sync/git-ops';
+import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
 
 /**
  * Registered git hosts (GitHub ships built-in; others register from their own aspect).
@@ -328,21 +328,29 @@ export class CiMain {
   async getDefaultBranchName(): Promise<string> {
     try {
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
-      return parseOriginHeadRef(result) ?? (await this.probeDefaultBranchName());
-    } catch (e: any) {
-      return this.probeDefaultBranchName(e);
+      const local = parseOriginHeadRef(result);
+      if (local) return local;
+    } catch {
+      // no local origin/HEAD — normal in a fresh CI clone; ask the remote itself below.
     }
+    // The remote's own answer outranks any local guess: `ls-remote --symref origin HEAD` names the
+    // true default branch (`trunk`, `develop`, `release/main`, ...) even in narrow or single-branch
+    // clones where the local symref is unset and `origin/*` enumeration is misleading.
+    const remote = await remoteHeadBranch();
+    if (remote) return remote;
+    return this.probeDefaultBranchName();
   }
 
   /**
-   * The fallback when `origin/HEAD` cannot answer: look for the two conventional names among the remote
+   * The last-resort fallback when neither the local `origin/HEAD` symref nor the remote itself
+   * (`remoteHeadBranch`, e.g. offline) can answer: look for the two conventional names among the remote
    * branches, then give up on `master`.
    *
    * Deliberately still only `main`/`master`. A repository whose default branch is neither *and* whose
-   * `origin/HEAD` is unset cannot be distinguished from one with several long-lived branches, and guessing
-   * wrong here means protecting the wrong branch — the same failure the primary path exists to avoid. The
-   * conventional pair is the only safe guess, and `bit ci sync` says which branch it settled on in every
-   * run's output.
+   * `origin/HEAD` is unset *and* whose remote is unreachable cannot be distinguished from one with
+   * several long-lived branches, and guessing wrong here means protecting the wrong branch — the same
+   * failure the two paths above exist to avoid. The conventional pair is the only safe guess, and
+   * `bit ci sync` says which branch it settled on in every run's output.
    */
   private async probeDefaultBranchName(originalError?: Error): Promise<string> {
     try {
