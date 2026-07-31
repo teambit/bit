@@ -1452,7 +1452,9 @@ export class DependencyResolverMain {
 as an alternative, you can use "+" to keep the same version installed in the workspace`;
       }
       const isVersionValid = Boolean(
-        this.isValidVersionSpecifier(policyVersion) || allowedSpecialChars.includes(policyVersion)
+        this.isValidVersionSpecifier(policyVersion) ||
+          allowedSpecialChars.includes(policyVersion) ||
+          allowedPrefixes.some((prefix) => policyVersion.startsWith(prefix))
       );
       if (isVersionValid) return;
       errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not a valid semver version or range`;

@@ -86,8 +86,13 @@ export class DependenciesGraph {
         );
         if (existingDirectDep == null) {
           rootEdge.neighbours.push(directDep);
-        } else if (existingDirectDep.id !== directDep.id && nodeIdLessThan(existingDirectDep.id, directDep.id)) {
-          existingDirectDep.id = directDep.id;
+        } else {
+          if (isWildcardSpecifier(existingDirectDep.specifier) && !isWildcardSpecifier(directDep.specifier)) {
+            existingDirectDep.specifier = directDep.specifier;
+          }
+          if (existingDirectDep.id !== directDep.id && nodeIdLessThan(existingDirectDep.id, directDep.id)) {
+            existingDirectDep.id = directDep.id;
+          }
         }
       }
     } else if (incomingRootEdge) {
@@ -129,6 +134,9 @@ export class DependenciesGraph {
     while (stack.length > 0) {
       const nodeId = stack.pop()!;
       reachablePackages.add(nodeIdWithoutPeerSuffix(nodeId));
+      for (const peerId of splitPeerIds(nodeId)) {
+        if (!isPatchHashSegment(peerId)) stack.push(peerId);
+      }
       const edge = edgesById.get(nodeId);
       if (!edge || reachableEdges.has(nodeId)) continue;
       reachableEdges.add(nodeId);
@@ -154,7 +162,8 @@ export class DependenciesGraph {
     const getHighestPeer = (name: string) => versionsByPackageName.get(name)?.[0];
     const rewritePeerId = (peerId: string, peerDependencies?: Record<string, string>): string => {
       const parsedPeer = parsePkgId(peerId);
-      const peerIds = splitPeerIds(peerId).map((nestedPeerId) => rewritePeerId(nestedPeerId));
+      const nestedPeerDependencies = this.packages.get(nodeIdWithoutPeerSuffix(peerId))?.peerDependencies;
+      const peerIds = splitPeerIds(peerId).map((nestedPeerId) => rewritePeerId(nestedPeerId, nestedPeerDependencies));
       let rewrittenBase = nodeIdWithoutPeerSuffix(peerId);
       if (parsedPeer) {
         const range = peerDependencies?.[parsedPeer.name];
@@ -315,10 +324,13 @@ function splitPeerIds(nodeId: string): string[] {
 }
 
 function createPeerSuffix(peerIds: string[]): string {
-  return peerIds
-    .sort()
-    .map((peerId) => `(${peerId})`)
-    .join('');
+  const patchSegments = peerIds.filter(isPatchHashSegment);
+  const peerSegments = peerIds.filter((peerId) => !isPatchHashSegment(peerId)).sort();
+  return [...patchSegments, ...peerSegments].map((peerId) => `(${peerId})`).join('');
+}
+
+function isPatchHashSegment(segment: string): boolean {
+  return segment.startsWith('patch_hash=');
 }
 
 function getVersionFromNodeId(nodeId: string): string | undefined {

@@ -316,22 +316,29 @@ export class PnpmPackageManager implements PackageManager {
     const result: PackageManagerNetworkConfig = {
       userAgent: configuredUserAgent ?? `bit user/${this.username}`,
     };
-    if (config.maxSockets != null) {
+    // The resolved config carries the engine's defaults for the numeric
+    // network settings, and anything returned here overrides Bit's global
+    // network config in the dependency resolver's merge — so only settings
+    // the user explicitly configured may pass through. `explicitSettings`
+    // ships in @pnpm/napi > 12.0.0-beta.2; on older engines nothing is
+    // forwarded and the engine still honors `.npmrc` itself.
+    const explicitSettings = new Set((config as { explicitSettings?: string[] }).explicitSettings ?? []);
+    if (config.maxSockets != null && explicitSettings.has('maxSockets')) {
       result.maxSockets = config.maxSockets;
     }
-    if (config.networkConcurrency != null) {
+    if (config.networkConcurrency != null && explicitSettings.has('networkConcurrency')) {
       result.networkConcurrency = config.networkConcurrency;
     }
-    if (config.fetchRetries != null) {
+    if (config.fetchRetries != null && explicitSettings.has('fetchRetries')) {
       result.fetchRetries = config.fetchRetries;
     }
-    if (config.fetchTimeout != null) {
+    if (config.fetchTimeout != null && explicitSettings.has('fetchTimeout')) {
       result.fetchTimeout = config.fetchTimeout;
     }
-    if (config.fetchRetryMaxtimeout != null) {
+    if (config.fetchRetryMaxtimeout != null && explicitSettings.has('fetchRetryMaxtimeout')) {
       result.fetchRetryMaxtimeout = config.fetchRetryMaxtimeout;
     }
-    if (config.fetchRetryMintimeout != null) {
+    if (config.fetchRetryMintimeout != null && explicitSettings.has('fetchRetryMintimeout')) {
       result.fetchRetryMintimeout = config.fetchRetryMintimeout;
     }
     if (config.strictSsl != null) {

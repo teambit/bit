@@ -39,6 +39,12 @@ let dp!: typeof Dp;
 let getLockfileImporterId!: typeof GetLockfileImporterId;
 let loading: Promise<void> | undefined;
 
+function ensureInitialized(): void {
+  if (!dp || !getLockfileImporterId) {
+    throw new Error('lockfile-deps-graph-converter: await init() before calling the converters');
+  }
+}
+
 export function init(): Promise<void> {
   loading ??= (async () => {
     const { loadEsm } = require('./load-pnpm-esm.cjs') as {
@@ -92,6 +98,7 @@ export function convertLockfileToGraph(
     componentIdByPkgName,
   }: Omit<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'rootDir' | 'components' | 'component'>
 ): DependenciesGraph {
+  ensureInitialized();
   if (componentRootDir == null || pkgName == null) {
     return convertLockfileToGraphFromCapsule(lockfile, { componentRelativeDir, componentIdByPkgName });
   }
@@ -291,6 +298,7 @@ export async function convertGraphToLockfile(
     resolve: ResolveFunction;
   }
 ): Promise<BitLockfileFile> {
+  await init();
   const graphString = _graph.serialize();
   const graph = DependenciesGraph.deserialize(graphString)!;
   dropOrphanFilePkgs(graph);
