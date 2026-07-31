@@ -279,8 +279,6 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     } catch (err: any) {
       this.throwWsJsoncAspectNotFoundError(err);
       return scopeAspectIds;
-
-      throw err;
     }
   }
 

@@ -19,6 +19,10 @@ import { SchemaAspect } from './schema.aspect';
 
 use(chaiSubset);
 
+function expectToContainSubset(actual: unknown, expected: unknown) {
+  (expect(actual).to as Chai.Assertion & { containSubset(subset: unknown): Chai.Assertion }).containSubset(expected);
+}
+
 describe('SchemaAspect', function () {
   this.timeout(0);
   let schema: SchemaMain;
@@ -60,7 +64,7 @@ describe('SchemaAspect', function () {
       // uncomment the next line temporarily to sync the expected json with new schema changes
       // fs.outputFileSync(expectedJsonPath, JSON.stringify(results, undefined, 2));
       const expectedJson = fs.readJsonSync(expectedJsonPath);
-      expect(results).to.to.containSubset(expectedJson);
+      expectToContainSubset(results, expectedJson);
     });
   });
   describe('default export extraction', () => {
@@ -105,7 +109,7 @@ describe('SchemaAspect', function () {
       const apiSchema = schema.getSchemaFromObject(json);
       expect(apiSchema instanceof APISchema).to.be.true;
       expect(apiSchema.componentId.constructor.name).to.equal(ComponentID.name);
-      expect(apiSchema.toObject()).to.containSubset(json);
+      expectToContainSubset(apiSchema.toObject(), json);
     });
     it('should not throw when it does not recognize the schema', () => {
       const jsonPath = path.join(getMockDir(), 'button-old-schema.json');
@@ -154,7 +158,7 @@ describe('SchemaAspect', function () {
       // uncomment the next line temporarily to sync the expected json with new diff changes
       // fs.outputFileSync(expectedJsonPath, JSON.stringify(result, undefined, 2));
       const expectedJson = fs.readJsonSync(expectedJsonPath);
-      expect(result).to.containSubset(expectedJson);
+      expectToContainSubset(result, expectedJson);
     });
 
     it('should detect changes', () => {

@@ -1,5 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
@@ -72,16 +74,22 @@ describe('dependency-resolver extension (part 2)', function () {
       it('should be able to install the env on a new workspace with no errors and install the latest of the pkg dep', () => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
         helper.command.install(helper.general.getPackageNameByCompName('empty-env'));
 
-        const envPkgJson = helper.fs.readJsonFile(
-          `node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`
-        );
+        const envPackageName = helper.general.getPackageNameByCompName('empty-env');
+        const envPkgJsonPath = `node_modules/${envPackageName}/package.json`;
+        const envPkgJson = helper.fs.readJsonFile(envPkgJsonPath);
         expect(envPkgJson.dependencies[examplePkg]).to.equal('*');
 
-        const pkgJsonPath = path.join('node_modules', '.pnpm/@ci+lodash@0.0.2/node_modules/@ci/lodash/package.json');
-        const pkgJson = helper.fs.readJsonFile(pkgJsonPath);
-        expect(pkgJson.version).to.equal('0.0.2');
+        const lockfile = yaml.load(
+          fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')
+        ) as any;
+        const envSnapshot = Object.entries(lockfile.snapshots).find(([depPath]) =>
+          depPath.startsWith(`${envPackageName}@0.0.2`)
+        )?.[1] as any;
+        expect(lockfile.packages).to.have.property(`${examplePkg}@0.0.2`);
+        expect(envSnapshot?.dependencies?.[examplePkg]).to.equal('0.0.2');
       });
     });
   });

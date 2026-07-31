@@ -22,7 +22,7 @@ import {
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyList } from '@teambit/dependency-resolver';
-import type { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import type { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import type { UiMain, PreStartOpts } from '@teambit/ui';
 import { readRootComponentsDir } from '@teambit/workspace.root-components';
@@ -81,12 +81,17 @@ export class ComponentCompiler {
     const distDirs = await this.distDirs();
     // delete dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
     if (deleteDistDir) {
-      dataToPersist = new DataToPersist();
-      for (const distDir of distDirs) {
-        dataToPersist.removePath(new RemovePath(distDir));
+      const relativeDistDirs = distDirs.filter((distDir) => !path.isAbsolute(distDir));
+      const absoluteDistDirs = distDirs.filter((distDir) => path.isAbsolute(distDir));
+      if (relativeDistDirs.length) {
+        dataToPersist = new DataToPersist();
+        for (const distDir of relativeDistDirs) {
+          dataToPersist.removePath(new RemovePath(distDir));
+        }
+        dataToPersist.addBasePath(this.workspace.path);
+        await dataToPersist.persistAllToFS();
       }
-      dataToPersist.addBasePath(this.workspace.path);
-      await dataToPersist.persistAllToFS();
+      await Promise.all(absoluteDistDirs.map((distDir) => fs.remove(distDir)));
     }
 
     const compilers: Compiler[] = (this.compilerInstance as MultiCompiler).compilers
@@ -116,10 +121,15 @@ export class ComponentCompiler {
 
     // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
     // as it uses other base-paths and doesn't respect the new node-modules base path.
-    dataToPersist = new DataToPersist();
-    dataToPersist.addManyFiles(this.dists);
-    dataToPersist.addBasePath(this.workspace.path);
-    await dataToPersist.persistAllToFS();
+    const relativeDists = this.dists.filter((distFile) => !path.isAbsolute(distFile.path));
+    const absoluteDists = this.dists.filter((distFile) => path.isAbsolute(distFile.path));
+    if (relativeDists.length) {
+      dataToPersist = new DataToPersist();
+      dataToPersist.addManyFiles(relativeDists);
+      dataToPersist.addBasePath(this.workspace.path);
+      await dataToPersist.persistAllToFS();
+    }
+    await Promise.all(absoluteDists.map((distFile) => distFile.write()));
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) this.logger.consoleSuccess();
 
@@ -129,6 +139,10 @@ export class ComponentCompiler {
   getPackageDir() {
     const packageName = componentIdToPackageName(this.component.state._consumer);
     return path.join('node_modules', packageName);
+  }
+
+  private toAbsolutePath(pathToResolve: string): string {
+    return path.isAbsolute(pathToResolve) ? pathToResolve : path.join(this.workspace.path, pathToResolve);
   }
 
   private throwOnCompileErrors(noThrow = true) {
@@ -150,7 +164,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async distDirs(): Promise<PathOsBasedRelative[]> {
+  private async distDirs(): Promise<string[]> {
     const packageName = componentIdToPackageName(this.component.state._consumer);
     const packageDir = path.join('node_modules', packageName);
     const distDirName = this.compilerInstance.getDistDir?.() || DEFAULT_DIST_DIRNAME;
@@ -175,7 +189,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     if (distDirs.length <= 1) return;
     const packageDistDir = distDirs[0];
     const otherDirs = distDirs.slice(1);
-    const packageDistDirAbs = path.join(this.workspace.path, packageDistDir);
+    const packageDistDirAbs = this.toAbsolutePath(packageDistDir);
     const matches = await globby(`**/*.d.ts`, {
       cwd: packageDistDirAbs,
       onlyFiles: true,
@@ -184,7 +198,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     if (!matches.length) return;
     await Promise.all(
       otherDirs.map(async (distDir) => {
-        const distDirAbs = path.join(this.workspace.path, distDir);
+        const distDirAbs = this.toAbsolutePath(distDir);
         await Promise.all(
           matches.map(async (match) => {
             const source = path.join(packageDistDirAbs, match);
@@ -213,10 +227,9 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     // Check if the dist directory exists (compiler may not have written anything)
     if (!(await fs.pathExists(sourceDistDirAbs))) return;
 
-    // Find which distDir corresponds to the outputDir and get the others
-    const outputDirRelative = path.relative(this.workspace.path, outputDir);
-    const sourceDistDirRelative = path.join(outputDirRelative, distDirName);
-    const otherDirs = distDirs.filter((dir) => dir !== sourceDistDirRelative);
+    const otherDirs = distDirs.filter(
+      (dir) => path.resolve(this.toAbsolutePath(dir)) !== path.resolve(sourceDistDirAbs)
+    );
 
     if (!otherDirs.length) return;
 
@@ -229,7 +242,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
     await Promise.all(
       otherDirs.map(async (distDir) => {
-        const distDirAbs = path.join(this.workspace.path, distDir);
+        const distDirAbs = this.toAbsolutePath(distDir);
         await Promise.all(
           matches.map(async (match) => {
             const source = path.join(sourceDistDirAbs, match);
@@ -249,7 +262,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
   private async compileOneFile(
     file: AbstractVinyl,
     initiator: CompilationInitiator,
-    distDirs: PathOsBasedRelative[]
+    distDirs: string[]
   ): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
@@ -281,7 +294,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFiles(initiator: CompilationInitiator, distDirs: PathOsBasedRelative[]): Promise<void> {
+  private async compileAllFiles(initiator: CompilationInitiator, distDirs: string[]): Promise<void> {
     const filesToCompile: AbstractVinyl[] = [];
     for (const base of distDirs) {
       this.component.filesystem.files.forEach((file: AbstractVinyl) => {

@@ -10,6 +10,70 @@ const logger = {
   debug: () => {},
 };
 
+function createDependencyResolverMain() {
+  return new DependencyResolverMain(
+    {} as any,
+    {} as any,
+    {} as any,
+    {} as any,
+    logger as any,
+    {} as any,
+    {} as any,
+    {} as any,
+    {} as any,
+    {
+      get: () => ({
+        getNetworkConfig: () => ({}),
+      }),
+    } as any,
+    {} as any,
+    {} as any,
+    {} as any,
+    {} as any
+  );
+}
+
+describe('DepenendencyResolverMain.validateAspectData()', () => {
+  it('should accept git+ssh dependency policy versions', () => {
+    const depResolver = createDependencyResolverMain();
+    expect(
+      depResolver.validateAspectData({
+        dependencies: [],
+        policy: [
+          {
+            dependencyId: 'private-pkg',
+            value: {
+              version: 'git+ssh://git@github.com/org/private-pkg.git',
+            },
+          },
+        ],
+      } as any)
+    ).to.equal(undefined);
+  });
+});
+
+describe('DepenendencyResolverMain.isValidVersionSpecifier()', () => {
+  const depResolver = createDependencyResolverMain();
+  for (const spec of [
+    'npm:uri-js-replace',
+    'npm:@scope/pkg',
+    'npm:@scope/pkg@1.0.0',
+    'npm:pkg@^1.0.0',
+    '1.2.3',
+    '^1.0.0',
+    'latest',
+  ]) {
+    it(`should accept ${spec}`, () => {
+      expect(depResolver.isValidVersionSpecifier(spec)).to.equal(true);
+    });
+  }
+  for (const spec of ['npm:', 'npm:@scope', 'npm:pkg name', '']) {
+    it(`should reject "${spec}"`, () => {
+      expect(depResolver.isValidVersionSpecifier(spec)).to.equal(false);
+    });
+  }
+});
+
 describe('DepenendencyResolverMain.getNetworkConfig()', () => {
   let httpStub: sinon.SinonStub;
   let packageManagerSlot: any;
@@ -189,7 +253,7 @@ XXXX
 });
 
 describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
-  function createDependencyResolverMain(
+  function createDependencyResolverForOutdatedPolicies(
     resolveRemoteVersion: (spec: string) => { version: string | undefined },
     policy: any
   ) {
@@ -255,7 +319,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
         'root-peer-dep2': '1.0.0',
       },
     };
-    const depResolver = createDependencyResolverMain(resolveRemoteVersion, policy);
+    const depResolver = createDependencyResolverForOutdatedPolicies(resolveRemoteVersion, policy);
     it('should return outdated dependencies', async () => {
       const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
         rootDir: '',
@@ -397,7 +461,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
         dep3: '^1.0.0',
       },
     };
-    const depResolver = createDependencyResolverMain(resolveRemoteVersion, policy);
+    const depResolver = createDependencyResolverForOutdatedPolicies(resolveRemoteVersion, policy);
     it('should return outdated dependencies when forcedVersionBump is set to patch', async () => {
       const outdatedPkgs = await depResolver.getOutdatedPkgsFromPolicies({
         rootDir: '',
