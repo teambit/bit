@@ -37,7 +37,7 @@ import {
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { generateResolverAndFetcher } from './lynx';
+import type * as LynxModule from './lynx';
 import { type DependenciesGraph } from '@teambit/objects';
 
 export type { RebuildFn };
@@ -101,6 +101,8 @@ export class PnpmPackageManager implements PackageManager {
   ) {
     await initLockfileDepsGraphConverter();
     const registries = opts.registries ?? new Registries(new Registry('https://node-registry.bit.cloud', false), {});
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const { generateResolverAndFetcher } = require('./lynx') as typeof LynxModule;
     const { resolve } = await generateResolverAndFetcher({
       ...opts,
       registries,
