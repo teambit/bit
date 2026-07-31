@@ -343,6 +343,10 @@ export class PnpmPackageManager implements PackageManager {
     if (config.fetchRetryMintimeout != null && explicitSettings.has('fetchRetryMintimeout')) {
       result.fetchRetryMintimeout = config.fetchRetryMintimeout;
     }
+    // Unlike the numeric settings above, strictSsl/ca/cert/key are optional
+    // in the engine's projection and populated only when explicitly
+    // configured (the engine applies its own defaults at client-build
+    // time), so presence is already the explicit gate.
     if (config.strictSsl != null) {
       result.strictSSL = config.strictSsl;
     }
