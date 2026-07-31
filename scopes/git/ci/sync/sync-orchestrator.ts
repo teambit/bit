@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
@@ -19,7 +20,7 @@ import {
 import { HALT_SUMMARY_PREFIX, REFUSED_SUMMARY_PREFIX, LaneSyncExecutor } from './lane-sync-executor';
 import { MainSyncExecutor } from './main-sync-executor';
 import { selectGitHostProvider } from './git-host-provider';
-import { isNonContentPath, listRemoteBranches } from './git-ops';
+import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
 import { deriveOwnerRepo, renderInitChecklist, scaffoldWorkflowFiles } from './init-scaffold';
 
 /**
@@ -119,7 +120,7 @@ export class SyncOrchestrator {
     // `.bit/` and `node_modules/` are filtered out because the executors never touch them — and in a
     // workspace whose `.gitignore` lacks Bit's block, `git status` lists every file under them,
     // which would make this warning claim tens of thousands of files are about to be discarded.
-    const dirtyFiles = (statusAtStart?.files ?? []).map((file) => file.path).filter((path) => !isNonContentPath(path));
+    const dirtyFiles = (statusAtStart?.files ?? []).map((file) => file.path).filter((file) => !isNonContentPath(file));
     if (dirtyFiles.length) {
       this.deps.logger.consoleWarning(
         `the working tree has ${dirtyFiles.length} uncommitted change(s). "bit ci sync" force-checkouts branches ` +
@@ -236,11 +237,35 @@ export class SyncOrchestrator {
    */
   private async syncInit(): Promise<string> {
     const defaultBranch = await this.deps.ci.getDefaultBranchName();
-    const fileOutcomes = scaffoldWorkflowFiles(this.deps.workspace.path, defaultBranch);
+
+    // WORKFLOWS BELONG TO THE REPOSITORY, NOT THE WORKSPACE. GitHub only discovers workflows at
+    // `<repo-root>/.github/workflows`; a bit workspace is frequently a subdirectory of its repository
+    // (a monorepo package, an app folder), and scaffolding relative to the workspace there produces two
+    // files that look completely correct and never run — the worst shape of failure for an onboarding
+    // command, because nothing reports an error and the user concludes sync is broken.
+    const repoRoot = await gitRepoRoot();
+    const scaffoldRoot = repoRoot ?? this.deps.workspace.path;
+    if (!repoRoot) {
+      this.deps.logger.consoleWarning(
+        `could not resolve the git repository root ("git rev-parse --show-toplevel" failed — is this a git ` +
+          `repository?). Writing the workflow files under the workspace instead: ${scaffoldRoot}. If that is ` +
+          `not the repository root, GitHub will not discover them — move .github/workflows there by hand.`
+      );
+    }
+
+    const fileOutcomes = scaffoldWorkflowFiles(scaffoldRoot, defaultBranch);
+    // Report the path actually written, relative to where the user is standing: when the workspace is a
+    // subdirectory, a bare `.github/workflows/bit-sync.yml` would be read as workspace-relative and send
+    // them looking in the wrong place.
+    const displayPath = (relativePath: string) => {
+      const abs = path.join(scaffoldRoot, relativePath);
+      const fromCwd = path.relative(process.cwd(), abs);
+      return fromCwd && !fromCwd.startsWith('..') ? fromCwd : abs;
+    };
     const fileLines = fileOutcomes.map((outcome) =>
       outcome.status === 'written'
-        ? `wrote ${outcome.relativePath} (default branch: ${defaultBranch})`
-        : `skipped ${outcome.relativePath} (already exists — bit ci sync --init never overwrites)`
+        ? `wrote ${displayPath(outcome.relativePath)} (default branch: ${defaultBranch})`
+        : `skipped ${displayPath(outcome.relativePath)} (already exists — bit ci sync --init never overwrites)`
     );
 
     const configAdded = await this.ensureSyncConfigBlock();

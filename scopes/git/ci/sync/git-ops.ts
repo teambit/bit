@@ -111,6 +111,50 @@ export async function isAncestor(maybeAncestor: string, descendant: string): Pro
 }
 
 /**
+ * The prefix `git symbolic-ref refs/remotes/origin/HEAD` puts in front of the default branch name.
+ */
+export const ORIGIN_HEAD_REF_PREFIX = 'refs/remotes/origin/';
+
+/**
+ * The default branch name out of `git symbolic-ref refs/remotes/origin/HEAD` output, or undefined when the
+ * output is not the shape we know.
+ *
+ * **Strips the prefix; never splits on `/`.** A branch name may legitimately contain slashes —
+ * `release/main`, `team/x/main` — and the previous `split('/').pop()` reduced
+ * `refs/remotes/origin/release/main` to `main`. That is not a cosmetic error: this value is what the sync
+ * flow protects. It is the branch the reserved-branch guard refuses to let a lane write to, the ref every
+ * `isAncestor` reachability test measures against, and the branch merged into a sync branch to keep it
+ * mergeable — so a truncated name means the *wrong* branch is protected and a real default branch called
+ * `release/main` is left unguarded while an unrelated `main` is treated as sacred.
+ *
+ * Returning undefined for an unrecognised shape (rather than guessing) hands the caller back to its
+ * probing fallback, which is a worse answer but never a wrong-branch one.
+ */
+export function parseOriginHeadRef(symbolicRefOutput: string): string | undefined {
+  const ref = symbolicRefOutput.trim();
+  if (!ref.startsWith(ORIGIN_HEAD_REF_PREFIX)) return undefined;
+  return ref.slice(ORIGIN_HEAD_REF_PREFIX.length) || undefined;
+}
+
+/**
+ * The absolute path of the git repository's root (its top-level working directory), or undefined when the
+ * current directory is not inside a git repository.
+ *
+ * Needed because a bit workspace is not necessarily the repository root, and some things belong to the
+ * repository rather than to the workspace — `.github/workflows` above all: GitHub only discovers workflows
+ * at `<repo>/.github/workflows`, so a workspace in a subdirectory that scaffolds relative to itself
+ * produces files that look right and never run.
+ */
+export async function gitRepoRoot(): Promise<string | undefined> {
+  try {
+    const root = (await git.raw(['rev-parse', '--show-toplevel'])).trim();
+    return root || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * The two `git config` operations `ensureGitIdentity` needs, injectable so the decision can be unit
  * tested without a git repository. Production always uses {@link realGitConfigIO}.
  */

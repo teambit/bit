@@ -42,7 +42,7 @@ import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider } from './sync/github-client';
-import { addAllExceptScopeAndModules } from './sync/git-ops';
+import { addAllExceptScopeAndModules, parseOriginHeadRef } from './sync/git-ops';
 
 /**
  * Registered git hosts (GitHub ships built-in; others register from their own aspect).
@@ -270,23 +270,44 @@ export class CiMain {
     return `${this.workspace.defaultScope}/${sanitizedBranch}`;
   }
 
-  async getDefaultBranchName() {
+  /**
+   * The repository's default branch name, **whole** — slashes included.
+   *
+   * `refs/remotes/origin/HEAD` is the authority when it resolves; the prefix is stripped and whatever
+   * follows is the name (see `parseOriginHeadRef` for why this must not `split('/')`). Anything else —
+   * an unrecognised shape, or no `origin/HEAD` at all, which is normal in a fresh CI clone — falls through
+   * to probing the remote branches.
+   */
+  async getDefaultBranchName(): Promise<string> {
     try {
-      // Try to get the default branch from git symbolic-ref
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
-      const defaultBranch = result.trim().split('/').pop();
-      return defaultBranch || 'master';
+      return parseOriginHeadRef(result) ?? (await this.probeDefaultBranchName());
     } catch (e: any) {
-      // Fallback to common default branch names
-      try {
-        const branches = await git.branch(['-r']);
-        if (branches.all.includes('origin/main')) return 'main';
-        if (branches.all.includes('origin/master')) return 'master';
-        return 'master'; // Final fallback
-      } catch {
-        this.logger.console(chalk.yellow(`Unable to detect default branch, using 'master': ${e.toString()}`));
-        return 'master';
-      }
+      return this.probeDefaultBranchName(e);
+    }
+  }
+
+  /**
+   * The fallback when `origin/HEAD` cannot answer: look for the two conventional names among the remote
+   * branches, then give up on `master`.
+   *
+   * Deliberately still only `main`/`master`. A repository whose default branch is neither *and* whose
+   * `origin/HEAD` is unset cannot be distinguished from one with several long-lived branches, and guessing
+   * wrong here means protecting the wrong branch — the same failure the primary path exists to avoid. The
+   * conventional pair is the only safe guess, and `bit ci sync` says which branch it settled on in every
+   * run's output.
+   */
+  private async probeDefaultBranchName(originalError?: Error): Promise<string> {
+    try {
+      const branches = await git.branch(['-r']);
+      if (branches.all.includes('origin/main')) return 'main';
+      if (branches.all.includes('origin/master')) return 'master';
+      return 'master';
+    } catch {
+      this.logger.console(
+        chalk.yellow(`Unable to detect default branch, using 'master'${originalError ? `: ${originalError}` : ''}`)
+      );
+      return 'master';
     }
   }
 

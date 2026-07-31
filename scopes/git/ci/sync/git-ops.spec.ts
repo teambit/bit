@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import type { GitConfigIO } from './git-ops';
-import { ensureGitIdentity, isNonContentPath } from './git-ops';
+import { ensureGitIdentity, isNonContentPath, parseOriginHeadRef } from './git-ops';
 
 /**
  * A recording stand-in for the two `git config` operations, so the decision can be tested without a git
@@ -75,5 +75,41 @@ describe('isNonContentPath', () => {
   it('does not match a component whose path merely starts with the same letters', () => {
     expect(isNonContentPath('.bitmap')).to.equal(false);
     expect(isNonContentPath('node_modules_backup/x')).to.equal(false);
+  });
+});
+
+/**
+ * The default branch name is what the sync flow *protects*: the reserved-branch guard refuses to let a lane
+ * write to it, every `isAncestor` reachability test measures against it, and it is what gets merged into a
+ * sync branch to keep the PR mergeable. A wrong value here does not fail loudly — it protects the wrong
+ * branch and leaves the real one unguarded.
+ */
+describe('parseOriginHeadRef', () => {
+  it('reads the ordinary case', () => {
+    expect(parseOriginHeadRef('refs/remotes/origin/main\n')).to.equal('main');
+    expect(parseOriginHeadRef('refs/remotes/origin/master')).to.equal('master');
+  });
+
+  /**
+   * THE regression. The old implementation was `result.trim().split('/').pop()`, which reduced
+   * `refs/remotes/origin/release/main` to `main` — so a repository whose default branch really is
+   * `release/main` had an unrelated `main` protected in its place.
+   */
+  it('keeps a slash-containing branch name whole', () => {
+    expect(parseOriginHeadRef('refs/remotes/origin/release/main')).to.equal('release/main');
+    expect(parseOriginHeadRef('refs/remotes/origin/team/x/main\n')).to.equal('team/x/main');
+    expect(parseOriginHeadRef('refs/remotes/origin/feature/a/b/c')).to.equal('feature/a/b/c');
+  });
+
+  it('returns undefined for a shape it does not recognise, so the caller can fall back', () => {
+    // Guessing here would be worse than probing: a wrong name protects the wrong branch.
+    expect(parseOriginHeadRef('refs/heads/main')).to.equal(undefined);
+    expect(parseOriginHeadRef('fatal: ref refs/remotes/origin/HEAD is not a symbolic ref')).to.equal(undefined);
+    expect(parseOriginHeadRef('')).to.equal(undefined);
+    expect(parseOriginHeadRef('   ')).to.equal(undefined);
+  });
+
+  it('returns undefined for the prefix with nothing after it', () => {
+    expect(parseOriginHeadRef('refs/remotes/origin/')).to.equal(undefined);
   });
 });

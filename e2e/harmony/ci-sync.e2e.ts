@@ -1621,6 +1621,63 @@ describe('bit ci sync', function () {
       expect(fs.readFileSync(workflowPath('bit-release.yml'), 'utf8')).to.equal(releaseYmlBefore);
     });
 
+    /**
+     * WORKFLOWS BELONG TO THE REPOSITORY, NOT THE WORKSPACE. GitHub only discovers workflows at
+     * `<repo-root>/.github/workflows`, and a bit workspace is frequently a subdirectory of its repository
+     * (a monorepo package, an app folder). Scaffolding relative to the workspace there produced two files
+     * that look completely correct and never run — the worst failure shape for an onboarding command,
+     * because nothing errors and the user concludes sync is broken.
+     *
+     * The fixture is built by hand rather than through the scope helper because that is the only way to get
+     * the real shape: bit refuses to `init` a workspace inside another workspace, so the repository root
+     * has to be a plain git repo that is NOT itself a workspace — which is exactly how a monorepo looks.
+     */
+    describe('a workspace in a subdirectory of the git repository', () => {
+      let repoRoot: string;
+      let wsDir: string;
+      let output: string;
+      let exitCode: number;
+
+      before(() => {
+        repoRoot = path.join(path.dirname(helper.scopes.localPath), `subdir-repo-${Date.now()}`);
+        wsDir = path.join(repoRoot, 'packages', 'app');
+        fs.mkdirpSync(wsDir);
+        helper.command.runCmd('git init', repoRoot);
+        helper.command.runCmd('bit init', wsDir);
+        ({ output, exitCode } = runBit('bit ci sync --init', wsDir));
+      });
+
+      it('should be non-vacuous: the run really used the SUBDIRECTORY workspace', () => {
+        // Without this the cell could pass for the wrong reason — e.g. if bit had resolved some other
+        // workspace, or the command had not run at all.
+        expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
+        expect(fs.existsSync(path.join(wsDir, 'workspace.jsonc')), 'the subdir must be its own workspace').to.be.true;
+        expect(output).to.include('added "teambit.git/ci": { "sync": {} } to workspace.jsonc');
+        expect(fs.readFileSync(path.join(wsDir, 'workspace.jsonc'), 'utf8')).to.include('teambit.git/ci');
+        // and the repository root is deliberately NOT a workspace, which is the shape being tested
+        expect(fs.existsSync(path.join(repoRoot, 'workspace.jsonc'))).to.be.false;
+      });
+
+      it('should write the workflows at the REPOSITORY root, never under the workspace', () => {
+        expect(
+          fs.existsSync(path.join(repoRoot, '.github', 'workflows', 'bit-sync.yml')),
+          'bit-sync.yml belongs at the repo root, where GitHub looks for it'
+        ).to.be.true;
+        expect(fs.existsSync(path.join(repoRoot, '.github', 'workflows', 'bit-release.yml'))).to.be.true;
+        expect(
+          fs.existsSync(path.join(wsDir, '.github')),
+          'no .github may be created under the subdirectory workspace — GitHub would never discover it'
+        ).to.be.false;
+      });
+
+      it('should report a path that resolves from where the user is standing', () => {
+        // Run from the subdirectory, a bare ".github/workflows/..." would read as workspace-relative and
+        // send the reader looking in a directory that deliberately does not exist.
+        expect(output).to.match(/wrote .*\.github[/\\]workflows[/\\]bit-sync\.yml/);
+        expect(output).to.not.match(/wrote \.github[/\\]workflows[/\\]bit-sync\.yml/);
+      });
+    });
+
     it('refuses to combine --init with another flag rather than silently ignoring one of them', () => {
       const { output, exitCode } = runBit('bit ci sync --init --dry-run');
       expect(exitCode, `bit ci sync --init --dry-run output:\n${output}`).to.not.equal(0);
