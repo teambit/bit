@@ -3,7 +3,7 @@ import type { LanesMain } from '@teambit/lanes';
 /**
  * Current lane of this checkout, read from the workspace's `.bitmap` pointer only. Must NOT go through
  * `lanes.getCurrentLane()`: that resolves via the local scope's lane object, which is absent on a cold
- * runner and falsely answers "main". Unlike `bitmap-state.ts`, no `exported` gate applies here — this
+ * runner and falsely answers "main". Unlike `parseBranchBitmap`, no `exported` gate applies here — this
  * answers "which lane will the next bit operation act on?", not attribution/retirement.
  */
 export function currentLaneIdStr(lanes: LanesMain): string | undefined {

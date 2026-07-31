@@ -13,12 +13,13 @@ import type { BranchSyncState } from './sync-state';
 import {
   CONFLICT_LABEL,
   SYNC_COMMIT_MARKER,
+  branchStateFingerprint,
   buildSyncCommitMessage,
+  fingerprintIdVersions,
   readBranchSyncState,
   hasSyncMarker,
   isSyncAuthoredMessage,
 } from './sync-state';
-import { branchStateFingerprint, fingerprintIdVersions } from './bitmap-state';
 import { currentLaneIdStr, ensureCurrentLaneObject } from './workspace-lane';
 import type { GitHostProvider, PrInfo } from './git-host-provider';
 import type { BranchKeepReason, LaneOwnershipEvidence } from './sync-planner';
@@ -1151,7 +1152,7 @@ export class LaneSyncExecutor {
     await addAllExceptScopeAndModules();
     await commitWithIdentity(message, { extraArgs: ['--allow-empty'] });
     // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or reinterpreted —
-    // the configured branch name is user input (see `ref-name.ts`).
+    // the configured branch name is user input (see `sync-config.ts`).
     await git.push(['origin', `HEAD:refs/heads/${branch}`]);
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
   }
