@@ -185,9 +185,7 @@ describe('install generator configured envs', function () {
       ) as any;
       expect(lockfile.packages).to.have.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
       expect(
-        lockfile.snapshots?.['@pnpm.e2e/parent-of-pkg-with-1-dep@1.0.0']?.dependencies?.[
-          '@pnpm.e2e/pkg-with-1-dep'
-        ]
+        lockfile.snapshots?.['@pnpm.e2e/parent-of-pkg-with-1-dep@1.0.0']?.dependencies?.['@pnpm.e2e/pkg-with-1-dep']
       ).to.eq('100.1.0');
     });
   });

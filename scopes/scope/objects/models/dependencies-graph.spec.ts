@@ -4,9 +4,10 @@ import { DependenciesGraph } from './dependencies-graph';
 
 describe('DependenciesGraph.merge', () => {
   it('adopts the more specific specifier when a wildcard direct dep merges with a manifest spec', () => {
-    const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '*' }]), edge('foo@1.0.0')], [
-      'foo@1.0.0',
-    ]);
+    const base = createGraph(
+      [rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '*' }]), edge('foo@1.0.0')],
+      ['foo@1.0.0']
+    );
     const incoming = createGraph(
       [rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '^1.0.0' }]), edge('foo@1.0.0')],
       ['foo@1.0.0']
@@ -29,9 +30,10 @@ describe('DependenciesGraph.merge', () => {
       ['plugin@1.0.0', 'typescript@5.0.0']
     );
     base.packages.set('parser@1.0.0', { peerDependencies: { typescript: '^5.0.0' } } as any);
-    const incoming = createGraph([rootEdge([{ id: 'typescript@6.0.0', name: 'typescript', specifier: '6.0.0' }]), edge('typescript@6.0.0')], [
-      'typescript@6.0.0',
-    ]);
+    const incoming = createGraph(
+      [rootEdge([{ id: 'typescript@6.0.0', name: 'typescript', specifier: '6.0.0' }]), edge('typescript@6.0.0')],
+      ['typescript@6.0.0']
+    );
 
     base.merge(incoming);
 
@@ -66,9 +68,10 @@ describe('DependenciesGraph.merge', () => {
       ['foo@1.0.0', 'bar@1.0.0']
     );
     base.packages.set('foo@1.0.0', { peerDependencies: { bar: '^1.0.0' } } as any);
-    const incoming = createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }]), edge('bar@1.0.0')], [
-      'bar@1.0.0',
-    ]);
+    const incoming = createGraph(
+      [rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }]), edge('bar@1.0.0')],
+      ['bar@1.0.0']
+    );
 
     base.merge(incoming);
 
