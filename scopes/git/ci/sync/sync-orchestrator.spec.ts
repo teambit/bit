@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { SyncOrchestrator } from './sync-orchestrator';
+import { SyncOrchestrator, assertCleanForDryRun } from './sync-orchestrator';
 import { branchToLaneName, resolveSyncConfig, syncableLaneNameForBranch } from './sync-config';
 
 // The deps are never reached: every conflict case throws before the first `this.deps` access.
@@ -62,6 +62,41 @@ describe('SyncOrchestrator target guards', () => {
     };
     const result = await new SyncOrchestrator(deps as any).sync({ branch: 'feature/foo' });
     expect(result).to.equal('branch feature/foo does not map to a valid lane name; nothing to do');
+  });
+});
+
+// A dry run computes the main-scope plan by force-checking-out the sync branch, so a dirty tree would be
+// discarded by a run that promised to write nothing.
+describe('assertCleanForDryRun', () => {
+  it('refuses a dirty tree, naming the paths at stake and how to keep them', () => {
+    let message = '';
+    try {
+      assertCleanForDryRun(['comp1/index.js', 'notes.txt']);
+    } catch (e: any) {
+      message = e.message;
+    }
+    expect(message).to.contain('--dry-run refuses to run');
+    expect(message).to.contain('2 uncommitted change(s)');
+    expect(message).to.contain('comp1/index.js, notes.txt');
+    expect(message).to.contain('Commit or stash them first');
+  });
+
+  it('caps the named paths so a large diff cannot produce an unreadable error', () => {
+    const paths = Array.from({ length: 12 }, (_, index) => `file-${index}.js`);
+    let message = '';
+    try {
+      assertCleanForDryRun(paths);
+    } catch (e: any) {
+      message = e.message;
+    }
+    expect(message).to.contain('12 uncommitted change(s)');
+    expect(message).to.contain('file-9.js');
+    expect(message).to.not.contain('file-10.js');
+    expect(message).to.contain('…');
+  });
+
+  it('permits a clean tree: the write-then-restore is only acceptable when nothing can be lost', () => {
+    expect(() => assertCleanForDryRun([])).to.not.throw();
   });
 });
 

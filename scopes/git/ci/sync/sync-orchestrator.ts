@@ -23,6 +23,22 @@ import { selectGitHostProvider } from './git-host-provider';
 import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
 import { deriveOwnerRepo, renderInitChecklist, scaffoldWorkflowFiles } from './init-scaffold';
 
+/**
+ * Refuse a `--dry-run` whose plan would be computed by force-checking-out branches over uncommitted
+ * work: the main-scope drift is a diff, so the tree IS written before the dry-run return. A dry run
+ * promises to write nothing, so it may not discard either — with a clean tree the write-then-restore
+ * loses nothing.
+ */
+export function assertCleanForDryRun(dirtyFiles: string[]): void {
+  if (!dirtyFiles.length) return;
+  const named = `${dirtyFiles.slice(0, 10).join(', ')}${dirtyFiles.length > 10 ? ', …' : ''}`;
+  throw new BitError(
+    `bit ci sync --dry-run refuses to run: the working tree has ${dirtyFiles.length} uncommitted change(s), ` +
+      `and computing the plan force-checkouts branches and removes untracked files, which would discard ` +
+      `them. Commit or stash them first: ${named}`
+  );
+}
+
 /** Everything the sync orchestration needs from `CiMain`, passed explicitly. */
 export type SyncOrchestratorDeps = {
   ci: CiMain;
@@ -104,6 +120,7 @@ export class SyncOrchestrator {
     // files at stake, before an interactive run discards anything.
     const statusAtStart = await git.status().catch(() => undefined);
     const dirtyFiles = (statusAtStart?.files ?? []).map((file) => file.path).filter((file) => !isNonContentPath(file));
+    if (opts.dryRun) assertCleanForDryRun(dirtyFiles);
     if (dirtyFiles.length) {
       this.deps.logger.consoleWarning(
         `the working tree has ${dirtyFiles.length} uncommitted change(s). "bit ci sync" force-checkouts branches ` +

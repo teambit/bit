@@ -294,6 +294,27 @@ describe('bit ci sync', function () {
       expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('dry-lane-snap');
       expect(branchTipMessage(LANE)).to.include('Bit-Lane-Head:');
     });
+
+    // The main-sync path force-checkouts the sync branch to compute the drift by diff, BEFORE the
+    // dry-run return — so before this guard a dry run exited 0 with the developer's edit destroyed.
+    it('--main --dry-run over uncommitted work refuses, and leaves that work exactly as it was', () => {
+      const edit = comp1Src('uncommitted-local-edit-that-must-survive');
+      const untrackedDir = 'scratch';
+      helper.fs.outputFile('comp1/index.js', edit);
+      helper.fs.outputFile(`${untrackedDir}/notes.txt`, 'untracked scratch\n');
+
+      const { output, exitCode } = runBit('bit ci sync --main --dry-run');
+      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+      expect(output).to.include('--dry-run refuses to run');
+      expect(output).to.include('comp1/index.js');
+      expect(output).to.include('Commit or stash them first');
+      expect(fs.readFileSync(path.join(helper.scopes.localPath, 'comp1', 'index.js')).toString()).to.equal(edit);
+      expect(path.join(helper.scopes.localPath, untrackedDir, 'notes.txt')).to.be.a.path();
+
+      // leave the block's workspace as the other cells found it
+      helper.command.runCmd('git checkout -- comp1/index.js');
+      fs.removeSync(path.join(helper.scopes.localPath, untrackedDir));
+    });
   });
 
   // The load-bearing half is the negative: `bit-sync/main` is never created or touched, checked both

@@ -43,7 +43,7 @@ export class CiSyncCmd implements Command {
     [
       '',
       'dry-run',
-      'Print the planned action per target. Nothing is pushed and no pull request is created or modified; the working tree is still written and then restored',
+      'Print the planned action per target. Nothing is pushed and no pull request is created or modified; the working tree is still written and then restored, so a dirty tree is refused rather than discarded',
     ],
     [
       '',

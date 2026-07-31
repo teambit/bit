@@ -132,7 +132,9 @@ export class MainSyncExecutor {
       logger.console(chalk.yellow(`main -> drift in ${drift.length} file(s): ${drift.slice(0, 20).join(', ')}`));
 
       if (opts.dryRun) {
-        // The working tree WAS written (a diff-based check has no other way); `finally` restores it.
+        // The working tree WAS written (a diff-based check has no other way); `finally` restores it. Safe
+        // only because a dry run over a dirty tree is refused before anything runs — the restore rewinds
+        // to HEAD, so an uncommitted change here would be gone (`assertCleanForDryRun`).
         logger.console(
           formatWarningSummary(
             directPush
