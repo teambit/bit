@@ -335,14 +335,14 @@ good the command's claim on the branch is, judged from git history alone:
 
 The outcomes:
 
-| Branch                                                                                | Outcome                                                                                              |
-| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `.bitmap` names this lane, not yet in the default branch, tip is our own sync commit   | PR closed, branch deleted                                                                            |
-| same, but with dev commits on top                                                     | PR closed, **branch kept** — those commits reached neither the lane nor the default branch           |
-| same, but the tip is a commit **we** did not write                                    | PR closed, **branch kept** — a developer wrote the branch's current state, so it may exist nowhere else |
-| `.bitmap` names this lane, branch tip already in the default branch                    | PR closed, branch deleted (the just-merged lane whose branch the host didn't auto-delete)            |
-| `.bitmap` names this lane and its commit is merged, but the tip is **not**              | PR closed, **branch kept** — commits were pushed after the merge and exist in no other ref           |
-| no lane pointer, one naming a different lane, an unexported one, or an unreadable `.bitmap` | `noop (branch maps to no lane and has no sync history of its own; ignoring)` — nothing written at all |
+| Branch                                                                                      | Outcome                                                                                                 |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `.bitmap` names this lane, not yet in the default branch, tip is our own sync commit        | PR closed, branch deleted                                                                               |
+| same, but with dev commits on top                                                           | PR closed, **branch kept** — those commits reached neither the lane nor the default branch              |
+| same, but the tip is a commit **we** did not write                                          | PR closed, **branch kept** — a developer wrote the branch's current state, so it may exist nowhere else |
+| `.bitmap` names this lane, branch tip already in the default branch                         | PR closed, branch deleted (the just-merged lane whose branch the host didn't auto-delete)               |
+| `.bitmap` names this lane and its commit is merged, but the tip is **not**                  | PR closed, **branch kept** — commits were pushed after the merge and exist in no other ref              |
+| no lane pointer, one naming a different lane, an unexported one, or an unreadable `.bitmap` | `noop (branch maps to no lane and has no sync history of its own; ignoring)` — nothing written at all   |
 
 A **kept** branch stays visible to the reconciler: every later run re-reports `close-pr` for it until the
 branch is deleted by hand (or its commits reach the default branch, which makes it deletable). That is
