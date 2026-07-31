@@ -787,7 +787,23 @@ export class EnvsMain {
     }
     const envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
     const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
-    return envDef;
+    if (envDef) {
+      return envDef;
+    }
+    // the env may be registered to the slot with a version, e.g. when it's loaded from the scope
+    // and not from the workspace. in such cases the version-less lookup above misses it. search the
+    // component aspect list for a matching entry and look it up by its full id. (same fallback as
+    // calculateEnv does).
+    const matchedEntry = component.state.aspects.entries.find((aspectEntry) => {
+      return (
+        envIdFromEnvsConfigWithoutVersion === aspectEntry.id.toString() ||
+        envIdFromEnvsConfigWithoutVersion === aspectEntry.id.toString({ ignoreVersion: true })
+      );
+    });
+    if (matchedEntry) {
+      return this.getEnvDefinitionById(matchedEntry.id);
+    }
+    return undefined;
   }
 
   /**
