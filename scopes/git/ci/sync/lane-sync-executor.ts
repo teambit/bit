@@ -28,7 +28,7 @@ import {
   branchExistsOnRemote,
   checkoutPristine,
   checkoutPristineRestore,
-  ensureGitIdentity,
+  commitWithIdentity,
   fetchRemoteHeads,
   isAncestor,
 } from './git-ops';
@@ -1148,9 +1148,8 @@ export class LaneSyncExecutor {
    * `--allow-empty` is only insurance against `git commit` failing the lane outright.
    */
   private async commitAllAndPush(branch: string, message: string) {
-    await ensureGitIdentity();
     await addAllExceptScopeAndModules();
-    await git.commit(message, undefined, { '--allow-empty': null });
+    await commitWithIdentity(message, { extraArgs: ['--allow-empty'] });
     // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or reinterpreted —
     // the configured branch name is user input (see `ref-name.ts`).
     await git.push(['origin', `HEAD:refs/heads/${branch}`]);

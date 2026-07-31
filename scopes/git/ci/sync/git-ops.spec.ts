@@ -4,29 +4,21 @@ import {
   ALL_HEADS_REFSPEC,
   checkoutPristine,
   checkoutPristineRestore,
+  commitWithIdentity,
   localBranchExists,
   DEFAULT_GIT_USER_EMAIL,
   DEFAULT_GIT_USER_NAME,
-  ensureGitIdentity,
   fetchRemoteHeads,
   isNonContentPath,
   parseLsRemoteSymref,
   parseOriginHeadRef,
   remoteHeadBranch,
+  resolveGitIdentity,
 } from './git-ops';
 
-/** A recording stand-in for the two `git config` operations. */
-function fakeConfig(initial: Record<string, string> = {}) {
-  const values: Record<string, string> = { ...initial };
-  const sets: Array<{ key: string; value: string }> = [];
-  const io: GitConfigIO = {
-    get: async (key) => values[key],
-    set: async (key, value) => {
-      values[key] = value;
-      sets.push({ key, value });
-    },
-  };
-  return { io, sets, values };
+/** A read-only stand-in for `git config --get`. There is no setter: nothing may write the config. */
+function fakeConfig(initial: Record<string, string> = {}): GitConfigIO {
+  return { get: async (key) => initial[key] };
 }
 
 const DEV = { 'user.email': 'dev@example.com', 'user.name': 'A Developer' };
@@ -43,7 +35,6 @@ const IDENTITY: Array<{
   env?: Record<string, string>;
   userName: string;
   email: string;
-  sets?: Array<{ key: string; value: string }>;
 }> = [
   { name: 'a fresh CI checkout has neither half', userName: DEFAULT_GIT_USER_NAME, email: DEFAULT_GIT_USER_EMAIL },
   {
@@ -51,16 +42,14 @@ const IDENTITY: Array<{
     config: { 'user.email': 'dev@example.com' },
     userName: DEFAULT_GIT_USER_NAME,
     email: 'dev@example.com',
-    sets: [{ key: 'user.name', value: DEFAULT_GIT_USER_NAME }],
   },
   {
     name: 'only the name is configured',
     config: { 'user.name': 'A Developer' },
     userName: 'A Developer',
     email: DEFAULT_GIT_USER_EMAIL,
-    sets: [{ key: 'user.email', value: DEFAULT_GIT_USER_EMAIL }],
   },
-  { name: 'both are already configured', config: DEV, userName: 'A Developer', email: 'dev@example.com', sets: [] },
+  { name: 'both are already configured', config: DEV, userName: 'A Developer', email: 'dev@example.com' },
   {
     name: 'the configured values are empty, which git reads as missing',
     config: { 'user.email': '', 'user.name': '' },
@@ -79,7 +68,6 @@ const IDENTITY: Array<{
     env: BOT_ENV,
     userName: 'A Developer',
     email: 'dev@example.com',
-    sets: [],
   },
   {
     name: 'only one env var is set, so each key resolves independently',
@@ -95,14 +83,10 @@ const IDENTITY: Array<{
   },
 ];
 
-describe('ensureGitIdentity', () => {
-  IDENTITY.forEach(({ name, config, env, userName, email, sets: expectedSets }) => {
+describe('resolveGitIdentity', () => {
+  IDENTITY.forEach(({ name, config, env, userName, email }) => {
     it(`resolves the identity when ${name}`, async () => {
-      const { io, sets, values } = fakeConfig(config);
-      await ensureGitIdentity(io, env ?? {});
-      expect(values['user.name']).to.equal(userName);
-      expect(values['user.email']).to.equal(email);
-      if (expectedSets) expect(sets).to.deep.equal(expectedSets);
+      expect(await resolveGitIdentity(fakeConfig(config), env ?? {})).to.deep.equal({ name: userName, email });
     });
   });
 
@@ -110,6 +94,54 @@ describe('ensureGitIdentity', () => {
   it('defaults to the identity the scaffolded workflows and the action both document', () => {
     expect(DEFAULT_GIT_USER_NAME).to.equal('bit-sync[bot]');
     expect(DEFAULT_GIT_USER_EMAIL).to.equal('bit-sync[bot]@users.noreply.github.com');
+  });
+});
+
+// The identity rides on the invocation. A `git config user.*` write would outlive the run and
+// re-author the developer's own later commits in that repository as the bot.
+describe('commitWithIdentity', () => {
+  function recorder(config?: Record<string, string>, env: Record<string, string> = {}) {
+    const argv: string[][] = [];
+    const run = async (args: string[]) => {
+      argv.push(args);
+      return '';
+    };
+    return { argv, deps: { run, io: fakeConfig(config), env } };
+  }
+
+  it('carries the identity as -c on the commit itself, and writes no config at all', async () => {
+    const { argv, deps } = recorder();
+    await commitWithIdentity('chore(bit-sync): sync git to latest main scope versions', deps);
+    expect(argv).to.deep.equal([
+      [
+        '-c',
+        `user.name=${DEFAULT_GIT_USER_NAME}`,
+        '-c',
+        `user.email=${DEFAULT_GIT_USER_EMAIL}`,
+        'commit',
+        '-m',
+        'chore(bit-sync): sync git to latest main scope versions',
+      ],
+    ]);
+    // no `config`/`addConfig` call of any shape — and GitConfigIO has no setter to make one with
+    expect(argv.some((args) => args.includes('config') || args.includes('addConfig'))).to.equal(false);
+  });
+
+  it('honours a configured identity and appends the extra flags after the message', async () => {
+    const { argv, deps } = recorder(DEV, BOT_ENV);
+    await commitWithIdentity('chore(bit-sync): sync lane', { ...deps, extraArgs: ['--allow-empty'] });
+    expect(argv).to.deep.equal([
+      [
+        '-c',
+        'user.name=A Developer',
+        '-c',
+        'user.email=dev@example.com',
+        'commit',
+        '-m',
+        'chore(bit-sync): sync lane',
+        '--allow-empty',
+      ],
+    ]);
   });
 });
 

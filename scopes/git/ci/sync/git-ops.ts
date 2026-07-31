@@ -202,13 +202,12 @@ export async function gitRepoRoot(): Promise<string | undefined> {
 }
 
 /**
- * The two `git config` operations `ensureGitIdentity` needs, injectable so the decision can be unit
- * tested without a git repository. Production always uses {@link realGitConfigIO}.
+ * Reading `git config`, injectable so the identity decision can be unit tested without a repository.
+ * There is deliberately no writer — see {@link resolveGitIdentity}.
  */
 export type GitConfigIO = {
   /** the configured value, or undefined when unset (or when git cannot answer) */
   get(key: string): Promise<string | undefined>;
-  set(key: string, value: string): Promise<void>;
 };
 
 export const realGitConfigIO: GitConfigIO = {
@@ -218,9 +217,6 @@ export const realGitConfigIO: GitConfigIO = {
       .then((out) => (out.trim().length ? out.trim() : undefined))
       // A missing key and "not a git repository" both exit non-zero; both mean "no identity to keep".
       .catch(() => undefined),
-  set: async (key, value) => {
-    await git.addConfig(key, value);
-  },
 };
 
 /**
@@ -231,15 +227,45 @@ export const realGitConfigIO: GitConfigIO = {
 export const DEFAULT_GIT_USER_NAME = 'bit-sync[bot]';
 export const DEFAULT_GIT_USER_EMAIL = 'bit-sync[bot]@users.noreply.github.com';
 
+export type GitIdentity = { name: string; email: string };
+
 /**
- * `git commit` fails outright when no identity is configured (the norm in a fresh CI checkout). git
- * requires BOTH keys, so each is checked and set independently. Precedence per key: configured git
- * identity > `GIT_USER_NAME`/`GIT_USER_EMAIL` env var > default.
+ * Who the sync commits as. Read-only on purpose: writing these keys into the repository's config
+ * would outlive the run and re-author the developer's own later commits as the bot. Precedence per
+ * key: configured git identity > `GIT_USER_NAME`/`GIT_USER_EMAIL` > default.
  */
-export async function ensureGitIdentity(
+export async function resolveGitIdentity(
   io: GitConfigIO = realGitConfigIO,
   env: NodeJS.ProcessEnv = process.env
+): Promise<GitIdentity> {
+  return {
+    name: (await io.get('user.name')) || env.GIT_USER_NAME || DEFAULT_GIT_USER_NAME,
+    email: (await io.get('user.email')) || env.GIT_USER_EMAIL || DEFAULT_GIT_USER_EMAIL,
+  };
+}
+
+/** The `git -c` pair that applies an identity to ONE invocation, leaving the repo's config alone. */
+export function identityArgs(identity: GitIdentity): string[] {
+  return ['-c', `user.name=${identity.name}`, '-c', `user.email=${identity.email}`];
+}
+
+export type IdentityDeps = { run?: GitArgsRunner; io?: GitConfigIO; env?: NodeJS.ProcessEnv };
+
+/**
+ * Run a git command that may author a commit. Every such command needs the identity — a fresh CI
+ * checkout has none, and git refuses to commit ("Please tell me who you are") without one.
+ */
+export async function gitWithIdentity(args: string[], deps: IdentityDeps = {}): Promise<string> {
+  const { run = realGitRaw, io = realGitConfigIO, env = process.env } = deps;
+  const identity = await resolveGitIdentity(io, env);
+  return String((await run([...identityArgs(identity), ...args])) ?? '');
+}
+
+/** `git commit` under the sync identity; `extraArgs` carries flags such as `--allow-empty`. */
+export async function commitWithIdentity(
+  message: string,
+  opts: IdentityDeps & { extraArgs?: string[] } = {}
 ): Promise<void> {
-  if (!(await io.get('user.email'))) await io.set('user.email', env.GIT_USER_EMAIL || DEFAULT_GIT_USER_EMAIL);
-  if (!(await io.get('user.name'))) await io.set('user.name', env.GIT_USER_NAME || DEFAULT_GIT_USER_NAME);
+  const { extraArgs = [], ...deps } = opts;
+  await gitWithIdentity(['commit', '-m', message, ...extraArgs], deps);
 }

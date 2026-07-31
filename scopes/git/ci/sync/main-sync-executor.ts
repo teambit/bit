@@ -15,8 +15,9 @@ import {
   branchExistsOnRemote,
   checkoutPristine,
   checkoutPristineRestore,
-  ensureGitIdentity,
+  commitWithIdentity,
   fetchRemoteHeads,
+  gitWithIdentity,
   isNonContentPath,
 } from './git-ops';
 
@@ -144,9 +145,8 @@ export class MainSyncExecutor {
           : `main -> drift detected in ${drift.length} file(s) — would open sync PR`;
       }
 
-      await ensureGitIdentity();
       await addAllExceptScopeAndModules();
-      await git.commit(mainSyncCommitMessage(drift.length));
+      await commitWithIdentity(mainSyncCommitMessage(drift.length));
       // Never force: a rejected push means a concurrent run pushed in between, and in direct-push mode
       // that rejection is the whole safety story for the default branch. Unambiguous refspec — see
       // `lane-sync-executor.commitAllAndPush`.
@@ -183,9 +183,9 @@ export class MainSyncExecutor {
    */
   private async catchUpWithDefaultBranch(branch: string): Promise<string | undefined> {
     const { defaultBranch, logger } = this.deps;
-    await ensureGitIdentity();
     try {
-      const out = await git.raw(['merge', '--no-edit', `origin/${defaultBranch}`]);
+      // under the identity: a non-fast-forward merge writes a merge COMMIT
+      const out = await gitWithIdentity(['merge', '--no-edit', `origin/${defaultBranch}`]);
       logger.console(chalk.blue(`Brought ${branch} up to date with origin/${defaultBranch}: ${out.trim()}`));
     } catch (e: any) {
       await git.raw(['merge', '--abort']).catch(() => undefined);
