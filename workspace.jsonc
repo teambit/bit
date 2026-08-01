@@ -67,7 +67,7 @@
         "@pnpm/logger": "1100.0.0",
         "@pnpm/network.ca-file": "3.0.3",
         "@pnpm/network.fetch": "1100.1.4",
-        "@pnpm/napi": "12.0.0-beta.2",
+        "@pnpm/napi": "12.0.0-beta.3",
         "@pnpm/node-fetch": "^1.0.0",
         "@pnpm/plugin-trusted-deps": "0.2.2",
         "@pnpm/registry-mock": "3.48.0",
