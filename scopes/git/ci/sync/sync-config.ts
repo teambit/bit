@@ -175,13 +175,21 @@ export function parseLaneTarget(input: string, defaultScope: string): LaneTarget
 }
 
 /**
- * The lane name a branch maps to, only if that name could actually be a lane. `branchToLaneName` alone
- * is a string transform (the identity under the default empty prefix), so it would report `feature/foo`
- * as a "lane" — a name bit forbids.
+ * The lane name a branch maps to, only if that name could actually be a lane AND maps back to a branch
+ * name usable in a git invocation. `branchToLaneName` alone is a string transform (the identity under
+ * the default empty prefix), so it would report `feature/foo` as a "lane" — a name bit forbids. The
+ * round trip matters because the lane grammar permits `-`: a developer branch called `-x` is a valid
+ * lane name, so enumeration would adopt it as a target and the branch mapping would then throw, turning
+ * one oddly-named branch into a halt that fails the whole `--all` run. Such a branch is not lane-mapped;
+ * skip it like any other.
  */
 export function syncableLaneNameForBranch(branch: string, cfg: Required<CiSyncConfig>): string | undefined {
   const laneName = branchToLaneName(branch, cfg);
-  return laneName && isValidLaneName(laneName) ? laneName : undefined;
+  if (!laneName || !isValidLaneName(laneName)) return undefined;
+  // `laneNameToBranch` asserts rather than returns, so the round trip is checked here: a configured
+  // override is already validated, and a derived name must pass the same branch-name rules.
+  if (cfg.branches[laneName]) return laneName;
+  return validateBranchName(`${cfg.branchPrefix}${laneName}`) === undefined ? laneName : undefined;
 }
 
 /** bit's own maximum lane-name length (`create-lane.ts`'s `MAX_LANE_NAME_LENGTH`). */

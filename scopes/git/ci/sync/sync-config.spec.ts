@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import type { CiSyncConfig, LaneTarget } from './sync-config';
 import {
+  syncableLaneNameForBranch,
   assertValidBranchName,
   assertValidBranchPrefix,
   isValidGitBranchName,
@@ -244,5 +245,40 @@ describe('isValidLaneName', () => {
   it("rejects a name past bit's length limit", () => {
     expect(isValidLaneName('a'.repeat(800))).to.equal(true);
     expect(isValidLaneName('a'.repeat(801))).to.equal(false);
+  });
+});
+
+/**
+ * `--all` maps every remote branch through here; anything it returns becomes a sync target whose branch
+ * name is then derived and validated. So the two directions must agree, or an ordinary developer branch
+ * halts the run instead of being skipped.
+ */
+describe('syncableLaneNameForBranch round-trips lane and branch validity', () => {
+  const cfg = (raw: CiSyncConfig = {}) => resolveSyncConfig({ lanes: ['*'], ...raw });
+
+  it('maps an ordinary branch to its lane name', () => {
+    expect(syncableLaneNameForBranch('my-lane', cfg())).to.equal('my-lane');
+  });
+
+  it('skips a branch whose mapped lane name is valid as a LANE but not usable as a BRANCH', () => {
+    // the lane grammar permits `-`, so `-x` is a legal lane name — but git reads it as an option, and
+    // `laneNameToBranch` asserts on it. Enumeration must skip such a branch, not adopt it as a target.
+    expect(isValidLaneName('-x')).to.equal(true);
+    expect(syncableLaneNameForBranch('-x', cfg())).to.equal(undefined);
+    expect(syncableLaneNameForBranch('--force', cfg())).to.equal(undefined);
+  });
+
+  it('skips a branch whose name bit forbids as a lane', () => {
+    expect(syncableLaneNameForBranch('feature/foo', cfg())).to.equal(undefined);
+  });
+
+  it('honours a configured override, which resolveSyncConfig already validated', () => {
+    expect(syncableLaneNameForBranch('release/x', cfg({ branches: { 'lane-x': 'release/x' } }))).to.equal('lane-x');
+  });
+
+  it('applies the round trip through a configured prefix too', () => {
+    const prefixed = cfg({ branchPrefix: 'bit-sync/' });
+    expect(syncableLaneNameForBranch('bit-sync/my-lane', prefixed)).to.equal('my-lane');
+    expect(syncableLaneNameForBranch('my-lane', prefixed)).to.equal(undefined);
   });
 });
