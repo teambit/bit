@@ -343,11 +343,7 @@ export async function install(
     emitLogEvent(event);
   };
 
-  // `returnListOfDepsRequiringBuild` lands in `@pnpm/napi`'s InstallOptions
-  // type in the release that ships it; the intersection bridges the older
-  // published typing. Engines without the option ignore it and return
-  // `depsRequiringBuild` only for blocked builds.
-  const installOptions: nodeApi.InstallOptions & { returnListOfDepsRequiringBuild?: boolean } = {
+  const installOptions: nodeApi.InstallOptions = {
     dir: rootDir,
     projects,
     storeDir,
@@ -444,14 +440,7 @@ export async function install(
       // install alongside `depsRequiringBuild`.
       const preInstallBitAttrs = await readBitLockfileAttrs(rootDir);
       restoreWantedLockfile = await removeWantedLockfileForUpdate(rootDir, options.updateAll);
-      // The extra `resolvedDir` param lands in `@pnpm/napi`'s ReadPackageHook
-      // type in the release that ships the directory-resolution context; the
-      // cast bridges the older published typing.
-      installPromise = nodeApi.install(
-        installOptions,
-        onLog,
-        readPackageHookForDeps as unknown as nodeApi.ReadPackageHook
-      );
+      installPromise = nodeApi.install(installOptions, onLog, readPackageHookForDeps);
       installsRunning[rootDir] = installPromise;
       const installResult: nodeApi.InstallResult = await installPromise;
       resolvedStoreDir = installResult.storeDir;

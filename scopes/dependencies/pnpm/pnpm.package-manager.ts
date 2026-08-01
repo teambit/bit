@@ -320,11 +320,9 @@ export class PnpmPackageManager implements PackageManager {
     };
     // The resolved config carries the engine's defaults for the numeric
     // network settings, and anything returned here overrides Bit's global
-    // network config in the dependency resolver's merge — so only settings
-    // the user explicitly configured may pass through. `explicitSettings`
-    // ships in @pnpm/napi > 12.0.0-beta.2; on older engines nothing is
-    // forwarded and the engine still honors `.npmrc` itself.
-    const explicitSettings = new Set((config as { explicitSettings?: string[] }).explicitSettings ?? []);
+    // network config in the dependency resolver's merge, so only settings the
+    // user explicitly configured may pass through.
+    const explicitSettings = new Set(config.explicitSettings);
     if (config.maxSockets != null && explicitSettings.has('maxSockets')) {
       result.maxSockets = config.maxSockets;
     }
