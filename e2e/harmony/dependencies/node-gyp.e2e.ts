@@ -5,17 +5,30 @@ import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/leg
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
+/** The env keys naming PATH, as this platform spells them — `Path` on Windows. */
+function pathEnvKeys(): string[] {
+  const keys = Object.keys(process.env).filter((key) => key.toUpperCase() === 'PATH');
+  return keys.length ? keys : ['PATH'];
+}
+
 /**
- * The PATH of this process minus every directory holding a `node-gyp`, so the
- * installed Bit has to supply its own. Without this the test would pass either
- * way: `npm run` puts the repo's `node_modules/.bin` — which carries a
- * `node-gyp` bin link — on PATH, and dependency build scripts inherit it.
+ * A PATH override holding this process's PATH minus every directory with a
+ * `node-gyp` in it, so the installed Bit has to supply its own. Without it the
+ * test would pass either way: `npm run` puts the repo's `node_modules/.bin` —
+ * which carries a `node-gyp` bin link — on PATH, and dependency build scripts
+ * inherit it.
+ *
+ * Keyed by the casing already in `process.env`, because the command helper
+ * spreads it into a plain object: an override under a casing of its own would
+ * sit alongside the original rather than replacing it.
  */
-function pathWithoutNodeGyp(): string {
-  return (process.env.PATH ?? '')
+function pathWithoutNodeGyp(): Record<string, string> {
+  const keys = pathEnvKeys();
+  const filtered = (process.env[keys[0]] ?? '')
     .split(path.delimiter)
     .filter((dir) => !['node-gyp', 'node-gyp.cmd'].some((bin) => fs.existsSync(path.join(dir, bin))))
     .join(path.delimiter);
+  return Object.fromEntries(keys.map((key) => [key, filtered]));
 }
 
 // The pnpm engine ships no node-gyp and spawns dependency build scripts with
@@ -44,7 +57,7 @@ function pathWithoutNodeGyp(): string {
       '@pnpm.e2e/has-binding-gyp': true,
     });
     helper.command.install('@pnpm.e2e/has-binding-gyp', undefined, undefined, {
-      envVariables: { PATH: pathWithoutNodeGyp() },
+      envVariables: pathWithoutNodeGyp(),
     });
   });
   after(() => {
