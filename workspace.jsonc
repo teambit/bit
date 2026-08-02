@@ -555,6 +555,9 @@
         "multimatch": "5.0.0",
         "nerf-dart": "1.0.0",
         "node-fetch": "2.6.7",
+        // put on PATH by teambit.dependencies/pnpm so dependency build scripts
+        // can shell out to it; the pnpm engine ships no node-gyp of its own
+        "node-gyp": "11.5.0",
         "node-source-walk": "4.2.0",
         "normalize-path": "3.0.0",
         "null-loader": "^4.0.1",
@@ -871,6 +874,17 @@
             "react-dom": "-",
             "react-router-dom": "-",
             "core-js": "-"
+          }
+        }
+      }
+    },
+    "scopes/dependencies/pnpm": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            // Not imported: the aspect only puts its bin on PATH for the build
+            // scripts of installed dependencies, so it has to be declared here.
+            "node-gyp": "11.5.0"
           }
         }
       }

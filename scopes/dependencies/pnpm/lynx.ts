@@ -31,6 +31,7 @@ import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-pat
 import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
+import { addNodeGypToPath } from './node-gyp-bin';
 
 /**
  * Packages that are known to have risky or unnecessary build scripts.
@@ -421,6 +422,9 @@ export async function install(
   let dependenciesChanged = false;
   let depsRequiringBuild: DepPath[] | undefined;
   let resolvedStoreDir = storeDir;
+  // Both the install and the `rebuild` below run dependency build scripts, and
+  // they inherit this process's PATH to do it.
+  addNodeGypToPath(logger);
   if (!options.dryRun) {
     let stopReporting: Function | undefined;
     let installPromise: Promise<nodeApi.InstallResult> | undefined;
