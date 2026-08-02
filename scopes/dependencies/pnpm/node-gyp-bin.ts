@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'fs';
+import { chmodSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'fs';
 import { delimiter, dirname, join } from 'path';
 import { CACHE_ROOT } from '@teambit/legacy.constants';
 import type { Logger } from '@teambit/logger';
@@ -77,7 +77,14 @@ function writeShim(target: string, content: string): void {
 }
 
 function readIfExists(target: string): string | undefined {
-  return existsSync(target) ? readFileSync(target, 'utf8') : undefined;
+  try {
+    return readFileSync(target, 'utf8');
+  } catch (err: any) {
+    // Read and handle the absence, rather than testing for it first: another
+    // Bit process replacing the wrapper could remove it between the two.
+    if (err.code === 'ENOENT') return undefined;
+    throw err;
+  }
 }
 
 function shQuote(value: string): string {

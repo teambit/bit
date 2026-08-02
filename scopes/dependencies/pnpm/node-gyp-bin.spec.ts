@@ -16,7 +16,10 @@ describe('addNodeGypToPath()', () => {
   });
 
   after(() => {
-    process.env.PATH = originalPath;
+    // Assigning `undefined` would leave the literal string "undefined" for
+    // every spec that runs after this one in the same process.
+    if (originalPath === undefined) delete process.env.PATH;
+    else process.env.PATH = originalPath;
     // The wrapper lands in the real Bit cache — writing it there is the
     // behavior under test, so it cannot be redirected without stubbing out the
     // thing being asserted. Take it back out; an install that wants it writes
