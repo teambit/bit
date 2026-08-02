@@ -422,10 +422,10 @@ export async function install(
   let dependenciesChanged = false;
   let depsRequiringBuild: DepPath[] | undefined;
   let resolvedStoreDir = storeDir;
-  // Both the install and the `rebuild` below run dependency build scripts, and
-  // they inherit this process's PATH to do it.
-  addNodeGypToPath(logger);
   if (!options.dryRun) {
+    // Dependency build scripts inherit this process's PATH. Set up inside the
+    // guard, so a dry run neither writes the wrapper nor touches the env.
+    addNodeGypToPath(logger);
     let stopReporting: Function | undefined;
     let installPromise: Promise<nodeApi.InstallResult> | undefined;
     let restoreWantedLockfile: (() => Promise<void>) | undefined;
@@ -474,6 +474,8 @@ export async function install(
     // The Rust engine's rebuild rebuilds every build-needing package and does not
     // support the pending / skipIfHasSideEffectsCache selectors of the old engine.
     rebuild: async () => {
+      // Reached without an install of its own after a dry run.
+      addNodeGypToPath(logger);
       let stopReporting: Function | undefined;
       if (!options.hidePackageManagerOutput) {
         stopReporting = initReporter({

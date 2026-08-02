@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { execFileSync } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, rmSync } from 'fs';
 import { delimiter, join } from 'path';
 import { addNodeGypToPath } from './node-gyp-bin';
 
@@ -17,6 +17,11 @@ describe('addNodeGypToPath()', () => {
 
   after(() => {
     process.env.PATH = originalPath;
+    // The wrapper lands in the real Bit cache — writing it there is the
+    // behavior under test, so it cannot be redirected without stubbing out the
+    // thing being asserted. Take it back out; an install that wants it writes
+    // it again, and a script already running one keeps the inode it opened.
+    addedDirs.forEach((dir) => rmSync(dir, { recursive: true, force: true }));
   });
 
   it('appends exactly one directory to PATH', () => {

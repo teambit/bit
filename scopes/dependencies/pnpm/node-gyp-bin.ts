@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'fs';
 import { delimiter, dirname, join } from 'path';
 import { CACHE_ROOT } from '@teambit/legacy.constants';
@@ -36,11 +37,18 @@ export function addNodeGypToPath(logger?: Logger): void {
   process.env.PATH = currentPath === '' ? dir : `${currentPath}${delimiter}${dir}`;
 }
 
-/** Writes the wrappers if they are not already current, and returns their directory. */
+/** Writes the wrappers if they are not already there, and returns their directory. */
 function writeShims(): string {
   const nodeGypJs = require.resolve('node-gyp/bin/node-gyp.js');
   const node = process.execPath;
-  const dir = join(CACHE_ROOT, 'node-gyp-bin');
+  // The wrappers hardcode the two paths, so the directory is keyed by them:
+  // another Bit install, or the same one under a different Node, resolves to a
+  // directory of its own instead of overwriting this one — which would point
+  // concurrent installs at the wrong node-gyp, and would make two Bit versions
+  // used side by side rewrite the wrapper on every install. What accumulates is
+  // two ~100-byte files per distinct pair, so nothing needs pruning.
+  const key = createHash('sha1').update(`${node}\n${nodeGypJs}`).digest('hex').slice(0, 12);
+  const dir = join(CACHE_ROOT, 'node-gyp-bin', key);
   // Written on Windows too: the default shell there is cmd.exe, but a
   // `scriptShell` pointing at bash needs the POSIX wrapper.
   writeShim(join(dir, 'node-gyp'), `#!/bin/sh\nexec ${shQuote(node)} ${shQuote(nodeGypJs)} "$@"\n`);
@@ -54,9 +62,7 @@ function writeShim(target: string, content: string): void {
   if (readIfExists(target) === content) return;
   mkdirSync(dirname(target), { recursive: true });
   // Write and rename, so the wrapper only ever appears at its final path fully
-  // written and executable. The rename also replaces a wrapper left by an older
-  // Bit without disturbing a script currently executing it, which keeps reading
-  // the inode it opened.
+  // written and executable, whichever of several concurrent Bit processes wins.
   const tmp = `${target}.${process.pid}.tmp`;
   try {
     writeFileSync(tmp, content);
@@ -64,8 +70,8 @@ function writeShim(target: string, content: string): void {
     renameSync(tmp, target);
   } catch (err) {
     rmSync(tmp, { force: true });
-    // Losing a race with another Bit process writing the same content is a
-    // success, not a failure — on Windows its rename would have thrown.
+    // Losing that race is a success, not a failure — on Windows the other
+    // process's rename would have thrown.
     if (readIfExists(target) !== content) throw err;
   }
 }
