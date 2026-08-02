@@ -103,6 +103,21 @@ const ENV_JSONC_LEVEL3 = {
   },
 };
 
+export const ENV_POLICY_WITH_TYPES_PEER = {
+  peers: [
+    {
+      name: 'react',
+      version: '^18.0.0',
+      supportedRange: '^17.0.0 || ^18.0.0',
+    },
+    {
+      name: '@types/react',
+      version: '18.0.25',
+      supportedRange: '^18.0.0',
+    },
+  ],
+};
+
 function generateEnvJsoncWithExtends(extendsName: string, envJsonc: object) {
   return {
     extends: extendsName,
@@ -575,6 +590,37 @@ describe('env-jsonc-policies', function () {
       expect(newSupportedRange).to.include(' || ');
       expect(newSupportedRange).to.include('^16.8.0');
       expect(newSupportedRange).to.include(newVersion);
+    });
+  });
+  describe('@types/* package listed as a peer in env.jsonc', function () {
+    this.timeout(0);
+    let componentShowParsed;
+    let envId;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      envId = `${helper.scopes.remote}/react-based-env`;
+      helper.command.create('react', 'button', '-p button --env teambit.react/react');
+      // having @types/react in the workspace policy makes it auto-detected for the component
+      // (since the component uses react), so the env peer override below actually applies to it.
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { '@types/react': '18.0.25' } });
+      helper.env.setCustomNewEnv(undefined, undefined, { policy: ENV_POLICY_WITH_TYPES_PEER });
+      helper.command.setEnv('button', envId);
+      helper.command.install();
+      componentShowParsed = helper.command.showComponentParsed('button');
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should still add regular (non-@types/*) peer deps from env.jsonc to the component', () => {
+      expect(componentShowParsed.peerPackageDependencies).to.include({ react: '^17.0.0 || ^18.0.0' });
+    });
+    it('should not add auto-detected @types/* peers to the component peer deps', () => {
+      expect(componentShowParsed.peerPackageDependencies).to.not.have.property('@types/react');
+    });
+    it('should not leak auto-detected @types/* peers into the component runtime or dev deps', () => {
+      expect(componentShowParsed.packageDependencies).to.not.have.property('@types/react');
+      expect(componentShowParsed.devPackageDependencies).to.not.have.property('@types/react');
     });
   });
 });

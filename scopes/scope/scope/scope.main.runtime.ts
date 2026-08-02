@@ -21,6 +21,7 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
+import { startOrJoinLoadTrace } from '@teambit/harmony.modules.load-trace';
 import type { IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import { IsolatorAspect } from '@teambit/isolator';
 import type { LoggerMain, Logger } from '@teambit/logger';
@@ -919,11 +920,14 @@ export class ScopeMain implements ComponentFactory {
 
   async getMany(ids: ComponentID[], throwIfNotExist = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
-    const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
-      return throwIfNotExist ? this.getOrThrow(id) : this.get(id);
+    if (!idsWithoutEmpty.length) return [];
+    return startOrJoinLoadTrace('scope.getMany', { ids: idsWithoutEmpty.length }, async () => {
+      const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+        return throwIfNotExist ? this.getOrThrow(id) : this.get(id);
+      });
+      const components = await componentsP;
+      return compact(components);
     });
-    const components = await componentsP;
-    return compact(components);
   }
 
   /**
@@ -1186,6 +1190,30 @@ export class ScopeMain implements ComponentFactory {
     const remote = await remotes.resolve(scopeName);
     const results = await remote.list();
     return results.map(({ id }) => id);
+  }
+
+  /**
+   * best-effort check whether a component-id already exists on its remote scope.
+   * intended as an early-warning helper (e.g. during "bit add"/"bit create"), not as a source of
+   * truth. it never throws: if the workspace is offline, the scope can't be resolved, the user has
+   * no access, or the remote lacks the component, it resolves to `false` so callers can safely skip.
+   *
+   * pass a pre-resolved `remotes` when checking many ids to avoid reloading the global-remotes file
+   * from disk on every call.
+   */
+  async isComponentExistsOnRemote(id: ComponentID, remotes?: Remotes): Promise<boolean> {
+    if (!id.scope) return false;
+    try {
+      const resolvedRemotes = remotes || (await this.getRemoteScopes());
+      const remote = await resolvedRemotes.resolve(id.scope);
+      const componentFromRemote = await remote.show(id.changeVersion(undefined));
+      return Boolean(componentFromRemote);
+    } catch (err) {
+      // offline / scope-not-found / no-access / component-not-found — all mean "don't warn".
+      // trace at debug level so unexpected failures are still diagnosable via the debug.log.
+      this.logger.debug(`isComponentExistsOnRemote: skipping check for ${id.toString()}, got an error: ${err}`);
+      return false;
+    }
   }
 
   async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {

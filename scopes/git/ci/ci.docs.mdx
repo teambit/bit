@@ -83,18 +83,51 @@ Publishes new semantic versions after a PR merges to `main`.
 bit ci merge [--message <string>] [--build] [--increment <level>] [--patch|--minor|--major] [--increment-by <number>]
 ```
 
-| Flag              | Shorthand | Description                                                                                                         |
-| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
-| `--message`       | `-m`      | Changelog entry (defaults to last Git commit message).                                                              |
-| `--build`         | `-b`      | Build locally (otherwise Ripple-CI does it). Required if workspace contains _soft-tagged_ components.               |
-| `--strict`        | `-s`      | Fail on warnings as well as errors (default: only fails on errors).                                                 |
-| `--increment`     | `-l`      | Version bump level: `major`, `premajor`, `minor`, `preminor`, `patch`, `prepatch`, `prerelease` (default: `patch`). |
-| `--patch`         | `-p`      | Shortcut for `--increment patch`.                                                                                   |
-| `--minor`         |           | Shortcut for `--increment minor`.                                                                                   |
-| `--major`         |           | Shortcut for `--increment major`.                                                                                   |
-| `--pre-release`   |           | Shortcut for `--increment prerelease` with optional identifier.                                                     |
-| `--prerelease-id` |           | Prerelease identifier (e.g. "dev" to get "1.0.0-dev.1").                                                            |
-| `--increment-by`  |           | Increment by more than 1 (e.g. `--increment-by 2` with patch: 0.0.1 → 0.0.3).                                       |
+| Flag                   | Shorthand | Description                                                                                                         |
+| ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `--message`            | `-m`      | Changelog entry (defaults to last Git commit message).                                                              |
+| `--build`              | `-b`      | Build locally (otherwise Ripple-CI does it). Required if workspace contains _soft-tagged_ components.               |
+| `--strict`             | `-s`      | Fail on warnings as well as errors (default: only fails on errors).                                                 |
+| `--increment`          | `-l`      | Version bump level: `major`, `premajor`, `minor`, `preminor`, `patch`, `prepatch`, `prerelease` (default: `patch`). |
+| `--patch`              | `-p`      | Shortcut for `--increment patch`.                                                                                   |
+| `--minor`              |           | Shortcut for `--increment minor`.                                                                                   |
+| `--major`              |           | Shortcut for `--increment major`.                                                                                   |
+| `--pre-release`        |           | Shortcut for `--increment prerelease` with optional identifier.                                                     |
+| `--prerelease-id`      |           | Prerelease identifier (e.g. "dev" to get "1.0.0-dev.1").                                                            |
+| `--increment-by`       |           | Increment by more than 1 (e.g. `--increment-by 2` with patch: 0.0.1 → 0.0.3).                                       |
+| `--auto-tag-increment` |           | Version bump level for auto-tagged dependents. See below.                                                           |
+
+### Bumping Dependents
+
+The version flags above apply only to the components that actually changed. Dependents that are
+picked up by auto-tag are bumped by a `patch`, regardless of `--major`/`--minor`:
+
+```bash
+# button 1.0.0 -> 2.0.0, but its dependent lib 1.0.0 -> 1.0.1
+bit ci merge --major
+```
+
+The one exception is a pre-release `--increment` (`prepatch`, `prerelease`, `preminor`,
+`premajor`), which the dependents do follow:
+
+```bash
+# button 1.0.0 -> 1.0.1-0, and its dependent lib 1.0.0 -> 1.0.1-0 too
+bit ci merge --increment prerelease
+```
+
+Use `--auto-tag-increment` to bump the dependents by an explicit level instead. It overrides both
+defaults above:
+
+```bash
+# button 1.0.0 -> 2.0.0, and its dependent lib 1.0.0 -> 2.0.0 as well
+bit ci merge --major --auto-tag-increment major
+```
+
+The two levels are independent, so `--major --auto-tag-increment minor` is also valid.
+
+**Note**: auto-tag is transitive — a dependent of a dependent is auto-tagged too. So
+`--auto-tag-increment major` bumps the _entire_ dependents graph by a major, not just the direct
+dependents. It cannot be combined with `--skip-auto-tag`.
 
 ### Automatic Version Bump Detection
 
@@ -113,7 +146,7 @@ When **no explicit version flags** are provided, `bit ci merge` can automaticall
 
 3. **Default**: patch version bump
 
-**Note**: Auto-detection only occurs when no version flags (`--patch`, `--minor`, `--major`, etc.) are provided. Explicit flags always take precedence.
+**Note**: Auto-detection only occurs when no version flags (`--patch`, `--minor`, `--major`, etc.) are provided. Explicit flags always take precedence. `--auto-tag-increment` is not considered a version flag for this purpose — it only affects dependents, so it can be combined with auto-detection.
 
 ### Internal flow
 

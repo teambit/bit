@@ -70,6 +70,7 @@ export type ImportOptions = {
   writeDeps?: 'package.json' | 'workspace.jsonc';
   laneOnly?: boolean; // when on a lane, only import components that exist on the lane (preserves legacy behavior)
   owner?: boolean; // treat the id as an owner name and import all components from all scopes of that owner
+  writeToEmptyDir?: boolean; // when the target dir is not empty, import into an available empty dir instead of failing
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -391,6 +392,7 @@ export default class ImportComponents {
       skipWriteConfigFiles: !this.options.writeConfigFiles,
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
+      writeToEmptyDir: this.options.writeToEmptyDir,
       skipWritingToFs: this.options.trackOnly,
       reasonForBitmapChange: 'import',
       writeDeps: this.options.writeDeps,
@@ -530,7 +532,7 @@ export default class ImportComponents {
     if (idsFromAnotherLane.length) {
       throw new BitError(`unable to import the following component(s) as they belong to other lane(s):
 ${idsFromAnotherLane.map((id) => id.toString()).join(', ')}
-if you need this specific snap, find the lane this snap is belong to, then run "bit lane merge <lane-id> [component-id]" to merge this component from the lane.
+if you need this specific snap, find the lane this snap belongs to, then run "bit lane merge <lane-id> [component-id]" to merge this component from the lane.
 if you just want to get a quick look into this snap, create a new workspace and import it by running "bit lane import <lane-id> --pattern <component-id>"`);
     }
   }
@@ -1098,6 +1100,7 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       skipWriteConfigFiles: !this.options.writeConfigFiles,
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
+      writeToEmptyDir: this.options.writeToEmptyDir,
       skipWritingToFs: this.options.trackOnly,
       shouldUpdateWorkspaceConfig: true,
       reasonForBitmapChange: 'import',

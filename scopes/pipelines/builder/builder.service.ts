@@ -124,6 +124,10 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       useHash,
       getExistingAsIs: true,
       seedersOnly: options.seedersOnly,
+      // pass the *original* (top-level) seeders so the per-env isolation doesn't filter out a dependency that is
+      // built as a capsule anyway by another env (see filterUnmodifiedExportedDependencies). keeping it lets its
+      // dependents leverage project-references instead of resolving it as an installed package.
+      originalSeeders: options.originalSeeders,
     };
 
     await pMapSeries(envsExecutionContext, async (executionContext) => {
@@ -157,6 +161,7 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
         exitOnFirstFailedTask: options.exitOnFirstFailedTask,
         showEnvNameInOutput: envs.length > 1,
         showEnvVersionInOutput: envIdsWithoutVersion.length > uniq(envIdsWithoutVersion).length,
+        concurrency: this.getBuildConcurrency(),
       }
     );
     const buildResults = await buildPipe.execute();
@@ -167,6 +172,18 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
 
   getComponentsCapsulesBaseDir(): string | undefined {
     return this.configStore.getConfig(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
+  }
+
+  /**
+   * Number of environments whose build task-chains may run concurrently. Defaults to 1 (fully
+   * serial — the original behavior). Opt into parallelism with the `BIT_BUILD_CONCURRENCY` env var
+   * (handy for CI) or the `build.concurrency` config. In parallel mode each env's tasks still run
+   * sequentially; only different envs run concurrently — see `BuildPipe.executeTasksInParallel`.
+   */
+  getBuildConcurrency(): number {
+    const raw = process.env.BIT_BUILD_CONCURRENCY ?? this.configStore.getConfig('build.concurrency');
+    const parsed = raw ? parseInt(raw, 10) : NaN;
+    return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
   }
 
   render() {

@@ -1,0 +1,954 @@
+$code-font: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+$border-color: var(--border-medium-color, #e8ecf0);
+$surface-color: var(--surface-color, #fff);
+$accent-color: var(--bit-accent-color, #6c5ce7);
+$text-primary: var(--on-surface-color, #1a1a2e);
+// note: deliberately darker than the theme's "muted" token — API diff text is content to be read,
+// not decoration, so it must clear WCAG AA (~4.5:1) on the surface, which #a0aec0-style mutes don't.
+$text-secondary: var(--on-surface-medium-color, #5a626c);
+$text-muted: var(--on-background-medium-color, #79808a);
+$focus-color: var(--focus-color, #0969da);
+$danger: var(--on-surface-negative-bold, #cf222e);
+$warning: var(--warning-color, #bb8009);
+$success: var(--success-color, #1a7f37);
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.fullView {
+  padding: 24px;
+  max-width: 1080px;
+}
+
+// ── summary bar ──────────────────────────────────────────────────────────────
+
+.summaryBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px 22px;
+  border-radius: 12px;
+  background: $surface-color;
+  border: 1px solid $border-color;
+}
+
+.summaryTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summaryHeading {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: $text-primary;
+}
+
+.summaryLoading {
+  font-size: 13px;
+  color: $accent-color;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.summaryProgress {
+  width: 160px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-neutral-color, #eaeef2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.summaryProgressFill {
+  height: 100%;
+  border-radius: 4px;
+  background: $focus-color;
+  transition: width 0.3s ease;
+}
+
+.summaryStats {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.summaryStat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-secondary;
+}
+
+.summaryStatMuted {
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.summaryDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+// ── per-component section ────────────────────────────────────────────────────
+
+.section {
+  margin-bottom: 18px;
+  border-radius: 12px;
+  border: 1px solid $border-color;
+  background: $surface-color;
+  overflow: hidden;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--surface-neutral-color, #f6f8fa);
+  border-bottom: 1px solid $border-color;
+}
+
+.sectionName {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-primary;
+  font-family: $code-font;
+}
+
+.sectionVersions {
+  font-size: 13px;
+  color: $text-secondary;
+  font-family: $code-font;
+}
+
+.sectionStats {
+  display: flex;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.sectionLoading {
+  font-size: 13px;
+  color: $text-secondary;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.sectionSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+}
+
+.skeletonBar {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-neutral-color, #eaeef2) 25%,
+    var(--surface-color, #f6f8fa) 50%,
+    var(--surface-neutral-color, #eaeef2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.statAdded {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $success;
+}
+
+.statRemoved {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $danger;
+}
+
+.statModified {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $warning;
+}
+
+.statBreaking {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $danger;
+  background: color-mix(in srgb, $danger 10%, transparent);
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+
+// ── change block ─────────────────────────────────────────────────────────────
+
+.changeBlock {
+  margin: 12px 16px;
+  border: 1px solid $border-color;
+  border-radius: 10px;
+  overflow: hidden;
+  scroll-margin-top: 12px;
+}
+
+.changeBlockFocused {
+  box-shadow: 0 0 0 2px color-mix(in srgb, $focus-color 45%, transparent);
+}
+
+.changeBlockDimmed {
+  opacity: 0.78;
+}
+
+.changeBlockHeader {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.changeBlockNote {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: $text-secondary;
+}
+
+.statusIndicator {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: $code-font;
+}
+
+.exportName {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-primary;
+  font-family: $code-font;
+}
+
+.schemaType {
+  font-size: 12.5px;
+  color: $text-secondary;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+
+// ── signatures + cause diffs (shared git-style diff block) ────────────────────
+
+.signatures {
+  padding: 0 14px 12px;
+}
+
+// ── member-cause clusters (severity groups + collapse-by-kind) ────────────────
+// A modified export's member changes are clustered by severity (breaking → minor → patch); within a
+// tier, additions/removals collapse by kind into signature snippets, modifications keep the token
+// diff, and doc-only changes render as notes.
+
+.causeClusters {
+  display: flex;
+  flex-direction: column;
+}
+
+.severityGroup {
+  padding: 2px 14px 14px;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 55%, transparent);
+  }
+}
+
+.severityHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 2px 10px;
+}
+
+.severityLabel {
+  line-height: 1;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.severityCount {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 1px 9px;
+  border-radius: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+// only the breaking tier carries a faint tint — it's the one a reader must not miss. minor/patch
+// stay on the plain surface so the block doesn't turn into a stack of colored bands.
+.severity_BREAKING {
+  background: color-mix(in srgb, $danger 3.5%, transparent);
+
+  .severityHeader {
+    color: $danger;
+  }
+  .severityCount {
+    background: color-mix(in srgb, $danger 12%, transparent);
+    color: $danger;
+  }
+}
+
+.severity_NON_BREAKING {
+  .severityHeader {
+    color: $warning;
+  }
+  .severityCount {
+    background: color-mix(in srgb, $warning 14%, transparent);
+    color: $warning;
+  }
+}
+
+.severity_PATCH {
+  .severityHeader {
+    color: $success;
+  }
+  .severityCount {
+    background: color-mix(in srgb, $success 13%, transparent);
+    color: $success;
+  }
+}
+
+.memberGroup {
+  & + & {
+    margin-top: 12px;
+  }
+
+  // the label already provides the gap above the snippet; drop the diff block's own top margin.
+  .diffBlock {
+    margin-top: 0;
+  }
+}
+
+.memberLabel {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.memberName {
+  font-family: $code-font;
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.memberKind {
+  font-size: 12px;
+  color: $text-secondary;
+}
+
+.memberNote {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 45%, transparent);
+  }
+}
+
+// added/removed signatures sit on a NEUTRAL surface so the syntax colors (tuned for a light code
+// background) always clear contrast — the add/remove signal is the colored left edge + gutter, never
+// colored text on a green/red fill (which fails WCAG for yellow-on-green, red-on-red, …).
+.sigBlock {
+  border: 1px solid $border-color;
+  border-left-width: 3px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-neutral-color, #f6f8fa);
+}
+
+.sigBlockAdd {
+  border-left-color: $success;
+
+  .diffGutter {
+    color: $success;
+  }
+}
+
+.sigBlockRemove {
+  border-left-color: $danger;
+
+  .diffGutter {
+    color: $danger;
+  }
+}
+
+.sigLine {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: start;
+  font-family: $code-font;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: $text-primary;
+  padding: 7px 14px 7px 0;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 55%, transparent);
+  }
+}
+
+// documentation (JSDoc/comment) changes show the actual prose that was removed/added. Prose, not a
+// signature — dark text on a faint tint (dark-on-tint clears contrast), italic to read as doc.
+.docBlock {
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.docLine {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: start;
+  padding: 8px 14px 8px 0;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 55%, transparent);
+  }
+}
+
+.docRemoved {
+  background: color-mix(in srgb, $danger 7%, transparent);
+
+  .diffGutter {
+    color: $danger;
+  }
+
+  .docTok {
+    background: color-mix(in srgb, $danger 24%, transparent);
+    color: $danger;
+  }
+}
+
+.docAdded {
+  background: color-mix(in srgb, $success 8%, transparent);
+
+  .diffGutter {
+    color: $success;
+  }
+
+  .docTok {
+    background: color-mix(in srgb, $success 22%, transparent);
+    color: var(--success-color, #136a2e);
+  }
+}
+
+// unchanged prose lines between doc changes — neutral surface, muted gutter, so only the real edits
+// carry color and the surrounding sentence reads as context (mirrors the code view's context lines).
+.docUnchanged {
+  .diffGutter {
+    color: $text-muted;
+  }
+}
+
+// within-line change emphasis on PROSE doc diffs — mirrors .diffTok but scoped to the doc tint
+// classes so a changed word/phrase stands out against the faint red/green while the rest reads as
+// context. Bold weight + a stronger tint of the same hue keeps it legible on either tint (no syntax
+// color — this is prose, not code). `<mark>`'s default yellow is overridden here.
+.docTok {
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.docText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: $text-primary;
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+// the declaration the doc belongs to — an unchanged context line beneath the doc diff. Neutral
+// surface, monospace + syntax highlighting, a "·" gutter so it reads as context, not an edit.
+.docContext {
+  background: var(--surface-neutral-color, #f6f8fa);
+  font-family: $code-font;
+  font-size: 13px;
+  line-height: 1.65;
+  color: $text-primary;
+
+  .diffGutter {
+    color: $text-muted;
+  }
+}
+
+.causeDescription {
+  font-size: 14px;
+  line-height: 1.55;
+  color: $text-primary;
+  flex: 1;
+}
+
+.impactDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  top: -1px;
+}
+
+// the reviewable surface: a removed line over an added line, full width, monospaced, with an
+// aligned gutter marker. dark text on a tint reads far better than colored-text-on-white, and
+// `pre-wrap` + `break-word` keep long type strings legible instead of truncating mid-token.
+.diffBlock {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.diffLine {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: start;
+  font-family: $code-font;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: $text-primary;
+  padding: 7px 14px 7px 0;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 60%, transparent);
+  }
+}
+
+.diffGutter {
+  text-align: center;
+  font-weight: 700;
+  user-select: none;
+  opacity: 0.95;
+}
+
+.diffCode {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+// token-level highlight: the exact tokens that differ get a stronger tint + weight, so a one-char
+// type change reads instantly. `<mark>`'s default yellow is overridden here.
+.diffTok {
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.diffLineRemoved {
+  background: color-mix(in srgb, $danger 8%, transparent);
+
+  .diffGutter {
+    color: $danger;
+  }
+
+  .diffTok {
+    background: color-mix(in srgb, $danger 24%, transparent);
+    color: $danger;
+  }
+}
+
+.diffLineAdded {
+  background: color-mix(in srgb, $success 9%, transparent);
+
+  .diffGutter {
+    color: $success;
+  }
+
+  .diffTok {
+    background: color-mix(in srgb, $success 22%, transparent);
+    color: var(--success-color, #136a2e);
+  }
+}
+
+// a no-op signature shown for context (internal/transitive change, public signature unchanged):
+// neutral surface, a "·" gutter, and a plain-language note so it reads as context, not a diff.
+.diffLineContext {
+  grid-template-columns: 26px 1fr auto;
+  background: var(--surface-neutral-color, #f6f8fa);
+  color: $text-secondary;
+
+  .diffGutter {
+    color: $text-muted;
+  }
+}
+
+.diffContextNote {
+  align-self: center;
+  padding-left: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 11.5px;
+  font-style: italic;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+// ── change category groups (breaking → minor → patch) ─────────────────────────
+
+.changeGroup {
+  & + & {
+    border-top: 1px solid color-mix(in srgb, $border-color 55%, transparent);
+  }
+}
+
+.changeGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px 2px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $text-secondary;
+}
+
+.changeGroupDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: $text-muted;
+
+  &[data-impact='BREAKING'] {
+    background: $danger;
+  }
+
+  &[data-impact='NON_BREAKING'] {
+    background: $warning;
+  }
+
+  &[data-impact='PATCH'] {
+    background: $success;
+  }
+}
+
+.changeGroupCount {
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-secondary;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 8px;
+  border-radius: 9px;
+}
+
+// ── blank state: no API to compare (neither side exposes one) ─────────────────
+// Calm, centered, neutral — NOT the amber warning treatment. There's nothing to act on here.
+.apiBlankState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 56px 24px;
+  min-height: 220px;
+}
+
+.apiBlankIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-neutral-color, #f6f8fa);
+  color: $text-muted;
+  border: 1px solid $border-color;
+}
+
+.apiBlankTitle {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.apiBlankDetail {
+  font-size: 13px;
+  line-height: 1.55;
+  color: $text-secondary;
+  max-width: 44ch;
+}
+
+// ── unresolved exports (extraction gaps — distinct from real changes) ─────────
+// A neutral, informational note (not the add/remove/modify vocabulary): the extractor couldn't read
+// these exports on one side, so their presence/absence is not a meaningful diff.
+.unresolvedNote {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 12px 16px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, $warning 35%, $border-color);
+  border-radius: 8px;
+  background: color-mix(in srgb, $warning 7%, transparent);
+}
+
+.unresolvedIcon {
+  color: $warning;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.unresolvedText {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: $text-secondary;
+
+  code {
+    font-family: $code-font;
+  }
+}
+
+// ── insights (slot-contributed) ──────────────────────────────────────────────
+
+.insights {
+  margin: 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insight {
+  padding: 10px 14px;
+  border: 1px dashed $border-color;
+  border-radius: 8px;
+  background: var(--surface-neutral-color, #fafbfc);
+  font-size: 13px;
+  line-height: 1.5;
+  color: $text-secondary;
+}
+
+// ── internal section ─────────────────────────────────────────────────────────
+
+.internalSection {
+  border-top: 1px solid $border-color;
+  padding-bottom: 6px;
+}
+
+.internalToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: $text-secondary;
+  text-align: left;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.internalCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-secondary;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 8px;
+  border-radius: 9px;
+}
+
+// ── slim component-level rows ────────────────────────────────────────────────
+
+.slimRowWrapper {
+  border-radius: 10px;
+  border: 1px solid $border-color;
+  background: $surface-color;
+  margin-bottom: 10px;
+  overflow: hidden;
+  scroll-margin-top: 12px;
+}
+
+.slimRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 18px;
+  color: $text-secondary;
+  font-size: 13.5px;
+}
+
+.slimRowButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.slimName {
+  font-family: $code-font;
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-primary;
+}
+
+.slimChip {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 11px;
+  border: 1px solid $border-color;
+  white-space: nowrap;
+}
+
+.slimChipOk {
+  color: $text-secondary;
+}
+
+.slimChipWarn {
+  color: $warning;
+  border-color: color-mix(in srgb, $warning 35%, transparent);
+  background: color-mix(in srgb, $warning 8%, transparent);
+}
+
+.slimChipError {
+  color: $danger;
+  border-color: color-mix(in srgb, $danger 35%, transparent);
+  background: color-mix(in srgb, $danger 7%, transparent);
+}
+
+.slimDetail {
+  font-size: 13px;
+  color: $text-secondary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slimExpand {
+  margin-left: auto;
+  font-size: 16px;
+  color: $text-muted;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.slimExpandOpen {
+  transform: rotate(90deg);
+}
+
+.slimExpanded {
+  border-top: 1px solid $border-color;
+  padding: 6px 0;
+}
+
+// ── impact badges ────────────────────────────────────────────────────────────
+
+.impactBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.impactBadgeSmall {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+// ── whole-pane states ────────────────────────────────────────────────────────
+
+.emptyState {
+  text-align: center;
+  padding: 56px 20px;
+}
+
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, $success 8%, transparent);
+  color: $success;
+  font-size: 26px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.emptyIconNeutral {
+  background: var(--surface-neutral-color, #f6f8fa);
+  color: $text-muted;
+  border: 1px solid $border-color;
+}
+
+.emptyTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 6px;
+}
+
+.emptySubtitle {
+  font-size: 14px;
+  line-height: 1.55;
+  color: $text-secondary;
+  max-width: 520px;
+  margin: 0 auto;
+}

@@ -176,7 +176,12 @@ export class Http implements Network {
       fetchTimeout: getAsNumber(CFG_FETCH_TIMEOUT) ?? 60000,
       localAddress: obj[CFG_LOCAL_ADDRESS],
       maxSockets: getAsNumber(CFG_MAX_SOCKETS) ?? 15,
-      networkConcurrency: getAsNumber(CFG_NETWORK_CONCURRENCY) ?? 16,
+      // No fallback on purpose: when the user hasn't configured it, leave it
+      // undefined so the package manager applies its own adaptive default
+      // (pnpm: min(96, max(cpuCores * 3, 64))). A hardcoded 16 here overrode
+      // that default on every install and capped fresh resolutions at ~100
+      // requests/second regardless of machine and network capacity.
+      networkConcurrency: getAsNumber(CFG_NETWORK_CONCURRENCY),
       strictSSL: typeof strictSSL === 'string' ? strictSSL === 'true' : strictSSL,
       ca: obj[CFG_NETWORK_CA] ?? obj[CFG_PROXY_CA],
       cafile: obj[CFG_NETWORK_CA_FILE] ?? obj[CFG_PROXY_CA_FILE],

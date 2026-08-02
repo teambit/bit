@@ -71,7 +71,12 @@ export class ComponentConfigMerger {
   private currentEnv: EnvData;
   private otherEnv: EnvData;
   private baseEnv?: EnvData;
-  private handledExtIds: string[] = [BuilderAspect.id]; // don't try to merge builder, it's possible that at one end it wasn't built yet, so it's empty
+  // don't try to merge builder, it's possible that at one end it wasn't built yet, so it's empty.
+  // teambit.envs/envs is handled exclusively by envStrategy() — the generic aspect merge only sees the
+  // raw `config.env`, which never carries the env's version (the version lives in the separate env-aspect
+  // entry that only envStrategy knows to attach). Letting the generic merge run would leak an unversioned
+  // external env and break the snap with ExternalEnvWithoutVersion.
+  private handledExtIds: string[] = [BuilderAspect.id, EnvsAspect.id];
   private otherLaneIdsStr: string[];
   constructor(
     private compIdStr: string,
@@ -203,8 +208,25 @@ export class ComponentConfigMerger {
     if (this.currentEnv.id === this.otherEnv.id && this.currentEnv.version === this.otherEnv.version) {
       return null;
     }
-    if (this.isIdInWorkspaceOrOtherLane(this.currentEnv.id, this.otherEnv.version)) {
-      // the env currently used is part of the workspace, that's what the user needs. don't try to resolve anything.
+    // did the current lane deliberately change its env away from the diversion point (base)?
+    // a version difference counts only when both sides have a known version — a missing base version
+    // (versionless/core env, or an absent base env-aspect entry) is "unknown", not "changed", so it must
+    // not block propagation of an env change made on the other lane.
+    const currentChangedEnvFromBase =
+      !this.baseEnv ||
+      this.baseEnv.id !== this.currentEnv.id ||
+      Boolean(this.baseEnv.version && this.currentEnv.version && this.baseEnv.version !== this.currentEnv.version);
+    // did "other" switch to a *different* env (a migration), or merely bump the same env's version?
+    const envIdChanged = this.currentEnv.id !== this.otherEnv.id;
+    // keep the current env (don't sync from "other") when it's a workspace component (or exists on the other
+    // lane) AND either the current lane deliberately changed its env, OR only the env's *version* differs.
+    // rationale: a workspace env's version is owned by the workspace, so we never adopt a different version of
+    // the *same* env from the other lane. only a genuine env *migration* (id change) that the current lane did
+    // not make is allowed to propagate — handled by the 3-way merge below (with the new env's version).
+    if (
+      (currentChangedEnvFromBase || !envIdChanged) &&
+      this.isIdInWorkspaceOrOtherLane(this.currentEnv.id, this.currentEnv.version)
+    ) {
       return null;
     }
     return this.basicConfigMerge(mergeStrategyParams);

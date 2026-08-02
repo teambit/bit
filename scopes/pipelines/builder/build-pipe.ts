@@ -2,6 +2,7 @@ import type { EnvDefinition } from '@teambit/envs';
 import type { ComponentMap } from '@teambit/component';
 import { ComponentID } from '@teambit/component';
 import type { Logger, LongProcessLogger } from '@teambit/logger';
+import Module from 'module';
 import mapSeries from 'p-map-series';
 import prettyTime from 'pretty-time';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
@@ -13,6 +14,7 @@ import type { ComponentResult } from './types';
 import type { TasksQueue } from './tasks-queue';
 import type { EnvsBuildContext } from './builder.service';
 import { TaskResultsList } from './task-results-list';
+import { executeTasksByLocationAndEnv } from './tasks-parallel-scheduler';
 
 export type TaskResults = {
   /**
@@ -51,6 +53,12 @@ type PipeOptions = {
   exitOnFirstFailedTask?: boolean; // by default it skips only when a dependent failed.
   showEnvNameInOutput?: boolean;
   showEnvVersionInOutput?: boolean; // in case it shows the env-name, whether should show also the version
+  /**
+   * number of environments whose task-chains may run concurrently. 1 (default) keeps the original
+   * fully-serial behavior. when > 1, environments are built in parallel (see
+   * `executeTasksByLocationAndEnv`).
+   */
+  concurrency?: number;
 };
 
 export class BuildPipe {
@@ -80,7 +88,12 @@ export class BuildPipe {
   async execute(): Promise<TaskResultsList> {
     await this.executePreBuild();
     this.longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasksQueue.length);
-    await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
+    const concurrency = this.options?.concurrency ?? 1;
+    if (concurrency > 1) {
+      await executeTasksByLocationAndEnv(this.tasksQueue, concurrency, ({ task, env }) => this.executeTask(task, env));
+    } else {
+      await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
+    }
     this.longProcessLogger.end();
     const capsuleRootDir = Object.values(this.envsBuildContext)[0]?.capsuleNetwork.capsulesRootDir;
     const tasksResultsList = new TaskResultsList(this.tasksQueue, this.taskResults, capsuleRootDir, this.logger);
@@ -97,6 +110,31 @@ export class BuildPipe {
       await task.preBuild(this.getBuildContext(env.id));
     });
     longProcessLogger.end();
+  }
+
+  /**
+   * in-process build tasks may hijack the Module._extensions loaders and leave them hijacked after
+   * the task ends. e.g. the mocha tester calls @babel/register, whose hook claims all ".js" files
+   * (including node_modules) and compiles files babel declines to transform as CJS scripts —
+   * breaking require() of ESM-only packages for every subsequent task in this process.
+   * snapshotting before each task and restoring after confines such hooks to the task that
+   * installed them. skipped in parallel mode, where another env's still-running task may rely on a
+   * hook it installed.
+   */
+  private snapshotRequireExtensions(): Record<string, unknown> | undefined {
+    if ((this.options?.concurrency ?? 1) > 1) return undefined;
+    return { ...(Module as any)._extensions };
+  }
+
+  private restoreRequireExtensions(snapshot: Record<string, unknown> | undefined) {
+    if (!snapshot) return;
+    const extensions = (Module as any)._extensions;
+    for (const key of Object.keys(extensions)) {
+      if (!(key in snapshot)) delete extensions[key];
+    }
+    for (const [key, loader] of Object.entries(snapshot)) {
+      if (extensions[key] !== loader) extensions[key] = loader;
+    }
   }
 
   private async executeTask(task: BuildTask, env: EnvDefinition): Promise<void> {
@@ -132,11 +170,14 @@ export class BuildPipe {
     this.logger.debug(
       `${taskLogPrefix} memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
     );
+    const requireExtensionsSnapshot = this.snapshotRequireExtensions();
     try {
       buildTaskResult = await task.execute(buildContext);
     } catch (err) {
       this.logger.consoleFailure(`env: ${env.id}, task "${taskId}" threw an error`);
       throw err;
+    } finally {
+      this.restoreRequireExtensions(requireExtensionsSnapshot);
     }
 
     const endTime = Date.now();

@@ -22,6 +22,7 @@ import type { VariantsMain } from '@teambit/variants';
 import { VariantsAspect } from '@teambit/variants';
 import type { Component } from '@teambit/component';
 import { ComponentID, ComponentMap } from '@teambit/component';
+import { isSnap } from '@teambit/component-version';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { updateJsoncPreservingFormatting } from '@teambit/toolbox.json.jsonc-utils';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
@@ -67,7 +68,8 @@ import { BundlerAspect } from '@teambit/bundler';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
-import { DependencyTypeNotSupportedInPolicy } from './exceptions';
+import { DependencyTypeNotSupportedInPolicy, UnpublishedComponentDependency } from './exceptions';
+import type { UnpublishedSnapDependency } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
 import { LinkCommand } from './link';
@@ -430,21 +432,32 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      const { dependenciesChanged } = await installer.installComponents(
-        this.workspace.path,
-        current.manifests,
-        mergedRootPolicy,
-        current.componentDirectoryMap,
-        {
-          linkedDependencies,
-          installTeambitBit: false,
-          forcedHarmonyVersion,
-        },
-        pmInstallOptions
-      );
+      let installResult: { dependenciesChanged: boolean };
+      try {
+        installResult = await installer.installComponents(
+          this.workspace.path,
+          current.manifests,
+          mergedRootPolicy,
+          current.componentDirectoryMap,
+          {
+            linkedDependencies,
+            installTeambitBit: false,
+            forcedHarmonyVersion,
+          },
+          pmInstallOptions
+        );
+      } catch (err: any) {
+        // when the package manager can't find a version, the culprit is usually a component dependency that
+        // resolves to a snap which was never published (e.g. a hidden lane update-dependent whose Ripple build
+        // failed or hasn't completed). replace the cryptic "No matching version found" with an actionable
+        // message. re-throws the original error otherwise.
+        throw this.enrichUnpublishedSnapDepError(err, current.componentDirectoryMap.components);
+      }
+      const { dependenciesChanged } = installResult;
       this.workspace.inInstallAfterPmContext = true;
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
+      await this.syncCoreAspectLinksForEnvs(compDirMap);
       const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
       await this.reloadMovedEnvs();
       await this.reloadNonLoadedEnvs();
@@ -490,6 +503,9 @@ export class InstallMain {
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    // the core aspects are compiled by now, so drop the links added above and let the envs resolve
+    // them from the workspace again.
+    await this.syncCoreAspectLinksForEnvs(compDirMap);
     if (!options?.lockfileOnly && !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
@@ -514,6 +530,59 @@ export class InstallMain {
   private shouldClearCacheOnInstall(): boolean {
     const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
     return nonLoadedEnvs.length > 0;
+  }
+
+  /**
+   * Called only when the package manager install failed. A "No matching version found" failure usually points
+   * at a component dependency that resolves to a snap which was never published — its build failed or hasn't
+   * completed yet (commonly a hidden lane "update-dependent" re-snapped by "snap updates" / Ripple CI, but not
+   * necessarily). Such a dep isn't checked out, so it can't be linked from source and there's no package to
+   * fetch. When the failing package matches one of those deps, return an actionable error (pointing at
+   * `bit import`); otherwise return the original error unchanged.
+   *
+   * We resolve the culprit by matching the package manager error against the resolved component dependencies
+   * rather than the lane's `updateDependents`, for two reasons: (1) the failing dep is not a workspace component,
+   * so its component-id (needed for the `bit import` remediation) is only recoverable from the resolved deps of
+   * the checked-out components — there's no package-name→id map for it; (2) `updateDependents` is unreliable —
+   * forking a lane drops it and `reset` moves entries out of it, so a never-published snap can still be pinned
+   * while no longer tracked there. The scan reads already-loaded in-memory dep data (no fetch).
+   */
+  private enrichUnpublishedSnapDepError(err: Error, components: Component[]): Error {
+    // only act on package manager failures that can be produced by an unpublished snap package. other codes
+    // (auth, network, FETCH_404, registry outages) can mention the same package but signal a real problem we must
+    // not mask. pnpm errors are wrapped by pnpmErrorToBitError, which keeps the original error on `cause`.
+    // `@pnpm/napi` can report the old TS engine's "No matching version found" path as
+    // SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER (or its prefixed ERR_PNPM_* form) for snap-versioned Bit package specs.
+    const pnpmCode = (err as any)?.cause?.code ?? (err as any)?.code;
+    const errMessage = err.message || '';
+    const isUnpublishedSnapCandidate =
+      pnpmCode === 'ERR_PNPM_NO_MATCHING_VERSION' ||
+      pnpmCode === 'SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER' ||
+      pnpmCode === 'ERR_PNPM_SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER' ||
+      (!pnpmCode && errMessage.includes('No matching version found'));
+    if (!isUnpublishedSnapCandidate) return err;
+
+    // checked-out components are linked from source, so they're never fetched from the registry.
+    const workspaceIds = this.workspace.listIds();
+
+    const unpublished = new Map<string, UnpublishedSnapDependency>();
+    for (const component of components) {
+      for (const dep of this.dependencyResolver.getComponentDependencies(component)) {
+        const depId = dep.componentId;
+        if (!depId.version || !isSnap(depId.version)) continue;
+        if (workspaceIds.hasWithoutVersion(depId)) continue;
+        // pinpoint the exact dependency the package manager failed on: its snap hash (globally unique) appears
+        // verbatim in the error (the manifest pins `0.0.0-<hash>`, so the raw hash is a substring).
+        if (!errMessage.includes(depId.version)) continue;
+        const key = depId.toStringWithoutVersion();
+        const dependent = component.id.toStringWithoutVersion();
+        const entry = unpublished.get(key);
+        if (entry) entry.dependents.push(dependent);
+        else unpublished.set(key, { id: key, version: depId.version, dependents: [dependent] });
+      }
+    }
+    if (!unpublished.size) return err;
+    return new UnpublishedComponentDependency([...unpublished.values()]);
   }
 
   /**
@@ -1017,6 +1086,7 @@ export class InstallMain {
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
             const envId = await this.envs.calculateEnvId(app);
+            const appWorkspaceDeps = await this._getAppWorkspaceDeps(app, workspaceDeps);
             return [
               await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, app.id),
               {
@@ -1024,7 +1094,7 @@ export class InstallMain {
                 dependencies: {
                   ...(await this._getEnvDependencies(envId, workspaceDeps)),
                   ...appManifest.dependencies,
-                  ...workspaceDeps,
+                  ...appWorkspaceDeps,
                 },
                 installConfig: {
                   hoistingLimits: 'workspaces',
@@ -1035,6 +1105,41 @@ export class InstallMain {
         )
       )
     );
+  }
+
+  private async _getAppWorkspaceDeps(
+    app: Component,
+    workspaceDeps: Record<string, string>
+  ): Promise<Record<string, string>> {
+    const workspaceComponents = await this.workspace.list();
+    const workspaceComponentsById = new Map(
+      workspaceComponents.map((component) => [component.id.toStringWithoutVersion(), component])
+    );
+    const appWorkspaceDeps: Record<string, string> = {};
+    const visited = new Set<string>();
+
+    const addComponent = (component: Component) => {
+      const componentId = component.id.toStringWithoutVersion();
+      if (visited.has(componentId)) return;
+      visited.add(componentId);
+
+      const packageName = this.dependencyResolver.getPackageName(component);
+      if (workspaceDeps[packageName]) {
+        appWorkspaceDeps[packageName] = workspaceDeps[packageName];
+      }
+
+      for (const dep of this.dependencyResolver.getComponentDependencies(component)) {
+        const depComponent = workspaceComponentsById.get(dep.componentId.toStringWithoutVersion());
+        if (depComponent) {
+          addComponent(depComponent);
+        } else if (workspaceDeps[dep.packageName]) {
+          appWorkspaceDeps[dep.packageName] = workspaceDeps[dep.packageName];
+        }
+      }
+    };
+
+    addComponent(app);
+    return appWorkspaceDeps;
   }
 
   /**
@@ -1246,6 +1351,23 @@ export class InstallMain {
       await this._linkAllComponentsToBitRoots(compDirMap);
     }
     return { linkResults: res, linkedRootDeps };
+  }
+
+  /**
+   * see DependencyLinker.syncCoreAspectLinksForEnvs.
+   *
+   * `linkCoreAspects` is only turned off by a workspace that authors the core aspects, since it must
+   * use the ones it builds rather than the running bit's. That opt-out is also exactly what leaves
+   * the envs' phantom require unsatisfied until those sources are compiled, so there is nothing to
+   * bridge in any other workspace - where this returns on the config read alone.
+   */
+  private async syncCoreAspectLinksForEnvs(compDirMap: ComponentMap<string>) {
+    if (this.dependencyResolver.linkCoreAspects()) return;
+    const linker = this.dependencyResolver.getLinker({ rootDir: this.workspace.path });
+    await linker.syncCoreAspectLinksForEnvs(
+      this.workspace.path,
+      compDirMap.toArray().map(([component]) => component.id)
+    );
   }
 
   async linkCodemods(compDirMap: ComponentMap<string>, options?: { rewire?: boolean }) {

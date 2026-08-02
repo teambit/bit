@@ -1,0 +1,79 @@
+---
+description: A navigational sidebar that renders a hierarchical tree of Bit components, grouped by scope and namespace.
+labels: ['react', 'navigation', 'sidebar', 'tree']
+---
+
+import { ComponentTree } from './component-tree';
+
+The `ComponentTree` is the main export of the `side-bar` component. It renders a collapsible tree of Bit components, organized by scope and namespace. Each leaf node is a clickable link that navigates to the component's page and highlights the currently active component based on the current URL.
+
+## Component usage
+
+```tsx
+import { ComponentTree } from '@teambit/ui-foundation.ui.side-bar';
+
+<ComponentTree components={myComponents} />
+```
+
+## With lanes
+
+Pass a `LanesModel` to enable lane-aware navigation. The tree will highlight components that exist only on the current lane or only on main, and generate correct lane-scoped URLs.
+
+```tsx
+import { ComponentTree } from '@teambit/ui-foundation.ui.side-bar';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+
+<ComponentTree components={myComponents} lanesModel={lanesModel} />
+```
+
+## Custom tree node renderer
+
+Swap out the default renderer per node type by passing a `TreeNode` prop. The renderer receives a `TreeNodeProps<PayloadType>` and must handle all three node types: scope (payload is a `ScopePayload` instance), namespace (has children), and component (leaf).
+
+```tsx
+import { ComponentTree, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
+import type { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
+import type { TreeNodeProps } from '@teambit/design.ui.tree';
+
+function MyTreeNode(props: TreeNodeProps<PayloadType>) {
+  const { node } = props;
+  if (!node.children) return <span>{node.id}</span>;
+  if (node.payload instanceof ScopePayload) return <strong>{node.id}</strong>;
+  return <em>{node.id}</em>;
+}
+
+<ComponentTree components={myComponents} TreeNode={MyTreeNode} />
+```
+
+## Collapsed state
+
+Set `isCollapsed` to collapse all scope and namespace groups by default. Groups containing the active component are always expanded regardless of this setting.
+
+```tsx
+<ComponentTree components={myComponents} isCollapsed />
+```
+
+## Tree transformation
+
+Use `transformTree` to modify the inflated tree before it is rendered. This is useful for reordering nodes or injecting synthetic nodes.
+
+```tsx
+<ComponentTree
+  components={myComponents}
+  transformTree={(root) => {
+    // reorder or filter tree nodes
+    return root;
+  }}
+/>
+```
+
+## Sub-components
+
+| Export | Purpose |
+|---|---|
+| `ComponentTree` | Main entry point — renders the full hierarchical tree |
+| `ComponentView` | Renders a single component leaf node as a navigable link |
+| `ScopeTreeNode` | Collapsible node representing a Bit scope |
+| `NamespaceTreeNode` | Collapsible node representing a namespace within a scope |
+| `ScopePayload` | Marker class attached to scope nodes in the payload map |
+| `PayloadType` | Union type: `ComponentModel | ScopePayload | LaneModel | undefined` |

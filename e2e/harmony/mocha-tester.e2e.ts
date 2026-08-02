@@ -15,6 +15,7 @@ describe('Mocha Tester', function () {
       '@teambit/typescript.typescript-compiler',
       '@teambit/defender.mocha-tester',
       'chai',
+      'chai-fs',
       '@babel/preset-typescript',
       '@babel/preset-env',
     ]);

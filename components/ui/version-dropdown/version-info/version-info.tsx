@@ -1,6 +1,8 @@
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { VersionLabel } from '@teambit/component.ui.version-label';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import React, { useMemo, useRef, useEffect } from 'react';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
@@ -31,6 +33,7 @@ function _VersionInfo(
     message,
     tag,
     profileImage,
+    deprecated,
     onVersionClicked,
   }: VersionInfoProps,
   ref?: React.ForwardedRef<HTMLDivElement>
@@ -69,6 +72,13 @@ function _VersionInfo(
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
           <Ellipsis className={classNames(styles.versionName)}>{formattedVersion}</Ellipsis>
           {isLatest && <VersionLabel status="latest" />}
+          {deprecated && (
+            <Tooltip placement="bottom" content="Deprecated">
+              <div className={styles.deprecatedIcon}>
+                <Icon of="note-deprecated" />
+              </div>
+            </Tooltip>
+          )}
           <CommitMessage message={message} showDetails={showDetails} />
         </div>
         <Ellipsis className={styles.versionTimestamp}>

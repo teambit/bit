@@ -18,6 +18,10 @@ import { SchemaAspect } from './schema.aspect';
 
 use(chaiSubset);
 
+function expectToContainSubset(actual: unknown, expected: unknown) {
+  (expect(actual).to as Chai.Assertion & { containSubset(subset: unknown): Chai.Assertion }).containSubset(expected);
+}
+
 describe('SchemaAspect', function () {
   this.timeout(0);
   let schema: SchemaMain;
@@ -56,9 +60,44 @@ describe('SchemaAspect', function () {
       // uncomment the next line temporarily to sync the expected json with new schema changes
       // fs.outputFileSync(expectedJsonPath, JSON.stringify(results, undefined, 2));
       const expectedJson = fs.readJsonSync(expectedJsonPath);
-      expect(results).to.to.containSubset(expectedJson);
+      expectToContainSubset(results, expectedJson);
     });
   });
+  describe('default export extraction', () => {
+    // Regression: `export class Foo` + `export default Foo` must extract the default as a stable,
+    // valid `default` re-reference to Foo — not a `"Foo (default)"` alias (invalid signature +
+    // unstable diff key). Empirically driven via the real extractor on the `default-export` fixture.
+    let exports: any[];
+    before(async () => {
+      const { workspacePath } = workspaceData;
+      const compDir = path.join(workspacePath, 'default-export');
+      const src = path.join(getMockDir(), 'default-export');
+      await fs.copy(src, compDir);
+      const harmony = await loadManyAspects([WorkspaceAspect, SchemaAspect, TrackerAspect], workspacePath);
+      const ws = harmony.get<Workspace>(WorkspaceAspect.id);
+      const tracker = harmony.get<TrackerMain>(TrackerAspect.id);
+      await tracker.track({ rootDir: compDir, defaultScope: 'org.scope' });
+      await ws.bitMap.write();
+      const schemaMain = harmony.get<SchemaMain>(SchemaAspect.id);
+      const compId = await ws.resolveComponentId('default-export');
+      const comp = await ws.get(compId);
+      const api = await schemaMain.getSchema(comp, true);
+      exports = (api.toObject() as any).module.exports || [];
+    });
+
+    it('should resolve the default export to a TypeRef named "default" pointing at the class', () => {
+      const def = exports.find((e) => (e.alias || e.name) === 'default');
+      expect(def, 'a `default` export should exist').to.exist;
+      expect(def.exportNode.__schema).to.equal('TypeRefSchema');
+      expect(def.exportNode.name).to.equal('Foo');
+    });
+
+    it('should NOT bake "(default)" into any export name/alias (keeps the signature valid)', () => {
+      const withSuffix = exports.filter((e) => `${e.alias || e.name}`.includes('(default)'));
+      expect(withSuffix, 'no export should carry a "(default)" suffix in its name').to.have.lengthOf(0);
+    });
+  });
+
   describe('getSchemaFromObject', () => {
     it('should be able to deserialize an JSON object to SchemaNode instances', () => {
       const jsonPath = path.join(getMockDir(), 'button-schemas.json');
@@ -66,7 +105,7 @@ describe('SchemaAspect', function () {
       const apiSchema = schema.getSchemaFromObject(json);
       expect(apiSchema instanceof APISchema).to.be.true;
       expect(apiSchema.componentId.constructor.name).to.equal(ComponentID.name);
-      expect(apiSchema.toObject()).to.containSubset(json);
+      expectToContainSubset(apiSchema.toObject(), json);
     });
     it('should not throw when it does not recognize the schema', () => {
       const jsonPath = path.join(getMockDir(), 'button-old-schema.json');
@@ -112,7 +151,7 @@ describe('SchemaAspect', function () {
       // uncomment the next line temporarily to sync the expected json with new diff changes
       // fs.outputFileSync(expectedJsonPath, JSON.stringify(result, undefined, 2));
       const expectedJson = fs.readJsonSync(expectedJsonPath);
-      expect(result).to.containSubset(expectedJson);
+      expectToContainSubset(result, expectedJson);
     });
 
     it('should detect changes', () => {

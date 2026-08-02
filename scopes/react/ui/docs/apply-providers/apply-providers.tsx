@@ -5,7 +5,6 @@ import { Composer } from '@teambit/base-ui.utils.composer';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 
 import type { RenderingContext } from '@teambit/preview';
-import { ReactAspect } from '@teambit/react';
 
 export type ApplyProvidersProps = {
   renderingContext: RenderingContext;
@@ -16,7 +15,8 @@ export type ApplyProvidersProps = {
  * applies providers from rendering context, and error boundary
  */
 export function ApplyProviders({ renderingContext, children, ...rest }: ApplyProvidersProps) {
-  const { providers = [] } = renderingContext.get(ReactAspect.id) || {};
+  // react env aspect id, inlined to avoid a source dependency on the react env package
+  const { providers = [] } = renderingContext.get('teambit.react/react') || {};
 
   return (
     <div {...rest}>

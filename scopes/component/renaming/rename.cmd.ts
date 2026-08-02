@@ -39,7 +39,7 @@ for local components: simply renames the existing component in place.`;
     ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
     ['', 'ast', 'use ast to transform files instead of regex'],
     ['', 'delete', 'DEPRECATED. this is now the default'],
-    ['', 'deprecate', 'instead of deleting the original component, deprecating it'],
+    ['', 'deprecate', 'instead of deleting the original component, deprecate it'],
     [
       'p',
       'path <relative-path>',

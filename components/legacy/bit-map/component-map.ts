@@ -312,6 +312,15 @@ export class ComponentMap {
     if (!deprecationConf) return false;
     return deprecationConf !== '-' && deprecationConf.deprecate === false;
   }
+  /**
+   * a range-deprecation is stored with `deprecate: false` (only specific versions are deprecated),
+   * so it's not isDeprecated(), yet it still needs clearing on undeprecate. detect it explicitly.
+   */
+  isDeprecatedByRange() {
+    const deprecationConf = this.config?.[Extensions.deprecation];
+    if (!deprecationConf || deprecationConf === '-') return false;
+    return Boolean(deprecationConf.range);
+  }
   isInternal() {
     const internalizeConf = this.config?.[Extensions.internalize];
     if (!internalizeConf) return false;

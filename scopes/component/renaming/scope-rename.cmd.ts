@@ -20,7 +20,7 @@ as a result of this change`;
       'refactor',
       'update the import statements in all dependent components to the new package name (i.e. with the new scope name)',
     ],
-    ['', 'deprecate', 'for exported components, instead of deleting the original components, deprecating them'],
+    ['', 'deprecate', 'for exported components, instead of deleting the original components, deprecate them'],
     ['x', 'skip-dependency-installation', 'do not install dependencies after the rename'],
   ] as CommandOptions;
   group = 'component-config';

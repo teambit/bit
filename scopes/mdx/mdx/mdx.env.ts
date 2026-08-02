@@ -2,6 +2,7 @@ import type { Environment, EnvContext } from '@teambit/envs';
 import { merge } from 'lodash';
 import type { ReactMain } from '@teambit/react';
 import type { Compiler, CompilerMain } from '@teambit/compiler';
+import type { BuildTask } from '@teambit/builder';
 import { MDXMultiCompiler } from '@teambit/mdx.compilers.mdx-multi-compiler';
 
 export const MdxEnvType = 'mdx';
@@ -34,7 +35,7 @@ export class MdxEnv implements Environment {
     return this.getMdxCompiler();
   }
 
-  getBuildPipe() {
+  getBuildPipe(): BuildTask[] {
     return [
       this.compiler.createTask('MDXCompiler', this.getMdxCompiler()),
       ...this.react.reactEnv.createBuildPipeWithoutCompiler(),

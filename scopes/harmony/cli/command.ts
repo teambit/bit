@@ -54,6 +54,15 @@ export interface Command {
   loader?: boolean;
 
   /**
+   * opt this command's `report` output into paging (like git's log/diff).
+   * when true, and stdout is an interactive human terminal, the output is piped through a pager
+   * (`less` by default). non-interactive contexts (piped output, CI, ai-agents, bit-cli-server)
+   * always get the full output at once. users can override with --pager / --no-pager.
+   * the default is false.
+   */
+  pager?: boolean;
+
+  /**
    * Array of command options where each element is a tuple.
    * ['flag alias', 'flag name', 'flag description']
    * for example:

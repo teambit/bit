@@ -105,7 +105,7 @@ useful for development when components need to reference each other or when debu
   async json([ids]: [string[]], opts: LinkCommandOpts): Promise<WorkspaceLinkResults> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     this.logger.console(
-      `Linking components and core aspects to node_modules for workspaces: '${chalk.cyan(this.workspace.name)}'`
+      `Linking components and core aspects to node_modules for workspace: '${chalk.cyan(this.workspace.name)}'`
     );
 
     const linkOpts: WorkspaceLinkOptions = {

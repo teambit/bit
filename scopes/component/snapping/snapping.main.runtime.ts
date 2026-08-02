@@ -200,6 +200,7 @@ export class SnappingMain {
     snapped = false,
     unmerged = false,
     releaseType,
+    autoTagReleaseType,
     preReleaseId,
     ignoreIssues,
     ignoreNewestVersion = false,
@@ -226,6 +227,7 @@ export class SnappingMain {
     unmerged?: boolean;
     version?: string;
     releaseType?: ReleaseType;
+    autoTagReleaseType?: ReleaseType;
     ignoreIssues?: string;
     scope?: string | boolean;
     incrementBy?: number;
@@ -269,6 +271,7 @@ export class SnappingMain {
       versionsFile,
       exactVersion: validExactVersion,
       releaseType,
+      autoTagReleaseType,
       preReleaseId,
       ignoreNewestVersion,
       skipTests,

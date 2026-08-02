@@ -105,15 +105,19 @@ commands:
             cd <<parameters.directory>> &&
             pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
+            echo "package-import-method=copy" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            echo "user-agent=bvm-bundle-circleci" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.12" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
             pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/util.lex-comparator']='3.0.2'" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/config.nerf-dart']='1.0.1'" &&
             pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
 
   # Bundle installation for Windows (with Windows-specific configs)
@@ -132,18 +136,70 @@ commands:
             cd <<parameters.directory>> &&
             pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
+            echo "package-import-method=copy" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            echo "user-agent=bvm-bundle-circleci" >> .npmrc &&
             echo "prefer-symlinked-executables=false" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.12" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
             pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/util.lex-comparator']='3.0.2'" &&
+            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/config.nerf-dart']='1.0.1'" &&
             pnpm add @teambit/bit --os=win32 --cpu=<<parameters.cpu>>
+
+  verify_pnpm_napi_bundle:
+    parameters:
+      package:
+        type: string
+      directory:
+        type: string
+        default: "bit-${BIT_VERSION}"
+    steps:
+      - run:
+          name: verify @pnpm/<<parameters.package>> native binary
+          command: |
+            cd <<parameters.directory>>
+            PNPM_NAPI_PACKAGE="<<parameters.package>>" node \<<'NODE'
+            const fs = require('fs');
+            const path = require('path');
+
+            const packageName = process.env.PNPM_NAPI_PACKAGE;
+            const candidates = [
+              path.join(process.cwd(), 'node_modules', '@pnpm', packageName, 'pnpm-napi.node'),
+              path.join(process.cwd(), 'node_modules', '.pnpm', 'node_modules', '@pnpm', packageName, 'pnpm-napi.node'),
+            ];
+            const found = candidates.find((candidate) => fs.existsSync(candidate));
+            if (found) {
+              console.log(`Found @pnpm/${packageName} native binary at ${path.relative(process.cwd(), found)}`);
+              process.exit(0);
+            }
+
+            const installedPackages = [];
+            for (const baseDir of [
+              path.join(process.cwd(), 'node_modules', '@pnpm'),
+              path.join(process.cwd(), 'node_modules', '.pnpm', 'node_modules', '@pnpm'),
+            ]) {
+              if (!fs.existsSync(baseDir)) continue;
+              for (const entry of fs.readdirSync(baseDir)) {
+                if (entry.startsWith('napi.')) installedPackages.push(path.relative(process.cwd(), path.join(baseDir, entry)));
+              }
+            }
+
+            console.error(`Missing @pnpm/${packageName}/pnpm-napi.node in Bit CLI bundle`);
+            console.error(`Checked:\n${candidates.map((candidate) => `  - ${path.relative(process.cwd(), candidate)}`).join('\n')}`);
+            console.error(
+              installedPackages.length
+                ? `Installed @pnpm/napi platform packages:\n${installedPackages.map((pkg) => `  - ${pkg}`).join('\n')}`
+                : 'No @pnpm/napi platform packages were found'
+            );
+            process.exit(1);
+            NODE
 
   # Bit configuration
   bit_config:
@@ -225,7 +281,6 @@ commands:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
       - run: bvm upgrade
-      # - run: bvm install 1.11.42
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -306,6 +361,7 @@ commands:
             --exclude=bit-${BIT_VERSION}/.npmrc
             --exclude=bit-${BIT_VERSION}/package.json
             --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
+            --exclude=bit-${BIT_VERSION}/pnpm-workspace.yaml
             bit-${BIT_VERSION}
 
   # Docker commands
@@ -392,8 +448,6 @@ commands:
     steps:
       - restore_cache:
           key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v0.1.6-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -475,8 +529,6 @@ commands:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v0.1.6-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -485,15 +537,21 @@ commands:
       # - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      - run:
+          name: set user agent for Bit processes in e2e tests
+          command: echo "user-agent=bit-e2e-circleci" >> ~/.npmrc
       # Make sure when we run bit from e2e tests we run it from the global not from here
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
-          # I tried really hard to split by timing. but it didn't work.
-          # CircleCI’s “split by timings” relies on per-testcase durations, but in our suite most time happens in
-          # before/after hooks, so testcase times are near-zero while the suite shows the full wall time.
-          # With no meaningful per-test weights, the splitter can’t balance work across 25 machines, leading to uneven distribution
-          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          # Files are split across nodes by measured per-file wall-clock times (bin-packing), see
+          # scripts/split-e2e-tests.js. CircleCI's "split by timings" can't work here: it relies on
+          # per-testcase durations from junit, but most of our e2e time is spent in before/after hooks,
+          # which mocha attributes to no testcase, so the splitter sees ~13% of the real cost.
+          # The timings manifest is derived from actual CI node run times; refresh it occasionally
+          # with: node scripts/generate-e2e-timings.js
+          command: 'cd bit && node scripts/split-e2e-tests.js | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          no_output_timeout: '50m'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
@@ -580,11 +638,7 @@ jobs:
       - run: cd bit && bbit init
       - run:
           name: bbit install
-          command: cd bit && bbit install
-      - save_cache:
-          key: core-aspect-env-v0.1.6-v1
-          paths:
-            - /home/circleci/Library/Caches/Bit/capsules/caec9a107
+          command: cd bit && echo "user-agent=bit-repo-circleci" >> .npmrc && bbit install
       # - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
@@ -631,21 +685,19 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v0.1.6-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
 
-  check_env_cache_sync:
+  check_version_sync:
     <<: *defaults
     steps:
-      # Only needs .bitmap and .circleci/config.yml from a plain checkout, so it
-      # runs (and fails) in seconds without waiting for setup_harmony.
+      # Only needs a plain checkout, so it runs (and fails) in seconds without
+      # waiting for setup_harmony.
       - checkout
       - run:
-          name: 'check env cache synchronization'
-          command: './scripts/check-env-cache-sync.sh'
+          name: 'check @teambit/harmony version synchronization'
+          command: './scripts/check-harmony-version-sync.sh'
 
   generate_and_check_types:
     <<: *defaults
@@ -664,6 +716,54 @@ jobs:
       - run:
           name: 'make sure the packages used in legacy are specified in package.json'
           command: 'cd bit && node scripts/validate-pkg-exist-in-pkg-json.js'
+
+  # Verify the generated CLI-reference / core-aspects files are committed and up to date.
+  # These files (cli-reference.{mdx,json,docs.mdx}, the claude-skill docs, and
+  # core-aspects-ids.json) are component sources, so they belong in the PR rather than
+  # being regenerated and committed post-merge on master by bit_merge. This shifts that
+  # generation left: it regenerates the files and fails if the working tree differs,
+  # telling the author to run the generate-* scripts and commit the result. Mirrors the
+  # environment bit_merge already uses to run `bit cli generate`.
+  check_generated_reference:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config
+      - restore_common_caches
+      - run:
+          name: 'regenerate CLI-reference and core-aspects files'
+          command: |
+            cd bit
+            npm run generate-cli-reference
+            npm run generate-cli-reference-json
+            npm run generate-cli-reference-docs
+            npm run generate-cli-skill
+            npm run generate-core-aspects-ids
+      - run:
+          name: 'fail if any generated reference file is out of date'
+          command: |
+            cd bit
+            GENERATED="scopes/harmony/cli-reference/cli-reference.mdx \
+                       scopes/harmony/cli-reference/cli-reference.json \
+                       scopes/harmony/cli-reference/cli-reference.docs.mdx \
+                       contrib/claude-skill-bit-cli/SKILL.md \
+                       contrib/claude-skill-bit-cli/CLI_REFERENCE.md \
+                       scopes/harmony/testing/load-aspect/core-aspects-ids.json"
+            # cli-reference.docs.mdx embeds the running bit version in its frontmatter
+            # (cli.cmd.ts: "Bit version: ${getBitVersion()}"), which is a release-time
+            # value not knowable in a PR. Ignore hunks whose only change is that line so
+            # the check doesn't flap on every version bump.
+            DIFF=$(git diff -I'Bit version: [0-9]' -- $GENERATED)
+            if [ -z "$DIFF" ]; then
+              echo "✅ generated reference files are up to date"
+            else
+              echo "❌ generated reference files are out of date. Run locally and commit the result:"
+              echo "   npm run generate-cli-reference && npm run generate-cli-reference-json && npm run generate-cli-reference-docs && npm run generate-cli-skill && npm run generate-core-aspects-ids"
+              git --no-pager diff -I'Bit version: [0-9]' --stat -- $GENERATED
+              exit 1
+            fi
 
   # ========== Documentation & Notifications ==========
   generate_docs:
@@ -702,10 +802,18 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run:
           name: 'bit ci pr'
-          command: 'cd bit && bit ci pr --build --keep-lane'
+          # --skip-cleanup: this container is discarded right after, so don't waste time restoring
+          # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
+          # NOTE: PR builds run the FULL pipeline by default. To trade specific tasks for speed on a
+          # given PR (no YAML change needed), add a `[skip-tasks: <names>]` token to the commit
+          # message, e.g. `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents]`.
+          command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
+            # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
+            # this build is CPU-bound and dominated by one env, so concurrency only added contention.
+            # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -766,7 +874,7 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 25
+    parallelism: 40
     steps:
       - e2e_test_cmd
 
@@ -776,7 +884,9 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 25
+      # gate for released-binary-only e2e tests (see e2e/harmony/released-bit-core-exports.e2e.ts)
+      E2E_RELEASED_BINARY: "true"
+    parallelism: 32
     steps:
       - attach_workspace:
           at: ./
@@ -784,8 +894,19 @@ jobs:
       - restore_common_caches
       - install_bvm
       - bvm_upgrade
+      # Fail fast if the released bundle ships any @teambit package whose exports.types points at
+      # source (.ts) instead of dist/*.d.ts — that breaks clients whose envs type-check it.
+      - run:
+          name: verify released bundle has no source-pointing exports.types
+          command: |
+            # the released bundle is identical across parallel nodes; scan once on node 0.
+            if [ "${CIRCLE_NODE_INDEX:-0}" != "0" ]; then
+              echo "skipping released-exports scan on node ${CIRCLE_NODE_INDEX}"; exit 0;
+            fi
+            BV=$(bbit --version | tr -d '[:space:]')
+            node bit/scripts/verify-released-exports.js "$HOME/.bvm/versions/$BV/bit-$BV/node_modules/@teambit"
       - e2e_test_cmd:
-         bit_bin: "--bin_bit=bbit"
+         bit_bin: "--bit_bin=bbit"
 
   # setup job: creates cleaned bit bundle and persists to workspace (runs once)
   setup_bundle_simulation:
@@ -817,7 +938,7 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 25
+    parallelism: 32
     steps:
       - attach_workspace:
           at: ./
@@ -837,7 +958,51 @@ jobs:
           name: verify cleaned binary works
           command: source $BASH_ENV && bit-cleaned --version
       - e2e_test_cmd:
-          bit_bin: "--bin_bit=bit-cleaned"
+          bit_bin: "--bit_bin=bit-cleaned"
+
+  # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
+  # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
+  # e2e_timings_refresh workflow.
+  update_e2e_timings:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: regenerate e2e timings manifest
+          command: node scripts/generate-e2e-timings.js --jobs=12 --prior=manifest
+      - run:
+          name: open a PR if weights changed meaningfully
+          command: |
+            if git diff --quiet scripts/e2e-test-timings.json; then
+              echo "manifest unchanged, nothing to do"; exit 0
+            fi
+            SIGNIFICANT=$(node -e '
+              const { execSync } = require("child_process");
+              const cur = require("./scripts/e2e-test-timings.json");
+              const old = JSON.parse(execSync("git show HEAD:scripts/e2e-test-timings.json", { encoding: "utf8" }));
+              let count = 0;
+              for (const [file, sec] of Object.entries(cur)) {
+                const prev = old[file];
+                if (prev === undefined || (Math.abs(sec - prev) > 45 && Math.abs(sec - prev) / Math.max(prev, 1) > 0.3)) count += 1;
+              }
+              for (const file of Object.keys(old)) if (!(file in cur)) count += 1;
+              console.log(count);
+            ')
+            echo "significantly changed entries: $SIGNIFICANT"
+            if [ "$SIGNIFICANT" -lt 3 ]; then
+              echo "drift too small, skipping PR"; exit 0
+            fi
+            BRANCH="update-e2e-timings-$(date +%Y-%m-%d)"
+            git config user.email "ci@bit.dev"
+            git config user.name "CircleCI"
+            git checkout -b "$BRANCH"
+            git commit -am "ci(e2e): refresh e2e timings manifest"
+            git push "https://davidfirst:${GH_RELEASE_GITHUB_API_TOKEN}@github.com/teambit/bit.git" "$BRANCH"
+            curl -sf -X POST \
+              -H "Authorization: token ${GH_RELEASE_GITHUB_API_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/teambit/bit/pulls \
+              -d "{\"title\":\"ci(e2e): refresh e2e timings manifest\",\"head\":\"$BRANCH\",\"base\":\"master\",\"body\":\"Automated biweekly refresh of scripts/e2e-test-timings.json from the last 12 e2e runs ($SIGNIFICANT entries drifted meaningfully). Generated by the e2e_timings_refresh scheduled workflow.\"}"
 
   # ========== Utility Jobs ==========
   harmony_deploy_approval_job:
@@ -858,6 +1023,8 @@ jobs:
       - setup_bit_version
       - setup_pnpm
       - install_bit_bundle
+      - verify_pnpm_napi_bundle:
+          package: "napi.linux-x64"
       - optimize_node_modules
       - run:
           name: copy lockfile
@@ -867,10 +1034,12 @@ jobs:
           name: move to linux folder
           command: mkdir linux && mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: install bit for Linux arm64
-          command: >
-            cd bit-${BIT_VERSION} &&
-            pnpm install --os=linux --cpu=arm64
+          name: reset bundle directory for Linux arm64
+          command: rm -rf bit-${BIT_VERSION} && mkdir bit-${BIT_VERSION}
+      - install_bit_bundle:
+          cpu: "arm64"
+      - verify_pnpm_napi_bundle:
+          package: "napi.linux-arm64"
       - optimize_node_modules:
           platform: arm64
       - compress_bit
@@ -903,16 +1072,21 @@ jobs:
       - setup_pnpm
       - install_bit_bundle:
           os: "darwin"
+      - verify_pnpm_napi_bundle:
+          package: "napi.darwin-x64"
       - optimize_node_modules
       - compress_bit
       - run:
           name: move to macos folder
           command: mkdir macos && mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: install bit for macOS arm64
-          command: >
-            cd bit-${BIT_VERSION} &&
-            pnpm install --os=darwin --cpu=arm64
+          name: reset bundle directory for macOS arm64
+          command: rm -rf bit-${BIT_VERSION} && mkdir bit-${BIT_VERSION}
+      - install_bit_bundle:
+          os: "darwin"
+          cpu: "arm64"
+      - verify_pnpm_napi_bundle:
+          package: "napi.darwin-arm64"
       - optimize_node_modules:
           platform: arm64
       - compress_bit
@@ -941,6 +1115,8 @@ jobs:
       - setup_bit_version
       - setup_pnpm
       - install_bit_bundle_windows
+      - verify_pnpm_napi_bundle:
+          package: "napi.win32-x64"
       - optimize_node_modules
       - compress_bit
       - run:
@@ -1253,10 +1429,16 @@ workflows:
       - check_circular_dependencies:
           requires:
             - setup_harmony
-      - check_env_cache_sync
+      - check_version_sync
       - generate_and_check_types:
           requires:
             - setup_harmony
+      - check_generated_reference:
+          requires:
+            - setup_harmony
+          filters:
+            branches:
+              ignore: master
       - generate_docs:
           <<: *semver_tags_only_filters
           requires:
@@ -1355,6 +1537,19 @@ workflows:
           requires:
             - setup_harmony
             - harmony_publish_to_gcloud
+
+  # Biweekly refresh of the e2e timings manifest (1st and 15th of the month, 04:00 UTC).
+  # Opens a PR only when the measured per-file weights drifted meaningfully.
+  e2e_timings_refresh:
+    triggers:
+      - schedule:
+          cron: '0 4 1,15 * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - update_e2e_timings
 
   # Windows nightly workflow
   # windows-nightly:

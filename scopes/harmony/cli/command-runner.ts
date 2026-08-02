@@ -4,6 +4,7 @@ import { loader } from '@teambit/legacy.loader';
 import { handleErrorAndExit } from './handle-errors';
 import { TOKEN_FLAG_NAME, CACHE_ROOT } from '@teambit/legacy.constants';
 import globalFlags from './global-flags';
+import { shouldUsePager, writeToPager } from './pager';
 import { Analytics } from '@teambit/legacy.analytics';
 import type { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
@@ -142,6 +143,11 @@ export class CommandRunner {
   }
 
   private async writeAndExit(data: string, exitCode: number) {
+    if (shouldUsePager(this.command, this.flags, data)) {
+      const paged = await writeToPager(data, Boolean(this.flags.pager));
+      // if the pager couldn't launch, fall through to a direct write so output is never lost.
+      if (paged) return logger.exitAfterFlush(exitCode, this.commandName, data);
+    }
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.commandName, data));
   }

@@ -47,6 +47,7 @@ import { BundlingStrategyNotFound } from './exceptions';
 import type { MainModulesMap } from './generate-link';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
+import { resolvePreviewFilePath } from './resolve-preview-file-path';
 import type { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
@@ -403,7 +404,12 @@ export class PreviewMain {
         return res.status(404).send('Folder not found.');
       }
       if (filePath) {
-        const file = join(publicDir, filePath);
+        // filePath is derived from the untrusted request URL; ensure it cannot traverse outside
+        // publicDir (e.g. via `../`) before serving it.
+        const file = resolvePreviewFilePath(publicDir, filePath);
+        if (!file) {
+          return res.status(403).send('Invalid file path.');
+        }
         if (!existsSync(file)) {
           return res.status(404).send('File not found.');
         }

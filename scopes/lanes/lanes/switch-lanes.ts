@@ -73,7 +73,12 @@ export class LaneSwitcher {
     const localLane = await this.consumer.scope.loadLane(laneId);
     const getMainIds = async () => {
       if (!skipFetch) {
-        const allIds = this.workspace.listIds();
+        // fetch by "latest" and without a lane, so the remote resolves each id against the head on
+        // main of its original scope. passing the ids as-is would send the versions from .bitmap,
+        // which on a lane are snap hashes that live on the lane's scope, not on the component's
+        // original scope. the original scope can't resolve them, drops them from the response
+        // silently, and the local head on main is left stale.
+        const allIds = this.workspace.listIds().toVersionLatest();
         try {
           await this.workspace.scope.legacyScope.scopeImporter.importWithoutDeps(allIds, {
             cache: false,

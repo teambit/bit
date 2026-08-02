@@ -101,6 +101,7 @@ bit validate                         # lint + type-check + tests (fast build) �
 bit test                             # run tests only
 bit lint                             # run linter only
 bit check-types                      # TypeScript type checker only
+bit ripple <sub-command>             # manage Ripple CI jobs on bit.cloud — list/log/errors/retry/stop (jobs that build components in the cloud after export)
 ```
 
 > **Never run `bit build`** unless absolutely necessary. Always use `bit validate` instead — it's faster and sufficient.
@@ -244,6 +245,8 @@ git push                                 # push your branch
 ```
 
 > Focus on development workflows: component creation, modification, testing, and local validation. Leave versioning and publishing to CI.
+
+Those CI builds run as Ripple CI jobs on bit.cloud. Use `bit ripple list` to see recent jobs, `bit ripple log` to follow one, and `bit ripple errors` to inspect build failures.
 
 ---
 

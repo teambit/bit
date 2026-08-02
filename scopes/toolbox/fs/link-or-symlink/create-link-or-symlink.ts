@@ -48,7 +48,7 @@ export function createLinkOrSymlink(
     const winMsg = IS_WINDOWS ? ' (or maybe copy)' : '';
     const errorHeader = componentId ? `failed to link a component ${componentId}` : 'failed to generate a symlink';
     throw new BitError(`${errorHeader}.
-Symlink${winMsg} from: ${srcPath}, to: ${destPath} was failed.
+Symlink${winMsg} from: ${srcPath}, to: ${destPath} failed.
 Please use "--log=trace" flag to get more info about the error.
 Original error: ${err}`);
   }
