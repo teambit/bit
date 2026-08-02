@@ -31,6 +31,7 @@ import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-pat
 import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
+import { addNodeGypToPath } from './node-gyp-bin';
 
 /**
  * Packages that are known to have risky or unnecessary build scripts.
@@ -422,6 +423,9 @@ export async function install(
   let depsRequiringBuild: DepPath[] | undefined;
   let resolvedStoreDir = storeDir;
   if (!options.dryRun) {
+    // Dependency build scripts inherit this process's PATH. Set up inside the
+    // guard, so a dry run neither writes the wrapper nor touches the env.
+    addNodeGypToPath(logger);
     let stopReporting: Function | undefined;
     let installPromise: Promise<nodeApi.InstallResult> | undefined;
     let restoreWantedLockfile: (() => Promise<void>) | undefined;
@@ -470,6 +474,8 @@ export async function install(
     // The Rust engine's rebuild rebuilds every build-needing package and does not
     // support the pending / skipIfHasSideEffectsCache selectors of the old engine.
     rebuild: async () => {
+      // Reached without an install of its own after a dry run.
+      addNodeGypToPath(logger);
       let stopReporting: Function | undefined;
       if (!options.hidePackageManagerOutput) {
         stopReporting = initReporter({
