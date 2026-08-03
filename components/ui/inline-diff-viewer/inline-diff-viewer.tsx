@@ -40,6 +40,29 @@ export type DiffFileRendererProps = {
   highlightedFeedbackId?: string;
   selectedLine?: number;
   dataFileId?: string;
+  /**
+   * called with the line number when a diff row is clicked. Rows are only
+   * clickable while this is supplied.
+   */
+  onLineClick?: (lineNumber: number) => void;
+  /**
+   * renders an extra full-width row directly beneath a line — a comment thread,
+   * an input, anything anchored to that line.
+   *
+   * Called ONLY for lines that carry feedback or are the `selectedLine`, so a
+   * file with one comment costs one extra row rather than one per line. Supplying
+   * this also suppresses the unified view's feedback badge, which would otherwise
+   * repeat, in miniature, what the widget already shows.
+   */
+  renderLineWidget?: (lineNumber: number) => React.ReactNode;
+  /**
+   * renders controls at the end of the file header, after the +/- stats.
+   */
+  renderHeaderActions?: () => React.ReactNode;
+  /**
+   * renders a band between the file header and the diff table.
+   */
+  renderBelowHeader?: () => React.ReactNode;
 };
 
 // --- Pure Rendering Components (no hooks, no state, just props → JSX) ---
@@ -56,10 +79,21 @@ export const DiffFileRenderer = React.memo(function DiffFileRenderer({
   highlightedFeedbackId,
   selectedLine,
   dataFileId,
+  onLineClick,
+  renderLineWidget,
+  renderHeaderActions,
+  renderBelowHeader,
 }: DiffFileRendererProps) {
   return (
     <div className={styles.diffFile} data-file-id={dataFileId}>
-      <DiffFileHeader fileName={fileName} status={status} additions={additions} deletions={deletions} />
+      <DiffFileHeader
+        fileName={fileName}
+        status={status}
+        additions={additions}
+        deletions={deletions}
+        renderActions={renderHeaderActions}
+      />
+      {renderBelowHeader?.()}
       <div className={styles.diffTableWrapper}>
         {diffMode === 'split' ? (
           <SplitDiffTable
@@ -68,6 +102,8 @@ export const DiffFileRenderer = React.memo(function DiffFileRenderer({
             rangeLines={rangeLines}
             highlightedFeedbackId={highlightedFeedbackId}
             selectedLine={selectedLine}
+            onLineClick={onLineClick}
+            renderLineWidget={renderLineWidget}
           />
         ) : (
           <UnifiedDiffTable
@@ -76,6 +112,8 @@ export const DiffFileRenderer = React.memo(function DiffFileRenderer({
             rangeLines={rangeLines}
             highlightedFeedbackId={highlightedFeedbackId}
             selectedLine={selectedLine}
+            onLineClick={onLineClick}
+            renderLineWidget={renderLineWidget}
           />
         )}
       </div>
@@ -83,16 +121,19 @@ export const DiffFileRenderer = React.memo(function DiffFileRenderer({
   );
 });
 
+
 export function DiffFileHeader({
   fileName,
   status,
   additions = 0,
   deletions = 0,
+  renderActions,
 }: {
   fileName: string;
   status?: string;
   additions?: number;
   deletions?: number;
+  renderActions?: () => React.ReactNode;
 }) {
   const statusClass =
     status === 'NEW'
@@ -110,6 +151,7 @@ export function DiffFileHeader({
         {deletions > 0 && <span className={styles.diffDeletions}>-{deletions}</span>}
         <ChangeBar additions={additions} deletions={deletions} />
       </div>
+      {renderActions?.()}
     </div>
   );
 }
@@ -292,12 +334,16 @@ function SplitDiffTable({
   rangeLines,
   highlightedFeedbackId,
   selectedLine,
+  onLineClick,
+  renderLineWidget,
 }: {
   hunks: DiffHunk[];
   feedbacksByLine?: Map<number, LineFeedback[]>;
   rangeLines?: Set<number>;
   highlightedFeedbackId?: string;
   selectedLine?: number;
+  onLineClick?: (lineNumber: number) => void;
+  renderLineWidget?: (lineNumber: number) => React.ReactNode;
 }) {
   const { rows } = buildSplitRows(hunks);
   if (hunks.length === 0) {
@@ -323,11 +369,17 @@ function SplitDiffTable({
           const lineFbs = feedbackLineNum ? feedbacksByLine?.get(feedbackLineNum) || [] : [];
           const isHighlighted = lineFbs.some((f) => f.id === highlightedFeedbackId);
           const isInRange = feedbackLineNum ? rangeLines?.has(feedbackLineNum) || false : false;
+          // Split view shows the widget for the selected line only; existing
+          // feedback is already represented by the badge in the gutter.
+          const widget = feedbackLineNum && selectedLine === feedbackLineNum && renderLineWidget
+            ? renderLineWidget(feedbackLineNum)
+            : null;
           return (
             <React.Fragment key={idx}>
               <tr
                 data-line={rightLineNum || undefined}
-                className={`${styles.splitRow} ${selectedLine === feedbackLineNum ? styles.diffRowSelected : ''} ${isInRange ? styles.diffRowRangeHighlight : ''}`}
+                className={`${styles.splitRow} ${selectedLine === feedbackLineNum ? styles.diffRowSelected : ''} ${isInRange ? styles.diffRowRangeHighlight : ''} ${onLineClick && feedbackLineNum ? styles.diffRowClickable : ''}`}
+                onClick={onLineClick && feedbackLineNum ? () => onLineClick(feedbackLineNum) : undefined}
               >
                 <td
                   className={`${styles.splitLineNum} ${row.left?.type === 'removed' ? styles.splitLineNumRemoved : ''}`}
@@ -350,6 +402,11 @@ function SplitDiffTable({
                   {row.right ? <HighlightedCode code={row.right.content} /> : null}
                 </td>
               </tr>
+              {widget && (
+                <tr className={styles.widgetRow}>
+                  <td colSpan={5}>{widget}</td>
+                </tr>
+              )}
             </React.Fragment>
           );
         })}
@@ -366,12 +423,16 @@ function UnifiedDiffTable({
   rangeLines,
   highlightedFeedbackId,
   selectedLine,
+  onLineClick,
+  renderLineWidget,
 }: {
   hunks: DiffHunk[];
   feedbacksByLine?: Map<number, LineFeedback[]>;
   rangeLines?: Set<number>;
   highlightedFeedbackId?: string;
   selectedLine?: number;
+  onLineClick?: (lineNumber: number) => void;
+  renderLineWidget?: (lineNumber: number) => React.ReactNode;
 }) {
   return (
     <table className={styles.diffTable}>
@@ -383,14 +444,33 @@ function UnifiedDiffTable({
               const lineFbs = lineNum ? feedbacksByLine?.get(lineNum) || [] : [];
               const isHighlighted = lineFbs.some((f) => f.id === highlightedFeedbackId);
               const isInRange = lineNum ? rangeLines?.has(lineNum) || false : false;
+              // A removed line has no counterpart in the new file to hang a
+              // comment on, and a '...' collapse marker is not a line at all.
+              const isSeparator = line.content.trim() === '...';
+              const showWidget = Boolean(
+                lineNum && renderLineWidget && line.type !== 'removed' && !isSeparator
+                  && (selectedLine === lineNum || lineFbs.length > 0)
+              );
+              const widget = showWidget && lineNum ? renderLineWidget?.(lineNum) : null;
+              const isClickable = Boolean(onLineClick && lineNum && !isSeparator);
               return (
+                <React.Fragment key={`${hi}-${li}`}>
                 <tr
-                  key={`${hi}-${li}`}
                   data-line={lineNum || undefined}
-                  className={`${styles.diffRow} ${line.type === 'added' ? styles.diffLineAdded : line.type === 'removed' ? styles.diffLineRemoved : ''} ${selectedLine === lineNum ? styles.diffRowSelected : ''} ${isInRange ? styles.diffRowRangeHighlight : ''}`}
+                  className={`${styles.diffRow} ${line.type === 'added' ? styles.diffLineAdded : line.type === 'removed' ? styles.diffLineRemoved : ''} ${selectedLine === lineNum ? styles.diffRowSelected : ''} ${isInRange ? styles.diffRowRangeHighlight : ''} ${isClickable ? styles.diffRowClickable : ''}`}
+                  onClick={isClickable && lineNum ? () => onLineClick?.(lineNum) : undefined}
                 >
                   <td className={styles.lineNumCell}>
-                    {lineFbs.length > 0 && <FeedbackBadgeDisplay feedbacks={lineFbs} isHighlighted={isHighlighted} />}
+                    {lineFbs.length > 0 && line.type !== 'removed' && !renderLineWidget && (
+                      <FeedbackBadgeDisplay feedbacks={lineFbs} isHighlighted={isHighlighted} />
+                    )}
+                    {/*
+                      The only hint that a line can be commented on. It sits over the
+                      line number and is revealed by hovering a clickable row, so it
+                      costs nothing on a diff nobody can comment on. Lines that already
+                      carry feedback show the badge (or the widget) instead.
+                    */}
+                    {onLineClick && line.type !== 'removed' && lineFbs.length === 0 && !isSeparator && <CommentIcon />}
                     <span
                       className={
                         line.type === 'removed'
@@ -429,12 +509,28 @@ function UnifiedDiffTable({
                     <HighlightedCode code={line.content} />
                   </td>
                 </tr>
+                {widget && (
+                  <tr className={styles.widgetRow}>
+                    <td colSpan={4}>{widget}</td>
+                  </tr>
+                )}
+                </React.Fragment>
               );
             })}
           </React.Fragment>
         ))}
       </tbody>
     </table>
+  );
+}
+
+function CommentIcon() {
+  return (
+    <span className={styles.commentIcon}>
+      <svg viewBox="0 0 16 16" fill="currentColor">
+        <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l-2.573 2.573A1.458 1.458 0 014 13.543V12H2.75A1.75 1.75 0 011 10.25v-7.5z" />
+      </svg>
+    </span>
   );
 }
 
