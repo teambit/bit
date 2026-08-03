@@ -31,6 +31,7 @@ import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-pat
 import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
+import { addNodeGypToPath } from './node-gyp-bin';
 
 /**
  * Packages that are known to have risky or unnecessary build scripts.
@@ -412,12 +413,19 @@ export async function install(
     // Bit reports the deps requiring a build in the lockfile instead of failing.
     strictDepBuilds: false,
     pnpmHomeDir: options.pnpmHomeDir,
+    // Report every package with install scripts (not just blocked ones) in
+    // `depsRequiringBuild`, so the `bit:` lockfile block lists them even
+    // though Bit allows the builds to run.
+    returnListOfDepsRequiringBuild: true,
   };
 
   let dependenciesChanged = false;
   let depsRequiringBuild: DepPath[] | undefined;
   let resolvedStoreDir = storeDir;
   if (!options.dryRun) {
+    // Dependency build scripts inherit this process's PATH. Set up inside the
+    // guard, so a dry run neither writes the wrapper nor touches the env.
+    addNodeGypToPath(logger);
     let stopReporting: Function | undefined;
     let installPromise: Promise<nodeApi.InstallResult> | undefined;
     let restoreWantedLockfile: (() => Promise<void>) | undefined;
@@ -436,27 +444,16 @@ export async function install(
       // install alongside `depsRequiringBuild`.
       const preInstallBitAttrs = await readBitLockfileAttrs(rootDir);
       restoreWantedLockfile = await removeWantedLockfileForUpdate(rootDir, options.updateAll);
-      // The extra `resolvedDir` param lands in `@pnpm/napi`'s ReadPackageHook
-      // type in the release that ships the directory-resolution context; the
-      // cast bridges the older published typing.
-      installPromise = nodeApi.install(
-        installOptions,
-        onLog,
-        readPackageHookForDeps as unknown as nodeApi.ReadPackageHook
-      );
+      installPromise = nodeApi.install(installOptions, onLog, readPackageHookForDeps);
       installsRunning[rootDir] = installPromise;
       const installResult: nodeApi.InstallResult = await installPromise;
       resolvedStoreDir = installResult.storeDir;
-      const sortedDepsRequiringBuild = [...(installResult.depsRequiringBuild ?? [])].sort();
-      if (sortedDepsRequiringBuild.length > 0 || preInstallBitAttrs != null) {
-        await addBitAttributesToLockfile(rootDir, {
-          ...preInstallBitAttrs,
-          depsRequiringBuild: sortedDepsRequiringBuild,
-        });
+      const sortedDepsRequiringBuild = sortDepsRequiringBuild(installResult.depsRequiringBuild);
+      const bitAttrs = mergeBitLockfileAttrs(preInstallBitAttrs, sortedDepsRequiringBuild);
+      if (bitAttrs != null) {
+        await addBitAttributesToLockfile(rootDir, bitAttrs);
       }
-      if (sortedDepsRequiringBuild.length > 0) {
-        depsRequiringBuild = sortedDepsRequiringBuild as unknown as DepPath[];
-      }
+      depsRequiringBuild = sortedDepsRequiringBuild as unknown as DepPath[] | undefined;
       dependenciesChanged =
         installResult.stats.added + installResult.stats.removed + installResult.stats.linkedToRoot > 0;
     } catch (err: any) {
@@ -477,6 +474,8 @@ export async function install(
     // The Rust engine's rebuild rebuilds every build-needing package and does not
     // support the pending / skipIfHasSideEffectsCache selectors of the old engine.
     rebuild: async () => {
+      // Reached without an install of its own after a dry run.
+      addNodeGypToPath(logger);
       let stopReporting: Function | undefined;
       if (!options.hidePackageManagerOutput) {
         stopReporting = initReporter({
@@ -788,6 +787,30 @@ export async function resolveRemoteVersion(
       manifest,
     };
   }
+}
+
+/**
+ * Sort the engine's `depsRequiringBuild` for a stable lockfile block, or
+ * return undefined when the install did not compute the list at all —
+ * it was served from the frozen-lockfile path, or the engine predates
+ * `returnListOfDepsRequiringBuild`. Undefined is not an empty list: the
+ * install has no answer, so the recorded one has to stand.
+ */
+export function sortDepsRequiringBuild(depsRequiringBuild: string[] | undefined): string[] | undefined {
+  return depsRequiringBuild == null ? undefined : [...depsRequiringBuild].sort();
+}
+
+/**
+ * The `bit:` attributes to re-assert after an install, or undefined when
+ * there is nothing to write. See {@link sortDepsRequiringBuild} for why
+ * an uncomputed list leaves the recorded one untouched.
+ */
+export function mergeBitLockfileAttrs(
+  preInstallAttrs: Partial<BitLockfileAttributes> | undefined,
+  sortedDepsRequiringBuild: string[] | undefined
+): Partial<BitLockfileAttributes> | undefined {
+  if (sortedDepsRequiringBuild == null) return preInstallAttrs;
+  return { ...preInstallAttrs, depsRequiringBuild: sortedDepsRequiringBuild };
 }
 
 /**
