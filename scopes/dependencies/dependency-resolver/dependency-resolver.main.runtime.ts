@@ -1677,7 +1677,11 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       // package document (it caches it under "metadata-full-filtered"). the abbreviated document is
       // returned unfiltered, and some registries (e.g. bit.cloud) include componentId there as well.
       try {
-        const { manifest: abbreviated } = await pm.resolveRemoteVersion(packageName, resolveOpts);
+        // pin the lookup to the version the full manifest resolved to, so a tag/range/versionless spec
+        // cannot drift to a different version if a new one gets published in between the two calls.
+        const abbreviatedSpec =
+          manifest.name && manifest.version ? `${manifest.name}@${manifest.version}` : packageName;
+        const { manifest: abbreviated } = await pm.resolveRemoteVersion(abbreviatedSpec, resolveOpts);
         if (abbreviated && 'componentId' in abbreviated && abbreviated.version === manifest.version) {
           // the componentId (and any other non-standard field) of the abbreviated manifest survives the merge,
           // as the full manifest got them stripped by the engine.
