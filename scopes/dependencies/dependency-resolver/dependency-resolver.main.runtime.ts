@@ -1676,11 +1676,17 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       // the pnpm v12 engine (@pnpm/napi) strips non-standard fields such as componentId from the full
       // package document (it caches it under "metadata-full-filtered"). the abbreviated document is
       // returned unfiltered, and some registries (e.g. bit.cloud) include componentId there as well.
-      const { manifest: abbreviated } = await pm.resolveRemoteVersion(packageName, resolveOpts);
-      if (abbreviated && 'componentId' in abbreviated && abbreviated.version === manifest.version) {
-        // the componentId (and any other non-standard field) of the abbreviated manifest survives the merge,
-        // as the full manifest got them stripped by the engine.
-        return { ...abbreviated, ...manifest };
+      try {
+        const { manifest: abbreviated } = await pm.resolveRemoteVersion(packageName, resolveOpts);
+        if (abbreviated && 'componentId' in abbreviated && abbreviated.version === manifest.version) {
+          // the componentId (and any other non-standard field) of the abbreviated manifest survives the merge,
+          // as the full manifest got them stripped by the engine.
+          return { ...abbreviated, ...manifest };
+        }
+      } catch (err: any) {
+        // the fallback is best-effort. the full manifest was already fetched successfully, so return it
+        // rather than failing the entire resolution due to a transient error in the extra lookup.
+        this.logger.warn(`failed to fetch the abbreviated manifest of ${packageName}`, err);
       }
     }
     return manifest;
