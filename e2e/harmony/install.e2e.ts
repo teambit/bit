@@ -141,7 +141,7 @@ describe('install generator configured envs', function () {
       helper.scopeHelper.destroy();
     });
     it('should not install optional dependencies', async () => {
-      const dirs = fs.readdirSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm'));
+      const dirs = helper.fs.getVirtualStoreDirNames();
       expect(dirs).to.not.include('is-positive@1.0.0');
       expect(dirs).to.include('@pnpm.e2e+pkg-with-good-optional@1.0.0');
     });
