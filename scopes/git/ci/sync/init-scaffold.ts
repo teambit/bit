@@ -108,11 +108,9 @@ jobs:
           # the default GITHUB_TOKEN do NOT trigger other workflow runs.
           token: \${{ secrets.BIT_SYNC_GH_TOKEN || secrets.GITHUB_TOKEN }}
       - uses: bit-tasks/init@v2
-      # CHANGE-ME: \`luvktest/bit-git-sync@v1\` is a placeholder pointing at this
-      # workspace's own repo path. Replace it with wherever you publish this
-      # action (your own fork, or its published marketplace location) and pin
-      # it to a release tag or a commit SHA.
-      - uses: luvktest/bit-git-sync@v1
+      # Pinned to a commit SHA on purpose: this job holds write permission, and
+      # a tag can move. Bump the SHA to take a new version of the action.
+      - uses: teambit/bit-git-sync@66c0fdf9e34e45f70b4f397b38b2b01f79dd1f41
         with:
           # CHANGE-ME: keep this in sync with
           # \`teambit.git/ci\`.\`sync.mainSyncBranch\` in your workspace.jsonc
@@ -180,11 +178,9 @@ jobs:
           fetch-depth: 0
           token: \${{ secrets.BIT_SYNC_GH_TOKEN || secrets.GITHUB_TOKEN }}
       - uses: bit-tasks/init@v2
-      # CHANGE-ME: \`luvktest/bit-git-sync@v1\` is a placeholder pointing at this
-      # workspace's own repo path. Replace it with wherever you publish this
-      # action (your own fork, or its published marketplace location) and pin
-      # it to a release tag or a commit SHA.
-      - uses: luvktest/bit-git-sync@v1
+      # Pinned to a commit SHA on purpose: this job holds write permission, and
+      # a tag can move. Bump the SHA to take a new version of the action.
+      - uses: teambit/bit-git-sync@66c0fdf9e34e45f70b4f397b38b2b01f79dd1f41
         with:
           # CHANGE-ME: keep this in sync with
           # \`teambit.git/ci\`.\`sync.mainSyncBranch\` AND with the \`if:\`
