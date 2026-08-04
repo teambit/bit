@@ -98,6 +98,7 @@ commands:
             curl -sf -X POST
             -H "Authorization: token $GH_RELEASE_GITHUB_API_TOKEN"
             -H "Accept: application/vnd.github+json"
+            -H "Content-Type: application/json"
             https://api.github.com/repos/teambit/bit/dispatches
             -d '{"event_type":"merge-queue-reconcile"}'
             || echo "merge-queue notify failed (non-fatal)"
@@ -870,6 +871,7 @@ jobs:
                 curl -sf -X POST \
                   -H "Authorization: token $GH_RELEASE_GITHUB_API_TOKEN" \
                   -H "Accept: application/vnd.github+json" \
+                  -H "Content-Type: application/json" \
                   https://api.github.com/repos/teambit/bit/dispatches \
                   -d '{"event_type":"merge-queue-reconcile"}' \
                   || echo "merge-queue notify failed (non-fatal)"

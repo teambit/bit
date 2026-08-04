@@ -26,8 +26,11 @@ on:
         default: false
   push:
     branches: [master]
+  # only events that can affect the queue: auto-merge toggles, and pushes to PRs already in it.
+  # opened/reopened/ready_for_review PRs can't be queued yet (closing a PR cancels auto-merge),
+  # and the scheduled safety net covers any residual case.
   pull_request_target:
-    types: [opened, reopened, synchronize, ready_for_review, auto_merge_enabled, auto_merge_disabled]
+    types: [synchronize, auto_merge_enabled, auto_merge_disabled]
   repository_dispatch:
     types: [merge-queue-reconcile]
 
@@ -48,7 +51,13 @@ permissions:
 
 jobs:
   reconcile:
-    if: github.repository == 'teambit/bit'
+    # the synchronize condition skips full reconciles for pushes to PRs that aren't in the queue
+    # (their gate state can't change); auto-merge toggle events always reconcile
+    if: >-
+      github.repository == 'teambit/bit' &&
+      (github.event_name != 'pull_request_target' ||
+       github.event.action != 'synchronize' ||
+       github.event.pull_request.auto_merge != null)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
