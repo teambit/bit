@@ -21917,6 +21917,9 @@ importers:
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
+      yaml:
+        specifier: 1.10.2
+        version: 1.10.2
 
   scopes/git/git:
     dependencies:
@@ -62018,7 +62021,11 @@ snapshots:
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency(react-dom@18.3.1)(react@18.3.1)
       '@teambit/lane-id': 0.0.312
+      '@teambit/legacy.bit-map': file:components/legacy/bit-map(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/legacy.constants': file:components/legacy/constants(react-dom@18.3.1)(react@18.3.1)
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/legacy.scope': file:components/legacy/scope(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool(react-dom@18.3.1)(react@18.3.1)
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
@@ -62049,7 +62056,11 @@ snapshots:
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lane-id': 0.0.312
+      '@teambit/legacy.bit-map': file:components/legacy/bit-map(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/legacy.constants': file:components/legacy/constants(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/legacy.scope': file:components/legacy/scope(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool(react-dom@19.2.7)(react@19.2.7)
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
@@ -62080,7 +62091,11 @@ snapshots:
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lane-id': 0.0.312
+      '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/legacy.constants': file:components/legacy/constants(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool(react-dom@19.2.7)(react@19.2.7)
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
