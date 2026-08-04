@@ -57,26 +57,28 @@ export function assertValidBranchPrefix(prefix: string, configKey: string): void
 }
 
 export interface CiSyncConfig {
-  /** prefix for lane-mapped branches, e.g. 'lane/' => lane my-lane <-> branch lane/my-lane */
+  /** The prefix for a lane-mapped branch. 'lane/' maps lane my-lane to branch lane/my-lane. */
   branchPrefix?: string;
-  /** explicit lane-name -> branch-name overrides */
+  /** Explicit overrides that map a lane name to a branch name. */
   branches?: Record<string, string>;
-  /** glob patterns of lane names to sync; [] disables lane mirroring (main-only) */
+  /** The glob patterns of the lane names to sync. An empty list stops lane mirroring. */
   lanes?: string[];
-  /** branch used for main-scope drift sync PRs */
+  /** The branch that carries the main-scope drift. */
   mainSyncBranch?: string;
   /**
-   * How main-scope drift reaches the default branch: 'pr' (default) via `mainSyncBranch` + a PR;
-   * 'direct-push' commits straight onto the default branch (`mainSyncBranch` unused).
+   * How main-scope drift reaches the default branch. 'pr' (the default): the command commits the drift
+   * to `mainSyncBranch` and opens a pull request. 'direct-push': the command commits the drift on the
+   * default branch and pushes it, and does not use `mainSyncBranch`.
    */
   mainSync?: 'pr' | 'direct-push';
   /**
-   * What `merge-diverged` does on a genuine conflict: 'halt' (default) labels the PR and leaves it to
-   * a human; 'git-wins'/'lane-wins' resolve conflicting hunks to that side. Non-conflicting hunks
-   * always merge regardless of policy.
+   * What the command does with one contested line during a `merge-diverged` action. 'halt' (the
+   * default): the command stops, labels the pull request, and writes the recovery steps. 'git-wins':
+   * the command keeps the branch version. 'lane-wins': the command takes the lane version.
+   * Non-conflicting changes always merge, with every value.
    */
   onConflict?: 'halt' | 'git-wins' | 'lane-wins';
-  /** enable GitHub auto-merge on the main sync PR */
+  /** Reserved. The command warns and enables no auto-merge on the main sync pull request. */
   autoMergeMainSyncPr?: boolean;
 }
 
