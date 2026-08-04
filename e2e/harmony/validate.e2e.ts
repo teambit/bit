@@ -115,8 +115,13 @@ describe('validate command', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
     });
-    it('should validate all components', () => {
+    it('should validate no components by default when all components are unmodified', () => {
+      const output = helper.command.runCmd('bit validate');
+      expect(output).to.include('No components found to validate');
+    });
+    it('should validate all components with --unmodified', () => {
       const output = helper.command.runCmd('bit validate --unmodified');
       expect(output).to.include('Validating 2 component(s)');
       expect(output).to.include('All validation checks passed');
