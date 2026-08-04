@@ -156,6 +156,13 @@ Tags and exports new semantic versions after merging a PR to main.
 By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.
 Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --auto-tag-increment <level>, --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push, --no-bitmap-commit
 
+## bit ci sync [lane]
+
+Reconciles Bit lanes and the main scope with git branches and pull requests.
+
+Stateless reconciler: compares each mapped lane's remote head against the state the branch itself records, and converges — importing lane changes onto the branch, exporting dev commits to the lane, or opening/closing PRs. That state comes from bit's own data: the .bitmap committed on the branch, which records the lane the branch mirrors and the exact version of every component on it. The "chore(bit-sync)" subject, "Bit-Lane-Head" trailer and "[bit-sync]" marker on sync commits are annotations for humans and triggers; the only decision that consults one is branch deletion, which additionally requires the marker to prove the reconciler wrote the branch tip. The main scope is reconciled by checking the workspace out to its latest exported versions and proposing the result as a sync PR. Triggers (webhook, push, cron) only decide when it runs, never what it does. Safe to re-run at any time; converged state is a no-op. A lane whose components are not all in this workspace's defaultScope is a cross-scope lane: no branch is created for it (it would leak another repository's components into this one) — enumerated runs skip it and stay green, an explicitly named one is refused, and a lane that became cross-scope after its branch existed is halted for a human. Configure mapping under `"teambit.git/ci": { "sync": { ... } }` in workspace.jsonc.
+Flags: --branch <branch>, --all, --main, --dry-run, --init
+
 ## bit clear-cache
 
 remove cached data to resolve stale data issues
@@ -984,8 +991,8 @@ Flags: --yes, --patch, --minor, --major, --semver
 
 run type-checking, linting, and testing in sequence
 
-validates components by running check-types, lint, and test commands in sequence. by default runs all checks even when errors are found. use --fail-fast to stop at the first failure. by default validates only new and modified components. use --all to validate all components.
-Flags: --all, --fail-fast, --skip-tasks <string>
+validates components by running check-types, lint, and test commands in sequence. by default runs all checks even when errors are found. use --fail-fast to stop at the first failure. by default validates only new and modified components. use --unmodified to validate all components.
+Flags: --unmodified, --fail-fast, --skip-tasks <string>
 
 ## bit version
 

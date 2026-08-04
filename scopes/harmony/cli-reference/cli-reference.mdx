@@ -460,6 +460,25 @@ By default, bumps patch versions when merging to main. If specific configuration
 | `--skip-push`                           |                  | skip pushing the changes to the remote repository (useful when CI handles the push separately)                                                                                                                                                                                                                                                                                           |
 | `--no-bitmap-commit`                    |                  | skip the post-tag git add/commit/push entirely. The new versions still land in the scope, but no .bitmap (or lockfile) commit is created on the default branch. Pair with `bitmapAutoSync: true` in workspace.jsonc so developers auto-sync their local .bitmap on the first bit command after `git pull`.                                                                               |
 
+### ci sync
+
+**Usage**: `ci sync [lane]`
+
+**Description**: Reconciles Bit lanes and the main scope with git branches and pull requests.  
+Stateless reconciler: compares each mapped lane's remote head against the state the branch itself records, and converges — importing lane changes onto the branch, exporting dev commits to the lane, or opening/closing PRs. That state comes from bit's own data: the .bitmap committed on the branch, which records the lane the branch mirrors and the exact version of every component on it. The "chore(bit-sync)" subject, "Bit-Lane-Head" trailer and "[bit-sync]" marker on sync commits are annotations for humans and triggers; the only decision that consults one is branch deletion, which additionally requires the marker to prove the reconciler wrote the branch tip. The main scope is reconciled by checking the workspace out to its latest exported versions and proposing the result as a sync PR. Triggers (webhook, push, cron) only decide when it runs, never what it does. Safe to re-run at any time; converged state is a no-op. A lane whose components are not all in this workspace's defaultScope is a cross-scope lane: no branch is created for it (it would leak another repository's components into this one) — enumerated runs skip it and stay green, an explicitly named one is refused, and a lane that became cross-scope after its branch existed is halted for a human. Configure mapping under `"teambit.git/ci": { "sync": { ... } }` in workspace.jsonc.
+
+| **Arg** |                                                                                                                      **Description**                                                                                                                      |
+| ------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `lane`  | the lane to reconcile: either a lane name (hosted on the workspace's defaultScope) or a scope-qualified lane id, "other-org.other-scope/my-lane", for a lane hosted on another scope. Its components must still all live in this workspace's defaultScope |
+
+| **Option**          | **Option alias** | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--branch <branch>` |                  | Resolve the lane from this git branch name using the sync mapping config (cannot be combined with --all)                                                                                                                                                                                                                                                                                                                                         |
+| `--all`             |                  | Reconcile every mapped lane plus the main scope (the default when no target is given; cannot be combined with a lane argument, --branch or --main)                                                                                                                                                                                                                                                                                               |
+| `--main`            |                  | Reconcile only the main scope against the default branch, opening a sync PR on drift (conflicts resolve in favour of the scope)                                                                                                                                                                                                                                                                                                                  |
+| `--dry-run`         |                  | Print the planned action per target. Nothing is pushed and no pull request is created or modified; the working tree is still written and then restored, so a dirty tree is refused rather than discarded                                                                                                                                                                                                                                         |
+| `--init`            |                  | One-command onboarding: scaffold .github/workflows/bit-sync.yml + bit-release.yml (with this repository's actual default branch substituted), add the `"teambit.git/ci": { "sync": {} }` config block to workspace.jsonc if absent, and print the remaining manual-steps checklist (secrets + bit.cloud webhook). Writes nothing else and never overwrites an existing workflow file. Cannot be combined with a lane argument or any other flag. |
+
 ---
 
 ## clear-cache
@@ -2887,7 +2906,7 @@ supports glob patterns to update specific packages. prompts for confirmation unl
 validates components by running check-types, lint, and test commands in sequence.  
 by default runs all checks even when errors are found.  
 use --fail-fast to stop at the first failure.  
-by default validates only new and modified components. use --all to validate all components.
+by default validates only new and modified components. use --unmodified to validate all components.
 
 `bit validate [component-pattern]`
 
@@ -2897,7 +2916,8 @@ by default validates only new and modified components. use --all to validate all
 
 | **Option**              | **Option alias** | **Description**                                                                                                                    |
 | ----------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `--all`                 |       `-a`       | validate all components, not only modified and new                                                                                 |
+| `--all`                 |       `-a`       | DEPRECATED. (use --unmodified)                                                                                                     |
+| `--unmodified`          |       `-u`       | validate all components, not only modified and new                                                                                 |
 | `--fail-fast`           |                  | stop at the first failure instead of running all checks                                                                            |
 | `--continue-on-error`   |       `-c`       | DEPRECATED: this is now the default behavior                                                                                       |
 | `--skip-tasks <string>` |                  | skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. available tasks: "check-types", "lint", "test" |
