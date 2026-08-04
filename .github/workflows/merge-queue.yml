@@ -37,12 +37,14 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  # contents: write is for the update-branch API (master's strict up-to-date protection means the
-  # bot must press "Update branch" on the queue head, or the queue starves after every bump commit)
+  # contents: write AND pull-requests: write are both required by the update-branch API (master's
+  # strict up-to-date protection means the bot must press "Update branch" on the queue head, or
+  # the queue starves after every bump commit; read-only pulls yields 403 "Resource not
+  # accessible by integration")
   contents: write
   statuses: write
   issues: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   reconcile:
