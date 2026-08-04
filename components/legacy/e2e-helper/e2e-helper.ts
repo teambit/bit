@@ -1,3 +1,4 @@
+// CI probe: trivial change to re-snap this component and run its dependents' specs on a clean master base.
 import fs from 'fs-extra';
 import { fromPairs } from 'lodash';
 import { FileStatus } from '@teambit/component.modules.merge-helper';
