@@ -1666,12 +1666,33 @@ as an alternative, you can use "+" to keep the same version installed in the wor
    */
   async fetchFullPackageManifest(packageName: string): Promise<DependencyManifest | undefined> {
     const pm = this.getSystemPackageManager();
-    const { manifest } = await pm.resolveRemoteVersion(packageName, {
+    const resolveOpts = {
       cacheRootDir: this.configStore.getConfig(CFG_PACKAGE_MANAGER_CACHE),
-      fullMetadata: true,
       // We can set anything here. The rootDir option is ignored, when resolving npm-hosted packages.
       rootDir: process.cwd(),
-    });
+    };
+    const { manifest } = await pm.resolveRemoteVersion(packageName, { ...resolveOpts, fullMetadata: true });
+    if (manifest && !('componentId' in manifest)) {
+      // the pnpm v12 engine (@pnpm/napi) strips non-standard fields such as componentId from the full
+      // package document (it caches it under "metadata-full-filtered"). the abbreviated document is
+      // returned unfiltered, and some registries (e.g. bit.cloud) include componentId there as well.
+      try {
+        // pin the lookup to the version the full manifest resolved to, so a tag/range/versionless spec
+        // cannot drift to a different version if a new one gets published in between the two calls.
+        const abbreviatedSpec =
+          manifest.name && manifest.version ? `${manifest.name}@${manifest.version}` : packageName;
+        const { manifest: abbreviated } = await pm.resolveRemoteVersion(abbreviatedSpec, resolveOpts);
+        if (abbreviated && 'componentId' in abbreviated && abbreviated.version === manifest.version) {
+          // the componentId (and any other non-standard field) of the abbreviated manifest survives the merge,
+          // as the full manifest got them stripped by the engine.
+          return { ...abbreviated, ...manifest };
+        }
+      } catch (err: any) {
+        // the fallback is best-effort. the full manifest was already fetched successfully, so return it
+        // rather than failing the entire resolution due to a transient error in the extra lookup.
+        this.logger.warn(`failed to fetch the abbreviated manifest of ${packageName}`, err);
+      }
+    }
     return manifest;
   }
 

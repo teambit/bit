@@ -1,0 +1,52 @@
+# Custom merge queue — see .github/scripts/merge-queue.js for the full design.
+#
+# Reconciles on a schedule plus master pushes (the bump commit landing mid-bit_merge). The loop is
+# stateless, so joining/leaving the queue is picked up within one scheduled cycle (~5m) — noise
+# next to a ~40m bit_merge. There is intentionally NO pull_request trigger: it would execute the
+# PR branch's copy of this workflow and script with CIRCLE_TOKEN in the environment, letting any
+# same-repo PR exfiltrate the secret. All triggers here run only code from master (checkout below
+# pins ref: master for the same reason).
+name: merge-queue
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'reconcile without mutating anything (no statuses, no branch updates, no dashboard writes)'
+        type: boolean
+        default: false
+  push:
+    branches: [master]
+
+# never let two reconcile loops overlap; a queued run supersedes waiting duplicates
+concurrency:
+  group: merge-queue
+  cancel-in-progress: false
+
+permissions:
+  # contents: write is for the update-branch API (master's strict up-to-date protection means the
+  # bot must press "Update branch" on the queue head, or the queue starves after every bump commit)
+  contents: write
+  statuses: write
+  issues: write
+  pull-requests: read
+
+jobs:
+  reconcile:
+    if: github.repository == 'teambit/bit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # always run the trusted master copy of the script, never a branch's copy
+          ref: master
+          sparse-checkout: .github
+      - name: reconcile merge queue
+        run: node .github/scripts/merge-queue.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CIRCLE_TOKEN: ${{ secrets.CIRCLE_TOKEN }}
+          MERGE_QUEUE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && 'true' || 'false' }}
