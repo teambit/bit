@@ -1,0 +1,55 @@
+# Custom merge queue — see .github/scripts/merge-queue.js for the full design.
+#
+# Reconciles on a schedule plus a few events that make it snappy:
+# - push to master: fires when the bump commit lands mid-bit_merge (the cycle will see bit_merge
+#   still running and wait), and on any other master push.
+# - pull_request events: joining/leaving the queue and new pushes to queued PRs.
+# The scheduled run is the safety net — the loop is stateless, so a missed event costs at most
+# one cycle of latency. The actual turn handoff after bit_merge completes has no webhook, so the
+# schedule (~5m) is what advances the queue; against a ~40m bit_merge that latency is noise.
+name: merge-queue
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'reconcile without mutating anything (no statuses, no branch updates, no dashboard writes)'
+        type: boolean
+        default: false
+  push:
+    branches: [master]
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, auto_merge_enabled, auto_merge_disabled]
+
+# never let two reconcile loops overlap; a queued run supersedes waiting duplicates
+concurrency:
+  group: merge-queue
+  cancel-in-progress: false
+
+permissions:
+  # contents: write is for the update-branch API (master's strict up-to-date protection means the
+  # bot must press "Update branch" on the queue head, or the queue starves after every bump commit)
+  contents: write
+  statuses: write
+  issues: write
+  pull-requests: read
+
+jobs:
+  reconcile:
+    # fork PRs get a read-only token that can't post statuses; the scheduled runs (repo context,
+    # full token) reconcile them instead
+    if: github.repository == 'teambit/bit' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: reconcile merge queue
+        run: node .github/scripts/merge-queue.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CIRCLE_TOKEN: ${{ secrets.CIRCLE_TOKEN }}
+          MERGE_QUEUE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && 'true' || 'false' }}
