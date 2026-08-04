@@ -183,7 +183,7 @@ async function fetchOpenPullRequestsPage(cursor) {
                     totalCount
                     nodes {
                       __typename
-                      ... on StatusContext { context state description }
+                      ... on StatusContext { context state description targetUrl }
                       ... on CheckRun { name status conclusion }
                     }
                   }
@@ -209,12 +209,12 @@ function hasTruncatedCheckContexts(pullRequest) {
   return Boolean(contexts && contexts.totalCount > contexts.nodes.length);
 }
 
-/** current state/description of our own gate status on the PR's head commit, if any */
+/** current state/description/target-url of our own gate status on the PR's head commit, if any */
 function getGateStatus(pullRequest) {
   const gate = getCheckContexts(pullRequest).find(
     (context) => context.__typename === 'StatusContext' && context.context === GATE_CONTEXT
   );
-  return gate ? { state: gate.state, description: gate.description || '' } : undefined;
+  return gate ? { state: gate.state, description: gate.description || '', targetUrl: gate.targetUrl || '' } : undefined;
 }
 
 /**
@@ -261,16 +261,25 @@ function evaluateChecks(pullRequest) {
   return { state: 'ready', failing };
 }
 
-async function postGateStatus(pullRequest, state, description) {
+async function postGateStatus(pullRequest, state, description, targetUrl) {
   const current = getGateStatus(pullRequest);
   const trimmedDescription = description.slice(0, MAX_STATUS_DESCRIPTION_LENGTH);
-  if (current && current.state === state.toUpperCase() && current.description === trimmedDescription) return;
+  if (
+    current &&
+    current.state === state.toUpperCase() &&
+    current.description === trimmedDescription &&
+    current.targetUrl === (targetUrl || '')
+  ) {
+    return;
+  }
   console.log(`  #${pullRequest.number}: ${GATE_CONTEXT} -> ${state} (${trimmedDescription})`);
   if (dryRun) return;
   await githubRequest('POST', `/repos/${OWNER}/${REPO}/statuses/${pullRequest.headRefOid}`, {
     state,
     context: GATE_CONTEXT,
     description: trimmedDescription,
+    // the "Details" link on the PR's checks row opens the live dashboard
+    ...(targetUrl ? { target_url: targetUrl } : {}),
   });
 }
 
@@ -363,7 +372,15 @@ async function ensureDashboardLabel() {
   }
 }
 
-async function updateDashboard({ masterState, entries, winner, updateCandidate }) {
+async function findDashboardIssue() {
+  const issues = await githubRequest(
+    'GET',
+    `/repos/${OWNER}/${REPO}/issues?labels=${DASHBOARD_LABEL}&state=open&per_page=1`
+  );
+  return issues[0];
+}
+
+async function updateDashboard({ masterState, entries, winner, updateCandidate, dashboardIssue }) {
   const lines = [
     '<!-- managed by .github/scripts/merge-queue.js — manual edits will be overwritten -->',
     `_Last reconciled: ${new Date().toISOString()}_`,
@@ -387,11 +404,7 @@ async function updateDashboard({ masterState, entries, winner, updateCandidate }
   lines.push('', 'Queue order is the time auto-merge was enabled (first come, first served).');
   const body = lines.join('\n');
 
-  const issues = await githubRequest(
-    'GET',
-    `/repos/${OWNER}/${REPO}/issues?labels=${DASHBOARD_LABEL}&state=open&per_page=1`
-  );
-  if (!issues.length) {
+  if (!dashboardIssue) {
     console.log(`creating the merge-queue dashboard issue${dryRun ? ' (skipped: dry run)' : ''}`);
     if (dryRun) return;
     await ensureDashboardLabel();
@@ -402,10 +415,12 @@ async function updateDashboard({ masterState, entries, winner, updateCandidate }
     });
     return;
   }
-  if (normalizeDashboardBody(issues[0].body) !== normalizeDashboardBody(body)) {
-    console.log(`updating the merge-queue dashboard issue #${issues[0].number}${dryRun ? ' (skipped: dry run)' : ''}`);
+  if (normalizeDashboardBody(dashboardIssue.body) !== normalizeDashboardBody(body)) {
+    console.log(
+      `updating the merge-queue dashboard issue #${dashboardIssue.number}${dryRun ? ' (skipped: dry run)' : ''}`
+    );
     if (dryRun) return;
-    await githubRequest('PATCH', `/repos/${OWNER}/${REPO}/issues/${issues[0].number}`, { body });
+    await githubRequest('PATCH', `/repos/${OWNER}/${REPO}/issues/${dashboardIssue.number}`, { body });
   }
 }
 
@@ -420,6 +435,12 @@ async function main() {
 
   const masterState = await getMasterState();
   console.log(`master: ${masterState.settled ? 'settled' : 'busy'} — ${masterState.reason}`);
+
+  // looked up before the status posts so the gate's "Details" link can point at the dashboard.
+  // On the first run ever it doesn't exist yet — statuses go out without a link and self-heal
+  // next cycle (the targetUrl comparison in postGateStatus re-posts them).
+  const dashboardIssue = await findDashboardIssue();
+  const dashboardUrl = dashboardIssue?.html_url;
 
   const openPullRequests = (await fetchOpenPullRequests()).filter(
     (pullRequest) => pullRequest.baseRefName === 'master'
@@ -467,7 +488,7 @@ async function main() {
       updateCandidate,
       masterState,
     });
-    await postGateStatus(entry.pullRequest, state, description);
+    await postGateStatus(entry.pullRequest, state, description, dashboardUrl);
   }
 
   // A PR that left the queue (auto-merge disabled) with a stale `success` gate could be merged
@@ -475,11 +496,16 @@ async function main() {
   for (const pullRequest of openPullRequests) {
     if (queuedPullRequests.includes(pullRequest)) continue;
     if (getGateStatus(pullRequest)?.state === 'SUCCESS') {
-      await postGateStatus(pullRequest, 'pending', 'not queued — enable auto-merge (squash) to join the merge queue');
+      await postGateStatus(
+        pullRequest,
+        'pending',
+        'not queued — enable auto-merge (squash) to join the merge queue',
+        dashboardUrl
+      );
     }
   }
 
-  await updateDashboard({ masterState, entries, winner, updateCandidate });
+  await updateDashboard({ masterState, entries, winner, updateCandidate, dashboardIssue });
   console.log('reconcile complete');
 }
 
