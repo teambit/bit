@@ -50,6 +50,7 @@
   "e2e/harmony/checkout-harmony.e2e.ts": 227,
   "e2e/harmony/ci-bitmap-auto-sync.e2e.ts": 544,
   "e2e/harmony/ci-commands.e2e.ts": 518,
+  "e2e/harmony/ci-sync.e2e.ts": 240,
   "e2e/harmony/compile.e2e.ts": 15,
   "e2e/harmony/component-config.e2e.ts": 17,
   "e2e/harmony/corrupted-objects.e2e.ts": 18,
