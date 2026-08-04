@@ -1,12 +1,11 @@
 # Custom merge queue — see .github/scripts/merge-queue.js for the full design.
 #
-# Reconciles on a schedule plus a few events that make it snappy:
-# - push to master: fires when the bump commit lands mid-bit_merge (the cycle will see bit_merge
-#   still running and wait), and on any other master push.
-# - pull_request events: joining/leaving the queue and new pushes to queued PRs.
-# The scheduled run is the safety net — the loop is stateless, so a missed event costs at most
-# one cycle of latency. The actual turn handoff after bit_merge completes has no webhook, so the
-# schedule (~5m) is what advances the queue; against a ~40m bit_merge that latency is noise.
+# Reconciles on a schedule plus master pushes (the bump commit landing mid-bit_merge). The loop is
+# stateless, so joining/leaving the queue is picked up within one scheduled cycle (~5m) — noise
+# next to a ~40m bit_merge. There is intentionally NO pull_request trigger: it would execute the
+# PR branch's copy of this workflow and script with CIRCLE_TOKEN in the environment, letting any
+# same-repo PR exfiltrate the secret. All triggers here run only code from master (checkout below
+# pins ref: master for the same reason).
 name: merge-queue
 
 on:
@@ -20,8 +19,6 @@ on:
         default: false
   push:
     branches: [master]
-  pull_request:
-    types: [opened, reopened, synchronize, ready_for_review, auto_merge_enabled, auto_merge_disabled]
 
 # never let two reconcile loops overlap; a queued run supersedes waiting duplicates
 concurrency:
@@ -38,14 +35,14 @@ permissions:
 
 jobs:
   reconcile:
-    # fork PRs get a read-only token that can't post statuses; the scheduled runs (repo context,
-    # full token) reconcile them instead
-    if: github.repository == 'teambit/bit' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    if: github.repository == 'teambit/bit'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
+          # always run the trusted master copy of the script, never a branch's copy
+          ref: master
           sparse-checkout: .github
       - name: reconcile merge queue
         run: node .github/scripts/merge-queue.js

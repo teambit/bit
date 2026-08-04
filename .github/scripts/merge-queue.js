@@ -414,13 +414,13 @@ async function ensureDashboardLabel() {
 async function findDashboardIssue() {
   const issues = await githubRequest(
     'GET',
-    `/repos/${OWNER}/${REPO}/issues?labels=${DASHBOARD_LABEL}&state=open&per_page=20`
+    `/repos/${OWNER}/${REPO}/issues?labels=${DASHBOARD_LABEL}&state=open&per_page=100`
   );
-  // the issues endpoint returns PRs too — a PR someone labeled merge-queue must never be treated
-  // as the dashboard (its body would get overwritten). Prefer the exact title; fall back to any
-  // true issue with the label so a renamed dashboard keeps working.
-  const trueIssues = issues.filter((issue) => !issue.pull_request);
-  return trueIssues.find((issue) => issue.title === DASHBOARD_TITLE) ?? trueIssues[0];
+  // Only an exact match may be PATCHed: the issues endpoint returns PRs too, and the label alone
+  // doesn't prove an item is the dashboard — overwriting anything else's body would corrupt it.
+  // A renamed dashboard is therefore not found and a fresh one gets created (close the old one);
+  // that failure mode is deliberate, corruption is not an acceptable one.
+  return issues.find((issue) => !issue.pull_request && issue.title === DASHBOARD_TITLE);
 }
 
 async function updateDashboard({ masterState, entries, winner, updateCandidate, dashboardIssue }) {
@@ -484,6 +484,7 @@ async function main() {
   // next cycle (the targetUrl comparison in postGateStatus re-posts them).
   const dashboardIssue = await findDashboardIssue();
   const dashboardUrl = dashboardIssue?.html_url;
+  const gateStatusFailures = [];
 
   const openPullRequests = (await fetchOpenPullRequests()).filter(
     (pullRequest) => pullRequest.baseRefName === 'master'
@@ -554,7 +555,14 @@ async function main() {
       updateCandidate,
       masterState,
     });
-    await postGateStatus(entry.pullRequest, state, description, dashboardUrl);
+    try {
+      await postGateStatus(entry.pullRequest, state, description, dashboardUrl);
+    } catch (error) {
+      // one PR's API failure must not abort the reconcile — the remaining PRs, the stale-success
+      // cleanup, and the dashboard still need their turn; the run is failed at the end instead
+      gateStatusFailures.push(entry.pullRequest.number);
+      console.log(`  #${entry.pullRequest.number}: failed to post gate status: ${error.message}`);
+    }
   }
 
   // A PR that left the queue (auto-merge disabled) with a stale `success` gate could be merged
@@ -562,16 +570,28 @@ async function main() {
   for (const pullRequest of openPullRequests) {
     if (queuedPullRequests.includes(pullRequest)) continue;
     if (getGateStatus(pullRequest)?.state === 'SUCCESS') {
-      await postGateStatus(
-        pullRequest,
-        'pending',
-        'not queued — enable auto-merge (squash) to join the merge queue',
-        dashboardUrl
-      );
+      try {
+        await postGateStatus(
+          pullRequest,
+          'pending',
+          'not queued — enable auto-merge (squash) to join the merge queue',
+          dashboardUrl
+        );
+      } catch (error) {
+        gateStatusFailures.push(pullRequest.number);
+        console.log(`  #${pullRequest.number}: failed to reset stale gate status: ${error.message}`);
+      }
     }
   }
 
   await updateDashboard({ masterState, entries, winner, updateCandidate, dashboardIssue });
+  if (gateStatusFailures.length) {
+    console.log(
+      `reconcile finished with gate-status failures on: ${gateStatusFailures.map((n) => `#${n}`).join(', ')}`
+    );
+    process.exitCode = 1;
+    return;
+  }
   console.log('reconcile complete');
 }
 
