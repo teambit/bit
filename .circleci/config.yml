@@ -86,6 +86,24 @@ orbs:
 # ========================================
 
 commands:
+  # Wakes the merge-queue GitHub workflow (see .github/workflows/merge-queue.yml). The queue's
+  # turn handoff depends on this ping: the bump commit is "[skip ci]" (fires no Actions run) and
+  # the cron is throttled, so without it the next queued PR waits minutes instead of seconds.
+  # Non-fatal on purpose — the queue's scheduled safety net covers a missed ping.
+  notify_merge_queue:
+    steps:
+      - run:
+          name: notify merge-queue
+          command: >
+            curl -sf -X POST
+            -H "Authorization: token $GH_RELEASE_GITHUB_API_TOKEN"
+            -H "Accept: application/vnd.github+json"
+            -H "Content-Type: application/json"
+            https://api.github.com/repos/teambit/bit/dispatches
+            -d '{"event_type":"merge-queue-reconcile"}'
+            || echo "merge-queue notify failed (non-fatal)"
+          when: always
+
   # Bundle installation with hoisting and overrides (Linux/macOS)
   install_bit_bundle:
     parameters:
@@ -847,6 +865,16 @@ jobs:
                 echo "No changes detected, but soft-tagged components found. Continuing workflow."
               else
                 echo "No changes detected, halting job to prevent further workflow execution."
+                # step halt skips all remaining steps, including the notify_merge_queue step at the
+                # end of this job — so ping the merge queue here first (master settles the moment
+                # this job halts). Non-fatal; the queue's scheduled safety net covers a miss.
+                curl -sf -X POST \
+                  -H "Authorization: token $GH_RELEASE_GITHUB_API_TOKEN" \
+                  -H "Accept: application/vnd.github+json" \
+                  -H "Content-Type: application/json" \
+                  https://api.github.com/repos/teambit/bit/dispatches \
+                  -d '{"event_type":"merge-queue-reconcile"}' \
+                  || echo "merge-queue notify failed (non-fatal)"
                 circleci-agent step halt
               fi
             fi
@@ -863,6 +891,8 @@ jobs:
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
+      # when: always on the inner step — success AND failure both settle master for the queue
+      - notify_merge_queue
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 

@@ -1,11 +1,18 @@
 # Custom merge queue — see .github/scripts/merge-queue.js for the full design.
 #
-# Reconciles on a schedule plus master pushes (the bump commit landing mid-bit_merge). The loop is
-# stateless, so joining/leaving the queue is picked up within one scheduled cycle (~5m) — noise
-# next to a ~40m bit_merge. There is intentionally NO pull_request trigger: it would execute the
-# PR branch's copy of this workflow and script with CIRCLE_TOKEN in the environment, letting any
-# same-repo PR exfiltrate the secret. All triggers here run only code from master (checkout below
-# pins ref: master for the same reason).
+# Event-driven with a scheduled safety net (the loop is stateless, so a missed event costs one
+# cycle at most):
+# - pull_request_target: instant reaction to joining/leaving the queue and pushes to queued PRs.
+#   Deliberately NOT pull_request — that would execute the PR branch's copy of this workflow and
+#   script with CIRCLE_TOKEN in the environment, letting any same-repo PR exfiltrate the secret.
+#   pull_request_target runs master's workflow definition, and the checkout below pins ref: master,
+#   so PR-controlled code never runs here.
+# - repository_dispatch (merge-queue-reconcile): sent by the CircleCI bit_merge job when it ends
+#   (including the early-halt path of no-component merges). This is the turn-handoff trigger —
+#   nothing else can be: bump commits carry "[skip ci]", which suppresses Actions push runs too,
+#   and the cron is throttled to 5-15m. With the ping, the next PR gets its turn within seconds.
+# - push to master: PR merges landing (bump commits fire nothing, per the above).
+# - schedule: safety net for missed events.
 name: merge-queue
 
 on:
@@ -19,6 +26,13 @@ on:
         default: false
   push:
     branches: [master]
+  # only events that can affect the queue: auto-merge toggles, and pushes to PRs already in it.
+  # opened/reopened/ready_for_review PRs can't be queued yet (closing a PR cancels auto-merge),
+  # and the scheduled safety net covers any residual case.
+  pull_request_target:
+    types: [synchronize, auto_merge_enabled, auto_merge_disabled]
+  repository_dispatch:
+    types: [merge-queue-reconcile]
 
 # never let two reconcile loops overlap; a queued run supersedes waiting duplicates
 concurrency:
@@ -26,16 +40,24 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  # contents: write is for the update-branch API (master's strict up-to-date protection means the
-  # bot must press "Update branch" on the queue head, or the queue starves after every bump commit)
+  # contents: write AND pull-requests: write are both required by the update-branch API (master's
+  # strict up-to-date protection means the bot must press "Update branch" on the queue head, or
+  # the queue starves after every bump commit; read-only pulls yields 403 "Resource not
+  # accessible by integration")
   contents: write
   statuses: write
   issues: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   reconcile:
-    if: github.repository == 'teambit/bit'
+    # the synchronize condition skips full reconciles for pushes to PRs that aren't in the queue
+    # (their gate state can't change); auto-merge toggle events always reconcile
+    if: >-
+      github.repository == 'teambit/bit' &&
+      (github.event_name != 'pull_request_target' ||
+       github.event.action != 'synchronize' ||
+       github.event.pull_request.auto_merge != null)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
