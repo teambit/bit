@@ -51,6 +51,7 @@ const GATE_CONTEXT = 'merge-queue/turn';
 const DASHBOARD_LABEL = 'merge-queue';
 const DASHBOARD_TITLE = 'Merge Queue Dashboard';
 const CIRCLE_PROJECT_SLUG = 'gh/teambit/bit';
+const CIRCLE_APP_BASE_URL = 'https://app.circleci.com/pipelines/github/teambit/bit';
 const MERGE_WORKFLOW_NAME = 'build_and_test';
 const MERGE_JOB_NAME = 'bit_merge';
 // scan every master pipeline younger than this for an active bit_merge — a time window (unlike a
@@ -164,7 +165,12 @@ async function getMasterState() {
       const { items: jobs = [] } = await circleRequest(`/workflow/${workflow.id}/job`);
       const mergeJob = jobs.find((job) => job.name === MERGE_JOB_NAME);
       if (mergeJob && ACTIVE_JOB_STATUSES.has(mergeJob.status)) {
-        return { settled: false, reason: `bit_merge is ${mergeJob.status} on pipeline #${pipeline.number}` };
+        return {
+          settled: false,
+          reason: `bit_merge is ${mergeJob.status} on pipeline #${pipeline.number}`,
+          // markdown consumers (the dashboard) render the reason as a link to the live workflow
+          url: `${CIRCLE_APP_BASE_URL}/${pipeline.number}/workflows/${workflow.id}`,
+        };
       }
     }
   }
@@ -429,7 +435,9 @@ async function updateDashboard({ masterState, entries, winner, updateCandidate, 
     '<!-- managed by .github/scripts/merge-queue.js — manual edits will be overwritten -->',
     `_Last reconciled: ${new Date().toISOString()}_`,
     '',
-    `**Master:** ${masterState.settled ? `🟢 settled — ${masterState.reason}` : `🟡 busy — ${masterState.reason}`}`,
+    `**Master:** ${masterState.settled ? '🟢 settled' : '🟡 busy'} — ${
+      masterState.url ? `[${masterState.reason}](${masterState.url})` : masterState.reason
+    }`,
     '',
   ];
   if (!entries.length) {
