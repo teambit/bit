@@ -11,6 +11,8 @@ import { ComponentAspect } from '@teambit/component';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
+import { createHash } from 'crypto';
+import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect } from '@teambit/envs';
@@ -27,6 +29,7 @@ import {
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
+  CFG_ENABLE_GLOBAL_VIRTUAL_STORE,
   DEFAULT_HARMONY_PACKAGE_MANAGER,
   getCloudDomain,
 } from '@teambit/legacy.constants';
@@ -256,6 +259,62 @@ export class DependencyResolverMain {
     const pmName = packageManagerName || this.config.packageManager;
     if (pmName === 'teambit.dependencies/yarn') return 'hoisted';
     return 'isolated';
+  }
+
+  /**
+   * whether dependency directories should be created once in pnpm's global virtual store and
+   * shared across workspaces and capsules, rather than re-created inside every
+   * `node_modules/.pnpm`.
+   *
+   * opt-in, in precedence order: the workspace config, then the `enable_global_virtual_store`
+   * global config, then off. `BIT_ENABLE_GLOBAL_VIRTUAL_STORE` overrides both - it is what the e2e
+   * suite flips to run the whole matrix under the global virtual store.
+   */
+  enableGlobalVirtualStore(): boolean {
+    const fromEnv = process.env.BIT_ENABLE_GLOBAL_VIRTUAL_STORE;
+    if (fromEnv != null && fromEnv !== '') return fromEnv === 'true' || fromEnv === '1';
+    if (this.config.enableGlobalVirtualStore != null) return this.config.enableGlobalVirtualStore;
+    return this.configStore.getConfig(CFG_ENABLE_GLOBAL_VIRTUAL_STORE) === 'true';
+  }
+
+  /**
+   * the directory the global virtual store materializes dependency directories in, or undefined
+   * when the global virtual store is off.
+   *
+   * bit does not use pnpm's own `<storeDir>/links` default. The core aspects are phantom
+   * dependencies of every published env and aspect - they resolve them from the installation of bit
+   * that is running, which under the project-local layout is reachable by walking up out of
+   * `node_modules/.pnpm`. Nothing in the global virtual store can walk up into a workspace, so the
+   * links have to sit at the root of the virtual store itself (see
+   * `DependencyLinker.linkCoreAspectsToGlobalVirtualStore`) - and that root therefore has to be
+   * private to one bit installation, or two of them would overwrite each other's core aspects.
+   */
+  async getGlobalVirtualStoreDir(rootDir?: string): Promise<string | undefined> {
+    if (!this.enableGlobalVirtualStore()) return undefined;
+    if (this.config.globalVirtualStoreDir) return this.config.globalVirtualStoreDir;
+    const packageManager = this.getPackageManager();
+    if (!packageManager?.getGlobalVirtualStoreDir) return undefined;
+    return packageManager.getGlobalVirtualStoreDir({
+      packageManagerConfigRootDir: rootDir,
+      installationId: this.bitInstallationId(),
+    });
+  }
+
+  /**
+   * stable identifier of the bit installation that is running, used to give it a private global
+   * virtual store root. Two checkouts of the same bit version ship different core aspects, so the
+   * version alone is not enough to tell them apart.
+   */
+  private bitInstallationId(): string {
+    const mainAspectPath = this.aspectLoader.mainAspect?.path ?? '';
+    let realMainAspectPath = mainAspectPath;
+    try {
+      realMainAspectPath = fs.realpathSync(mainAspectPath);
+    } catch {
+      // a path we cannot resolve still identifies the installation well enough to key on
+    }
+    const hash = createHash('sha1').update(realMainAspectPath).digest('hex').slice(0, 10);
+    return `${getBitVersionGracefully() ?? 'unknown'}-${hash}`;
   }
 
   linkCoreAspects(): boolean {
@@ -678,6 +737,8 @@ export class DependencyResolverMain {
       this.config.preferOffline,
       this.config.minimumReleaseAge,
       this.config.minimumReleaseAgeExclude,
+      this.config.patchedDependencies,
+      this.config.packageExtensions,
       options.installingContext
     );
   }
