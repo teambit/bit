@@ -62,7 +62,7 @@ export [component-patterns...] - upload components to remote scopes
 lane [sub-command] - manage lanes for parallel development
 Subcommands: list, show, create, remove, change-scope, alias, rename, remove-readme, import, remove-comp, fetch, eject, current, history, history-diff, checkout, revert, merge-move
 ci <sub-command> - continuous integration commands for automated workflows
-Subcommands: verify, pr, merge
+Subcommands: verify, pr, merge, sync
 fork <pattern> [target-component-name] - create a new component by copying from an existing one
 internalize [component-pattern] - mark components as internal to hide them by default in the UI
 
