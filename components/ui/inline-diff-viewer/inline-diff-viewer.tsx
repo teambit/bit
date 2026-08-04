@@ -121,7 +121,6 @@ export const DiffFileRenderer = React.memo(function DiffFileRenderer({
   );
 });
 
-
 export function DiffFileHeader({
   fileName,
   status,
@@ -371,9 +370,10 @@ function SplitDiffTable({
           const isInRange = feedbackLineNum ? rangeLines?.has(feedbackLineNum) || false : false;
           // Split view shows the widget for the selected line only; existing
           // feedback is already represented by the badge in the gutter.
-          const widget = feedbackLineNum && selectedLine === feedbackLineNum && renderLineWidget
-            ? renderLineWidget(feedbackLineNum)
-            : null;
+          const widget =
+            feedbackLineNum && selectedLine === feedbackLineNum && renderLineWidget
+              ? renderLineWidget(feedbackLineNum)
+              : null;
           return (
             <React.Fragment key={idx}>
               <tr
@@ -448,72 +448,77 @@ function UnifiedDiffTable({
               // comment on, and a '...' collapse marker is not a line at all.
               const isSeparator = line.content.trim() === '...';
               const showWidget = Boolean(
-                lineNum && renderLineWidget && line.type !== 'removed' && !isSeparator
-                  && (selectedLine === lineNum || lineFbs.length > 0)
+                lineNum &&
+                  renderLineWidget &&
+                  line.type !== 'removed' &&
+                  !isSeparator &&
+                  (selectedLine === lineNum || lineFbs.length > 0)
               );
               const widget = showWidget && lineNum ? renderLineWidget?.(lineNum) : null;
               const isClickable = Boolean(onLineClick && lineNum && !isSeparator);
               return (
                 <React.Fragment key={`${hi}-${li}`}>
-                <tr
-                  data-line={lineNum || undefined}
-                  className={`${styles.diffRow} ${line.type === 'added' ? styles.diffLineAdded : line.type === 'removed' ? styles.diffLineRemoved : ''} ${selectedLine === lineNum ? styles.diffRowSelected : ''} ${isInRange ? styles.diffRowRangeHighlight : ''} ${isClickable ? styles.diffRowClickable : ''}`}
-                  onClick={isClickable && lineNum ? () => onLineClick?.(lineNum) : undefined}
-                >
-                  <td className={styles.lineNumCell}>
-                    {lineFbs.length > 0 && line.type !== 'removed' && !renderLineWidget && (
-                      <FeedbackBadgeDisplay feedbacks={lineFbs} isHighlighted={isHighlighted} />
-                    )}
-                    {/*
+                  <tr
+                    data-line={lineNum || undefined}
+                    className={`${styles.diffRow} ${line.type === 'added' ? styles.diffLineAdded : line.type === 'removed' ? styles.diffLineRemoved : ''} ${selectedLine === lineNum ? styles.diffRowSelected : ''} ${isInRange ? styles.diffRowRangeHighlight : ''} ${isClickable ? styles.diffRowClickable : ''}`}
+                    onClick={isClickable && lineNum ? () => onLineClick?.(lineNum) : undefined}
+                  >
+                    <td className={styles.lineNumCell}>
+                      {lineFbs.length > 0 && line.type !== 'removed' && !renderLineWidget && (
+                        <FeedbackBadgeDisplay feedbacks={lineFbs} isHighlighted={isHighlighted} />
+                      )}
+                      {/*
                       The only hint that a line can be commented on. It sits over the
                       line number and is revealed by hovering a clickable row, so it
                       costs nothing on a diff nobody can comment on. Lines that already
                       carry feedback show the badge (or the widget) instead.
                     */}
-                    {onLineClick && line.type !== 'removed' && lineFbs.length === 0 && !isSeparator && <CommentIcon />}
-                    <span
-                      className={
-                        line.type === 'removed'
-                          ? styles.lineNumRemoved
-                          : line.type === 'added'
-                            ? styles.lineNumAdded
-                            : styles.lineNum
-                      }
-                    >
-                      {line.oldLineNumber ?? ''}
-                    </span>
-                  </td>
-                  <td className={styles.lineNumCell}>
-                    <span
-                      className={
-                        line.type === 'added'
-                          ? styles.lineNumAdded
-                          : line.type === 'removed'
+                      {onLineClick && line.type !== 'removed' && lineFbs.length === 0 && !isSeparator && (
+                        <CommentIcon />
+                      )}
+                      <span
+                        className={
+                          line.type === 'removed'
                             ? styles.lineNumRemoved
-                            : styles.lineNum
-                      }
-                    >
-                      {line.newLineNumber ?? ''}
-                    </span>
-                  </td>
-                  <td className={styles.signCell}>
-                    <span
-                      className={
-                        line.type === 'added' ? styles.signAdded : line.type === 'removed' ? styles.signRemoved : ''
-                      }
-                    >
-                      {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : ' '}
-                    </span>
-                  </td>
-                  <td className={styles.codeCell}>
-                    <HighlightedCode code={line.content} />
-                  </td>
-                </tr>
-                {widget && (
-                  <tr className={styles.widgetRow}>
-                    <td colSpan={4}>{widget}</td>
+                            : line.type === 'added'
+                              ? styles.lineNumAdded
+                              : styles.lineNum
+                        }
+                      >
+                        {line.oldLineNumber ?? ''}
+                      </span>
+                    </td>
+                    <td className={styles.lineNumCell}>
+                      <span
+                        className={
+                          line.type === 'added'
+                            ? styles.lineNumAdded
+                            : line.type === 'removed'
+                              ? styles.lineNumRemoved
+                              : styles.lineNum
+                        }
+                      >
+                        {line.newLineNumber ?? ''}
+                      </span>
+                    </td>
+                    <td className={styles.signCell}>
+                      <span
+                        className={
+                          line.type === 'added' ? styles.signAdded : line.type === 'removed' ? styles.signRemoved : ''
+                        }
+                      >
+                        {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : ' '}
+                      </span>
+                    </td>
+                    <td className={styles.codeCell}>
+                      <HighlightedCode code={line.content} />
+                    </td>
                   </tr>
-                )}
+                  {widget && (
+                    <tr className={styles.widgetRow}>
+                      <td colSpan={4}>{widget}</td>
+                    </tr>
+                  )}
                 </React.Fragment>
               );
             })}

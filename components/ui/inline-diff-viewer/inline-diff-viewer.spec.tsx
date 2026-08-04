@@ -47,9 +47,7 @@ describe('DiffFileRenderer — the line-interaction props are opt-in', () => {
     const inert = render(<DiffFileRenderer fileName="a.ts" hunks={hunks} diffMode="unified" />);
     expect(inert.container.querySelector('[class*="commentIcon"]')).toBeNull();
 
-    const live = render(
-      <DiffFileRenderer fileName="a.ts" hunks={hunks} diffMode="unified" onLineClick={() => {}} />
-    );
+    const live = render(<DiffFileRenderer fileName="a.ts" hunks={hunks} diffMode="unified" onLineClick={() => {}} />);
     expect(live.container.querySelector('[class*="commentIcon"]')).toBeTruthy();
   });
 
