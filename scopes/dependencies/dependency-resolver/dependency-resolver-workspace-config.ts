@@ -1,6 +1,6 @@
 import type { PeerDependencyRules } from '@pnpm/types';
 import type { WorkspacePolicyConfigObject } from './policy';
-import type { PackageImportMethod } from './package-manager';
+import type { PackageImportMethod, PackageExtension } from './package-manager';
 
 export type NodeLinker = 'hoisted' | 'isolated';
 
@@ -139,6 +139,36 @@ export interface DependencyResolverWorkspaceConfig {
    * Controls the way packages are imported from the store.
    */
   packageImportMethod?: PackageImportMethod;
+
+  /*
+   * Opt in to pnpm's global virtual store. When enabled, dependency directories are created once
+   * in a directory shared by all workspaces and capsules on the machine, instead of being
+   * re-created inside every `node_modules/.pnpm`. This makes installation significantly faster, at
+   * the cost of a virtual store that is no longer contained in the workspace.
+   * It has no effect when `nodeLinker` is `hoisted`, which uses no virtual store.
+   */
+  enableGlobalVirtualStore?: boolean;
+
+  /*
+   * Path to the global virtual store directory. Defaults to a directory under the pnpm store that
+   * is private to the running bit installation. Only used when `enableGlobalVirtualStore` is on.
+   */
+  globalVirtualStoreDir?: string;
+
+  /*
+   * A map of package name (optionally with a version range) to a patch file path,
+   * relative to the workspace root. Equivalent to pnpm's `patchedDependencies`.
+   */
+  patchedDependencies?: Record<string, string>;
+
+  /*
+   * Declare dependencies that a published package uses but forgot to declare ("phantom"
+   * dependencies). Equivalent to pnpm's `packageExtensions`.
+   * This matters most with `enableGlobalVirtualStore`: a package in the shared store cannot reach
+   * anything hoisted into this workspace's `node_modules`, so declaring the dependency is the only
+   * way to put it where the package can resolve it.
+   */
+  packageExtensions?: Record<string, PackageExtension>;
 
   /*
    * Use and cache the results of (pre/post)install hooks.

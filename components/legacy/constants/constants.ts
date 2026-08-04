@@ -361,6 +361,12 @@ export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
 export const CFG_ISOLATED_SCOPE_CAPSULES = 'isolated_scope_capsules';
 
 /**
+ * Opt in to pnpm's global virtual store for every workspace and capsule on this machine.
+ * A workspace can still override it through `teambit.dependencies/dependency-resolver`.
+ */
+export const CFG_ENABLE_GLOBAL_VIRTUAL_STORE = 'enable_global_virtual_store';
+
+/**
  * Name of the directory where the capsules for building components are stored
  * This is used for the components capsules for bit build / tag / snap / sign
  * This directory is relative to the capsules root directory

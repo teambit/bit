@@ -7,6 +7,7 @@ export type { CreateFromComponentsOptions, ManifestDependenciesObject } from './
 export type {
   InstallationContext,
   PackageImportMethod,
+  PackageExtension,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,

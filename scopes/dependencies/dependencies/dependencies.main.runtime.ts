@@ -8,6 +8,8 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import fs from 'fs-extra';
 import path from 'path';
+import { parse as parseYaml } from 'yaml';
+import { depPathToDirName } from '@teambit/dependencies.pnpm.dep-path';
 import semver from 'semver';
 import { cloneDeep, compact, set, uniq } from 'lodash';
 import pMapSeries from 'p-map-series';
@@ -467,7 +469,7 @@ export class DependenciesMain {
           `Expected "${pnpmDir}" to exist. Run "bit install" first.`
       );
     }
-    const pnpmEntries = await fs.readdir(pnpmDir);
+    const pnpmEntries = await this.readVirtualStoreEntries(pnpmDir);
 
     const pnpmPackageCopies = new Map<string, number>();
     let pnpmStoreEntries = 0;
@@ -599,6 +601,26 @@ export class DependenciesMain {
     return dirName.substring(0, atIdx);
   }
 
+  /**
+   * The per-copy directory names of everything the last install materialized for this workspace.
+   *
+   * Normally these are the directories inside `node_modules/.pnpm`. With the global virtual store
+   * enabled the copies live in the shared store instead - and that store holds every workspace's
+   * packages, so it cannot be scanned for this workspace's ground truth. The current lockfile pnpm
+   * writes into `node_modules/.pnpm` records exactly what was materialized here, and its dep paths
+   * map one-to-one onto the directory names of the project-local layout.
+   */
+  private async readVirtualStoreEntries(virtualStoreDir: string): Promise<string[]> {
+    const entries = (await fs.readdir(virtualStoreDir)).filter(
+      (entry) => !entry.startsWith('.') && entry !== 'node_modules' && entry !== 'lock.yaml'
+    );
+    if (entries.length) return entries;
+    const currentLockfilePath = path.join(virtualStoreDir, 'lock.yaml');
+    if (!(await fs.pathExists(currentLockfilePath))) return entries;
+    const lockfile = parseYaml(await fs.readFile(currentLockfilePath, 'utf8'));
+    return Object.keys(lockfile?.packages ?? {}).map((depPath: string) => depPathToDirName(depPath));
+  }
+
   /** Inspect all .pnpm entries for a specific package, showing each installed copy and its peer combo. */
   async diagnoseDrillDown(
     packageName: string
@@ -612,7 +634,7 @@ export class DependenciesMain {
           `Expected "${pnpmDir}" to exist. Run "bit install" first.`
       );
     }
-    const entries = await fs.readdir(pnpmDir);
+    const entries = await this.readVirtualStoreEntries(pnpmDir);
 
     // Convert package name to .pnpm format: @scope/name → @scope+name
     const pnpmPrefix = packageName.replace('/', '+');
