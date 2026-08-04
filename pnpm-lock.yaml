@@ -7876,7 +7876,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.10(@types/node@22.10.5)(@vitest/coverage-istanbul@4.1.10)(jsdom@29.1.1)(vite@8.1.5)
 
-  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@2.0.5:
+  node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@2.0.6:
     dependencies:
       '@mdx-js/react':
         specifier: 3.1.1
@@ -8287,8 +8287,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/harmony.envs.core-aspect-env':
-        specifier: 2.0.5
-        version: 2.0.5(@babel/core@7.28.3)(@babel/traverse@7.29.7)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(webpack@5.97.1)
+        specifier: 2.0.6
+        version: 2.0.6(@babel/core@7.28.3)(@babel/traverse@7.29.7)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(webpack@5.97.1)
       '@teambit/harmony.modules.concurrency':
         specifier: workspace:*
         version: file:scopes/harmony/modules/concurrency(react-dom@19.2.7)(react@19.2.7)
@@ -29682,6 +29682,12 @@ packages:
       react: 19.2.7
       react-dom: 19.2.7
 
+  '@bitdev/react.preview.react-docs-template@1.0.15':
+    resolution: {integrity: sha512-MWHr/uB9jsrg3FpoLmbSYJWt0y0SToeG2xO1tgxa1LElseqDWmT1OjLR5hLdI/9i2JFqO2ncoIFd1OKDxnCBkA==}
+    peerDependencies:
+      react: 19.2.7
+      react-dom: 19.2.7
+
   '@bitdev/react.preview.react-docs-template@1.0.5':
     resolution: {integrity: sha512-9LuN57qKD6ptZnzNaKzzFFEIXNG0EmFYx1yufq9dbD56iUSVcH6W0hnmR/w3OutTdkElqFme39f8yLgVrO/WYA==}
     peerDependencies:
@@ -36006,8 +36012,8 @@ packages:
   '@teambit/harmony.envs.core-aspect-env@2.0.1':
     resolution: {integrity: sha512-YRvm5jkqOu84NHjtK/vr9GGId3fHjbpvtLvKgGb25hniDbHuNjRigC4aZMOz2B1gcMHU2Htpx6hzwAI+kzITkA==}
 
-  '@teambit/harmony.envs.core-aspect-env@2.0.5':
-    resolution: {integrity: sha512-YjtaK+dP5VD8uHTivsAJ94maBTDx6p6rTNZXtw9zkmsxPDqdacFHZY56R4Su9hNG83+Ff+i4GciCWzq+Zr/Hjg==}
+  '@teambit/harmony.envs.core-aspect-env@2.0.6':
+    resolution: {integrity: sha512-c5pDE0uVzWK/a0fef4+AKzkCY0oyKBmZMsbjX+zcukpI9I6zdIod9C1+zAT5nVeJzxAvPzhrZvKl9mIqBHk3zQ==}
 
   '@teambit/harmony.modules.concurrency@0.0.12':
     resolution: {integrity: sha512-j8u/QH0wyXpoEvpATqspcBcf1wbJ70PR82c7Na/ZbOu8+9w2tQIHl+ME7kozcDMX2wSG3cM9TjhJcWS+goRxMg==}
@@ -53602,6 +53608,14 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
 
   '@bitdev/react.preview.react-docs-template@1.0.14(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@bitdev/react.preview.react-docs-app': 0.0.11
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
+  '@bitdev/react.preview.react-docs-template@1.0.15(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@bitdev/react.preview.react-docs-app': 0.0.11
       '@types/react': 19.2.14
@@ -78369,7 +78383,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/harmony.envs.core-aspect-env@2.0.5(@babel/core@7.28.3)(@babel/traverse@7.29.7)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(webpack@5.97.1)':
+  '@teambit/harmony.envs.core-aspect-env@2.0.6(@babel/core@7.28.3)(@babel/traverse@7.29.7)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(webpack@5.97.1)':
     dependencies:
       '@babel/plugin-proposal-decorators': 7.28.0(@babel/core@7.28.3)(supports-color@9.4.0)
       '@babel/plugin-transform-class-properties': 7.27.1(@babel/core@7.28.3)(supports-color@9.4.0)
@@ -78379,7 +78393,7 @@ snapshots:
       '@babel/preset-react': 7.27.1(@babel/core@7.28.3)(supports-color@9.4.0)
       '@babel/preset-typescript': 7.27.1(@babel/core@7.28.3)(supports-color@9.4.0)
       '@babel/runtime': 7.20.0
-      '@bitdev/react.preview.react-docs-template': 1.0.11(react-dom@19.2.7)(react@19.2.7)
+      '@bitdev/react.preview.react-docs-template': 1.0.15(react-dom@19.2.7)(react@19.2.7)
       '@mdx-js/react': 3.1.1(@types/react@19.2.14)(react@19.2.7)
       '@teambit/compilation.babel-compiler': 1.1.18(react@19.2.7)(supports-color@9.4.0)
       '@teambit/defender.mocha-tester': 1.1.1(@babel/core@7.28.3)(react@19.2.7)(supports-color@9.4.0)
