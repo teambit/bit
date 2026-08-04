@@ -15,6 +15,9 @@
  * - Turn-taking ("fast" mode): when master is settled, the FIRST queued PR that is green,
  *   mergeable, and up to date with master gets the turn. PRs with failing/pending checks or
  *   conflicts keep their queue position but are passed over until they recover.
+ * - A granted turn is revoked when auto-merge hasn't fired within 15m (something outside this
+ *   model blocks the merge, e.g. a review requirement) or when master becomes busy first — the
+ *   queue then moves on instead of stalling behind the stuck PR.
  * - Branch updates: master's protection has "require branches to be up to date" (strict), and
  *   every bump commit makes all open PRs BEHIND — so without updates the queue would starve.
  *   When master is settled and no PR can merge right now, the bot presses "Update branch" on the
@@ -50,7 +53,18 @@ const DASHBOARD_TITLE = 'Merge Queue Dashboard';
 const CIRCLE_PROJECT_SLUG = 'gh/teambit/bit';
 const MERGE_WORKFLOW_NAME = 'build_and_test';
 const MERGE_JOB_NAME = 'bit_merge';
-const RECENT_PIPELINES_TO_INSPECT = 10;
+// scan every master pipeline younger than this for an active bit_merge — a time window (unlike a
+// fixed count) can't miss a still-running job behind a burst of pushes; 4h far exceeds the longest
+// possible bit_merge (50m no-output timeout) plus serial-group queueing
+const MASTER_SCAN_WINDOW_MS = 4 * 60 * 60 * 1000;
+const MAX_PIPELINE_PAGES = 3;
+// a fresh master push may take a moment to get its CircleCI pipeline; within this grace period a
+// pipeline-less non-[skip ci] HEAD means "bit_merge is coming", beyond it the pipeline is simply
+// older than the scan window (idle repo), not missing
+const PIPELINE_CREATION_GRACE_MS = 30 * 60 * 1000;
+// a winner whose success gate is older than this and still unmerged is blocked by something
+// outside this script's model (e.g. a review requirement) — demote it so the queue moves on
+const STUCK_WINNER_TIMEOUT_MS = 15 * 60 * 1000;
 // job statuses meaning bit_merge is still going to run or is running (incl. waiting in the
 // CircleCI serial-group). Terminal statuses (success/failed/canceled/...) mean settled.
 const ACTIVE_JOB_STATUSES = new Set(['running', 'queued', 'not_running', 'blocked', 'on_hold', 'retried']);
@@ -106,22 +120,38 @@ async function circleRequest(path) {
   return response.json();
 }
 
+async function getMasterPipelinesWithinWindow() {
+  const pipelines = [];
+  let pageToken;
+  for (let page = 0; page < MAX_PIPELINE_PAGES; page += 1) {
+    const tokenParam = pageToken ? `&page-token=${pageToken}` : '';
+    const response = await circleRequest(`/project/${CIRCLE_PROJECT_SLUG}/pipeline?branch=master${tokenParam}`);
+    for (const pipeline of response.items ?? []) {
+      if (Date.now() - new Date(pipeline.created_at).getTime() > MASTER_SCAN_WINDOW_MS) return pipelines;
+      pipelines.push(pipeline);
+    }
+    pageToken = response.next_page_token;
+    if (!pageToken) break;
+  }
+  return pipelines;
+}
+
 /**
  * Master is "settled" when no bit_merge job is active on any recent master pipeline. Also guards
- * the gap between a merge landing and CircleCI creating its pipeline: a non-[skip ci] HEAD with no
- * pipeline yet is treated as unsettled.
+ * the gap between a merge landing and CircleCI creating its pipeline: a recent non-[skip ci] HEAD
+ * with no pipeline yet is treated as unsettled.
  */
 async function getMasterState() {
   const branch = await githubRequest('GET', `/repos/${OWNER}/${REPO}/branches/master`);
   const headSha = branch.commit.sha;
   const headMessage = branch.commit.commit.message || '';
+  const headAgeMs = Date.now() - new Date(branch.commit.commit.committer.date).getTime();
 
-  const { items: pipelines = [] } = await circleRequest(`/project/${CIRCLE_PROJECT_SLUG}/pipeline?branch=master`);
-  const recentPipelines = pipelines.slice(0, RECENT_PIPELINES_TO_INSPECT);
+  const recentPipelines = await getMasterPipelinesWithinWindow();
 
   const headIsSkipCi = headMessage.includes('[skip ci]') || headMessage.includes('[ci skip]');
   const headHasPipeline = recentPipelines.some((pipeline) => pipeline.vcs && pipeline.vcs.revision === headSha);
-  if (!headIsSkipCi && !headHasPipeline) {
+  if (!headIsSkipCi && !headHasPipeline && headAgeMs < PIPELINE_CREATION_GRACE_MS) {
     return { settled: false, reason: `pipeline for master HEAD ${headSha.slice(0, 9)} not created yet` };
   }
 
@@ -183,7 +213,7 @@ async function fetchOpenPullRequestsPage(cursor) {
                     totalCount
                     nodes {
                       __typename
-                      ... on StatusContext { context state description targetUrl }
+                      ... on StatusContext { context state description targetUrl createdAt }
                       ... on CheckRun { name status conclusion }
                     }
                   }
@@ -214,7 +244,14 @@ function getGateStatus(pullRequest) {
   const gate = getCheckContexts(pullRequest).find(
     (context) => context.__typename === 'StatusContext' && context.context === GATE_CONTEXT
   );
-  return gate ? { state: gate.state, description: gate.description || '', targetUrl: gate.targetUrl || '' } : undefined;
+  return gate
+    ? {
+        state: gate.state,
+        description: gate.description || '',
+        targetUrl: gate.targetUrl || '',
+        createdAt: gate.createdAt,
+      }
+    : undefined;
 }
 
 /**
@@ -286,6 +323,7 @@ async function postGateStatus(pullRequest, state, description, targetUrl) {
 function describeQueueEntry({ entry, index, queueSize, winner, updateCandidate, masterState }) {
   const position = `position ${index + 1}/${queueSize}`;
   if (entry === winner) return { state: 'success', description: 'your turn — auto-merge will land this PR now' };
+  if (entry.demoted) return { state: 'pending', description: `${position} — ${entry.demoted}` };
   const { pullRequest, checks } = entry;
   if (pullRequest.mergeable === 'CONFLICTING') {
     return { state: 'pending', description: `${position} — conflicts with master, resolve to become eligible` };
@@ -343,6 +381,7 @@ function escapeTableCell(text) {
 function dashboardEntryState({ entry, winner, updateCandidate }) {
   const { pullRequest, checks } = entry;
   if (entry === winner) return '✅ merging now';
+  if (entry.demoted) return '⚠️ turn revoked, see its merge-queue/turn status';
   if (pullRequest.mergeable === 'CONFLICTING') return '⚠️ conflicts with master';
   if (checks.state === 'failing') return `❌ failing: ${escapeTableCell(checks.failing.join(', '))}`;
   if (entry === updateCandidate) return '🔄 updating branch with master';
@@ -375,9 +414,13 @@ async function ensureDashboardLabel() {
 async function findDashboardIssue() {
   const issues = await githubRequest(
     'GET',
-    `/repos/${OWNER}/${REPO}/issues?labels=${DASHBOARD_LABEL}&state=open&per_page=1`
+    `/repos/${OWNER}/${REPO}/issues?labels=${DASHBOARD_LABEL}&state=open&per_page=20`
   );
-  return issues[0];
+  // the issues endpoint returns PRs too — a PR someone labeled merge-queue must never be treated
+  // as the dashboard (its body would get overwritten). Prefer the exact title; fall back to any
+  // true issue with the label so a renamed dashboard keeps working.
+  const trueIssues = issues.filter((issue) => !issue.pull_request);
+  return trueIssues.find((issue) => issue.title === DASHBOARD_TITLE) ?? trueIssues[0];
 }
 
 async function updateDashboard({ masterState, entries, winner, updateCandidate, dashboardIssue }) {
@@ -451,18 +494,41 @@ async function main() {
   const entries = queuedPullRequests.map((pullRequest) => ({ pullRequest, checks: evaluateChecks(pullRequest) }));
   console.log(`queue: ${entries.length} PR(s) — [${entries.map((e) => `#${e.pullRequest.number}`).join(', ')}]`);
 
+  // Sticky winner: an entry whose gate is already success was granted the turn on a previous
+  // cycle and should normally just be re-confirmed until GitHub merges it. Two exceptions demote
+  // it back to pending: master became busy before auto-merge fired (an admin-bypass merge could
+  // otherwise let this PR land mid-bit_merge), or the turn is older than the timeout and the PR
+  // still hasn't merged — something outside this script's model blocks it (e.g. a review
+  // requirement), and holding the turn would stall the whole queue behind it.
+  let stickyWinner;
+  for (const entry of entries) {
+    const gate = getGateStatus(entry.pullRequest);
+    if (gate?.state !== 'SUCCESS') continue;
+    if (!masterState.settled) {
+      entry.demoted = `master became busy before auto-merge fired (${masterState.reason}) — turn revoked`;
+    } else if (Date.now() - new Date(gate.createdAt).getTime() > STUCK_WINNER_TIMEOUT_MS) {
+      entry.demoted = `auto-merge did not fire within ${STUCK_WINNER_TIMEOUT_MS / 60000}m — passed over; check review or other merge requirements`;
+    } else if (!stickyWinner) {
+      stickyWinner = entry;
+    }
+    if (entry.demoted) console.log(`demoting #${entry.pullRequest.number}: ${entry.demoted}`);
+  }
+
   // fast mode: the first queued PR that is fully green, mergeable, and up to date takes the turn;
   // PRs ahead of it that are red/pending/conflicting/behind keep their position but are passed
   // over this round.
-  const winner = masterState.settled
-    ? entries.find(
-        (entry) =>
-          entry.checks.state === 'ready' &&
-          entry.pullRequest.mergeable === 'MERGEABLE' &&
-          entry.pullRequest.mergeStateStatus !== 'BEHIND'
-      )
-    : undefined;
-  if (winner) console.log(`winner: #${winner.pullRequest.number} — flipping ${GATE_CONTEXT} to success`);
+  const winner =
+    stickyWinner ??
+    (masterState.settled
+      ? entries.find(
+          (entry) =>
+            !entry.demoted &&
+            entry.checks.state === 'ready' &&
+            entry.pullRequest.mergeable === 'MERGEABLE' &&
+            entry.pullRequest.mergeStateStatus !== 'BEHIND'
+        )
+      : undefined);
+  if (winner) console.log(`winner: #${winner.pullRequest.number} — ${GATE_CONTEXT} success`);
 
   // Master's strict up-to-date protection means a behind PR can never merge, and every bump
   // commit puts ALL open PRs behind — so when nothing can merge right now, press "Update branch"
