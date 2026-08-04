@@ -9,6 +9,8 @@
  * How this works instead:
  * - Enrollment: a PR joins the queue by enabling GitHub's native auto-merge (squash). No labels.
  * - Ordering: FIFO by `autoMergeRequest.enabledAt` (disabling + re-enabling moves you to the back).
+ *   PRs carrying the `merge-queue:priority` label jump to the front (FIFO among themselves) —
+ *   the label is the durable priority store, applied/removed from the PR page like any label.
  * - Gate: this script owns the `merge-queue/turn` commit status, which is a required check on
  *   master. It stays `pending` on every queued PR except the one whose turn it is; flipping it to
  *   `success` lets GitHub's own auto-merge perform the actual squash-merge. The bot never merges.
@@ -49,6 +51,7 @@ const OWNER = 'teambit';
 const REPO = 'bit';
 const GATE_CONTEXT = 'merge-queue/turn';
 const DASHBOARD_LABEL = 'merge-queue';
+const PRIORITY_LABEL = 'merge-queue:priority';
 const DASHBOARD_TITLE = 'Merge Queue Dashboard';
 const CIRCLE_PROJECT_SLUG = 'gh/teambit/bit';
 const CIRCLE_APP_BASE_URL = 'https://app.circleci.com/pipelines/github/teambit/bit';
@@ -209,6 +212,11 @@ async function fetchOpenPullRequestsPage(cursor) {
           mergeable
           mergeStateStatus
           headRefOid
+          labels(first: 20) {
+            nodes {
+              name
+            }
+          }
           baseRefName
           author { login }
           autoMergeRequest { enabledAt }
@@ -238,6 +246,10 @@ async function fetchOpenPullRequestsPage(cursor) {
 
 function getCheckContexts(pullRequest) {
   return pullRequest.commits.nodes[0]?.commit.statusCheckRollup?.contexts.nodes ?? [];
+}
+
+function isPriorityPullRequest(pullRequest) {
+  return pullRequest.labels.nodes.some((label) => label.name === PRIORITY_LABEL);
 }
 
 /** true when the PR has more check contexts than the single page we fetched */
@@ -328,7 +340,7 @@ async function postGateStatus(pullRequest, state, description, targetUrl) {
 }
 
 function describeQueueEntry({ entry, index, queueSize, winner, updateCandidate, masterState }) {
-  const position = `position ${index + 1}/${queueSize}`;
+  const position = `position ${index + 1}/${queueSize}${isPriorityPullRequest(entry.pullRequest) ? ' (priority)' : ''}`;
   if (entry === winner) return { state: 'success', description: 'your turn — auto-merge will land this PR now' };
   if (entry.demoted) return { state: 'pending', description: `${position} — ${entry.demoted}` };
   const { pullRequest, checks } = entry;
@@ -449,11 +461,15 @@ async function updateDashboard({ masterState, entries, winner, updateCandidate, 
       const { pullRequest } = entry;
       const author = pullRequest.author?.login ?? 'unknown';
       lines.push(
-        `| ${index + 1} | #${pullRequest.number} ${escapeTableCell(pullRequest.title)} | @${author} | ${dashboardEntryState({ entry, winner, updateCandidate })} |`
+        `| ${index + 1}${isPriorityPullRequest(pullRequest) ? ' 🔥' : ''} | #${pullRequest.number} ${escapeTableCell(pullRequest.title)} | @${author} | ${dashboardEntryState({ entry, winner, updateCandidate })} |`
       );
     });
   }
-  lines.push('', 'Queue order is the time auto-merge was enabled (first come, first served).');
+  lines.push(
+    '',
+    'Queue order is the time auto-merge was enabled (first come, first served). ' +
+      'Add the `merge-queue:priority` label to a queued PR to move it to the front (🔥).'
+  );
   const body = lines.join('\n');
 
   if (!dashboardIssue) {
@@ -500,7 +516,12 @@ async function main() {
   );
   const queuedPullRequests = openPullRequests
     .filter((pullRequest) => pullRequest.autoMergeRequest && !pullRequest.isDraft)
-    .sort((a, b) => a.autoMergeRequest.enabledAt.localeCompare(b.autoMergeRequest.enabledAt) || a.number - b.number);
+    .sort(
+      (a, b) =>
+        Number(isPriorityPullRequest(b)) - Number(isPriorityPullRequest(a)) ||
+        a.autoMergeRequest.enabledAt.localeCompare(b.autoMergeRequest.enabledAt) ||
+        a.number - b.number
+    );
   const entries = queuedPullRequests.map((pullRequest) => ({ pullRequest, checks: evaluateChecks(pullRequest) }));
   console.log(`queue: ${entries.length} PR(s) — [${entries.map((e) => `#${e.pullRequest.number}`).join(', ')}]`);
 
