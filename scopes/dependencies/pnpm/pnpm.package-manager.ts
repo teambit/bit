@@ -227,6 +227,10 @@ export class PnpmPackageManager implements PackageManager {
         hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
         hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+        enableGlobalVirtualStore: installOptions.enableGlobalVirtualStore,
+        globalVirtualStoreDir: installOptions.globalVirtualStoreDir,
+        patchedDependencies: installOptions.patchedDependencies,
+        packageExtensions: installOptions.packageExtensions,
         preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
@@ -417,6 +421,22 @@ export class PnpmPackageManager implements PackageManager {
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
     return Object.fromEntries(manifests.map((manifest) => [manifest.name, 'workspace:*']));
+  }
+
+  /**
+   * `<storeDir>/bit-links/<installationId>` rather than pnpm's own `<storeDir>/links`: bit has to
+   * put the core aspects at the root of this directory (they are phantom dependencies of every
+   * published env), so it must not be shared with either the pnpm CLI or another bit installation.
+   */
+  async getGlobalVirtualStoreDir({
+    packageManagerConfigRootDir,
+    installationId,
+  }: {
+    packageManagerConfigRootDir?: string;
+    installationId: string;
+  }): Promise<string> {
+    const { config } = await this.readConfig(packageManagerConfigRootDir);
+    return join(config.storeDir, 'bit-links', installationId);
   }
 
   async pruneModules(rootDir: string): Promise<void> {

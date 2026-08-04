@@ -180,10 +180,52 @@ export class DependencyLinker {
         localLinks.push(this.linkDetailToLocalDepEntry(link.linksDetail));
       });
     }
+    await this.linkCoreAspectsToGlobalVirtualStore(rootDir, linkResults);
     return {
       linkedRootDeps: Object.fromEntries(localLinks.map(([key, value]) => [key, `link:${value}`])),
       linkResults,
     };
+  }
+
+  /**
+   * The core aspects are phantom dependencies of every published env and aspect - they are required
+   * without being declared, and the running bit installation provides them. Under the project-local
+   * virtual store that works because a package in `node_modules/.pnpm` resolves them by walking up
+   * into the workspace's root `node_modules`, where they are linked as root dependencies.
+   *
+   * A package in the global virtual store has no workspace to walk up into: its ancestors are
+   * `<globalVirtualStoreDir>/<scope>/<name>/<version>/<hash>` and then the store itself. So the same
+   * links are mirrored at the root of the global virtual store, which every slot in it can reach.
+   *
+   * Only the links that come from the bit installation are mirrored - the workspace's own component
+   * links stay workspace-local, and the store root is shared by every workspace on the machine.
+   * `DependencyResolverMain.getGlobalVirtualStoreDir` keeps that root private to one bit
+   * installation, so mirroring one installation's core aspects there cannot shadow another's.
+   */
+  private async linkCoreAspectsToGlobalVirtualStore(
+    rootDir: string | undefined,
+    linkResults: LinkResults
+  ): Promise<void> {
+    const globalVirtualStoreDir = await this.dependencyResolver.getGlobalVirtualStoreDir(rootDir ?? this.rootDir);
+    if (!globalVirtualStoreDir) return;
+    const links: Record<string, string> = {};
+    const addLink = (linkDetail?: LinkDetail) => {
+      if (!linkDetail) return;
+      const [packageName, from] = this.linkDetailToLocalDepEntry(linkDetail);
+      links[packageName] = `link:${from}`;
+    };
+    addLink(linkResults.teambitBitLink?.linkDetail);
+    linkResults.coreAspectsLinks?.forEach((link) => addLink(link.linkDetail));
+    addLink(linkResults.harmonyLink);
+    addLink(linkResults.teambitLegacyLink);
+    if (!Object.keys(links).length) return;
+    try {
+      await createLinks(globalVirtualStoreDir, links, { skipIfSymlinkValid: true });
+    } catch (err: any) {
+      this.logger.warn(
+        `failed linking the core aspects into the global virtual store at ${globalVirtualStoreDir}. ${err.message}`
+      );
+    }
   }
 
   private linkDetailToLocalDepEntry(linkDetail: LinkDetail): [string, string] {
@@ -616,17 +658,31 @@ export class DependencyLinker {
     });
     if (!authoredCoreAspects.length) return;
 
-    const hoistedStoreDir = path.join(rootDir, 'node_modules', '.pnpm');
+    // under the global virtual store the published envs live outside the workspace entirely, so the
+    // bridge has to sit at the root of that store - the only directory on their resolution path -
+    // exactly where `linkCoreAspectsToGlobalVirtualStore` puts the non-authored core aspects.
+    const globalVirtualStoreDir = await this.dependencyResolver.getGlobalVirtualStoreDir(rootDir);
+    const hoistedStoreDir = globalVirtualStoreDir ?? path.join(rootDir, 'node_modules', '.pnpm');
     // the hoisted store only exists in a pnpm-managed workspace. anywhere else this directory is on
     // no resolution path, so there is nothing to bridge - and it must not be fabricated here.
-    if (!fs.pathExistsSync(hoistedStoreDir)) return;
+    if (!globalVirtualStoreDir && !fs.pathExistsSync(hoistedStoreDir)) return;
 
     const links: Record<string, string> = {};
     for (const aspectId of authoredCoreAspects) {
       const packageName = getCoreAspectPackageName(aspectId);
       const linkPath = path.join(hoistedStoreDir, 'node_modules', packageName);
-      if (this.hasCompiledMain(path.join(rootDir, 'node_modules', packageName))) {
-        await this.removeCoreAspectBootstrapLink(linkPath, rootDir);
+      const workspacePkgDir = path.join(rootDir, 'node_modules', packageName);
+      if (this.hasCompiledMain(workspacePkgDir)) {
+        // Once the source component is compiled, the workspace's own copy is the one to use. Under
+        // the project-local layout the published packages reach it by walking up out of
+        // `node_modules/.pnpm`, so the bootstrap bridge is removed as soon as it is redundant.
+        // From the global virtual store there is no walking up into the workspace, so the bridge
+        // stays - repointed at the compiled workspace copy rather than at the raw source.
+        if (!globalVirtualStoreDir) {
+          await this.removeCoreAspectBootstrapLink(linkPath, rootDir);
+          continue;
+        }
+        links[packageName] = `link:${workspacePkgDir}`;
         continue;
       }
       const fromDir = this._getCoreAspectSourceDir(aspectId, packageName, rootDir);

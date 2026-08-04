@@ -8,7 +8,12 @@ import type { Logger } from '@teambit/logger';
 import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import type { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
-import type { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
+import type {
+  PackageManager,
+  PackageManagerInstallOptions,
+  PackageImportMethod,
+  PackageExtension,
+} from './package-manager';
 import type { WorkspacePolicy } from './policy';
 import type { CreateFromComponentsOptions } from './manifest';
 import type { DependencyResolverMain } from './dependency-resolver.main.runtime';
@@ -118,6 +123,10 @@ export class DependencyInstaller {
 
     private minimumReleaseAgeExclude?: string[],
 
+    private patchedDependencies?: Record<string, string>,
+
+    private packageExtensions?: Record<string, PackageExtension>,
+
     private installingContext: DepInstallerContext = {}
   ) {}
 
@@ -215,6 +224,21 @@ export class DependencyInstaller {
       cacheRootDir: this.cacheRootDir,
       nodeLinker: this.nodeLinker,
       packageImportMethod: this.packageImportMethod,
+      // Capsules stay on the project-local virtual store even when the global one is enabled.
+      // A capsule is a self-contained build sandbox, and TypeScript's declaration emit relies on
+      // that: it names the type of an inferred value (`compiler()` returning a `@teambit/compiler`
+      // type, say) through the package that declares it, and can only do so while that package
+      // sits inside the capsule. Moving env and aspect packages out to the shared store makes
+      // `bit build` of any custom env fail with TS2742 ("cannot be named without a reference to
+      // ../../../node_modules/@teambit/compiler"). Workspace installs - the ones a user actually
+      // waits on repeatedly - still get the global store.
+      enableGlobalVirtualStore:
+        !this.installingContext?.inCapsule && this.dependencyResolver.enableGlobalVirtualStore(),
+      globalVirtualStoreDir: this.installingContext?.inCapsule
+        ? undefined
+        : await this.dependencyResolver.getGlobalVirtualStoreDir(finalRootDir),
+      patchedDependencies: this.patchedDependencies,
+      packageExtensions: this.packageExtensions,
       minimumReleaseAge: this.minimumReleaseAge,
       minimumReleaseAgeExclude: this.minimumReleaseAgeExclude,
       sideEffectsCache: this.sideEffectsCache,
