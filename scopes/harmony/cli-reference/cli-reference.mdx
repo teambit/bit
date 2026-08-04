@@ -2906,7 +2906,7 @@ supports glob patterns to update specific packages. prompts for confirmation unl
 validates components by running check-types, lint, and test commands in sequence.  
 by default runs all checks even when errors are found.  
 use --fail-fast to stop at the first failure.  
-by default validates only new and modified components. use --all to validate all components.
+by default validates only new and modified components. use --unmodified to validate all components.
 
 `bit validate [component-pattern]`
 
@@ -2916,7 +2916,8 @@ by default validates only new and modified components. use --all to validate all
 
 | **Option**              | **Option alias** | **Description**                                                                                                                    |
 | ----------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `--all`                 |       `-a`       | validate all components, not only modified and new                                                                                 |
+| `--all`                 |       `-a`       | DEPRECATED. (use --unmodified)                                                                                                     |
+| `--unmodified`          |       `-u`       | validate all components, not only modified and new                                                                                 |
 | `--fail-fast`           |                  | stop at the first failure instead of running all checks                                                                            |
 | `--continue-on-error`   |       `-c`       | DEPRECATED: this is now the default behavior                                                                                       |
 | `--skip-tasks <string>` |                  | skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. available tasks: "check-types", "lint", "test" |

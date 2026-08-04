@@ -6286,6 +6286,11 @@
       [
         "a",
         "all",
+        "DEPRECATED. (use --unmodified)"
+      ],
+      [
+        "u",
+        "unmodified",
         "validate all components, not only modified and new"
       ],
       [
@@ -6305,7 +6310,7 @@
       ]
     ],
     "description": "run type-checking, linting, and testing in sequence",
-    "extendedDescription": "validates components by running check-types, lint, and test commands in sequence.\nby default runs all checks even when errors are found.\nuse --fail-fast to stop at the first failure.\nby default validates only new and modified components. use --all to validate all components.",
+    "extendedDescription": "validates components by running check-types, lint, and test commands in sequence.\nby default runs all checks even when errors are found.\nuse --fail-fast to stop at the first failure.\nby default validates only new and modified components. use --unmodified to validate all components.",
     "group": "testing",
     "private": false,
     "arguments": [
