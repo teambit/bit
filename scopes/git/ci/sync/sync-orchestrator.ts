@@ -108,14 +108,6 @@ export class SyncOrchestrator {
     const defaultBranch = await this.deps.ci.getDefaultBranchName();
     const mainLaneName = this.deps.lanes.getDefaultLaneId().name;
 
-    if (cfg.mode !== 'git-source-of-truth') {
-      // `mode` is accepted but nothing reads it yet; a configured 'mirror' must not look effective.
-      this.deps.logger.consoleWarning(
-        `sync.mode is set to "${cfg.mode}", but mode is not implemented yet — this run behaves as ` +
-          `"git-source-of-truth" (git wins on conflict, merges happen on the git host)`
-      );
-    }
-
     // The executors force-checkout branches and remove untracked files; warn up front, naming the
     // files at stake, before an interactive run discards anything.
     const statusAtStart = await git.status().catch(() => undefined);

@@ -122,9 +122,9 @@ jobs:
           # the action chdirs here before running anything.
           # ws-dir: packages/my-workspace
         env:
-          # Service account token. In Mode A (git-source-of-truth), this
-          # account must be EXEMPT from the org's change-request/merge
-          # block, or bit.cloud rejects the sync-driven writes.
+          # Service account token. This account must be EXEMPT from the
+          # org's change-request/merge block, or bit.cloud rejects the
+          # sync-driven writes.
           BIT_CONFIG_ACCESS_TOKEN: \${{ secrets.BIT_CONFIG_ACCESS_TOKEN }}
           GITHUB_TOKEN: \${{ secrets.BIT_SYNC_GH_TOKEN || secrets.GITHUB_TOKEN }}
           # Optional: git identity for the commits the sync creates. Defaults
@@ -313,7 +313,7 @@ export function renderInitChecklist(ownerRepo: OwnerRepo | undefined): string {
     '',
     '1. Secrets -- add in the repository (or org) Settings > Secrets and variables > Actions:',
     '   - BIT_CONFIG_ACCESS_TOKEN (required): a bit.cloud service-account token with export rights on',
-    "     this scope. In Mode A (git-source-of-truth) this account must also be exempt from the org's",
+    "     this scope. This account must also be exempt from the org's",
     '     change-request/merge block -- it is the only identity that merges lanes.',
     '   - BIT_SYNC_GH_TOKEN (optional): a GitHub PAT or App token. Without it, sync pushes/PRs use the',
     '     default GITHUB_TOKEN, which does NOT trigger downstream workflow runs (loop-safe, but the',

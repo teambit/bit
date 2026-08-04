@@ -153,7 +153,6 @@ describe('laneNameToBranch validates the derived name', () => {
 describe('sync-config', () => {
   it('applies defaults', () => {
     expect(resolveSyncConfig(undefined)).to.deep.equal({
-      mode: 'git-source-of-truth',
       branchPrefix: '',
       branches: {},
       lanes: ['*'],

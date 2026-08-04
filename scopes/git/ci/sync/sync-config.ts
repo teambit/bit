@@ -57,8 +57,6 @@ export function assertValidBranchPrefix(prefix: string, configKey: string): void
 }
 
 export interface CiSyncConfig {
-  /** 'git-source-of-truth': lanes mirror to PRs, merges happen in GitHub. 'mirror': bit.cloud merges allowed, git tracks. */
-  mode?: 'git-source-of-truth' | 'mirror';
   /** prefix for lane-mapped branches, e.g. 'lane/' => lane my-lane <-> branch lane/my-lane */
   branchPrefix?: string;
   /** explicit lane-name -> branch-name overrides */
@@ -88,7 +86,6 @@ export interface CiSyncConfig {
  */
 export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
   const resolved: Required<CiSyncConfig> = {
-    mode: raw?.mode ?? 'git-source-of-truth',
     branchPrefix: raw?.branchPrefix ?? '',
     branches: raw?.branches ?? {},
     lanes: raw?.lanes ?? ['*'],

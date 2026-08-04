@@ -485,16 +485,15 @@ bit ci merge --build  # → automatically uses minor version bump
 }
 ```
 
-| Field                 | Default                 | Description                                                                                                                                        |
-| --------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`                | `"git-source-of-truth"` | **Reserved** — accepted but not implemented; every run behaves as `git-source-of-truth`, and any other value warns.                                |
-| `branchPrefix`        | `""`                    | Prefix for lane-mapped branches: `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                                            |
-| `branches`            | `{}`                    | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                                          |
-| `lanes`               | `["*"]`                 | Glob patterns (`*` only) of lane names to sync; `[]` disables lane mirroring, leaving main-scope sync.                                             |
-| `mainSyncBranch`      | `"bit-sync/main"`       | Branch carrying the main-scope drift PR. Unused under `mainSync: "direct-push"`.                                                                   |
-| `mainSync`            | `"pr"`                  | `"pr"` proposes main-scope drift from `mainSyncBranch`; `"direct-push"` commits it straight onto the default branch.                               |
-| `onConflict`          | `"halt"`                | Same-line divergence in `merge-diverged`: `"halt"` labels the PR for a human; `"git-wins"` / `"lane-wins"` resolve conflicting hunks to that side. |
-| `autoMergeMainSyncPr` | `false`                 | **Reserved** — GitHub auto-merge on the sync PR is not implemented; use a repository rule.                                                         |
+| Field                 | Default           | Description                                                                                                                                        |
+| --------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `branchPrefix`        | `""`              | Prefix for lane-mapped branches: `"lane/"` maps lane `my-lane` ⇄ branch `lane/my-lane`.                                                            |
+| `branches`            | `{}`              | Explicit lane-name → branch-name overrides; they win over `branchPrefix`.                                                                          |
+| `lanes`               | `["*"]`           | Glob patterns (`*` only) of lane names to sync; `[]` disables lane mirroring, leaving main-scope sync.                                             |
+| `mainSyncBranch`      | `"bit-sync/main"` | Branch carrying the main-scope drift PR. Unused under `mainSync: "direct-push"`.                                                                   |
+| `mainSync`            | `"pr"`            | `"pr"` proposes main-scope drift from `mainSyncBranch`; `"direct-push"` commits it straight onto the default branch.                               |
+| `onConflict`          | `"halt"`          | Same-line divergence in `merge-diverged`: `"halt"` labels the PR for a human; `"git-wins"` / `"lane-wins"` resolve conflicting hunks to that side. |
+| `autoMergeMainSyncPr` | `false`           | **Reserved** — GitHub auto-merge on the sync PR is not implemented; use a repository rule.                                                         |
 
 Branch names are validated at startup, naming the offending config key rather than failing mid-run. The
 default branch and `mainSyncBranch` are never treated as lane-mapped, even with an empty `branchPrefix`.
