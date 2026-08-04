@@ -111,13 +111,19 @@ describe('validate command', function () {
     });
   });
 
-  describe('validating with --all flag', () => {
+  describe('validating with --unmodified flag', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
     });
     it('should validate all components', () => {
+      const output = helper.command.runCmd('bit validate --unmodified');
+      expect(output).to.include('Validating 2 component(s)');
+      expect(output).to.include('All validation checks passed');
+    });
+    it('should still support the deprecated --all flag and show a deprecation warning', () => {
       const output = helper.command.runCmd('bit validate --all');
+      expect(output).to.include('--all is deprecated, use --unmodified instead');
       expect(output).to.include('Validating 2 component(s)');
       expect(output).to.include('All validation checks passed');
     });
