@@ -2,6 +2,8 @@ import { expect } from 'chai';
 import type { GitConfigIO } from './git-ops';
 import {
   ALL_HEADS_REFSPEC,
+  SYNC_EXCLUDED_PATHS,
+  addAllExceptScopeAndModules,
   assertCheckoutableBranch,
   checkoutPristine,
   checkoutPristineRestore,
@@ -232,6 +234,53 @@ describe('isNonContentPath', () => {
       expect(isNonContentPath(p), p).to.equal(true)
     );
     ['.bitmap', 'node_modules_backup/x'].forEach((p) => expect(isNonContentPath(p), p).to.equal(false));
+  });
+});
+
+// Both paths must end with the same index: everything staged except `.bit` / `node_modules`. The
+// fallback exists because `git add` refuses a pathspec naming an ignored path.
+describe('addAllExceptScopeAndModules', () => {
+  /** Records argv; `failFastPath` models git refusing the `:(exclude)` form (both trees gitignored). */
+  function recorder(failFastPath = false) {
+    const argv: string[][] = [];
+    const run = async (args: string[]) => {
+      argv.push(args);
+      if (failFastPath && args.some((arg) => arg.startsWith(':(exclude)'))) {
+        throw new Error('The following paths are ignored by one of your .gitignore files:\n.bit\nnode_modules');
+      }
+      return undefined;
+    };
+    return { argv, run };
+  }
+
+  it('excludes both trees by pathspec in one command, so git never traverses them', async () => {
+    const { argv, run } = recorder();
+    await addAllExceptScopeAndModules(run);
+    expect(argv).to.deep.equal([['add', '-A', '--', '.', ':(exclude).bit', ':(exclude)node_modules']]);
+  });
+
+  it('falls back to add-then-reset when git refuses the pathspecs', async () => {
+    const { argv, run } = recorder(true);
+    await addAllExceptScopeAndModules(run);
+    expect(argv).to.deep.equal([
+      ['add', '-A', '--', '.', ':(exclude).bit', ':(exclude)node_modules'],
+      ['add', '-A', '--', '.'],
+      ['reset', '-q', '--', '.bit', 'node_modules'],
+    ]);
+  });
+
+  // Either shape must cover every excluded path, or a new entry silently stops being excluded.
+  it('names every excluded path on both paths', async () => {
+    const fast = recorder();
+    await addAllExceptScopeAndModules(fast.run);
+    const fallback = recorder(true);
+    await addAllExceptScopeAndModules(fallback.run);
+    const reset = fallback.argv.find((args) => args[0] === 'reset') as string[];
+    SYNC_EXCLUDED_PATHS.forEach((path) => {
+      expect(fast.argv[0], path).to.include(`:(exclude)${path}`);
+      expect(reset, path).to.include(path);
+    });
+    expect(reset.slice(3)).to.deep.equal(SYNC_EXCLUDED_PATHS);
   });
 });
 

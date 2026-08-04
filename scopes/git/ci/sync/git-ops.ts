@@ -99,14 +99,19 @@ export async function checkoutPristineRestore(
 
 /**
  * Stage every change except `.bit` / `node_modules` (a bare `add -A` would commit the local scope when
- * `.gitignore` lacks Bit's block). Two commands, not `:(exclude)` pathspecs: `git add` exits non-zero
- * when any pathspec element — including a negative one — names an ignored path, and `-f` would
- * force-add every other ignored path. `git reset -- <paths>` is a no-op for paths absent from the
- * index, so neither command can fail.
+ * `.gitignore` lacks Bit's block). The `:(exclude)` pathspecs make git skip those trees instead of
+ * staging them for a reset to undo; `git add` refuses them when a named path IS ignored — the case where
+ * the traversal is already cheap — so the add-then-reset pair is the fallback. Both leave the same index,
+ * and `git reset -- <paths>` is a no-op for paths absent from it, so neither fallback command can fail.
  */
-export async function addAllExceptScopeAndModules(): Promise<void> {
-  await git.raw(['add', '-A', '--', '.']);
-  await git.raw(['reset', '-q', '--', ...SYNC_EXCLUDED_PATHS]);
+export async function addAllExceptScopeAndModules(run: GitArgsRunner = realGitRaw): Promise<void> {
+  const stageAll = ['add', '-A', '--', '.'];
+  try {
+    await run([...stageAll, ...SYNC_EXCLUDED_PATHS.map((path) => `:(exclude)${path}`)]);
+  } catch {
+    await run(stageAll);
+    await run(['reset', '-q', '--', ...SYNC_EXCLUDED_PATHS]);
+  }
 }
 
 /**
