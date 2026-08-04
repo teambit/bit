@@ -72,6 +72,7 @@ const ACTIVE_JOB_STATUSES = new Set(['running', 'queued', 'not_running', 'blocke
 // terminal (success/failed/error/canceled/not_run) is skipped without fetching its jobs.
 const ACTIVE_WORKFLOW_STATUSES = new Set(['created', 'running', 'failing', 'on_hold']);
 const MAX_STATUS_DESCRIPTION_LENGTH = 140;
+const NOT_QUEUED_DESCRIPTION = 'not queued — enable auto-merge (squash) to join the merge queue';
 
 const githubToken = process.env.GITHUB_TOKEN;
 const circleToken = process.env.CIRCLE_TOKEN;
@@ -565,18 +566,15 @@ async function main() {
     }
   }
 
-  // A PR that left the queue (auto-merge disabled) with a stale `success` gate could be merged
-  // manually at any moment, bypassing the queue. Reset it to pending.
+  // A PR that left the queue (auto-merge disabled) keeps its last gate status. A stale `success`
+  // could let it be merged manually at any moment, bypassing the queue; a stale position text is
+  // merely misleading. Reset both to the not-queued message.
   for (const pullRequest of openPullRequests) {
     if (queuedPullRequests.includes(pullRequest)) continue;
-    if (getGateStatus(pullRequest)?.state === 'SUCCESS') {
+    const gate = getGateStatus(pullRequest);
+    if (gate && (gate.state === 'SUCCESS' || gate.description !== NOT_QUEUED_DESCRIPTION)) {
       try {
-        await postGateStatus(
-          pullRequest,
-          'pending',
-          'not queued — enable auto-merge (squash) to join the merge queue',
-          dashboardUrl
-        );
+        await postGateStatus(pullRequest, 'pending', NOT_QUEUED_DESCRIPTION, dashboardUrl);
       } catch (error) {
         gateStatusFailures.push(pullRequest.number);
         console.log(`  #${pullRequest.number}: failed to reset stale gate status: ${error.message}`);

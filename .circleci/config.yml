@@ -863,21 +863,6 @@ jobs:
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
-      - run:
-          # Wakes the merge-queue GitHub workflow the moment bit_merge ends (success OR failure —
-          # both settle master), so the next queued PR gets its turn immediately instead of waiting
-          # for the queue's scheduled safety-net cycle. Non-fatal on purpose: the schedule covers a
-          # missed ping. Note: an early `step halt` (no component changes) skips this step; that
-          # case is also picked up by the schedule.
-          name: notify merge-queue
-          command: >
-            curl -sf -X POST
-            -H "Authorization: token $GH_RELEASE_GITHUB_API_TOKEN"
-            -H "Accept: application/vnd.github+json"
-            https://api.github.com/repos/teambit/bit/dispatches
-            -d '{"event_type":"merge-queue-reconcile"}'
-            || echo "merge-queue notify failed (non-fatal)"
-          when: always
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
