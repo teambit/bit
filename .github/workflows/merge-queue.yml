@@ -7,11 +7,12 @@
 #   script with CIRCLE_TOKEN in the environment, letting any same-repo PR exfiltrate the secret.
 #   pull_request_target runs master's workflow definition, and the checkout below pins ref: master,
 #   so PR-controlled code never runs here.
-# - push to master: PR merges landing. NOT bump commits — their "[skip ci]" message suppresses
-#   Actions push runs too (and even without that, bit_merge is still finishing when the bump is
-#   pushed, so a run at that moment would correctly wait).
-# - schedule: safety net, and the turn-handoff mechanism — the first cycle after bit_merge ends
-#   (with or without a bump commit) grants the next turn.
+# - repository_dispatch (merge-queue-reconcile): sent by the CircleCI bit_merge job when it ends
+#   (including the early-halt path of no-component merges). This is the turn-handoff trigger —
+#   nothing else can be: bump commits carry "[skip ci]", which suppresses Actions push runs too,
+#   and the cron is throttled to 5-15m. With the ping, the next PR gets its turn within seconds.
+# - push to master: PR merges landing (bump commits fire nothing, per the above).
+# - schedule: safety net for missed events.
 name: merge-queue
 
 on:
@@ -27,6 +28,8 @@ on:
     branches: [master]
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review, auto_merge_enabled, auto_merge_disabled]
+  repository_dispatch:
+    types: [merge-queue-reconcile]
 
 # never let two reconcile loops overlap; a queued run supersedes waiting duplicates
 concurrency:
