@@ -129,6 +129,16 @@ export type BranchSyncState = {
 };
 
 /**
+ * Whether a `rev-list --count` output reports commits. An unreadable count answers `true`: `false` is an
+ * input to branch retirement, so not knowing must withhold a deletion rather than license one. Empty
+ * output is reachable — simple-git's `raw` resolves with it on some non-zero exits.
+ */
+export function parseDevCommitCount(raw: string): boolean {
+  const count = Number.parseInt(raw.trim(), 10);
+  return Number.isNaN(count) ? true : count > 0;
+}
+
+/**
  * Read a remote branch's sync state from its committed `.bitmap`. Assumes `git fetch origin` already ran.
  * `--first-parent` is a correctness requirement: `git log` orders across all parents, so a `.bitmap`
  * change that arrived through a merge would otherwise be picked as this branch's own state commit.
@@ -149,7 +159,7 @@ export async function readBranchSyncState(
   const range = stateCommit ? `${stateCommit}..${revision}` : `origin/${defaultBranch}..${revision}`;
   const count = await git.raw(['rev-list', range, '--count']);
 
-  return { stateCommit, bitmap, hasDevCommits: parseInt(count.trim(), 10) > 0, tipMessage, tipSha };
+  return { stateCommit, bitmap, hasDevCommits: parseDevCommitCount(count), tipMessage, tipSha };
 }
 
 /**

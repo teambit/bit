@@ -9,6 +9,7 @@ import {
   hasSyncMarker,
   isSyncAuthoredMessage,
   parseBranchBitmap,
+  parseDevCommitCount,
 } from './sync-state';
 
 const DEFAULT_SCOPE = 'acme.shop';
@@ -180,6 +181,28 @@ describe('parseBranchBitmap', () => {
     });
     expect(parseBranchBitmap(content, DEFAULT_SCOPE)?.versions).to.deep.equal({
       [`${DEFAULT_SCOPE}/comp1`]: 'latest',
+    });
+  });
+});
+
+/**
+ * Only a count git actually printed may report "no dev commits" — that answer is an input to branch
+ * retirement, so every unreadable shape must read as "there is unmerged work" and keep the branch.
+ */
+const DEV_COMMIT_COUNTS: Array<[string, string, boolean]> = [
+  ['a count of commits on top of the state commit', '3', true],
+  ['the raw output shape, trailing newline and all', '3\n', true],
+  ['a genuine zero — the only license to retire', '0', false],
+  ["a genuine zero with git's trailing newline", '0\n', false],
+  ['empty output, which simple-git resolves with on some non-zero exits', '', true],
+  ['whitespace-only output', '  \n ', true],
+  ['git writing an error where the count was expected', 'fatal: bad revision', true],
+];
+
+describe('parseDevCommitCount', () => {
+  DEV_COMMIT_COUNTS.forEach(([name, raw, hasDevCommits]) => {
+    it(`${hasDevCommits ? 'keeps the branch' : 'permits retirement'} for ${name}`, () => {
+      expect(parseDevCommitCount(raw), JSON.stringify(raw)).to.equal(hasDevCommits);
     });
   });
 });
