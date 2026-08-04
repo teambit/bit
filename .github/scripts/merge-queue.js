@@ -141,9 +141,30 @@ async function getMasterState() {
 }
 
 async function fetchOpenPullRequests() {
+  // paginate so a queued PR beyond the first page can never be silently unmanaged; the cap is a
+  // runaway guard, not an expected size
+  const maxPages = 10;
+  const pullRequests = [];
+  let cursor;
+  for (let page = 0; page < maxPages; page += 1) {
+    const { pageNodes, pageInfo } = await fetchOpenPullRequestsPage(cursor);
+    pullRequests.push(...pageNodes);
+    if (!pageInfo.hasNextPage) return pullRequests;
+    cursor = pageInfo.endCursor;
+  }
+  console.log(`warning: more than ${maxPages * 100} open PRs; reconciling only the first ${pullRequests.length}`);
+  return pullRequests;
+}
+
+async function fetchOpenPullRequestsPage(cursor) {
+  const afterClause = cursor ? `, after: "${cursor}"` : '';
   const query = `{
     repository(owner: "${OWNER}", name: "${REPO}") {
-      pullRequests(states: OPEN, first: 100, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      pullRequests(states: OPEN, first: 100${afterClause}, orderBy: { field: UPDATED_AT, direction: DESC }) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
         nodes {
           number
           title
@@ -159,6 +180,7 @@ async function fetchOpenPullRequests() {
               commit {
                 statusCheckRollup {
                   contexts(first: 100) {
+                    totalCount
                     nodes {
                       __typename
                       ... on StatusContext { context state description }
@@ -174,11 +196,17 @@ async function fetchOpenPullRequests() {
     }
   }`;
   const data = await githubGraphql(query);
-  return data.repository.pullRequests.nodes;
+  return { pageNodes: data.repository.pullRequests.nodes, pageInfo: data.repository.pullRequests.pageInfo };
 }
 
 function getCheckContexts(pullRequest) {
   return pullRequest.commits.nodes[0]?.commit.statusCheckRollup?.contexts.nodes ?? [];
+}
+
+/** true when the PR has more check contexts than the single page we fetched */
+function hasTruncatedCheckContexts(pullRequest) {
+  const contexts = pullRequest.commits.nodes[0]?.commit.statusCheckRollup?.contexts;
+  return Boolean(contexts && contexts.totalCount > contexts.nodes.length);
 }
 
 /** current state/description of our own gate status on the PR's head commit, if any */
@@ -195,6 +223,12 @@ function getGateStatus(pullRequest) {
  * merge a PR nothing has checked.
  */
 function evaluateChecks(pullRequest) {
+  // an incomplete view of the checks must never grant the turn — treat as still-pending rather
+  // than risk merging on unseen failures
+  if (hasTruncatedCheckContexts(pullRequest)) {
+    console.log(`  #${pullRequest.number}: more than 100 check contexts, treating as pending (raise the page size)`);
+    return { state: 'pending', failing: [] };
+  }
   const ignoredContexts = new Set(
     [GATE_CONTEXT]
       .concat((process.env.MERGE_QUEUE_IGNORE_CHECKS || '').split(','))
