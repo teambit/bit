@@ -11,6 +11,7 @@ import type NpmHelper from './e2e-npm-helper';
 import type PackageJsonHelper from './e2e-package-json-helper';
 import type ScopeHelper from './e2e-scope-helper';
 import type ScopesData from './e2e-scopes';
+import type WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
 
 export type GenerateEnvJsoncOptions = {
   extends?: string;
@@ -26,6 +27,7 @@ export default class FixtureHelper {
   npm: NpmHelper;
   packageJson: PackageJsonHelper;
   scopeHelper: ScopeHelper;
+  workspaceJsonc: WorkspaceJsoncHelper;
 
   constructor(
     fsHelper: FsHelper,
@@ -34,7 +36,8 @@ export default class FixtureHelper {
     scopes: ScopesData,
     debugMode: boolean,
     packageJson: PackageJsonHelper,
-    scopeHelper: ScopeHelper
+    scopeHelper: ScopeHelper,
+    workspaceJsonc: WorkspaceJsoncHelper
   ) {
     this.fs = fsHelper;
     this.command = commandHelper;
@@ -43,6 +46,7 @@ export default class FixtureHelper {
     this.debugMode = debugMode;
     this.packageJson = packageJson;
     this.scopeHelper = scopeHelper;
+    this.workspaceJsonc = workspaceJsonc;
   }
   createComponentBarFoo(impl: string = fixtures.fooFixture) {
     this.fs.createFile('bar', 'foo.js', impl);
@@ -227,6 +231,62 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
       this.fs.outputFile(path.join('extensions', `ext${i}`, `ext${i}.main.runtime.ts`), mainImp(i));
       this.command.addComponent(`extensions/ext${i}`, { m: aspectFileName });
     }
+  }
+
+  /**
+   * creates an aspect component with the same files and env config ("teambit.harmony/aspect")
+   * that the former core "bit-aspect" template used to generate. the template itself is no
+   * longer part of bit core (it lives in the env used by the bit repo), so e2e-tests scaffold
+   * the aspect directly.
+   */
+  createAspect(name = 'my-aspect', options: { path?: string } = {}) {
+    const scope = this.workspaceJsonc.getDefaultScope() || this.scopes.remote;
+    const scopeWithoutOwner = scope.includes('.') ? scope.split('.')[1] : scope;
+    const dir = options.path || path.join(scopeWithoutOwner, name);
+    const namePascalCase = name
+      .split('-')
+      .map((part) => capitalize(part))
+      .join('');
+    this.fs.outputFile(
+      path.join(dir, 'index.ts'),
+      `import { ${namePascalCase}Aspect } from './${name}.aspect';
+
+export type { ${namePascalCase}Main } from './${name}.main.runtime';
+export default ${namePascalCase}Aspect;
+export { ${namePascalCase}Aspect };
+`
+    );
+    this.fs.outputFile(
+      path.join(dir, `${name}.aspect.ts`),
+      `import { Aspect } from '@teambit/harmony';
+
+export const ${namePascalCase}Aspect = Aspect.create({
+  id: '${scope}/${name}',
+});
+`
+    );
+    this.fs.outputFile(
+      path.join(dir, `${name}.main.runtime.ts`),
+      `import { MainRuntime } from '@teambit/cli';
+import { ${namePascalCase}Aspect } from './${name}.aspect';
+
+export class ${namePascalCase}Main {
+  static slots = [];
+  static dependencies = [];
+  static runtime = MainRuntime;
+
+  static async provider() {
+    return new ${namePascalCase}Main();
+  }
+}
+
+${namePascalCase}Aspect.addRuntime(${namePascalCase}Main);
+
+export default ${namePascalCase}Main;
+`
+    );
+    this.command.addComponent(dir, { i: name });
+    this.command.setEnv(name, 'teambit.harmony/aspect');
   }
 
   populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = true): string {

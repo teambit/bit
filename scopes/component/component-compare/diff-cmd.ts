@@ -45,7 +45,11 @@ if both "version" and "to-version" are provided, compare those two versions dire
   ];
   alias = '';
   options = [
-    ['p', 'parent', 'compare the specified "version" to its immediate parent instead of comparing to the current one'],
+    [
+      'p',
+      'parent',
+      'compare the specified "version" (or the current version if not specified) to its nearest meaningful ancestor, showing what changed in that version. hidden ancestors and identical un-tagged snaps (e.g. the merged snap a release-tag was created from) are skipped; tagged ancestors are never skipped',
+    ],
     ['v', 'verbose', 'show a more verbose output where possible'],
     ['t', 'table', 'show tables instead of plain text for dependencies diff'],
     [
@@ -71,6 +75,10 @@ if both "version" and "to-version" are provided, compare those two versions dire
     {
       cmd: 'diff foo 0.0.2 --parent',
       description: 'compare "foo@0.0.2" to its parent version. showing what changed in 0.0.2',
+    },
+    {
+      cmd: 'diff foo --parent',
+      description: 'compare the current version of "foo" to its parent version. showing what changed in it',
     },
     { cmd: 'diff foo --name-only', description: 'list changed files and field categories without diff bodies' },
     { cmd: 'diff foo --file src/index.ts', description: 'show the diff of a single file in a component' },
