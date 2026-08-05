@@ -1,0 +1,29 @@
+# No-op bridge between review events and the merge-queue reconcile.
+#
+# An approval landing on a queued PR is what un-sticks a winner that was demoted for a missing
+# review — without an event it waited for the scheduled reconcile, and GitHub throttles cron far
+# beyond its 5m spec (20m+ gaps observed), so the queue treats the cron as a last-resort net only.
+#
+# Review events must not trigger merge-queue.yml directly: pull_request_review executes the PR
+# merge commit's copy of the triggered workflow, and merge-queue.yml maps CIRCLE_TOKEN into its
+# environment — a queued PR could rewrite that copy and exfiltrate the secret. This bridge absorbs
+# the untrusted context instead: it references no secrets and does nothing; its completion fires a
+# workflow_run event on merge-queue.yml, which always runs master's trusted copy. Works for fork
+# PRs too (no secrets needed here).
+name: merge-queue-review-ping
+
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions: {}
+
+jobs:
+  ping:
+    # only reviews on queued PRs (auto-merge enabled) can change queue decisions; when this skips,
+    # the run concludes non-success and the reconcile's workflow_run condition filters it out
+    if: github.repository == 'teambit/bit' && github.event.pull_request.auto_merge != null
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: echo "review on a queued PR — this run's completion triggers a merge-queue reconcile"
