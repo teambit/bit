@@ -713,6 +713,11 @@
       // react-animate-height < 2.1.2 reads this.state.animating after unmount,
       // which throws under React 19 because React 19 nullifies state on unmount.
       "react-animate-height@2": "^3.2.3",
+      // collapse @rspack/core 1.7.x to a single version. the root policy resolves ^1.7.7 to a
+      // newer patch than the one pinned by installed envs; with both present, injected copies of
+      // components that type against rspack (e.g. bundler/ui) mix the two and tsc fails with
+      // incompatible '#private' Compilation types.
+      "@rspack/core@1.7": "1.7.12",
       // Collapse react/react-dom to a single version in capsules. Some older published
       // components still pull react@17.0.2; without this, @teambit/logger resolves into two
       // pnpm variants (_react@17.0.2 and _react@19.1.0) whose Logger types are incompatible
