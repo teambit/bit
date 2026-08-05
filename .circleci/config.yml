@@ -851,7 +851,20 @@ jobs:
           # becomes a cheap no-op once a stable release without those core envs is out.
           command: |
             cd bit
+            echo "=== bit globals (dev) ==="; node bin/bit.js globals || true
+            echo "=== bbit globals (stable) ==="; bbit globals || true
+            echo "=== store dirs ==="; ls -la /home/circleci/package 2>/dev/null || echo "no /home/circleci/package"; du -sh /home/circleci/package/* 2>/dev/null || true
+            (while true; do
+              CUR=$(cat /sys/fs/cgroup/memory.current 2>/dev/null || cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null || echo 0)
+              MAX=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo 0)
+              echo "CGROUP-MEM: $((CUR/1048576))MB / $((MAX/1048576))MB"
+              sleep 15
+            done) &
+            SAMPLER=$!
             node bin/bit.js install
+            STATUS=$?
+            kill $SAMPLER 2>/dev/null || true
+            exit $STATUS
           no_output_timeout: '30m'
           environment:
             PNPM_MAX_WORKERS: "6"
