@@ -572,6 +572,11 @@ commands:
           no_output_timeout: '50m'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
+            # pnpm v12 extracts tarballs in a worker pool sized by availableParallelism(), which
+            # inside CircleCI docker reports the HOST's cpu count (~36), not the resource class's.
+            # ~35 workers, each a V8 isolate inheriting the NODE_OPTIONS heap allowance, OOM-kill
+            # `bit install` on any container size. inherited by the bit processes the tests spawn.
+            PNPM_MAX_WORKERS: "3"
           when: always
       - store_test_results:
           path: bit/junit
@@ -667,6 +672,10 @@ jobs:
             echo "user-agent=bit-repo-circleci" >> .npmrc &&
             git update-index --skip-worktree .npmrc &&
             bbit install
+          environment:
+            # see the "bit install (dev binary)" step of bit_pr - pnpm v12's worker pool is sized
+            # by the HOST's cpu count inside docker; cap it to the resource class's actual cpus.
+            PNPM_MAX_WORKERS: "4"
       # - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
@@ -835,20 +844,17 @@ jobs:
           # the install manifest. the dev binary treats them as regular envs and needs their
           # packages in node_modules to load them - without them workspace-status verification
           # fails. reconcile here (2xlarge) rather than in setup_harmony.
-          # network.concurrency caps concurrent tarball fetches - the reconcile downloads the
-          # envs' full closure (thousands of packages) and the fetch phase has been OOM-killed.
-          # the free/df sampler prints resource usage every 15s to diagnose any further kills.
+          # PNPM_MAX_WORKERS: pnpm v12 sizes its tarball-extraction worker pool by
+          # availableParallelism(), which inside CircleCI docker reports the HOST's cpu count
+          # (~36), not the resource class's - ~35 V8 worker isolates OOM-kill the fetch phase of
+          # this install (it downloads the legacy envs' full closure) on any container size.
           # becomes a cheap no-op once a stable release without those core envs is out.
           command: |
             cd bit
-            bit config set network.concurrency 4
-            (while true; do echo "MEM(MB): $(free -m | awk 'NR==2{print $3 "/" $2}') DISK: $(df -h /home | tail -1 | awk '{print $3 "/" $2}')"; sleep 15; done) &
-            SAMPLER=$!
             node bin/bit.js install
-            STATUS=$?
-            kill $SAMPLER 2>/dev/null || true
-            exit $STATUS
           no_output_timeout: '30m'
+          environment:
+            PNPM_MAX_WORKERS: "6"
       - run:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
@@ -913,11 +919,13 @@ jobs:
           name: bit install (dev binary)
           # same reconcile as in bit_pr: the released bbit filters the legacy-core-env packages
           # out of the manifest; the dev binary needs them installed to load those envs.
+          # PNPM_MAX_WORKERS: see the bit_pr step of the same name.
           command: |
             cd bit
-            bit config set network.concurrency 4
             node bin/bit.js install
           no_output_timeout: '30m'
+          environment:
+            PNPM_MAX_WORKERS: "6"
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
