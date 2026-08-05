@@ -4,7 +4,8 @@ import semver from 'semver';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';
-import { GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy.constants';
+import path from 'path';
+import { GLOBAL_CONFIG, GLOBAL_LOGS, NODE_PATH_SEPARATOR, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 
@@ -66,12 +67,61 @@ process.emit = function (name, data) {
 };
 
 export async function bootstrap() {
+  addHoistedStoreToNodePath();
   enableLoaderIfPossible();
   printBitVersionIfAsked();
   warnIfRunningAsRoot();
   verifyNodeVersionCompatibility();
   await ensureDirectories();
   await Analytics.promptAnalyticsIfNeeded();
+}
+
+/**
+ * Put the workspace's privately hoisted directory on `NODE_PATH`.
+ *
+ * The core aspects are phantom dependencies of every published env and aspect - required without
+ * being declared, and provided by the running bit installation. Under the project-local virtual
+ * store an env resolves them by walking up out of `node_modules/.pnpm` into the workspace's root
+ * `node_modules`. Under pnpm's global virtual store the env lives in the shared store instead, with
+ * no workspace above it to walk into, so that resolution fails.
+ *
+ * pnpm's answer for hoisted dependencies in that layout is `NODE_PATH`, pointing at
+ * `<workspace>/node_modules/.pnpm/node_modules`, which stays project-local under the global virtual
+ * store. That is where `DependencyLinker.linkCoreAspectsToHoistedStore` puts the core aspects, so
+ * adding it here is what makes them resolvable from a store slot.
+ *
+ * pnpm sets `NODE_PATH` in the command shims it writes, but bit runs from bvm rather than through a
+ * shim and loads aspects in its own process, so it has to do this itself - and before any aspect is
+ * required, hence its place at the top of `bootstrap`.
+ *
+ * Node only consults `NODE_PATH` for CommonJS. Core aspects and published env dists are CommonJS
+ * today; an ESM env importing an undeclared `@teambit/*` would still fail, for which pnpm offers the
+ * `@pnpm/plugin-esm-node-path` config dependency.
+ *
+ * A no-op when the directory doesn't exist, which is every workspace not using the global virtual
+ * store, and anything run outside a workspace.
+ */
+function addHoistedStoreToNodePath() {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  if (!workspaceRoot) return;
+  const hoistedDir = path.join(workspaceRoot, 'node_modules', '.pnpm', 'node_modules');
+  if (!fs.existsSync(hoistedDir)) return;
+  const existing = process.env.NODE_PATH;
+  if (existing?.split(NODE_PATH_SEPARATOR).includes(hoistedDir)) return;
+  process.env.NODE_PATH = existing ? `${hoistedDir}${NODE_PATH_SEPARATOR}${existing}` : hoistedDir;
+  // `NODE_PATH` is read once when the module system initializes, so a later assignment only takes
+  // effect after re-deriving the global paths.
+  (require('module') as { _initPaths(): void })._initPaths();
+}
+
+function findWorkspaceRoot(from: string): string | undefined {
+  let dir = path.resolve(from);
+  for (;;) {
+    if (fs.existsSync(path.join(dir, WORKSPACE_JSONC))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
 }
 
 async function ensureDirectories() {
