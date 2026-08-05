@@ -94,6 +94,8 @@ describe('multiple compilers - babel and typescript', function () {
       helper.extensions.addExtensionToVariant('comp2', 'teambit.harmony/node');
       helper.extensions.addExtensionToVariant('comp3', `${helper.scopes.remote}/${babelEnv}`);
       helper.extensions.addExtensionToVariant('comp4', 'teambit.harmony/node');
+      // teambit.harmony/node is no longer a core aspect and must be installed
+      helper.command.install('@teambit/node@1.0.1042');
       helper.command.compile();
       buildOutput = helper.command.build();
     });

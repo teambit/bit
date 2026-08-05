@@ -233,6 +233,23 @@ export class AspectLoaderMain {
     }
   }
 
+  /**
+   * whether any version of this aspect is already loaded into harmony.
+   */
+  isAspectLoadedIgnoringVersion(idWithoutVersion: string): boolean {
+    return Boolean(this.getLoadedAspectIdIgnoringVersion(idWithoutVersion));
+  }
+
+  /**
+   * get the full id (including version) of a loaded aspect by its id without version, if any
+   * version of it is loaded into harmony.
+   */
+  getLoadedAspectIdIgnoringVersion(idWithoutVersion: string): string | undefined {
+    return this.harmony.extensionsIds.find(
+      (extId) => extId.split('@')[0] === idWithoutVersion && Boolean(this.harmony.extensions.get(extId)?.loaded)
+    );
+  }
+
   getDescriptor(id: string): AspectDescriptor | undefined {
     try {
       const instance = this.harmony.get<any>(id);
@@ -415,6 +432,13 @@ export class AspectLoaderMain {
     const idStr = requireableExtension.component.id.toString();
     const aspect = await requireableExtension.require();
     const manifest = aspect.default || aspect;
+    if (manifest.id && this.isCoreAspect(manifest.id)) {
+      // the require() resolved to a core-aspect module. this can happen when a core aspect is a
+      // dependency of the loaded aspect. don't override its id with the component id - the
+      // manifest object is shared with the core, and mutating its id breaks core-aspects
+      // resolution (e.g. it will be searched with a version, such as "aspect-loader@1.0.0").
+      return manifest;
+    }
     manifest.id = idStr;
     // It's important to clone deep the manifest here to prevent mutate dependencies of other manifests as they point to the same location in memory
     const cloned = this.cloneManifest(manifest);
@@ -456,7 +480,8 @@ export class AspectLoaderMain {
       if (!requireableExtensions) return undefined;
       const idStr = requireableExtension.component.id.toString();
       try {
-        return await this.doRequire(requireableExtension, runSubscribers);
+        const requiredManifest = await this.doRequire(requireableExtension, runSubscribers);
+        return requiredManifest;
       } catch (firstErr: any) {
         this.addFailure(idStr);
         this.logger.warn(`failed loading an aspect "${idStr}", will try to fix and reload`, firstErr);
@@ -628,7 +653,21 @@ export class AspectLoaderMain {
         })
       : allDefs;
 
-    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    // multiple defs may share the same path - e.g. several versions of an env whose versioned
+    // env-root is missing all fall back to the same package dir in the root node_modules. keep
+    // the def whose identity matches a requested id, otherwise the requested version is silently
+    // dropped here and its env never registers (its components then get a NonLoadedEnv issue).
+    const requestedIdsStr = new Set(componentIds.map((id) => id.toString()));
+    const matchesRequested = (def: AspectDefinition) =>
+      (def.id && requestedIdsStr.has(def.id)) || (def.component && requestedIdsStr.has(def.component.id.toString()));
+    const defByPath = new Map<string, AspectDefinition>();
+    for (const def of afterExclusion) {
+      const key = `${def.aspectPath}-${def.runtimePath}`;
+      const existing = defByPath.get(key);
+      if (!existing) defByPath.set(key, def);
+      else if (!matchesRequested(existing) && matchesRequested(def)) defByPath.set(key, def);
+    }
+    const uniqDefs = Array.from(defByPath.values());
     let defs = uniqDefs;
     if (runtimeName && filterOpts.filterByRuntime) {
       defs = defs.filter((def) => def.runtimePath);

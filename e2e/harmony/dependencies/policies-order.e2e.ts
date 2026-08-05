@@ -11,7 +11,7 @@ describe('policies order', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
+      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1 --env teambit.react/react');
       helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
         envName: 'env1',
         dependencies: {
@@ -31,7 +31,9 @@ describe('policies order', function () {
         },
       });
       helper.command.dependenciesSet('custom-react/env1', 'is-positive@2.0.0');
-      helper.command.install();
+      // the envs/env and react envs used to be core aspects, now their packages must be installed
+      // for the env1 fixture (which imports @teambit/react) to be compiled and loaded
+      helper.command.install('@teambit/env@1.0.1042 @teambit/react@1.0.1042');
     });
     after(() => {
       helper.scopeHelper.destroy();

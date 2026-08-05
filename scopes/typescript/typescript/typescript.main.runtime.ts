@@ -437,6 +437,11 @@ export class TypescriptMain {
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
     cli.register(checkTypesCmd);
 
+    // serve components whose env provides no schema extractor (e.g. the default empty-env)
+    schema.registerFallbackExtractorFactory((tsserverPath, contextPath, schemaTransformers, apiTransformers) =>
+      tsMain.createSchemaExtractor(undefined, tsserverPath, contextPath, schemaTransformers, apiTransformers)
+    );
+
     return tsMain;
   }
 }

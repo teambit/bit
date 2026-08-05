@@ -187,6 +187,11 @@ describe('dev-dependencies functionality', function () {
       helper.extensions.addExtensionToVariant('*', envId);
       helper.fixtures.populateComponents(1, false);
       helper.fs.outputFile(`comp1/index.js`, `const isPositive = require('is-positive');`);
+      // the custom env composes @teambit/node, whose aspect chain also requires the react and
+      // aspect env packages from the workspace root (they used to be core aspects). install them
+      // so the env loads, then run another install so its dependency policies (is-positive as a
+      // dev dep) are applied to the components.
+      helper.command.install('@teambit/react@1.0.1042 @teambit/aspect@1.0.1042');
       helper.command.install();
       helper.command.tagWithoutBuild();
     });

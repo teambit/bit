@@ -17,7 +17,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { Logger } from '@teambit/logger';
 import type { EnvsMain } from '@teambit/envs';
-import { EnvsAspect } from '@teambit/envs';
+import { EnvsAspect, resolveLegacyCoreEnvId } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
@@ -252,6 +252,10 @@ export class WorkspaceComponentLoader {
     const nonCoreEnvs = groupedByIsCoreEnvs.false || [];
     await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap);
     const allExtIds: Map<string, ComponentID> = new Map();
+    // extensions that used to be core aspects (legacy core envs) are saved in old components by
+    // name only, without a component-id. collect them so they'll be part of the load groups and
+    // get loaded before the components that use them.
+    const nameOnlyLegacyEnvExtensions = new Set<string>();
     nonCoreEnvs.forEach((id) => {
       const idStr = id.toString();
       const fromCache = this.componentsExtensionsCache.get(idStr);
@@ -262,8 +266,39 @@ export class WorkspaceComponentLoader {
         if (!allExtIds.has(ext.stringId) && ext.newExtensionId) {
           allExtIds.set(ext.stringId, ext.newExtensionId);
         }
+        if (!ext.extensionId && ext.stringId && this.envs.isLegacyCoreEnv(ext.stringId)) {
+          nameOnlyLegacyEnvExtensions.add(ext.stringId);
+        }
       });
+      // the env may be configured only via the envs config (`teambit.envs/envs: { env: ... }`)
+      // without an extension entry of its own (e.g. generated env templates). the cached envId is
+      // computed only when extensions are loaded, so fall back to the raw envs config. collect it
+      // as well, so it gets loaded before the components that use it.
+      const envIdFromEnvsConfig = fromCache.extensions.findCoreExtension(EnvsAspect.id)?.config?.env as
+        | string
+        | undefined;
+      const envIdFromCache = fromCache.envId || envIdFromEnvsConfig;
+      if (envIdFromCache && !envIdFromCache.includes('@') && this.envs.isLegacyCoreEnv(envIdFromCache)) {
+        nameOnlyLegacyEnvExtensions.add(envIdFromCache);
+      }
     });
+    await Promise.all(
+      Array.from(nameOnlyLegacyEnvExtensions).map(async (envIdStr) => {
+        if (allExtIds.has(envIdStr)) return;
+        // when the env is a workspace component (e.g. in the bit repo itself), use the workspace
+        // version. resolving to the pinned version would load a second copy of the component at a
+        // version that may not exist in the local scope.
+        const workspaceId = this.workspace.listIds().searchStrWithoutVersion(envIdStr);
+        if (workspaceId) {
+          allExtIds.set(envIdStr, workspaceId);
+          return;
+        }
+        // resolve to the pinned version. otherwise, a versionless id resolves to the latest
+        // version, which may not exist in the local scope.
+        const resolved = await this.workspace.resolveComponentId(resolveLegacyCoreEnvId(envIdStr));
+        allExtIds.set(envIdStr, resolved);
+      })
+    );
     const allExtCompIds = Array.from(allExtIds.values());
     await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
 
@@ -273,7 +308,7 @@ export class WorkspaceComponentLoader {
     wsIds.forEach((id) => {
       const idStr = id.toString();
       const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.envId) {
+      if (!fromCache) {
         return;
       }
       const envId = fromCache.envId;
@@ -503,6 +538,10 @@ export class WorkspaceComponentLoader {
         this.componentLoadedSelfAsAspects.set(idStr, true);
       }
       const envsData = component.state.aspects.get(EnvsAspect.id);
+      // envs that used to be core aspects are always envs. this can't be determined by the
+      // env-data, as when their own env was not loaded yet, the env-data is calculated with a
+      // fallback env.
+      const isLegacyCoreEnv = this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion());
       // a component with an env plugin file (*.bit-env.*) is an env by definition. the env-data
       // type can't be relied on when the env's own env was not loaded yet (e.g. a just-created
       // env whose env-of-env is not installed) - the env-data falls back to the default env.
@@ -513,6 +552,7 @@ export class WorkspaceComponentLoader {
         (envsData?.data?.services ||
           envsData?.data?.self ||
           envsData?.data?.type === 'env' ||
+          isLegacyCoreEnv ||
           this.envs.hasEnvPluginFile(component))
       ) {
         aspectIds.push(idStr);
