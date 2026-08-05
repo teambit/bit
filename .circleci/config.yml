@@ -672,16 +672,6 @@ jobs:
       # - run: cd bit && ls -l node_modules/@babel
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
       # - run: cd bit && ls -l node_modules/.bin
-      - run:
-          name: bit install (dev binary)
-          # the released bbit still treats the legacy core envs (node/react/aspect/env/mdx/readme)
-          # as core aspects and filters their packages out of the install manifest. the dev binary
-          # treats them as regular envs and needs their packages in node_modules to load them
-          # (bit_pr/bit_merge fail workspace-status verification otherwise). re-run install with
-          # the dev binary (bootable now that bbit install compiled the workspace) to reconcile.
-          # this becomes a cheap no-op once a stable release without those core envs is out.
-          command: cd bit && node bin/bit.js install
-          no_output_timeout: '30m'
       - persist_to_workspace:
           root: .
           paths:
@@ -839,6 +829,19 @@ jobs:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run:
+          name: bit install (dev binary)
+          # the released bbit (used by setup_harmony) still treats the legacy core envs
+          # (node/react/aspect/env/mdx/readme) as core aspects and filters their packages out of
+          # the install manifest. the dev binary treats them as regular envs and needs their
+          # packages in node_modules to load them - without them workspace-status verification
+          # fails. reconcile here (2xlarge) rather than in setup_harmony - the install pulls the
+          # envs' full closure and peaks well over the 8GB of setup_harmony's large container.
+          # becomes a cheap no-op once a stable release without those core envs is out.
+          command: cd bit && node bin/bit.js install
+          no_output_timeout: '30m'
+          environment:
+            NODE_OPTIONS: --max-old-space-size=30000
+      - run:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
           # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
@@ -898,6 +901,14 @@ jobs:
                 circleci-agent step halt
               fi
             fi
+      - run:
+          name: bit install (dev binary)
+          # same reconcile as in bit_pr: the released bbit filters the legacy-core-env packages
+          # out of the manifest; the dev binary needs them installed to load those envs.
+          command: cd bit && node bin/bit.js install
+          no_output_timeout: '30m'
+          environment:
+            NODE_OPTIONS: --max-old-space-size=30000
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
