@@ -39,6 +39,12 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
+import { adoptAndRetrySwitch, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
+
+export type CiSwitchLaneOptions = SwitchLaneOptions & {
+  /** after an adoption retry, write the adopted components' files (`checkout --reset`) */
+  writeAdoptedFiles?: boolean;
+};
 import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
@@ -456,23 +462,40 @@ export class CiMain {
    * out" no-op case). Callers that need to react to a specific failure mode (e.g. stale lane) can
    * inspect the returned error; existing callers ignore it and rely on a follow-up
    * `getCurrentLane()` check.
+   *
+   * A switch that fails because the lane provides a component the workspace tracks as new retries
+   * once after adopting the lane's version — see `adoptNewComponentsTheLaneProvides`.
    */
-  private async switchToLane(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
+  private async switchToLane(laneName: string, options: CiSwitchLaneOptions = {}): Promise<Error | undefined> {
     this.logger.console(chalk.blue(`Switching to ${laneName}`));
-    try {
-      await this.lanes.switchLanes(laneName, {
+    const { writeAdoptedFiles, ...switchOptions } = options;
+    const doSwitch = () =>
+      this.lanes.switchLanes(laneName, {
         forceOurs: true,
         workspaceOnly: true,
         skipDependencyInstallation: true,
-        ...options,
+        ...switchOptions,
       });
+    const failure = (err: any) => {
+      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${err?.toString() ?? err}`));
+      return err;
+    };
+    try {
+      await doSwitch();
     } catch (e: any) {
       if (e?.toString().includes('already checked out')) {
         this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
         return undefined;
       }
-      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e?.toString() ?? e}`));
-      return e;
+      if (!isLaneMissingComponentError(e)) return failure(e);
+      const retryErr = await adoptAndRetrySwitch(laneName, e, doSwitch, writeAdoptedFiles, {
+        workspace: this.workspace,
+        lanes: this.lanes,
+        logger: this.logger,
+        checkout: this.checkout,
+        reloadWorkspace: () => this.reloadWorkspaceFromDisk(),
+      });
+      if (retryErr) return failure(retryErr);
     }
     return undefined;
   }
@@ -482,7 +505,7 @@ export class CiMain {
    * throwing. `switchToLane` spreads caller options AFTER its defaults, so `forceOurs: true` is
    * overridable — the sync import direction depends on that. Do not reorder that spread.
    */
-  async switchToLaneForSync(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
+  async switchToLaneForSync(laneName: string, options: CiSwitchLaneOptions = {}): Promise<Error | undefined> {
     return this.switchToLane(laneName, options);
   }
 
