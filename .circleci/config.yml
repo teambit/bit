@@ -851,9 +851,12 @@ jobs:
           # becomes a cheap no-op once a stable release without those core envs is out.
           command: |
             cd bit
-            echo "=== bit globals (dev) ==="; node bin/bit.js globals || true
-            echo "=== bbit globals (stable) ==="; bbit globals || true
-            echo "=== store dirs ==="; ls -la /home/circleci/package 2>/dev/null || echo "no /home/circleci/package"; du -sh /home/circleci/package/* 2>/dev/null || true
+            # reuse the pnpm store populated by setup_harmony's bbit install (persisted at the
+            # workspace root). without it the dev install resolves everything from scratch and
+            # the native pnpm engine's fetch phase retains the downloads in memory until it gets
+            # OOM-killed - reuse keeps the fetch down to the closure packages only.
+            echo "store-dir=/home/circleci/bit/.pnpm-store" >> ~/.npmrc
+            echo "=== persisted store ==="; du -sh /home/circleci/bit/.pnpm-store 2>/dev/null || echo "no persisted store at /home/circleci/bit/.pnpm-store"
             (while true; do
               CUR=$(cat /sys/fs/cgroup/memory.current 2>/dev/null || cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null || echo 0)
               MAX=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo 0)
@@ -932,9 +935,10 @@ jobs:
           name: bit install (dev binary)
           # same reconcile as in bit_pr: the released bbit filters the legacy-core-env packages
           # out of the manifest; the dev binary needs them installed to load those envs.
-          # PNPM_MAX_WORKERS: see the bit_pr step of the same name.
+          # PNPM_MAX_WORKERS and store-dir: see the bit_pr step of the same name.
           command: |
             cd bit
+            echo "store-dir=/home/circleci/bit/.pnpm-store" >> ~/.npmrc
             node bin/bit.js install
           no_output_timeout: '30m'
           environment:
