@@ -672,6 +672,16 @@ jobs:
       # - run: cd bit && ls -l node_modules/@babel
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
       # - run: cd bit && ls -l node_modules/.bin
+      - run:
+          name: bit install (dev binary)
+          # the released bbit still treats the legacy core envs (node/react/aspect/env/mdx/readme)
+          # as core aspects and filters their packages out of the install manifest. the dev binary
+          # treats them as regular envs and needs their packages in node_modules to load them
+          # (bit_pr/bit_merge fail workspace-status verification otherwise). re-run install with
+          # the dev binary (bootable now that bbit install compiled the workspace) to reconcile.
+          # this becomes a cheap no-op once a stable release without those core envs is out.
+          command: cd bit && node bin/bit.js install
+          no_output_timeout: '30m'
       - persist_to_workspace:
           root: .
           paths:
@@ -909,8 +919,11 @@ jobs:
   # ========== Testing Jobs ==========
   e2e_test:
     <<: *defaults
-    # changing from medium to large, doesn't affect the performance
-    # resource_class: large
+    # changing from medium to large, doesn't affect the performance (speed-wise).
+    # medium+ is for MEMORY: tests that install a legacy-core env (node/react/aspect/env) pull the
+    # env package's full dependency closure (~3.6k packages, the whole bit runtime at its published
+    # version) and `bit install` peaks over 3GB — on medium (4GB) the process gets OOM-killed.
+    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
@@ -921,6 +934,8 @@ jobs:
   # makes sure the newly published version doesn't break bit
   e2e_test_bbit:
     <<: *defaults
+    # medium+ for the same OOM reason as e2e_test: legacy-core-env installs peak over 3GB.
+    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
