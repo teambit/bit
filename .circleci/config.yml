@@ -656,7 +656,17 @@ jobs:
       - run: cd bit && bbit init
       - run:
           name: bbit install
-          command: cd bit && echo "user-agent=bit-repo-circleci" >> .npmrc && bbit install
+          # the user-agent append labels registry requests from CI installs (the committed .npmrc
+          # says bit-repo-local). skip-worktree keeps the mutation out of any later commit made
+          # from this workspace (e.g. the version-bump commit of `bit ci merge`, which stages all
+          # tracked changes) — without it, a duplicate user-agent line lands on master every
+          # release and, being last in the file, overrides bit-repo-local for local installs too.
+          # the flag lives in .git/index, so it survives persist_to_workspace into later jobs.
+          command: >
+            cd bit &&
+            echo "user-agent=bit-repo-circleci" >> .npmrc &&
+            git update-index --skip-worktree .npmrc &&
+            bbit install
       # - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
