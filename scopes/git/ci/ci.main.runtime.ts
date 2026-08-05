@@ -471,11 +471,12 @@ export class CiMain {
         skipDependencyInstallation: true,
         ...options,
       });
-      // `forceOurs` defaults to true below, so an omitted option means "the workspace files win"
-      // (the `bit ci pr` calls) — only an explicit forceOurs: false import materializes.
+      // `forceOurs` defaults to true in the switch above. An omitted option therefore means that
+      // the workspace files win (the `bit ci pr` calls). Only an import with an explicit
+      // `forceOurs: false` writes the adopted files.
       if (adopted.length && options.forceOurs === false) {
-        // an adopted entry already records the lane's version, so the switch's checkout skips it
-        // as up to date and never writes its files — materialize them explicitly
+        // An adopted entry already records the lane's version. The checkout of the switch skips
+        // it as up to date and does not write its files. Write them here.
         await this.checkout.checkout({ ids: adopted, reset: true, skipNpmInstall: true });
       }
     } catch (e: any) {

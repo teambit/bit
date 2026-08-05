@@ -7,22 +7,26 @@ import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
 
 /**
- * A new (versionless) `.bitmap` entry whose id the target lane also carries breaks the lane
- * switch twice over: the entry has no scope, so the legacy layer reads the component as "local,
- * never exported" — the lane fetch's default filter then drops the id and the lane merge dies
- * with `unable to merge lane …, the component … was not found`, and every import on the way
- * refuses to fetch a "local" id from the remote. The onboarding quickstart manufactures exactly
- * this state: `bit add` a component, commit `.bitmap`, and let the component's first export
- * happen on a lane.
+ * A lane switch halts when the target lane carries a component that the workspace tracks as a
+ * new component. A versionless `.bitmap` entry has no scope, so the legacy layer reads the
+ * component as local and not exported. The default filter of `importMany` then drops the id from
+ * the lane fetch, and the lane merge halts with `unable to merge lane …, the component … was not
+ * found`. Each later import also refuses to fetch a "local" id from the remote. The onboarding
+ * quickstart creates this state: the user runs `bit add`, commits `.bitmap`, and exports the
+ * component for the first time on a lane.
  *
- * Adopt the lane's version INTO each shadowing entry (in memory only — a failed switch must not
- * rewrite `.bitmap` on disk): the entry keeps its rootDir and config, stops reading as local, and
- * the objects import below succeeds through `importMany`'s existing `includeUnexported` escape
- * hatch (the ids come from the lane object, so they exist on the remote by construction).
- * Matching is scope+name, so a same-named new component from another scope stays untouched.
+ * This function adopts the lane's version into each shadowing entry, in memory only. The entry
+ * keeps its rootDir and its config, and the legacy layer no longer reads it as local. A failed
+ * switch does not change `.bitmap` on disk. The function then imports the objects of the adopted
+ * components with the existing `includeUnexported` option of `importMany`. The ids come from the
+ * lane object, so they exist on the remote.
  *
- * Returns the adopted ids at the lane's version. The switch skips them as already up to date, so
- * an importing caller must materialize their files afterwards (`checkout --reset`).
+ * The match compares scope and name. A new component with the same name from a different scope
+ * does not change.
+ *
+ * The function returns the adopted ids at the lane's version. The switch skips an entry that
+ * already records the target version, so an importing caller must write the files afterwards
+ * (`checkout --reset`).
  */
 export async function adoptNewComponentsTheLaneProvides(
   deps: { workspace: Workspace; lanes: LanesMain; importer: ImporterMain; logger: Logger },

@@ -1083,10 +1083,10 @@ describe('bit ci sync', function () {
     });
   });
 
-  // The onboarding-quickstart state: `bit add` a brand-new component, commit the versionless
-  // `.bitmap` entry, and let the component's FIRST export happen on a lane. The sync workspace then
-  // tracks the id as new while the lane provides it — the importer skips the id (it "exists"
-  // locally), and the lane merge dies with "unable to merge lane …, the component … was not found".
+  // The onboarding quickstart creates this state: the user runs `bit add`, commits the versionless
+  // `.bitmap` entry, and exports the component for the first time on a lane. The sync workspace
+  // then tracks the id as new while the lane provides it. Without the adoption guard, the lane
+  // fetch drops the id and the lane merge halts with "the component … was not found".
   describe('a lane component that the workspace tracks as new and unexported (first lane export)', () => {
     const LANE = 'first-lane-export';
     let defaultBranch: string;
@@ -1099,7 +1099,7 @@ describe('bit ci sync', function () {
       helper.command.runCmd('git add .');
       helper.command.runCmd('git commit -m "track comp3 as a new component"');
       helper.command.runCmd(`git push origin ${defaultBranch}`);
-      // the developer's clone carries the same versionless entry; the lane holds comp3's first snap
+      // the developer's clone carries the same versionless entry, and the lane holds comp3's first snap
       createLaneWithSnap(
         LANE,
         { 'comp3/index.js': 'module.exports = () => "comp3: lane-snap-1";' },
