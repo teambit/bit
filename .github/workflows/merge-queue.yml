@@ -20,6 +20,11 @@
 #   group collapses bursts. No self-recursion: this workflow's own runs complete their suites
 #   via GITHUB_TOKEN, whose events never trigger workflows. Runs the default branch's workflow
 #   copy, so PR code never runs here.
+# - workflow_run (merge-queue-review-ping): a review landing on a queued PR — approvals un-stick
+#   winners demoted for a missing review. Reviews can't trigger this workflow directly:
+#   pull_request_review runs the PR merge commit's workflow copy, which must never see
+#   CIRCLE_TOKEN; the secret-less ping workflow absorbs that context, and its completion lands
+#   here on master's trusted copy.
 # - schedule: safety net for missed events.
 name: merge-queue
 
@@ -44,6 +49,9 @@ on:
     types: [merge-queue-reconcile]
   check_suite:
     types: [completed]
+  workflow_run:
+    workflows: [merge-queue-review-ping]
+    types: [completed]
 
 # never let two reconcile loops overlap; a queued run supersedes waiting duplicates
 concurrency:
@@ -67,6 +75,8 @@ jobs:
     # auto-merge toggle events always reconcile
     if: >-
       github.repository == 'teambit/bit' &&
+      (github.event_name != 'workflow_run' ||
+       github.event.workflow_run.conclusion == 'success') &&
       (github.event_name != 'pull_request_target' ||
        github.event.action == 'auto_merge_enabled' ||
        github.event.action == 'auto_merge_disabled' ||
