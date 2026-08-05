@@ -424,19 +424,24 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   /**
-   * `<storeDir>/bit-links/<installationId>` rather than pnpm's own `<storeDir>/links`: bit has to
-   * put the core aspects at the root of this directory (they are phantom dependencies of every
-   * published env), so it must not be shared with either the pnpm CLI or another bit installation.
+   * pnpm's own shared `<storeDir>/links`.
+   *
+   * Bit used to carve out a private `<storeDir>/bit-links/<installationId>` root, because the core
+   * aspects had to be mirrored at the root of the virtual store for the published envs to reach
+   * them, and such a mirror cannot be shared with the pnpm CLI or another bit installation. They now
+   * go to the project-local hoisted directory instead (see
+   * `DependencyLinker.linkCoreAspectsToHoistedStore`), so nothing is written inside the store and
+   * the shared directory can be used - slots are reused across bit versions and with every other
+   * pnpm project, upgrades stay incremental, and `pnpm store prune` can account for them.
    */
   async getGlobalVirtualStoreDir({
     packageManagerConfigRootDir,
-    installationId,
   }: {
     packageManagerConfigRootDir?: string;
     installationId: string;
   }): Promise<string> {
     const { config } = await this.readConfig(packageManagerConfigRootDir);
-    return join(config.storeDir, 'bit-links', installationId);
+    return config.globalVirtualStoreDir ?? join(config.storeDir, 'links');
   }
 
   async pruneModules(rootDir: string): Promise<void> {
