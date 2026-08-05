@@ -40,6 +40,11 @@ import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency'
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
 import { adoptNewComponentsTheLaneProvides } from './sync/adopt-lane-new-components';
+
+export type CiSwitchLaneOptions = SwitchLaneOptions & {
+  /** after an adoption retry, write the adopted components' files (`checkout --reset`) */
+  writeAdoptedFiles?: boolean;
+};
 import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
@@ -457,35 +462,56 @@ export class CiMain {
    * out" no-op case). Callers that need to react to a specific failure mode (e.g. stale lane) can
    * inspect the returned error; existing callers ignore it and rely on a follow-up
    * `getCurrentLane()` check.
+   *
+   * A switch that fails because the lane provides a component the workspace tracks as new retries
+   * once after adopting the lane's version — see `adoptNewComponentsTheLaneProvides`.
    */
-  private async switchToLane(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
+  private async switchToLane(laneName: string, options: CiSwitchLaneOptions = {}): Promise<Error | undefined> {
     this.logger.console(chalk.blue(`Switching to ${laneName}`));
-    try {
-      const adopted = await adoptNewComponentsTheLaneProvides(
-        { workspace: this.workspace, lanes: this.lanes, importer: this.importer, logger: this.logger },
-        laneName
-      );
-      await this.lanes.switchLanes(laneName, {
+    const { writeAdoptedFiles, ...switchOptions } = options;
+    const doSwitch = () =>
+      this.lanes.switchLanes(laneName, {
         forceOurs: true,
         workspaceOnly: true,
         skipDependencyInstallation: true,
-        ...options,
+        ...switchOptions,
       });
-      // `forceOurs` defaults to true in the switch above. An omitted option therefore means that
-      // the workspace files win (the `bit ci pr` calls). Only an import with an explicit
-      // `forceOurs: false` writes the adopted files.
-      if (adopted.length && options.forceOurs === false) {
-        // An adopted entry already records the lane's version. The checkout of the switch skips
-        // it as up to date and does not write its files. Write them here.
-        await this.checkout.checkout({ ids: adopted, reset: true, skipNpmInstall: true });
-      }
+    const failure = (err: any) => {
+      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${err?.toString() ?? err}`));
+      return err;
+    };
+    try {
+      await doSwitch();
     } catch (e: any) {
       if (e?.toString().includes('already checked out')) {
         this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
         return undefined;
       }
-      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e?.toString() ?? e}`));
-      return e;
+      const errStr = e?.toString() ?? '';
+      const laneMissesLocalComponent = errStr.includes('unable to merge lane') && errStr.includes('was not found');
+      if (!laneMissesLocalComponent) return failure(e);
+      // the adoption mutates `.bitmap` entries in memory; a failed retry must not leak that
+      // state into the next `.bitmap` write
+      const bitMapSnapshot = this.workspace.bitMap.takeSnapshot();
+      const adopted = await adoptNewComponentsTheLaneProvides(laneName, {
+        workspace: this.workspace,
+        lanes: this.lanes,
+        logger: this.logger,
+      }).catch(() => []);
+      if (!adopted.length) {
+        this.workspace.bitMap.restoreFromSnapshot(bitMapSnapshot);
+        return failure(e);
+      }
+      try {
+        await doSwitch();
+        if (writeAdoptedFiles) {
+          // the retried switch skips an id already at the lane's version, so its files are still unwritten
+          await this.checkout.checkout({ ids: adopted, reset: true, skipNpmInstall: true });
+        }
+      } catch (retryErr: any) {
+        this.workspace.bitMap.restoreFromSnapshot(bitMapSnapshot);
+        return failure(retryErr);
+      }
     }
     return undefined;
   }
@@ -495,7 +521,7 @@ export class CiMain {
    * throwing. `switchToLane` spreads caller options AFTER its defaults, so `forceOurs: true` is
    * overridable — the sync import direction depends on that. Do not reorder that spread.
    */
-  async switchToLaneForSync(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
+  async switchToLaneForSync(laneName: string, options: CiSwitchLaneOptions = {}): Promise<Error | undefined> {
     return this.switchToLane(laneName, options);
   }
 

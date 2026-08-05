@@ -1142,7 +1142,11 @@ export class LaneSyncExecutor {
       }
     }
 
-    const switchErr = await this.deps.ci.switchToLaneForSync(laneIdStr, { forceOurs: false, forceTheirs: true });
+    const switchErr = await this.deps.ci.switchToLaneForSync(laneIdStr, {
+      forceOurs: false,
+      forceTheirs: true,
+      writeAdoptedFiles: true,
+    });
     if (switchErr) return switchErr;
 
     // Verify before the caller commits a `.bitmap` asserting this lane's content.

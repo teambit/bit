@@ -1083,23 +1083,21 @@ describe('bit ci sync', function () {
     });
   });
 
-  // The onboarding quickstart creates this state: the user runs `bit add`, commits the versionless
-  // `.bitmap` entry, and exports the component for the first time on a lane. The sync workspace
-  // then tracks the id as new while the lane provides it. Without the adoption guard, the lane
-  // fetch drops the id and the lane merge halts with "the component … was not found".
+  // `bit add` + a committed versionless `.bitmap` entry + the component's first export on a lane —
+  // the onboarding quickstart's state, and the one the adoption retry exists for.
   describe('a lane component that the workspace tracks as new and unexported (first lane export)', () => {
     const LANE = 'first-lane-export';
     let defaultBranch: string;
 
     before(() => {
       ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
-      // the documented "commit workspace.jsonc and the new .bitmap" onboarding step
+      // commit the versionless `.bitmap` entry, as the onboarding step does
       helper.fs.outputFile('comp3/index.js', 'module.exports = () => "comp3: initial";');
       helper.command.addComponent('comp3');
       helper.command.runCmd('git add .');
       helper.command.runCmd('git commit -m "track comp3 as a new component"');
       helper.command.runCmd(`git push origin ${defaultBranch}`);
-      // the developer's clone carries the same versionless entry, and the lane holds comp3's first snap
+      // the clone carries the same versionless entry
       createLaneWithSnap(
         LANE,
         { 'comp3/index.js': 'module.exports = () => "comp3: lane-snap-1";' },
@@ -1114,9 +1112,9 @@ describe('bit ci sync', function () {
       expect(remoteBranchExists(LANE)).to.be.true;
       const onBranch = fileOnBranch(LANE, 'comp3/index.js');
       expect(onBranch, `comp3/index.js on origin/${LANE}:\n${onBranch}`).to.include('comp3: lane-snap-1');
-      // the branch's `.bitmap` must carry the lane's comp3, not the versionless entry
+      // the branch `.bitmap` must record the lane version, not the versionless entry
       expect(fileOnBranch(LANE, '.bitmap')).to.include(LANE);
-      // the workspace is restored: back on the default branch, on main, with comp3 still tracked
+      // the workspace is restored: back on the default branch, on main
       expect(helper.command.runCmd('git branch --show-current').trim()).to.equal(defaultBranch);
       expect(helper.command.listLanesParsed().currentLane).to.equal('main');
     });
