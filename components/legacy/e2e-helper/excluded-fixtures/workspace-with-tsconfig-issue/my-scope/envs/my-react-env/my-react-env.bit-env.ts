@@ -1,4 +1,3 @@
-// @bit-no-check
 // @ts-nocheck
 
 /**
