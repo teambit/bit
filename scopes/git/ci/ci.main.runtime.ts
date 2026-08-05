@@ -39,7 +39,7 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
-import { adoptNewComponentsTheLaneProvides, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
+import { adoptAndRetrySwitch, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
 
 export type CiSwitchLaneOptions = SwitchLaneOptions & {
   /** after an adoption retry, write the adopted components' files (`checkout --reset`) */
@@ -488,36 +488,14 @@ export class CiMain {
         return undefined;
       }
       if (!isLaneMissingComponentError(e)) return failure(e);
-      // the adoption mutates `.bitmap` entries in memory; a failed retry rolls the workspace back
-      // by reloading from disk, which the failed switch never wrote
-      const rollback = async (err: any) => {
-        await this.reloadWorkspaceFromDisk().catch((reloadErr) => {
-          this.logger.console(
-            chalk.yellow(
-              `Failed to reload the workspace after the adoption retry: ${reloadErr?.toString() ?? reloadErr}`
-            )
-          );
-        });
-        return failure(err);
-      };
-      const adopted = await adoptNewComponentsTheLaneProvides(laneName, {
+      const retryErr = await adoptAndRetrySwitch(laneName, e, doSwitch, writeAdoptedFiles, {
         workspace: this.workspace,
         lanes: this.lanes,
         logger: this.logger,
-      }).catch((adoptErr) => {
-        this.logger.console(chalk.yellow(`The adoption retry failed: ${adoptErr?.toString() ?? adoptErr}`));
-        return [];
+        checkout: this.checkout,
+        reloadWorkspace: () => this.reloadWorkspaceFromDisk(),
       });
-      if (!adopted.length) return rollback(e);
-      try {
-        await doSwitch();
-        if (writeAdoptedFiles) {
-          // the retried switch skips an id already at the lane's version, so its files are still unwritten
-          await this.checkout.checkout({ ids: adopted, reset: true, skipNpmInstall: true });
-        }
-      } catch (retryErr: any) {
-        return rollback(retryErr);
-      }
+      if (retryErr) return failure(retryErr);
     }
     return undefined;
   }

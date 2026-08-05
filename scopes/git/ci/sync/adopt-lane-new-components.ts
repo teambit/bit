@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import type { CheckoutMain } from '@teambit/checkout';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { LanesMain } from '@teambit/lanes';
@@ -10,6 +11,11 @@ export type AdoptLaneNewComponentsDeps = {
   workspace: Workspace;
   lanes: LanesMain;
   logger: Logger;
+};
+
+export type AdoptRetryDeps = AdoptLaneNewComponentsDeps & {
+  checkout: CheckoutMain;
+  reloadWorkspace: () => Promise<void>;
 };
 
 /**
@@ -65,4 +71,58 @@ export async function adoptNewComponentsTheLaneProvides(
     reason: `lane ${laneId.toString()} provides component(s) this workspace tracks as new`,
   });
   return adoptedIds;
+}
+
+/**
+ * Runs after a switch failed with the missing-component marker: adopt the lane's versions, then
+ * retry the switch once. Returns undefined on success, and the error to report on failure. A
+ * failed retry reloads the workspace from disk — the failed switch never wrote to it — so the
+ * in-memory adoption disappears completely (including `updatedIds` and the changed flag).
+ */
+export async function adoptAndRetrySwitch(
+  laneName: string,
+  originalErr: Error,
+  doSwitch: () => Promise<unknown>,
+  writeAdoptedFiles: boolean | undefined,
+  deps: AdoptRetryDeps
+): Promise<Error | undefined> {
+  const { logger, reloadWorkspace } = deps;
+  const rollback = async (err: Error) => {
+    await reloadWorkspace().catch((reloadErr) => {
+      logger.console(
+        chalk.yellow(`Failed to reload the workspace after the adoption retry: ${reloadErr?.toString() ?? reloadErr}`)
+      );
+    });
+    return err;
+  };
+  const adopted = await adoptNewComponentsTheLaneProvides(laneName, deps).catch((adoptErr) => {
+    logger.console(chalk.yellow(`The adoption retry failed: ${adoptErr?.toString() ?? adoptErr}`));
+    return [];
+  });
+  if (!adopted.length) return rollback(originalErr);
+  try {
+    await doSwitch();
+    // the retried switch skips an id already at the lane's version, so its files are still unwritten
+    if (writeAdoptedFiles) await writeFilesKeepingConfig(adopted, deps);
+    return undefined;
+  } catch (retryErr: any) {
+    return rollback(retryErr);
+  }
+}
+
+/**
+ * `checkout --reset` writes the files of an entry that already records the target version, but its
+ * `resetConfig` also deletes the entry's `.bitmap` config — keep the config across the call.
+ */
+async function writeFilesKeepingConfig(adopted: ComponentID[], { workspace, checkout }: AdoptRetryDeps) {
+  const bitMap = workspace.consumer.bitMap;
+  const entryConfig = (id: ComponentID) => bitMap.getComponentIfExist(id, { ignoreVersion: true })?.config;
+  const configs = adopted.map((id) => ({ id, config: entryConfig(id) }));
+  await checkout.checkout({ ids: adopted, reset: true, skipNpmInstall: true });
+  configs.forEach(({ id, config }) => {
+    const entry = bitMap.getComponentIfExist(id, { ignoreVersion: true });
+    if (!config || !entry || entry.config) return;
+    entry.config = config;
+    bitMap.markAsChanged();
+  });
 }
