@@ -490,18 +490,21 @@ export class CiMain {
       const errStr = e?.toString() ?? '';
       const laneMissesLocalComponent = errStr.includes('unable to merge lane') && errStr.includes('was not found');
       if (!laneMissesLocalComponent) return failure(e);
-      // the adoption mutates `.bitmap` entries in memory; a failed retry must not leak that
-      // state into the next `.bitmap` write
-      const bitMapSnapshot = this.workspace.bitMap.takeSnapshot();
+      // the adoption mutates `.bitmap` entries in memory; a failed retry rolls the workspace back
+      // by reloading from disk, which the failed switch never wrote
+      const rollback = async (err: any) => {
+        await this.reloadWorkspaceFromDisk();
+        return failure(err);
+      };
       const adopted = await adoptNewComponentsTheLaneProvides(laneName, {
         workspace: this.workspace,
         lanes: this.lanes,
         logger: this.logger,
-      }).catch(() => []);
-      if (!adopted.length) {
-        this.workspace.bitMap.restoreFromSnapshot(bitMapSnapshot);
-        return failure(e);
-      }
+      }).catch((adoptErr) => {
+        this.logger.console(chalk.yellow(`The adoption retry failed: ${adoptErr?.toString() ?? adoptErr}`));
+        return [];
+      });
+      if (!adopted.length) return rollback(e);
       try {
         await doSwitch();
         if (writeAdoptedFiles) {
@@ -509,8 +512,7 @@ export class CiMain {
           await this.checkout.checkout({ ids: adopted, reset: true, skipNpmInstall: true });
         }
       } catch (retryErr: any) {
-        this.workspace.bitMap.restoreFromSnapshot(bitMapSnapshot);
-        return failure(retryErr);
+        return rollback(retryErr);
       }
     }
     return undefined;
