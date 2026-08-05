@@ -39,7 +39,7 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
-import { adoptNewComponentsTheLaneProvides } from './sync/adopt-lane-new-components';
+import { adoptNewComponentsTheLaneProvides, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
 
 export type CiSwitchLaneOptions = SwitchLaneOptions & {
   /** after an adoption retry, write the adopted components' files (`checkout --reset`) */
@@ -487,13 +487,17 @@ export class CiMain {
         this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
         return undefined;
       }
-      const errStr = e?.toString() ?? '';
-      const laneMissesLocalComponent = errStr.includes('unable to merge lane') && errStr.includes('was not found');
-      if (!laneMissesLocalComponent) return failure(e);
+      if (!isLaneMissingComponentError(e)) return failure(e);
       // the adoption mutates `.bitmap` entries in memory; a failed retry rolls the workspace back
       // by reloading from disk, which the failed switch never wrote
       const rollback = async (err: any) => {
-        await this.reloadWorkspaceFromDisk();
+        await this.reloadWorkspaceFromDisk().catch((reloadErr) => {
+          this.logger.console(
+            chalk.yellow(
+              `Failed to reload the workspace after the adoption retry: ${reloadErr?.toString() ?? reloadErr}`
+            )
+          );
+        });
         return failure(err);
       };
       const adopted = await adoptNewComponentsTheLaneProvides(laneName, {

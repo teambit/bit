@@ -13,6 +13,16 @@ export type AdoptLaneNewComponentsDeps = {
 };
 
 /**
+ * The lane merge (`sources.mergeLane` in the legacy scope) throws a plain Error with this wording
+ * when a lane component's objects are absent. A typed error needs a change outside the ci aspect;
+ * the stale-lane recovery of `bit ci pr` matches the same text.
+ */
+export function isLaneMissingComponentError(err: unknown): boolean {
+  const msg = (err as Error)?.message ?? String(err ?? '');
+  return msg.includes('unable to merge lane') && msg.includes('was not found');
+}
+
+/**
  * A versionless `.bitmap` entry reads as local and unexported, so a lane fetch drops its id and
  * the lane merge fails with `the component … was not found`. Adopt the lane's version into each
  * such entry, and import the adopted objects (`includeUnexported`, because the entries made them
