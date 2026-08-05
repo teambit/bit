@@ -132,4 +132,66 @@ describe('ComponentConfigMerger', () => {
       expect(mergedConfig[EnvsAspect.id]).to.be.undefined;
     });
   });
+
+  describe('external env version bump on "other" when the lane already inherited an earlier bump', () => {
+    // Reproduces the `bit ci pr` env-version ratchet: the lane forked when the env was 1.0.2, an earlier
+    // config sync moved the lane's snaps to 2.0.0, then main bumped again to 2.0.6. The 3-way now sees a
+    // base that matches neither side (a pseudo-conflict), and with 'ours' the lane used to stick to 2.0.0
+    // forever. Since both sides use the SAME external env and only the version differs, the newer version
+    // must win.
+    let mergedConfig: Record<string, any>;
+    before(() => {
+      const env = 'other-scope.envs/ext-env'; // external env — not a workspace component.
+      const base = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@1.0.2`));
+      const current = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@2.0.0`));
+      const other = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@2.0.6`));
+      mergedConfig = mergeEnvConfig(current, base, other, []);
+    });
+    it("should adopt other's newer version of the same env despite the pseudo-conflict", () => {
+      expect(mergedConfig[EnvsAspect.id]).to.deep.equal({ env: 'other-scope.envs/ext-env@2.0.6' });
+    });
+  });
+
+  describe('external env version pseudo-conflict where the lane is on the NEWER version', () => {
+    // Same conflict shape as above, but the lane's version is ahead of "other" — nothing to adopt.
+    let mergedConfig: Record<string, any>;
+    before(() => {
+      const env = 'other-scope.envs/ext-env';
+      const base = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@1.0.2`));
+      const current = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@2.0.6`));
+      const other = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@2.0.0`));
+      mergedConfig = mergeEnvConfig(current, base, other, []);
+    });
+    it('should keep the lane env (no sync entry)', () => {
+      expect(mergedConfig[EnvsAspect.id]).to.be.undefined;
+    });
+  });
+
+  describe('external env version pseudo-conflict with the "manual" strategy', () => {
+    // The newer-version auto-resolution is scoped to the 'ours' strategy (the `bit ci pr` config sync).
+    // A manual lane-merge should still surface the conflict to the user rather than auto-resolve.
+    let result: ReturnType<ComponentConfigMerger['merge']>;
+    before(() => {
+      const env = 'other-scope.envs/ext-env';
+      const base = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@1.0.2`));
+      const current = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@2.0.0`));
+      const other = new ExtensionDataList(envsEntry(env), envAspectEntry(`${env}@2.0.6`));
+      const merger = new ComponentConfigMerger(
+        'my-scope/some-comp',
+        [],
+        undefined,
+        current,
+        base,
+        other,
+        'lane',
+        'main',
+        noopLogger,
+        'manual' as MergeStrategy
+      );
+      result = merger.merge();
+    });
+    it('should report a conflict instead of auto-resolving', () => {
+      expect(result.hasConflicts()).to.be.true;
+    });
+  });
 });

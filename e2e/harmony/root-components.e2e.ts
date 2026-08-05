@@ -1380,9 +1380,9 @@ module.exports.default = {
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
     npmCiRegistry.configureCiInPackageJsonHarmony();
-    helper.command.create('bit-aspect', 'dep-dep-aspect');
-    helper.command.create('bit-aspect', 'dep-aspect');
-    helper.command.create('bit-aspect', 'main-aspect');
+    helper.fixtures.createAspect('dep-dep-aspect');
+    helper.fixtures.createAspect('dep-aspect');
+    helper.fixtures.createAspect('main-aspect');
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/dep-aspect/dep-aspect.main.runtime.ts`,
       getDepAspect(helper.scopes.remoteWithoutOwner)

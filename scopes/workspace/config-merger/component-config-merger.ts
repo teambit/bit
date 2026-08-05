@@ -229,6 +229,34 @@ export class ComponentConfigMerger {
     ) {
       return null;
     }
+    // same (external) env on both sides, only the version differs, and the base matches neither side —
+    // the shape basicConfigMerge treats as a conflict. for an env version this is not a genuine conflict:
+    // a 3-way merge cannot tell whether the current lane deliberately picked its version or merely
+    // inherited an earlier sync from "other" (e.g. `bit ci pr` syncing main's env bump onto the PR lane —
+    // after the first synced bump, base matches neither side forever). with the "ours" strategy that
+    // pseudo-conflict silently pins the lane to the old env version for good. env versions are monotonic
+    // in practice, so resolve by taking the newer of the two. a deliberate explicit pin still wins at
+    // component load: config from .bitmap/component-json takes precedence over this merged config (see
+    // aspects-merger merge order). other strategies keep their semantics: "theirs" already adopts the
+    // other side via basicConfigMerge, and "manual" should still surface the conflict to the user.
+    if (
+      !envIdChanged &&
+      this.mergeStrategy === 'ours' &&
+      this.currentEnv.version &&
+      this.otherEnv.version &&
+      semver.valid(this.currentEnv.version) &&
+      semver.valid(this.otherEnv.version)
+    ) {
+      const envStr = (env: EnvData) => (env.version ? `${env.id}@${env.version}` : env.id);
+      const baseEnvStr = this.baseEnv ? envStr(this.baseEnv) : undefined;
+      const isConflictShape =
+        !baseEnvStr || (baseEnvStr !== envStr(this.currentEnv) && baseEnvStr !== envStr(this.otherEnv));
+      if (isConflictShape) {
+        return semver.gt(this.otherEnv.version, this.currentEnv.version)
+          ? { id: EnvsAspect.id, mergedConfig: { env: envStr(this.otherEnv) } }
+          : null;
+      }
+    }
     return this.basicConfigMerge(mergeStrategyParams);
   }
 

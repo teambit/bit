@@ -279,6 +279,7 @@
         "@teambit/gitconfig": "2.0.10",
         "@teambit/graph.cleargraph": "0.0.11",
         "@teambit/harmony": "0.4.12",
+        "@teambit/harmony.envs.core-aspect-env": "2.0.1",
         "@teambit/html.modules.inject-html-element": "0.0.6",
         "@teambit/lane-id": "~0.0.312",
         "@teambit/lanes.ui.icons.lane-icon": "^0.0.9",
@@ -759,6 +760,9 @@
   "teambit.generator/generator": {
     "aspects": [
       "teambit.harmony/aspect"
+    ],
+    "envs": [
+      "teambit.harmony/envs/core-aspect-env"
     ]
   },
   "teambit.component/issues": {

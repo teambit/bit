@@ -74,7 +74,8 @@ export class Helper {
       this.scopes,
       this.debugMode,
       this.packageJson,
-      this.scopeHelper
+      this.scopeHelper,
+      this.workspaceJsonc
     );
     this.extensions = new ExtensionsHelper(
       this.scopes,
