@@ -39,6 +39,7 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
+import { adoptNewComponentsTheLaneProvides } from './sync/adopt-lane-new-components';
 import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
@@ -460,12 +461,23 @@ export class CiMain {
   private async switchToLane(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
     this.logger.console(chalk.blue(`Switching to ${laneName}`));
     try {
+      const adopted = await adoptNewComponentsTheLaneProvides(
+        { workspace: this.workspace, lanes: this.lanes, importer: this.importer, logger: this.logger },
+        laneName
+      );
       await this.lanes.switchLanes(laneName, {
         forceOurs: true,
         workspaceOnly: true,
         skipDependencyInstallation: true,
         ...options,
       });
+      // `forceOurs` defaults to true below, so an omitted option means "the workspace files win"
+      // (the `bit ci pr` calls) — only an explicit forceOurs: false import materializes.
+      if (adopted.length && options.forceOurs === false) {
+        // an adopted entry already records the lane's version, so the switch's checkout skips it
+        // as up to date and never writes its files — materialize them explicitly
+        await this.checkout.checkout({ ids: adopted, reset: true, skipNpmInstall: true });
+      }
     } catch (e: any) {
       if (e?.toString().includes('already checked out')) {
         this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));

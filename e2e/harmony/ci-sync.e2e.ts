@@ -1082,4 +1082,43 @@ describe('bit ci sync', function () {
       expect(output).to.not.match(/wrote \.github[/\\]workflows[/\\]bit-sync\.yml/);
     });
   });
+
+  // The onboarding-quickstart state: `bit add` a brand-new component, commit the versionless
+  // `.bitmap` entry, and let the component's FIRST export happen on a lane. The sync workspace then
+  // tracks the id as new while the lane provides it — the importer skips the id (it "exists"
+  // locally), and the lane merge dies with "unable to merge lane …, the component … was not found".
+  describe('a lane component that the workspace tracks as new and unexported (first lane export)', () => {
+    const LANE = 'first-lane-export';
+    let defaultBranch: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      // the documented "commit workspace.jsonc and the new .bitmap" onboarding step
+      helper.fs.outputFile('comp3/index.js', 'module.exports = () => "comp3: initial";');
+      helper.command.addComponent('comp3');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "track comp3 as a new component"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      // the developer's clone carries the same versionless entry; the lane holds comp3's first snap
+      createLaneWithSnap(
+        LANE,
+        { 'comp3/index.js': 'module.exports = () => "comp3: lane-snap-1";' },
+        'comp3 first snap'
+      );
+    });
+
+    it('imports the lane instead of halting on "the component was not found"', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> import-lane`);
+      expect(remoteBranchExists(LANE)).to.be.true;
+      const onBranch = fileOnBranch(LANE, 'comp3/index.js');
+      expect(onBranch, `comp3/index.js on origin/${LANE}:\n${onBranch}`).to.include('comp3: lane-snap-1');
+      // the branch's `.bitmap` must carry the lane's comp3, not the versionless entry
+      expect(fileOnBranch(LANE, '.bitmap')).to.include(LANE);
+      // the workspace is restored: back on the default branch, on main, with comp3 still tracked
+      expect(helper.command.runCmd('git branch --show-current').trim()).to.equal(defaultBranch);
+      expect(helper.command.listLanesParsed().currentLane).to.equal('main');
+    });
+  });
 });
