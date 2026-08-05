@@ -1699,9 +1699,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
@@ -2198,6 +2195,9 @@ importers:
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   components/bit/get-bit-version:
     dependencies:
@@ -19942,9 +19942,6 @@ importers:
       '@teambit/base-ui.surfaces.split-pane.split-pane':
         specifier: 1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/compositions.ui.composition-live-controls':
         specifier: ^0.0.6
         version: 0.0.6(react@19.2.7)
@@ -20051,6 +20048,9 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
@@ -21267,9 +21267,6 @@ importers:
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.2
         version: 1.0.2(react@19.2.7)
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/design.ui.surfaces.status-message-card':
         specifier: 0.0.18
         version: 0.0.18(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
@@ -21313,6 +21310,9 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/docs.content.docs-overview':
         specifier: 1.96.8
         version: 1.96.8(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -22304,6 +22304,9 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.4
         version: 1.2.4
+      '@teambit/design.ui.brand.logo':
+        specifier: 1.96.19
+        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
@@ -22410,9 +22413,6 @@ importers:
       '@teambit/bit.content.what-is-bit':
         specifier: 1.96.13
         version: 1.96.13(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/design.ui.brand.logo':
-        specifier: 1.96.19
-        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(type-fest@1.4.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
@@ -23317,9 +23317,6 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
-      '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
-        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
@@ -23345,6 +23342,9 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
+      '@teambit/ui-foundation.ui.is-browser':
+        specifier: ^0.0.500
+        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24435,9 +24435,6 @@ importers:
       chalk:
         specifier: 4.1.2
         version: 4.1.2
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
       filenamify:
         specifier: 4.2.0
         version: 4.2.0
@@ -24456,9 +24453,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lru-cache:
-        specifier: 10.4.3
-        version: 10.4.3
       mime:
         specifier: 2.5.2
         version: 2.5.2
@@ -24523,6 +24517,12 @@ importers:
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
+      cross-fetch:
+        specifier: 3.1.5
+        version: 3.1.5
+      lru-cache:
+        specifier: 10.4.3
+        version: 10.4.3
 
   scopes/preview/ui/component-preview:
     dependencies:
@@ -24900,9 +24900,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       mini-css-extract-plugin:
         specifier: 2.2.2
         version: 2.2.2(webpack@5.97.1)
@@ -25033,6 +25030,9 @@ importers:
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(esbuild@0.14.29)(uglify-js@3.19.3)
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   scopes/react/ui/compositions-app:
     dependencies:
@@ -61086,6 +61086,7 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.14)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
+      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/legacy-bit-id': 1.1.3
@@ -61157,6 +61158,7 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component-id': 1.2.4
+      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy-bit-id': 1.1.3
@@ -61228,6 +61230,7 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component-id': 1.2.4
+      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy-bit-id': 1.1.3
@@ -69548,7 +69551,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -69623,7 +69625,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -69698,7 +69699,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
@@ -69773,7 +69773,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
@@ -69848,7 +69847,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -69923,7 +69921,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -74914,7 +74911,6 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@4.3.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -74948,7 +74944,6 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@4.3.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@4.3.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@18.3.1)(react@18.3.1)
@@ -74982,7 +74977,6 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@4.3.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@4.3.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -75016,7 +75010,6 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@5.2.1)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -86938,14 +86931,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -87006,14 +86997,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -87074,14 +87063,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -87142,14 +87129,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -87210,14 +87195,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 5.2.1
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -87254,7 +87237,6 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/harmony': 0.4.12
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -87269,7 +87251,6 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/harmony': 0.4.12
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -90487,7 +90468,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -90627,7 +90607,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -90767,7 +90746,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -90907,7 +90885,6 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
