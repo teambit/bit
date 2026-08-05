@@ -17,9 +17,13 @@
 # - check_suite: a queued PR's CI finishing fires no push/PR event, so without this the
 #   green->turn transition waited for the throttled cron (10-20m in practice). Fires on every
 #   suite completion in the repo; the reconcile is idempotent and cheap, and the concurrency
-#   group collapses bursts. No self-recursion: this workflow's own runs complete their suites
-#   via GITHUB_TOKEN, whose events never trigger workflows. Runs the default branch's workflow
-#   copy, so PR code never runs here.
+#   group collapses bursts. Master suites are filtered out in the job condition — push and
+#   repository_dispatch already cover master's transitions, and every bit_merge would otherwise
+#   fire a pointless reconcile ~40m after each merge. Not filtered on an associated PR:
+#   check_suite.pull_requests is empty for fork PRs, which can legitimately be queued (their
+#   head_branch is null, so the master filter keeps them). No self-recursion: this workflow's own
+#   runs complete their suites via GITHUB_TOKEN, whose events never trigger workflows. Runs the
+#   default branch's workflow copy, so PR code never runs here.
 # - workflow_run (merge-queue-review-ping): a review landing on a queued PR — approvals un-stick
 #   winners demoted for a missing review. Reviews can't trigger this workflow directly:
 #   pull_request_review runs the PR merge commit's workflow copy, which must never see
@@ -75,6 +79,8 @@ jobs:
     # auto-merge toggle events always reconcile
     if: >-
       github.repository == 'teambit/bit' &&
+      (github.event_name != 'check_suite' ||
+       github.event.check_suite.head_branch != 'master') &&
       (github.event_name != 'workflow_run' ||
        github.event.workflow_run.conclusion == 'success') &&
       (github.event_name != 'pull_request_target' ||
