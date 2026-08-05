@@ -130,6 +130,35 @@ export class DependencyInstaller {
     private installingContext: DepInstallerContext = {}
   ) {}
 
+  /**
+   * Patches bit ships for published packages that under-declare a dependency, merged under the
+   * workspace's own `patchedDependencies` so a user entry for the same package always wins.
+   *
+   * Only applied under the global virtual store. These packages resolve fine project-locally, where
+   * a package in `node_modules/.pnpm` reaches the workspace by walking up; the patch exists because
+   * a package in the shared store cannot.
+   *
+   * `@teambit/react.react-env` ships a `tsconfig.json` whose `extends` names
+   * `@teambit/react/typescript/tsconfig.json` without declaring `@teambit/react` - a phantom
+   * dependency. `NODE_PATH` cannot cover it: TypeScript resolves `extends` with its own resolver,
+   * which never consults it. The patch inlines the extended config so no resolution is needed, which
+   * is the only form that works from any location. Declaring the dependency instead would install a
+   * registry copy of a core aspect, duplicating what has to stay a single host-provided instance.
+   *
+   * Keyed without a version: every published version carries the same file, and the patch has to
+   * cover all of them (a workspace can resolve several react-env versions at once).
+   */
+  private withBuiltInPatches(
+    fromConfig: Record<string, string> | undefined,
+    enableGlobalVirtualStore: boolean
+  ): Record<string, string> | undefined {
+    if (!enableGlobalVirtualStore) return fromConfig;
+    const builtIn = {
+      '@teambit/react.react-env': path.join(__dirname, 'patches', 'react-env-tsconfig-extends.patch'),
+    };
+    return { ...builtIn, ...fromConfig };
+  }
+
   async install(
     rootDir: string | undefined,
     rootPolicy: WorkspacePolicy,
@@ -237,7 +266,10 @@ export class DependencyInstaller {
       globalVirtualStoreDir: this.installingContext?.inCapsule
         ? undefined
         : await this.dependencyResolver.getGlobalVirtualStoreDir(finalRootDir),
-      patchedDependencies: this.patchedDependencies,
+      patchedDependencies: this.withBuiltInPatches(
+        this.patchedDependencies,
+        !this.installingContext?.inCapsule && this.dependencyResolver.enableGlobalVirtualStore()
+      ),
       packageExtensions: this.packageExtensions,
       minimumReleaseAge: this.minimumReleaseAge,
       minimumReleaseAgeExclude: this.minimumReleaseAgeExclude,

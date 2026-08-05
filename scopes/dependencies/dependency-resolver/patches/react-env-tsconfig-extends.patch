@@ -1,0 +1,84 @@
+diff --git a/config/tsconfig.json b/config/tsconfig.json
+index 7a5e4b8..ab86a20 100644
+--- a/config/tsconfig.json
++++ b/config/tsconfig.json
+@@ -1,12 +1,23 @@
+ {
+-  "extends": "@teambit/react/typescript/tsconfig.json",
+   "compilerOptions": {
+-    "jsx": "react-jsx",
++    "lib": [
++      "esnext",
++      "dom",
++      "dom.Iterable"
++    ],
+     "target": "es2020",
+-    "lib": ["esnext", "dom", "dom.Iterable"],
++    "module": "es2020",
++    "jsx": "react-jsx",
++    "declaration": true,
++    "sourceMap": true,
++    "experimentalDecorators": true,
++    "skipLibCheck": true,
++    "moduleResolution": "node",
++    "esModuleInterop": true,
++    "resolveJsonModule": true,
++    "allowJs": true,
+     "outDir": "./dist",
+     "strict": true,
+-    "experimentalDecorators": true,
+     "emitDecoratorMetadata": true,
+     "preserveConstEnums": true
+   },
+@@ -18,5 +29,8 @@
+     "package.json",
+     "**/*.cjs"
+   ],
+-  "include": ["**/*", "**/*.json"]
++  "include": [
++    "**/*",
++    "**/*.json"
++  ]
+ }
+diff --git a/dist/config/tsconfig.json b/dist/config/tsconfig.json
+index 7a5e4b8..ab86a20 100644
+--- a/dist/config/tsconfig.json
++++ b/dist/config/tsconfig.json
+@@ -1,12 +1,23 @@
+ {
+-  "extends": "@teambit/react/typescript/tsconfig.json",
+   "compilerOptions": {
+-    "jsx": "react-jsx",
++    "lib": [
++      "esnext",
++      "dom",
++      "dom.Iterable"
++    ],
+     "target": "es2020",
+-    "lib": ["esnext", "dom", "dom.Iterable"],
++    "module": "es2020",
++    "jsx": "react-jsx",
++    "declaration": true,
++    "sourceMap": true,
++    "experimentalDecorators": true,
++    "skipLibCheck": true,
++    "moduleResolution": "node",
++    "esModuleInterop": true,
++    "resolveJsonModule": true,
++    "allowJs": true,
+     "outDir": "./dist",
+     "strict": true,
+-    "experimentalDecorators": true,
+     "emitDecoratorMetadata": true,
+     "preserveConstEnums": true
+   },
+@@ -18,5 +29,8 @@
+     "package.json",
+     "**/*.cjs"
+   ],
+-  "include": ["**/*", "**/*.json"]
++  "include": [
++    "**/*",
++    "**/*.json"
++  ]
+ }
