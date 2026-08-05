@@ -170,8 +170,8 @@ importers:
         specifier: 1100.0.0
         version: 1100.0.0
       '@pnpm/napi':
-        specifier: 12.0.0-beta.4
-        version: 12.0.0-beta.4
+        specifier: 12.0.0-rc.0
+        version: 12.0.0-rc.0
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -3063,6 +3063,9 @@ importers:
       '@teambit/defender.mocha-tester':
         specifier: ^1.1.1
         version: 1.1.1(@babel/core@7.28.3)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/dependencies.pnpm.dep-path':
+        specifier: 1.0.1
+        version: 1.0.1
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
@@ -3117,6 +3120,9 @@ importers:
       react-router-dom:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.2.7)(react@19.2.7)
+      resolve-from:
+        specifier: 5.0.0
+        version: 5.0.0
       tar:
         specifier: 7.4.3
         version: 7.4.3
@@ -20809,6 +20815,9 @@ importers:
       '@teambit/component-version':
         specifier: ^1.0.4
         version: 1.0.4
+      '@teambit/dependencies.pnpm.dep-path':
+        specifier: 1.0.1
+        version: 1.0.1
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
@@ -20902,6 +20911,9 @@ importers:
       table:
         specifier: 6.7.3
         version: 6.7.3
+      yaml:
+        specifier: 1.10.2
+        version: 1.10.2
     devDependencies:
       '@teambit/defender.fs.global-bit-temp-dir':
         specifier: 0.0.1
@@ -20934,8 +20946,8 @@ importers:
   scopes/dependencies/dependency-resolver:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.0.0-beta.4
-        version: 12.0.0-beta.4
+        specifier: 12.0.0-rc.0
+        version: 12.0.0-rc.0
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -21098,8 +21110,8 @@ importers:
         specifier: 1100.0.0
         version: 1100.0.0
       '@pnpm/napi':
-        specifier: 12.0.0-beta.4
-        version: 12.0.0-beta.4
+        specifier: 12.0.0-rc.0
+        version: 12.0.0-rc.0
       '@pnpm/plugin-trusted-deps':
         specifier: 0.2.2
         version: 0.2.2
@@ -24262,8 +24274,8 @@ importers:
   scopes/pkg/pkg:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.0.0-beta.4
-        version: 12.0.0-beta.4
+        specifier: 12.0.0-rc.0
+        version: 12.0.0-rc.0
       '@teambit/bit-error':
         specifier: ~0.0.404
         version: 0.0.404
@@ -30989,52 +31001,52 @@ packages:
     resolution: {integrity: sha512-A3bRMTIZ5ptDPAE/KsDeY1J5UqqOiyo66+k/mUvaVjx++OJdMbp9If5kisEq9ljAV5r5TRpkxsJbSdrdJ5WtzQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/napi.darwin-arm64@12.0.0-beta.4':
-    resolution: {integrity: sha512-92iot0UeQcZ+ZA4aIlgtrxQCJZ6n3cvh7+3JSgtNcnH0pQ9Pql6em3l3Ja4IBwcNLt/yuMndJwrW+SSuFgLj5Q==}
+  '@pnpm/napi.darwin-arm64@12.0.0-rc.0':
+    resolution: {integrity: sha512-s2vUp6SpEa1hh98uHZyi+E16MpDKn+vR//pPJYTZsb0Jlj/VPGxHGIlK3zGTWi5f9jrJVSi3kRWHL51azi0x0Q==}
     cpu: [arm64]
     os: [darwin]
 
-  '@pnpm/napi.darwin-x64@12.0.0-beta.4':
-    resolution: {integrity: sha512-w3ZaLhkWsylz+ypKY8qAWxqo9t+CNOEeH9lxQrw7ia4nlP4NMB/YU/l/2VFkFelY7+AyRKgrRk8w3kOSM7lnFA==}
+  '@pnpm/napi.darwin-x64@12.0.0-rc.0':
+    resolution: {integrity: sha512-CpUBSs48mT/svKYZPQIKy5gW1FC8JkbCgg8t8mtnzsUMrRi3+Y6bFctWIdbfZT76OD45RtFs6KUSziZJErfRgg==}
     cpu: [x64]
     os: [darwin]
 
-  '@pnpm/napi.linux-arm64-musl@12.0.0-beta.4':
-    resolution: {integrity: sha512-y1w1uDuBfeZR5NnP2wquCrn4xy7ufBifVqm+BwyjNY6UCAUFwG/Vn7oVRwZmQPA2NXl33+HvBEBEx53y3RmVTg==}
+  '@pnpm/napi.linux-arm64-musl@12.0.0-rc.0':
+    resolution: {integrity: sha512-4KUou1RsFxTiYVm5O+d2wATSYkTtZAYHo3N3u3q5Jp/SLpEZBV/6dcFEME0vh7ssxf2EKjGMZCMerfsNh0UX7g==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-arm64@12.0.0-beta.4':
-    resolution: {integrity: sha512-6xph/qJPQjXQbE1di2c6tPxMGl76pDWADiJmNTbmeXU1Ciw/bvPmZPRedjscx1dVFuQKZysYjlzJz4RBUK6z3Q==}
+  '@pnpm/napi.linux-arm64@12.0.0-rc.0':
+    resolution: {integrity: sha512-qulxK0+SqOHBM/0r4zOi+/Jc7CKMCGOipn0/snDqRDlOcqoDKtmwn/IPnBhbpD6E94SvWANeH9mUUWOtKsohwg==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-x64-musl@12.0.0-beta.4':
-    resolution: {integrity: sha512-Yn+4H10La6Oqn5iwsvh2QSXxkHwvEO1tcjHxzMEbimWcNzmA1977AYArV7K8f9s5rBfDVFWu24cT5yaLxvPHfA==}
+  '@pnpm/napi.linux-x64-musl@12.0.0-rc.0':
+    resolution: {integrity: sha512-wth73s5LERyBeRDYMe6M/kTN6HIvi6Q8Cuku9yrJdKvK+Ljvst9nIzw3cuZL8sn0hfpgi4GA58qA6xL1HP6C3g==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-x64@12.0.0-beta.4':
-    resolution: {integrity: sha512-wnMqI89BLINH7XEkI5J7U2pbcGrE5PbFFO2eaBk22SD/KgLQF0ZHuhLf6UBGHGz8id4I9XkEL7amj8HZkcozkQ==}
+  '@pnpm/napi.linux-x64@12.0.0-rc.0':
+    resolution: {integrity: sha512-1M2SMwlJGAiFAKcugCKcVrq65dOZsu6LSV0m/rEQxG43jruxwVS/a9WuF1JqxKUtJmoMLJp3H7R3fzIrd5Jq6w==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.win32-arm64@12.0.0-beta.4':
-    resolution: {integrity: sha512-NnUJX+KgGwuyGDo5oC9NNG5BqqPpFRQrmXkqltxE6G0bqbJGcaCConax0SmS389wQ1DksXLyVPV+6+ZXNcNybA==}
+  '@pnpm/napi.win32-arm64@12.0.0-rc.0':
+    resolution: {integrity: sha512-X1/jty/Jrr5ORuAbpWF8ds87v5a451dRJc5xpNSF2g6EzXYoTlOsfo/RKrrJfKxob0cx08DXWf4jAY1XEbkA2Q==}
     cpu: [arm64]
     os: [win32]
 
-  '@pnpm/napi.win32-x64@12.0.0-beta.4':
-    resolution: {integrity: sha512-Gv/KCIK+XX61QoRTK+fm8kTl2o+D0+xJPr1JhLS55HyrjCmUSV6Ixnng/xXHRBTyi2buMnB6qaQg9oYJTnCb1g==}
+  '@pnpm/napi.win32-x64@12.0.0-rc.0':
+    resolution: {integrity: sha512-qmZSEs8JMm14jo9d7FsrozYKw8wWHrVfuVU9GO+49E2r7OXW7w1TLD2fx9BNLlWcLpebkzvT78Je2fMtHa7cow==}
     cpu: [x64]
     os: [win32]
 
-  '@pnpm/napi@12.0.0-beta.4':
-    resolution: {integrity: sha512-tcORn/XC9POMhsKUsnld3BW2rGWaSEZ6urB5PihVf56ubNtZ/GioT8r6e20FhbsjekdhGMGCbYa1Zxxj4pp8+g==}
+  '@pnpm/napi@12.0.0-rc.0':
+    resolution: {integrity: sha512-y/PA7F8gIporezPiaUPLJ7gg4sxST5D+iRncpOVprxqG9nUFABXvyjVx4b8bvR9h7vxMktppUWC1erKdGL8Pyg==}
     engines: {node: '>=18.*'}
 
   '@pnpm/network.agent@0.1.0':
@@ -55471,40 +55483,40 @@ snapshots:
       bole: 5.0.17
       split2: 4.2.0
 
-  '@pnpm/napi.darwin-arm64@12.0.0-beta.4':
+  '@pnpm/napi.darwin-arm64@12.0.0-rc.0':
     optional: true
 
-  '@pnpm/napi.darwin-x64@12.0.0-beta.4':
+  '@pnpm/napi.darwin-x64@12.0.0-rc.0':
     optional: true
 
-  '@pnpm/napi.linux-arm64-musl@12.0.0-beta.4':
+  '@pnpm/napi.linux-arm64-musl@12.0.0-rc.0':
     optional: true
 
-  '@pnpm/napi.linux-arm64@12.0.0-beta.4':
+  '@pnpm/napi.linux-arm64@12.0.0-rc.0':
     optional: true
 
-  '@pnpm/napi.linux-x64-musl@12.0.0-beta.4':
+  '@pnpm/napi.linux-x64-musl@12.0.0-rc.0':
     optional: true
 
-  '@pnpm/napi.linux-x64@12.0.0-beta.4':
+  '@pnpm/napi.linux-x64@12.0.0-rc.0':
     optional: true
 
-  '@pnpm/napi.win32-arm64@12.0.0-beta.4':
+  '@pnpm/napi.win32-arm64@12.0.0-rc.0':
     optional: true
 
-  '@pnpm/napi.win32-x64@12.0.0-beta.4':
+  '@pnpm/napi.win32-x64@12.0.0-rc.0':
     optional: true
 
-  '@pnpm/napi@12.0.0-beta.4':
+  '@pnpm/napi@12.0.0-rc.0':
     optionalDependencies:
-      '@pnpm/napi.darwin-arm64': 12.0.0-beta.4
-      '@pnpm/napi.darwin-x64': 12.0.0-beta.4
-      '@pnpm/napi.linux-arm64': 12.0.0-beta.4
-      '@pnpm/napi.linux-arm64-musl': 12.0.0-beta.4
-      '@pnpm/napi.linux-x64': 12.0.0-beta.4
-      '@pnpm/napi.linux-x64-musl': 12.0.0-beta.4
-      '@pnpm/napi.win32-arm64': 12.0.0-beta.4
-      '@pnpm/napi.win32-x64': 12.0.0-beta.4
+      '@pnpm/napi.darwin-arm64': 12.0.0-rc.0
+      '@pnpm/napi.darwin-x64': 12.0.0-rc.0
+      '@pnpm/napi.linux-arm64': 12.0.0-rc.0
+      '@pnpm/napi.linux-arm64-musl': 12.0.0-rc.0
+      '@pnpm/napi.linux-x64': 12.0.0-rc.0
+      '@pnpm/napi.linux-x64-musl': 12.0.0-rc.0
+      '@pnpm/napi.win32-arm64': 12.0.0-rc.0
+      '@pnpm/napi.win32-x64': 12.0.0-rc.0
 
   '@pnpm/network.agent@0.1.0(supports-color@9.4.0)':
     dependencies:
@@ -71313,6 +71325,7 @@ snapshots:
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -71359,6 +71372,7 @@ snapshots:
       semver: 7.7.1
       stylus-lookup: 3.0.2(supports-color@9.4.0)
       table: 6.7.3
+      yaml: 1.10.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@pnpm/logger'
@@ -71382,6 +71396,7 @@ snapshots:
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
@@ -71428,6 +71443,7 @@ snapshots:
       semver: 7.7.1
       stylus-lookup: 3.0.2(supports-color@9.4.0)
       table: 6.7.3
+      yaml: 1.10.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@pnpm/logger'
@@ -71451,6 +71467,7 @@ snapshots:
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
@@ -71497,6 +71514,7 @@ snapshots:
       semver: 7.7.1
       stylus-lookup: 3.0.2(supports-color@9.4.0)
       table: 6.7.3
+      yaml: 1.10.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@pnpm/logger'
@@ -71520,6 +71538,7 @@ snapshots:
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
@@ -71566,6 +71585,7 @@ snapshots:
       semver: 7.7.1
       stylus-lookup: 3.0.2(supports-color@9.4.0)
       table: 6.7.3
+      yaml: 1.10.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@pnpm/logger'
@@ -71589,6 +71609,7 @@ snapshots:
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -71635,6 +71656,7 @@ snapshots:
       semver: 7.7.1
       stylus-lookup: 3.0.2(supports-color@9.4.0)
       table: 6.7.3
+      yaml: 1.10.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@pnpm/logger'
@@ -71658,6 +71680,7 @@ snapshots:
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -71704,6 +71727,7 @@ snapshots:
       semver: 7.7.1
       stylus-lookup: 3.0.2(supports-color@9.4.0)
       table: 6.7.3
+      yaml: 1.10.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@pnpm/logger'
@@ -71727,6 +71751,7 @@ snapshots:
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
@@ -71773,6 +71798,7 @@ snapshots:
       semver: 7.7.1
       stylus-lookup: 3.0.2(supports-color@9.4.0)
       table: 6.7.3
+      yaml: 1.10.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@pnpm/logger'
@@ -71789,10 +71815,11 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
+      '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/bvm.path': 1.0.0
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues(react-dom@19.2.7)(react@19.2.7)
@@ -71854,10 +71881,11 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(chai@4.3.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
+      '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@18.3.1)(react@18.3.1)
       '@teambit/bvm.path': 1.0.0
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues(react-dom@18.3.1)(react@18.3.1)
@@ -71919,10 +71947,11 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(chai@4.3.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
+      '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/bvm.path': 1.0.0
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues(react-dom@19.2.7)(react@19.2.7)
@@ -71984,10 +72013,11 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
+      '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/bvm.path': 1.0.0
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues(react-dom@19.2.7)(react@19.2.7)
@@ -82668,6 +82698,7 @@ snapshots:
       '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/defender.fs.global-bit-temp-dir': 0.0.1
       '@teambit/defender.mocha-tester': 1.1.1(@babel/core@7.26.9)(react@19.2.7)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lane-id': 0.0.312
@@ -82691,6 +82722,7 @@ snapshots:
       pad-right: 0.2.2
       react: 19.2.7
       react-router-dom: 6.30.1(react-dom@19.2.7)(react@19.2.7)
+      resolve-from: 5.0.0
       tar: 7.4.3
       yaml: 1.10.2
     transitivePeerDependencies:
@@ -82714,6 +82746,7 @@ snapshots:
       '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/defender.fs.global-bit-temp-dir': 0.0.1
       '@teambit/defender.mocha-tester': 1.1.1(@babel/core@7.28.3)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lane-id': 0.0.312
@@ -82737,6 +82770,7 @@ snapshots:
       pad-right: 0.2.2
       react: 19.2.7
       react-router-dom: 6.30.1(react-dom@19.2.7)(react@19.2.7)
+      resolve-from: 5.0.0
       tar: 7.4.3
       yaml: 1.10.2
     transitivePeerDependencies:
@@ -82760,6 +82794,7 @@ snapshots:
       '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/defender.fs.global-bit-temp-dir': 0.0.1
       '@teambit/defender.mocha-tester': 1.1.1(@babel/core@7.28.3)(react@18.3.1)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle(react-dom@18.3.1)(react@18.3.1)
       '@teambit/lane-id': 0.0.312
@@ -82783,6 +82818,7 @@ snapshots:
       pad-right: 0.2.2
       react: 18.3.1
       react-router-dom: 6.30.1(react-dom@18.3.1)(react@18.3.1)
+      resolve-from: 5.0.0
       tar: 7.4.3
       yaml: 1.10.2
     transitivePeerDependencies:
@@ -82806,6 +82842,7 @@ snapshots:
       '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/defender.fs.global-bit-temp-dir': 0.0.1
       '@teambit/defender.mocha-tester': 1.1.1(@babel/core@7.28.3)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lane-id': 0.0.312
@@ -82829,6 +82866,7 @@ snapshots:
       pad-right: 0.2.2
       react: 19.2.7
       react-router-dom: 6.30.1(react-dom@19.2.7)(react@19.2.7)
+      resolve-from: 5.0.0
       tar: 7.4.3
       yaml: 1.10.2
     transitivePeerDependencies:
@@ -82852,6 +82890,7 @@ snapshots:
       '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/defender.fs.global-bit-temp-dir': 0.0.1
       '@teambit/defender.mocha-tester': 1.1.1(@babel/core@7.28.3)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lane-id': 0.0.312
@@ -82875,6 +82914,7 @@ snapshots:
       pad-right: 0.2.2
       react: 19.2.7
       react-router-dom: 6.30.1(react-dom@19.2.7)(react@19.2.7)
+      resolve-from: 5.0.0
       tar: 7.4.3
       yaml: 1.10.2
     transitivePeerDependencies:
@@ -85936,7 +85976,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(@types/react@19.2.14)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues(react-dom@19.2.7)(react@19.2.7)
@@ -85977,7 +86017,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(@types/react@19.2.14)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues(react-dom@18.3.1)(react@18.3.1)
@@ -86018,7 +86058,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues(react-dom@19.2.7)(react@19.2.7)
@@ -86068,7 +86108,7 @@ snapshots:
       '@pnpm/lockfile.fs': 1100.2.0(@pnpm/logger@1100.0.0)
       '@pnpm/lockfile.types': 1100.0.19
       '@pnpm/logger': 1100.0.0
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -86117,7 +86157,7 @@ snapshots:
       '@pnpm/lockfile.fs': 1100.2.0(@pnpm/logger@1100.0.0)
       '@pnpm/lockfile.types': 1100.0.19
       '@pnpm/logger': 1100.0.0
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -86166,7 +86206,7 @@ snapshots:
       '@pnpm/lockfile.fs': 1100.2.0(@pnpm/logger@1100.0.0)
       '@pnpm/lockfile.types': 1100.0.19
       '@pnpm/logger': 1100.0.0
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -86215,7 +86255,7 @@ snapshots:
       '@pnpm/lockfile.fs': 1100.2.0(@pnpm/logger@1100.0.0)
       '@pnpm/lockfile.types': 1100.0.19
       '@pnpm/logger': 1100.0.0
-      '@pnpm/napi': 12.0.0-beta.4
+      '@pnpm/napi': 12.0.0-rc.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
