@@ -129,6 +129,14 @@ export class MainSyncExecutor {
         );
       }
 
+      // Consume dependency-context drift before diffing: the tag's .bitmap/lockfile writes then
+      // ride the same file-diff `driftFiles()` computes below, with no separate commit path.
+      await this.deps.ci.reloadWorkspaceFromDisk();
+      const convergence = await this.deps.ci.convergeContextDrift({ dryRun: opts.dryRun });
+      // `converged` alone misses the dry-run case (it never tags, so it's always 0) — the no-op
+      // case is the only one that shouldn't print.
+      if (convergence.summary !== 'no dependency-context drift') logger.console(convergence.summary);
+
       const drift = await this.driftFiles();
       // Direct-push stays bare: asking the host about `mainSyncBranch`'s PR would be the one
       // interaction with it this mode promises not to make.

@@ -38,6 +38,7 @@ import { adoptAndRetrySwitch, isLaneMissingComponentError } from './sync/adopt-l
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { detectContextDrift as detectContextDriftImpl } from './sync/context-drift-detector';
 import type { ContextDriftReport } from './sync/context-drift-detector';
+import { convergenceMessage, blockerNamesUnion } from './sync/context-drift';
 import { syncConfigFromMain as syncConfigFromMainImpl } from './sync/main-config-sync';
 
 export type CiSwitchLaneOptions = SwitchLaneOptions & {
@@ -609,6 +610,51 @@ export class CiMain {
    */
   async detectContextDrift(): Promise<ContextDriftReport> {
     return detectContextDriftImpl(this.workspace, this.logger);
+  }
+
+  /**
+   * Consume dependency-context drift on main: one patch tag of exactly the drifted set,
+   * tolerating only blockers that already exist on the recorded heads, then export.
+   * The .bitmap/lockfile updates are left in the working tree for the caller's
+   * mainSync commit flow to pick up.
+   */
+  async convergeContextDrift({ dryRun }: { dryRun?: boolean } = {}): Promise<{ converged: number; summary: string }> {
+    const { drift } = await this.detectContextDrift();
+    if (!drift.length) return { converged: 0, summary: 'no dependency-context drift' };
+    const running = this.getRunningBitVersion();
+    this.logger.console(chalk.blue(`${drift.length} component(s) carry dependency-context drift:`));
+    drift.forEach((d) =>
+      this.logger.console(
+        `  ${d.id.toStringWithoutVersion()} (${d.changedKeys.join(', ')})` +
+          `${d.recordedBitVersion && d.recordedBitVersion !== running ? ` recorded with bit ${d.recordedBitVersion}` : ''}`
+      )
+    );
+    const idStrs = drift.map((d) => d.id.toStringWithoutVersion());
+    if (dryRun) {
+      return { converged: 0, summary: `dry-run: would converge ${drift.length} component(s)` };
+    }
+    const message = convergenceMessage(
+      drift.map((d) => d.recordedBitVersion),
+      running
+    );
+    const status = await this.status.status({ lanes: true });
+    const ignoreIssues = blockerNamesUnion(status.componentsWithIssues, new Set(idStrs));
+    const results = await this.snapping.tag({
+      ids: idStrs,
+      message,
+      releaseType: 'patch',
+      autoTagReleaseType: 'patch',
+      ignoreIssues,
+      build: undefined,
+      persist: false,
+      failFast: true,
+    });
+    if (!results) return { converged: 0, summary: 'no dependency-context drift' };
+    this.logger.console(chalk.blue(message));
+    await this.exporter.export();
+    const count = results.taggedComponents.length;
+    this.logger.console(chalk.green(`Converged ${count} component(s)`));
+    return { converged: count, summary: `converged ${count} component(s)` };
   }
 
   async verifyWorkspaceStatus() {

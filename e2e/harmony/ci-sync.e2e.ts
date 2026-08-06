@@ -1203,6 +1203,62 @@ describe('bit ci sync', function () {
     });
   });
 
+  // Convergence consumes the drift on main: one patch tag, exported, .bitmap bump riding the
+  // bit-sync/main flow. The circular pair also drifts, so the tag must tolerate the blocker that
+  // already exists on the recorded heads (it was tagged with --ignore-issues originally).
+  describe('main reconcile converges dependency-context drift', () => {
+    const SYNC_BRANCH = 'bit-sync/main';
+    let defaultBranch: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      helper.fs.outputFile('comp2/index.js', `require('is-odd');\nmodule.exports = () => 'comp2: with-pkg';\n`);
+      helper.fs.outputFile('comp3/index.js', `require('is-odd');\nrequire('@${helper.scopes.remote}/comp4');`);
+      helper.fs.outputFile('comp4/index.js', `require('@${helper.scopes.remote}/comp3');`);
+      helper.command.addComponent('comp3');
+      helper.command.addComponent('comp4');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-odd': '1.0.0' } });
+      helper.command.install();
+      helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
+      helper.command.export();
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "record deps under is-odd 1.0.0"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-odd': '3.0.1' } });
+      // Task 2 finding: a bare workspace.jsonc edit is invisible to a running process — only a real
+      // `install()` re-run actually moves what gets resolved from disk (node_modules/lockfile).
+      helper.command.install();
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "bump is-odd policy"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+    });
+
+    it('dry-run reports the convergence and tags nothing', () => {
+      const { output, exitCode } = syncRun('--main --dry-run');
+      expect(exitCode, output).to.equal(0);
+      expect(output).to.include('dependency-context drift');
+      expect(output).to.include('dry-run');
+      const list = helper.command.listRemoteScopeParsed();
+      const comp2 = list.find((c: any) => c.id.includes('comp2'));
+      // comp2 was already recorded at 0.0.2 by the setup's own tag (is-odd 1.0.0) — the dry-run's
+      // job is to NOT advance it any further, not to leave it below 0.0.2.
+      expect(comp2.localVersion || comp2.currentVersion).to.equal('0.0.2');
+    });
+
+    it('converges: one patch tag with the alignment message, exported, .bitmap bump on the sync branch', () => {
+      const { output, exitCode } = syncRun('--main');
+      expect(exitCode, output).to.equal(0);
+      expect(output).to.include('align dependency context');
+      expect(fileOnBranch(SYNC_BRANCH, '.bitmap')).to.include('0.0.2');
+    });
+
+    it('the next run finds a converged pair and no-ops', () => {
+      const { output, exitCode } = syncRun('--main');
+      expect(exitCode, output).to.equal(0);
+      expect(output).to.match(/converged/i);
+    });
+  });
+
   describe('a stale bit-sync/main that conflicts with the default branch', () => {
     const SYNC_BRANCH = 'bit-sync/main';
     let defaultBranch: string;
