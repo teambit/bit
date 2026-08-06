@@ -69,7 +69,10 @@ export function convergenceMessage(recordedBitVersions: (string | undefined)[], 
 export function blockerNamesUnion(
   componentsWithIssues: {
     id: { toStringWithoutVersion(): string };
-    issues: { getAllIssueNames(): string[]; hasTagBlockerIssues(): boolean };
+    issues: {
+      getAllIssues(): { isTagBlocker: boolean; constructor: { name: string } }[];
+      hasTagBlockerIssues(): boolean;
+    };
   }[],
   inSet: Set<string>
 ): string | undefined {
@@ -77,7 +80,12 @@ export function blockerNamesUnion(
   for (const entry of componentsWithIssues) {
     if (!inSet.has(entry.id.toStringWithoutVersion())) continue;
     if (!entry.issues.hasTagBlockerIssues()) continue;
-    entry.issues.getAllIssueNames().forEach((n) => names.add(n));
+    // Only the tag-blocker issues need ignoring — a non-blocker issue name in `ignoreIssues` is a
+    // no-op, so the union should carry exactly what it's there to suppress.
+    entry.issues
+      .getAllIssues()
+      .filter((issue) => issue.isTagBlocker)
+      .forEach((issue) => names.add(issue.constructor.name));
   }
   return names.size ? [...names].join(',') : undefined;
 }

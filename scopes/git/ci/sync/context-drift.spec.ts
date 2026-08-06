@@ -152,19 +152,30 @@ describe('convergenceMessage', () => {
 });
 
 describe('blockerNamesUnion', () => {
-  const entry = (idStr: string, names: string[], blocker: boolean) => ({
+  const issue = (name: string, isTagBlocker: boolean) => ({ isTagBlocker, constructor: { name } });
+  const entry = (idStr: string, issues: { isTagBlocker: boolean; constructor: { name: string } }[]) => ({
     id: { toStringWithoutVersion: () => idStr },
-    issues: { getAllIssueNames: () => names, hasTagBlockerIssues: () => blocker },
+    issues: {
+      getAllIssues: () => issues,
+      hasTagBlockerIssues: () => issues.some((i) => i.isTagBlocker),
+    },
   });
 
   it('unions blocker issue names of in-set components only', () => {
     const res = blockerNamesUnion(
-      [entry('s/a', ['CircularDependencies'], true), entry('s/b', ['MissingDists'], true)],
+      [entry('s/a', [issue('CircularDependencies', true)]), entry('s/b', [issue('MissingDists', true)])],
       new Set(['s/a'])
     );
     expect(res).to.equal('CircularDependencies');
   });
   it('returns undefined when no in-set component has blockers', () => {
-    expect(blockerNamesUnion([entry('s/a', ['X'], false)], new Set(['s/a']))).to.equal(undefined);
+    expect(blockerNamesUnion([entry('s/a', [issue('X', false)])], new Set(['s/a']))).to.equal(undefined);
+  });
+  it('carries only the blocker issue name, not a non-blocker issue on the same component', () => {
+    const res = blockerNamesUnion(
+      [entry('s/a', [issue('CircularDependencies', true), issue('MissingDists', false)])],
+      new Set(['s/a'])
+    );
+    expect(res).to.equal('CircularDependencies');
   });
 });
