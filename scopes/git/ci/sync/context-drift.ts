@@ -10,8 +10,9 @@ export const DRIFT_FIELDS = [
   'devPackageDependencies',
   'peerPackageDependencies',
   // env-computed dependency data (force:true env policies, e.g. the core react env's dependency
-  // template). Keep `extensions` OUT of this list: a git-side policy source that reaches
-  // `overrides` without also touching `extensions` would otherwise go undetected as drift.
+  // template). Keep `extensions` out of this list: a git-side `bit deps set` writes both the
+  // component's aspect config (extensions) and the computed overrides — extensions must stay
+  // comparable so that change classifies as git-authored.
   'overrides',
 ] as const;
 

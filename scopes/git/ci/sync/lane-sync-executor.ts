@@ -770,8 +770,8 @@ export class LaneSyncExecutor {
    * Pending components split into git-authored changes and dependency-context drift before snapping
    * (a recorded dep range moved under the workspace's current resolution context, not under a dev's
    * commit). Only the git-authored subset passes as `snapIds`; drift never rides into a lane snap it
-   * did not touch directly. A drifted component that a snapped component depends on can still be
-   * auto-snapped as that dependent — `snapPrCommit` reports that case. Main-side convergence consumes
+   * did not touch directly. A drifted component that depends on a snapped component can still be
+   * auto-snapped as its dependent — `snapPrCommit` reports that case. Main-side convergence consumes
    * drift not auto-snapped this way.
    */
   private async snapAndExportOntoLane(laneIdStr: string, message: string): Promise<Error | undefined> {
