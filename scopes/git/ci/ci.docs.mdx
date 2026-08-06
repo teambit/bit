@@ -395,6 +395,20 @@ pull-request diff, and a person rejects it: close the pull request. With `mainSy
 command commits the same drift on the default branch, and uses no sync branch and no pull request. The push
 is a plain push, so the run stops if the default branch moved during the run.
 
+### Dependency-context drift
+
+A mirror workspace can show modified components when git has no changes. The
+cause is a moved resolution context: the pinned bit engine ships new env
+dependency templates, or a committed root policy changes a recorded range.
+This is a real dependency change that the repository introduces.
+
+`bit ci sync` consumes it. A main run tags the drifted components (patch bump)
+with the message `align dependency context`, and exports. A lane run never
+snaps drifted components; it snaps only the components with git-authored
+changes and reports the drift. Pin the engine in `workspace.jsonc`
+(`"teambit.harmony/bit": { "engine": "<version>" }`) so the context moves only
+when a commit moves it.
+
 ### Git host providers and credentials
 
 The command uses plain git for every git operation. The command uses a `GitHostProvider` for every
