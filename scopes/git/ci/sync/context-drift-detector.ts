@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentID } from '@teambit/component-id';
 import type { Workspace } from '@teambit/workspace';
 import type { Logger } from '@teambit/logger';
@@ -18,7 +19,12 @@ export type ContextDriftReport = {
  * context (env template of the pinned engine, root policy) moved instead.
  */
 export async function detectContextDrift(workspace: Workspace, logger: Logger): Promise<ContextDriftReport> {
-  const pending = await workspace.listTagPendingIds();
+  const pendingIds = await workspace.listTagPendingIds();
+  // Local-only components are excluded from the pending set everywhere a snap would run (mirrors
+  // Snapping.getTagPendingComponentsIds) — `export` refuses them, and a bare `legacyBitIds` snap
+  // (this run's `snapIds` path) skips the pending-list computation that normally does this filtering.
+  const localOnly = ComponentIdList.fromArray(workspace.filter.byLocalOnly(pendingIds));
+  const pending = pendingIds.filter((id) => !localOnly.hasWithoutVersion(id));
   const legacyScope = workspace.scope.legacyScope;
   const repo = legacyScope.objects;
   const drift: ContextDriftReport['drift'] = [];
