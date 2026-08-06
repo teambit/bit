@@ -6,7 +6,7 @@ import type { CheckoutMain } from '@teambit/checkout';
 import { git } from '../git';
 import type { CiMain } from '../ci.main.runtime';
 import type { CiSyncConfig } from './sync-config';
-import { SYNC_COMMIT_MARKER } from './sync-state';
+import { SYNC_COMMIT_MARKER, isSyncAuthoredMessage } from './sync-state';
 import { currentLaneIdStr } from './workspace-lane';
 import type { GitHostProvider } from './git-host-provider';
 import { HALT_SUMMARY_PREFIX, capEntries } from './lane-sync-executor';
@@ -38,7 +38,8 @@ export type MainSyncDeps = {
  * Reconcile the main scope with the repository's default branch. Stateless: `bit checkout head`
  * writes the latest exported versions, so an empty `git status` IS convergence and any diff IS the
  * drift. Under 'pr' the convergence is proposed via `mainSyncBranch`; under 'direct-push' it lands on
- * the default branch with a plain push. Nothing is ever force-pushed in either mode.
+ * the default branch with a plain push. One force push exists: a machine-owned sync branch that
+ * conflicts with the default branch is re-forked under a tip lease (`reforkIfMachineOwned`).
  */
 /** the "nothing to do" line, shared by both modes */
 const CONVERGED_SUMMARY = 'main -> converged (checkout head produced no changes)';
@@ -82,10 +83,14 @@ export class MainSyncExecutor {
 
       if (syncBranchExists) {
         // Catch up with the default branch: the PR must stay mergeable, and `checkout head` on a stale
-        // tree would re-commit pre-merge content over the default branch's changes. A merge — never a
-        // rebase, never a force-push — is the only non-destructive way to move a branch with an open PR.
+        // tree would re-commit pre-merge content over the default branch's changes. A merge keeps a
+        // branch that carries human commits intact; a machine-owned branch that conflicts is re-forked,
+        // because its content is recomputed from the scope on every run.
         const catchUpErr = await this.catchUpWithDefaultBranch(branch);
-        if (catchUpErr) return `${HALT_SUMMARY_PREFIX} main -> ${catchUpErr}`;
+        if (catchUpErr) {
+          const healed = await this.reforkIfMachineOwned(branch);
+          if (!healed) return `${HALT_SUMMARY_PREFIX} main -> ${catchUpErr}`;
+        }
       }
 
       // `checkout head` resolves versions against the CURRENT lane; a lane pointer on this branch
@@ -188,8 +193,18 @@ export class MainSyncExecutor {
   private async catchUpWithDefaultBranch(branch: string): Promise<string | undefined> {
     const { defaultBranch, logger } = this.deps;
     try {
-      // under the identity: a non-fast-forward merge writes a merge COMMIT
-      const out = await gitWithIdentity(['merge', '--no-edit', `origin/${defaultBranch}`]);
+      // under the identity: a non-fast-forward merge writes a merge COMMIT. The marker on its own
+      // line keeps the branch machine-owned (`isSyncAuthoredMessage`) across catch-up merges.
+      const out = await gitWithIdentity([
+        'merge',
+        '-m',
+        `merge origin/${defaultBranch} into ${branch}\n\n${SYNC_COMMIT_MARKER}`,
+        `origin/${defaultBranch}`,
+      ]);
+      // judge the merge by repository state, never by rejection: simple-git resolves on some
+      // non-zero exits, and a conflicted `.bitmap` would otherwise reach the workspace reload
+      const conflicted = (await git.status()).conflicted;
+      if (conflicted.length) throw new Error(`merge conflicts in: ${conflicted.join(', ')}`);
       logger.console(chalk.blue(`Brought ${branch} up to date with origin/${defaultBranch}: ${out.trim()}`));
     } catch (e: any) {
       await git.raw(['merge', '--abort']).catch(() => undefined);
@@ -201,6 +216,34 @@ export class MainSyncExecutor {
     // The merge may have brought a new `.bitmap` in from the default branch.
     await this.deps.ci.reloadWorkspaceFromDisk();
     return undefined;
+  }
+
+  /**
+   * A sync branch whose every commit beyond the default branch passes `isSyncAuthoredMessage` is
+   * machine state, recomputable from the scope — re-fork it from the default branch instead of
+   * halting. The force push is leased on the tip the ownership was read from, so a concurrent
+   * run's push rejects this one instead of losing work. Returns false when any commit fails the
+   * probe; the caller keeps the halt, because a human wrote on the branch.
+   */
+  private async reforkIfMachineOwned(branch: string): Promise<boolean> {
+    const { defaultBranch, logger } = this.deps;
+    const staleTip = (await git.revparse([`origin/${branch}`])).trim();
+    const log = await git.raw(['log', `origin/${defaultBranch}..${staleTip}`, '--format=%B%x1e']);
+    const messages = log
+      .split('\x1e')
+      .map((message) => message.trim())
+      .filter(Boolean);
+    const machineOwned = messages.length > 0 && messages.every((message) => isSyncAuthoredMessage(message));
+    if (!machineOwned) return false;
+    logger.console(
+      formatWarningSummary(
+        `main -> ${branch} conflicts with ${defaultBranch} and carries only ${SYNC_COMMIT_MARKER} commits — ` +
+          `re-forking it from origin/${defaultBranch}`
+      )
+    );
+    await this.resetToStartPoint(branch, `origin/${defaultBranch}`);
+    await git.push([`--force-with-lease=refs/heads/${branch}:${staleTip}`, 'origin', `HEAD:refs/heads/${branch}`]);
+    return true;
   }
 
   /**
