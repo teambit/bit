@@ -33,7 +33,11 @@
  *   "Merge Queue Dashboard" issue (label: merge-queue) is kept up to date.
  *
  * The loop is stateless and idempotent: every run re-derives the queue from the GitHub + CircleCI
- * APIs, so a skipped or crashed run costs nothing.
+ * APIs, so a skipped or crashed run costs nothing. It runs from three places for redundancy:
+ * the GitHub Actions workflow (event-driven + cron), a CircleCI scheduled workflow
+ * (merge_queue_heartbeat, every 10m — survives Actions outages on independent infrastructure),
+ * and, as a break-glass, any machine: GITHUB_TOKEN=<pat> CIRCLE_TOKEN=<token> node
+ * .github/scripts/merge-queue.js (add MERGE_QUEUE_DRY_RUN=true to observe without mutating).
  *
  * Required env: GITHUB_TOKEN (statuses+issues write), CIRCLE_TOKEN (CircleCI API, read).
  * Optional env: MERGE_QUEUE_IGNORE_CHECKS — comma-separated check names to ignore when deciding
