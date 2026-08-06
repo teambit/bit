@@ -804,6 +804,7 @@ export class CiMain {
         originalLane,
         message: resolvedMessage,
         build,
+        strict,
         dryRun,
         skipCleanup: resolvedSkipCleanup,
         skipTasks: resolvedSkipTasks,
@@ -879,6 +880,7 @@ export class CiMain {
     originalLane,
     message,
     build,
+    strict,
     dryRun,
     skipCleanup,
     skipTasks,
@@ -890,6 +892,7 @@ export class CiMain {
     originalLane: Lane | undefined;
     message: string;
     build: boolean | undefined;
+    strict: boolean | undefined;
     dryRun?: boolean;
     skipCleanup: boolean;
     skipTasks?: string;
@@ -944,7 +947,13 @@ export class CiMain {
               const { gitAuthored } = await this.detectContextDrift();
               const known = new Set(snapIds.map((id) => id.toStringWithoutVersion()));
               const missing = gitAuthored.filter((id) => !known.has(id.toStringWithoutVersion()));
-              if (missing.length) snapIds = [...snapIds, ...missing];
+              if (missing.length) {
+                snapIds = [...snapIds, ...missing];
+                // The added ids never went through `snapPrCommit`'s scoped verify — that ran before
+                // this expansion, over the pre-expansion set. Re-run it over the final set, or an
+                // added id's blocker surfaces later at snap instead of at this gate.
+                await this.verifyWorkspaceStatusInternal(strict, { snapIds });
+              }
             }
           }
         } else {
