@@ -1,5 +1,10 @@
 import { isEqual, omit, sortBy } from 'lodash';
 
+// Deprecated per-file props. consumer.isComponentModified copies them from the model onto the
+// filesystem side before comparing, so they must not classify as a file change here either — an
+// old recorded Version's `name`/`test` can differ from a rebuild for reasons unrelated to drift.
+const DEPRECATED_FILE_PROPS = ['name', 'test'] as const;
+
 export const DRIFT_FIELDS = [
   'dependencies',
   'devDependencies',
@@ -24,17 +29,22 @@ const EXCLUDED = [...DRIFT_FIELDS, ...VOLATILE_FIELDS];
 
 /**
  * Sort a `Version.id()` payload's `files` (and each file's `dists`, if present) by
- * `relativePath`. Mirrors `sortProperties` in consumer.ts (the recorded-vs-filesystem
- * modified check), so a pure ordering difference does not read as drift or as a
+ * `relativePath`, and strip the deprecated `name`/`test` file props. Mirrors `sortProperties` /
+ * the deprecated-prop alignment in consumer.ts's recorded-vs-filesystem modified check, so
+ * neither a pure ordering difference nor a stale `name`/`test` value reads as drift or as a
  * git-authored change.
  */
 export function normalizePayload(payload: Record<string, any>): Record<string, any> {
   if (!Array.isArray(payload.files)) return payload;
+  const stripDeprecated = (file: Record<string, any>) => omit(file, DEPRECATED_FILE_PROPS);
   return {
     ...payload,
-    files: sortBy(payload.files, 'relativePath').map((file: Record<string, any>) =>
-      Array.isArray(file.dists) ? { ...file, dists: sortBy(file.dists, 'relativePath') } : file
-    ),
+    files: sortBy(payload.files, 'relativePath').map((file: Record<string, any>) => {
+      const stripped = stripDeprecated(file);
+      return Array.isArray(file.dists)
+        ? { ...stripped, dists: sortBy(file.dists, 'relativePath').map(stripDeprecated) }
+        : stripped;
+    }),
   };
 }
 

@@ -76,6 +76,25 @@ describe('classifyPayloadDiff', () => {
     const resWithFileChange = classifyPayloadDiff(normalizePayload(recorded), normalizePayload(fromFsWithFileChange));
     expect(resWithFileChange.depOnly).to.equal(false);
   });
+
+  it('stripping the deprecated name/test file props does not mask a real file change', () => {
+    const recorded = {
+      ...base,
+      files: [{ file: 'aaa', relativePath: 'index.js', name: 'index.js', test: false }],
+    };
+    const fromFs = {
+      ...base,
+      // same file content, stale deprecated props, plus a dep change
+      files: [{ file: 'aaa', relativePath: 'index.js', name: 'old-name.js', test: true }],
+      packageDependencies: { 'is-odd': '3.0.1' },
+    };
+    const res = classifyPayloadDiff(normalizePayload(recorded), normalizePayload(fromFs));
+    expect(res.depOnly).to.equal(true);
+
+    const fromFsWithFileChange = { ...fromFs, files: [{ ...fromFs.files[0], file: 'ccc' }] };
+    const resWithFileChange = classifyPayloadDiff(normalizePayload(recorded), normalizePayload(fromFsWithFileChange));
+    expect(resWithFileChange.depOnly).to.equal(false);
+  });
 });
 
 describe('normalizePayload', () => {
