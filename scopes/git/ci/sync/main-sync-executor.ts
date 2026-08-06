@@ -133,14 +133,17 @@ export class MainSyncExecutor {
       // ride the same file-diff `driftFiles()` computes below, with no separate commit path.
       await this.deps.ci.reloadWorkspaceFromDisk();
       const convergence = await this.deps.ci.convergeContextDrift({ dryRun: opts.dryRun });
-      // `converged` alone misses the dry-run case (it never tags, so it's always 0) — the no-op
-      // case is the only one that shouldn't print.
-      if (convergence.summary !== 'no dependency-context drift') logger.console(convergence.summary);
+      if (convergence.detected) logger.console(convergence.summary);
 
       const drift = await this.driftFiles();
       // Direct-push stays bare: asking the host about `mainSyncBranch`'s PR would be the one
       // interaction with it this mode promises not to make.
-      if (!drift.length) return directPush ? CONVERGED_SUMMARY : await this.convergedSummary(branch);
+      if (!drift.length) {
+        // A dry-run tags nothing, so `driftFiles()` sees no file diff even when convergence was
+        // detected — the CONVERGED summary would contradict the "would converge" line just logged.
+        if (opts.dryRun && convergence.detected) return `main -> ${convergence.summary}`;
+        return directPush ? CONVERGED_SUMMARY : await this.convergedSummary(branch);
+      }
 
       logger.console(
         formatWarningSummary(`main -> drift in ${drift.length} file(s): ${drift.slice(0, 20).join(', ')}`)

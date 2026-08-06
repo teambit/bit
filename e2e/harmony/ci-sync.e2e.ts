@@ -1249,7 +1249,10 @@ describe('bit ci sync', function () {
       const { output, exitCode } = syncRun('--main');
       expect(exitCode, output).to.equal(0);
       expect(output).to.include('align dependency context');
-      expect(fileOnBranch(SYNC_BRANCH, '.bitmap')).to.include('0.0.2');
+      expect(output).to.include('main -> pushed sync commit to');
+      // comp2's own convergence bump (0.0.2 -> 0.0.3) — 0.0.2 alone is already true at the fork
+      // point and would pass whether or not this run converged anything.
+      expect(fileOnBranch(SYNC_BRANCH, '.bitmap')).to.include('0.0.3');
     });
 
     it('the next run finds a converged pair and no-ops', () => {

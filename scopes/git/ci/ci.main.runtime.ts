@@ -618,9 +618,13 @@ export class CiMain {
    * The .bitmap/lockfile updates are left in the working tree for the caller's
    * mainSync commit flow to pick up.
    */
-  async convergeContextDrift({ dryRun }: { dryRun?: boolean } = {}): Promise<{ converged: number; summary: string }> {
+  async convergeContextDrift({ dryRun }: { dryRun?: boolean } = {}): Promise<{
+    converged: number;
+    detected: boolean;
+    summary: string;
+  }> {
     const { drift } = await this.detectContextDrift();
-    if (!drift.length) return { converged: 0, summary: 'no dependency-context drift' };
+    if (!drift.length) return { converged: 0, detected: false, summary: 'no dependency-context drift' };
     const running = this.getRunningBitVersion();
     this.logger.console(chalk.blue(`${drift.length} component(s) carry dependency-context drift:`));
     drift.forEach((d) =>
@@ -631,7 +635,7 @@ export class CiMain {
     );
     const idStrs = drift.map((d) => d.id.toStringWithoutVersion());
     if (dryRun) {
-      return { converged: 0, summary: `dry-run: would converge ${drift.length} component(s)` };
+      return { converged: 0, detected: true, summary: `dry-run: would converge ${drift.length} component(s)` };
     }
     const message = convergenceMessage(
       drift.map((d) => d.recordedBitVersion),
@@ -649,12 +653,20 @@ export class CiMain {
       persist: false,
       failFast: true,
     });
-    if (!results) return { converged: 0, summary: 'no dependency-context drift' };
+    // Drift was detected but the tag call produced nothing to export — detector and tag disagree.
+    // Distinct from "no dependency-context drift" (drift.length === 0): here `detected` stays true.
+    if (!results) {
+      return {
+        converged: 0,
+        detected: true,
+        summary: `drift detected but nothing was taggable (${drift.length} component(s))`,
+      };
+    }
     this.logger.console(chalk.blue(message));
     await this.exporter.export();
     const count = results.taggedComponents.length;
     this.logger.console(chalk.green(`Converged ${count} component(s)`));
-    return { converged: count, summary: `converged ${count} component(s)` };
+    return { converged: count, detected: true, summary: `converged ${count} component(s)` };
   }
 
   async verifyWorkspaceStatus() {
