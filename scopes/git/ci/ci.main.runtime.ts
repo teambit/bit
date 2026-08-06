@@ -437,10 +437,9 @@ export class CiMain {
   }
 
   /**
-   * `snapIds`: fail only on issues in the components this run actually snaps. A real scope carries
-   * components with tag blockers (e.g. circular dependencies), and a global failure would block every
-   * snap in the repo — including snaps that never touch the blocked components. The snap itself still
-   * refuses its own components' blockers.
+   * `snapIds` scopes the status failure to the components this run snaps. A global failure would
+   * block every snap in the repo, including one that never touches a blocked component (e.g. a
+   * circular dependency). The snap itself still enforces blockers on its own components.
    */
   private async verifyWorkspaceStatusInternal(strict: boolean = false, { snapIds }: { snapIds?: ComponentID[] } = {}) {
     this.logger.console('📊 Workspace Status');
@@ -613,10 +612,12 @@ export class CiMain {
   }
 
   /**
-   * Consume dependency-context drift on main: one patch tag of exactly the drifted set,
-   * tolerating only blockers that already exist on the recorded heads, then export.
-   * The .bitmap/lockfile updates are left in the working tree for the caller's
-   * mainSync commit flow to pick up.
+   * Consume dependency-context drift on main. Tag exactly the drifted set with one patch
+   * bump, then export. The tag ignores blockers on the drifted components: their files and
+   * config match the recorded head, so a blocker reflects the recorded content under the
+   * current context. A blocker type the context itself introduces is tolerated too. The
+   * .bitmap/lockfile updates stay in the working tree for the caller's mainSync commit flow
+   * to pick up.
    */
   async convergeContextDrift({ dryRun }: { dryRun?: boolean } = {}): Promise<{
     converged: number;
@@ -653,8 +654,8 @@ export class CiMain {
       persist: false,
       failFast: true,
     });
-    // Drift was detected but the tag call produced nothing to export — detector and tag disagree.
-    // Distinct from "no dependency-context drift" (drift.length === 0): here `detected` stays true.
+    // The tag call produced nothing, though drift was detected — detector and tag disagree. This
+    // differs from "no dependency-context drift" (drift.length === 0): here `detected` stays true.
     if (!results) {
       return {
         converged: 0,
@@ -697,6 +698,7 @@ export class CiMain {
     skipTasks,
     noDestructiveRecovery,
     snapIds,
+    driftIds,
   }: {
     laneIdStr: string;
     message: string;
@@ -716,6 +718,8 @@ export class CiMain {
     noDestructiveRecovery?: boolean;
     /** Snap only these ids (no version), not every tag-pending component; unset for `bit ci pr` (global). */
     snapIds?: string[];
+    /** Ids excluded from `snapIds` as dependency-context drift; used only to report a dependent auto-snap. */
+    driftIds?: string[];
   }) {
     // The post-export cleanup switches the workspace back to main, which re-checks-out main's HEAD
     // and re-imports every workspace component — pointless when the workspace is about to be
@@ -750,7 +754,9 @@ export class CiMain {
 
     const resolvedSnapIds = snapIds ? await this.workspace.resolveMultipleComponentIds(snapIds) : undefined;
     if (resolvedSnapIds && !resolvedSnapIds.length) {
-      this.logger.console(chalk.yellow('No git-authored changes to snap (only dependency-context drift is pending)'));
+      // Neutral wording: this method does not know whether drift caused the empty set or nothing
+      // was pending at all — the caller (e.g. the lane sync executor) reports drift separately.
+      this.logger.console(chalk.yellow('No git-authored changes to snap'));
       return 'No changes detected, nothing to snap';
     }
 
@@ -783,6 +789,7 @@ export class CiMain {
         skipTasks: resolvedSkipTasks,
         noDestructiveRecovery,
         snapIds: resolvedSnapIds,
+        driftIds,
       });
     }
     return this.snapAndExportWithTempLane({
@@ -857,6 +864,7 @@ export class CiMain {
     skipTasks,
     noDestructiveRecovery,
     snapIds,
+    driftIds,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
@@ -867,6 +875,7 @@ export class CiMain {
     skipTasks?: string;
     noDestructiveRecovery?: boolean;
     snapIds?: ComponentID[];
+    driftIds?: string[];
   }) {
     // Query the remote (by name, to avoid fetching all lanes) so we know whether to reuse or create
     const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
@@ -908,6 +917,15 @@ export class CiMain {
             );
           } else {
             await this.syncConfigFromMain(laneId);
+            // `snapIds` was resolved before this call. `syncConfigFromMain` clears the component
+            // cache, so a component it just re-configured can become git-authored only now — add
+            // any such id, or this run's snap would miss it. Never add a drift id.
+            if (snapIds) {
+              const { gitAuthored } = await this.detectContextDrift();
+              const known = new Set(snapIds.map((id) => id.toStringWithoutVersion()));
+              const missing = gitAuthored.filter((id) => !known.has(id.toStringWithoutVersion()));
+              if (missing.length) snapIds = [...snapIds, ...missing];
+            }
           }
         } else {
           // Switch failed even though the remote lane exists. The destructive recovery below
@@ -1037,7 +1055,26 @@ export class CiMain {
         return 'No changes detected, nothing to snap';
       }
 
-      const { snappedComponents }: SnapResults = results;
+      const { snappedComponents, autoSnappedResults }: SnapResults = results;
+
+      // A drifted id excluded from `snapIds` can still be auto-snapped, as a dependent of a
+      // component this run did snap — that auto-snap consumes its drift. Report it; the caller
+      // logged the drift as "not snapped here" before this run knew the outcome.
+      if (driftIds?.length) {
+        const driftSet = new Set(driftIds);
+        const autoSnappedDrift = [
+          ...new Set(
+            autoSnappedResults
+              .filter((r) => driftSet.has(r.component.id.toStringWithoutVersion()))
+              .map((r) => r.component.id.toStringWithoutVersion())
+          ),
+        ];
+        if (autoSnappedDrift.length) {
+          this.logger.console(
+            chalk.blue(`Auto-snapped as a dependent, consuming its drift: ${autoSnappedDrift.join(', ')}`)
+          );
+        }
+      }
 
       const snapOutput = snapResultOutput(results);
       this.logger.console(snapOutput);

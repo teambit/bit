@@ -129,8 +129,8 @@ export class MainSyncExecutor {
         );
       }
 
-      // Consume dependency-context drift before diffing: the tag's .bitmap/lockfile writes then
-      // ride the same file-diff `driftFiles()` computes below, with no separate commit path.
+      // Consume dependency-context drift before diffing. The tag's .bitmap/lockfile writes then
+      // ride the same file diff `driftFiles()` computes below; there is no separate commit path.
       await this.deps.ci.reloadWorkspaceFromDisk();
       const convergence = await this.deps.ci.convergeContextDrift({ dryRun: opts.dryRun });
       if (convergence.detected) logger.console(convergence.summary);
@@ -139,9 +139,11 @@ export class MainSyncExecutor {
       // Direct-push stays bare: asking the host about `mainSyncBranch`'s PR would be the one
       // interaction with it this mode promises not to make.
       if (!drift.length) {
-        // A dry-run tags nothing, so `driftFiles()` sees no file diff even when convergence was
-        // detected — the CONVERGED summary would contradict the "would converge" line just logged.
-        if (opts.dryRun && convergence.detected) return `main -> ${convergence.summary}`;
+        // Two cases produce no file diff even though convergence was detected: a dry-run tags
+        // nothing, and a detected-but-nothing-taggable convergence (converged: 0) exports nothing
+        // either. Report `convergence.summary` in both, or the CONVERGED summary would contradict
+        // the line just logged.
+        if (convergence.detected && (opts.dryRun || !convergence.converged)) return `main -> ${convergence.summary}`;
         return directPush ? CONVERGED_SUMMARY : await this.convergedSummary(branch);
       }
 

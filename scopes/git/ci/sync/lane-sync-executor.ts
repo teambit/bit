@@ -767,10 +767,12 @@ export class LaneSyncExecutor {
    * imported BEFORE delegating: a switch onto the lane the workspace is already on no-ops before any
    * fetch, so it never warms a cold scope.
    *
-   * Pending components are split into git-authored changes and dependency-context drift (a recorded
-   * dep range moved under the workspace's current resolution context, not under a dev's commit) before
-   * snapping: only the git-authored subset is passed as `snapIds`, so drift is never swept into a lane
-   * snap it never touched. Main-side convergence consumes drift separately (not this run's job).
+   * Pending components split into git-authored changes and dependency-context drift before snapping
+   * (a recorded dep range moved under the workspace's current resolution context, not under a dev's
+   * commit). Only the git-authored subset passes as `snapIds`; drift never rides into a lane snap it
+   * did not touch directly. A drifted component that a snapped component depends on can still be
+   * auto-snapped as that dependent — `snapPrCommit` reports that case. Main-side convergence consumes
+   * drift not auto-snapped this way.
    */
   private async snapAndExportOntoLane(laneIdStr: string, message: string): Promise<Error | undefined> {
     try {
@@ -782,7 +784,7 @@ export class LaneSyncExecutor {
         this.deps.logger.console(
           `${drift.length} component(s) carry dependency-context drift` +
             `${recorded ? ` (recorded with bit ${recorded}, running bit ${running})` : ''} — ` +
-            `main convergence consumes this; not snapped here:`
+            `not snapped directly by this run (a dependent may auto-snap it):`
         );
         drift.forEach((d) =>
           this.deps.logger.console(`  ${d.id.toStringWithoutVersion()} (${d.changedKeys.join(', ')})`)
@@ -797,6 +799,7 @@ export class LaneSyncExecutor {
         skipCleanup: true,
         noDestructiveRecovery: true,
         snapIds: gitAuthored.map((id) => id.toStringWithoutVersion()),
+        driftIds: drift.map((d) => d.id.toStringWithoutVersion()),
       });
       return undefined;
     } catch (e: any) {

@@ -402,10 +402,13 @@ cause is a moved resolution context: the pinned bit engine ships new env
 dependency templates, or a committed root policy changes a recorded range.
 This is a real dependency change that the repository introduces.
 
-`bit ci sync` consumes it. A main run tags the drifted components (patch bump)
-with the message `align dependency context`, and exports. A lane run never
-snaps drifted components; it snaps only the components with git-authored
-changes and reports the drift. Pin the engine in `workspace.jsonc`
+`bit ci sync` consumes it. A main run tags the drifted components with a
+patch bump and a message of the shape
+`chore: align dependency context (recorded with bit X, workspace runs bit Y)`,
+then exports. A lane run snaps only the components with git-authored changes
+and reports the drift; it does not snap a drifted component directly, but a
+drifted component that a snapped component depends on is auto-snapped as
+that dependent. Pin the engine in `workspace.jsonc`
 (`"teambit.harmony/bit": { "engine": "<version>" }`) so the context moves only
 when a commit moves it.
 

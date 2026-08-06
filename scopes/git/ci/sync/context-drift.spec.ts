@@ -39,6 +39,12 @@ describe('classifyPayloadDiff', () => {
     const fromFs = { ...base, extensions: [{ name: 'teambit.envs/envs', config: { env: 'x' } }] };
     expect(classifyPayloadDiff(base, fromFs).depOnly).to.equal(false);
   });
+
+  it('classifies an overrides-only change (env-computed dep data) as depOnly', () => {
+    const recorded = { ...base, overrides: { devDependencies: { '@types/react': '^17.0.0' } } };
+    const fromFs = { ...base, overrides: { devDependencies: { '@types/react': '^19.0.0' } } };
+    expect(classifyPayloadDiff(recorded, fromFs).depOnly).to.equal(true);
+  });
 });
 
 describe('convergenceMessage', () => {

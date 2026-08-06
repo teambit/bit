@@ -1120,8 +1120,8 @@ describe('bit ci sync', function () {
     });
   });
 
-  // A real scope carries components with tag blockers (e.g. circular dependencies). The snap only
-  // includes the lane's pending components, so a blocker on an untouched component must not halt it.
+  // A real scope carries components with tag blockers (e.g. circular dependencies). The snap
+  // covers only the lane's pending components. A blocker on an untouched component must not halt it.
   describe('a snap-blocking issue on a component the lane never touches', () => {
     const LANE = 'clean-lane';
     let defaultBranch: string;
@@ -1154,9 +1154,9 @@ describe('bit ci sync', function () {
     });
   });
 
-  // The engine-bump analogue reproducible with one bit binary: the committed root policy moves a
-  // recorded package range. The lane run must snap only the git-authored change and report the
-  // drifted component instead of sweeping it into the dev's snap.
+  // This reproduces an engine bump with one bit binary: a committed root policy moves a recorded
+  // package range. The lane run snaps only the git-authored change, and reports the drifted
+  // component instead of sweeping it into the dev's snap.
   describe('dependency-context drift is excluded from the lane snap', () => {
     const LANE = 'drift-lane';
     let defaultBranch: string;
@@ -1172,18 +1172,18 @@ describe('bit ci sync', function () {
       helper.command.runCmd('git add -A');
       helper.command.runCmd('git commit -m "comp2 records is-odd 1.0.0"');
       helper.command.runCmd(`git push origin ${defaultBranch}`);
-      // Lane creation must happen while the policy still matches comp2's recorded range — otherwise
-      // the dev's own (unscoped) `bit snap` would sweep the drift in too, and there'd be nothing left
-      // for `bit ci sync` to exclude.
+      // Create the lane while the policy still matches comp2's recorded range. Otherwise the dev's
+      // own (unscoped) `bit snap` sweeps the drift in too, and leaves nothing for `bit ci sync` to
+      // exclude.
       devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
       seedSync(LANE);
       branchSideCommit(LANE, defaultBranch, 'comp1/index.js', comp1Src('dev-commit-1'), 'dev commit on comp1');
-      // The default branch's own resolution context moves AFTER the lane forked — the analogue of an
-      // engine bump: `bit ci sync` boots on the default branch, and a workspace-level policy/engine
-      // aggregate is resolved once at that boot (mid-run branch checkouts don't re-read it — see
-      // `Workspace._reloadConsumer`, which reloads the consumer/bitmap but not this). So the run's
-      // *actual* resolution context is whatever is in effect here, regardless of which branch it
-      // later checks out — exactly the drift a real engine bump produces on an untouched component.
+      // The default branch's resolution context moves after the lane forks — the engine-bump
+      // analogue: `bit ci sync` boots on the default branch and resolves the workspace policy/engine
+      // aggregate once, at boot. Mid-run branch checkouts do not re-read it (`Workspace._reloadConsumer`
+      // reloads the consumer and bitmap, not this). The run's resolution context is fixed at boot,
+      // regardless of which branch it later checks out — the same drift a real engine bump produces
+      // on an untouched component.
       helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-odd': '3.0.1' } });
       helper.command.install();
       helper.command.runCmd('git add -A');
@@ -1203,9 +1203,9 @@ describe('bit ci sync', function () {
     });
   });
 
-  // Convergence consumes the drift on main: one patch tag, exported, .bitmap bump riding the
-  // bit-sync/main flow. The circular pair also drifts, so the tag must tolerate the blocker that
-  // already exists on the recorded heads (it was tagged with --ignore-issues originally).
+  // Convergence on main consumes the drift: one patch tag, exported, with the .bitmap bump riding
+  // the bit-sync/main flow. The circular pair also drifts. The tag must tolerate the blocker
+  // already present on the recorded heads (tagged with --ignore-issues originally).
   describe('main reconcile converges dependency-context drift', () => {
     const SYNC_BRANCH = 'bit-sync/main';
     let defaultBranch: string;
@@ -1225,8 +1225,8 @@ describe('bit ci sync', function () {
       helper.command.runCmd('git commit -m "record deps under is-odd 1.0.0"');
       helper.command.runCmd(`git push origin ${defaultBranch}`);
       helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-odd': '3.0.1' } });
-      // Task 2 finding: a bare workspace.jsonc edit is invisible to a running process — only a real
-      // `install()` re-run actually moves what gets resolved from disk (node_modules/lockfile).
+      // A bare workspace.jsonc edit is invisible to a running process. Only a real `install()`
+      // re-run moves what gets resolved from disk (node_modules/lockfile).
       helper.command.install();
       helper.command.runCmd('git add -A');
       helper.command.runCmd('git commit -m "bump is-odd policy"');
@@ -1238,13 +1238,13 @@ describe('bit ci sync', function () {
       expect(exitCode, output).to.equal(0);
       expect(output).to.include('dependency-context drift');
       expect(output).to.include('dry-run');
-      // Pin the actual returned summary line (not just the mid-run log, which would pass either
-      // way) — the count is left out since it's not the stable part.
+      // Pin the returned summary line, not just the mid-run log — that would pass either way.
+      // The count is left out; it is not the stable part.
       expect(output).to.include('main -> dry-run: would converge');
       const list = helper.command.listRemoteScopeParsed();
       const comp2 = list.find((c: any) => c.id.includes('comp2'));
-      // comp2 was already recorded at 0.0.2 by the setup's own tag (is-odd 1.0.0) — the dry-run's
-      // job is to NOT advance it any further, not to leave it below 0.0.2.
+      // comp2 is already recorded at 0.0.2 from the setup's own tag (is-odd 1.0.0). The dry-run
+      // must not advance it further; it need not leave it below 0.0.2.
       expect(comp2.localVersion || comp2.currentVersion).to.equal('0.0.2');
     });
 
@@ -1253,8 +1253,8 @@ describe('bit ci sync', function () {
       expect(exitCode, output).to.equal(0);
       expect(output).to.include('align dependency context');
       expect(output).to.include('main -> pushed sync commit to');
-      // comp2's own convergence bump (0.0.2 -> 0.0.3) — 0.0.2 alone is already true at the fork
-      // point and would pass whether or not this run converged anything.
+      // Checks comp2's convergence bump (0.0.2 -> 0.0.3). 0.0.2 alone is already true at the fork
+      // point, so it would pass regardless of convergence.
       expect(fileOnBranch(SYNC_BRANCH, '.bitmap')).to.include('0.0.3');
     });
 
@@ -1262,6 +1262,7 @@ describe('bit ci sync', function () {
       const { output, exitCode } = syncRun('--main');
       expect(exitCode, output).to.equal(0);
       expect(output).to.match(/converged/i);
+      expect(output).to.not.include('align dependency context');
     });
   });
 

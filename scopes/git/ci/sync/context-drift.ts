@@ -9,6 +9,10 @@ export const DRIFT_FIELDS = [
   'packageDependencies',
   'devPackageDependencies',
   'peerPackageDependencies',
+  // env-computed dependency data (force:true env policies, e.g. the core react env's dependency
+  // template). Keep `extensions` OUT of this list: a git-side policy source that reaches
+  // `overrides` without also touching `extensions` would otherwise go undetected as drift.
+  'overrides',
 ] as const;
 
 // Keys that legitimately differ between a recorded Version and one rebuilt
