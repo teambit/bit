@@ -1120,9 +1120,6 @@ describe('bit ci sync', function () {
     });
   });
 
-  // The sync branch is machine-owned: every commit it holds beyond the default branch is recomputed
-  // from scope state. When the default branch moves past it and the catch-up merge conflicts, the
-  // run must re-fork the branch instead of halting — unless a human commit sits on it.
   describe('a stale bit-sync/main that conflicts with the default branch', () => {
     const SYNC_BRANCH = 'bit-sync/main';
     let defaultBranch: string;
@@ -1137,8 +1134,8 @@ describe('bit ci sync', function () {
       helper.command.runCmd('bit tag --message "bump to 0.0.2"', devPath);
       helper.command.runCmd('bit export', devPath);
       seedSync('--main');
-      // the default branch then adopts a NEWER comp1 (0.0.3) than the sync branch recorded (0.0.2):
-      // both sides changed the same `.bitmap` line, so the catch-up merge conflicts
+      // the default branch adopts comp1@0.0.3 while the sync branch recorded 0.0.2 — the same
+      // `.bitmap` line on both sides, so the catch-up merge conflicts
       fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('main-scope-v3'));
       helper.command.runCmd('bit tag comp1 --message "bump comp1 to 0.0.3" --unmodified', devPath);
       helper.command.runCmd('bit export', devPath);
