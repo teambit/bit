@@ -19,6 +19,7 @@ import {
   fetchRemoteHeads,
   gitWithIdentity,
   isNonContentPath,
+  isStaleLeaseRejection,
 } from './git-ops';
 
 export type MainSyncDeps = {
@@ -86,8 +87,9 @@ export class MainSyncExecutor {
         // tree would re-commit pre-merge content over the default branch's changes.
         const catchUpErr = await this.catchUpWithDefaultBranch(branch);
         if (catchUpErr) {
-          const healed = await this.reforkIfMachineOwned(branch);
-          if (!healed) return `${HALT_SUMMARY_PREFIX} main -> ${catchUpErr}`;
+          const refork = await this.reforkIfMachineOwned(branch);
+          if (refork === 'human-owned') return `${HALT_SUMMARY_PREFIX} main -> ${catchUpErr}`;
+          if (refork === 'raced') return `main -> ${branch} was updated by a concurrent run — deferring to it`;
         }
       }
 
@@ -217,9 +219,9 @@ export class MainSyncExecutor {
   /**
    * Re-fork the sync branch from the default branch when every commit it holds beyond it passes
    * `isSyncAuthoredMessage` — machine state is recomputable from the scope. The force push is
-   * leased on the tip the ownership was read from, so a concurrent run's push wins.
+   * leased on the tip the ownership was read from, so a concurrent run's push wins the race.
    */
-  private async reforkIfMachineOwned(branch: string): Promise<boolean> {
+  private async reforkIfMachineOwned(branch: string): Promise<'re-forked' | 'raced' | 'human-owned'> {
     const { defaultBranch, logger } = this.deps;
     const staleTip = (await git.revparse([`origin/${branch}`])).trim();
     const log = await git.raw(['log', `origin/${defaultBranch}..${staleTip}`, '--format=%B%x1e']);
@@ -228,7 +230,7 @@ export class MainSyncExecutor {
       .map((message) => message.trim())
       .filter(Boolean);
     const machineOwned = messages.length > 0 && messages.every((message) => isSyncAuthoredMessage(message));
-    if (!machineOwned) return false;
+    if (!machineOwned) return 'human-owned';
     logger.console(
       formatWarningSummary(
         `main -> ${branch} conflicts with ${defaultBranch} and carries only ${SYNC_COMMIT_MARKER} commits — ` +
@@ -236,8 +238,14 @@ export class MainSyncExecutor {
       )
     );
     await this.resetToStartPoint(branch, `origin/${defaultBranch}`);
-    await git.push([`--force-with-lease=refs/heads/${branch}:${staleTip}`, 'origin', `HEAD:refs/heads/${branch}`]);
-    return true;
+    try {
+      await git.push([`--force-with-lease=refs/heads/${branch}:${staleTip}`, 'origin', `HEAD:refs/heads/${branch}`]);
+    } catch (e: any) {
+      if (!isStaleLeaseRejection(e?.message || String(e))) throw e;
+      logger.console(formatWarningSummary(`main -> ${branch} moved while re-forking — another run owns it now`));
+      return 'raced';
+    }
+    return 're-forked';
   }
 
   /**
