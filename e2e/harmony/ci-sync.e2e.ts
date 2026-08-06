@@ -1238,6 +1238,9 @@ describe('bit ci sync', function () {
       expect(exitCode, output).to.equal(0);
       expect(output).to.include('dependency-context drift');
       expect(output).to.include('dry-run');
+      // Pin the actual returned summary line (not just the mid-run log, which would pass either
+      // way) — the count is left out since it's not the stable part.
+      expect(output).to.include('main -> dry-run: would converge');
       const list = helper.command.listRemoteScopeParsed();
       const comp2 = list.find((c: any) => c.id.includes('comp2'));
       // comp2 was already recorded at 0.0.2 by the setup's own tag (is-odd 1.0.0) — the dry-run's
