@@ -735,13 +735,9 @@ jobs:
       - checkout
       - run:
           name: 'reconcile the merge queue'
-          command: |
-            if [ -z "$CIRCLE_TOKEN" ]; then
-              echo "The CIRCLE_TOKEN project env var is not set; the reconcile script requires it"
-              echo "(a CircleCI API token, read scope — used to detect an active bit_merge on master)."
-              exit 1
-            fi
-            GITHUB_TOKEN=$GH_RELEASE_GITHUB_API_TOKEN node .github/scripts/merge-queue.js
+          # no CIRCLE_TOKEN needed: the project is public, so the script's CircleCI reads work
+          # unauthenticated (it uses the token only when one is present in the environment)
+          command: GITHUB_TOKEN=$GH_RELEASE_GITHUB_API_TOKEN node .github/scripts/merge-queue.js
 
   generate_and_check_types:
     <<: *defaults
@@ -1614,7 +1610,7 @@ workflows:
   # is independent infrastructure that kept working through that outage, so this schedule runs the
   # very same reconcile script from here. The script is stateless and idempotent — concurrent runs
   # with the Actions-side reconciles are harmless. It can also be run from any laptop as a
-  # break-glass: GITHUB_TOKEN=<pat> CIRCLE_TOKEN=<token> node .github/scripts/merge-queue.js
+  # break-glass: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
   merge_queue_heartbeat:
     triggers:
       - schedule:

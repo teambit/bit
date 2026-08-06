@@ -36,10 +36,13 @@
  * APIs, so a skipped or crashed run costs nothing. It runs from three places for redundancy:
  * the GitHub Actions workflow (event-driven + cron), a CircleCI scheduled workflow
  * (merge_queue_heartbeat, every 10m — survives Actions outages on independent infrastructure),
- * and, as a break-glass, any machine: GITHUB_TOKEN=<pat> CIRCLE_TOKEN=<token> node
- * .github/scripts/merge-queue.js (add MERGE_QUEUE_DRY_RUN=true to observe without mutating).
+ * and, as a break-glass, any machine: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
+ * (add MERGE_QUEUE_DRY_RUN=true to observe without mutating).
  *
- * Required env: GITHUB_TOKEN (statuses+issues write), CIRCLE_TOKEN (CircleCI API, read).
+ * Required env: GITHUB_TOKEN (statuses+issues write). Optional: CIRCLE_TOKEN (CircleCI API,
+ * read) — the project is public so unauthenticated reads work; set it only to avoid shared-IP
+ * rate limits (e.g. on hosted runners). Either way a failed CircleCI read fails the run — the
+ * queue never treats "couldn't check bit_merge" as settled.
  * Optional env: MERGE_QUEUE_IGNORE_CHECKS — comma-separated check names to ignore when deciding
  * whether a PR is green.
  *
@@ -121,7 +124,7 @@ async function githubGraphql(query) {
 
 async function circleRequest(path) {
   const response = await fetch(`https://circleci.com/api/v2${path}`, {
-    headers: { 'Circle-Token': circleToken },
+    headers: circleToken ? { 'Circle-Token': circleToken } : {},
   });
   if (!response.ok) {
     throw new Error(`CircleCI GET ${path} failed: ${response.status} ${await response.text()}`);
@@ -319,8 +322,14 @@ function evaluateChecks(pullRequest) {
     console.log(`  #${pullRequest.number}: more than 100 check contexts, treating as pending (raise the page size)`);
     return { state: 'pending', failing: [] };
   }
+  // 'reconcile' (this queue's own workflow job) and 'ping' (the review bridge job) appear as
+  // check runs on PR head commits; their failures or hangs are queue-infrastructure artifacts
+  // (e.g. the 2026-08-06 Actions outage failed every reconcile run, which then blocked the PRs
+  // as "checks failing"), not verdicts about the PR — never let them gate the queue
+  const selfCheckRunNames = ['reconcile', 'ping'];
   const ignoredContexts = new Set(
     [GATE_CONTEXT]
+      .concat(selfCheckRunNames)
       .concat((process.env.MERGE_QUEUE_IGNORE_CHECKS || '').split(','))
       .map((name) => name.trim())
       .filter(Boolean)
@@ -529,10 +538,7 @@ async function updateDashboard({ masterState, entries, winner, updateCandidate, 
 async function main() {
   if (!githubToken) throw new Error('GITHUB_TOKEN is required');
   if (!circleToken) {
-    throw new Error(
-      'CIRCLE_TOKEN is required — a CircleCI API token, used to detect whether bit_merge is active on master. ' +
-        'Without it the queue cannot tell when master is settled, so it refuses to run rather than merge blindly.'
-    );
+    console.log('CIRCLE_TOKEN not set — using unauthenticated CircleCI reads (public project)');
   }
 
   const masterState = await getMasterState();
