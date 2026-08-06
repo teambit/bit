@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { classifyPayloadDiff, convergenceMessage, blockerNamesUnion } from './context-drift';
+import { classifyPayloadDiff, convergenceMessage, blockerNamesUnion, normalizePayload } from './context-drift';
 
 describe('classifyPayloadDiff', () => {
   const base = {
@@ -44,6 +44,75 @@ describe('classifyPayloadDiff', () => {
     const recorded = { ...base, overrides: { devDependencies: { '@types/react': '^17.0.0' } } };
     const fromFs = { ...base, overrides: { devDependencies: { '@types/react': '^19.0.0' } } };
     expect(classifyPayloadDiff(recorded, fromFs).depOnly).to.equal(true);
+  });
+
+  it('normalizing file order before comparing does not mask a real file change', () => {
+    const recorded = {
+      ...base,
+      files: [
+        { file: 'aaa', relativePath: 'index.js' },
+        { file: 'bbb', relativePath: 'utils.js' },
+      ],
+    };
+    const fromFs = {
+      ...base,
+      // same files, reversed order, plus a dep change
+      files: [
+        { file: 'bbb', relativePath: 'utils.js' },
+        { file: 'aaa', relativePath: 'index.js' },
+      ],
+      packageDependencies: { 'is-odd': '3.0.1' },
+    };
+    const res = classifyPayloadDiff(normalizePayload(recorded), normalizePayload(fromFs));
+    expect(res.depOnly).to.equal(true);
+
+    const fromFsWithFileChange = {
+      ...fromFs,
+      files: [
+        { file: 'bbb', relativePath: 'utils.js' },
+        { file: 'ccc', relativePath: 'index.js' },
+      ],
+    };
+    const resWithFileChange = classifyPayloadDiff(normalizePayload(recorded), normalizePayload(fromFsWithFileChange));
+    expect(resWithFileChange.depOnly).to.equal(false);
+  });
+});
+
+describe('normalizePayload', () => {
+  it('sorts files by relativePath', () => {
+    const payload = {
+      files: [
+        { file: 'bbb', relativePath: 'z.js' },
+        { file: 'aaa', relativePath: 'a.js' },
+      ],
+    };
+    expect(normalizePayload(payload).files).to.deep.equal([
+      { file: 'aaa', relativePath: 'a.js' },
+      { file: 'bbb', relativePath: 'z.js' },
+    ]);
+  });
+
+  it("sorts each file's dists by relativePath when present", () => {
+    const payload = {
+      files: [
+        {
+          relativePath: 'a.js',
+          dists: [
+            { relativePath: 'z.js.map', file: 'x' },
+            { relativePath: 'a.js.map', file: 'y' },
+          ],
+        },
+      ],
+    };
+    expect(normalizePayload(payload).files[0].dists).to.deep.equal([
+      { relativePath: 'a.js.map', file: 'y' },
+      { relativePath: 'z.js.map', file: 'x' },
+    ]);
+  });
+
+  it('leaves a payload without a files array untouched', () => {
+    const payload = { mainFile: 'index.js' };
+    expect(normalizePayload(payload)).to.deep.equal(payload);
   });
 });
 

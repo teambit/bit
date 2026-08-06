@@ -1,6 +1,14 @@
 import type { RuntimeDefinition, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { CLIAspect, type CLIMain, MainRuntime, formatWarningSummary } from '@teambit/cli';
+import {
+  CLIAspect,
+  type CLIMain,
+  MainRuntime,
+  formatWarningSummary,
+  formatSuccessSummary,
+  formatSection,
+  formatItem,
+} from '@teambit/cli';
 import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
@@ -612,10 +620,13 @@ export class CiMain {
   }
 
   /**
-   * Consume dependency-context drift on main. Tag exactly the drifted set with one patch
-   * bump, then export. The tag ignores blockers on the drifted components: their files and
-   * config match the recorded head, so a blocker reflects the recorded content under the
-   * current context. A blocker type the context itself introduces is tolerated too. The
+   * Consume dependency-context drift on main. The tag seeds exactly the drifted set with one
+   * patch bump; bit's auto-tag then bumps each drifted component's dependents so their
+   * recorded dependencies follow. Skipping auto-tag would leave those dependents' recorded
+   * deps stale, and the next run would re-detect the same drift — a convergence cascade that
+   * never settles. The tag ignores blockers on the drifted components: their files and config
+   * match the recorded head, so a blocker reflects the recorded content under the current
+   * context. A blocker type the context itself introduces is tolerated too. The
    * .bitmap/lockfile updates stay in the working tree for the caller's mainSync commit flow
    * to pick up.
    */
@@ -627,11 +638,16 @@ export class CiMain {
     const { drift } = await this.detectContextDrift();
     if (!drift.length) return { converged: 0, detected: false, summary: 'no dependency-context drift' };
     const running = this.getRunningBitVersion();
-    this.logger.console(chalk.blue(`${drift.length} component(s) carry dependency-context drift:`));
-    drift.forEach((d) =>
-      this.logger.console(
-        `  ${d.id.toStringWithoutVersion()} (${d.changedKeys.join(', ')})` +
-          `${d.recordedBitVersion && d.recordedBitVersion !== running ? ` recorded with bit ${d.recordedBitVersion}` : ''}`
+    this.logger.console(
+      formatSection(
+        'dependency-context drift',
+        '',
+        drift.map((d) =>
+          formatItem(
+            `${d.id.toStringWithoutVersion()} (${d.changedKeys.join(', ')})` +
+              `${d.recordedBitVersion && d.recordedBitVersion !== running ? ` recorded with bit ${d.recordedBitVersion}` : ''}`
+          )
+        )
       )
     );
     const idStrs = drift.map((d) => d.id.toStringWithoutVersion());
@@ -664,9 +680,13 @@ export class CiMain {
       };
     }
     this.logger.console(chalk.blue(message));
-    await this.exporter.export();
+    const exportIds = [
+      ...results.taggedComponents.map((c) => c.id.toString()),
+      ...results.autoTaggedResults.map((r) => r.component.id.toString()),
+    ];
+    await this.exporter.export({ ids: exportIds });
     const count = results.taggedComponents.length;
-    this.logger.console(chalk.green(`Converged ${count} component(s)`));
+    this.logger.console(formatSuccessSummary(`Converged ${count} component(s)`));
     return { converged: count, detected: true, summary: `converged ${count} component(s)` };
   }
 
@@ -756,7 +776,7 @@ export class CiMain {
     if (resolvedSnapIds && !resolvedSnapIds.length) {
       // Neutral wording: this method does not know whether drift caused the empty set or nothing
       // was pending at all — the caller (e.g. the lane sync executor) reports drift separately.
-      this.logger.console(chalk.yellow('No git-authored changes to snap'));
+      this.logger.console(formatWarningSummary('No git-authored changes to snap'));
       return 'No changes detected, nothing to snap';
     }
 

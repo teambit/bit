@@ -1,4 +1,4 @@
-import { isEqual, omit } from 'lodash';
+import { isEqual, omit, sortBy } from 'lodash';
 
 export const DRIFT_FIELDS = [
   'dependencies',
@@ -21,6 +21,22 @@ export const DRIFT_FIELDS = [
 const VOLATILE_FIELDS = ['log', 'parents', 'squashed', 'origin'] as const;
 
 const EXCLUDED = [...DRIFT_FIELDS, ...VOLATILE_FIELDS];
+
+/**
+ * Sort a `Version.id()` payload's `files` (and each file's `dists`, if present) by
+ * `relativePath`. Mirrors `sortProperties` in consumer.ts (the recorded-vs-filesystem
+ * modified check), so a pure ordering difference does not read as drift or as a
+ * git-authored change.
+ */
+export function normalizePayload(payload: Record<string, any>): Record<string, any> {
+  if (!Array.isArray(payload.files)) return payload;
+  return {
+    ...payload,
+    files: sortBy(payload.files, 'relativePath').map((file: Record<string, any>) =>
+      Array.isArray(file.dists) ? { ...file, dists: sortBy(file.dists, 'relativePath') } : file
+    ),
+  };
+}
 
 export function classifyPayloadDiff(
   recorded: Record<string, any>,

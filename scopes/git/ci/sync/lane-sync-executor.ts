@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { formatWarningSummary } from '@teambit/cli';
+import { formatWarningSummary, formatSection, formatItem } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { LanesMain } from '@teambit/lanes';
 import type { LaneData } from '@teambit/legacy.scope';
@@ -782,12 +782,12 @@ export class LaneSyncExecutor {
         const running = this.deps.ci.getRunningBitVersion();
         const recorded = [...new Set(drift.map((d) => d.recordedBitVersion).filter(Boolean))].join(', ');
         this.deps.logger.console(
-          `${drift.length} component(s) carry dependency-context drift` +
-            `${recorded ? ` (recorded with bit ${recorded}, running bit ${running})` : ''} — ` +
-            `not snapped directly by this run (a dependent may auto-snap it):`
-        );
-        drift.forEach((d) =>
-          this.deps.logger.console(`  ${d.id.toStringWithoutVersion()} (${d.changedKeys.join(', ')})`)
+          formatSection(
+            'dependency-context drift',
+            `not snapped directly by this run (a dependent may auto-snap it)` +
+              `${recorded ? ` — recorded with bit ${recorded}, running bit ${running}` : ''}`,
+            drift.map((d) => formatItem(`${d.id.toStringWithoutVersion()} (${d.changedKeys.join(', ')})`))
+          )
         );
       }
       await this.deps.ci.snapPrCommit({
