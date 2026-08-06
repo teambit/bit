@@ -1,6 +1,6 @@
 import type { RuntimeDefinition, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { CLIAspect, type CLIMain, MainRuntime } from '@teambit/cli';
+import { CLIAspect, type CLIMain, MainRuntime, formatWarningSummary } from '@teambit/cli';
 import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
@@ -434,22 +434,46 @@ export class CiMain {
     return 'chore: update .bitmap and lockfiles as needed [skip ci]';
   }
 
-  private async verifyWorkspaceStatusInternal(strict: boolean = false) {
+  /**
+   * `scopeToPendingComponents`: fail only on issues in the components a snap/tag would include
+   * (`listTagPendingIds`). A real scope carries components with tag blockers (e.g. circular
+   * dependencies), and a global failure would block every snap in the repo — including snaps that
+   * never touch the blocked components. The snap itself still refuses its own components' blockers.
+   */
+  private async verifyWorkspaceStatusInternal(
+    strict: boolean = false,
+    { scopeToPendingComponents = false }: { scopeToPendingComponents?: boolean } = {}
+  ) {
     this.logger.console('📊 Workspace Status');
     this.logger.console(chalk.blue('Verifying status of workspace'));
 
+    const formatOptions = strict
+      ? { strict: true, warnings: true } // When strict=true, fail on both issues and warnings
+      : { failOnError: true, warnings: false }; // By default, fail only on errors (tag blockers)
     const status = await this.status.status({ lanes: true });
-    const { data: statusOutput, code } = await this.status.formatStatusOutput(
-      status,
-      strict
-        ? { strict: true, warnings: true } // When strict=true, fail on both errors and warnings
-        : { failOnError: true, warnings: false } // By default, fail only on errors (tag blockers)
-    );
+    const { data: statusOutput, code } = await this.status.formatStatusOutput(status, formatOptions);
 
     // Log the formatted status output
     this.logger.console(statusOutput);
 
-    if (code !== 0) {
+    let effectiveCode = code;
+    if (code !== 0 && scopeToPendingComponents) {
+      const pending = ComponentIdList.fromArray(await this.workspace.listTagPendingIds());
+      const scoped = {
+        ...status,
+        componentsWithIssues: status.componentsWithIssues.filter((c) => pending.hasWithoutVersion(c.id)),
+      };
+      ({ code: effectiveCode } = await this.status.formatStatusOutput(scoped, formatOptions));
+      if (effectiveCode === 0) {
+        this.logger.console(
+          formatWarningSummary(
+            'The issues above are on components this run does not snap or tag — they do not block it'
+          )
+        );
+      }
+    }
+
+    if (effectiveCode !== 0) {
       throw new Error('Workspace status verification failed');
     }
 
@@ -868,7 +892,7 @@ export class CiMain {
 
     const laneId = await this.lanes.parseLaneId(laneIdStr);
 
-    await this.verifyWorkspaceStatusInternal(strict);
+    await this.verifyWorkspaceStatusInternal(strict, { scopeToPendingComponents: true });
 
     await this.importer
       .import({
@@ -1652,7 +1676,7 @@ export class CiMain {
       );
     }
 
-    const { status } = await this.verifyWorkspaceStatusInternal(strict);
+    const { status } = await this.verifyWorkspaceStatusInternal(strict, { scopeToPendingComponents: true });
 
     const hasSoftTaggedComponents = status.softTaggedComponents.length > 0;
 

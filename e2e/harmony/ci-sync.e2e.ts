@@ -1120,6 +1120,40 @@ describe('bit ci sync', function () {
     });
   });
 
+  // A real scope carries components with tag blockers (e.g. circular dependencies). The snap only
+  // includes the lane's pending components, so a blocker on an untouched component must not halt it.
+  describe('a snap-blocking issue on a component the lane never touches', () => {
+    const LANE = 'clean-lane';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      // a circular pair on main: a tag blocker on components no lane sync will ever snap
+      helper.fs.outputFile('comp3/index.js', `require('@${helper.scopes.remote}/comp4');`);
+      helper.fs.outputFile('comp4/index.js', `require('@${helper.scopes.remote}/comp3');`);
+      helper.command.addComponent('comp3');
+      helper.command.addComponent('comp4');
+      helper.command.install();
+      helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
+      helper.command.export();
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "add a circular pair to main"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
+      seedSync(LANE);
+      branchSideCommit(LANE, defaultBranch, 'comp1/index.js', comp1Src('dev-commit-1'), 'dev commit on comp1');
+    });
+
+    it('snaps the dev commit onto the lane although the untouched pair has a tag blocker', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.not.include('Workspace status verification failed');
+      expect(output).to.include(`${LANE} -> export-branch`);
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('dev-commit-1');
+    });
+  });
+
   describe('a stale bit-sync/main that conflicts with the default branch', () => {
     const SYNC_BRANCH = 'bit-sync/main';
     let defaultBranch: string;
