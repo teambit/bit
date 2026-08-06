@@ -1154,6 +1154,55 @@ describe('bit ci sync', function () {
     });
   });
 
+  // The engine-bump analogue reproducible with one bit binary: the committed root policy moves a
+  // recorded package range. The lane run must snap only the git-authored change and report the
+  // drifted component instead of sweeping it into the dev's snap.
+  describe('dependency-context drift is excluded from the lane snap', () => {
+    const LANE = 'drift-lane';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      helper.fs.outputFile('comp2/index.js', `require('is-odd');\nmodule.exports = () => 'comp2: with-pkg';\n`);
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-odd': '1.0.0' } });
+      helper.command.install();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "comp2 records is-odd 1.0.0"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      // Lane creation must happen while the policy still matches comp2's recorded range — otherwise
+      // the dev's own (unscoped) `bit snap` would sweep the drift in too, and there'd be nothing left
+      // for `bit ci sync` to exclude.
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
+      seedSync(LANE);
+      branchSideCommit(LANE, defaultBranch, 'comp1/index.js', comp1Src('dev-commit-1'), 'dev commit on comp1');
+      // The default branch's own resolution context moves AFTER the lane forked — the analogue of an
+      // engine bump: `bit ci sync` boots on the default branch, and a workspace-level policy/engine
+      // aggregate is resolved once at that boot (mid-run branch checkouts don't re-read it — see
+      // `Workspace._reloadConsumer`, which reloads the consumer/bitmap but not this). So the run's
+      // *actual* resolution context is whatever is in effect here, regardless of which branch it
+      // later checks out — exactly the drift a real engine bump produces on an untouched component.
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-odd': '3.0.1' } });
+      helper.command.install();
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "bump is-odd policy (engine-bump analogue)"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+    });
+
+    it('snaps the dev commit, reports the drifted component, and keeps it off the lane', () => {
+      const before = remoteLaneFingerprint(LANE);
+      expect(before).to.not.include('comp2');
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include('dependency-context drift');
+      expect(output).to.include('comp2');
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('dev-commit-1');
+      expect(remoteLaneFingerprint(LANE)).to.not.include('comp2');
+    });
+  });
+
   describe('a stale bit-sync/main that conflicts with the default branch', () => {
     const SYNC_BRANCH = 'bit-sync/main';
     let defaultBranch: string;

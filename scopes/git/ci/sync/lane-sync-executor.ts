@@ -766,10 +766,28 @@ export class LaneSyncExecutor {
    * stale-lane recovery (delete + re-fork the remote lane) into a throw. The lane object must be
    * imported BEFORE delegating: a switch onto the lane the workspace is already on no-ops before any
    * fetch, so it never warms a cold scope.
+   *
+   * Pending components are split into git-authored changes and dependency-context drift (a recorded
+   * dep range moved under the workspace's current resolution context, not under a dev's commit) before
+   * snapping: only the git-authored subset is passed as `snapIds`, so drift is never swept into a lane
+   * snap it never touched. Main-side convergence consumes drift separately (not this run's job).
    */
   private async snapAndExportOntoLane(laneIdStr: string, message: string): Promise<Error | undefined> {
     try {
       await ensureCurrentLaneObject(this.deps.lanes);
+      const { drift, gitAuthored } = await this.deps.ci.detectContextDrift();
+      if (drift.length) {
+        const running = this.deps.ci.getRunningBitVersion();
+        const recorded = [...new Set(drift.map((d) => d.recordedBitVersion).filter(Boolean))].join(', ');
+        this.deps.logger.console(
+          `${drift.length} component(s) carry dependency-context drift` +
+            `${recorded ? ` (recorded with bit ${recorded}, running bit ${running})` : ''} — ` +
+            `main convergence consumes this; not snapped here:`
+        );
+        drift.forEach((d) =>
+          this.deps.logger.console(`  ${d.id.toStringWithoutVersion()} (${d.changedKeys.join(', ')})`)
+        );
+      }
       await this.deps.ci.snapPrCommit({
         laneIdStr,
         message,
@@ -778,6 +796,7 @@ export class LaneSyncExecutor {
         keepLane: true,
         skipCleanup: true,
         noDestructiveRecovery: true,
+        snapIds: gitAuthored.map((id) => id.toStringWithoutVersion()),
       });
       return undefined;
     } catch (e: any) {
