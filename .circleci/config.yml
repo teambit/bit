@@ -670,8 +670,13 @@ jobs:
           command: >
             cd bit &&
             echo "user-agent=bit-repo-circleci" >> .npmrc &&
+            echo "store-dir=/home/circleci/bit/.pnpm-store" >> ~/.npmrc &&
             git update-index --skip-worktree .npmrc &&
             bbit install
+          # store-dir pins the pnpm store INSIDE the persisted workspace (the native pnpm engine
+          # defaults to ~/Library/Caches/Bit, which persist_to_workspace can't reach) so the
+          # ".pnpm-store" entry below actually persists it and downstream jobs (bit_pr's dev
+          # install) reuse the packages instead of re-downloading the whole universe.
           environment:
             # see the "bit install (dev binary)" step of bit_pr - pnpm v12's worker pool is sized
             # by the HOST's cpu count inside docker; cap it to the resource class's actual cpus.
