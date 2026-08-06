@@ -670,13 +670,15 @@ jobs:
           command: >
             cd bit &&
             echo "user-agent=bit-repo-circleci" >> .npmrc &&
-            echo "store-dir=/home/circleci/bit/.pnpm-store" >> ~/.npmrc &&
+            bbit config set package-manager.cache /home/circleci/bit/.bit-cache &&
             git update-index --skip-worktree .npmrc &&
             bbit install
-          # store-dir pins the pnpm store INSIDE the persisted workspace (the native pnpm engine
-          # defaults to ~/Library/Caches/Bit, which persist_to_workspace can't reach) so the
-          # ".pnpm-store" entry below actually persists it and downstream jobs (bit_pr's dev
-          # install) reuse the packages instead of re-downloading the whole universe.
+          # package-manager.cache pins the package cache (pnpm store) INSIDE the persisted
+          # workspace - bit passes cacheRootDir programmatically so npmrc store-dir is ignored,
+          # and the default (~/Library/Caches/Bit) is outside persist_to_workspace's root. with
+          # it persisted, downstream jobs (bit_pr's dev install) reuse the packages instead of
+          # re-downloading the whole universe (which the native pnpm engine's fetch cannot
+          # survive memory-wise).
           environment:
             # see the "bit install (dev binary)" step of bit_pr - pnpm v12's worker pool is sized
             # by the HOST's cpu count inside docker; cap it to the resource class's actual cpus.
@@ -691,6 +693,7 @@ jobs:
           paths:
             - bit
             - .pnpm-store
+            - .bit-cache
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
@@ -856,12 +859,12 @@ jobs:
           # becomes a cheap no-op once a stable release without those core envs is out.
           command: |
             cd bit
-            # reuse the pnpm store populated by setup_harmony's bbit install (persisted at the
-            # workspace root). without it the dev install resolves everything from scratch and
+            # reuse the package cache populated by setup_harmony's bbit install (persisted at the
+            # workspace root). without it the dev install fetches everything from scratch and
             # the native pnpm engine's fetch phase retains the downloads in memory until it gets
             # OOM-killed - reuse keeps the fetch down to the closure packages only.
-            echo "store-dir=/home/circleci/bit/.pnpm-store" >> ~/.npmrc
-            echo "=== persisted store ==="; du -sh /home/circleci/bit/.pnpm-store 2>/dev/null || echo "no persisted store at /home/circleci/bit/.pnpm-store"
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
+            echo "=== persisted cache ==="; du -sh /home/circleci/bit/.bit-cache 2>/dev/null || echo "no persisted cache at /home/circleci/bit/.bit-cache"
             (while true; do
               CUR=$(cat /sys/fs/cgroup/memory.current 2>/dev/null || cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null || echo 0)
               MAX=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo 0)
@@ -940,10 +943,10 @@ jobs:
           name: bit install (dev binary)
           # same reconcile as in bit_pr: the released bbit filters the legacy-core-env packages
           # out of the manifest; the dev binary needs them installed to load those envs.
-          # PNPM_MAX_WORKERS and store-dir: see the bit_pr step of the same name.
+          # PNPM_MAX_WORKERS and package-manager.cache: see the bit_pr step of the same name.
           command: |
             cd bit
-            echo "store-dir=/home/circleci/bit/.pnpm-store" >> ~/.npmrc
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
             node bin/bit.js install
           no_output_timeout: '30m'
           environment:
