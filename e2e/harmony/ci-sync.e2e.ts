@@ -1164,10 +1164,11 @@ describe('bit ci sync', function () {
   describe('a commit that touches no bit-tracked file settles instead of looping', () => {
     const LANE = 'docs-only-lane';
     let defaultBranch: string;
+    let devPath: string;
 
     before(() => {
       ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
-      createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
       seedSync(LANE);
       branchSideCommit(LANE, defaultBranch, 'NOTES.md', '# notes\n', 'docs: add notes');
     });
@@ -1188,6 +1189,24 @@ describe('bit ci sync', function () {
       );
       // executeExportBranch's own work (the checkout, the snap attempt) never ran a second time
       expect(second.output).to.not.include('Exporting branch');
+    });
+
+    // The withhold settles; it does not trap. A real dev commit on top of the recognized ledger tip
+    // must still clear it and export normally — the tip is no longer the reconciler's own commit.
+    it('a real dev commit on top of the settled tip clears the withhold and exports again', () => {
+      branchSideCommit(
+        LANE,
+        defaultBranch,
+        'comp1/index.js',
+        comp1Src('dev-commit-after-settle'),
+        'dev commit after settling'
+      );
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include('Exporting branch');
+      expect(output).to.include(`${LANE} -> export-branch`);
+      expect(output).to.not.include('branch tip is already this reconciler');
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('dev-commit-after-settle');
     });
   });
 
