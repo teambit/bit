@@ -1,59 +1,45 @@
-import { isEqual, omit, sortBy } from 'lodash';
-
-// Deprecated per-file props. consumer.isComponentModified copies them from the model before
-// comparing; strip them here too, or a stale `name`/`test` value misclassifies as drift.
-const DEPRECATED_FILE_PROPS = ['name', 'test'] as const;
-
-export const DRIFT_FIELDS = [
+// Field names diffBetweenComponentsObjects (verbose) can emit for a dependency-only change. Any
+// other field name means the change is git-authored, not workspace/engine drift.
+export const DRIFT_FIELD_NAMES = [
   'dependencies',
   'devDependencies',
   'peerDependencies',
   'extensionDependencies',
-  'flattenedDependencies',
   'packageDependencies',
   'devPackageDependencies',
   'peerPackageDependencies',
-  // env-computed dependency data (force:true env policies). Excludes `extensions`: `bit deps set`
-  // writes both extensions and overrides, and extensions must stay comparable so that change
-  // classifies as git-authored.
-  'overrides',
+  'overridesDependencies',
+  'overridesDevDependencies',
+  'overridesPeerDependencies',
 ] as const;
 
-// Keys that legitimately differ between a recorded Version and one rebuilt
-// from the filesystem, independent of any user change.
-const VOLATILE_FIELDS = ['log', 'parents', 'squashed', 'origin'] as const;
+// files/specs field diffs on unchanged file content come from deprecated per-file props (name,
+// test); content truth is the hash compare done by the caller, not this field name.
+const CONTENT_FIELDS = ['files', 'specs'];
 
-const EXCLUDED = [...DRIFT_FIELDS, ...VOLATILE_FIELDS];
+export type DriftClassification = {
+  drift: boolean;
+  changedKeys: string[];
+  /** set when the component changed but the diff engine names nothing that explains it */
+  anomaly?: string;
+};
 
 /**
- * Sort a `Version.id()` payload's `files` (and each file's `dists`) by `relativePath`, and strip
- * the deprecated `name`/`test` props. Mirrors consumer.ts's sortProperties / deprecated-prop
- * alignment, so ordering and stale props don't misclassify as drift.
+ * Classify a diffBetweenComponentsObjects field-name list as dependency-context drift or
+ * git-authored. `filesChanged` must come from a content hash compare, not from this field list:
+ * a files/specs field diff can fire on unchanged content (deprecated per-file props).
  */
-export function normalizePayload(payload: Record<string, any>): Record<string, any> {
-  if (!Array.isArray(payload.files)) return payload;
-  const stripDeprecated = (file: Record<string, any>) => omit(file, DEPRECATED_FILE_PROPS);
-  return {
-    ...payload,
-    files: sortBy(payload.files, 'relativePath').map((file: Record<string, any>) => {
-      const stripped = stripDeprecated(file);
-      return Array.isArray(file.dists)
-        ? { ...stripped, dists: sortBy(file.dists, 'relativePath').map(stripDeprecated) }
-        : stripped;
-    }),
-  };
-}
-
-export function classifyPayloadDiff(
-  recorded: Record<string, any>,
-  fromFs: Record<string, any>
-): { depOnly: boolean; changedKeys: string[] } {
-  const keys = new Set([...Object.keys(recorded), ...Object.keys(fromFs)]);
-  const changedKeys = [...keys].filter(
-    (k) => !(VOLATILE_FIELDS as readonly string[]).includes(k) && !isEqual(recorded[k], fromFs[k])
-  );
-  const depOnly = isEqual(omit(recorded, EXCLUDED), omit(fromFs, EXCLUDED));
-  return { depOnly, changedKeys };
+export function classifyDiffFields(fieldNames: string[], filesChanged: boolean): DriftClassification {
+  if (filesChanged) return { drift: false, changedKeys: fieldNames };
+  const effective = fieldNames.filter((f) => !CONTENT_FIELDS.includes(f));
+  if (!effective.length) {
+    // files/specs fired with unchanged content: a deprecated per-file prop (name/test) differs.
+    if (fieldNames.length) return { drift: true, changedKeys: ['deprecated-file-props'] };
+    // no field diff at all, yet the caller reached us because the component is tag-pending.
+    return { drift: false, changedKeys: [], anomaly: 'modified without a visible diff' };
+  }
+  const drift = effective.every((f) => (DRIFT_FIELD_NAMES as readonly string[]).includes(f));
+  return { drift, changedKeys: effective };
 }
 
 export function convergenceMessage(recordedBitVersions: (string | undefined)[], runningBitVersion: string): string {
