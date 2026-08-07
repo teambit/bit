@@ -86,8 +86,9 @@ export function hasSyncMarker(message: string): boolean {
 
 /**
  * Strict probe for "we wrote this commit": the marker alone on its own line. This is an input to branch
- * deletion, so a developer merely quoting the marker must never count as authorship. `\r?` tolerates CRLF;
- * a recognition failure errs toward keeping the branch.
+ * deletion and to the export-branch withhold (a branch whose tip is already our own commit settles
+ * instead of re-exporting), so a developer merely quoting the marker must never count as authorship.
+ * `\r?` tolerates CRLF; a recognition failure errs toward keeping the branch / re-attempting the export.
  */
 export function isSyncAuthoredMessage(message: string): boolean {
   return new RegExp(`^${SYNC_COMMIT_MARKER.replace(/[[\]]/g, '\\$&')}\\r?$`, 'm').test(message);
