@@ -445,6 +445,17 @@ export class LaneSyncExecutor {
           pr,
         });
       case 'export-branch':
+        // The tip is already this reconciler's own commit — it already confirmed everything up to
+        // it (that is what writing it means), and `hasDevCommits`/`stateCommit` cannot tell a real
+        // dev commit from one that touches no bit-tracked file (docs, CI config): `stateCommit` is
+        // derived from `.bitmap`'s content, never from commit messages (sync-state.ts), so a commit
+        // that leaves `.bitmap` byte-identical never advances it, however many runs re-confirm
+        // "nothing to snap" on top. Recognizing our own tip here — not by loosening `hasDevCommits`
+        // itself, which the ownership/retirement path also reads and must stay strict — is what
+        // makes that settle instead of re-planning `export-branch` forever.
+        if (tipIsSyncCommit) {
+          return `${laneName} -> noop (converged; branch tip is already this reconciler's own sync commit)`;
+        }
         return this.executeExportBranch({ target, laneIdStr, branch, defaultBranch });
       case 'merge-diverged':
         return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch });
