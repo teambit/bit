@@ -727,6 +727,27 @@ jobs:
           name: 'check @teambit/harmony version synchronization'
           command: './scripts/check-harmony-version-sync.sh'
 
+  # Runs the same reconcile script the merge-queue GitHub workflow runs — see the
+  # merge_queue_reconcile workflow below for why it also lives here.
+  merge_queue_reconcile:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: 'reconcile the merge queue'
+          # no CIRCLE_TOKEN needed: the project is public, so the script's CircleCI reads work
+          # unauthenticated (it uses the token only when one is present in the environment).
+          # A hung API call would otherwise let a run outlive the 10m schedule interval — the
+          # tight no_output_timeout bounds it (the script normally finishes in seconds).
+          no_output_timeout: 5m
+          command: |
+            if [ -z "$GH_RELEASE_GITHUB_API_TOKEN" ]; then
+              echo "The GH_RELEASE_GITHUB_API_TOKEN project env var is not set — the reconcile"
+              echo "script needs it as GITHUB_TOKEN (statuses+issues write)."
+              exit 1
+            fi
+            GITHUB_TOKEN=$GH_RELEASE_GITHUB_API_TOKEN node .github/scripts/merge-queue.js
+
   generate_and_check_types:
     <<: *defaults
     steps:
@@ -1590,6 +1611,30 @@ workflows:
                 - master
     jobs:
       - update_e2e_timings
+
+  # Independent heartbeat for the merge queue. The GitHub Actions side of the queue is
+  # event-driven, but its only time-based fallback is the Actions cron — which GitHub throttles
+  # far beyond its 5m spec (20-40m silent gaps), and which vanishes entirely when Actions itself
+  # is down (2026-08-06 outage: the queue froze and only admins could bypass the gate). CircleCI
+  # is independent infrastructure that kept working through that outage, so this schedule runs the
+  # very same reconcile script from here. The script is stateless and idempotent — concurrent runs
+  # with the Actions-side reconciles are harmless. It can also be run from any laptop as a
+  # break-glass: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
+  merge_queue_heartbeat:
+    triggers:
+      - schedule:
+          # CircleCI's config-level cron rejects step syntax (*/10) — list the minutes explicitly
+          cron: '4,14,24,34,44,54 * * * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - merge_queue_reconcile:
+          # serialize heartbeat runs against each other (same mechanism bit_merge uses) so a
+          # slow run can't overlap the next tick; overlap with the Actions-side reconciles
+          # remains possible and harmless — the script is stateless and idempotent
+          serial-group: 'merge-queue-reconcile'
 
   # Windows nightly workflow
   # windows-nightly:

@@ -29,7 +29,10 @@
 #   pull_request_review runs the PR merge commit's workflow copy, which must never see
 #   CIRCLE_TOKEN; the secret-less ping workflow absorbs that context, and its completion lands
 #   here on master's trusted copy.
-# - schedule: safety net for missed events.
+# - schedule: safety net for missed events. Not the only one: a CircleCI scheduled workflow
+#   (merge_queue_heartbeat in .circleci/config.yml) runs the same script every 10m from
+#   independent infrastructure — GitHub's cron is heavily throttled, and an Actions outage
+#   (2026-08-06) froze this workflow entirely, blocking every non-admin merge.
 name: merge-queue
 
 on:

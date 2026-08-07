@@ -33,9 +33,16 @@
  *   "Merge Queue Dashboard" issue (label: merge-queue) is kept up to date.
  *
  * The loop is stateless and idempotent: every run re-derives the queue from the GitHub + CircleCI
- * APIs, so a skipped or crashed run costs nothing.
+ * APIs, so a skipped or crashed run costs nothing. It runs from three places for redundancy:
+ * the GitHub Actions workflow (event-driven + cron), a CircleCI scheduled workflow
+ * (merge_queue_heartbeat, every 10m — survives Actions outages on independent infrastructure),
+ * and, as a break-glass, any machine: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
+ * (add MERGE_QUEUE_DRY_RUN=true to observe without mutating).
  *
- * Required env: GITHUB_TOKEN (statuses+issues write), CIRCLE_TOKEN (CircleCI API, read).
+ * Required env: GITHUB_TOKEN (statuses+issues write). Optional: CIRCLE_TOKEN (CircleCI API,
+ * read) — the project is public so unauthenticated reads work; set it only to avoid shared-IP
+ * rate limits (e.g. on hosted runners). Either way a failed CircleCI read fails the run — the
+ * queue never treats "couldn't check bit_merge" as settled.
  * Optional env: MERGE_QUEUE_IGNORE_CHECKS — comma-separated check names to ignore when deciding
  * whether a PR is green.
  *
@@ -75,6 +82,13 @@ const ACTIVE_JOB_STATUSES = new Set(['running', 'queued', 'not_running', 'blocke
 // workflow statuses under which a contained bit_merge job could still be active; anything
 // terminal (success/failed/error/canceled/not_run) is skipped without fetching its jobs.
 const ACTIVE_WORKFLOW_STATUSES = new Set(['created', 'running', 'failing', 'on_hold']);
+// check runs created by the queue's own GitHub workflows (the reconcile job and the review-ping
+// bridge job) appear on PR head commits; their failures or hangs are queue-infrastructure
+// artifacts (e.g. the 2026-08-06 Actions outage failed every reconcile run, which then blocked
+// the PRs as "checks failing"), not verdicts about the PR — never let them gate the queue.
+// Matched by owning workflow name (not job name) so unrelated checks that happen to share a job
+// name are still honored.
+const SELF_WORKFLOW_NAMES = new Set(['merge-queue', 'merge-queue-review-ping']);
 const MAX_STATUS_DESCRIPTION_LENGTH = 140;
 const NOT_QUEUED_DESCRIPTION = 'not queued — enable auto-merge (squash) to join the merge queue';
 
@@ -115,14 +129,34 @@ async function githubGraphql(query) {
   return result.data;
 }
 
+// transient CircleCI failures get bounded retries: the reconcile is this queue's outage
+// fallback, and (especially unauthenticated) reads can hit rate limits or blips — one 429/5xx
+// must not abort a whole heartbeat run. Hard failures (401/404/...) still throw immediately,
+// and exhausting retries throws too: "couldn't check bit_merge" is never treated as settled.
+const RETRYABLE_CIRCLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+
 async function circleRequest(path) {
-  const response = await fetch(`https://circleci.com/api/v2${path}`, {
-    headers: { 'Circle-Token': circleToken },
-  });
-  if (!response.ok) {
-    throw new Error(`CircleCI GET ${path} failed: ${response.status} ${await response.text()}`);
+  const maxAttempts = 3;
+  for (let attempt = 1; ; attempt += 1) {
+    let response;
+    try {
+      response = await fetch(`https://circleci.com/api/v2${path}`, {
+        headers: circleToken ? { 'Circle-Token': circleToken } : {},
+      });
+    } catch (error) {
+      if (attempt === maxAttempts) throw error;
+      console.log(`CircleCI GET ${path} network error (attempt ${attempt}/${maxAttempts}): ${error.message}`);
+      await sleep(attempt * 3000);
+      continue;
+    }
+    if (response.ok) return response.json();
+    const body = await response.text();
+    if (attempt === maxAttempts || !RETRYABLE_CIRCLE_STATUSES.has(response.status)) {
+      throw new Error(`CircleCI GET ${path} failed: ${response.status} ${body}`);
+    }
+    console.log(`CircleCI GET ${path} got ${response.status} (attempt ${attempt}/${maxAttempts}), retrying`);
+    await sleep(attempt * 3000);
   }
-  return response.json();
 }
 
 async function getMasterPipelinesWithinWindow() {
@@ -229,7 +263,7 @@ async function fetchOpenPullRequestsPage(cursor) {
                     nodes {
                       __typename
                       ... on StatusContext { context state description targetUrl createdAt }
-                      ... on CheckRun { name status conclusion }
+                      ... on CheckRun { name status conclusion checkSuite { workflowRun { workflow { name } } } }
                     }
                   }
                 }
@@ -333,6 +367,7 @@ function evaluateChecks(pullRequest) {
       else pendingCount += 1; // PENDING / EXPECTED
     } else if (context.__typename === 'CheckRun') {
       if (ignoredContexts.has(context.name)) continue;
+      if (SELF_WORKFLOW_NAMES.has(context.checkSuite?.workflowRun?.workflow?.name)) continue;
       evaluatedCount += 1;
       if (context.status !== 'COMPLETED') {
         pendingCount += 1;
@@ -525,10 +560,7 @@ async function updateDashboard({ masterState, entries, winner, updateCandidate, 
 async function main() {
   if (!githubToken) throw new Error('GITHUB_TOKEN is required');
   if (!circleToken) {
-    throw new Error(
-      'CIRCLE_TOKEN is required — a CircleCI API token, used to detect whether bit_merge is active on master. ' +
-        'Without it the queue cannot tell when master is settled, so it refuses to run rather than merge blindly.'
-    );
+    console.log('CIRCLE_TOKEN not set — using unauthenticated CircleCI reads (public project)');
   }
 
   const masterState = await getMasterState();
