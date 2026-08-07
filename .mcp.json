@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "bit-cloud": {
+      "type": "http",
+      "url": "https://mcp.bit.cloud/mcp"
+    }
+  }
+}
