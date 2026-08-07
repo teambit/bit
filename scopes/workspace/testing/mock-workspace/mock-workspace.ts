@@ -19,6 +19,17 @@ export function mockWorkspace(opts: { bareScopeName?: string } = {}): WorkspaceD
   if (opts.bareScopeName) {
     legacyHelper.scopeHelper.reInitWorkspace();
     legacyHelper.scopes.setRemoteScope(undefined, undefined, opts.bareScopeName);
+    // this "second workspace" flow reconstructs the remote path from the scope name and re-registers
+    // it. it only works if the bare scope created by the first workspace still exists at that path.
+    // surface a clear diagnostic if it doesn't (a leftover-cleanup / ordering issue), instead of the
+    // cryptic scope-resolution error that surfaces later at import time.
+    if (!fs.existsSync(legacyHelper.scopes.remotePath)) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[mockWorkspace] WARNING: bare scope "${opts.bareScopeName}" does not exist at ` +
+          `"${legacyHelper.scopes.remotePath}"; the reconstructed remote will not resolve.`
+      );
+    }
     legacyHelper.scopeHelper.addRemoteScope();
   } else {
     legacyHelper.scopeHelper.setWorkspaceWithRemoteScope();
