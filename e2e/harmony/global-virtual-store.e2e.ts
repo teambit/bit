@@ -32,7 +32,10 @@ describe('installing with the global virtual store', function () {
     });
     it('should link the dependency from the global virtual store', () => {
       const depPath = path.join(helper.scopes.localPath, 'node_modules/is-positive');
-      expect(fs.realpathSync(depPath)).to.match(/[\\/]bit-links[\\/]/);
+      // the shared store lives outside the workspace: pnpm's own `<storeDir>/links` root
+      const realPath = fs.realpathSync(depPath);
+      expect(realPath).to.match(/[\\/]links[\\/]/);
+      expect(realPath).to.not.have.string(helper.scopes.localPath);
     });
     it('should still record the installed dependencies in the current lockfile', () => {
       expect(helper.fs.getVirtualStoreDirNames()).to.include('is-positive@1.0.0');
