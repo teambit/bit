@@ -6,9 +6,11 @@ import type { Logger } from '@teambit/logger';
 import type { Scope as LegacyScope } from '@teambit/legacy.scope';
 import type { Repository } from '@teambit/objects';
 import type { SourceFile } from '@teambit/component.sources';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { diffBetweenComponentsObjects } from '@teambit/legacy.component-diff';
+import type { FileComparison } from './context-drift';
 import { classifyDiffFields } from './context-drift';
 
 type DriftCheckResult =
@@ -22,20 +24,35 @@ export type ContextDriftReport = {
   gitAuthored: ComponentID[];
 };
 
-/** relativePath -> content hash, using the same hashing the model persists files with. */
-function fileHashes(files: SourceFile[]): Map<string, string> {
-  return new Map(files.map((file) => [file.relativePath, file.toSourceAsLinuxEOL().hash().hash]));
+// SourceFile is Vinyl-based: the path property is `.relative`, not `.relativePath` (that name
+// belongs to SourceFileModel). Both `componentFromModel.files` and the workspace component's
+// `.files` are SourceFile — `Component.toConsumerComponent` already converts model files to it.
+function relPath(file: SourceFile): string {
+  return pathNormalizeToLinux(file.relative);
 }
 
-/** True if any file was added, removed, or its content hash changed. Ignores non-content props. */
-function filesContentChanged(recordedFiles: SourceFile[], workspaceFiles: SourceFile[]): boolean {
+/** relativePath -> content hash, using the same hashing the model persists files with. */
+function fileHashes(files: SourceFile[]): Map<string, string> {
+  return new Map(files.map((file) => [relPath(file), file.toSourceAsLinuxEOL().hash().hash]));
+}
+
+function pathsEqual(a: SourceFile[], b: SourceFile[]): boolean {
+  const bPaths = new Set(b.map(relPath));
+  return a.length === b.length && a.every((file) => bPaths.has(relPath(file)));
+}
+
+/**
+ * Content truth, independent of the field diff: a files/specs field diff can fire on unchanged
+ * content (deprecated per-file props). `pathSetsEqual` is computed structurally, never derived
+ * from the hash compare, so a broken hash compare can't fake it. Exported for unit coverage —
+ * this is the multi-file content compare, not the diff engine.
+ */
+export function compareFiles(recordedFiles: SourceFile[], workspaceFiles: SourceFile[]): FileComparison {
   const recorded = fileHashes(recordedFiles);
   const workspace = fileHashes(workspaceFiles);
-  if (recorded.size !== workspace.size) return true;
-  for (const [relativePath, hash] of recorded) {
-    if (workspace.get(relativePath) !== hash) return true;
-  }
-  return false;
+  const filesChanged =
+    recorded.size !== workspace.size || [...recorded].some(([path, hash]) => workspace.get(path) !== hash);
+  return { filesChanged, pathSetsEqual: pathsEqual(recordedFiles, workspaceFiles) };
 }
 
 /** Attribution only: which bit version recorded this component. A lookup failure must not affect the verdict. */
@@ -77,10 +94,15 @@ export async function detectContextDrift(workspace: Workspace, logger: Logger): 
         const consumerComp = comp.state._consumer;
         const fromModel = consumerComp.componentFromModel;
         if (!fromModel) return { id, kind: 'git-authored' }; // nothing recorded to diff against
-        const filesChanged = filesContentChanged(fromModel.files, consumerComp.files);
-        const fieldsDiff = await diffBetweenComponentsObjects(fromModel, consumerComp, { verbose: true });
+        const fileComparison = compareFiles(fromModel.files ?? [], consumerComp.files ?? []);
+        // content alone settles it; skip the diff engine (it shells out to `git diff --no-index`
+        // per differing aspect config) rather than spend that cost on an already-decided verdict.
+        if (fileComparison.filesChanged) return { id, kind: 'git-authored' };
+        // sortById (inside diffBetweenComponentsObjects) reorders extension config in place; diff
+        // against a clone so the live, possibly-cached workspace component is never touched.
+        const fieldsDiff = await diffBetweenComponentsObjects(fromModel, consumerComp.clone(), { verbose: true });
         const fieldNames = (fieldsDiff ?? []).map((f) => f.fieldName);
-        const { drift, changedKeys, anomaly } = classifyDiffFields(fieldNames, filesChanged);
+        const { drift, changedKeys, anomaly } = classifyDiffFields(fieldNames, fileComparison);
         if (anomaly) logger.console(chalk.yellow(`  ${id.toStringWithoutVersion()}: ${anomaly}`));
         if (!drift) return { id, kind: 'git-authored' };
         const recordedBitVersion = await getRecordedBitVersion(legacyScope, repo, id);

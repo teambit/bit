@@ -1164,7 +1164,13 @@ describe('bit ci sync', function () {
 
     before(() => {
       ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
-      helper.fs.outputFile('comp2/index.js', `require('is-odd');\nmodule.exports = () => 'comp2: with-pkg';\n`);
+      // A second file makes comp2 a multi-file component: the drift run's file-content compare
+      // must hash every file, not just one, to see that neither one changed.
+      helper.fs.outputFile('comp2/utils.js', `module.exports = () => 'comp2-util';\n`);
+      helper.fs.outputFile(
+        'comp2/index.js',
+        `require('is-odd');\nrequire('./utils');\nmodule.exports = () => 'comp2: with-pkg';\n`
+      );
       helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-odd': '1.0.0' } });
       helper.command.install();
       helper.command.tagAllWithoutBuild();
