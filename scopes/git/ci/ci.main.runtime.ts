@@ -445,9 +445,10 @@ export class CiMain {
   }
 
   /**
-   * `verifyIds` scopes the status failure to the components this run snaps — a global failure would
-   * otherwise block every snap in the repo. The snap itself still enforces blockers on its own
-   * components.
+   * `verifyIds` scopes the status failure to a subset of what this run may snap — the git-authored
+   * change on a lane run, not the drifted components riding along with it (those are tolerated at
+   * snap time instead, via `driftIds`/`snapIgnoreIssues`). A global failure would otherwise block
+   * every snap in the repo. The snap itself still enforces blockers on every component it snaps.
    */
   private async verifyWorkspaceStatusInternal(
     strict: boolean = false,
@@ -475,7 +476,9 @@ export class CiMain {
       ({ code: effectiveCode } = await this.status.formatStatusOutput(scoped, formatOptions));
       if (effectiveCode === 0) {
         this.logger.console(
-          formatWarningSummary('The issues above are on components this run does not snap — they do not block it')
+          formatWarningSummary(
+            "The issues above are on components outside this run's git-authored change — they do not fail this gate"
+          )
         );
       }
     }
@@ -789,6 +792,10 @@ export class CiMain {
     // drifted component's files and config equal its recorded head, so its blockers are not new.
     // Computed here (against the status this call already loaded) rather than in the caller, so a
     // lane run doesn't pay for a second full `status()` pass.
+    // Coarse by construction (spec 5.2): `ignoreIssues` applies to the whole snap, not per component,
+    // so a blocker `syncConfigFromMain` freshly introduces on some OTHER component is also shadowed
+    // whenever its type happens to match one already tolerated for the drifted set. No re-verify
+    // step recovers from this; per-component granularity needs a snapping API change (out of scope).
     const snapIgnoreIssues = driftIds?.length
       ? blockerNamesUnion(status.componentsWithIssues, new Set(driftIds))
       : undefined;

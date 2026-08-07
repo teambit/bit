@@ -1,5 +1,12 @@
 import { expect } from 'chai';
-import { classifyDiffFields, convergenceMessage, blockerNamesUnion } from './context-drift';
+import {
+  classifyDiffFields,
+  convergenceMessage,
+  blockerNamesUnion,
+  driftReportCommentBody,
+  driftClearedCommentBody,
+  DRIFT_COMMENT_MARKER,
+} from './context-drift';
 
 describe('classifyDiffFields', () => {
   const unchanged = { filesChanged: false, pathSetsEqual: true };
@@ -93,5 +100,40 @@ describe('blockerNamesUnion', () => {
       new Set(['s/a'])
     );
     expect(res).to.equal('CircularDependencies');
+  });
+});
+
+describe('driftReportCommentBody', () => {
+  const drift = [
+    {
+      id: { toStringWithoutVersion: () => 'scope/comp2' },
+      recordedBitVersion: '1.12.61',
+      changedKeys: ['packageDependencies'],
+    },
+  ];
+  const anchors = {
+    branch: 'drift-lane',
+    branchTipSha: 'abcdef0123456789',
+    laneIdStr: 'scope/drift-lane',
+    laneHead: '0123456789abcdef',
+  };
+
+  it('carries the marker, the cause, the synced pair, and the drifted component', () => {
+    const body = driftReportCommentBody(drift, '2.0.69', anchors);
+    expect(body).to.include(DRIFT_COMMENT_MARKER);
+    expect(body).to.include('recorded with bit 1.12.61, running bit 2.0.69');
+    // the anchors: which push, which lane snap
+    expect(body).to.include('drift-lane');
+    expect(body).to.include('abcdef012');
+    expect(body).to.include('scope/drift-lane');
+    expect(body).to.include('0123456789ab'.slice(0, 9));
+    expect(body).to.include('scope/comp2');
+    expect(body).to.include('packageDependencies');
+  });
+});
+
+describe('driftClearedCommentBody', () => {
+  it('carries the marker, so the upsert can find and update this exact comment', () => {
+    expect(driftClearedCommentBody()).to.include(DRIFT_COMMENT_MARKER);
   });
 });

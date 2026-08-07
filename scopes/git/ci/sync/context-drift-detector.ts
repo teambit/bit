@@ -18,7 +18,7 @@ type DriftCheckResult =
   | { id: ComponentID; kind: 'drift'; recordedBitVersion?: string; changedKeys: string[] };
 
 export type ContextDriftReport = {
-  /** dep-only diff vs the recorded version — never snapped by a lane run */
+  /** dep-only diff vs the recorded version — a lane run snaps these too, as surfaced side effects */
   drift: { id: ComponentID; recordedBitVersion?: string; changedKeys: string[] }[];
   /** pending minus drift: new components and file/config-diff components */
   gitAuthored: ComponentID[];
@@ -76,8 +76,9 @@ async function getRecordedBitVersion(
  */
 export async function detectContextDrift(workspace: Workspace, logger: Logger): Promise<ContextDriftReport> {
   const pendingIds = await workspace.listTagPendingIds();
-  // `export` refuses local-only components; a `legacyBitIds` snap bypasses the pending-path filter
-  // that normally removes them (Snapping.getTagPendingComponentsIds), so filter here.
+  // `export` refuses local-only components, and so does the snap's own tag-pending resolution
+  // (`Snapping.getTagPendingComponentsIds`). Filtering them here keeps this split aligned with what
+  // the snap actually snaps, or the drift/git-authored ids reported wouldn't match its outcome.
   const localOnly = ComponentIdList.fromArray(workspace.filter.byLocalOnly(pendingIds));
   const pending = pendingIds.filter((id) => !localOnly.hasWithoutVersion(id));
   const legacyScope = workspace.scope.legacyScope;

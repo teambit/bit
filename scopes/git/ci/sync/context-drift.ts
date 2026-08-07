@@ -95,16 +95,34 @@ const MAX_LISTED_DRIFT_COMPONENTS = 50;
 
 type DriftEntry = { id: { toStringWithoutVersion(): string }; recordedBitVersion?: string; changedKeys: string[] };
 
+/** The synced pair a drift report names, so the comment identifies which push and which lane snap it covers. */
+export type DriftReportAnchors = {
+  branch: string;
+  /** the branch's tip commit after this run's sync commit */
+  branchTipSha: string;
+  laneIdStr: string;
+  /** the lane's content fingerprint after this run's export (see `laneHeadFingerprint`) */
+  laneHead: string;
+};
+
 /**
  * The PR comment body for a lane snap that carried dependency-context drift (spec 5.6). States the
- * cause, lists the affected components and their changed fields, and points at the change request
- * for the full diff. `driftClearedCommentBody` is the counterpart once the drift is gone.
+ * cause, names the synced branch/lane pair, lists the affected components and their changed
+ * fields, and points at the change request for the full diff. `driftClearedCommentBody` is the
+ * counterpart once the drift is gone.
  */
-export function driftReportCommentBody(drift: DriftEntry[], runningBitVersion: string): string {
+export function driftReportCommentBody(
+  drift: DriftEntry[],
+  runningBitVersion: string,
+  anchors: DriftReportAnchors
+): string {
   const recorded = [...new Set(drift.map((d) => d.recordedBitVersion).filter(Boolean))].join(', ');
   const causeLine = recorded
     ? `Cause: the dependency context changed (recorded with bit ${recorded}, running bit ${runningBitVersion}).`
     : `Cause: the dependency context changed.`;
+  const anchorLine =
+    `Branch \`${anchors.branch}\` @ \`${anchors.branchTipSha.slice(0, 9)}\` synced onto lane ` +
+    `\`${anchors.laneIdStr}\` @ \`${anchors.laneHead.slice(0, 9)}\`.`;
   const entries = drift.map((d) => `- \`${d.id.toStringWithoutVersion()}\` — ${d.changedKeys.join(', ')}`);
   const list =
     entries.length > MAX_LISTED_DRIFT_COMPONENTS
@@ -118,6 +136,7 @@ export function driftReportCommentBody(drift: DriftEntry[], runningBitVersion: s
     '### Dependency-context drift',
     '',
     causeLine,
+    anchorLine,
     'This snap carries the components below as a side effect of the committed context. Git does not show this change.',
     '',
     ...list,

@@ -15,6 +15,7 @@ import {
   laneSyncPrBody,
 } from './lane-sync-executor';
 import { resolveSyncConfig } from './sync-config';
+import { DRIFT_COMMENT_MARKER } from './context-drift';
 
 type LaneComponents = Parameters<typeof laneHeadFingerprint>[0];
 
@@ -253,6 +254,105 @@ describe('syncLane outer catch under --dry-run', () => {
     const summary = await throwingExecutor(gitHostCalls).syncLane({ hostScope: 'acme.shop', name: '-hostile' });
     expect(summary).to.match(/^HALTED -hostile -> unexpected error: .*not a valid git branch name/);
     expect(gitHostCalls).to.deep.equal([]);
+  });
+});
+
+describe('surfaceDriftOnPr', () => {
+  const ANCHORS = {
+    branch: 'drift-lane',
+    branchTipSha: 'abcdef0123456789',
+    laneIdStr: 'acme.shop/drift-lane',
+    laneHead: '0123456789abcdef',
+  };
+  const DRIFT = [{ id: { toStringWithoutVersion: () => 'acme.shop/comp2' }, changedKeys: ['packageDependencies'] }];
+
+  /** `upsertCalls` records every `upsertComment` invocation; `findPrCalls` every PR lookup. */
+  function executorWith(opts: {
+    gitHost?: 'none' | 'no-upsert' | 'ok' | 'throws';
+    upsertCalls?: any[];
+    findPrCalls?: string[];
+  }) {
+    const upsertCalls = opts.upsertCalls ?? [];
+    const findPrCalls = opts.findPrCalls ?? [];
+    const warnings: string[] = [];
+    const noopLogger = {
+      console: () => {},
+      consoleWarning: (m: string) => warnings.push(m),
+      error: () => {},
+      debug: () => {},
+    };
+    const findPrByBranch = async (branch: string) => {
+      findPrCalls.push(branch);
+      return { number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] };
+    };
+    const gitHost =
+      opts.gitHost === 'none'
+        ? undefined
+        : opts.gitHost === 'no-upsert'
+          ? ({ name: 'stub', findPrByBranch } as any)
+          : ({
+              name: 'stub',
+              findPrByBranch,
+              upsertComment: async (...args: any[]) => {
+                upsertCalls.push(args);
+                if (opts.gitHost === 'throws') throw new Error('rate limited');
+              },
+            } as any);
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: { getRunningBitVersion: () => '2.0.69' } as any,
+      logger: noopLogger as any,
+      gitHost,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    return { executor, upsertCalls, findPrCalls, warnings };
+  }
+
+  it('drift present: upserts a report body naming the synced branch/lane pair and the drifted component', async () => {
+    const { executor, upsertCalls } = executorWith({ gitHost: 'ok' });
+    await (executor as any).surfaceDriftOnPr({ ...ANCHORS, drift: DRIFT });
+    expect(upsertCalls).to.have.lengthOf(1);
+    const [prNumber, marker, body, options] = upsertCalls[0];
+    expect(prNumber).to.equal(7);
+    expect(marker).to.equal(DRIFT_COMMENT_MARKER);
+    expect(body).to.include(ANCHORS.branch);
+    expect(body).to.include(ANCHORS.branchTipSha.slice(0, 9));
+    expect(body).to.include(ANCHORS.laneIdStr);
+    expect(body).to.include(ANCHORS.laneHead.slice(0, 9));
+    expect(body).to.include('acme.shop/comp2');
+    expect(options).to.equal(undefined); // createIfAbsent defaults to true — a report must always land
+  });
+
+  it('drift empty: upserts the cleared body with createIfAbsent false — never posts a fresh "cleared" comment', async () => {
+    const { executor, upsertCalls } = executorWith({ gitHost: 'ok' });
+    await (executor as any).surfaceDriftOnPr({ ...ANCHORS, drift: [] });
+    expect(upsertCalls).to.have.lengthOf(1);
+    const [, marker, , options] = upsertCalls[0];
+    expect(marker).to.equal(DRIFT_COMMENT_MARKER);
+    expect(options).to.deep.equal({ createIfAbsent: false });
+  });
+
+  it('no configured git host: skips silently, without even looking up the PR', async () => {
+    const { executor, upsertCalls, findPrCalls } = executorWith({ gitHost: 'none' });
+    await (executor as any).surfaceDriftOnPr({ ...ANCHORS, drift: DRIFT });
+    expect(upsertCalls).to.deep.equal([]);
+    expect(findPrCalls).to.deep.equal([]);
+  });
+
+  it('a provider without upsertComment: skips silently, the same as no provider', async () => {
+    const { executor, upsertCalls, findPrCalls } = executorWith({ gitHost: 'no-upsert' });
+    await (executor as any).surfaceDriftOnPr({ ...ANCHORS, drift: DRIFT });
+    expect(upsertCalls).to.deep.equal([]);
+    expect(findPrCalls).to.deep.equal([]);
+  });
+
+  it('the git host API throws: warns, and does not fail the caller', async () => {
+    const { executor, warnings } = executorWith({ gitHost: 'throws' });
+    await (executor as any).surfaceDriftOnPr({ ...ANCHORS, drift: DRIFT }); // must not reject
+    expect(warnings).to.have.lengthOf(1);
+    expect(warnings[0]).to.include('rate limited');
+    expect(warnings[0]).to.include('#7');
   });
 });
 

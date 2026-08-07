@@ -172,7 +172,9 @@ describe('GitHubClient', () => {
     expect(await client.findPrByBranch('lane-x')).to.equal(undefined);
   });
 
-  describe('upsertIssueComment', () => {
+  describe('upsertComment', () => {
+    // named `upsertComment`, matching `GitHostProvider.upsertComment` exactly — see the method's
+    // own doc comment for why a differently-named method would be a silent-no-op trap.
     function fakeFetchOver(existingComments: Array<{ id: number; body: string }>) {
       const calls: Array<{ url: string; init: any }> = [];
       const fetchImpl = (async (url: any, init: any) => {
@@ -192,7 +194,7 @@ describe('GitHubClient', () => {
     it('posts a new comment when no marked comment exists', async () => {
       const { calls, fetchImpl } = fakeFetchOver([]);
       const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
-      await client.upsertIssueComment(7, '<!-- marker -->', '<!-- marker -->\nbody');
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nbody');
       const posts = calls.filter((c) => c.init?.method === 'POST');
       expect(posts).to.have.lengthOf(1);
       expect(posts[0].url).to.equal('https://api.github.com/repos/acme/shop/issues/7/comments');
@@ -204,7 +206,7 @@ describe('GitHubClient', () => {
         { id: 99, body: '<!-- marker -->\nold report' },
       ]);
       const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
-      await client.upsertIssueComment(7, '<!-- marker -->', '<!-- marker -->\nnew report');
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nnew report');
       const patches = calls.filter((c) => c.init?.method === 'PATCH');
       expect(patches).to.have.lengthOf(1);
       expect(patches[0].url).to.equal('https://api.github.com/repos/acme/shop/issues/comments/99');
@@ -215,8 +217,46 @@ describe('GitHubClient', () => {
     it('skips silently when createIfAbsent is false and no marked comment exists', async () => {
       const { calls, fetchImpl } = fakeFetchOver([]);
       const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
-      await client.upsertIssueComment(7, '<!-- marker -->', 'cleared', { createIfAbsent: false });
+      await client.upsertComment(7, '<!-- marker -->', 'cleared', { createIfAbsent: false });
       expect(calls.some((c) => c.init?.method === 'POST' || c.init?.method === 'PATCH')).to.equal(false);
+    });
+
+    it('lists at per_page=100 and follows Link-header pagination to find a comment past page 1', async () => {
+      // GitHub defaults to per_page=30; a naive single-page list would miss this comment and post a
+      // duplicate report on every push instead of updating it.
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        const method = init?.method ?? 'GET';
+        if (method === 'GET' && !String(url).includes('page=2')) {
+          return new Response(JSON.stringify([{ id: 1, body: 'unrelated' }]), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              link: '<https://api.github.com/repos/acme/shop/issues/7/comments?per_page=100&page=2>; rel="next"',
+            },
+          });
+        }
+        if (method === 'GET') {
+          return new Response(JSON.stringify([{ id: 99, body: '<!-- marker -->\nold report' }]), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } });
+      }) as typeof fetch;
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nnew report');
+
+      const gets = calls.filter((c) => (c.init?.method ?? 'GET') === 'GET');
+      expect(gets).to.have.lengthOf(2);
+      expect(gets[0].url).to.include('per_page=100');
+      expect(gets[1].url).to.equal('https://api.github.com/repos/acme/shop/issues/7/comments?per_page=100&page=2');
+      const patches = calls.filter((c) => c.init?.method === 'PATCH');
+      expect(patches).to.have.lengthOf(1);
+      expect(patches[0].url).to.equal('https://api.github.com/repos/acme/shop/issues/comments/99');
+      // the found-on-page-2 comment was updated, not duplicated
+      expect(calls.some((c) => c.init?.method === 'POST')).to.equal(false);
     });
   });
 });

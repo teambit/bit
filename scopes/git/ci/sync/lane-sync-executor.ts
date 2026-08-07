@@ -10,6 +10,7 @@ import type { CiMain, ContextDriftReport } from '../ci.main.runtime';
 import type { CiSyncConfig, LaneTarget } from './sync-config';
 import { laneNameToBranch } from './sync-config';
 import { DRIFT_COMMENT_MARKER, driftClearedCommentBody, driftReportCommentBody } from './context-drift';
+import type { DriftReportAnchors } from './context-drift';
 import type { BranchSyncState } from './sync-state';
 import {
   CONFLICT_LABEL,
@@ -611,7 +612,7 @@ export class LaneSyncExecutor {
     await this.checkoutFromRemote(branch, `origin/${branch}`);
 
     try {
-      const { error: exportErr, drift } = await this.snapAndExportOntoLane(laneIdStr, message);
+      const { error: exportErr, drift, noop } = await this.snapAndExportOntoLane(laneIdStr, message);
       if (exportErr) {
         // Halt rather than propagate: one lane's failed snap/export must not abort the lanes after it.
         return await this.executeHalt({
@@ -622,10 +623,12 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
-      await this.surfaceDriftOnPr(branch, drift);
+      if (noop) {
+        return `${laneName} -> export-branch (branch ${branch} has no bit-tracked change; nothing snapped onto lane ${laneIdStr})`;
+      }
 
-      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (!laneHead) {
+      const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      if (!recorded) {
         return await this.executeHalt({
           laneName,
           laneIdStr,
@@ -634,6 +637,10 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
+      const { laneHead, branchTipSha } = recorded;
+      // After recordLaneHeadOnBranch, not before: the report names the branch tip and lane head this
+      // run just produced, and neither exists until the commit+push above lands.
+      await this.surfaceDriftOnPr({ branch, branchTipSha, laneIdStr, laneHead, drift });
       return `${laneName} -> export-branch (lane ${laneIdStr} @ ${laneHead.slice(0, 9)}, branch ${branch} updated)`;
     } finally {
       await this.restoreWorkspace(defaultBranch);
@@ -730,6 +737,11 @@ export class LaneSyncExecutor {
       }
 
       // ---- step 2: snap + export the merged tree onto the lane ---------------------------------
+      // `noop` (see `snapAndExportOntoLane`) is deliberately IGNORED here, unlike in
+      // `executeExportBranch`: step 1's checkout can rewrite `.bitmap` and file content to match an
+      // ALREADY-recorded version (e.g. a full-file conflict resolved by "theirs") — nothing new to
+      // snap, but a real git-level change the branch does not have yet. Skipping the branch commit
+      // on `noop` would silently drop that change.
       const { error: exportErr, drift } = await this.snapAndExportOntoLane(
         laneIdStr,
         `merge remote lane ${laneIdStr} into ${branch} ${SYNC_COMMIT_MARKER}`
@@ -740,13 +752,15 @@ export class LaneSyncExecutor {
             `result failed: ${exportErr.message}`
         );
       }
-      await this.surfaceDriftOnPr(branch, drift);
 
       // ---- step 3: record the new lane head on the branch --------------------------------------
-      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (!laneHead) {
+      const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      if (!recorded) {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
       }
+      const { laneHead, branchTipSha } = recorded;
+      // After recordLaneHeadOnBranch, not before — see executeExportBranch for why.
+      await this.surfaceDriftOnPr({ branch, branchTipSha, laneIdStr, laneHead, drift });
       return (
         `${laneName} -> merge-diverged (${policyClause}merged lane into branch, then exported; lane ${laneIdStr} @ ` +
         `${laneHead.slice(0, 9)}, branch ${branch} updated)`
@@ -776,14 +790,24 @@ export class LaneSyncExecutor {
    * verification still scopes to the git-authored subset (`verifyIds`); the drifted subset's
    * pre-existing blockers are tolerated at snap time via `driftIds` (see `blockerNamesUnion`), never
    * at verification time — a *new* blocker on a component the developer touched still fails the run.
+   *
+   * `noop: true` when neither set has anything (the old cheap path, restored): a docs-only commit or
+   * an already-converged merge touches no bit component, and `snapPrCommit` — full status, import,
+   * lane creation/reuse, config sync — is pure overhead for that case, minutes of it on a large
+   * workspace. The caller skips its own follow-up (drift comment, `.bitmap` sync commit) too: there
+   * is nothing to report and nothing new to record on the branch.
    */
   private async snapAndExportOntoLane(
     laneIdStr: string,
     message: string
-  ): Promise<{ error?: Error; drift: ContextDriftReport['drift'] }> {
+  ): Promise<{ error?: Error; drift: ContextDriftReport['drift']; noop?: boolean }> {
     try {
       await ensureCurrentLaneObject(this.deps.lanes);
       const { drift, gitAuthored } = await this.deps.ci.detectContextDrift();
+      if (!gitAuthored.length && !drift.length) {
+        this.deps.logger.console(chalk.yellow('No changes detected, nothing to snap'));
+        return { drift: [], noop: true };
+      }
       if (drift.length) {
         const running = this.deps.ci.getRunningBitVersion();
         const recorded = [...new Set(drift.map((d) => d.recordedBitVersion).filter(Boolean))].join(', ');
@@ -818,9 +842,17 @@ export class LaneSyncExecutor {
    * Upsert the drift-report comment on the branch's PR (spec 5.6): the enumerated effect of the
    * fan-out the snap just committed. Silently a no-op with no configured git host (the run-log
    * report above is the fallback surface), no open PR yet, or a provider that doesn't implement
-   * comment upserts. Never fails the lane — a report is a courtesy, not a gate.
+   * comment upserts. Never fails the lane — a report is a courtesy, not a gate. `anchors` must come
+   * from `recordLaneHeadOnBranch`'s result — the branch tip and lane head it names don't exist
+   * until that commit+push lands, so callers invoke this AFTER it, never before.
    */
-  private async surfaceDriftOnPr(branch: string, drift: ContextDriftReport['drift']): Promise<void> {
+  private async surfaceDriftOnPr({
+    branch,
+    branchTipSha,
+    laneIdStr,
+    laneHead,
+    drift,
+  }: DriftReportAnchors & { drift: ContextDriftReport['drift'] }): Promise<void> {
     const { gitHost, logger } = this.deps;
     const upsertComment = gitHost?.upsertComment?.bind(gitHost);
     if (!upsertComment) return;
@@ -829,7 +861,11 @@ export class LaneSyncExecutor {
     try {
       if (drift.length) {
         const running = this.deps.ci.getRunningBitVersion();
-        await upsertComment(pr.number, DRIFT_COMMENT_MARKER, driftReportCommentBody(drift, running));
+        await upsertComment(
+          pr.number,
+          DRIFT_COMMENT_MARKER,
+          driftReportCommentBody(drift, running, { branch, branchTipSha, laneIdStr, laneHead })
+        );
       } else {
         // Only update a report that already exists — a lane with no drift that never had one must
         // not gain a "drift cleared" comment out of nowhere.
@@ -845,18 +881,20 @@ export class LaneSyncExecutor {
   /**
    * Record on the branch which lane state it now mirrors: re-query the lane (the export just moved it,
    * so any earlier fingerprint is stale), commit — crucially the `.bitmap` the snap rewrote — and push.
-   * Returns undefined when the lane can no longer be read, in which case the caller halts.
+   * Returns undefined when the lane can no longer be read, in which case the caller halts. The
+   * returned `branchTipSha` is the pushed commit — the anchor a drift report names alongside
+   * `laneHead`, so the two only exist together once this call succeeds (see `surfaceDriftOnPr`).
    */
   private async recordLaneHeadOnBranch(
     target: LaneTarget,
     laneIdStr: string,
     branch: string
-  ): Promise<string | undefined> {
+  ): Promise<{ laneHead: string; branchTipSha: string } | undefined> {
     const remoteLane = await this.getRemoteLane(target);
     if (!remoteLane) return undefined;
     const laneHead = laneHeadFingerprint(remoteLane.components);
-    await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
-    return laneHead;
+    const branchTipSha = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+    return { laneHead, branchTipSha };
   }
 
   /**
@@ -1270,13 +1308,16 @@ export class LaneSyncExecutor {
    * push means someone pushed concurrently and the next run should re-plan rather than clobber.
    * `--allow-empty` is only insurance against `git commit` failing the lane outright.
    */
-  private async commitAllAndPush(branch: string, message: string) {
+  /** Returns the pushed commit's sha — the branch tip anchor a drift report names. */
+  private async commitAllAndPush(branch: string, message: string): Promise<string> {
     await addAllExceptScopeAndModules();
     await commitWithIdentity(message, { extraArgs: ['--allow-empty'] });
+    const tipSha = (await git.revparse(['HEAD'])).trim();
     // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or reinterpreted —
     // the configured branch name is user input (see `sync-config.ts`).
     await git.push(['origin', `HEAD:refs/heads/${branch}`]);
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
+    return tipSha;
   }
 
   private async openPrForLane({
