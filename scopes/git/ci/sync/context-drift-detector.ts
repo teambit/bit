@@ -98,9 +98,10 @@ export async function detectContextDrift(workspace: Workspace, logger: Logger): 
         // content alone settles it; skip the diff engine (it shells out to `git diff --no-index`
         // per differing aspect config) rather than spend that cost on an already-decided verdict.
         if (fileComparison.filesChanged) return { id, kind: 'git-authored' };
-        // sortById (inside diffBetweenComponentsObjects) reorders extension config in place; diff
-        // against a clone so the live, possibly-cached workspace component is never touched.
-        const fieldsDiff = await diffBetweenComponentsObjects(fromModel, consumerComp.clone(), { verbose: true });
+        // diffBetweenComponentsObjects sorts extension config keys in place; the mutation is
+        // shallow and hash-idempotent (Version.id() sorts the same way), so it is acceptable on
+        // the live object.
+        const fieldsDiff = await diffBetweenComponentsObjects(fromModel, consumerComp, { verbose: true });
         const fieldNames = (fieldsDiff ?? []).map((f) => f.fieldName);
         const { drift, changedKeys, anomaly } = classifyDiffFields(fieldNames, fileComparison);
         if (anomaly) logger.console(chalk.yellow(`  ${id.toStringWithoutVersion()}: ${anomaly}`));
