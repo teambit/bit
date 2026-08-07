@@ -287,6 +287,11 @@ export class MergingMain {
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
 
     if (!skipDependencyInstallation && !leftUnresolvedConflicts && !componentsHasConfigMergeConflicts) {
+      // the components were loaded (and cached) before the merge wrote the merged files and the
+      // merged config (unmerged-components store). without clearing the cache, the install below
+      // reloads them with pre-merge dependencies, so a package newly introduced on the other side
+      // never enters the install manifest and the package manager skips it ("lockfile is up to date").
+      if (this.workspace) await this.workspace.clearCache();
       // this is a workaround.
       // keep this here. although it gets called before snapping.
       // the reason is that when the installation is running, for some reason, some apps are unable to load in the same process.
