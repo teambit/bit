@@ -1,4 +1,5 @@
-export { Request } from './request';
-export { Response } from './response';
-export { NextFunction } from './next';
-export { Route, Middleware, Verb } from './route';
+export type { Request } from './request';
+export type { Response } from './response';
+export type { NextFunction } from './next';
+export type { Route, Middleware } from './route';
+export { Verb } from './route';
