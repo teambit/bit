@@ -1119,4 +1119,79 @@ describe('bit ci sync', function () {
       expect(helper.command.listLanesParsed().currentLane).to.equal('main');
     });
   });
+
+  describe('a stale bit-sync/main that conflicts with the default branch', () => {
+    const SYNC_BRANCH = 'bit-sync/main';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({}));
+      devPath = helper.scopeHelper.cloneWorkspace();
+      // the scope moves ahead: both components tag 0.0.2; the sync branch proposes that drift
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('main-scope-v2'));
+      fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), comp2Src('main-scope-v2'));
+      helper.command.runCmd('bit tag --message "bump to 0.0.2"', devPath);
+      helper.command.runCmd('bit export', devPath);
+      seedSync('--main');
+      // the default branch adopts comp1@0.0.3 while the sync branch recorded 0.0.2 — the same
+      // `.bitmap` line on both sides, so the catch-up merge conflicts
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('main-scope-v3'));
+      helper.command.runCmd('bit tag comp1 --message "bump comp1 to 0.0.3" --unmodified', devPath);
+      helper.command.runCmd('bit export', devPath);
+      helper.command.runCmd('bit checkout head comp1 -x');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "chore: adopt comp1 0.0.3"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      gitFetch();
+    });
+
+    it('re-forks the machine-owned branch from the default branch and pushes the remaining drift', () => {
+      const tipBefore = branchTipSha(SYNC_BRANCH);
+      const { output, exitCode } = syncRun('--main');
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.not.include('HALTED');
+      expect(output).to.include('re-forking');
+      expect(output).to.include(`main -> pushed sync commit to ${SYNC_BRANCH}`);
+      expect(branchTipSha(SYNC_BRANCH)).to.not.equal(tipBefore);
+      // the re-forked branch carries the default branch's comp1 and the scope's comp2 drift
+      expect(fileOnBranch(SYNC_BRANCH, 'comp1/index.js')).to.include('main-scope-v3');
+      expect(fileOnBranch(SYNC_BRANCH, 'comp2/index.js')).to.include('main-scope-v2');
+      expect(fileOnBranch(SYNC_BRANCH, '.bitmap')).to.include('0.0.3');
+      // non-vacuous: the default branch never gained the scope's comp2
+      expect(fileOnBranch(defaultBranch, 'comp2/index.js')).to.include('comp2: initial');
+      // the re-run is a converged no-op
+      const rerun = syncRun('--main');
+      expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+      expect(rerun.output).to.include('main -> converged');
+    });
+
+    it('keeps the halt when a human commit sits on the sync branch', () => {
+      // a human pushes straight to the sync branch, and the default branch conflicts with the edit
+      helper.command.runCmd(`git fetch origin ${SYNC_BRANCH}`);
+      helper.command.runCmd(`git checkout -B ${SYNC_BRANCH} origin/${SYNC_BRANCH}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('human-edit-on-sync-branch'));
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "fix: a human edit on the sync branch"');
+      helper.command.runCmd(`git push origin ${SYNC_BRANCH}`);
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('main-scope-v4'));
+      helper.command.runCmd('bit tag comp1 --message "bump comp1 to 0.0.4" --unmodified', devPath);
+      helper.command.runCmd('bit export', devPath);
+      helper.command.runCmd('bit checkout head comp1 -x');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "chore: adopt comp1 0.0.4"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      gitFetch();
+
+      const tipBefore = branchTipSha(SYNC_BRANCH);
+      const { output, exitCode } = syncRun('--main');
+      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+      expect(output).to.include('could not bring the sync branch');
+      expect(output).to.not.include('re-forking');
+      // the human commit survives
+      expect(branchTipSha(SYNC_BRANCH)).to.equal(tipBefore);
+      expect(fileOnBranch(SYNC_BRANCH, 'comp1/index.js')).to.include('human-edit-on-sync-branch');
+    });
+  });
 });
