@@ -244,6 +244,36 @@ async function fetchOpenPullRequestsPage(cursor) {
   return { pageNodes: data.repository.pullRequests.nodes, pageInfo: data.repository.pullRequests.pageInfo };
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * GitHub computes a PR's mergeability lazily: after master moves (e.g. the bit_merge bump
+ * commit), the first read returns mergeable UNKNOWN and merely schedules the computation. The
+ * bit_merge-end dispatch reconcile regularly lands inside that window — UNKNOWN fails both the
+ * winner and the update-candidate conditions, so without a re-read the reconcile would do
+ * nothing and strand the queue until the (unreliable) cron. Re-reading via REST both polls the
+ * result and nudges GitHub to compute it. Only the fields this run acts on are patched; the
+ * head sha from the original snapshot is kept (a head moved mid-run self-heals next cycle).
+ */
+async function refreshUnknownMergeability(entries) {
+  const maxAttempts = 4;
+  const delayMs = 5000;
+  for (const entry of entries) {
+    const { pullRequest } = entry;
+    if (pullRequest.mergeable !== 'UNKNOWN') continue;
+    for (let attempt = 0; attempt < maxAttempts && pullRequest.mergeable === 'UNKNOWN'; attempt += 1) {
+      await sleep(delayMs);
+      const fresh = await githubRequest('GET', `/repos/${OWNER}/${REPO}/pulls/${pullRequest.number}`);
+      if (fresh.mergeable === null) continue;
+      pullRequest.mergeable = fresh.mergeable ? 'MERGEABLE' : 'CONFLICTING';
+      pullRequest.mergeStateStatus = (fresh.mergeable_state || 'unknown').toUpperCase();
+    }
+    console.log(
+      `  #${pullRequest.number}: mergeability was UNKNOWN, now ${pullRequest.mergeable} (${pullRequest.mergeStateStatus})`
+    );
+  }
+}
+
 function getCheckContexts(pullRequest) {
   return pullRequest.commits.nodes[0]?.commit.statusCheckRollup?.contexts.nodes ?? [];
 }
@@ -524,6 +554,10 @@ async function main() {
     );
   const entries = queuedPullRequests.map((pullRequest) => ({ pullRequest, checks: evaluateChecks(pullRequest) }));
   console.log(`queue: ${entries.length} PR(s) — [${entries.map((e) => `#${e.pullRequest.number}`).join(', ')}]`);
+
+  // only when settled: winner selection and branch updates are the two actions gated on
+  // mergeability, and both are skipped on a busy master anyway
+  if (masterState.settled) await refreshUnknownMergeability(entries);
 
   // Sticky winner: an entry whose gate is already success was granted the turn on a previous
   // cycle and should normally just be re-confirmed until GitHub merges it. Two exceptions demote
