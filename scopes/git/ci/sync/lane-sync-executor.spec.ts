@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import {
   branchMirrorsOtherLaneNote,
   branchMirrorsOtherLaneReason,
+  changedLaneComponents,
   crossScopeDescription,
   crossScopeMidFlightHaltReason,
   crossScopeRefusal,
@@ -13,6 +14,8 @@ import {
   laneHeadFingerprint,
   LaneSyncExecutor,
   laneSyncPrBody,
+  RUN_SUMMARY_MARKER,
+  runSummaryCommentBody,
 } from './lane-sync-executor';
 import { resolveSyncConfig } from './sync-config';
 
@@ -385,5 +388,144 @@ describe('isProtectedBranch', () => {
 
   it('permits an ordinary lane branch', () => {
     expect(isProtectedBranch('my-lane', 'develop', 'bit-sync/main')).to.equal(false);
+  });
+});
+
+describe('changedLaneComponents', () => {
+  it('includes a component new to the lane, and one whose head moved', () => {
+    const before = [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')];
+    const after = [
+      comp('acme.shop/comp1', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2'),
+      comp('acme.shop/comp2', 'ccccccccccccccccccccccccccccccccccccccc3'),
+    ];
+    const changed = changedLaneComponents(before, after);
+    expect(changed.map((c) => c.id.toStringWithoutVersion())).to.deep.equal(['acme.shop/comp1', 'acme.shop/comp2']);
+  });
+
+  it('excludes a component whose head did not move', () => {
+    const stable = comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
+    expect(changedLaneComponents([stable], [stable])).to.deep.equal([]);
+  });
+
+  it('treats an undefined "before" (never seen this lane) as everything being new', () => {
+    const after = [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')];
+    expect(changedLaneComponents(undefined, after)).to.deep.equal(after);
+  });
+});
+
+describe('runSummaryCommentBody', () => {
+  it('carries the marker, the changed components, and the branch/lane anchors', () => {
+    const body = runSummaryCommentBody({
+      laneIdStr: 'acme.shop/my-lane',
+      laneUrl: 'https://bit.cloud/acme/shop/~lane/my-lane',
+      branch: 'my-lane',
+      branchTipSha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1',
+      laneHead: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2',
+      changed: [comp('acme.shop/comp1', 'ccccccccccccccccccccccccccccccccccccccc3')],
+    });
+    expect(body).to.include(RUN_SUMMARY_MARKER);
+    expect(body).to.include('acme.shop/comp1` @ `ccccccccc');
+    expect(body).to.include('branch: `my-lane` @ `aaaaaaaaa`');
+    expect(body).to.include('lane: `acme.shop/my-lane` @ `bbbbbbbbb`');
+  });
+
+  it('says plainly that nothing changed, rather than an empty list', () => {
+    const body = runSummaryCommentBody({
+      laneIdStr: 'acme.shop/my-lane',
+      laneUrl: 'https://bit.cloud/acme/shop/~lane/my-lane',
+      branch: 'my-lane',
+      branchTipSha: undefined,
+      laneHead: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2',
+      changed: [],
+    });
+    expect(body).to.include('none — nothing on the lane changed this run');
+    expect(body).to.not.include('@ `undefined');
+  });
+});
+
+// The comment is a pure surface effect: it must never gate the run's own outcome, and must degrade
+// silently through every "nothing to comment on" state a real host, PR or branch can be in.
+describe('postRunSummaryComment', () => {
+  const BEFORE = [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')];
+  const AFTER = [comp('acme.shop/comp1', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2')];
+
+  function executorWith(gitHost: any, warnings: string[] = []) {
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {} as any,
+      logger: { console: () => {}, consoleWarning: (msg: string) => warnings.push(msg), error: () => {} } as any,
+      gitHost,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    (executor as any).currentBranchTip = async () => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
+    return executor;
+  }
+
+  const call = (executor: LaneSyncExecutor) =>
+    (executor as any).postRunSummaryComment({
+      target: { hostScope: 'acme.shop', name: 'my-lane' },
+      laneIdStr: 'acme.shop/my-lane',
+      branch: 'my-lane',
+      laneHead: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2',
+      preComponents: BEFORE,
+      postComponents: AFTER,
+    }) as Promise<void>;
+
+  it('upserts the marked comment on the open PR when the host supports it', async () => {
+    const calls: any[] = [];
+    const gitHost = {
+      findPrByBranch: async () => ({ number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] }),
+      upsertComment: async (prNumber: number, marker: string, body: string) => {
+        calls.push({ prNumber, marker, body });
+      },
+    };
+    await call(executorWith(gitHost));
+    expect(calls).to.have.lengthOf(1);
+    expect(calls[0].prNumber).to.equal(7);
+    expect(calls[0].marker).to.equal(RUN_SUMMARY_MARKER);
+    expect(calls[0].body).to.include('acme.shop/comp1` @ `bbbbbbbbb');
+  });
+
+  it('is a no-op with no configured git host', async () => {
+    await call(executorWith(undefined)); // would throw on any host call; nothing to assert but "did not throw"
+  });
+
+  it('is a no-op when the host does not implement upsertComment', async () => {
+    const calls: any[] = [];
+    const gitHost = {
+      findPrByBranch: async () => {
+        calls.push('findPrByBranch');
+        return { number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] };
+      },
+    };
+    await call(executorWith(gitHost));
+    // upsertComment is feature-tested BEFORE the PR lookup — an unsupported host must not even look up the PR.
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('is a no-op when the branch has no open PR yet', async () => {
+    const calls: any[] = [];
+    const gitHost = {
+      findPrByBranch: async () => undefined,
+      upsertComment: async () => {
+        calls.push('upsertComment');
+      },
+    };
+    await call(executorWith(gitHost));
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('warns and does not throw when the comment API call fails', async () => {
+    const warnings: string[] = [];
+    const gitHost = {
+      findPrByBranch: async () => ({ number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] }),
+      upsertComment: async () => {
+        throw new Error('rate limited');
+      },
+    };
+    await call(executorWith(gitHost, warnings));
+    expect(warnings.join('\n')).to.contain('Could not post the run-summary comment');
+    expect(warnings.join('\n')).to.contain('rate limited');
   });
 });
