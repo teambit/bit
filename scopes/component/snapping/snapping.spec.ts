@@ -227,8 +227,18 @@ describe('Snapping aspect', function () {
     });
     it('should block setting local-only when a component is staged', async () => {
       const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
-      await snapping.tag({ unmodified: true });
+      const tagResults = await snapping.tag({ unmodified: true });
+      // eslint-disable-next-line no-console
+      console.log(
+        'DIAG tagResults snapped:',
+        JSON.stringify(tagResults?.snappedComponents.map((c) => c.id.toString()))
+      );
       const comp2Id = await workspace.idsByPattern('comp2');
+      // eslint-disable-next-line no-console
+      console.log('DIAG comp2Id:', JSON.stringify(comp2Id.map((id) => id.toString())));
+      const status = await (workspace as any).getComponentStatusById(comp2Id[0]);
+      // eslint-disable-next-line no-console
+      console.log('DIAG comp2 status:', JSON.stringify(status));
       try {
         await workspace.setLocalOnly(comp2Id);
         expect.fail('should have thrown an error');

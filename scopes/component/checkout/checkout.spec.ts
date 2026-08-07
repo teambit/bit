@@ -32,7 +32,9 @@ describe('CheckoutAspect', function () {
       const { workspacePath } = workspaceData;
       const compsDir = await mockComponents(workspacePath);
       const snapping: SnappingMain = await loadAspect(SnappingAspect, workspacePath);
-      await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
+      const tagRes = await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
+      // eslint-disable-next-line no-console
+      console.log('DIAG checkout-reset tag snapped:', JSON.stringify(tagRes?.snappedComponents.map((c) => c.id.toString())));
       const { id, dir } = compsDir[0];
       compId = id;
       compDir = dir;
@@ -42,6 +44,14 @@ describe('CheckoutAspect', function () {
       expect(dir).to.not.be.a.path();
       workspace = await loadAspect(WorkspaceAspect, workspacePath);
       const { components, invalidComponents } = await workspace.componentLoader.getMany([id], undefined, false);
+      // eslint-disable-next-line no-console
+      console.log(
+        'DIAG checkout-reset getMany:',
+        JSON.stringify({
+          components: components.map((c) => c.id.toString()),
+          invalid: invalidComponents.map((c) => ({ id: c.id.toString(), err: c.err?.constructor?.name })),
+        })
+      );
       expect(components).to.have.lengthOf(0);
       expect(invalidComponents).to.have.lengthOf(1);
 
