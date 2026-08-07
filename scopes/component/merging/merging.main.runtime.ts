@@ -291,7 +291,9 @@ export class MergingMain {
       // merged config (unmerged-components store). without clearing the cache, the install below
       // reloads them with pre-merge dependencies, so a package newly introduced on the other side
       // never enters the install manifest and the package manager skips it ("lockfile is up to date").
-      if (this.workspace) await this.workspace.clearCache();
+      // clear only the component caches — the scope objects were written by this very process, so
+      // the scope cache is current and clearing it would add avoidable overhead to every merge.
+      if (this.workspace) this.workspace.clearAllComponentsCache();
       // this is a workaround.
       // keep this here. although it gets called before snapping.
       // the reason is that when the installation is running, for some reason, some apps are unable to load in the same process.

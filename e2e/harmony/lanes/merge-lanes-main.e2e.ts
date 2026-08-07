@@ -338,7 +338,7 @@ describe('merge lanes - main lane operations', function () {
       helper.command.install();
       const laneWs = helper.scopeHelper.cloneWorkspace();
       helper.command.switchLocalLane('main', '-x');
-      helper.command.install('is-positive');
+      helper.command.install('is-positive@3.1.0');
       helper.fs.outputFile('comp1/index.js', `const isPositive = require('is-positive');\n${baseFile}`);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
