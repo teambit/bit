@@ -1,8 +1,7 @@
 import { isEqual, omit, sortBy } from 'lodash';
 
-// Deprecated per-file props. consumer.isComponentModified copies them from the model onto the
-// filesystem side before comparing, so they must not classify as a file change here either — an
-// old recorded Version's `name`/`test` can differ from a rebuild for reasons unrelated to drift.
+// Deprecated per-file props. consumer.isComponentModified copies them from the model before
+// comparing; strip them here too, or a stale `name`/`test` value misclassifies as drift.
 const DEPRECATED_FILE_PROPS = ['name', 'test'] as const;
 
 export const DRIFT_FIELDS = [
@@ -14,10 +13,9 @@ export const DRIFT_FIELDS = [
   'packageDependencies',
   'devPackageDependencies',
   'peerPackageDependencies',
-  // env-computed dependency data (force:true env policies, e.g. the core react env's dependency
-  // template). Keep `extensions` out of this list: a git-side `bit deps set` writes both the
-  // component's aspect config (extensions) and the computed overrides — extensions must stay
-  // comparable so that change classifies as git-authored.
+  // env-computed dependency data (force:true env policies). Excludes `extensions`: `bit deps set`
+  // writes both extensions and overrides, and extensions must stay comparable so that change
+  // classifies as git-authored.
   'overrides',
 ] as const;
 
@@ -28,11 +26,9 @@ const VOLATILE_FIELDS = ['log', 'parents', 'squashed', 'origin'] as const;
 const EXCLUDED = [...DRIFT_FIELDS, ...VOLATILE_FIELDS];
 
 /**
- * Sort a `Version.id()` payload's `files` (and each file's `dists`, if present) by
- * `relativePath`, and strip the deprecated `name`/`test` file props. Mirrors `sortProperties` /
- * the deprecated-prop alignment in consumer.ts's recorded-vs-filesystem modified check, so
- * neither a pure ordering difference nor a stale `name`/`test` value reads as drift or as a
- * git-authored change.
+ * Sort a `Version.id()` payload's `files` (and each file's `dists`) by `relativePath`, and strip
+ * the deprecated `name`/`test` props. Mirrors consumer.ts's sortProperties / deprecated-prop
+ * alignment, so ordering and stale props don't misclassify as drift.
  */
 export function normalizePayload(payload: Record<string, any>): Record<string, any> {
   if (!Array.isArray(payload.files)) return payload;
@@ -80,8 +76,7 @@ export function blockerNamesUnion(
   for (const entry of componentsWithIssues) {
     if (!inSet.has(entry.id.toStringWithoutVersion())) continue;
     if (!entry.issues.hasTagBlockerIssues()) continue;
-    // Only the tag-blocker issues need ignoring — a non-blocker issue name in `ignoreIssues` is a
-    // no-op, so the union should carry exactly what it's there to suppress.
+    // A non-blocker issue name in `ignoreIssues` is a no-op; only tag-blocker names belong here.
     entry.issues
       .getAllIssues()
       .filter((issue) => issue.isTagBlocker)

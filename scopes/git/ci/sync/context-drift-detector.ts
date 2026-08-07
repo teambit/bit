@@ -19,24 +19,18 @@ export type ContextDriftReport = {
 };
 
 /**
- * Split the tag-pending set into git-authored changes and dependency-context drift. Drift means
- * the diff against the recorded version is confined to dependency data. On a pristine checkout,
- * git did not touch the component; the resolution context (env template of the pinned engine,
- * root policy) moved instead.
+ * Split the tag-pending set into git-authored changes and dependency-context drift. Drift = the
+ * diff against the recorded version is confined to dependency data; files and config are identical.
  */
 export async function detectContextDrift(workspace: Workspace, logger: Logger): Promise<ContextDriftReport> {
   const pendingIds = await workspace.listTagPendingIds();
-  // Exclude local-only components, matching every snap path (mirrors
-  // Snapping.getTagPendingComponentsIds). `export` refuses them, and a bare `legacyBitIds` snap
-  // (this run's `snapIds` path) skips the pending-list computation that normally filters them out.
+  // `export` refuses local-only components; a `legacyBitIds` snap bypasses the pending-path filter
+  // that normally removes them (Snapping.getTagPendingComponentsIds), so filter here.
   const localOnly = ComponentIdList.fromArray(workspace.filter.byLocalOnly(pendingIds));
   const pending = pendingIds.filter((id) => !localOnly.hasWithoutVersion(id));
   const legacyScope = workspace.scope.legacyScope;
   const repo = legacyScope.objects;
-  // Bounded concurrency (same pattern as sync/main-config-sync.ts): each component's check loads
-  // its recorded Version and rebuilds it from the filesystem, which a large pending set shouldn't
-  // fire off unbounded. pMapPool preserves input order in its results, so the split below stays
-  // deterministic regardless of which component's check resolves first.
+  // pMapPool preserves input order, keeping the split deterministic.
   const results = await pMapPool<ComponentID, DriftCheckResult>(
     pending,
     async (id) => {
@@ -50,10 +44,8 @@ export async function detectContextDrift(workspace: Workspace, logger: Logger): 
         const consumerComp = comp.state._consumer.clone();
         consumerComp.log = recorded.log; // same normalization as consumer.isComponentModified
         const { version: fromFs } = await legacyScope.sources.consumerComponentToVersion(consumerComp);
-        // Version.id() serializes to a JSON string for hashing. Parse both sides so the pure helper
-        // gets plain objects, then normalize file order — the recorded Version was sorted by
-        // consumer.ts's sortProperties at persist time, but consumerComponentToVersion's output
-        // here is not, so a pure ordering difference would otherwise misclassify as drift.
+        // Version.id() returns a JSON string. Normalization is required on both sides: the recorded
+        // Version was sorted at persist time (consumer.ts sortProperties); the rebuilt one is not.
         const { depOnly, changedKeys } = classifyPayloadDiff(
           normalizePayload(JSON.parse(recorded.id())),
           normalizePayload(JSON.parse(fromFs.id()))
@@ -61,7 +53,7 @@ export async function detectContextDrift(workspace: Workspace, logger: Logger): 
         if (depOnly) return { id, kind: 'drift', recordedBitVersion: recorded.bitVersion, changedKeys };
         return { id, kind: 'git-authored' };
       } catch (e: any) {
-        // best-effort per component: an unreadable model must not kill the run — treat as git-authored
+        // an unreadable model must not kill the run; degrade to git-authored
         logger.console(chalk.yellow(`  ${id.toStringWithoutVersion()}: drift check skipped (${e?.message || e})`));
         return { id, kind: 'git-authored' };
       }

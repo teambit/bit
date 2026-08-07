@@ -445,9 +445,9 @@ export class CiMain {
   }
 
   /**
-   * `snapIds` scopes the status failure to the components this run snaps. A global failure would
-   * block every snap in the repo, including one that never touches a blocked component (e.g. a
-   * circular dependency). The snap itself still enforces blockers on its own components.
+   * `snapIds` scopes the status failure to the components this run snaps — a global failure would
+   * otherwise block every snap in the repo. The snap itself still enforces blockers on its own
+   * components.
    */
   private async verifyWorkspaceStatusInternal(strict: boolean = false, { snapIds }: { snapIds?: ComponentID[] } = {}) {
     this.logger.console('📊 Workspace Status');
@@ -620,15 +620,12 @@ export class CiMain {
   }
 
   /**
-   * Consume dependency-context drift on main. The tag seeds exactly the drifted set with one
-   * patch bump; bit's auto-tag then bumps each drifted component's dependents so their
-   * recorded dependencies follow. Skipping auto-tag would leave those dependents' recorded
-   * deps stale, and the next run would re-detect the same drift — a convergence cascade that
-   * never settles. The tag ignores blockers on the drifted components: their files and config
-   * match the recorded head, so a blocker reflects the recorded content under the current
-   * context. A blocker type the context itself introduces is tolerated too. The
-   * .bitmap/lockfile updates stay in the working tree for the caller's mainSync commit flow
-   * to pick up.
+   * Consume dependency-context drift on main with one patch tag over the drifted set. Auto-tag
+   * then carries each drifted component's dependents; skipping it would leave their recorded deps
+   * stale and the next run would re-detect the same drift. Ignores blockers on the drifted
+   * components, including ones the context change itself introduces — their files and config
+   * already match the recorded head. Leaves .bitmap/lockfile updates in the working tree for the
+   * caller's mainSync commit flow.
    */
   async convergeContextDrift({ dryRun }: { dryRun?: boolean } = {}): Promise<{
     converged: number;
@@ -670,8 +667,8 @@ export class CiMain {
       persist: false,
       failFast: true,
     });
-    // The tag call produced nothing, though drift was detected — detector and tag disagree. This
-    // differs from "no dependency-context drift" (drift.length === 0): here `detected` stays true.
+    // Drift detected but the tag produced nothing (detector and tag disagree); `detected` stays
+    // true here, unlike the empty-drift case above.
     if (!results) {
       return {
         converged: 0,
@@ -774,8 +771,8 @@ export class CiMain {
 
     const resolvedSnapIds = snapIds ? await this.workspace.resolveMultipleComponentIds(snapIds) : undefined;
     if (resolvedSnapIds && !resolvedSnapIds.length) {
-      // Neutral wording: this method does not know whether drift caused the empty set or nothing
-      // was pending at all — the caller (e.g. the lane sync executor) reports drift separately.
+      // This method can't tell drift-caused emptiness from nothing pending; the caller (e.g. the
+      // lane sync executor) reports drift separately.
       this.logger.console(formatWarningSummary('No git-authored changes to snap'));
       return 'No changes detected, nothing to snap';
     }
@@ -940,18 +937,18 @@ export class CiMain {
             );
           } else {
             await this.syncConfigFromMain(laneId);
-            // `snapIds` was resolved before this call. `syncConfigFromMain` clears the component
-            // cache, so a component it just re-configured can become git-authored only now — add
-            // any such id, or this run's snap would miss it. Never add a drift id.
+            // `syncConfigFromMain` clears the component cache; a component it just reconfigured
+            // can only now show as git-authored. Add it here, or the snap misses it. Never add a
+            // drift id.
             if (snapIds) {
               const { gitAuthored } = await this.detectContextDrift();
               const known = new Set(snapIds.map((id) => id.toStringWithoutVersion()));
               const missing = gitAuthored.filter((id) => !known.has(id.toStringWithoutVersion()));
               if (missing.length) {
                 snapIds = [...snapIds, ...missing];
-                // The added ids never went through `snapPrCommit`'s scoped verify — that ran before
-                // this expansion, over the pre-expansion set. Re-run it over the final set, or an
-                // added id's blocker surfaces later at snap instead of at this gate.
+                // The added ids skipped `snapPrCommit`'s scoped verify, which ran before this
+                // expansion. Re-verify over the final set, or an added id's blocker surfaces at
+                // snap instead of here.
                 await this.verifyWorkspaceStatusInternal(strict, { snapIds });
               }
             }

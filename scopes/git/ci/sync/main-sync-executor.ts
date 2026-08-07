@@ -139,10 +139,9 @@ export class MainSyncExecutor {
       // Direct-push stays bare: asking the host about `mainSyncBranch`'s PR would be the one
       // interaction with it this mode promises not to make.
       if (!drift.length) {
-        // Two cases produce no file diff even though convergence was detected: a dry-run tags
-        // nothing, and a detected-but-nothing-taggable convergence (converged: 0) exports nothing
-        // either. Report `convergence.summary` in both, or the CONVERGED summary would contradict
-        // the line just logged.
+        // A dry-run, or a detected-but-nothing-taggable convergence (converged: 0), also produces
+        // no file diff. Return `convergence.summary` for both, or the CONVERGED summary
+        // contradicts the line just logged.
         if (convergence.detected && (opts.dryRun || !convergence.converged)) return `main -> ${convergence.summary}`;
         return directPush ? CONVERGED_SUMMARY : await this.convergedSummary(branch);
       }

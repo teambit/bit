@@ -767,12 +767,10 @@ export class LaneSyncExecutor {
    * imported BEFORE delegating: a switch onto the lane the workspace is already on no-ops before any
    * fetch, so it never warms a cold scope.
    *
-   * Pending components split into git-authored changes and dependency-context drift before snapping
-   * (a recorded dep range moved under the workspace's current resolution context, not under a dev's
-   * commit). Only the git-authored subset passes as `snapIds`; drift never rides into a lane snap it
-   * did not touch directly. A drifted component that depends on a snapped component can still be
-   * auto-snapped as its dependent — `snapPrCommit` reports that case. Main-side convergence consumes
-   * drift not auto-snapped this way.
+   * Splits pending components into git-authored changes and dependency-context drift before
+   * snapping. Only the git-authored subset passes as `snapIds`; drift rides into a lane snap only
+   * as an auto-snapped dependent of a snapped component (`snapPrCommit` reports that case).
+   * Main-side convergence consumes drift not auto-snapped this way.
    */
   private async snapAndExportOntoLane(laneIdStr: string, message: string): Promise<Error | undefined> {
     try {
