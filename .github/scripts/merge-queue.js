@@ -82,6 +82,13 @@ const ACTIVE_JOB_STATUSES = new Set(['running', 'queued', 'not_running', 'blocke
 // workflow statuses under which a contained bit_merge job could still be active; anything
 // terminal (success/failed/error/canceled/not_run) is skipped without fetching its jobs.
 const ACTIVE_WORKFLOW_STATUSES = new Set(['created', 'running', 'failing', 'on_hold']);
+// check runs created by the queue's own GitHub workflows (the reconcile job and the review-ping
+// bridge job) appear on PR head commits; their failures or hangs are queue-infrastructure
+// artifacts (e.g. the 2026-08-06 Actions outage failed every reconcile run, which then blocked
+// the PRs as "checks failing"), not verdicts about the PR — never let them gate the queue.
+// Matched by owning workflow name (not job name) so unrelated checks that happen to share a job
+// name are still honored.
+const SELF_WORKFLOW_NAMES = new Set(['merge-queue', 'merge-queue-review-ping']);
 const MAX_STATUS_DESCRIPTION_LENGTH = 140;
 const NOT_QUEUED_DESCRIPTION = 'not queued — enable auto-merge (squash) to join the merge queue';
 
@@ -122,14 +129,34 @@ async function githubGraphql(query) {
   return result.data;
 }
 
+// transient CircleCI failures get bounded retries: the reconcile is this queue's outage
+// fallback, and (especially unauthenticated) reads can hit rate limits or blips — one 429/5xx
+// must not abort a whole heartbeat run. Hard failures (401/404/...) still throw immediately,
+// and exhausting retries throws too: "couldn't check bit_merge" is never treated as settled.
+const RETRYABLE_CIRCLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+
 async function circleRequest(path) {
-  const response = await fetch(`https://circleci.com/api/v2${path}`, {
-    headers: circleToken ? { 'Circle-Token': circleToken } : {},
-  });
-  if (!response.ok) {
-    throw new Error(`CircleCI GET ${path} failed: ${response.status} ${await response.text()}`);
+  const maxAttempts = 3;
+  for (let attempt = 1; ; attempt += 1) {
+    let response;
+    try {
+      response = await fetch(`https://circleci.com/api/v2${path}`, {
+        headers: circleToken ? { 'Circle-Token': circleToken } : {},
+      });
+    } catch (error) {
+      if (attempt === maxAttempts) throw error;
+      console.log(`CircleCI GET ${path} network error (attempt ${attempt}/${maxAttempts}): ${error.message}`);
+      await sleep(attempt * 3000);
+      continue;
+    }
+    if (response.ok) return response.json();
+    const body = await response.text();
+    if (attempt === maxAttempts || !RETRYABLE_CIRCLE_STATUSES.has(response.status)) {
+      throw new Error(`CircleCI GET ${path} failed: ${response.status} ${body}`);
+    }
+    console.log(`CircleCI GET ${path} got ${response.status} (attempt ${attempt}/${maxAttempts}), retrying`);
+    await sleep(attempt * 3000);
   }
-  return response.json();
 }
 
 async function getMasterPipelinesWithinWindow() {
@@ -236,7 +263,7 @@ async function fetchOpenPullRequestsPage(cursor) {
                     nodes {
                       __typename
                       ... on StatusContext { context state description targetUrl createdAt }
-                      ... on CheckRun { name status conclusion }
+                      ... on CheckRun { name status conclusion checkSuite { workflowRun { workflow { name } } } }
                     }
                   }
                 }
@@ -322,14 +349,8 @@ function evaluateChecks(pullRequest) {
     console.log(`  #${pullRequest.number}: more than 100 check contexts, treating as pending (raise the page size)`);
     return { state: 'pending', failing: [] };
   }
-  // 'reconcile' (this queue's own workflow job) and 'ping' (the review bridge job) appear as
-  // check runs on PR head commits; their failures or hangs are queue-infrastructure artifacts
-  // (e.g. the 2026-08-06 Actions outage failed every reconcile run, which then blocked the PRs
-  // as "checks failing"), not verdicts about the PR — never let them gate the queue
-  const selfCheckRunNames = ['reconcile', 'ping'];
   const ignoredContexts = new Set(
     [GATE_CONTEXT]
-      .concat(selfCheckRunNames)
       .concat((process.env.MERGE_QUEUE_IGNORE_CHECKS || '').split(','))
       .map((name) => name.trim())
       .filter(Boolean)
@@ -346,6 +367,7 @@ function evaluateChecks(pullRequest) {
       else pendingCount += 1; // PENDING / EXPECTED
     } else if (context.__typename === 'CheckRun') {
       if (ignoredContexts.has(context.name)) continue;
+      if (SELF_WORKFLOW_NAMES.has(context.checkSuite?.workflowRun?.workflow?.name)) continue;
       evaluatedCount += 1;
       if (context.status !== 'COMPLETED') {
         pendingCount += 1;
