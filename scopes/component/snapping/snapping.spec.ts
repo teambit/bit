@@ -231,7 +231,7 @@ describe('Snapping aspect', function () {
       // eslint-disable-next-line no-console
       console.log(
         'DIAG tagResults snapped:',
-        JSON.stringify(tagResults?.snappedComponents.map((c) => c.id.toString()))
+        JSON.stringify(tagResults?.taggedComponents.map((c) => c.id.toString()))
       );
       const comp2Id = await workspace.idsByPattern('comp2');
       // eslint-disable-next-line no-console

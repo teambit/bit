@@ -34,7 +34,7 @@ describe('CheckoutAspect', function () {
       const snapping: SnappingMain = await loadAspect(SnappingAspect, workspacePath);
       const tagRes = await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
       // eslint-disable-next-line no-console
-      console.log('DIAG checkout-reset tag snapped:', JSON.stringify(tagRes?.snappedComponents.map((c) => c.id.toString())));
+      console.log('DIAG checkout-reset tag snapped:', JSON.stringify(tagRes?.taggedComponents.map((c) => c.id.toString())));
       const { id, dir } = compsDir[0];
       compId = id;
       compDir = dir;
