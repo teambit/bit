@@ -728,7 +728,7 @@
       "@pnpm/util.lex-comparator": "3.0.2",
       "@pnpm/config.nerf-dart": "1.0.1"
     },
-    "nodeVersion": "22.22.0",
+    "nodeVersion": "24.18.1",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -810,7 +810,7 @@
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
-            "node": "22.22.0"
+            "node": "24.18.1"
           },
           "engines": {
             "node": ">=18.12.0"
