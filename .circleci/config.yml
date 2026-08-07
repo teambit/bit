@@ -736,8 +736,17 @@ jobs:
       - run:
           name: 'reconcile the merge queue'
           # no CIRCLE_TOKEN needed: the project is public, so the script's CircleCI reads work
-          # unauthenticated (it uses the token only when one is present in the environment)
-          command: GITHUB_TOKEN=$GH_RELEASE_GITHUB_API_TOKEN node .github/scripts/merge-queue.js
+          # unauthenticated (it uses the token only when one is present in the environment).
+          # A hung API call would otherwise let a run outlive the 10m schedule interval — the
+          # tight no_output_timeout bounds it (the script normally finishes in seconds).
+          no_output_timeout: 5m
+          command: |
+            if [ -z "$GH_RELEASE_GITHUB_API_TOKEN" ]; then
+              echo "The GH_RELEASE_GITHUB_API_TOKEN project env var is not set — the reconcile"
+              echo "script needs it as GITHUB_TOKEN (statuses+issues write)."
+              exit 1
+            fi
+            GITHUB_TOKEN=$GH_RELEASE_GITHUB_API_TOKEN node .github/scripts/merge-queue.js
 
   generate_and_check_types:
     <<: *defaults
@@ -1621,7 +1630,11 @@ workflows:
               only:
                 - master
     jobs:
-      - merge_queue_reconcile
+      - merge_queue_reconcile:
+          # serialize heartbeat runs against each other (same mechanism bit_merge uses) so a
+          # slow run can't overlap the next tick; overlap with the Actions-side reconciles
+          # remains possible and harmless — the script is stateless and idempotent
+          serial-group: 'merge-queue-reconcile'
 
   # Windows nightly workflow
   # windows-nightly:
