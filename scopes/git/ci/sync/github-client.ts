@@ -135,6 +135,32 @@ export class GitHubClient implements GitHostProvider {
   async addLabel(prNumber: number, label: string): Promise<void> {
     await this.request('POST', `/issues/${prNumber}/labels`, { labels: [label] });
   }
+
+  private async listIssueComments(prNumber: number): Promise<{ id: number; body: string }[]> {
+    const list = await this.request('GET', `/issues/${prNumber}/comments`);
+    return (list ?? []).map((c: any) => ({ id: c.id, body: c.body ?? '' }));
+  }
+
+  /**
+   * Find the comment carrying `marker` (an HTML comment embedded in the body) and replace its body,
+   * or post `body` as a new comment when none exists and `options.createIfAbsent` is not false.
+   * GitHub's comment PATCH endpoint is `/issues/comments/{id}`, not `/issues/{pr}/comments/{id}` —
+   * a comment id is unique per repository, not scoped under the issue/PR that carries it.
+   */
+  async upsertIssueComment(
+    prNumber: number,
+    marker: string,
+    body: string,
+    options: { createIfAbsent?: boolean } = {}
+  ): Promise<void> {
+    const existing = (await this.listIssueComments(prNumber)).find((c) => c.body.includes(marker));
+    if (existing) {
+      await this.request('PATCH', `/issues/comments/${existing.id}`, { body });
+      return;
+    }
+    if (options.createIfAbsent === false) return;
+    await this.comment(prNumber, body);
+  }
 }
 
 /**
@@ -189,6 +215,15 @@ export class GitHubHostProvider implements GitHostProvider {
 
   async addLabel(prNumber: number, label: string): Promise<void> {
     return this.requireClient().addLabel(prNumber, label);
+  }
+
+  async upsertComment(
+    prNumber: number,
+    marker: string,
+    body: string,
+    options?: { createIfAbsent?: boolean }
+  ): Promise<void> {
+    return this.requireClient().upsertIssueComment(prNumber, marker, body, options);
   }
 
   private resolveClient(remoteUrl?: string): GitHubClient | undefined {

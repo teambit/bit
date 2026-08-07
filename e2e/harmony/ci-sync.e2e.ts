@@ -1120,8 +1120,10 @@ describe('bit ci sync', function () {
     });
   });
 
-  // A real scope carries components with tag blockers (e.g. circular dependencies). The snap
-  // covers only the lane's pending components. A blocker on an untouched component must not halt it.
+  // A real scope carries components with tag blockers (e.g. circular dependencies). This pair is
+  // untouched in the strongest sense: no diff at all, so it is never part of the run's tag-pending
+  // set, and its blocker must not halt the run. Contrast the drift cell below, where a pair IS
+  // pending (a dep-only diff) and its blocker is tolerated instead of avoided.
   describe('a snap-blocking issue on a component the lane never touches', () => {
     const LANE = 'clean-lane';
     let defaultBranch: string;
@@ -1155,9 +1157,11 @@ describe('bit ci sync', function () {
   });
 
   // This reproduces an engine bump with one bit binary: a committed root policy moves a recorded
-  // package range. The lane run snaps only the git-authored change, and reports the drifted
-  // component instead of sweeping it into the dev's snap.
-  describe('dependency-context drift is excluded from the lane snap', () => {
+  // package range. Lanes carry the fan-out (spec decision 6): the lane run snaps the drifted
+  // component together with the git-authored change, in one snap under the developer's own
+  // message, and reports it as a surfaced side effect — git does not show this change, the run
+  // log and the PR report do.
+  describe('dependency-context drift rides the lane snap as a surfaced side effect', () => {
     const LANE = 'drift-lane';
     let defaultBranch: string;
     let devPath: string;
@@ -1179,7 +1183,7 @@ describe('bit ci sync', function () {
       helper.command.runCmd('git commit -m "comp2 records is-odd 1.0.0"');
       helper.command.runCmd(`git push origin ${defaultBranch}`);
       // Create the lane before the policy bump, or the dev's own (unscoped) `bit snap` sweeps the
-      // drift in too, leaving nothing for `bit ci sync` to exclude.
+      // change in too, leaving nothing for `bit ci sync` to detect as drift.
       devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
       seedSync(LANE);
       branchSideCommit(LANE, defaultBranch, 'comp1/index.js', comp1Src('dev-commit-1'), 'dev commit on comp1');
@@ -1194,7 +1198,7 @@ describe('bit ci sync', function () {
       helper.command.runCmd(`git push origin ${defaultBranch}`);
     });
 
-    it('snaps the dev commit, reports the drifted component, and keeps it off the lane', () => {
+    it('snaps the dev commit, carries the drifted component onto the lane, and reports it', () => {
       const before = remoteLaneFingerprint(LANE);
       expect(before).to.not.include('comp2');
       const { output, exitCode } = syncRun(LANE);
@@ -1202,7 +1206,54 @@ describe('bit ci sync', function () {
       expect(output).to.include('dependency-context drift');
       expect(output).to.include('comp2');
       expect(laneTipFile(devPath, 'comp1/index.js')).to.include('dev-commit-1');
-      expect(remoteLaneFingerprint(LANE)).to.not.include('comp2');
+      expect(remoteLaneFingerprint(LANE)).to.include('comp2');
+    });
+  });
+
+  // The case that used to halt production: a drifted component's pre-existing tag blocker must not
+  // block a lane run now that lanes carry the whole fan-out in one snap. Reuses the circular-pair +
+  // policy-bump recipe from the main-convergence describe below, on a lane instead of main.
+  describe('a drifted component with a pre-existing blocker rides the lane snap without halting', () => {
+    const LANE = 'drift-with-blocker-lane';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      // A circular pair, recorded under a tag-blocker override — the blocker the drifted set's
+      // tolerance (`snapIgnoreIssues`) must carry through the lane snap.
+      helper.fs.outputFile('comp3/index.js', `require('is-odd');\nrequire('@${helper.scopes.remote}/comp4');`);
+      helper.fs.outputFile('comp4/index.js', `require('@${helper.scopes.remote}/comp3');`);
+      helper.command.addComponent('comp3');
+      helper.command.addComponent('comp4');
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-odd': '1.0.0' } });
+      helper.command.install();
+      helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
+      helper.command.export();
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "record circular pair under is-odd 1.0.0"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      // Create the lane before the policy bump, for the same reason as the drift cell above.
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
+      seedSync(LANE);
+      branchSideCommit(LANE, defaultBranch, 'comp1/index.js', comp1Src('dev-commit-1'), 'dev commit on comp1');
+      // engine-bump analogue: drifts the circular pair, blocker and all
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { 'is-odd': '3.0.1' } });
+      helper.command.install();
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "bump is-odd policy (engine-bump analogue)"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+    });
+
+    it('exits 0, snaps the dev commit, and carries the drifted pair onto the lane', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.not.include('Workspace status verification failed');
+      expect(output).to.include('dependency-context drift');
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('dev-commit-1');
+      const laneFingerprint = remoteLaneFingerprint(LANE);
+      expect(laneFingerprint).to.include('comp3');
+      expect(laneFingerprint).to.include('comp4');
     });
   });
 

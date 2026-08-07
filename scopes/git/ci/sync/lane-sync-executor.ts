@@ -6,9 +6,10 @@ import type { LaneData } from '@teambit/legacy.scope';
 import { getCloudDomain } from '@teambit/legacy.constants';
 import { FileStatus, type MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { git } from '../git';
-import type { CiMain } from '../ci.main.runtime';
+import type { CiMain, ContextDriftReport } from '../ci.main.runtime';
 import type { CiSyncConfig, LaneTarget } from './sync-config';
 import { laneNameToBranch } from './sync-config';
+import { DRIFT_COMMENT_MARKER, driftClearedCommentBody, driftReportCommentBody } from './context-drift';
 import type { BranchSyncState } from './sync-state';
 import {
   CONFLICT_LABEL,
@@ -610,7 +611,7 @@ export class LaneSyncExecutor {
     await this.checkoutFromRemote(branch, `origin/${branch}`);
 
     try {
-      const exportErr = await this.snapAndExportOntoLane(laneIdStr, message);
+      const { error: exportErr, drift } = await this.snapAndExportOntoLane(laneIdStr, message);
       if (exportErr) {
         // Halt rather than propagate: one lane's failed snap/export must not abort the lanes after it.
         return await this.executeHalt({
@@ -621,6 +622,7 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
+      await this.surfaceDriftOnPr(branch, drift);
 
       const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
       if (!laneHead) {
@@ -728,7 +730,7 @@ export class LaneSyncExecutor {
       }
 
       // ---- step 2: snap + export the merged tree onto the lane ---------------------------------
-      const exportErr = await this.snapAndExportOntoLane(
+      const { error: exportErr, drift } = await this.snapAndExportOntoLane(
         laneIdStr,
         `merge remote lane ${laneIdStr} into ${branch} ${SYNC_COMMIT_MARKER}`
       );
@@ -738,6 +740,7 @@ export class LaneSyncExecutor {
             `result failed: ${exportErr.message}`
         );
       }
+      await this.surfaceDriftOnPr(branch, drift);
 
       // ---- step 3: record the new lane head on the branch --------------------------------------
       const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
@@ -759,20 +762,25 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * Snap the workspace's current tree onto the lane and export it; returns the error so the caller can
-   * halt. Snaps WHATEVER is in the workspace (the switch uses `forceOurs` and never merges files), so
-   * a diverged tree must already hold the merged content. `keepLane` preserves the lane's history,
-   * `skipCleanup` keeps the snap's `.bitmap` for the caller to commit, `noDestructiveRecovery` turns
-   * stale-lane recovery (delete + re-fork the remote lane) into a throw. The lane object must be
-   * imported BEFORE delegating: a switch onto the lane the workspace is already on no-ops before any
-   * fetch, so it never warms a cold scope.
+   * Snap the workspace's current tree onto the lane and export it; returns the error (if any) and the
+   * drift the run detected, so the caller can halt or surface the report. Snaps WHATEVER is in the
+   * workspace (the switch uses `forceOurs` and never merges files), so a diverged tree must already
+   * hold the merged content. `keepLane` preserves the lane's history, `skipCleanup` keeps the snap's
+   * `.bitmap` for the caller to commit, `noDestructiveRecovery` turns stale-lane recovery (delete +
+   * re-fork the remote lane) into a throw. The lane object must be imported BEFORE delegating: a
+   * switch onto the lane the workspace is already on no-ops before any fetch, so it never warms a
+   * cold scope.
    *
-   * Splits pending components into git-authored changes and dependency-context drift before
-   * snapping. Only the git-authored subset passes as `snapIds`; drift rides into a lane snap only
-   * as an auto-snapped dependent of a snapped component (`snapPrCommit` reports that case).
-   * Main-side convergence consumes drift not auto-snapped this way.
+   * Lanes carry the fan-out (spec decision 6): the snap covers the full pending set — the
+   * git-authored change and any dependency-context drift — under the developer's own message. Status
+   * verification still scopes to the git-authored subset (`verifyIds`); the drifted subset's
+   * pre-existing blockers are tolerated at snap time via `driftIds` (see `blockerNamesUnion`), never
+   * at verification time — a *new* blocker on a component the developer touched still fails the run.
    */
-  private async snapAndExportOntoLane(laneIdStr: string, message: string): Promise<Error | undefined> {
+  private async snapAndExportOntoLane(
+    laneIdStr: string,
+    message: string
+  ): Promise<{ error?: Error; drift: ContextDriftReport['drift'] }> {
     try {
       await ensureCurrentLaneObject(this.deps.lanes);
       const { drift, gitAuthored } = await this.deps.ci.detectContextDrift();
@@ -782,8 +790,9 @@ export class LaneSyncExecutor {
         this.deps.logger.console(
           formatSection(
             'dependency-context drift',
-            `not snapped directly by this run (a dependent may auto-snap it)` +
-              `${recorded ? ` — recorded with bit ${recorded}, running bit ${running}` : ''}`,
+            `${drift.length} component(s) carry dependency-context drift` +
+              `${recorded ? ` (recorded with bit ${recorded}, running bit ${running})` : ''}` +
+              ` — snapped as side effects of the committed context; see the PR report:`,
             drift.map((d) => formatItem(`${d.id.toStringWithoutVersion()} (${d.changedKeys.join(', ')})`))
           )
         );
@@ -796,12 +805,40 @@ export class LaneSyncExecutor {
         keepLane: true,
         skipCleanup: true,
         noDestructiveRecovery: true,
-        snapIds: gitAuthored.map((id) => id.toStringWithoutVersion()),
+        verifyIds: gitAuthored.map((id) => id.toStringWithoutVersion()),
         driftIds: drift.map((d) => d.id.toStringWithoutVersion()),
       });
-      return undefined;
+      return { drift };
     } catch (e: any) {
-      return e instanceof Error ? e : new Error(String(e?.message ?? e));
+      return { error: e instanceof Error ? e : new Error(String(e?.message ?? e)), drift: [] };
+    }
+  }
+
+  /**
+   * Upsert the drift-report comment on the branch's PR (spec 5.6): the enumerated effect of the
+   * fan-out the snap just committed. Silently a no-op with no configured git host (the run-log
+   * report above is the fallback surface), no open PR yet, or a provider that doesn't implement
+   * comment upserts. Never fails the lane — a report is a courtesy, not a gate.
+   */
+  private async surfaceDriftOnPr(branch: string, drift: ContextDriftReport['drift']): Promise<void> {
+    const { gitHost, logger } = this.deps;
+    const upsertComment = gitHost?.upsertComment?.bind(gitHost);
+    if (!upsertComment) return;
+    const pr = await this.findPr(branch);
+    if (!pr) return;
+    try {
+      if (drift.length) {
+        const running = this.deps.ci.getRunningBitVersion();
+        await upsertComment(pr.number, DRIFT_COMMENT_MARKER, driftReportCommentBody(drift, running));
+      } else {
+        // Only update a report that already exists — a lane with no drift that never had one must
+        // not gain a "drift cleared" comment out of nowhere.
+        await upsertComment(pr.number, DRIFT_COMMENT_MARKER, driftClearedCommentBody(), { createIfAbsent: false });
+      }
+    } catch (e: any) {
+      logger.consoleWarning(
+        `Could not update the dependency-context drift report on PR #${pr.number}: ${e?.message || e}`
+      );
     }
   }
 

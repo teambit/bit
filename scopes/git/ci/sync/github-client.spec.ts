@@ -171,4 +171,52 @@ describe('GitHubClient', () => {
     const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl: fakeFetch });
     expect(await client.findPrByBranch('lane-x')).to.equal(undefined);
   });
+
+  describe('upsertIssueComment', () => {
+    function fakeFetchOver(existingComments: Array<{ id: number; body: string }>) {
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        const method = init?.method ?? 'GET';
+        if (method === 'GET') {
+          return new Response(JSON.stringify(existingComments), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } });
+      }) as typeof fetch;
+      return { calls, fetchImpl };
+    }
+
+    it('posts a new comment when no marked comment exists', async () => {
+      const { calls, fetchImpl } = fakeFetchOver([]);
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertIssueComment(7, '<!-- marker -->', '<!-- marker -->\nbody');
+      const posts = calls.filter((c) => c.init?.method === 'POST');
+      expect(posts).to.have.lengthOf(1);
+      expect(posts[0].url).to.equal('https://api.github.com/repos/acme/shop/issues/7/comments');
+    });
+
+    it('patches the marked comment in place, and never posts a second one', async () => {
+      const { calls, fetchImpl } = fakeFetchOver([
+        { id: 42, body: 'unrelated comment' },
+        { id: 99, body: '<!-- marker -->\nold report' },
+      ]);
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertIssueComment(7, '<!-- marker -->', '<!-- marker -->\nnew report');
+      const patches = calls.filter((c) => c.init?.method === 'PATCH');
+      expect(patches).to.have.lengthOf(1);
+      expect(patches[0].url).to.equal('https://api.github.com/repos/acme/shop/issues/comments/99');
+      expect(JSON.parse(patches[0].init.body)).to.deep.equal({ body: '<!-- marker -->\nnew report' });
+      expect(calls.some((c) => c.init?.method === 'POST')).to.equal(false);
+    });
+
+    it('skips silently when createIfAbsent is false and no marked comment exists', async () => {
+      const { calls, fetchImpl } = fakeFetchOver([]);
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertIssueComment(7, '<!-- marker -->', 'cleared', { createIfAbsent: false });
+      expect(calls.some((c) => c.init?.method === 'POST' || c.init?.method === 'PATCH')).to.equal(false);
+    });
+  });
 });

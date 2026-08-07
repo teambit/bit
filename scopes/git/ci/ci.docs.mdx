@@ -405,12 +405,12 @@ This is a real dependency change that the repository introduces.
 `bit ci sync` consumes it. A main run tags the drifted components with a
 patch bump and a message of the shape
 `chore: align dependency context (recorded with bit X, workspace runs bit Y)`,
-then exports. A lane run snaps only the components with git-authored changes
-and reports the drift; it does not snap a drifted component directly, but a
-drifted component that depends on a snapped component is auto-snapped as
-its dependent. Pin the engine in `workspace.jsonc`
-(`"teambit.harmony/bit": { "engine": "<version>" }`) so the context moves only
-when a commit moves it.
+then exports. A lane run snaps the drift together with the git-authored
+change, in one snap under the developer's own message, and reports the
+drifted components on the pull request — main convergence is for context
+drift that reaches main without a pull request. Pin the engine in
+`workspace.jsonc` (`"teambit.harmony/bit": { "engine": "<version>" }`) so the
+context moves only when a commit moves it.
 
 ### Git host providers and credentials
 

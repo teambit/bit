@@ -445,11 +445,14 @@ export class CiMain {
   }
 
   /**
-   * `snapIds` scopes the status failure to the components this run snaps — a global failure would
+   * `verifyIds` scopes the status failure to the components this run snaps — a global failure would
    * otherwise block every snap in the repo. The snap itself still enforces blockers on its own
    * components.
    */
-  private async verifyWorkspaceStatusInternal(strict: boolean = false, { snapIds }: { snapIds?: ComponentID[] } = {}) {
+  private async verifyWorkspaceStatusInternal(
+    strict: boolean = false,
+    { verifyIds }: { verifyIds?: ComponentID[] } = {}
+  ) {
     this.logger.console('📊 Workspace Status');
     this.logger.console(chalk.blue('Verifying status of workspace'));
 
@@ -463,8 +466,8 @@ export class CiMain {
     this.logger.console(statusOutput);
 
     let effectiveCode = code;
-    if (code !== 0 && snapIds) {
-      const inSet = ComponentIdList.fromArray(snapIds);
+    if (code !== 0 && verifyIds) {
+      const inSet = ComponentIdList.fromArray(verifyIds);
       const scoped = {
         ...status,
         componentsWithIssues: status.componentsWithIssues.filter((c) => inSet.hasWithoutVersion(c.id)),
@@ -714,7 +717,7 @@ export class CiMain {
     skipCleanup,
     skipTasks,
     noDestructiveRecovery,
-    snapIds,
+    verifyIds,
     driftIds,
   }: {
     laneIdStr: string;
@@ -733,9 +736,18 @@ export class CiMain {
      * stale-lane case throws instead, which the sync executor surfaces as a halt for a human.
      */
     noDestructiveRecovery?: boolean;
-    /** Snap only these ids (no version), not every tag-pending component; unset for `bit ci pr` (global). */
-    snapIds?: string[];
-    /** Ids excluded from `snapIds` as dependency-context drift; used only to report a dependent auto-snap. */
+    /**
+     * Scope the status verification to these ids (no version) instead of every pending component;
+     * unset for `bit ci pr` (production: global). The snap itself is never scoped — it always snaps
+     * whatever bit's own tag-pending resolution finds.
+     */
+    verifyIds?: string[];
+    /**
+     * Dependency-context drift ids riding along in this snap (lane runs only). Consumed only here,
+     * to compute the snap's `ignoreIssues`: a drifted component's files and config already equal its
+     * recorded head, so a tag-blocker already present on it is not new — see `blockerNamesUnion`.
+     * Never forwarded past this method.
+     */
     driftIds?: string[];
   }) {
     // The post-export cleanup switches the workspace back to main, which re-checks-out main's HEAD
@@ -769,15 +781,17 @@ export class CiMain {
 
     const laneId = await this.lanes.parseLaneId(laneIdStr);
 
-    const resolvedSnapIds = snapIds ? await this.workspace.resolveMultipleComponentIds(snapIds) : undefined;
-    if (resolvedSnapIds && !resolvedSnapIds.length) {
-      // This method can't tell drift-caused emptiness from nothing pending; the caller (e.g. the
-      // lane sync executor) reports drift separately.
-      this.logger.console(formatWarningSummary('No git-authored changes to snap'));
-      return 'No changes detected, nothing to snap';
-    }
+    const resolvedVerifyIds = verifyIds ? await this.workspace.resolveMultipleComponentIds(verifyIds) : undefined;
 
-    await this.verifyWorkspaceStatusInternal(strict, { snapIds: resolvedSnapIds });
+    const { status } = await this.verifyWorkspaceStatusInternal(strict, { verifyIds: resolvedVerifyIds });
+
+    // The union of tag-blocker issue names already present on the drifted set — tolerated because a
+    // drifted component's files and config equal its recorded head, so its blockers are not new.
+    // Computed here (against the status this call already loaded) rather than in the caller, so a
+    // lane run doesn't pay for a second full `status()` pass.
+    const snapIgnoreIssues = driftIds?.length
+      ? blockerNamesUnion(status.componentsWithIssues, new Set(driftIds))
+      : undefined;
 
     await this.importer
       .import({
@@ -801,13 +815,11 @@ export class CiMain {
         originalLane,
         message: resolvedMessage,
         build,
-        strict,
         dryRun,
         skipCleanup: resolvedSkipCleanup,
         skipTasks: resolvedSkipTasks,
         noDestructiveRecovery,
-        snapIds: resolvedSnapIds,
-        driftIds,
+        snapIgnoreIssues,
       });
     }
     return this.snapAndExportWithTempLane({
@@ -818,7 +830,7 @@ export class CiMain {
       dryRun,
       skipCleanup: resolvedSkipCleanup,
       skipTasks: resolvedSkipTasks,
-      snapIds: resolvedSnapIds,
+      snapIgnoreIssues,
     });
   }
 
@@ -877,25 +889,22 @@ export class CiMain {
     originalLane,
     message,
     build,
-    strict,
     dryRun,
     skipCleanup,
     skipTasks,
     noDestructiveRecovery,
-    snapIds,
-    driftIds,
+    snapIgnoreIssues,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
     message: string;
     build: boolean | undefined;
-    strict: boolean | undefined;
     dryRun?: boolean;
     skipCleanup: boolean;
     skipTasks?: string;
     noDestructiveRecovery?: boolean;
-    snapIds?: ComponentID[];
-    driftIds?: string[];
+    /** Tag-blocker issue names to tolerate on this snap; see `snapPrCommit`'s `driftIds`. */
+    snapIgnoreIssues?: string;
   }) {
     // Query the remote (by name, to avoid fetching all lanes) so we know whether to reuse or create
     const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
@@ -936,22 +945,11 @@ export class CiMain {
               )
             );
           } else {
-            await this.syncConfigFromMain(laneId);
             // `syncConfigFromMain` clears the component cache; a component it just reconfigured
-            // can only now show as git-authored. Add it here, or the snap misses it. Never add a
-            // drift id.
-            if (snapIds) {
-              const { gitAuthored } = await this.detectContextDrift();
-              const known = new Set(snapIds.map((id) => id.toStringWithoutVersion()));
-              const missing = gitAuthored.filter((id) => !known.has(id.toStringWithoutVersion()));
-              if (missing.length) {
-                snapIds = [...snapIds, ...missing];
-                // The added ids skipped `snapPrCommit`'s scoped verify, which ran before this
-                // expansion. Re-verify over the final set, or an added id's blocker surfaces at
-                // snap instead of here.
-                await this.verifyWorkspaceStatusInternal(strict, { snapIds });
-              }
-            }
+            // can only now show as tag-pending. Nothing to re-verify or expand here: the snap below
+            // always resolves its own tag-pending set fresh (no `legacyBitIds` scoping), so it picks
+            // up any component this sync just reconfigured without a staleness window.
+            await this.syncConfigFromMain(laneId);
           }
         } else {
           // Switch failed even though the remote lane exists. The destructive recovery below
@@ -1073,7 +1071,7 @@ export class CiMain {
         build,
         exitOnFirstFailedTask: true,
         skipTasks,
-        legacyBitIds: snapIds ? ComponentIdList.fromArray(snapIds) : undefined,
+        ignoreIssues: snapIgnoreIssues,
       });
 
       if (!results) {
@@ -1081,26 +1079,7 @@ export class CiMain {
         return 'No changes detected, nothing to snap';
       }
 
-      const { snappedComponents, autoSnappedResults }: SnapResults = results;
-
-      // A drifted id excluded from `snapIds` can still be auto-snapped, as a dependent of a
-      // component this run did snap — that auto-snap consumes its drift. Report it; the caller
-      // logged the drift as "not snapped here" before this run knew the outcome.
-      if (driftIds?.length) {
-        const driftSet = new Set(driftIds);
-        const autoSnappedDrift = [
-          ...new Set(
-            autoSnappedResults
-              .filter((r) => driftSet.has(r.component.id.toStringWithoutVersion()))
-              .map((r) => r.component.id.toStringWithoutVersion())
-          ),
-        ];
-        if (autoSnappedDrift.length) {
-          this.logger.console(
-            chalk.blue(`Auto-snapped as a dependent, consuming its drift: ${autoSnappedDrift.join(', ')}`)
-          );
-        }
-      }
+      const { snappedComponents }: SnapResults = results;
 
       const snapOutput = snapResultOutput(results);
       this.logger.console(snapOutput);
@@ -1139,7 +1118,7 @@ export class CiMain {
     dryRun,
     skipCleanup,
     skipTasks,
-    snapIds,
+    snapIgnoreIssues,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
@@ -1148,7 +1127,8 @@ export class CiMain {
     dryRun?: boolean;
     skipCleanup: boolean;
     skipTasks?: string;
-    snapIds?: ComponentID[];
+    /** Tag-blocker issue names to tolerate on this snap; see `snapPrCommit`'s `driftIds`. */
+    snapIgnoreIssues?: string;
   }) {
     // Use unique temp lane name to avoid race conditions when multiple CI jobs run concurrently
     const tempLaneName = `${laneId.name}-${generateRandomStr(5)}`;
@@ -1180,7 +1160,7 @@ export class CiMain {
         build,
         exitOnFirstFailedTask: true,
         skipTasks,
-        legacyBitIds: snapIds ? ComponentIdList.fromArray(snapIds) : undefined,
+        ignoreIssues: snapIgnoreIssues,
       });
 
       if (!results) {

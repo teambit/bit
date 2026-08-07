@@ -86,3 +86,52 @@ export function blockerNamesUnion(
   }
   return names.size ? [...names].join(',') : undefined;
 }
+
+/** Marks the one PR comment `bit ci sync` owns for the drift report (spec 5.6). Not shown to a reader. */
+export const DRIFT_COMMENT_MARKER = '<!-- bit-sync-drift-report -->';
+
+/** How many drifted components a report lists before it summarizes the rest, to stay under a git host's comment size limit. */
+const MAX_LISTED_DRIFT_COMPONENTS = 50;
+
+type DriftEntry = { id: { toStringWithoutVersion(): string }; recordedBitVersion?: string; changedKeys: string[] };
+
+/**
+ * The PR comment body for a lane snap that carried dependency-context drift (spec 5.6). States the
+ * cause, lists the affected components and their changed fields, and points at the change request
+ * for the full diff. `driftClearedCommentBody` is the counterpart once the drift is gone.
+ */
+export function driftReportCommentBody(drift: DriftEntry[], runningBitVersion: string): string {
+  const recorded = [...new Set(drift.map((d) => d.recordedBitVersion).filter(Boolean))].join(', ');
+  const causeLine = recorded
+    ? `Cause: the dependency context changed (recorded with bit ${recorded}, running bit ${runningBitVersion}).`
+    : `Cause: the dependency context changed.`;
+  const entries = drift.map((d) => `- \`${d.id.toStringWithoutVersion()}\` — ${d.changedKeys.join(', ')}`);
+  const list =
+    entries.length > MAX_LISTED_DRIFT_COMPONENTS
+      ? [
+          ...entries.slice(0, MAX_LISTED_DRIFT_COMPONENTS),
+          `- …and ${entries.length - MAX_LISTED_DRIFT_COMPONENTS} more`,
+        ]
+      : entries;
+  return [
+    DRIFT_COMMENT_MARKER,
+    '### Dependency-context drift',
+    '',
+    causeLine,
+    'This snap carries the components below as a side effect of the committed context. Git does not show this change.',
+    '',
+    ...list,
+    '',
+    'The change request on Bit Cloud shows the full diff.',
+  ].join('\n');
+}
+
+/** The drift-report comment, updated in place once its drift clears. Never deleted (spec 5.6). */
+export function driftClearedCommentBody(): string {
+  return [
+    DRIFT_COMMENT_MARKER,
+    '### Dependency-context drift',
+    '',
+    'The dependency-context drift this comment reported is gone. The lane matches its dependency context.',
+  ].join('\n');
+}
