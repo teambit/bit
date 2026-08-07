@@ -383,6 +383,7 @@
         "@types/express": "^4.17.21",
         "@types/find-root": "1.1.2",
         "@types/fs-extra": "9.0.7",
+        "@types/graceful-fs": "4.1.9",
         "@types/graphlib": "2.1.7",
         "@types/http-proxy": "^1.17.16",
         "@types/http-proxy-agent": "2.0.2",
