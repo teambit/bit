@@ -157,6 +157,8 @@ export class DependencyInstaller {
     fromConfig: Record<string, PackageExtension> | undefined,
     enableGlobalVirtualStore: boolean
   ): Record<string, PackageExtension> | undefined {
+    // TEMP CI BISECT - DO NOT MERGE: see assertSafeVirtualStoreTransition.
+    if (process.env.BIT_TEMP_CI_BISECT !== 'off') return fromConfig;
     if (!enableGlobalVirtualStore) return fromConfig;
     const react = { dependencies: { '@teambit/react': '*' } };
     const builtIn: Record<string, PackageExtension> = {
@@ -192,6 +194,10 @@ export class DependencyInstaller {
    * a fresh install writes whichever layout is requested.
    */
   private async assertSafeVirtualStoreTransition(finalRootDir: string, enableGlobalVirtualStore: boolean) {
+    // TEMP CI BISECT - DO NOT MERGE: disabled together with withBuiltInPackageExtensions to
+    // determine whether this commit's logic or the lockfile re-resolution breaks bit_pr's
+    // capsule MochaTest. Remove after the diagnosis.
+    if (process.env.BIT_TEMP_CI_BISECT !== 'off') return;
     const modulesDir = path.join(finalRootDir, 'node_modules');
     let modulesYaml: string;
     try {
