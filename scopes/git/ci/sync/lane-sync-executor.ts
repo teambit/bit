@@ -447,6 +447,17 @@ export class LaneSyncExecutor {
           pr,
         });
       case 'export-branch':
+        // The tip is already this reconciler's own commit — it already confirmed everything up to
+        // it (that is what writing it means), and `hasDevCommits`/`stateCommit` cannot tell a real
+        // dev commit from one that touches no bit-tracked file (docs, CI config): `stateCommit` is
+        // derived from `.bitmap`'s content, never from commit messages (sync-state.ts), so a commit
+        // that leaves `.bitmap` byte-identical never advances it, however many runs re-confirm
+        // "nothing to snap" on top. Recognizing our own tip here — not by loosening `hasDevCommits`
+        // itself, which the ownership/retirement path also reads and must stay strict — is what
+        // makes that settle instead of re-planning `export-branch` forever.
+        if (tipIsSyncCommit) {
+          return `${laneName} -> noop (converged; branch tip is already this reconciler's own sync commit)`;
+        }
         return this.executeExportBranch({ target, laneIdStr, branch, defaultBranch });
       case 'merge-diverged':
         return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch });
@@ -623,19 +634,24 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
-      if (noop) {
-        return `${laneName} -> export-branch (branch ${branch} has no bit-tracked change; nothing snapped onto lane ${laneIdStr})`;
-      }
-
+      // Still write the sync ledger on a noop: without it, `stateCommit` (sync-state.ts) never
+      // advances past a commit that touches no bit-tracked file (docs, CI config), and the planner
+      // re-plans `export-branch` on every future run forever — cheap per run, but a standing loop
+      // that never settles. `recordLaneHeadOnBranch`'s commit is `--allow-empty`.
       const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
       if (!recorded) {
         return await this.executeHalt({
           laneName,
           laneIdStr,
           branch,
-          reason: `lane ${laneIdStr} could not be read back from the remote after export`,
+          reason: noop
+            ? `lane ${laneIdStr} could not be read back from the remote while recording the no-op sync ledger`
+            : `lane ${laneIdStr} could not be read back from the remote after export`,
           pr: await this.findPr(branch),
         });
+      }
+      if (noop) {
+        return `${laneName} -> export-branch (branch ${branch} has no bit-tracked change; nothing snapped onto lane ${laneIdStr})`;
       }
       const { laneHead, branchTipSha } = recorded;
       // After recordLaneHeadOnBranch, not before: the report names the branch tip and lane head this

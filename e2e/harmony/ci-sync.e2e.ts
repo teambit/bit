@@ -1156,6 +1156,41 @@ describe('bit ci sync', function () {
     });
   });
 
+  // The nothing-pending short-circuit (executeExportBranch) still writes the sync-ledger commit, or
+  // a docs-only commit (touches no bit-tracked file) would leave `stateCommit` (sync-state.ts, derived
+  // from `.bitmap`'s content, never commit messages) stuck behind it forever — `hasDevCommits` would
+  // stay true on every future run. The reconciler settles instead by recognizing its OWN tip: once
+  // that ledger commit is the branch's tip, a later run stops before redoing any export-branch work.
+  describe('a commit that touches no bit-tracked file settles instead of looping', () => {
+    const LANE = 'docs-only-lane';
+    let defaultBranch: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
+      seedSync(LANE);
+      branchSideCommit(LANE, defaultBranch, 'NOTES.md', '# notes\n', 'docs: add notes');
+    });
+
+    it('reports nothing to snap once, then settles — the second run does not redo export-branch work', () => {
+      const first = syncRun(LANE);
+      expect(first.exitCode, `bit ci sync output:\n${first.output}`).to.equal(0);
+      // pins the noop summary's exact wording
+      expect(first.output).to.include(
+        `${LANE} -> export-branch (branch ${LANE} has no bit-tracked change; nothing snapped onto lane`
+      );
+
+      const second = syncRun(LANE);
+      expect(second.exitCode, `bit ci sync output:\n${second.output}`).to.equal(0);
+      // pins the settled summary's exact wording
+      expect(second.output).to.include(
+        `${LANE} -> noop (converged; branch tip is already this reconciler's own sync commit)`
+      );
+      // executeExportBranch's own work (the checkout, the snap attempt) never ran a second time
+      expect(second.output).to.not.include('Exporting branch');
+    });
+  });
+
   // This reproduces an engine bump with one bit binary: a committed root policy moves a recorded
   // package range. Lanes carry the fan-out (spec decision 6): the lane run snaps the drifted
   // component together with the git-authored change, in one snap under the developer's own

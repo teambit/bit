@@ -159,10 +159,12 @@ export class GitHubClient implements GitHostProvider {
   private async listIssueComments(prNumber: number): Promise<{ id: number; body: string }[]> {
     const comments: { id: number; body: string }[] = [];
     let next: string | undefined = `/issues/${prNumber}/comments?per_page=100`;
-    while (next) {
+    // Defensive cap: 20 pages (2,000 comments) is far past any real PR; without it a malformed or
+    // adversarial `Link` header could loop this call forever.
+    for (let page = 0; next && page < 20; page += 1) {
       const res: Response = await this.requestRaw('GET', next);
-      const page = (await res.json()) as any[];
-      comments.push(...page.map((c: any) => ({ id: c.id, body: c.body ?? '' })));
+      const body = (await res.json()) as any[];
+      comments.push(...body.map((c: any) => ({ id: c.id, body: c.body ?? '' })));
       next = nextPageUrl(res.headers.get('link'));
     }
     return comments;
