@@ -271,9 +271,7 @@ export class DependencyInstaller {
     }
     // guard here rather than in `install()`: workspace installs enter through this method
     // directly (InstallMain._installModules), so `install()` is not a choke point.
-    // TEMP CI ISOLATION - DO NOT MERGE: guard call disabled to isolate the capsule MochaTest
-    // failure; re-enable after the verdict.
-    if (!this.installingContext?.inCapsule && process.env.BIT_TEMP_NO_GUARD !== undefined) {
+    if (!this.installingContext?.inCapsule) {
       await this.assertSafeVirtualStoreTransition(
         finalRootDir,
         this.dependencyResolver.enableGlobalVirtualStore()
