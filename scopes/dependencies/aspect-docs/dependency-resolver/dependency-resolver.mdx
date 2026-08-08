@@ -95,9 +95,10 @@ Allowed values of `nodeLinker`:
 
 By default every workspace builds its own copy of the dependency directories under
 `node_modules/.pnpm`. Setting `enableGlobalVirtualStore` moves them into a directory shared by every
-workspace and capsule on the machine, so a dependency subgraph that was already installed once is
-linked rather than re-created. Installs become significantly faster, at the cost of a virtual store
-that is no longer contained in the workspace.
+workspace on the machine (pnpm's own `<storeDir>/links` unless overridden), so a dependency subgraph
+that was already installed once is linked rather than re-created. Installs become significantly
+faster, at the cost of a virtual store that is no longer contained in the workspace. Capsules are
+not affected: they deliberately keep the project-local layout, whatever the workspace uses.
 
 ```json
 {

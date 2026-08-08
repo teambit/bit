@@ -142,16 +142,17 @@ export interface DependencyResolverWorkspaceConfig {
 
   /*
    * Opt in to pnpm's global virtual store. When enabled, dependency directories are created once
-   * in a directory shared by all workspaces and capsules on the machine, instead of being
-   * re-created inside every `node_modules/.pnpm`. This makes installation significantly faster, at
-   * the cost of a virtual store that is no longer contained in the workspace.
-   * It has no effect when `nodeLinker` is `hoisted`, which uses no virtual store.
+   * in a directory shared by all workspaces on the machine, instead of being re-created inside
+   * every `node_modules/.pnpm`. This makes installation significantly faster, at the cost of a
+   * virtual store that is no longer contained in the workspace.
+   * Capsules are unaffected - they always keep the project-local layout. It also has no effect
+   * when `nodeLinker` is `hoisted`, which uses no virtual store.
    */
   enableGlobalVirtualStore?: boolean;
 
   /*
-   * Path to the global virtual store directory. Defaults to a directory under the pnpm store that
-   * is private to the running bit installation. Only used when `enableGlobalVirtualStore` is on.
+   * Path to the global virtual store directory. Defaults to pnpm's own shared `<storeDir>/links`.
+   * Only used when `enableGlobalVirtualStore` is on.
    */
   globalVirtualStoreDir?: string;
 

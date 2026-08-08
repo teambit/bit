@@ -56,14 +56,15 @@ export type PackageManagerInstallOptions = {
 
   /**
    * Create dependency directories once in the global virtual store and share them across
-   * workspaces and capsules, instead of re-creating them in every `node_modules/.pnpm`.
+   * workspaces, instead of re-creating them in every `node_modules/.pnpm`. Capsule installs
+   * never use it - the installer forces the project-local layout there.
    */
   enableGlobalVirtualStore?: boolean;
 
   /**
-   * Where the global virtual store materializes those directories. See
-   * `DependencyResolverMain.getGlobalVirtualStoreDir` for why bit picks its own location rather
-   * than pnpm's `<storeDir>/links` default.
+   * Where the global virtual store materializes those directories. pnpm's own shared
+   * `<storeDir>/links` unless overridden (see `PnpmPackageManager.getGlobalVirtualStoreDir` for
+   * why the shared root works).
    */
   globalVirtualStoreDir?: string;
 
