@@ -365,6 +365,13 @@ export class DependencyInstaller {
       forcedHarmonyVersion: options.forcedHarmonyVersion,
       ...packageManagerOptions,
     };
+    if (this.installingContext?.inCapsule) {
+      // the capsule invariant is non-negotiable: caller-provided packageManagerOptions spread
+      // last for every other option's sake, but must not move a capsule onto the global store
+      // (see the comment above on TypeScript's declaration emit)
+      calculatedPmOpts.enableGlobalVirtualStore = false;
+      calculatedPmOpts.globalVirtualStoreDir = undefined;
+    }
     if (options.installTeambitBit) {
       if (!mainAspect.version || !mainAspect.packageName) {
         throw new MainAspectNotInstallable();
