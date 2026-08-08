@@ -197,8 +197,9 @@ export class DependencyLinker {
    * `<storeDir>/links/<scope>/<name>/<version>/<hash>`, shared with every other project on the
    * machine. pnpm's answer for exactly this case is the privately hoisted directory: it stays
    * project-local at `<rootDir>/node_modules/.pnpm/node_modules` even under the global virtual
-   * store, and is put on the module resolution path via `NODE_PATH` (see
-   * `setHoistedStoreOnNodePath`, which does that for bit's own process).
+   * store, and is put on the module resolution path via `NODE_PATH` and an ESM loader (see
+   * `ensureHoistedDependencyResolution` in the hoisted-resolution bridge, which does that for
+   * bit's own process and the ones it spawns).
    *
    * So the core aspects are linked there rather than mirrored into the store. Nothing is written
    * inside the store itself, which is what lets bit use pnpm's shared `<storeDir>/links` instead of
@@ -207,10 +208,6 @@ export class DependencyLinker {
    *
    * Only the links that come from the bit installation go here - the workspace's own component
    * links stay in the workspace's root `node_modules`.
-   *
-   * Caveat: Node ignores `NODE_PATH` for ESM. Core aspects and published env dists are CommonJS
-   * today, so this resolves; an ESM env importing an undeclared `@teambit/*` would not. pnpm's
-   * `@pnpm/plugin-esm-node-path` config dependency is the escape hatch if that changes.
    */
   private async linkCoreAspectsToHoistedStore(rootDir: string | undefined, linkResults: LinkResults): Promise<void> {
     // capsules stay on the project-local virtual store (see the installer's capsule invariant),
@@ -232,6 +229,9 @@ export class DependencyLinker {
     addLink(linkResults.teambitLegacyLink);
     if (!Object.keys(links).length) return;
     const hoistedStoreDir = path.join(finalRootDir.toString(), 'node_modules', '.pnpm');
+    // same rule as syncCoreAspectLinksForEnvs: bridge the virtual store pnpm materialized, never
+    // fabricate one (a lockfile-only install leaves it missing on purpose)
+    if (!fs.pathExistsSync(hoistedStoreDir)) return;
     try {
       await createLinks(hoistedStoreDir, links, { skipIfSymlinkValid: true });
     } catch (err: any) {
@@ -682,9 +682,12 @@ export class DependencyLinker {
     // is reached from a store slot via `NODE_PATH` rather than by walking up.
     const hoistedStoreDir = path.join(rootDir, 'node_modules', '.pnpm');
     const underGlobalVirtualStore = Boolean(await this.dependencyResolver.getGlobalVirtualStoreDir(rootDir));
-    // the hoisted store only exists in a pnpm-managed workspace. anywhere else this directory is on
-    // no resolution path, so there is nothing to bridge - and it must not be fabricated here.
-    if (!underGlobalVirtualStore && !fs.pathExistsSync(hoistedStoreDir)) return;
+    // the hoisted store only exists in a pnpm-managed workspace whose node_modules was actually
+    // materialized - anywhere else (a non-pnpm workspace, a lockfile-only install) the directory
+    // is on no resolution path, so there is nothing to bridge and it must not be fabricated here.
+    // every real install materializes it under both layouts, and both call sites run after the
+    // package manager has finished.
+    if (!fs.pathExistsSync(hoistedStoreDir)) return;
 
     const links: Record<string, string> = {};
     for (const aspectId of authoredCoreAspects) {

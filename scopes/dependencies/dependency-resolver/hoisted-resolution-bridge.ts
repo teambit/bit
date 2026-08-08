@@ -102,7 +102,8 @@ let lastImportFlag: string | undefined;
  */
 export function isPathInsideOrEqual(child: string, parent: string): boolean {
   const rel = path.relative(parent, child);
-  return !rel.startsWith('..') && !path.isAbsolute(rel);
+  // component-aware traversal check: a child legitimately named `..foo` also starts with `..`
+  return !path.isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${path.sep}`);
 }
 
 export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
