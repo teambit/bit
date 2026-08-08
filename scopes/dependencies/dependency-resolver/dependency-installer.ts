@@ -8,6 +8,7 @@ import type { Logger } from '@teambit/logger';
 import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import type { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined, SelfHostedVirtualStoreTransition } from './exceptions';
+import { isPathInside } from './hoisted-resolution-bridge';
 import type {
   PackageManager,
   PackageManagerInstallOptions,
@@ -215,7 +216,7 @@ export class DependencyInstaller {
     const workspaceRealpath = await fs.realpath(finalRootDir).catch(() => finalRootDir);
     const resolvedStoreDir = path.resolve(workspaceRealpath, 'node_modules', virtualStoreDir);
     const storeRealpath = await fs.realpath(resolvedStoreDir).catch(() => resolvedStoreDir);
-    const currentIsGlobal = !storeRealpath.startsWith(workspaceRealpath + path.sep);
+    const currentIsGlobal = !isPathInside(storeRealpath, workspaceRealpath);
     if (currentIsGlobal === enableGlobalVirtualStore) return;
 
     // the switch only endangers a bit whose own code lives inside the node_modules being
@@ -223,7 +224,7 @@ export class DependencyInstaller {
     // workspace packages are real directories, so a workspace-provided bit resolves under the
     // workspace realpath while bvm/global installations resolve elsewhere.
     const runningFrom = await fs.realpath(__dirname).catch(() => __dirname);
-    const selfHosted = runningFrom.startsWith(path.join(workspaceRealpath, 'node_modules') + path.sep);
+    const selfHosted = isPathInside(runningFrom, path.join(workspaceRealpath, 'node_modules'));
     if (!selfHosted) return;
     throw new SelfHostedVirtualStoreTransition(finalRootDir, enableGlobalVirtualStore);
   }

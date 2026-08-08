@@ -57,7 +57,14 @@ export async function resolve (specifier, context, defaultResolve) {
     return await defaultResolve(specifier, context, defaultResolve)
   } catch (originalError) {
     // Only bare specifiers can come from the hoisted directory; the rest are already anchored.
-    if (specifier.startsWith('.') || specifier.startsWith('/') || specifier.startsWith('node:')) {
+    // Windows absolute (drive-letter) and UNC paths are path specifiers too.
+    if (
+      specifier.startsWith('.') ||
+      specifier.startsWith('/') ||
+      specifier.startsWith('node:') ||
+      specifier.startsWith('\\\\') ||
+      /^[a-zA-Z]:[\\\\/]/.test(specifier)
+    ) {
       throw originalError
     }
     // createRequire anchored inside the entry searches the entry itself: Node skips appending
@@ -86,6 +93,16 @@ let lastImportFlag: string | undefined;
  * store. No manifest or no recorded value reads as project-local - a workspace that never
  * installed under the global store has nothing to bridge.
  */
+/**
+ * Platform-safe path containment: `path.relative` is case-insensitive on Windows (where the
+ * filesystem is) and case-sensitive on posix, which a bare `startsWith` prefix check gets wrong
+ * for drive-letter casing differences between realpath results and given spellings.
+ */
+export function isPathInside(child: string, parent: string): boolean {
+  const rel = path.relative(parent, child);
+  return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+}
+
 export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
   let modulesYaml: string;
   try {
@@ -108,7 +125,7 @@ export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
   } catch {
     // dangling recorded dir - judge by the lexical resolution
   }
-  return !storeRealpath.startsWith(workspaceRealpath + path.sep);
+  return !isPathInside(storeRealpath, workspaceRealpath);
 }
 
 /**
