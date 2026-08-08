@@ -182,6 +182,32 @@ export class DependencyInstaller {
   }
 
   /**
+   * Patch paths are configured relative to the workspace root, but pnpm resolves a relative one
+   * from the directory it is installing in. Those coincide for a workspace install and do not for
+   * a capsule install, which runs in the capsules directory - the patch would be looked for
+   * under the capsule root and the install would fail on the missing file.
+   *
+   * So capsule installs get absolute paths, resolved against the workspace root the caller passes
+   * as the package manager config root. Workspace installs keep the configured spelling: pnpm
+   * records it in the lockfile, and an absolute path there would be machine-specific.
+   */
+  private resolvePatchPaths(
+    installRootDir: string,
+    packageManagerConfigRootDir?: string
+  ): Record<string, string> | undefined {
+    if (!this.patchedDependencies) return undefined;
+    if (!packageManagerConfigRootDir || packageManagerConfigRootDir === installRootDir) {
+      return this.patchedDependencies;
+    }
+    return Object.fromEntries(
+      Object.entries(this.patchedDependencies).map(([selector, patchPath]) => [
+        selector,
+        path.isAbsolute(patchPath) ? patchPath : path.join(packageManagerConfigRootDir, patchPath),
+      ])
+    );
+  }
+
+  /**
    * Refuse an install that would switch this workspace between the project-local and the global
    * virtual store while the running bit is installed inside this workspace's `node_modules`.
    *
@@ -346,7 +372,7 @@ export class DependencyInstaller {
       globalVirtualStoreDir: this.installingContext?.inCapsule
         ? undefined
         : await this.dependencyResolver.getGlobalVirtualStoreDir(finalRootDir),
-      patchedDependencies: this.patchedDependencies,
+      patchedDependencies: this.resolvePatchPaths(finalRootDir, options.packageManagerConfigRootDir),
       packageExtensions: this.withBuiltInPackageExtensions(
         this.packageExtensions,
         !this.installingContext?.inCapsule && this.dependencyResolver.enableGlobalVirtualStore()
