@@ -122,6 +122,11 @@ export async function resolve (specifier, context, defaultResolve) {
     if (specifier.startsWith('.') || specifier.startsWith('/') || specifier.startsWith('node:')) {
       throw originalError
     }
+    // createRequire anchored inside the entry searches the entry itself: Node skips appending
+    // /node_modules to a directory already named node_modules, and the parent step re-yields it
+    // (.pnpm -> .pnpm/node_modules). Exact for the hoisted-dir entries this loader exists for;
+    // an entry not named node_modules would be searched one level deeper than CommonJS NODE_PATH
+    // does - those entries are already covered by the CommonJS side and are not ours to fix.
     for (const basePath of extraNodePaths) {
       try {
         const require = createRequire(pathToFileURL(basePath + '/').href)
@@ -138,6 +143,15 @@ function enableHoistedDependencyResolution() {
   if (!workspaceRoot) return;
   const hoistedDir = path.join(workspaceRoot, 'node_modules', '.pnpm', 'node_modules');
   if (!fs.existsSync(hoistedDir)) return;
+  // only for the global-virtual-store layout. The hoisted directory exists in every pnpm
+  // workspace, but project-locally packages reach it by walking up out of `node_modules/.pnpm` -
+  // no NODE_PATH needed - and enabling it anyway would change resolution semantics for regular
+  // workspaces (undeclared dependencies start resolving) and leak NODE_OPTIONS into every child
+  // process. The layout is read the same way the installer's transition guard reads it: pnpm
+  // records `virtualStoreDir` in `.modules.yaml` as `.pnpm` for the project-local layout and as
+  // a path escaping the workspace for the global one. This runs before any aspect or config
+  // loads, so filesystem state is the only signal available.
+  if (!isGlobalVirtualStoreLayout(workspaceRoot)) return;
   const existing = process.env.NODE_PATH;
   if (!existing?.split(NODE_PATH_SEPARATOR).includes(hoistedDir)) {
     process.env.NODE_PATH = existing ? `${hoistedDir}${NODE_PATH_SEPARATOR}${existing}` : hoistedDir;
@@ -190,6 +204,38 @@ function registerEsmNodePathLoader() {
   process.env.NODE_OPTIONS = process.env.NODE_OPTIONS
     ? `${process.env.NODE_OPTIONS} ${importFlag}`
     : importFlag;
+}
+
+/**
+ * Whether the workspace's last install used pnpm's global virtual store, judged by the
+ * `virtualStoreDir` the engine records in `node_modules/.modules.yaml`: `.pnpm` (or any path
+ * inside the workspace) means project-local; a path escaping the workspace means the global
+ * store. No manifest or no recorded value reads as project-local - a workspace that never
+ * installed under the global store has nothing to bridge.
+ */
+function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
+  let modulesYaml: string;
+  try {
+    modulesYaml = fs.readFileSync(path.join(workspaceRoot, 'node_modules', '.modules.yaml'), 'utf8');
+  } catch {
+    return false;
+  }
+  const virtualStoreDir = modulesYaml.match(/^\s*"?virtualStoreDir"?:\s*"?([^"\n]+?)"?,?\s*$/m)?.[1];
+  if (!virtualStoreDir) return false;
+  let workspaceRealpath = workspaceRoot;
+  try {
+    workspaceRealpath = fs.realpathSync(workspaceRoot);
+  } catch {
+    // fall back to the given spelling
+  }
+  const resolved = path.resolve(workspaceRealpath, 'node_modules', virtualStoreDir);
+  let storeRealpath = resolved;
+  try {
+    storeRealpath = fs.realpathSync(resolved);
+  } catch {
+    // dangling recorded dir - judge by the lexical resolution
+  }
+  return !storeRealpath.startsWith(workspaceRealpath + path.sep);
 }
 
 function findWorkspaceRoot(from: string): string | undefined {
