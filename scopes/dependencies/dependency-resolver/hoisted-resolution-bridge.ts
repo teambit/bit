@@ -30,23 +30,27 @@
  *   installer re-applies the bridge the moment the target layout is known.
  *
  * Everything here is idempotent, so calling it again is always safe: the `NODE_PATH` entry is
- * added once, the ESM loader registers once per process, and the `NODE_OPTIONS` flag is matched
- * exactly before appending.
+ * added once, the ESM loader re-registers only when the entry set grows (the previous, subset
+ * loader keeps chaining harmlessly), and the process's own `NODE_OPTIONS` flag is replaced
+ * rather than stacked.
  */
 import * as fs from 'fs';
 import * as path from 'path';
 import { pathToFileURL } from 'url';
 
 /**
- * Source of the registered ESM loader. It reads `NODE_PATH` at load time and, when the default
- * resolution of a bare specifier fails, retries it from each entry.
+ * Source of the registered ESM loader, with the resolution entries injected at registration time.
+ * The entries cannot be read from `NODE_PATH` inside the loader: on modern Node the hooks run on
+ * a separate thread whose `process.env` is a snapshot taken at registration, so late additions -
+ * an install switching the workspace onto the global virtual store mid-process - would never be
+ * seen. Injecting the list makes each registration self-contained; when the set grows, a new
+ * loader is registered and chains after the previous (whose entries are a subset - harmless).
  */
-const ESM_NODE_PATH_LOADER = `
+const esmNodePathLoaderSource = (dirs: string[]) => `
 import { createRequire } from 'node:module'
-import { delimiter } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-const extraNodePaths = (process.env.NODE_PATH || '').split(delimiter).filter(Boolean)
+const extraNodePaths = ${JSON.stringify(dirs)}
 
 export async function resolve (specifier, context, defaultResolve) {
   try {
@@ -72,7 +76,8 @@ export async function resolve (specifier, context, defaultResolve) {
 }
 `;
 
-let esmLoaderRegisteredInProcess = false;
+const registeredEsmDirs = new Set<string>();
+let lastImportFlag: string | undefined;
 
 /**
  * Whether the workspace's last install used pnpm's global virtual store, judged by the
@@ -188,24 +193,31 @@ function registerEsmNodePathLoader(): void {
     register?: (specifier: string, parentURL: string) => void;
   };
   if (typeof nodeModule.register !== 'function') return;
-  const loaderUrl = `data:text/javascript,${encodeURIComponent(ESM_NODE_PATH_LOADER)}`;
+  // mirror the CommonJS side exactly: every current NODE_PATH entry participates
+  const dirs = (process.env.NODE_PATH || '').split(path.delimiter).filter(Boolean);
+  if (!dirs.length) return;
+  if (lastImportFlag && dirs.every((dir) => registeredEsmDirs.has(dir))) return;
+  const loaderUrl = `data:text/javascript,${encodeURIComponent(esmNodePathLoaderSource(dirs))}`;
   const parentUrl = pathToFileURL(path.join(process.cwd(), '/')).href;
-  if (!esmLoaderRegisteredInProcess) {
-    try {
-      nodeModule.register(loaderUrl, parentUrl);
-      esmLoaderRegisteredInProcess = true;
-    } catch {
-      // A runtime that rejects the loader must not take the whole CLI down with it - the CommonJS
-      // half of the workaround is unaffected, and only ESM packages relying on hoisting are lost.
-      return;
-    }
+  try {
+    nodeModule.register(loaderUrl, parentUrl);
+  } catch {
+    // A runtime that rejects the loader must not take the whole CLI down with it - the CommonJS
+    // half of the workaround is unaffected, and only ESM packages relying on hoisting are lost.
+    return;
   }
+  dirs.forEach((dir) => registeredEsmDirs.add(dir));
   const registration = `import{register}from'node:module';register(${JSON.stringify(loaderUrl)},${JSON.stringify(parentUrl)});`;
   const importFlag = `--import=data:text/javascript,${encodeURIComponent(registration)}`;
-  // idempotence check against our own flag, not any 'register' substring - a user's
-  // `--require ts-node/register` in NODE_OPTIONS must not suppress the loader's propagation
-  if (process.env.NODE_OPTIONS?.includes(importFlag)) return;
-  process.env.NODE_OPTIONS = process.env.NODE_OPTIONS
-    ? `${process.env.NODE_OPTIONS} ${importFlag}`
-    : importFlag;
+  // children get one flag carrying the full current set: replace our previous flag rather than
+  // stacking loaders, and match our own flag exactly - a user's `--require ts-node/register`
+  // in NODE_OPTIONS must not suppress the loader's propagation
+  if (lastImportFlag && process.env.NODE_OPTIONS?.includes(lastImportFlag)) {
+    process.env.NODE_OPTIONS = process.env.NODE_OPTIONS.replace(lastImportFlag, importFlag);
+  } else if (!process.env.NODE_OPTIONS?.includes(importFlag)) {
+    process.env.NODE_OPTIONS = process.env.NODE_OPTIONS
+      ? `${process.env.NODE_OPTIONS} ${importFlag}`
+      : importFlag;
+  }
+  lastImportFlag = importFlag;
 }
