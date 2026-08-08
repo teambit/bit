@@ -27,7 +27,12 @@ describe('installing with the global virtual store', function () {
     });
     it('should not create the dependency directories inside the workspace', () => {
       const virtualStoreDir = path.join(helper.scopes.localPath, 'node_modules/.pnpm');
-      const dirs = fs.readdirSync(virtualStoreDir).filter((dir) => dir !== 'lock.yaml' && dir !== 'node_modules');
+      // dependency directories specifically: metadata files (`lock.yaml`) and pnpm's own
+      // entries (`node_modules`, dot-entries) are expected to stay
+      const dirs = fs
+        .readdirSync(virtualStoreDir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules')
+        .map((entry) => entry.name);
       expect(dirs).to.deep.eq([]);
     });
     it('should link the dependency from the global virtual store', () => {

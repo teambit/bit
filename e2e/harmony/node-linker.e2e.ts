@@ -33,8 +33,8 @@ describe('installing with non-default nodeLinker', function () {
       it('should create a hoisted node_modules', function () {
         const depPath = path.join(helper.fixtures.scopes.localPath, 'node_modules/is-positive');
         // the isolated linker symlinks into a virtual store: `node_modules/.pnpm` project-locally,
-        // or `<storeDir>/bit-links/<installation>` when the global virtual store is enabled.
-        expect(fs.realpathSync(depPath)).to.match(/[\\/](\.pnpm|bit-links)[\\/]/);
+        // or pnpm's shared `<storeDir>/links` root when the global virtual store is enabled.
+        expect(fs.realpathSync(depPath)).to.match(/[\\/](\.pnpm|links)[\\/]/);
       });
     });
   });

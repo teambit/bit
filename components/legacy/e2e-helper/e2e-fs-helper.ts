@@ -62,9 +62,13 @@ export default class FsHelper {
   getVirtualStoreDirNames(workspacePath: string = this.scopes.localPath): string[] {
     const virtualStoreDir = path.join(workspacePath, 'node_modules/.pnpm');
     if (!fs.existsSync(virtualStoreDir)) return [];
+    // dependency directories only - metadata files (`lock.yaml`) and pnpm's own entries
+    // (`node_modules`, dot-entries) would otherwise read as materialized deps and suppress
+    // the lockfile fallback below
     const dirs = fs
-      .readdirSync(virtualStoreDir)
-      .filter((dirName) => dirName !== 'lock.yaml' && dirName !== 'node_modules');
+      .readdirSync(virtualStoreDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules')
+      .map((entry) => entry.name);
     if (dirs.length) return dirs;
     const currentLockfile = path.join(virtualStoreDir, 'lock.yaml');
     if (!fs.existsSync(currentLockfile)) return dirs;
