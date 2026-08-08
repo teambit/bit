@@ -231,8 +231,14 @@ export class DependencyLinker {
     try {
       await createLinks(hoistedStoreDir, links, { skipIfSymlinkValid: true });
     } catch (err: any) {
-      this.logger.warn(
-        `failed linking the core aspects into the hoisted store at ${hoistedStoreDir}. ${err.message}`
+      // fail loudly: under the global virtual store these links are what lets every package in a
+      // store slot resolve the undeclared core aspects. A workspace missing them is broken in
+      // ways that only surface later as obscure "Cannot find module '@teambit/...'" failures far
+      // from the cause - unlike syncCoreAspectLinksForEnvs' bootstrap bridge, which the install
+      // flow genuinely tolerates losing.
+      throw new BitError(
+        `failed linking the core aspects into the hoisted store at ${hoistedStoreDir}, which packages ` +
+          `in the global virtual store rely on to resolve them: ${err.message}`
       );
     }
   }
