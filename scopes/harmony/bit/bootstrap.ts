@@ -89,7 +89,7 @@ export async function bootstrap() {
 function enableHoistedDependencyResolution() {
   try {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    const bridge = require('@teambit/dependency-resolver/dist/hoisted-resolution-bridge') as {
+    const bridge = require('@teambit/dependency-resolver/dist/hoisted-resolution-bridge.js') as {
       isGlobalVirtualStoreLayout(workspaceRoot: string): boolean;
       ensureHoistedDependencyResolution(workspaceRoot: string): void;
       ensureSelfInstallationBridge(): void;

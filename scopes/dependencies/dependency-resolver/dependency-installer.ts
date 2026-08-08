@@ -153,8 +153,11 @@ export class DependencyInstaller {
    * (react-env fixed it in 2.x by inlining, hence the `@1` scope). Third-party envs with the
    * same shape are covered by the user-level `packageExtensions` config this merges under.
    *
-   * The added dependencies are caret-pinned to the major whose file layout the extension
-   * exists for - a floating `*` would follow a future major that may not keep
+   * Both halves of every entry are version-scoped. The keys cover only the majors shipped and
+   * verified to carry the phantom - a future major of an env must be re-verified before its
+   * range moves, rather than inheriting the workaround (and its injected dependency edge)
+   * automatically. The added dependencies are caret-pinned to the major whose file layout the
+   * extension exists for - a floating `*` would follow a future major that may not keep
    * `typescript/tsconfig.json` (or the rspack env's `config/`) where the extending tsconfigs
    * point, and would drift across installs.
    */
@@ -165,12 +168,12 @@ export class DependencyInstaller {
     if (!enableGlobalVirtualStore) return fromConfig;
     const react = { dependencies: { '@teambit/react': '^1.0.0' } };
     const builtIn: Record<string, PackageExtension> = {
-      '@teambit/node.envs.node-babel-mocha': react,
-      '@teambit/node.envs.node-typescript-mocha': react,
-      '@teambit/react.internal.base-react-env': react,
-      '@teambit/rspack.envs.react-env': react,
+      '@teambit/node.envs.node-babel-mocha@<3': react,
+      '@teambit/node.envs.node-typescript-mocha@<3': react,
+      '@teambit/react.internal.base-react-env@1': react,
+      '@teambit/rspack.envs.react-env@<2': react,
       '@teambit/react.react-env@1': react,
-      '@teambit/cloud.envs.cloud-react': {
+      '@teambit/cloud.envs.cloud-react@0': {
         dependencies: { '@teambit/rspack.envs.react-env': '^1.0.0' },
       },
     };
