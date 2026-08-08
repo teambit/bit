@@ -5,8 +5,7 @@ import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';
 import path from 'path';
-import { pathToFileURL } from 'url';
-import { GLOBAL_CONFIG, GLOBAL_LOGS, NODE_PATH_SEPARATOR, WORKSPACE_JSONC } from '@teambit/legacy.constants';
+import { GLOBAL_CONFIG, GLOBAL_LOGS, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 
@@ -78,164 +77,34 @@ export async function bootstrap() {
 }
 
 /**
- * Make the workspace's privately hoisted dependencies resolvable from the global virtual store.
- *
- * Under the project-local virtual store, a package in `node_modules/.pnpm` resolves anything it
- * requires without declaring it by walking *up* into the workspace - the hoisted
- * `node_modules/.pnpm/node_modules` first, then the workspace root. Under pnpm's global virtual
- * store the package lives in a store shared with every other project on the machine, with no
- * workspace above it, so every such require fails.
- *
- * This covers phantom dependencies generally, not one class of them. Bit's core aspects are the
- * case that motivated it - `@teambit/*` is required by every published env and aspect without being
- * declared, because it has to be the single copy from the running installation - but any
- * under-declared package in the graph resolves the same way, which is why the whole hoisted
- * directory goes on the path rather than a hand-picked list.
- *
- * pnpm's answer for this layout is `NODE_PATH` pointing at the hoisted directory, which stays
- * project-local under the global virtual store. pnpm sets it in the command shims it writes, but bit
- * runs from bvm rather than through a shim and loads aspects in its own process, so it has to do
- * this itself - and before any aspect is required, hence its place at the top of `bootstrap`.
- *
- * `NODE_PATH` only covers CommonJS; {@link registerEsmNodePathLoader} handles ESM.
- *
- * A no-op when the directory doesn't exist, which is every workspace not using the global virtual
- * store, and anything run outside a workspace.
+ * Bridge the workspace's privately hoisted dependencies onto the resolution path when the last
+ * install used pnpm's global virtual store. The whole implementation - the layout detection, the
+ * NODE_PATH half, and the ESM loader - lives in
+ * `@teambit/dependency-resolver/dist/hoisted-resolution-bridge` so the install flow can re-apply
+ * it after the install that switches a workspace onto the global store (this pre-aspect gate
+ * still reflects the old layout during that run). Deep-required lazily so CLI startup never pays
+ * for the dependency-resolver barrel, and best-effort: a workspace where the package is absent
+ * or broken has nothing to bridge.
  */
-/**
- * Source of the ESM loader registered by {@link registerEsmNodePathLoader}, adapted from
- * `@pnpm/plugin-esm-node-path` (MIT). It reads `NODE_PATH` at load time and, when the default
- * resolution of a bare specifier fails, retries it from each entry.
- */
-const ESM_NODE_PATH_LOADER = `
-import { createRequire } from 'node:module'
-import { delimiter } from 'node:path'
-import { pathToFileURL } from 'node:url'
-
-const extraNodePaths = (process.env.NODE_PATH || '').split(delimiter).filter(Boolean)
-
-export async function resolve (specifier, context, defaultResolve) {
-  try {
-    return await defaultResolve(specifier, context, defaultResolve)
-  } catch (originalError) {
-    // Only bare specifiers can come from the hoisted directory; the rest are already anchored.
-    if (specifier.startsWith('.') || specifier.startsWith('/') || specifier.startsWith('node:')) {
-      throw originalError
-    }
-    // createRequire anchored inside the entry searches the entry itself: Node skips appending
-    // /node_modules to a directory already named node_modules, and the parent step re-yields it
-    // (.pnpm -> .pnpm/node_modules). Exact for the hoisted-dir entries this loader exists for;
-    // an entry not named node_modules would be searched one level deeper than CommonJS NODE_PATH
-    // does - those entries are already covered by the CommonJS side and are not ours to fix.
-    for (const basePath of extraNodePaths) {
-      try {
-        const require = createRequire(pathToFileURL(basePath + '/').href)
-        return { url: pathToFileURL(require.resolve(specifier)).href, shortCircuit: true }
-      } catch {}
-    }
-    throw originalError
-  }
-}
-`;
-
 function enableHoistedDependencyResolution() {
-  const workspaceRoot = findWorkspaceRoot(process.cwd());
-  if (!workspaceRoot) return;
-  const hoistedDir = path.join(workspaceRoot, 'node_modules', '.pnpm', 'node_modules');
-  if (!fs.existsSync(hoistedDir)) return;
-  // only for the global-virtual-store layout. The hoisted directory exists in every pnpm
-  // workspace, but project-locally packages reach it by walking up out of `node_modules/.pnpm` -
-  // no NODE_PATH needed - and enabling it anyway would change resolution semantics for regular
-  // workspaces (undeclared dependencies start resolving) and leak NODE_OPTIONS into every child
-  // process. The layout is read the same way the installer's transition guard reads it: pnpm
-  // records `virtualStoreDir` in `.modules.yaml` as `.pnpm` for the project-local layout and as
-  // a path escaping the workspace for the global one. This runs before any aspect or config
-  // loads, so filesystem state is the only signal available.
-  if (!isGlobalVirtualStoreLayout(workspaceRoot)) return;
-  const existing = process.env.NODE_PATH;
-  if (!existing?.split(NODE_PATH_SEPARATOR).includes(hoistedDir)) {
-    process.env.NODE_PATH = existing ? `${hoistedDir}${NODE_PATH_SEPARATOR}${existing}` : hoistedDir;
-    // `NODE_PATH` is read once when the module system initializes, so a later assignment only takes
-    // effect after re-deriving the global paths.
-    (require('module') as { _initPaths(): void })._initPaths();
-  }
-  registerEsmNodePathLoader();
-}
-
-/**
- * The ESM half of {@link enableHoistedDependencyResolution}.
- *
- * Node consults `NODE_PATH` only for CommonJS; ESM resolution ignores it entirely. Bit supports ESM
- * components, so without this an ESM package in the store cannot reach the hoisted directory at all
- * and the CommonJS half above would only cover part of the problem.
- *
- * The fix is an ESM loader whose `resolve` hook falls back to the `NODE_PATH` entries when the
- * default resolution fails. Registered two ways, because both matter:
- *
- * - `module.register` for bit's own process, which is where aspects and envs are loaded.
- * - `NODE_OPTIONS`, so the processes bit spawns - env build steps, app servers, test workers -
- *   inherit it. They resolve their own dependencies and hit the same wall.
- *
- * The loader and the `--import` registration trick are adapted from pnpm's
- * `@pnpm/plugin-esm-node-path` (MIT), which exists for exactly this case; it is inlined as a data
- * URL rather than taken as a dependency so there is no file to ship and no install step to depend
- * on. `module.register` needs Node 20.6, so this is skipped on older runtimes - the CommonJS half
- * still applies there.
- */
-function registerEsmNodePathLoader() {
-  const nodeModule = require('module') as {
-    register?: (specifier: string, parentURL: string) => void;
-  };
-  if (typeof nodeModule.register !== 'function') return;
-  const loaderUrl = `data:text/javascript,${encodeURIComponent(ESM_NODE_PATH_LOADER)}`;
-  const parentUrl = pathToFileURL(path.join(process.cwd(), '/')).href;
   try {
-    nodeModule.register(loaderUrl, parentUrl);
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const bridge = require('@teambit/dependency-resolver/dist/hoisted-resolution-bridge') as {
+      isGlobalVirtualStoreLayout(workspaceRoot: string): boolean;
+      ensureHoistedDependencyResolution(workspaceRoot: string): void;
+      ensureSelfInstallationBridge(): void;
+    };
+    // the running installation's own needs come first - a store-linked installation (its
+    // packages living in global-store slots) requires the bridge regardless of which workspace,
+    // if any, this process operates on
+    bridge.ensureSelfInstallationBridge();
+    const workspaceRoot = findWorkspaceRoot(process.cwd());
+    if (workspaceRoot && bridge.isGlobalVirtualStoreLayout(workspaceRoot)) {
+      bridge.ensureHoistedDependencyResolution(workspaceRoot);
+    }
   } catch {
-    // A runtime that rejects the loader must not take the whole CLI down with it - the CommonJS
-    // half of the workaround is unaffected, and only ESM packages relying on hoisting are lost.
-    return;
+    // pre-aspect bootstrap must never fail the CLI over the bridge
   }
-  const registration = `import{register}from'node:module';register(${JSON.stringify(loaderUrl)},${JSON.stringify(parentUrl)});`;
-  const importFlag = `--import=data:text/javascript,${encodeURIComponent(registration)}`;
-  // idempotence check against our own flag, not any 'register' substring - a user's
-  // `--require ts-node/register` in NODE_OPTIONS must not suppress the loader's propagation
-  if (process.env.NODE_OPTIONS?.includes(importFlag)) return;
-  process.env.NODE_OPTIONS = process.env.NODE_OPTIONS
-    ? `${process.env.NODE_OPTIONS} ${importFlag}`
-    : importFlag;
-}
-
-/**
- * Whether the workspace's last install used pnpm's global virtual store, judged by the
- * `virtualStoreDir` the engine records in `node_modules/.modules.yaml`: `.pnpm` (or any path
- * inside the workspace) means project-local; a path escaping the workspace means the global
- * store. No manifest or no recorded value reads as project-local - a workspace that never
- * installed under the global store has nothing to bridge.
- */
-function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
-  let modulesYaml: string;
-  try {
-    modulesYaml = fs.readFileSync(path.join(workspaceRoot, 'node_modules', '.modules.yaml'), 'utf8');
-  } catch {
-    return false;
-  }
-  const virtualStoreDir = modulesYaml.match(/^\s*"?virtualStoreDir"?:\s*"?([^"\n]+?)"?,?\s*$/m)?.[1];
-  if (!virtualStoreDir) return false;
-  let workspaceRealpath = workspaceRoot;
-  try {
-    workspaceRealpath = fs.realpathSync(workspaceRoot);
-  } catch {
-    // fall back to the given spelling
-  }
-  const resolved = path.resolve(workspaceRealpath, 'node_modules', virtualStoreDir);
-  let storeRealpath = resolved;
-  try {
-    storeRealpath = fs.realpathSync(resolved);
-  } catch {
-    // dangling recorded dir - judge by the lexical resolution
-  }
-  return !storeRealpath.startsWith(workspaceRealpath + path.sep);
 }
 
 function findWorkspaceRoot(from: string): string | undefined {
