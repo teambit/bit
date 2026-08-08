@@ -152,13 +152,18 @@ export class DependencyInstaller {
    * The list covers teambit's own published envs known to carry the phantom `extends`
    * (react-env fixed it in 2.x by inlining, hence the `@1` scope). Third-party envs with the
    * same shape are covered by the user-level `packageExtensions` config this merges under.
+   *
+   * The added dependencies are caret-pinned to the major whose file layout the extension
+   * exists for - a floating `*` would follow a future major that may not keep
+   * `typescript/tsconfig.json` (or the rspack env's `config/`) where the extending tsconfigs
+   * point, and would drift across installs.
    */
   private withBuiltInPackageExtensions(
     fromConfig: Record<string, PackageExtension> | undefined,
     enableGlobalVirtualStore: boolean
   ): Record<string, PackageExtension> | undefined {
     if (!enableGlobalVirtualStore) return fromConfig;
-    const react = { dependencies: { '@teambit/react': '*' } };
+    const react = { dependencies: { '@teambit/react': '^1.0.0' } };
     const builtIn: Record<string, PackageExtension> = {
       '@teambit/node.envs.node-babel-mocha': react,
       '@teambit/node.envs.node-typescript-mocha': react,
@@ -166,7 +171,7 @@ export class DependencyInstaller {
       '@teambit/rspack.envs.react-env': react,
       '@teambit/react.react-env@1': react,
       '@teambit/cloud.envs.cloud-react': {
-        dependencies: { '@teambit/rspack.envs.react-env': '*' },
+        dependencies: { '@teambit/rspack.envs.react-env': '^1.0.0' },
       },
     };
     return { ...builtIn, ...fromConfig };
