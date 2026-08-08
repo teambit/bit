@@ -269,8 +269,15 @@ export class DependencyResolverMain {
    * opt-in, in precedence order: the workspace config, then the `enable_global_virtual_store`
    * global config, then off. `BIT_ENABLE_GLOBAL_VIRTUAL_STORE` overrides both - it is what the e2e
    * suite flips to run the whole matrix under the global virtual store.
+   *
+   * always off under `nodeLinker: hoisted`: the hoisted linker copies packages straight into
+   * `node_modules`, so there is no virtual store for the global one to replace. The pnpm adapter
+   * forces the engine option off in that case (see `lynx.ts`); reporting it off here too keeps
+   * every store-gated behavior (core-aspect links into the hoisted store, `NODE_PATH` bootstrap,
+   * the layout-transition guard) consistent with what the engine actually does.
    */
   enableGlobalVirtualStore(): boolean {
+    if (this.nodeLinker() === 'hoisted') return false;
     const fromEnv = process.env.BIT_ENABLE_GLOBAL_VIRTUAL_STORE;
     if (fromEnv != null && fromEnv !== '') return fromEnv === 'true' || fromEnv === '1';
     if (this.config.enableGlobalVirtualStore != null) return this.config.enableGlobalVirtualStore;

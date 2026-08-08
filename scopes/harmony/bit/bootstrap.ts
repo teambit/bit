@@ -184,7 +184,9 @@ function registerEsmNodePathLoader() {
   }
   const registration = `import{register}from'node:module';register(${JSON.stringify(loaderUrl)},${JSON.stringify(parentUrl)});`;
   const importFlag = `--import=data:text/javascript,${encodeURIComponent(registration)}`;
-  if (process.env.NODE_OPTIONS?.includes('register')) return;
+  // idempotence check against our own flag, not any 'register' substring - a user's
+  // `--require ts-node/register` in NODE_OPTIONS must not suppress the loader's propagation
+  if (process.env.NODE_OPTIONS?.includes(importFlag)) return;
   process.env.NODE_OPTIONS = process.env.NODE_OPTIONS
     ? `${process.env.NODE_OPTIONS} ${importFlag}`
     : importFlag;

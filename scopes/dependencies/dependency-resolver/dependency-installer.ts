@@ -201,10 +201,13 @@ export class DependencyInstaller {
     }
     const virtualStoreDir = modulesYaml.match(/^\s*"?virtualStoreDir"?:\s*"?([^"\n]+?)"?,?\s*$/m)?.[1];
     if (!virtualStoreDir) return;
+    // compare real paths on both sides: resolving the recorded dir against the as-given (possibly
+    // symlinked) workspace spelling while comparing to the workspace's realpath would misread a
+    // project-local store as global for a workspace reached through a symlink
     const workspaceRealpath = await fs.realpath(finalRootDir).catch(() => finalRootDir);
-    const currentIsGlobal = !path
-      .resolve(modulesDir, virtualStoreDir)
-      .startsWith(workspaceRealpath + path.sep);
+    const resolvedStoreDir = path.resolve(workspaceRealpath, 'node_modules', virtualStoreDir);
+    const storeRealpath = await fs.realpath(resolvedStoreDir).catch(() => resolvedStoreDir);
+    const currentIsGlobal = !storeRealpath.startsWith(workspaceRealpath + path.sep);
     if (currentIsGlobal === enableGlobalVirtualStore) return;
 
     // the switch only endangers a bit whose own code lives inside the node_modules being
