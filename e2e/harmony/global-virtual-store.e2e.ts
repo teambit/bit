@@ -58,18 +58,20 @@ describe('installing with the global virtual store', function () {
       helper.command.install('is-positive@1.0.0');
       // a patch's context lines are byte-exact, so build it from what was actually installed
       const indexPath = path.join(helper.scopes.localPath, 'node_modules/is-positive/index.js');
-      const context = fs.readFileSync(indexPath, 'utf8').split('\n');
+      const contents = fs.readFileSync(indexPath, 'utf8');
+      const hasTrailingNewline = contents.endsWith('\n');
+      const lines = (hasTrailingNewline ? contents.slice(0, -1) : contents).split('\n');
       helper.fs.outputFile(
         'patches/is-positive.patch',
         [
           'diff --git a/index.js b/index.js',
           '--- a/index.js',
           '+++ b/index.js',
-          `@@ -1,${context.length - 1} +1,${context.length} @@`,
-          ` ${context[0]}`,
+          `@@ -1,${lines.length} +1,${lines.length + 1} @@`,
+          ` ${lines[0]}`,
           '+// patched',
-          ...context.slice(1, -1).map((line) => ` ${line}`),
-          '',
+          ...lines.slice(1).map((line) => ` ${line}`),
+          ...(hasTrailingNewline ? [''] : ['\\ No newline at end of file']),
         ].join('\n')
       );
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('patchedDependencies', {

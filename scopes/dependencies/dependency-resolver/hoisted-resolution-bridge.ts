@@ -107,16 +107,30 @@ export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
 }
 
 /**
- * The root of the installation this module runs from: the parent of the `node_modules` that
- * contains it. For a bvm-installed bit that is the bvm version directory; for a workspace-provided
- * bit it is the workspace. `undefined` when the module doesn't live under a `node_modules` at all
- * (e.g. running from source).
+ * The root of the installation this module runs from: the nearest ancestor that owns a
+ * `node_modules/.modules.yaml`. For a bvm-installed bit that is the bvm version directory; for a
+ * workspace-provided bit it is the workspace.
+ *
+ * Two candidate starting points, because Node realpaths module filenames: under the global
+ * virtual store this module's `__dirname` is the *store slot* - a dead end with no
+ * `.modules.yaml` and no physical path back to the installation. The entry script's
+ * `process.argv[1]` is the path *as invoked*, unresolved through symlinks, so for a store-linked
+ * installation it still sits inside the installation tree. `__dirname` remains the fallback for
+ * setups that invoke bit through a resolved path (and for the copy-shaped installations where it
+ * works fine). `undefined` when neither leads to an installation (e.g. running from source).
  */
 function selfInstallationRoot(): string | undefined {
-  const segments = __dirname.split(path.sep);
-  const idx = segments.lastIndexOf('node_modules');
-  if (idx <= 0) return undefined;
-  return segments.slice(0, idx).join(path.sep) || path.sep;
+  const candidates = [process.argv[1], __dirname].filter(Boolean) as string[];
+  for (const candidate of candidates) {
+    let dir = path.dirname(path.resolve(candidate));
+    for (;;) {
+      if (fs.existsSync(path.join(dir, 'node_modules', '.modules.yaml'))) return dir;
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  return undefined;
 }
 
 /**
