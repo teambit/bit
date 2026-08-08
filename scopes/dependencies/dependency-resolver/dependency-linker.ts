@@ -213,6 +213,10 @@ export class DependencyLinker {
    * `@pnpm/plugin-esm-node-path` config dependency is the escape hatch if that changes.
    */
   private async linkCoreAspectsToHoistedStore(rootDir: string | undefined, linkResults: LinkResults): Promise<void> {
+    // capsules stay on the project-local virtual store (see the installer's capsule invariant),
+    // where packages reach the core aspects by walking up to the capsule root - the hoisted-store
+    // bridge is a global-virtual-store mechanism and must not write into capsule layouts
+    if (this.linkingContext?.inCapsule) return;
     const finalRootDir = rootDir ?? this.rootDir;
     if (!finalRootDir) return;
     if (!(await this.dependencyResolver.getGlobalVirtualStoreDir(finalRootDir))) return;
