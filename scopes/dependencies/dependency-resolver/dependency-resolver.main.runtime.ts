@@ -281,7 +281,10 @@ export class DependencyResolverMain {
     const fromEnv = process.env.BIT_ENABLE_GLOBAL_VIRTUAL_STORE;
     if (fromEnv != null && fromEnv !== '') return fromEnv === 'true' || fromEnv === '1';
     if (this.config.enableGlobalVirtualStore != null) return this.config.enableGlobalVirtualStore;
-    return this.configStore.getConfig(CFG_ENABLE_GLOBAL_VIRTUAL_STORE) === 'true';
+    // the config store surfaces hand-edited values as booleans and CLI-set values as strings
+    // (see isolatedCapsules); accept both, plus '1' for parity with the env var
+    const fromGlobalConfig = this.configStore.getConfig(CFG_ENABLE_GLOBAL_VIRTUAL_STORE) as boolean | string | undefined;
+    return fromGlobalConfig === true || fromGlobalConfig === 'true' || fromGlobalConfig === '1';
   }
 
   /**
