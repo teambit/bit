@@ -87,7 +87,12 @@ export function ComponentOverview({
     }
   }, [selectedPkgManager]);
 
-  const tabsComponentId: ContentTab[] = [
+  // version skew: the published Tab type gained `content?: string`, which intersects
+  // ContentTab's `content: ReactNode` into `ReactNode & string` - impossible to satisfy with an
+  // element, though elements are the intended usage. Build with the corrected member and cast
+  // once where the array is handed over.
+  type ContentTabFixed = Omit<ContentTab, 'content'> & { content: React.ReactNode };
+  const tabsComponentId: ContentTabFixed[] = [
     {
       component: function TabPackageName() {
         return <span>{packageNameTabTitle}</span>;
@@ -262,7 +267,12 @@ export function ComponentOverview({
         </Row>
         <Row>
           <div className={styles.contentTabs}>
-            <ContentTabs priority="folder" tabs={tabsComponentId} navClassName={styles.nav} tabClassName={styles.tab} />
+            <ContentTabs
+              priority="folder"
+              tabs={tabsComponentId as ContentTab[]}
+              navClassName={styles.nav}
+              tabClassName={styles.tab}
+            />
           </div>
           <BadgeSection
             position={BadgePosition.Package}

@@ -375,12 +375,17 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const skipComponentCompareQuery =
     hidden || (base?.id.version?.toString() === compare?.id.version?.toString() && !compareIsLocalChanges);
 
-  const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
+  const { loading: compCompareLoading, componentCompareData: componentCompareDataRaw } = useComponentCompareQuery(
     base?.id.toString(),
     compare?.id.toString(),
     undefined,
     skipComponentCompareQuery
   );
+  // version skew: the GraphQL response carries `tests`, the npm-published
+  // ComponentCompareQueryResponse doesn't declare it yet
+  const componentCompareData = componentCompareDataRaw as
+    | (typeof componentCompareDataRaw & { tests?: Array<FileCompareResult & { fileName: string }> })
+    | undefined;
 
   const { loading: apiDiffLoading, result: apiDiffResult } = useApiDiff(base?.id.toString(), compare?.id.toString(), {
     skip: hidden,

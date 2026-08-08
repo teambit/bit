@@ -7,6 +7,7 @@ export type { CreateFromComponentsOptions, ManifestDependenciesObject } from './
 export type {
   InstallationContext,
   PackageImportMethod,
+  PackageExtension,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
@@ -79,4 +80,5 @@ export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
 export { isRange } from './manifest/deduping/hoist-dependencies';
 export type { DependencyEnv } from './dependency-env';
 export { DetectorHook, DependencyDetector, FileContext } from './detector-hook';
+export { ensureHoistedDependencyResolution, ensureSelfInstallationBridge, isGlobalVirtualStoreLayout } from './hoisted-resolution-bridge';
 export { DependencyResolverAspect as default, DependencyResolverAspect };

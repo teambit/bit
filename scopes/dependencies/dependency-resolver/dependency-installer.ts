@@ -7,8 +7,14 @@ import { type DependenciesGraph } from '@teambit/objects';
 import type { Logger } from '@teambit/logger';
 import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import type { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
-import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
-import type { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
+import { MainAspectNotInstallable, RootDirNotDefined, SelfHostedVirtualStoreTransition } from './exceptions';
+import { isPathInsideOrEqual, parseRecordedVirtualStoreDir } from './hoisted-resolution-bridge';
+import type {
+  PackageManager,
+  PackageManagerInstallOptions,
+  PackageImportMethod,
+  PackageExtension,
+} from './package-manager';
 import type { WorkspacePolicy } from './policy';
 import type { CreateFromComponentsOptions } from './manifest';
 import type { DependencyResolverMain } from './dependency-resolver.main.runtime';
@@ -118,8 +124,138 @@ export class DependencyInstaller {
 
     private minimumReleaseAgeExclude?: string[],
 
+    private patchedDependencies?: Record<string, string>,
+
+    private packageExtensions?: Record<string, PackageExtension>,
+
     private installingContext: DepInstallerContext = {}
   ) {}
+
+  /**
+   * `packageExtensions` bit ships for published envs whose `tsconfig.json` `extends` a package
+   * they never declare, merged under the workspace's own `packageExtensions` so a user entry for
+   * the same package always wins.
+   *
+   * Only applied under the global virtual store. TypeScript resolves `extends` with its own
+   * resolver, walking up from the tsconfig's real location: under the project-local layout that
+   * walk passes pnpm's privately hoisted `node_modules/.pnpm/node_modules`, which catches any
+   * phantom dependency, so these envs work by accident. A global-store slot walks up into the
+   * store and finds nothing. Declaring the missing dependency via `packageExtensions` - pnpm's
+   * documented remedy for exactly this - places the real package inside the slot's
+   * `node_modules`, where the tsconfig resolver finds it.
+   *
+   * An extension merges *underneath* the manifest (it only adds entries the package lacks), an
+   * entry whose package never installs is not an error (unlike `patchedDependencies`), and a
+   * `name@range` key scopes an entry to the versions that need it. None of these envs import
+   * their extends-target at runtime - the reference lives only in config files - so the added
+   * registry copy cannot shadow the host-provided core-aspect singletons.
+   *
+   * The list covers teambit's own published envs known to carry the phantom `extends`
+   * (react-env fixed it in 2.x by inlining, hence the `@1` scope). Third-party envs with the
+   * same shape are covered by the user-level `packageExtensions` config this merges under.
+   *
+   * Both halves of every entry are version-scoped. The keys cover only the majors shipped and
+   * verified to carry the phantom - a future major of an env must be re-verified before its
+   * range moves, rather than inheriting the workaround (and its injected dependency edge)
+   * automatically. The added dependencies are caret-pinned to the major whose file layout the
+   * extension exists for - a floating `*` would follow a future major that may not keep
+   * `typescript/tsconfig.json` (or the rspack env's `config/`) where the extending tsconfigs
+   * point, and would drift across installs.
+   */
+  private withBuiltInPackageExtensions(
+    fromConfig: Record<string, PackageExtension> | undefined,
+    enableGlobalVirtualStore: boolean
+  ): Record<string, PackageExtension> | undefined {
+    if (!enableGlobalVirtualStore) return fromConfig;
+    const react = { dependencies: { '@teambit/react': '^1.0.0' } };
+    const builtIn: Record<string, PackageExtension> = {
+      '@teambit/node.envs.node-babel-mocha@<3': react,
+      '@teambit/node.envs.node-typescript-mocha@<3': react,
+      '@teambit/react.internal.base-react-env@1': react,
+      '@teambit/rspack.envs.react-env@<2': react,
+      '@teambit/react.react-env@1': react,
+      '@teambit/cloud.envs.cloud-react@0': {
+        dependencies: { '@teambit/rspack.envs.react-env': '^1.0.0' },
+      },
+    };
+    return { ...builtIn, ...fromConfig };
+  }
+
+  /**
+   * Patch paths are configured relative to the workspace root, but pnpm resolves a relative one
+   * from the directory it is installing in. Those coincide for a workspace install and do not for
+   * a capsule install, which runs in the capsules directory - the patch would be looked for
+   * under the capsule root and the install would fail on the missing file.
+   *
+   * So capsule installs get absolute paths, resolved against the workspace root the caller passes
+   * as the package manager config root. Workspace installs keep the configured spelling: pnpm
+   * records it in the lockfile, and an absolute path there would be machine-specific.
+   */
+  private resolvePatchPaths(
+    installRootDir: string,
+    packageManagerConfigRootDir?: string
+  ): Record<string, string> | undefined {
+    if (!this.patchedDependencies) return undefined;
+    if (!packageManagerConfigRootDir || packageManagerConfigRootDir === installRootDir) {
+      return this.patchedDependencies;
+    }
+    return Object.fromEntries(
+      Object.entries(this.patchedDependencies).map(([selector, patchPath]) => [
+        selector,
+        path.isAbsolute(patchPath) ? patchPath : path.join(packageManagerConfigRootDir, patchPath),
+      ])
+    );
+  }
+
+  /**
+   * Refuse an install that would switch this workspace between the project-local and the global
+   * virtual store while the running bit is installed inside this workspace's `node_modules`.
+   *
+   * Both layouts are safe in steady state: repeat installs preserve the top-level package
+   * directories the running process resolves from, and the end-of-install compile refreshes the
+   * per-variant copies (`.pnpm` entries or store slots). A layout *switch* is different - it
+   * relocates every injected component package, rebuilding the top-level directories from
+   * source, so their compiled `dist` disappears mid-install. A bit running from those very
+   * directories loses its own code before it can reach the compile step that would restore it,
+   * and dies leaving `node_modules` unusable. The transition has to run once from a bit
+   * installation outside the workspace; detect the combination up front and fail before
+   * anything is rewritten.
+   *
+   * The current layout is read off `node_modules/.modules.yaml`: pnpm records `virtualStoreDir`
+   * as `.pnpm` for the project-local layout and as a path escaping the workspace for the global
+   * one. No manifest (fresh install) or an unreadable one means nothing can be mid-flight -
+   * a fresh install writes whichever layout is requested.
+   */
+  private async assertSafeVirtualStoreTransition(finalRootDir: string, enableGlobalVirtualStore: boolean) {
+    const modulesDir = path.join(finalRootDir, 'node_modules');
+    let modulesManifest: string;
+    try {
+      modulesManifest = await fs.readFile(path.join(modulesDir, '.modules.yaml'), 'utf8');
+    } catch {
+      return;
+    }
+    // same reader as the bootstrap-time layout gate, so the guard and the bridge can never
+    // disagree about which layout the workspace is currently on
+    const virtualStoreDir = parseRecordedVirtualStoreDir(modulesManifest);
+    if (!virtualStoreDir) return;
+    // compare real paths on both sides: resolving the recorded dir against the as-given (possibly
+    // symlinked) workspace spelling while comparing to the workspace's realpath would misread a
+    // project-local store as global for a workspace reached through a symlink
+    const workspaceRealpath = await fs.realpath(finalRootDir).catch(() => finalRootDir);
+    const resolvedStoreDir = path.resolve(workspaceRealpath, 'node_modules', virtualStoreDir);
+    const storeRealpath = await fs.realpath(resolvedStoreDir).catch(() => resolvedStoreDir);
+    const currentIsGlobal = !isPathInsideOrEqual(storeRealpath, workspaceRealpath);
+    if (currentIsGlobal === enableGlobalVirtualStore) return;
+
+    // the switch only endangers a bit whose own code lives inside the node_modules being
+    // rewritten. `__dirname` sits in the running installation's copy of this component; injected
+    // workspace packages are real directories, so a workspace-provided bit resolves under the
+    // workspace realpath while bvm/global installations resolve elsewhere.
+    const runningFrom = await fs.realpath(__dirname).catch(() => __dirname);
+    const selfHosted = isPathInsideOrEqual(runningFrom, path.join(workspaceRealpath, 'node_modules'));
+    if (!selfHosted) return;
+    throw new SelfHostedVirtualStoreTransition(finalRootDir, enableGlobalVirtualStore);
+  }
 
   async install(
     rootDir: string | undefined,
@@ -173,6 +309,14 @@ export class DependencyInstaller {
     if (!finalRootDir) {
       throw new RootDirNotDefined();
     }
+    // guard here rather than in `install()`: workspace installs enter through this method
+    // directly (InstallMain._installModules), so `install()` is not a choke point.
+    if (!this.installingContext?.inCapsule) {
+      await this.assertSafeVirtualStoreTransition(
+        finalRootDir,
+        this.dependencyResolver.enableGlobalVirtualStore()
+      );
+    }
     if (options.linkedDependencies) {
       manifests = JSON.parse(JSON.stringify(manifests));
       const linkedDependencies = JSON.parse(
@@ -215,6 +359,24 @@ export class DependencyInstaller {
       cacheRootDir: this.cacheRootDir,
       nodeLinker: this.nodeLinker,
       packageImportMethod: this.packageImportMethod,
+      // Capsules stay on the project-local virtual store even when the global one is enabled.
+      // A capsule is a self-contained build sandbox, and TypeScript's declaration emit relies on
+      // that: it names the type of an inferred value (`compiler()` returning a `@teambit/compiler`
+      // type, say) through the package that declares it, and can only do so while that package
+      // sits inside the capsule. Moving env and aspect packages out to the shared store makes
+      // `bit build` of any custom env fail with TS2742 ("cannot be named without a reference to
+      // ../../../node_modules/@teambit/compiler"). Workspace installs - the ones a user actually
+      // waits on repeatedly - still get the global store.
+      enableGlobalVirtualStore:
+        !this.installingContext?.inCapsule && this.dependencyResolver.enableGlobalVirtualStore(),
+      globalVirtualStoreDir: this.installingContext?.inCapsule
+        ? undefined
+        : await this.dependencyResolver.getGlobalVirtualStoreDir(finalRootDir),
+      patchedDependencies: this.resolvePatchPaths(finalRootDir, options.packageManagerConfigRootDir),
+      packageExtensions: this.withBuiltInPackageExtensions(
+        this.packageExtensions,
+        !this.installingContext?.inCapsule && this.dependencyResolver.enableGlobalVirtualStore()
+      ),
       minimumReleaseAge: this.minimumReleaseAge,
       minimumReleaseAgeExclude: this.minimumReleaseAgeExclude,
       sideEffectsCache: this.sideEffectsCache,
@@ -232,6 +394,13 @@ export class DependencyInstaller {
       forcedHarmonyVersion: options.forcedHarmonyVersion,
       ...packageManagerOptions,
     };
+    if (this.installingContext?.inCapsule) {
+      // the capsule invariant is non-negotiable: caller-provided packageManagerOptions spread
+      // last for every other option's sake, but must not move a capsule onto the global store
+      // (see the comment above on TypeScript's declaration emit)
+      calculatedPmOpts.enableGlobalVirtualStore = false;
+      calculatedPmOpts.globalVirtualStoreDir = undefined;
+    }
     if (options.installTeambitBit) {
       if (!mainAspect.version || !mainAspect.packageName) {
         throw new MainAspectNotInstallable();

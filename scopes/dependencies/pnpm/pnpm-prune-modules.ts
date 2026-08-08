@@ -32,7 +32,19 @@ export async function pnpmPruneModules(rootDir: string): Promise<void> {
   await Promise.all(difference(pkgDirs, dirsShouldBePresent).map((dir) => fs.remove(path.join(virtualStoreDir, dir))));
 }
 
+/**
+ * The project-local virtual store may hold no package directories at all: with the global virtual
+ * store enabled the packages live under `<storeDir>/links` (pruned by the engine itself) and only
+ * `lock.yaml` and the hoisted `node_modules` remain here. A `lockfileOnly` install leaves the
+ * directory missing entirely. Both cases mean "nothing for us to prune".
+ */
 async function readPackageDirsFromVirtualStore(virtualStoreDir: string): Promise<string[]> {
-  const allDirs = await fs.readdir(virtualStoreDir);
+  let allDirs: string[];
+  try {
+    allDirs = await fs.readdir(virtualStoreDir);
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return [];
+    throw err;
+  }
   return allDirs.filter((dir) => dir !== 'lock.yaml' && dir !== 'node_modules');
 }
