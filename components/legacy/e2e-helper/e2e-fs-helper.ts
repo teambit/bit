@@ -3,7 +3,10 @@ import fs from 'fs-extra';
 import { use, expect } from 'chai';
 import { globSync } from 'glob';
 import * as path from 'path';
+import * as yaml from 'yaml';
+import resolveFrom from 'resolve-from';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
+import { depPathToDirName } from '@teambit/dependencies.pnpm.dep-path';
 import * as fixtures from './fixtures';
 import { ensureAndWriteJson } from './e2e-helper';
 import type ScopesData from './e2e-scopes';
@@ -26,6 +29,53 @@ export default class FsHelper {
 
     return globSync(path.normalize(`**/${ext}`), params).map((x) => path.normalize(x));
   }
+  /**
+   * Walk a chain of package names the way Node resolves them - each name is resolved from the real
+   * directory of the one before it - and return the last one's directory.
+   *
+   * Use this instead of hand-writing a path into `node_modules/.pnpm/<depPath>/node_modules/<dep>`:
+   * that spelling only exists in the project-local virtual store. Under the global virtual store the
+   * package lives in a hash-named directory in the shared store, and under a hoisted `nodeLinker` it
+   * is nested in `node_modules` - resolution finds the right copy in all three.
+   */
+  resolvePackageDir(chain: string[], workspacePath: string = this.scopes.localPath): string {
+    let dir = workspacePath;
+    for (const packageName of chain) {
+      dir = path.dirname(fs.realpathSync(resolveFrom(dir, `${packageName}/package.json`)));
+    }
+    return dir;
+  }
+
+  /** The `package.json` of the package at the end of a `resolvePackageDir` chain. */
+  readPackageJsonOfChain(chain: string[], workspacePath?: string): Record<string, any> {
+    return fs.readJsonSync(path.join(this.resolvePackageDir(chain, workspacePath), 'package.json'));
+  }
+
+  /**
+   * The dependency directories the last install materialized, named the way `node_modules/.pnpm`
+   * names them (`@scope+name@version`).
+   *
+   * With the global virtual store enabled those directories live in the shared store instead of
+   * `node_modules/.pnpm`, and the shared store holds every workspace's packages - so the equivalent
+   * per-workspace list comes from the current lockfile the install writes next to them.
+   */
+  getVirtualStoreDirNames(workspacePath: string = this.scopes.localPath): string[] {
+    const virtualStoreDir = path.join(workspacePath, 'node_modules/.pnpm');
+    if (!fs.existsSync(virtualStoreDir)) return [];
+    // dependency directories only - metadata files (`lock.yaml`) and pnpm's own entries
+    // (`node_modules`, dot-entries) would otherwise read as materialized deps and suppress
+    // the lockfile fallback below
+    const dirs = fs
+      .readdirSync(virtualStoreDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules')
+      .map((entry) => entry.name);
+    if (dirs.length) return dirs;
+    const currentLockfile = path.join(virtualStoreDir, 'lock.yaml');
+    if (!fs.existsSync(currentLockfile)) return dirs;
+    const lockfile = yaml.parse(fs.readFileSync(currentLockfile, 'utf8'));
+    return Object.keys(lockfile?.packages ?? {}).map((depPath: string) => depPathToDirName(depPath));
+  }
+
   getObjectFiles() {
     return globSync(path.normalize('*/*'), { cwd: path.join(this.scopes.localPath, '.bit/objects') });
   }

@@ -14,7 +14,21 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    // Under pnpm's global virtual store, a published package's .d.ts can no longer reach the
+    // workspace's hoisted @types by walking up from its store slot (project-locally the walk
+    // out of node_modules/.pnpm found them). Pin the react typings to the workspace copies so
+    // type resolution matches the runtime NODE_PATH bridge. Harmless project-locally - it
+    // resolves to the same hoisted packages the walk-up found.
+    "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      // published @teambit packages' .d.ts reference core aspects they never declare; from a
+      // store slot those don't resolve and their types silently collapse. Route every @teambit
+      // specifier through the workspace's node_modules - core aspects hit the workspace
+      // components, published packages hit their own top-level links (the same slots).
+      "@teambit/*": ["./node_modules/@teambit/*"]
+    }
   },
   "include": [
     "scopes",

@@ -11,6 +11,8 @@ import { ComponentAspect } from '@teambit/component';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
+import { createHash } from 'crypto';
+import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect } from '@teambit/envs';
@@ -27,6 +29,7 @@ import {
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
+  CFG_ENABLE_GLOBAL_VIRTUAL_STORE,
   DEFAULT_HARMONY_PACKAGE_MANAGER,
   getCloudDomain,
 } from '@teambit/legacy.constants';
@@ -256,6 +259,71 @@ export class DependencyResolverMain {
     const pmName = packageManagerName || this.config.packageManager;
     if (pmName === 'teambit.dependencies/yarn') return 'hoisted';
     return 'isolated';
+  }
+
+  /**
+   * whether dependency directories should be created once in pnpm's global virtual store and
+   * shared across workspaces and capsules, rather than re-created inside every
+   * `node_modules/.pnpm`.
+   *
+   * opt-in, in precedence order: the workspace config, then the `enable_global_virtual_store`
+   * global config, then off. `BIT_ENABLE_GLOBAL_VIRTUAL_STORE` overrides both - it is what the e2e
+   * suite flips to run the whole matrix under the global virtual store.
+   *
+   * always off under `nodeLinker: hoisted`: the hoisted linker copies packages straight into
+   * `node_modules`, so there is no virtual store for the global one to replace. The pnpm adapter
+   * forces the engine option off in that case (see `lynx.ts`); reporting it off here too keeps
+   * every store-gated behavior (core-aspect links into the hoisted store, `NODE_PATH` bootstrap,
+   * the layout-transition guard) consistent with what the engine actually does.
+   */
+  enableGlobalVirtualStore(): boolean {
+    if (this.nodeLinker() === 'hoisted') return false;
+    const fromEnv = process.env.BIT_ENABLE_GLOBAL_VIRTUAL_STORE;
+    if (fromEnv != null && fromEnv !== '') return fromEnv === 'true' || fromEnv === '1';
+    if (this.config.enableGlobalVirtualStore != null) return this.config.enableGlobalVirtualStore;
+    // the config store surfaces hand-edited values as booleans and CLI-set values as strings
+    // (see isolatedCapsules); accept both, plus '1' for parity with the env var
+    const fromGlobalConfig = this.configStore.getConfig(CFG_ENABLE_GLOBAL_VIRTUAL_STORE) as boolean | string | undefined;
+    return fromGlobalConfig === true || fromGlobalConfig === 'true' || fromGlobalConfig === '1';
+  }
+
+  /**
+   * the directory the global virtual store materializes dependency directories in, or undefined
+   * when the global virtual store is off.
+   *
+   * pnpm's own shared `<storeDir>/links` root by default (see
+   * `PnpmPackageManager.getGlobalVirtualStoreDir` for why the shared root works and is
+   * preferable), overridable through the `globalVirtualStoreDir` config. The core aspects being
+   * phantom dependencies of every published env is solved outside the store: they are linked into
+   * the workspace's private hoisted directory (`DependencyLinker.linkCoreAspectsToHoistedStore`),
+   * which the hoisted-resolution bridge puts on the resolution path of store-linked packages.
+   */
+  async getGlobalVirtualStoreDir(rootDir?: string): Promise<string | undefined> {
+    if (!this.enableGlobalVirtualStore()) return undefined;
+    if (this.config.globalVirtualStoreDir) return this.config.globalVirtualStoreDir;
+    const packageManager = this.getPackageManager();
+    if (!packageManager?.getGlobalVirtualStoreDir) return undefined;
+    return packageManager.getGlobalVirtualStoreDir({
+      packageManagerConfigRootDir: rootDir,
+      installationId: this.bitInstallationId(),
+    });
+  }
+
+  /**
+   * stable identifier of the bit installation that is running, used to give it a private global
+   * virtual store root. Two checkouts of the same bit version ship different core aspects, so the
+   * version alone is not enough to tell them apart.
+   */
+  private bitInstallationId(): string {
+    const mainAspectPath = this.aspectLoader.mainAspect?.path ?? '';
+    let realMainAspectPath = mainAspectPath;
+    try {
+      realMainAspectPath = fs.realpathSync(mainAspectPath);
+    } catch {
+      // a path we cannot resolve still identifies the installation well enough to key on
+    }
+    const hash = createHash('sha1').update(realMainAspectPath).digest('hex').slice(0, 10);
+    return `${getBitVersionGracefully() ?? 'unknown'}-${hash}`;
   }
 
   linkCoreAspects(): boolean {
@@ -678,6 +746,8 @@ export class DependencyResolverMain {
       this.config.preferOffline,
       this.config.minimumReleaseAge,
       this.config.minimumReleaseAgeExclude,
+      this.config.patchedDependencies,
+      this.config.packageExtensions,
       options.installingContext
     );
   }

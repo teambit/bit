@@ -91,6 +91,44 @@ Allowed values of `nodeLinker`:
 - `"hoisted"` - create a hoisted (aka flat) `node_modules` directory without using symlinks. Similar to the one created by npm or Yarn classic.
 - `"isolated"` - create a `node_modules` directory using symlinks. All dependencies are symlinked from a flat storage at `node_modules/.pnpm` (when using pnpm) or `node_modules/.store` (when using Yarn).
 
+### Share the dependency directories between workspaces
+
+By default every workspace builds its own copy of the dependency directories under
+`node_modules/.pnpm`. Setting `enableGlobalVirtualStore` moves them into a directory shared by every
+workspace on the machine (pnpm's own `<storeDir>/links` unless overridden), so a dependency subgraph
+that was already installed once is linked rather than re-created. Installs become significantly
+faster, at the cost of a virtual store that is no longer contained in the workspace. Capsules are
+not affected: they deliberately keep the project-local layout, whatever the workspace uses.
+
+```json
+{
+  "teambit.dependencies/dependency-resolver": {
+    "enableGlobalVirtualStore": true
+  }
+}
+```
+
+It can also be turned on for every workspace on the machine with
+`bit config set enable_global_virtual_store true`, and pointed at a different location with
+`globalVirtualStoreDir`. It has no effect when `nodeLinker` is `"hoisted"`, which does not use a
+virtual store at all.
+
+### Patch a dependency
+
+`patchedDependencies` maps a package (optionally with a version range) to a patch file, applied to
+the package right after it is extracted - the same setting pnpm reads from `pnpm-workspace.yaml`.
+Relative paths resolve against the workspace root.
+
+```json
+{
+  "teambit.dependencies/dependency-resolver": {
+    "patchedDependencies": {
+      "is-positive@1.0.0": "patches/is-positive.patch"
+    }
+  }
+}
+```
+
 ### Apply policies on all relevant components
 
 A dependency policy configured at the root level of the workspace configuration (JSON) will by default affect _all_ components that have that package as their dependency (i.e., components that have this module listed in their generated dependency graph).
