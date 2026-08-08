@@ -291,13 +291,12 @@ export class DependencyResolverMain {
    * the directory the global virtual store materializes dependency directories in, or undefined
    * when the global virtual store is off.
    *
-   * bit does not use pnpm's own `<storeDir>/links` default. The core aspects are phantom
-   * dependencies of every published env and aspect - they resolve them from the installation of bit
-   * that is running, which under the project-local layout is reachable by walking up out of
-   * `node_modules/.pnpm`. Nothing in the global virtual store can walk up into a workspace, so the
-   * links have to sit at the root of the virtual store itself (see
-   * `DependencyLinker.linkCoreAspectsToGlobalVirtualStore`) - and that root therefore has to be
-   * private to one bit installation, or two of them would overwrite each other's core aspects.
+   * pnpm's own shared `<storeDir>/links` root by default (see
+   * `PnpmPackageManager.getGlobalVirtualStoreDir` for why the shared root works and is
+   * preferable), overridable through the `globalVirtualStoreDir` config. The core aspects being
+   * phantom dependencies of every published env is solved outside the store: they are linked into
+   * the workspace's private hoisted directory (`DependencyLinker.linkCoreAspectsToHoistedStore`),
+   * which the hoisted-resolution bridge puts on the resolution path of store-linked packages.
    */
   async getGlobalVirtualStoreDir(rootDir?: string): Promise<string | undefined> {
     if (!this.enableGlobalVirtualStore()) return undefined;

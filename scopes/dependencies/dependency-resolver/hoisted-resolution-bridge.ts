@@ -96,11 +96,13 @@ let lastImportFlag: string | undefined;
 /**
  * Platform-safe path containment: `path.relative` is case-insensitive on Windows (where the
  * filesystem is) and case-sensitive on posix, which a bare `startsWith` prefix check gets wrong
- * for drive-letter casing differences between realpath results and given spellings.
+ * for drive-letter casing differences between realpath results and given spellings. Equality
+ * counts as inside - every caller asks "does this path escape that root", and a path equal to
+ * the root has not escaped it.
  */
-export function isPathInside(child: string, parent: string): boolean {
+export function isPathInsideOrEqual(child: string, parent: string): boolean {
   const rel = path.relative(parent, child);
-  return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+  return !rel.startsWith('..') && !path.isAbsolute(rel);
 }
 
 export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
@@ -125,7 +127,7 @@ export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
   } catch {
     // dangling recorded dir - judge by the lexical resolution
   }
-  return !isPathInside(storeRealpath, workspaceRealpath);
+  return !isPathInsideOrEqual(storeRealpath, workspaceRealpath);
 }
 
 /**
