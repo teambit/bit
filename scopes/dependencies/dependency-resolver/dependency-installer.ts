@@ -8,7 +8,7 @@ import type { Logger } from '@teambit/logger';
 import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import type { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined, SelfHostedVirtualStoreTransition } from './exceptions';
-import { isPathInsideOrEqual } from './hoisted-resolution-bridge';
+import { isPathInsideOrEqual, parseRecordedVirtualStoreDir } from './hoisted-resolution-bridge';
 import type {
   PackageManager,
   PackageManagerInstallOptions,
@@ -202,13 +202,15 @@ export class DependencyInstaller {
    */
   private async assertSafeVirtualStoreTransition(finalRootDir: string, enableGlobalVirtualStore: boolean) {
     const modulesDir = path.join(finalRootDir, 'node_modules');
-    let modulesYaml: string;
+    let modulesManifest: string;
     try {
-      modulesYaml = await fs.readFile(path.join(modulesDir, '.modules.yaml'), 'utf8');
+      modulesManifest = await fs.readFile(path.join(modulesDir, '.modules.yaml'), 'utf8');
     } catch {
       return;
     }
-    const virtualStoreDir = modulesYaml.match(/^\s*"?virtualStoreDir"?:\s*"?([^"\n]+?)"?,?\s*$/m)?.[1];
+    // same reader as the bootstrap-time layout gate, so the guard and the bridge can never
+    // disagree about which layout the workspace is currently on
+    const virtualStoreDir = parseRecordedVirtualStoreDir(modulesManifest);
     if (!virtualStoreDir) return;
     // compare real paths on both sides: resolving the recorded dir against the as-given (possibly
     // symlinked) workspace spelling while comparing to the workspace's realpath would misread a

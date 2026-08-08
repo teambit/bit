@@ -611,9 +611,11 @@ export class DependenciesMain {
    * map one-to-one onto the directory names of the project-local layout.
    */
   private async readVirtualStoreEntries(virtualStoreDir: string): Promise<string[]> {
-    const entries = (await fs.readdir(virtualStoreDir)).filter(
-      (entry) => !entry.startsWith('.') && entry !== 'node_modules' && entry !== 'lock.yaml'
-    );
+    // directories only: a stray file (or `lock.yaml` itself) is not a materialized copy, and
+    // counting one would both garble the copy counts and suppress the lockfile fallback below
+    const entries = (await fs.readdir(virtualStoreDir, { withFileTypes: true }))
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules')
+      .map((entry) => entry.name);
     if (entries.length) return entries;
     const currentLockfilePath = path.join(virtualStoreDir, 'lock.yaml');
     if (!(await fs.pathExists(currentLockfilePath))) return entries;

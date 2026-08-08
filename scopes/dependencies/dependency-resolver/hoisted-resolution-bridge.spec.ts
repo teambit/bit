@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import path from 'path';
-import { isPathInsideOrEqual } from './hoisted-resolution-bridge';
+import { isPathInsideOrEqual, parseRecordedVirtualStoreDir } from './hoisted-resolution-bridge';
 
 describe('isPathInsideOrEqual()', () => {
   const base = path.resolve('/base');
@@ -18,5 +18,21 @@ describe('isPathInsideOrEqual()', () => {
   });
   it('should count a sibling as outside', () => {
     expect(isPathInsideOrEqual(path.join(path.dirname(base), 'sibling'), base)).to.eq(false);
+  });
+});
+
+describe('parseRecordedVirtualStoreDir()', () => {
+  it('should read the JSON manifest current pnpm writes', () => {
+    const manifest = JSON.stringify({ hoistedDependencies: {}, virtualStoreDir: '../../store/v11/links' }, null, 2);
+    expect(parseRecordedVirtualStoreDir(manifest)).to.eq('../../store/v11/links');
+  });
+  it('should read a block-YAML manifest from an older pnpm', () => {
+    expect(parseRecordedVirtualStoreDir('layoutVersion: 5\nvirtualStoreDir: .pnpm\n')).to.eq('.pnpm');
+  });
+  it('should not confuse virtualStoreDirMaxLength for the store dir', () => {
+    expect(parseRecordedVirtualStoreDir('virtualStoreDirMaxLength: 120\n')).to.eq(undefined);
+  });
+  it('should return undefined when the manifest records no store dir', () => {
+    expect(parseRecordedVirtualStoreDir(JSON.stringify({ layoutVersion: 5 }))).to.eq(undefined);
   });
 });

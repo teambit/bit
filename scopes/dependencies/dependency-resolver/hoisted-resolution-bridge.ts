@@ -87,6 +87,29 @@ const registeredEsmDirs = new Set<string>();
 let lastImportFlag: string | undefined;
 
 /**
+ * The `virtualStoreDir` pnpm recorded in a `node_modules/.modules.yaml`, or undefined when the
+ * manifest records none.
+ *
+ * Current pnpm writes this manifest as JSON (YAML 1.2 being a superset of it), so the structured
+ * read is a plain `JSON.parse` - no dependency, and correct for every value the writer can emit.
+ * Older versions wrote block YAML, which the line match handles. A full YAML parser is
+ * deliberately avoided: this runs in `bootstrap`, before any command does its work, and parsing
+ * the whole manifest costs ~40ms on this repo's own 415KB one against ~0.2ms for the line match
+ * (the manifest carries the entire hoisted alias map, so it grows with the dependency graph).
+ * Taking a package dependency here would also make the earliest, least recoverable step of CLI
+ * startup depend on module resolution - the very thing this module exists to repair.
+ */
+export function parseRecordedVirtualStoreDir(modulesManifest: string): string | undefined {
+  try {
+    const parsed = JSON.parse(modulesManifest) as { virtualStoreDir?: unknown };
+    return typeof parsed.virtualStoreDir === 'string' ? parsed.virtualStoreDir : undefined;
+  } catch {
+    // not JSON - a block-YAML manifest from an older pnpm
+  }
+  return modulesManifest.match(/^\s*"?virtualStoreDir"?:\s*"?([^"\n]+?)"?,?\s*$/m)?.[1];
+}
+
+/**
  * Whether the workspace's last install used pnpm's global virtual store, judged by the
  * `virtualStoreDir` the engine records in `node_modules/.modules.yaml`: `.pnpm` (or any path
  * inside the workspace) means project-local; a path escaping the workspace means the global
@@ -107,13 +130,13 @@ export function isPathInsideOrEqual(child: string, parent: string): boolean {
 }
 
 export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
-  let modulesYaml: string;
+  let modulesManifest: string;
   try {
-    modulesYaml = fs.readFileSync(path.join(workspaceRoot, 'node_modules', '.modules.yaml'), 'utf8');
+    modulesManifest = fs.readFileSync(path.join(workspaceRoot, 'node_modules', '.modules.yaml'), 'utf8');
   } catch {
     return false;
   }
-  const virtualStoreDir = modulesYaml.match(/^\s*"?virtualStoreDir"?:\s*"?([^"\n]+?)"?,?\s*$/m)?.[1];
+  const virtualStoreDir = parseRecordedVirtualStoreDir(modulesManifest);
   if (!virtualStoreDir) return false;
   let workspaceRealpath = workspaceRoot;
   try {
