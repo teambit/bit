@@ -1095,6 +1095,75 @@ jobs:
       - e2e_test_cmd:
           bit_bin: "--bit_bin=bit-cleaned"
 
+  # ========== esbuild CLI bundle ==========
+  # Builds the bundled CLI once and persists it, so all e2e nodes share a single build instead of
+  # each of them producing (and installing the externals for) their own.
+  setup_esbuild_bundle:
+    <<: *defaults
+    resource_class: large
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+      PNPM_MAX_WORKERS: "4"
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_common_caches
+      - install_bvm
+      - bvm_upgrade
+      - run:
+          name: compile the workspace
+          # the bundle is built from each component's dist/, and setup_harmony deliberately skips
+          # compiling, so it has to happen here.
+          command: cd bit && bbit compile
+          no_output_timeout: '30m'
+      - run:
+          name: build the esbuild bundle
+          # bundle:ensure builds only when its stamp differs and then installs the externals; on a
+          # fresh CI machine that is always a full build, which is what we want here.
+          command: cd bit && npm run bundle:ensure -- --out-dir /home/circleci/bit/esbuild-bundle
+          no_output_timeout: '30m'
+      - run:
+          name: smoke test the bundle
+          command: |
+            node /home/circleci/bit/esbuild-bundle/node_modules/@teambit/bit/bin/bit --version
+            node /home/circleci/bit/esbuild-bundle/node_modules/@teambit/bit/bin/bit --help > /dev/null
+      - persist_to_workspace:
+          root: .
+          paths:
+            - esbuild-bundle
+      - store_artifacts:
+          path: /home/circleci/bit/esbuild-bundle/bundle/metafile.json
+      - store_artifacts:
+          path: /home/circleci/bit/esbuild-bundle/bundle-stamp.json
+
+  # Runs the full e2e suite against the bundled CLI from setup_esbuild_bundle.
+  e2e_test_esbuild_bundle:
+    <<: *defaults
+    # medium+ for the same OOM reason as e2e_test.
+    resource_class: medium+
+    environment:
+      BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
+    parallelism: 40
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_common_caches
+      - run:
+          name: put the bundled bit on PATH as "bit-bundled"
+          # the launcher resolves the bundle relative to its own realpath, so a symlink is enough.
+          command: |
+            mkdir -p /home/circleci/.npm-global/bin
+            BIT_BUNDLED=/home/circleci/bit/esbuild-bundle/node_modules/@teambit/bit/bin/bit
+            chmod +x "$BIT_BUNDLED"
+            ln -sf "$BIT_BUNDLED" /home/circleci/.npm-global/bin/bit-bundled
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: verify the bundled binary works
+          command: source $BASH_ENV && bit-bundled --version
+      - e2e_test_cmd:
+          bit_bin: "--bit_bin=bit-bundled"
+
   # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
   # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
   # e2e_timings_refresh workflow.
@@ -1593,6 +1662,19 @@ workflows:
               only: /^optimize-node-modules.*|^cleanup-script.*|.*cleanup.*script.*/
           requires:
             - setup_bundle_simulation
+      # the esbuild CLI bundle - gated to the bundling branches until it is proven green
+      - setup_esbuild_bundle:
+          filters:
+            branches:
+              only: /^bit-bundle.*/
+          requires:
+            - setup_harmony
+      - e2e_test_esbuild_bundle:
+          filters:
+            branches:
+              only: /^bit-bundle.*/
+          requires:
+            - setup_esbuild_bundle
       - bit_pr:
           requires:
             - setup_harmony
