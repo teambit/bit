@@ -2,7 +2,12 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import { hoistedResolutionDirs, isPathInsideOrEqual, parseRecordedVirtualStoreDir } from './hoisted-resolution-bridge';
+import {
+  ensureHoistedDependencyResolution,
+  hoistedResolutionDirs,
+  isPathInsideOrEqual,
+  parseRecordedVirtualStoreDir,
+} from './hoisted-resolution-bridge';
 
 describe('isPathInsideOrEqual()', () => {
   const base = path.resolve('/base');
@@ -59,5 +64,67 @@ describe('hoistedResolutionDirs()', () => {
   });
   it('should return nothing for a root that was never installed', () => {
     expect(hoistedResolutionDirs(root)).to.deep.eq([]);
+  });
+});
+
+describe('ensureHoistedDependencyResolution()', () => {
+  let root: string;
+  let nodePath: string | undefined;
+  let nodeOptions: string | undefined;
+  const hoisted = () => path.join(root, 'node_modules', '.pnpm', 'node_modules');
+  const rootModules = () => path.join(root, 'node_modules');
+  const entries = () => (process.env.NODE_PATH ?? '').split(path.delimiter).filter(Boolean);
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'ensure-hoisted-resolution-'));
+    fs.ensureDirSync(hoisted());
+    nodePath = process.env.NODE_PATH;
+    nodeOptions = process.env.NODE_OPTIONS;
+  });
+  afterEach(() => {
+    if (nodePath === undefined) delete process.env.NODE_PATH;
+    else process.env.NODE_PATH = nodePath;
+    if (nodeOptions === undefined) delete process.env.NODE_OPTIONS;
+    else process.env.NODE_OPTIONS = nodeOptions;
+    fs.removeSync(root);
+  });
+
+  it('should put both directories in walk order', () => {
+    delete process.env.NODE_PATH;
+    ensureHoistedDependencyResolution(root);
+    expect(entries()).to.deep.eq([hoisted(), rootModules()]);
+  });
+
+  it('should reorder entries a previous bridge left in the wrong order', () => {
+    // a bit that bridged the hoisted directory alone leaves it in NODE_PATH for its children;
+    // adding the root's node_modules in front of it there would invert the walk
+    process.env.NODE_PATH = hoisted();
+    ensureHoistedDependencyResolution(root);
+    expect(entries()).to.deep.eq([hoisted(), rootModules()]);
+  });
+
+  it('should keep entries it does not own, behind its own', () => {
+    const foreign = path.join(root, 'somewhere-else');
+    process.env.NODE_PATH = [rootModules(), foreign].join(path.delimiter);
+    ensureHoistedDependencyResolution(root);
+    expect(entries()).to.deep.eq([hoisted(), rootModules(), foreign]);
+  });
+
+  it('should leave NODE_PATH untouched when it already reads correctly', () => {
+    process.env.NODE_PATH = [hoisted(), rootModules()].join(path.delimiter);
+    const before = process.env.NODE_PATH;
+    ensureHoistedDependencyResolution(root);
+    expect(process.env.NODE_PATH).to.eq(before);
+  });
+
+  it('should do nothing for a root that was never installed', () => {
+    const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'ensure-hoisted-resolution-bare-'));
+    delete process.env.NODE_PATH;
+    try {
+      ensureHoistedDependencyResolution(bare);
+      expect(process.env.NODE_PATH).to.eq(undefined);
+    } finally {
+      fs.removeSync(bare);
+    }
   });
 });

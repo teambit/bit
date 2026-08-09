@@ -230,12 +230,15 @@ export function ensureHoistedDependencyResolution(workspaceRoot: string): void {
   const dirs = hoistedResolutionDirs(workspaceRoot);
   if (!dirs.length) return;
   const existing = process.env.NODE_PATH;
-  const known = new Set(existing?.split(path.delimiter).filter(Boolean) ?? []);
-  const added = dirs.filter((dir) => !known.has(dir));
-  if (added.length) {
-    // prepended in walk order, so the hoisted directory keeps winning over the root's own
-    // node_modules exactly as the walk out of `.pnpm` used to reach it first
-    process.env.NODE_PATH = [...added, ...(existing ? [existing] : [])].join(path.delimiter);
+  const untouched = (existing?.split(path.delimiter).filter(Boolean) ?? []).filter((dir) => !dirs.includes(dir));
+  // rebuilt rather than prepended, because order is resolution order and an entry already present
+  // is not necessarily in front of the one it has to beat: a bit that bridged the hoisted
+  // directory alone leaves it in `NODE_PATH` for its children, and adding the root's node_modules
+  // in front of it there would invert the walk the bridge exists to reproduce. Everything this
+  // bridge does not own keeps its relative order, behind what the walk reached first.
+  const next = [...dirs, ...untouched].join(path.delimiter);
+  if (next !== existing) {
+    process.env.NODE_PATH = next;
     // `NODE_PATH` is read once when the module system initializes, so a later assignment only
     // takes effect after re-deriving the global paths.
     (require('module') as { _initPaths(): void })._initPaths();
