@@ -485,6 +485,7 @@
         "dreidels": "0.6.1",
         "enhanced-resolve": "4.5.0",
         "enquirer": "2.4.1",
+        "esbuild": "0.28.2",
         "eslint": "8.56.0",
         "eslint-config-prettier": "8.5.0",
         "eslint-import-resolver-node": "0.3.4",
