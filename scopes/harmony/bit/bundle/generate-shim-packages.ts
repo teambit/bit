@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { join, relative } from 'path';
 import type { BundlePaths } from './config';
 import type { CoreAspectInfo } from './core-aspects-info';
-import { EXTRA_PACKAGES, toExportName } from './core-aspects-info';
+import { toExportName } from './core-aspects-info';
 
 /**
  * Every core aspect must still be importable as `@teambit/<name>` from a user's workspace - that is
@@ -92,7 +92,7 @@ async function generateOne(paths: BundlePaths, target: ShimTarget) {
   await fs.writeJson(join(pkgDir, 'package.json'), packageJson, { spaces: 2 });
 }
 
-export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspectInfo[]) {
+export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspectInfo[], extraPackages: string[]) {
   const targets: ShimTarget[] = aspects.map((aspect) => ({
     packageName: aspect.packageName,
     exportName: aspect.exportName,
@@ -100,7 +100,7 @@ export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspe
     aspectFileBase: basenameOf(aspect.aspectImport),
     mainRuntimeFileBase: basenameOf(aspect.mainRuntimeImport),
   }));
-  EXTRA_PACKAGES.forEach((packageName) => {
+  extraPackages.forEach((packageName) => {
     targets.push({ packageName, exportName: toExportName(packageName.replace('@teambit/', '')) });
   });
   await Promise.all(targets.map((target) => generateOne(paths, target)));

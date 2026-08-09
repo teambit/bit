@@ -1,4 +1,6 @@
 import { readdir } from 'fs-extra';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { getAspectDir, getCoreAspectName, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { getAllCoreAspectsIds } from '../manifests';
 
@@ -26,8 +28,27 @@ export type CoreAspectInfo = {
 /**
  * additional `@teambit/*` packages that are not aspects but that user code (and bit's own generated
  * code) imports directly, so they must be re-exported from the bundle too.
+ *
+ * `@teambit/legacy` is deliberately NOT here. `bit-bundle2` included it, but that predates the split
+ * of legacy into per-concern packages (`@teambit/legacy.constants`, `@teambit/legacy.logger`, ...)
+ * which are ordinary workspace components and get bundled like any other. Nothing in the sources
+ * imports the old umbrella package any more; a copy lingering in a developer's node_modules is a
+ * leftover, and relying on it produced a bundle that built locally and failed on CI.
  */
-export const EXTRA_PACKAGES = ['@teambit/harmony', '@teambit/legacy'];
+const CANDIDATE_EXTRA_PACKAGES = ['@teambit/harmony'];
+
+/**
+ * Only the extras actually present. A missing one must not fail the build - it means the package is
+ * no longer part of the installation, which is information, not an error.
+ */
+export function getExtraPackages(repoRoot: string): string[] {
+  return CANDIDATE_EXTRA_PACKAGES.filter((packageName) => {
+    const exists = existsSync(join(repoRoot, 'node_modules', packageName, 'package.json'));
+    // eslint-disable-next-line no-console
+    if (!exists) console.warn(`[bundle] extra package "${packageName}" is not installed, skipping it`);
+    return exists;
+  });
+}
 
 export function toExportName(name: string): string {
   return name.replace(/[.\-/]+(.)/g, (_, chr) => chr.toUpperCase());

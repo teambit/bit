@@ -701,6 +701,13 @@ _(append-only)_
   and rejected): Node's compile cache does not apply to a main entry script. Same file evaluated as
   main = 0.813 s, via `require()` = 0.390 s. A stub SEA that requires the bundle from disk runs at
   0.642 s, identical to the script launcher (§9.2).
+- **2026-08-09** — first CI run failed with `Could not resolve "@teambit/legacy"`. The package is
+  declared nowhere in the repo and imported by nothing; the only reference was the bundler's own
+  `EXTRA_PACKAGES` list, copied from `bit-bundle2` (which predates the split of legacy into
+  `@teambit/legacy.constants`, `@teambit/legacy.logger`, … — all ordinary components that bundle
+  normally). It resolved locally purely because a stale v2.1.0 copy sat in a developer's
+  `node_modules`. Dropped, and the extras list is now filtered to what is actually installed so a
+  missing optional extra warns instead of failing the build. Shims: 108 → 107.
 - **2026-08-09** — e2e runners added (`e2e-test:bundle`, `e2e-test:sea`). `./e2e/commands/cat.e2e.ts`
   passes 8/8 against both; per-command cost 0.78 s (script) vs 2.0 s (SEA).
 - **2026-08-09** — `ensure-bundle` stamp verified across six scenarios: cold build, warm reuse,

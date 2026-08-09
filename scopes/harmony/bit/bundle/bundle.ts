@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import { join } from 'path';
 import { getBundlePaths, DEFAULT_OUT_DIR, BUNDLE_DIR_NAME } from './config';
-import { getCoreAspectsInfo } from './core-aspects-info';
+import { getCoreAspectsInfo, getExtraPackages } from './core-aspects-info';
 import { getExternals } from './externals';
 import { generateEntry } from './generate-entry';
 import { runEsbuild } from './run-esbuild';
@@ -46,7 +46,12 @@ async function runBundle() {
   const withoutRuntime = aspects.filter((a) => !a.mainRuntimeImport).map((a) => a.id);
   console.log(`[bundle] core aspects: ${aspects.length} (${withoutRuntime.length} without a main runtime)`);
 
-  const { entryFilePath, seaEntryFilePath, exportsByPackage } = await generateEntry(paths.generatedDir, aspects);
+  const extraPackages = getExtraPackages(repoRoot);
+  const { entryFilePath, seaEntryFilePath, exportsByPackage } = await generateEntry(
+    paths.generatedDir,
+    aspects,
+    extraPackages
+  );
   const externals = getExternals({ uiBundling: argv.uiBundling });
 
   const result = await runEsbuild({
@@ -60,7 +65,7 @@ async function runBundle() {
 
   const workers = await buildWorkers(paths, externals);
   const bitVersion = await getBitVersionFromRepo(repoRoot);
-  await generateShimPackages(paths, aspects);
+  await generateShimPackages(paths, aspects, extraPackages);
   await generateBin(paths);
   const assetCount = await copyAssets(paths);
   const esmBridges = await generateEsmBridges(paths, exportsByPackage);
@@ -79,6 +84,7 @@ async function runBundle() {
     bundleFile: paths.appFilePath,
     bundleSizeMb: +(size / 1024 / 1024).toFixed(2),
     coreAspects: aspects.length,
+    extraPackages,
     aspectsWithoutMainRuntime: withoutRuntime,
     uiBundlingExternals: argv.uiBundling,
     externalsInstalled: Object.keys(dependencies).length,
