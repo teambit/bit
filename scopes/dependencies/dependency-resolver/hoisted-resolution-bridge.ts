@@ -137,6 +137,16 @@ export function isPathInsideOrEqual(child: string, parent: string): boolean {
   return !path.isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${path.sep}`);
 }
 
+/**
+ * Whether two spellings name the same directory. `path.relative` normalizes both sides first, so a
+ * trailing separator, a redundant `.`, a relative spelling and - on Windows - a difference in case
+ * all compare equal, which string equality would miss. Anything written by hand into `NODE_PATH`
+ * arrives in whatever spelling its author chose.
+ */
+export function isSamePath(one: string, other: string): boolean {
+  return path.relative(one, other) === '';
+}
+
 export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
   let modulesManifest: string;
   try {
@@ -230,7 +240,11 @@ export function ensureHoistedDependencyResolution(workspaceRoot: string): void {
   const dirs = hoistedResolutionDirs(workspaceRoot);
   if (!dirs.length) return;
   const existing = process.env.NODE_PATH;
-  const untouched = (existing?.split(path.delimiter).filter(Boolean) ?? []).filter((dir) => !dirs.includes(dir));
+  const untouched = (existing?.split(path.delimiter).filter(Boolean) ?? []).filter(
+    // by path rather than by spelling, so an entry naming a directory this bridge owns is replaced
+    // by the canonical one instead of being kept alongside it as a redundant search base
+    (dir) => !dirs.some((owned) => isSamePath(dir, owned))
+  );
   // rebuilt rather than prepended, because order is resolution order and an entry already present
   // is not necessarily in front of the one it has to beat: a bit that bridged the hoisted
   // directory alone leaves it in `NODE_PATH` for its children, and adding the root's node_modules

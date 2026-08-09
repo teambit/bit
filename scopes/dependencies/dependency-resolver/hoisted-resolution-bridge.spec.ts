@@ -7,6 +7,7 @@ import {
   ensureHoistedDependencyResolution,
   hoistedResolutionDirs,
   isPathInsideOrEqual,
+  isSamePath,
   parseRecordedVirtualStoreDir,
 } from './hoisted-resolution-bridge';
 
@@ -125,6 +126,12 @@ describe('ensureHoistedDependencyResolution()', () => {
     expect(entries()).to.deep.eq([hoisted(), rootModules(), foreign]);
   });
 
+  it('should replace an entry that names an owned directory in another spelling', () => {
+    process.env.NODE_PATH = [`${rootModules()}${path.sep}`, `${hoisted()}${path.sep}.`].join(path.delimiter);
+    ensureHoistedDependencyResolution(root);
+    expect(entries()).to.deep.eq([hoisted(), rootModules()]);
+  });
+
   it('should leave NODE_PATH untouched when it already reads correctly', () => {
     process.env.NODE_PATH = [hoisted(), rootModules()].join(path.delimiter);
     const before = process.env.NODE_PATH;
@@ -141,5 +148,18 @@ describe('ensureHoistedDependencyResolution()', () => {
     } finally {
       fs.removeSync(bare);
     }
+  });
+});
+
+describe('isSamePath()', () => {
+  const dir = path.resolve('/base', 'node_modules');
+  it('should ignore a trailing separator', () => {
+    expect(isSamePath(`${dir}${path.sep}`, dir)).to.eq(true);
+  });
+  it('should ignore a redundant current-directory segment', () => {
+    expect(isSamePath(path.join(dir, '.'), dir)).to.eq(true);
+  });
+  it('should separate genuinely different directories', () => {
+    expect(isSamePath(path.join(dir, 'nested'), dir)).to.eq(false);
   });
 });
