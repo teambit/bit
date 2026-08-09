@@ -151,6 +151,56 @@ describe('ensureHoistedDependencyResolution()', () => {
   });
 });
 
+describe('ensureHoistedDependencyResolution() esm registration', () => {
+  let first: string;
+  let second: string;
+  let nodePath: string | undefined;
+  let nodeOptions: string | undefined;
+  let register: unknown;
+  const nodeModule = Module as unknown as { register?: unknown; _initPaths(): void };
+  const flag = () => (process.env.NODE_OPTIONS ?? '').match(/--import=\S+/)?.[0];
+
+  beforeEach(() => {
+    first = fs.mkdtempSync(path.join(os.tmpdir(), 'esm-registration-first-'));
+    second = fs.mkdtempSync(path.join(os.tmpdir(), 'esm-registration-second-'));
+    [first, second].forEach((root) => fs.ensureDirSync(path.join(root, 'node_modules', '.pnpm', 'node_modules')));
+    nodePath = process.env.NODE_PATH;
+    nodeOptions = process.env.NODE_OPTIONS;
+    delete process.env.NODE_PATH;
+    delete process.env.NODE_OPTIONS;
+    register = nodeModule.register;
+    // a no-op keeps the body running - the flag is what these cases are about - without leaving a
+    // loader registered on the process
+    nodeModule.register = () => {};
+  });
+  afterEach(() => {
+    if (nodePath === undefined) delete process.env.NODE_PATH;
+    else process.env.NODE_PATH = nodePath;
+    if (nodeOptions === undefined) delete process.env.NODE_OPTIONS;
+    else process.env.NODE_OPTIONS = nodeOptions;
+    nodeModule.register = register;
+    nodeModule._initPaths();
+    [first, second].forEach((root) => fs.removeSync(root));
+  });
+
+  it('should hand children a flag carrying the order NODE_PATH now reads', () => {
+    ensureHoistedDependencyResolution(first);
+    ensureHoistedDependencyResolution(second);
+    const beforeReorder = flag();
+    // bridging the first root again moves its directories back to the front, so the list the
+    // loader was registered with no longer matches the one CommonJS resolves through
+    ensureHoistedDependencyResolution(first);
+    expect(flag()).to.not.eq(beforeReorder);
+  });
+
+  it('should leave the flag alone when nothing about the list changed', () => {
+    ensureHoistedDependencyResolution(first);
+    const unchanged = flag();
+    ensureHoistedDependencyResolution(first);
+    expect(flag()).to.eq(unchanged);
+  });
+});
+
 describe('isSamePath()', () => {
   const dir = path.resolve('/base', 'node_modules');
   it('should ignore a trailing separator', () => {

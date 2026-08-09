@@ -36,10 +36,18 @@
  *   old layout, yet the same process goes on to reload envs and compile from store slots. The
  *   installer re-applies the bridge the moment the target layout is known.
  *
- * Everything here is idempotent, so calling it again is always safe: each `NODE_PATH` entry is
- * added once, the ESM loader re-registers only when the entry set grows (the previous, subset
- * loader keeps chaining harmlessly), and the process's own `NODE_OPTIONS` flag is replaced
- * rather than stacked.
+ * Everything here is idempotent, so calling it again is always safe: `NODE_PATH` is rebuilt to the
+ * same value, the ESM loader re-registers only when the ordered entry list changes, and the
+ * process's own `NODE_OPTIONS` flag is replaced rather than stacked.
+ *
+ * One asymmetry to know about when reading the ESM half. Node runs the *last* registered loader
+ * first and it delegates through `defaultResolve` before its own fallback, so an earlier
+ * registration resolves anything it can before a later one is consulted. A re-registration
+ * therefore corrects what child processes inherit - the `--import` flag carries the current list -
+ * while in-process the earlier registration keeps its precedence for the entries it already had.
+ * That only diverges from CommonJS for a specifier resolvable from more than one entry across two
+ * registrations with different orders, which needs a process bridging two roots in alternating
+ * order; the CommonJS half, rebuilt on every call, is always right.
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -50,8 +58,9 @@ import { pathToFileURL } from 'url';
  * The entries cannot be read from `NODE_PATH` inside the loader: on modern Node the hooks run on
  * a separate thread whose `process.env` is a snapshot taken at registration, so late additions -
  * an install switching the workspace onto the global virtual store mid-process - would never be
- * seen. Injecting the list makes each registration self-contained; when the set grows, a new
- * loader is registered and chains after the previous (whose entries are a subset - harmless).
+ * seen. Injecting the list makes each registration self-contained, at the cost of needing a new
+ * registration whenever the list changes - by order as much as by membership, since the loader
+ * searches these entries in the order given.
  */
 const esmNodePathLoaderSource = (dirs: string[]) => `
 import { createRequire } from 'node:module'
@@ -91,7 +100,7 @@ export async function resolve (specifier, context, defaultResolve) {
 }
 `;
 
-const registeredEsmDirs = new Set<string>();
+let lastRegisteredEntries: string | undefined;
 let lastImportFlag: string | undefined;
 
 /**
@@ -281,10 +290,13 @@ function registerEsmNodePathLoader(): void {
     register?: (specifier: string, parentURL: string) => void;
   };
   if (typeof nodeModule.register !== 'function') return;
-  // mirror the CommonJS side exactly: every current NODE_PATH entry participates
+  // mirror the CommonJS side exactly: every current NODE_PATH entry participates, in its order
   const dirs = (process.env.NODE_PATH || '').split(path.delimiter).filter(Boolean);
   if (!dirs.length) return;
-  if (lastImportFlag && dirs.every((dir) => registeredEsmDirs.has(dir))) return;
+  const entries = dirs.join(path.delimiter);
+  // ordered, not a set: the loader inlines the list, so a reordering leaves a registration whose
+  // precedence no longer matches the one CommonJS now uses
+  if (lastImportFlag && entries === lastRegisteredEntries) return;
   const loaderUrl = `data:text/javascript,${encodeURIComponent(esmNodePathLoaderSource(dirs))}`;
   const parentUrl = pathToFileURL(path.join(process.cwd(), '/')).href;
   try {
@@ -294,7 +306,7 @@ function registerEsmNodePathLoader(): void {
     // half of the workaround is unaffected, and only ESM packages relying on hoisting are lost.
     return;
   }
-  dirs.forEach((dir) => registeredEsmDirs.add(dir));
+  lastRegisteredEntries = entries;
   const registration = `import{register}from'node:module';register(${JSON.stringify(loaderUrl)},${JSON.stringify(parentUrl)});`;
   const importFlag = `--import=data:text/javascript,${encodeURIComponent(registration)}`;
   // children get one flag carrying the full current set: replace our previous flag rather than
