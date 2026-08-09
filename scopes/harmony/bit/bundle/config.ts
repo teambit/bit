@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, resolve } from 'path';
 
 /**
  * All the paths the bundler writes to / reads from.
@@ -27,7 +27,10 @@ export const BUNDLE_DIR_NAME = 'bundle';
 export const APP_FILE_BASE_NAME = 'bit.app';
 
 export function getBundlePaths(repoRoot: string, outDir = DEFAULT_OUT_DIR): BundlePaths {
-  const rootOutDir = outDir;
+  // the bundler spawns child processes with other cwds (npm install inside the bundle dir, the
+  // bundle introspection used for the esm bridges), so a relative out-dir would resolve differently
+  // depending on the step. normalise once, here.
+  const rootOutDir = resolve(repoRoot, outDir);
   const bundleDir = join(rootOutDir, BUNDLE_DIR_NAME);
   const appFileName = `${APP_FILE_BASE_NAME}.js`;
   return {
