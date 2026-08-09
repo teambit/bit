@@ -662,9 +662,15 @@ jobs:
           # tracked changes) — without it, a duplicate user-agent line lands on master every
           # release and, being last in the file, overrides bit-repo-local for local installs too.
           # the flag lives in .git/index, so it survives persist_to_workspace into later jobs.
+          #
+          # store-dir moves the store — and with it the global virtual store at <store-dir>/links,
+          # which every node_modules entry symlinks into — under the persist_to_workspace root, so
+          # the later jobs that only attach the workspace get resolvable symlinks. pnpm's default
+          # store lives in ~/.local/share/pnpm, outside that root.
           command: >
             cd bit &&
             echo "user-agent=bit-repo-circleci" >> .npmrc &&
+            echo "store-dir=/home/circleci/bit/.pnpm-store" >> .npmrc &&
             git update-index --skip-worktree .npmrc &&
             bbit install
       # `bbit install` compiles as part of the install, but that pass can fall back to the
@@ -683,7 +689,10 @@ jobs:
           root: .
           paths:
             - bit
-            - .pnpm-store
+            # only the global virtual store, not the content-addressable files/ it hardlinks from:
+            # the consumers of this workspace read node_modules, they never fetch packages, and
+            # carrying files/ too would duplicate every package in the archive.
+            - .pnpm-store/*/links
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
