@@ -1107,15 +1107,9 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - restore_common_caches
-      - install_bvm
-      - bvm_upgrade
-      - run:
-          name: compile the workspace
-          # the bundle is built from each component's dist/, and setup_harmony deliberately skips
-          # compiling, so it has to happen here.
-          command: cd bit && bbit compile
-          no_output_timeout: '30m'
+      # no bvm and no compile step: `bit install` compiles by default (which is why setup_harmony
+      # has `bbit compile` commented out), so the attached workspace already has every component's
+      # dist/ - the only input the bundler needs. Building the bundle itself is plain node + npm.
       - run:
           name: build the esbuild bundle
           # bundle:ensure builds only when its stamp differs and then installs the externals; on a
