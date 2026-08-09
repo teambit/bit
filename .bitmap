@@ -44,7 +44,6 @@
         "mainFile": "find-duplications.ts",
         "rootDir": "scopes/toolbox/array/duplications-finder"
     },
-    
     "aspect-docs/babel": {
         "name": "aspect-docs/babel",
         "scope": "teambit.compilation",
@@ -669,13 +668,26 @@
         "mainFile": "index.ts",
         "rootDir": "components/entities/semantic-schema-diff"
     },
- 
     "envs": {
         "name": "envs",
         "scope": "teambit.envs",
         "version": "1.0.1097",
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs"
+    },
+    "envs/bit-cli-app-env": {
+        "name": "envs/bit-cli-app-env",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/envs/bit-cli-app-env",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.0.6": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "eslint": {
         "name": "eslint",
@@ -999,7 +1011,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/mcp/mcp-config-writer"
     },
-   
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
@@ -1062,6 +1073,20 @@
         "version": "0.0.152",
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/modules/babel-compiler"
+    },
+    "modules/cli-bundler": {
+        "name": "modules/cli-bundler",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/cli-bundler",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.0.6": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "modules/component-package-name": {
         "name": "modules/component-package-name",
@@ -1349,7 +1374,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/new-component-helper"
     },
-    
     "notifications": {
         "name": "notifications",
         "scope": "teambit.ui-foundation",
@@ -1476,7 +1500,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/pubsub"
     },
-   
     "react-router": {
         "name": "react-router",
         "scope": "teambit.ui-foundation",
@@ -1484,7 +1507,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
-    
     "refactoring": {
         "name": "refactoring",
         "scope": "teambit.component",

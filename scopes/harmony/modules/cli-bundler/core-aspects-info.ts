@@ -1,8 +1,7 @@
 import { readdir } from 'fs-extra';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { getAspectDir, getCoreAspectName, getCoreAspectPackageName } from '@teambit/aspect-loader';
-import { getAllCoreAspectsIds } from '../manifests';
+import { getCoreAspectName, getCoreAspectPackageName } from '@teambit/aspect-loader';
 
 export type CoreAspectInfo = {
   /** e.g. `teambit.workspace/workspace` */
@@ -41,9 +40,9 @@ const CANDIDATE_EXTRA_PACKAGES = ['@teambit/harmony'];
  * Only the extras actually present. A missing one must not fail the build - it means the package is
  * no longer part of the installation, which is information, not an error.
  */
-export function getExtraPackages(repoRoot: string): string[] {
+export function getExtraPackages(packagesRoot: string): string[] {
   return CANDIDATE_EXTRA_PACKAGES.filter((packageName) => {
-    const exists = existsSync(join(repoRoot, 'node_modules', packageName, 'package.json'));
+    const exists = existsSync(join(packagesRoot, 'node_modules', packageName, 'package.json'));
     // eslint-disable-next-line no-console
     if (!exists) console.warn(`[bundle] extra package "${packageName}" is not installed, skipping it`);
     return exists;
@@ -73,18 +72,28 @@ async function findRuntimeAndAspectFiles(dir: string) {
 
 const stripExt = (file: string) => file.replace(/\.(ts|js)$/, '');
 
-export async function getCoreAspectsInfo(): Promise<CoreAspectInfo[]> {
-  const ids = getAllCoreAspectsIds();
+/**
+ * The core aspect ids are an *input*, not something this component discovers.
+ *
+ * They live in `@teambit/bit`'s `manifests.ts`, and importing them here would make the bundler
+ * depend on the very component it bundles - which becomes a genuine cycle once `bit`'s env depends
+ * on this component. Instead each caller supplies them from where it already has them: the repo
+ * script imports `manifests` directly (it runs inside `@teambit/bit`), and the build task reads the
+ * compiled `manifests.js` out of the capsule it is building.
+ *
+ * `packagesRoot` is likewise explicit rather than resolved from the running process: during a build
+ * the packages to read are the capsule's, not the ones bit itself is running from.
+ */
+export async function getCoreAspectsInfo(coreAspectIds: string[], packagesRoot: string): Promise<CoreAspectInfo[]> {
+  const ids = coreAspectIds;
   const infos = await Promise.all(
     ids.map(async (id): Promise<CoreAspectInfo | undefined> => {
       const name = getCoreAspectName(id);
       const packageName = getCoreAspectPackageName(id);
-      let dir: string;
-      try {
-        dir = getAspectDir(id);
-      } catch {
+      const dir = join(packagesRoot, 'node_modules', packageName);
+      if (!existsSync(join(dir, 'package.json'))) {
         // eslint-disable-next-line no-console
-        console.warn(`[bundle] unable to resolve core aspect "${id}", skipping`);
+        console.warn(`[bundle] core aspect "${id}" is not installed under ${packagesRoot}, skipping`);
         return undefined;
       }
       const { mainRuntimeFile, aspectFile } = await findRuntimeAndAspectFiles(dir);
