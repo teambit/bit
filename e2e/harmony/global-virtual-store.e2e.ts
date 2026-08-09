@@ -56,6 +56,28 @@ describe('installing with the global virtual store', function () {
       ).to.be.a.path();
     });
   });
+  describe('building an aspect', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('enableGlobalVirtualStore', true);
+      helper.workspaceJsonc.disablePreview();
+      helper.fixtures.populateExtensions(1);
+      helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
+      helper.command.install();
+      // throws on a failed build pipeline, which is the assertion: the TSCompiler task is what
+      // breaks when the types below cannot be reached
+      output = helper.command.tagAllComponents();
+    });
+    // the compiled program reaches `.d.ts` files that sit in store slots, and those reference
+    // types they never declare - `@types/*` for a package that ships none, the core aspects. From
+    // a store slot none of it resolves by walking up, and the types quietly degrade into errors
+    // that name a prop rather than the cause.
+    it('should type-check the aspect against the types a store slot cannot reach by walking up', () => {
+      expect(output).to.not.have.string('error TS');
+      expect(helper.command.listParsed()).to.have.lengthOf(1);
+    });
+  });
   describe('patched dependencies', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();

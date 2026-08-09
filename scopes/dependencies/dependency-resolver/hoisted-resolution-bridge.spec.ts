@@ -1,6 +1,8 @@
 import { expect } from 'chai';
+import fs from 'fs-extra';
+import os from 'os';
 import path from 'path';
-import { isPathInsideOrEqual, parseRecordedVirtualStoreDir } from './hoisted-resolution-bridge';
+import { hoistedResolutionDirs, isPathInsideOrEqual, parseRecordedVirtualStoreDir } from './hoisted-resolution-bridge';
 
 describe('isPathInsideOrEqual()', () => {
   const base = path.resolve('/base');
@@ -34,5 +36,28 @@ describe('parseRecordedVirtualStoreDir()', () => {
   });
   it('should return undefined when the manifest records no store dir', () => {
     expect(parseRecordedVirtualStoreDir(JSON.stringify({ layoutVersion: 5 }))).to.eq(undefined);
+  });
+});
+
+describe('hoistedResolutionDirs()', () => {
+  let root: string;
+  const hoisted = () => path.join(root, 'node_modules', '.pnpm', 'node_modules');
+  const rootModules = () => path.join(root, 'node_modules');
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'hoisted-resolution-dirs-'));
+  });
+  afterEach(() => fs.removeSync(root));
+
+  it('should return both directories in the order the walk reached them', () => {
+    fs.ensureDirSync(hoisted());
+    expect(hoistedResolutionDirs(root)).to.deep.eq([hoisted(), rootModules()]);
+  });
+  it('should keep the root node_modules when nothing was hoisted', () => {
+    fs.ensureDirSync(rootModules());
+    expect(hoistedResolutionDirs(root)).to.deep.eq([rootModules()]);
+  });
+  it('should return nothing for a root that was never installed', () => {
+    expect(hoistedResolutionDirs(root)).to.deep.eq([]);
   });
 });
