@@ -61,6 +61,34 @@ describe('globalVirtualStoreTypePaths()', () => {
     expect(globalVirtualStoreTypePaths(root)).to.not.have.property('dir-entry');
   });
 
+  it('should not map a package whose declarations carry the esm extension', () => {
+    write(path.join(root, 'node_modules', '@types', 'esm-typed'), { name: '@types/esm-typed' });
+    write(path.join(root, 'node_modules', 'esm-typed'), { name: 'esm-typed', main: 'dist/index.mjs' }, [
+      'dist/index.d.mts',
+    ]);
+    expect(globalVirtualStoreTypePaths(root)).to.not.have.property('esm-typed');
+  });
+
+  it('should not map a package whose declarations carry the cjs extension', () => {
+    write(path.join(root, 'node_modules', '@types', 'cjs-typed'), { name: '@types/cjs-typed' });
+    write(path.join(root, 'node_modules', 'cjs-typed'), { name: 'cjs-typed', main: 'dist/index.cjs' }, [
+      'dist/index.d.cts',
+    ]);
+    expect(globalVirtualStoreTypePaths(root)).to.not.have.property('cjs-typed');
+  });
+
+  it('should not map a package whose declarations sit beside an export target', () => {
+    // no `types` condition and no `main`: the modern resolver infers the declarations from the
+    // target it picked, and so does this
+    write(path.join(root, 'node_modules', '@types', 'export-typed'), { name: '@types/export-typed' });
+    write(path.join(root, 'node_modules', 'export-typed'), {
+      name: 'export-typed',
+      exports: { '.': { import: './dist/index.mjs' } },
+    });
+    fs.outputFileSync(path.join(root, 'node_modules', 'export-typed', 'dist', 'index.d.mts'), '');
+    expect(globalVirtualStoreTypePaths(root)).to.not.have.property('export-typed');
+  });
+
   it('should not map a package that declares types through a conditional export', () => {
     write(path.join(root, 'node_modules', '@types', 'exported'), { name: '@types/exported' });
     write(path.join(root, 'node_modules', 'exported'), {

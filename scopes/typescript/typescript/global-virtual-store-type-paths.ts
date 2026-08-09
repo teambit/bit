@@ -54,19 +54,36 @@ function exportsDeclareTypes(exportsField: unknown): boolean {
   );
 }
 
+/** Every file an `exports` map points at, at any depth of subpath and condition nesting. */
+function exportTargets(exportsField: unknown, collected: string[] = []): string[] {
+  if (typeof exportsField === 'string') collected.push(exportsField);
+  else if (exportsField && typeof exportsField === 'object') {
+    Object.values(exportsField as Record<string, unknown>).forEach((target) => exportTargets(target, collected));
+  }
+  return collected;
+}
+
+/** Every extension a declaration file can carry: `.mjs` is typed by `.d.mts`, `.cjs` by `.d.cts`. */
+const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts', '.d.cts'];
+
 /**
  * The declaration file TypeScript infers from an entry point, which is how a package ships types
  * without saying so: `dist/index.js` is typed by `dist/index.d.ts`, and a directory entry point by
  * an `index.d.ts` inside it.
+ *
+ * All three extensions are tried against each shape rather than the one paired with the entry's
+ * own extension. Being too eager here only skips a mapping; missing one redirects the specifier to
+ * `@types` and buries the declarations the package actually ships.
  */
 function declarationsBesideEntry(packageDir: string, main: unknown): boolean {
   const entry = typeof main === 'string' && main ? main : 'index.js';
   const resolved = path.join(packageDir, entry);
   const withoutExtension = resolved.replace(/\.(js|cjs|mjs|jsx)$/, '');
-  return (
-    fs.existsSync(`${withoutExtension}.d.ts`) ||
-    fs.existsSync(path.join(resolved, 'index.d.ts')) ||
-    fs.existsSync(path.join(packageDir, 'index.d.ts'))
+  return DECLARATION_EXTENSIONS.some(
+    (extension) =>
+      fs.existsSync(`${withoutExtension}${extension}`) ||
+      fs.existsSync(path.join(resolved, `index${extension}`)) ||
+      fs.existsSync(path.join(packageDir, `index${extension}`))
   );
 }
 
@@ -78,8 +95,9 @@ function declarationsBesideEntry(packageDir: string, main: unknown): boolean {
  * Every form a package can ship types in has to count, because a false negative here is not a
  * missed optimization - it redirects a specifier to `@types` and *overrides* the package's own,
  * usually newer, declarations. `types`/`typings`, a `types` condition in `exports`,
- * `typesVersions`, and the declaration file inferred from the entry point all mean the same thing
- * to the resolver, which reached the package itself and never looked at `@types` at all.
+ * `typesVersions`, and the declaration file inferred from an entry point - `main` for the classic
+ * resolver, any `exports` target for the modern one - all mean the same thing to the resolver,
+ * which reached the package itself and never looked at `@types` at all.
  */
 function shipsOwnTypes(specifier: string, dirs: string[]): boolean {
   for (const dir of dirs) {
@@ -93,7 +111,8 @@ function shipsOwnTypes(specifier: string, dirs: string[]): boolean {
     if (typeof manifest.types === 'string' || typeof manifest.typings === 'string') return true;
     if (manifest.typesVersions && typeof manifest.typesVersions === 'object') return true;
     if (exportsDeclareTypes(manifest.exports)) return true;
-    return declarationsBesideEntry(packageDir, manifest.main);
+    const entries = [manifest.main, ...exportTargets(manifest.exports)];
+    return entries.some((entry) => declarationsBesideEntry(packageDir, entry));
   }
   return false;
 }
