@@ -1082,4 +1082,167 @@ describe('bit ci sync', function () {
       expect(output).to.not.match(/wrote \.github[/\\]workflows[/\\]bit-sync\.yml/);
     });
   });
+
+  // `bit add` + a committed versionless `.bitmap` entry + the component's first export on a lane —
+  // the onboarding quickstart's state, and the one the adoption retry exists for.
+  describe('a lane component that the workspace tracks as new and unexported (first lane export)', () => {
+    const LANE = 'first-lane-export';
+    let defaultBranch: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      // commit the versionless `.bitmap` entry, as the onboarding step does
+      helper.fs.outputFile('comp3/index.js', 'module.exports = () => "comp3: initial";');
+      helper.command.addComponent('comp3');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "track comp3 as a new component"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      // the clone carries the same versionless entry
+      createLaneWithSnap(
+        LANE,
+        { 'comp3/index.js': 'module.exports = () => "comp3: lane-snap-1";' },
+        'comp3 first snap'
+      );
+    });
+
+    it('imports the lane instead of halting on "the component was not found"', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> import-lane`);
+      expect(remoteBranchExists(LANE)).to.be.true;
+      const onBranch = fileOnBranch(LANE, 'comp3/index.js');
+      expect(onBranch, `comp3/index.js on origin/${LANE}:\n${onBranch}`).to.include('comp3: lane-snap-1');
+      // the branch `.bitmap` must record the lane version, not the versionless entry
+      expect(fileOnBranch(LANE, '.bitmap')).to.include(LANE);
+      // the workspace is restored: back on the default branch, on main
+      expect(helper.command.runCmd('git branch --show-current').trim()).to.equal(defaultBranch);
+      expect(helper.command.listLanesParsed().currentLane).to.equal('main');
+    });
+  });
+
+  // A branch commit that touches no bit-tracked file (docs, CI config) gives export-branch nothing
+  // to snap. The sync-ledger commit executeExportBranch still writes is `--allow-empty` and never
+  // touches `.bitmap`, so `stateCommit` (sync-state.ts, derived from `.bitmap`'s content, never
+  // commit messages) never advances past the docs commit — `hasDevCommits` stays true forever, and
+  // every later run re-plans export-branch on top of the ledger commit it just wrote.
+  describe('a commit that touches no bit-tracked file settles instead of looping', () => {
+    const LANE = 'docs-only-lane';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
+      seedSync(LANE);
+      branchSideCommit(LANE, defaultBranch, 'NOTES.md', '# notes\n', 'docs: add notes');
+    });
+
+    it('exports nothing to snap once, then settles — the second run does not redo export-branch work', () => {
+      const first = syncRun(LANE);
+      expect(first.exitCode, `bit ci sync output:\n${first.output}`).to.equal(0);
+      expect(first.output).to.include(`${LANE} -> export-branch`);
+
+      const second = syncRun(LANE);
+      expect(second.exitCode, `bit ci sync output:\n${second.output}`).to.equal(0);
+      // pins the settled summary's exact wording
+      expect(second.output).to.include(
+        `${LANE} -> noop (converged; branch tip is already this reconciler's own sync commit)`
+      );
+      // executeExportBranch's own work (the checkout, the snap attempt) never ran a second time
+      expect(second.output).to.not.include('Exporting branch');
+    });
+
+    // The withhold settles; it does not trap. A real dev commit on top of the recognized ledger tip
+    // must still clear it and export normally — the tip is no longer the reconciler's own commit.
+    it('a real dev commit on top of the settled tip clears the withhold and exports again', () => {
+      branchSideCommit(
+        LANE,
+        defaultBranch,
+        'comp1/index.js',
+        comp1Src('dev-commit-after-settle'),
+        'dev commit after settling'
+      );
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include('Exporting branch');
+      expect(output).to.include(`${LANE} -> export-branch`);
+      expect(output).to.not.include('branch tip is already this reconciler');
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('dev-commit-after-settle');
+    });
+  });
+
+  describe('a stale bit-sync/main that conflicts with the default branch', () => {
+    const SYNC_BRANCH = 'bit-sync/main';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({}));
+      devPath = helper.scopeHelper.cloneWorkspace();
+      // the scope moves ahead: both components tag 0.0.2; the sync branch proposes that drift
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('main-scope-v2'));
+      fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), comp2Src('main-scope-v2'));
+      helper.command.runCmd('bit tag --message "bump to 0.0.2"', devPath);
+      helper.command.runCmd('bit export', devPath);
+      seedSync('--main');
+      // the default branch adopts comp1@0.0.3 while the sync branch recorded 0.0.2 — the same
+      // `.bitmap` line on both sides, so the catch-up merge conflicts
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('main-scope-v3'));
+      helper.command.runCmd('bit tag comp1 --message "bump comp1 to 0.0.3" --unmodified', devPath);
+      helper.command.runCmd('bit export', devPath);
+      helper.command.runCmd('bit checkout head comp1 -x');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "chore: adopt comp1 0.0.3"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      gitFetch();
+    });
+
+    it('re-forks the machine-owned branch from the default branch and pushes the remaining drift', () => {
+      const tipBefore = branchTipSha(SYNC_BRANCH);
+      const { output, exitCode } = syncRun('--main');
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.not.include('HALTED');
+      expect(output).to.include('re-forking');
+      expect(output).to.include(`main -> pushed sync commit to ${SYNC_BRANCH}`);
+      expect(branchTipSha(SYNC_BRANCH)).to.not.equal(tipBefore);
+      // the re-forked branch carries the default branch's comp1 and the scope's comp2 drift
+      expect(fileOnBranch(SYNC_BRANCH, 'comp1/index.js')).to.include('main-scope-v3');
+      expect(fileOnBranch(SYNC_BRANCH, 'comp2/index.js')).to.include('main-scope-v2');
+      expect(fileOnBranch(SYNC_BRANCH, '.bitmap')).to.include('0.0.3');
+      // non-vacuous: the default branch never gained the scope's comp2
+      expect(fileOnBranch(defaultBranch, 'comp2/index.js')).to.include('comp2: initial');
+      // the re-run is a converged no-op
+      const rerun = syncRun('--main');
+      expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+      expect(rerun.output).to.include('main -> converged');
+    });
+
+    it('keeps the halt when a human commit sits on the sync branch', () => {
+      // a human pushes straight to the sync branch, and the default branch conflicts with the edit
+      helper.command.runCmd(`git fetch origin ${SYNC_BRANCH}`);
+      helper.command.runCmd(`git checkout -B ${SYNC_BRANCH} origin/${SYNC_BRANCH}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('human-edit-on-sync-branch'));
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "fix: a human edit on the sync branch"');
+      helper.command.runCmd(`git push origin ${SYNC_BRANCH}`);
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('main-scope-v4'));
+      helper.command.runCmd('bit tag comp1 --message "bump comp1 to 0.0.4" --unmodified', devPath);
+      helper.command.runCmd('bit export', devPath);
+      helper.command.runCmd('bit checkout head comp1 -x');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "chore: adopt comp1 0.0.4"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      gitFetch();
+
+      const tipBefore = branchTipSha(SYNC_BRANCH);
+      const { output, exitCode } = syncRun('--main');
+      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+      expect(output).to.include('could not bring the sync branch');
+      expect(output).to.not.include('re-forking');
+      // the human commit survives
+      expect(branchTipSha(SYNC_BRANCH)).to.equal(tipBefore);
+      expect(fileOnBranch(SYNC_BRANCH, 'comp1/index.js')).to.include('human-edit-on-sync-branch');
+    });
+  });
 });

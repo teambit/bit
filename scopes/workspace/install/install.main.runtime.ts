@@ -52,7 +52,11 @@ import type {
   WorkspacePolicy,
   UpdatedComponent,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect, ComponentDependency } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverAspect,
+  ComponentDependency,
+  ensureHoistedDependencyResolution,
+} from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -471,6 +475,13 @@ export class InstallMain {
         await restoreCoreAspectLinks();
       }
       this.workspace.inInstallAfterPmContext = true;
+      // the install that switches a workspace onto the global virtual store runs with bootstrap's
+      // pre-aspect bridge gate still reflecting the old layout, yet this same process goes on to
+      // reload envs and compile from store slots. Re-apply the bridge (idempotent) now that the
+      // target layout is known, before anything resolves from the new locations.
+      if (this.dependencyResolver.enableGlobalVirtualStore()) {
+        ensureHoistedDependencyResolution(this.workspace.path);
+      }
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
       await this.syncCoreAspectLinksForEnvs(compDirMap);

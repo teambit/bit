@@ -227,6 +227,10 @@ export class PnpmPackageManager implements PackageManager {
         hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
         hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+        enableGlobalVirtualStore: installOptions.enableGlobalVirtualStore,
+        globalVirtualStoreDir: installOptions.globalVirtualStoreDir,
+        patchedDependencies: installOptions.patchedDependencies,
+        packageExtensions: installOptions.packageExtensions,
         preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
@@ -417,6 +421,27 @@ export class PnpmPackageManager implements PackageManager {
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
     return Object.fromEntries(manifests.map((manifest) => [manifest.name, 'workspace:*']));
+  }
+
+  /**
+   * pnpm's own shared `<storeDir>/links`.
+   *
+   * Bit used to carve out a private `<storeDir>/bit-links/<installationId>` root, because the core
+   * aspects had to be mirrored at the root of the virtual store for the published envs to reach
+   * them, and such a mirror cannot be shared with the pnpm CLI or another bit installation. They now
+   * go to the project-local hoisted directory instead (see
+   * `DependencyLinker.linkCoreAspectsToHoistedStore`), so nothing is written inside the store and
+   * the shared directory can be used - slots are reused across bit versions and with every other
+   * pnpm project, upgrades stay incremental, and `pnpm store prune` can account for them.
+   */
+  async getGlobalVirtualStoreDir({
+    packageManagerConfigRootDir,
+  }: {
+    packageManagerConfigRootDir?: string;
+    installationId: string;
+  }): Promise<string> {
+    const { config } = await this.readConfig(packageManagerConfigRootDir);
+    return config.globalVirtualStoreDir ?? join(config.storeDir, 'links');
   }
 
   async pruneModules(rootDir: string): Promise<void> {

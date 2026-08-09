@@ -26,10 +26,9 @@ import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { CiSyncCmd } from './commands/sync.cmd';
 import { git } from './git';
+import { attachEnvVersionToLaneConfig } from './attach-env-version-to-lane-config';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentID } from '@teambit/component-id';
-import { EnvsAspect } from '@teambit/envs';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { compact, isEqual } from 'lodash';
 import type { Version, LaneComponent, Lane } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
@@ -41,6 +40,12 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
+import { adoptAndRetrySwitch, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
+
+export type CiSwitchLaneOptions = SwitchLaneOptions & {
+  /** after an adoption retry, write the adopted components' files (`checkout --reset`) */
+  writeAdoptedFiles?: boolean;
+};
 import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
@@ -458,23 +463,40 @@ export class CiMain {
    * out" no-op case). Callers that need to react to a specific failure mode (e.g. stale lane) can
    * inspect the returned error; existing callers ignore it and rely on a follow-up
    * `getCurrentLane()` check.
+   *
+   * A switch that fails because the lane provides a component the workspace tracks as new retries
+   * once after adopting the lane's version — see `adoptNewComponentsTheLaneProvides`.
    */
-  private async switchToLane(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
+  private async switchToLane(laneName: string, options: CiSwitchLaneOptions = {}): Promise<Error | undefined> {
     this.logger.console(chalk.blue(`Switching to ${laneName}`));
-    try {
-      await this.lanes.switchLanes(laneName, {
+    const { writeAdoptedFiles, ...switchOptions } = options;
+    const doSwitch = () =>
+      this.lanes.switchLanes(laneName, {
         forceOurs: true,
         workspaceOnly: true,
         skipDependencyInstallation: true,
-        ...options,
+        ...switchOptions,
       });
+    const failure = (err: any) => {
+      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${err?.toString() ?? err}`));
+      return err;
+    };
+    try {
+      await doSwitch();
     } catch (e: any) {
       if (e?.toString().includes('already checked out')) {
         this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
         return undefined;
       }
-      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e?.toString() ?? e}`));
-      return e;
+      if (!isLaneMissingComponentError(e)) return failure(e);
+      const retryErr = await adoptAndRetrySwitch(laneName, e, doSwitch, writeAdoptedFiles, {
+        workspace: this.workspace,
+        lanes: this.lanes,
+        logger: this.logger,
+        checkout: this.checkout,
+        reloadWorkspace: () => this.reloadWorkspaceFromDisk(),
+      });
+      if (retryErr) return failure(retryErr);
     }
     return undefined;
   }
@@ -484,7 +506,7 @@ export class CiMain {
    * throwing. `switchToLane` spreads caller options AFTER its defaults, so `forceOurs: true` is
    * overridable — the sync import direction depends on that. Do not reorder that spread.
    */
-  async switchToLaneForSync(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
+  async switchToLaneForSync(laneName: string, options: CiSwitchLaneOptions = {}): Promise<Error | undefined> {
     return this.switchToLane(laneName, options);
   }
 
@@ -1777,7 +1799,7 @@ export class CiMain {
 
         const laneConfig = laneVersion.extensions.toConfigObject();
         if (!laneConfig || Object.keys(laneConfig).length === 0) return;
-        this.attachEnvVersionToLaneConfig(laneConfig, laneVersion);
+        attachEnvVersionToLaneConfig(laneConfig, laneVersion);
 
         // Get main Version for comparison
         let mainConfig: Record<string, any> = {};
@@ -1806,26 +1828,6 @@ export class CiMain {
       await this.workspace.clearCache();
       this.logger.console(chalk.blue('Restored config changes from lane'));
     }
-  }
-
-  /**
-   * toConfigObject() above drops aspect entries whose config is empty - including the env aspect
-   * entry (e.g. "my-env@0.0.1": {}) that accompanies an env-set, since its only config field is
-   * the internal "__specific". restoring just the versionless "teambit.envs/envs" reference is
-   * not enough: env resolution during the subsequent tag anchors to the component's own aspect
-   * entry (a versionless reference is never resolved by scanning the loaded envs, as another
-   * component may use a different version of the same env). re-attach the version recorded in
-   * the lane Version's env aspect entry, and split it back into the two .bitmap entries
-   * (versionless "env" + versioned aspect entry) - the same shape "bit env set" writes.
-   */
-  private attachEnvVersionToLaneConfig(laneConfig: Record<string, any>, laneVersion: Version) {
-    const envId: string | undefined = laneConfig[EnvsAspect.id]?.env;
-    if (!envId || envId.includes('@')) return;
-    const envEntry = laneVersion.extensions.findExtension(envId, true);
-    const envVersion = envEntry?.extensionId?.version;
-    if (!envVersion) return;
-    laneConfig[EnvsAspect.id].env = `${envId}@${envVersion}`;
-    ExtensionDataList.adjustEnvsOnConfigObject(laneConfig);
   }
 
   /**

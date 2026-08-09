@@ -11,11 +11,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MAX_FILES_READ = 1070;
+const MAX_FILES_READ = 1100;
 const MAX_FILES_READ_STATUS = 1515;
 
 /**
- * as of now (2026/05/27) ~1,063 files are loaded during bit-bootstrap.
+ * as of now (2026/08/08) ~1,072 files are loaded during bit-bootstrap (recent additions: the
+ * ci-sync commands, harmony 0.4.12's dist layout, and the global-virtual-store bridge - the
+ * bridge module plus one .modules.yaml read per install root).
  * for "bit status", around 1,433 files are loaded.
  *
  * two weeks ago we were at 2,964 files. a few PRs helped to reduce the number of files. among them:

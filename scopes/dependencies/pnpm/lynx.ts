@@ -21,6 +21,7 @@ import type {
   ResolvedPackageVersion,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
+  PackageExtension,
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
@@ -264,6 +265,10 @@ export async function install(
     hoistWorkspacePackages?: boolean;
     returnListOfDepsRequiringBuild?: boolean;
     packageImportMethod?: 'auto' | 'hardlink' | 'copy' | 'clone';
+    enableGlobalVirtualStore?: boolean;
+    globalVirtualStoreDir?: string;
+    patchedDependencies?: Record<string, string>;
+    packageExtensions?: Record<string, PackageExtension>;
     pnpmHomeDir?: string;
     preferOffline?: boolean;
     // Accepted for backward-compatibility with the previous pnpm engine, but the
@@ -373,6 +378,12 @@ export async function install(
     packageImportMethod: options.packageImportMethod,
     preferOffline: options.preferOffline,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    // The hoisted linker copies packages straight into `node_modules` instead of symlinking them
+    // out of a virtual store, so there is no virtual store for the global one to replace.
+    enableGlobalVirtualStore: options.nodeLinker === 'hoisted' ? false : options.enableGlobalVirtualStore,
+    globalVirtualStoreDir: options.globalVirtualStoreDir,
+    patchedDependencies: options.patchedDependencies,
+    packageExtensions: options.packageExtensions,
     peersSuffixMaxLength: 1000,
     dedupePeerDependents: true,
     dedupePeers: options.dedupePeers,

@@ -135,7 +135,9 @@ export function SchemaNodesSummary({
                     headings={_headings}
                   />
                   {groupedMembersByType.map((member) => {
-                    // @ts-expect-error - version skew: local SchemaNode has diff() but npm-published version doesn't yet
+                    // @ts-ignore - version skew: local SchemaNode has diff() but the npm-published one doesn't yet.
+                    // Only errors in the capsule build, where two semantic-schema versions genuinely coexist; the
+                    // workspace type-check resolves a single copy (tsconfig paths), so @ts-expect-error would be unused there.
                     return renderTable(type ?? '', member, _headings);
                   })}
                 </div>
@@ -146,7 +148,8 @@ export function SchemaNodesSummary({
                 {groupedMembersByType.map((member) => (
                   <SchemaMethodMember
                     key={`${member.__schema}-${member.name}`}
-                    // @ts-expect-error - version skew: local SchemaNode has diff() but npm-published version doesn't yet
+                    // @ts-ignore - version skew: local SchemaNode has diff() but the npm-published one doesn't yet.
+                    // Only errors in the capsule build (two semantic-schema versions); unused in the workspace type-check.
                     member={member}
                     apiNodeRendererProps={apiNodeRendererProps}
                   />
