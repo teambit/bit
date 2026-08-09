@@ -26,7 +26,7 @@ const ASSETS: Array<{ from: string; to: string; flatten?: boolean }> = [
 ];
 
 async function copyOne(paths: BundlePaths, asset: (typeof ASSETS)[number], seen: Map<string, string>) {
-  const files = await globby(asset.from, { cwd: paths.repoRoot, dot: true });
+  const files = await globby(asset.from, { cwd: paths.packagesRoot, dot: true });
   if (!files.length) {
     // eslint-disable-next-line no-console
     console.warn(`[bundle] asset pattern matched nothing: ${asset.from}`);
@@ -42,7 +42,7 @@ async function copyOne(paths: BundlePaths, asset: (typeof ASSETS)[number], seen:
       }
       seen.set(target, file);
       await fs.ensureDir(dirname(target));
-      await fs.copy(join(paths.repoRoot, file), target, { dereference: true, overwrite: true });
+      await fs.copy(join(paths.packagesRoot, file), target, { dereference: true, overwrite: true });
     })
   );
   return files.length;

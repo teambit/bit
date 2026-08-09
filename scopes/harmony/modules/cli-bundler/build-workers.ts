@@ -12,7 +12,7 @@ import { teambitDistResolverPlugin } from './plugins/teambit-dist-resolver-plugi
 export async function buildWorkers(paths: BundlePaths, externals: string[]) {
   const results = await Promise.all(
     WORKER_ENTRIES.map(async (entry) => {
-      const entryPoint = join(paths.repoRoot, 'node_modules', entry.packageName, entry.sourcePath);
+      const entryPoint = join(paths.packagesRoot, 'node_modules', entry.packageName, entry.sourcePath);
       const outfile = join(paths.bundleDir, entry.outPath);
       const result = await build({
         entryPoints: [entryPoint],
@@ -25,7 +25,7 @@ export async function buildWorkers(paths: BundlePaths, externals: string[]) {
         logLevel: 'warning',
         mainFields: ['main', 'module'],
         external: externals,
-        plugins: [teambitDistResolverPlugin(paths.repoRoot), ignoreAssetsPlugin()],
+        plugins: [teambitDistResolverPlugin(paths.packagesRoot), ignoreAssetsPlugin()],
       });
       return { outPath: entry.outPath, errors: result.errors.length };
     })

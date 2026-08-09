@@ -33,9 +33,7 @@ async function main() {
     ...argv,
   });
   console.log(`\n[bundle] done:\n${JSON.stringify(result, null, 2)}`);
-  console.log(
-    `\nnext:\n  cd ${result.outDir}/bundle && npm install\n  node ${result.outDir}/node_modules/@teambit/bit/bin/bit --version`
-  );
+  console.log(`\nnext:\n  cd ${result.outDir} && npm install\n  node ${result.outDir}/bin/bit --version`);
 }
 
 main().catch((err) => {

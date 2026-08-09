@@ -159,9 +159,7 @@ export async function ensureBundle(repoRoot: string, opts: EnsureOptions = {}): 
   const artifactExists = await fs.pathExists(artifact);
   const upToDate = match && artifactExists && !opts.force;
 
-  const bitBin = sea
-    ? join(paths.rootOutDir, 'bit-app')
-    : `node ${join(paths.rootOutDir, 'node_modules', '@teambit', 'bit', 'bin', 'bit')}`;
+  const bitBin = sea ? join(paths.rootOutDir, 'bit-app') : `node ${join(paths.rootOutDir, 'bin', 'bit')}`;
 
   if (upToDate) {
     console.log(`[ensure-bundle] reusing ${paths.rootOutDir} (stamp matches)`);
@@ -179,9 +177,10 @@ export async function ensureBundle(repoRoot: string, opts: EnsureOptions = {}): 
   if (sea) args.push('--sea');
   if (opts.uiBundling) args.push('--ui-bundling');
   runStep(process.execPath, args, repoRoot);
-  // the externals are installed inside `bundle/`, and a clean rebuild deliberately keeps them - so
-  // this is a no-op on a warm machine and the real install on a cold one.
-  runStep('npm', ['install', '--no-audit', '--no-fund', '--loglevel', 'error'], paths.bundleDir);
+  // the externals are ordinary dependencies of the distribution's package.json, so they install
+  // into its root `node_modules`. a clean rebuild deliberately keeps that directory, so this is a
+  // no-op on a warm machine and the real install on a cold one.
+  runStep('npm', ['install', '--no-audit', '--no-fund', '--loglevel', 'error'], paths.rootOutDir);
 
   await fs.writeJson(join(paths.rootOutDir, STAMP_FILE), wanted, { spaces: 2 });
   return { built: true, reason: why, outDir: paths.rootOutDir, bitBin };

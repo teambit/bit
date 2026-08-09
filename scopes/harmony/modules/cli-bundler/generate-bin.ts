@@ -11,7 +11,8 @@ import type { BundlePaths } from './config';
  * whenever a user's code imports a core aspect.
  */
 export async function generateBin(paths: BundlePaths) {
-  const binDir = join(paths.rootOutDir, 'node_modules', '@teambit', 'bit', 'bin');
+  // the package root's bin/, which is what package.json's `bin` field and bvm point at
+  const binDir = join(paths.rootOutDir, 'bin');
   await fs.ensureDir(binDir);
   const relPath = relative(binDir, paths.appFilePath).split('\\').join('/');
   // V8 has to parse and compile the whole bundle on every invocation, which costs more than the

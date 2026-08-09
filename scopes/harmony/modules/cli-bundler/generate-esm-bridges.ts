@@ -74,7 +74,7 @@ export async function generateEsmBridges(paths: BundlePaths, exportsByPackage: R
         skipped.push(packageName);
         return;
       }
-      const distDir = join(paths.rootOutDir, 'node_modules', packageName, 'dist');
+      const distDir = join(paths.shimsDir, packageName, 'dist');
       await fs.outputFile(join(distDir, 'esm.mjs'), bridgeContent(names));
       generated += 1;
     })

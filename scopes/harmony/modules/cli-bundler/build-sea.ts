@@ -44,7 +44,7 @@ export async function buildSea(
   const result = await runEsbuild({
     entryFilePath: seaEntryFilePath,
     outFilePath: seaJsPath,
-    repoRoot: paths.repoRoot,
+    repoRoot: paths.packagesRoot,
     minify: opts.minify,
     externals: opts.externals,
     seaWrapper: true,

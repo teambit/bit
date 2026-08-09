@@ -47,7 +47,7 @@ const IMPORT_META_BANNER = [
  */
 const SEA_BANNER = [
   `var __bitPath = require('node:path');`,
-  `var __bitBaseDir = process.env.BIT_BUNDLE_DIR || __bitPath.join(__bitPath.dirname(process.execPath), 'bundle');`,
+  `var __bitBaseDir = process.env.BIT_BUNDLE_DIR || __bitPath.join(__bitPath.dirname(process.execPath), 'dist', 'core-aspects', 'bundle');`,
   `var __filename = __bitPath.join(__bitBaseDir, 'bit.app.js');`,
   `var __dirname = __bitBaseDir;`,
   `var require = require('node:module').createRequire(__filename);`,

@@ -63,23 +63,12 @@ export type BundleCliResult = {
   warnings: number;
 };
 
-/**
- * Wipe every generated artefact but keep `bundle/node_modules` - the installed externals. They take
- * ~30s to reinstall and are only invalidated when the externals list changes, so removing them on
- * every rebuild would make the edit/build/test loop needlessly slow.
- */
+/** Wipe every generated artefact but keep the installed externals. */
 async function cleanOutDir(paths: ReturnType<typeof getBundlePaths>) {
-  const keep = join(paths.bundleDir, 'node_modules');
   const entries = await fs.readdir(paths.rootOutDir).catch(() => [] as string[]);
-  const bundleDirName = paths.bundleDir.split(/[\\/]/).pop() as string;
-  await Promise.all(entries.filter((e) => e !== bundleDirName).map((e) => fs.remove(join(paths.rootOutDir, e))));
-  const bundleEntries = await fs.readdir(paths.bundleDir).catch(() => [] as string[]);
-  await Promise.all(
-    bundleEntries
-      .map((entry) => join(paths.bundleDir, entry))
-      .filter((entryPath) => entryPath !== keep)
-      .map((entryPath) => fs.remove(entryPath))
-  );
+  // everything else is generated; `node_modules` holds the installed externals, which take ~30s to
+  // reinstall and only change when the externals list does.
+  await Promise.all(entries.filter((e) => e !== 'node_modules').map((e) => fs.remove(join(paths.rootOutDir, e))));
 }
 
 async function readBitVersion(packagesRoot: string): Promise<string> {
@@ -123,7 +112,7 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
   await generateBin(paths);
   const assetCount = await copyAssets(paths);
   const esmBridges = await generateEsmBridges(paths, exportsByPackage);
-  generateNpmrc(paths.bundleDir);
+  generateNpmrc(paths.rootOutDir);
   const { dependencies, unresolved } = await generatePackageJson(paths, bitVersion, externals);
   const sea = options.sea ? await buildSea(paths, seaEntryFilePath, { minify: options.minify, externals }) : undefined;
 

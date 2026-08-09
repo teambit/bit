@@ -25,7 +25,7 @@ const FALLBACK_VERSIONS: Record<string, string> = {
  * declared (e.g. resolved through a peer) and the repo's package.json after that.
  */
 async function resolveVersion(paths: BundlePaths, packageName: string, wsPolicy: any, repoPkgJson: any) {
-  const installed = join(paths.repoRoot, 'node_modules', packageName, 'package.json');
+  const installed = join(paths.packagesRoot, 'node_modules', packageName, 'package.json');
   if (await fs.pathExists(installed)) {
     const { version } = await fs.readJson(installed);
     if (version) return version;
@@ -41,10 +41,10 @@ async function resolveVersion(paths: BundlePaths, packageName: string, wsPolicy:
 }
 
 export async function generatePackageJson(paths: BundlePaths, bitVersion: string, externals: string[]) {
-  const wsJsoncRaw = await fs.readFile(join(paths.repoRoot, 'workspace.jsonc'), 'utf8');
+  const wsJsoncRaw = await fs.readFile(join(paths.packagesRoot, 'workspace.jsonc'), 'utf8');
   const wsJsonc: any = parse(wsJsoncRaw);
   const wsPolicy = wsJsonc?.['teambit.dependencies/dependency-resolver']?.policy;
-  const repoPkgJson = await fs.readJson(join(paths.repoRoot, 'package.json'));
+  const repoPkgJson = await fs.readJson(join(paths.packagesRoot, 'package.json'));
 
   const names = Array.from(new Set(externals.map(rootPackageName))).filter((n) => !externalsNotInstalled.has(n));
   const dependencies: Record<string, string> = {};
@@ -65,10 +65,12 @@ export async function generatePackageJson(paths: BundlePaths, bitVersion: string
     version: bitVersion,
     private: true,
     description:
-      'the packages that could not be inlined into bit.app.js. installed *inside* the bundle dir so ' +
-      'that a package manager run here can never touch the generated @teambit/* shims one level up.',
+      'stands in for the published @teambit/bit package.json. the externals are declared as ordinary ' +
+      'dependencies, so a package manager installs them into the install root - which the upward ' +
+      'node_modules walk from dist/core-aspects/bundle reaches one level beyond the shims.',
+    bin: { bit: './bin/bit' },
     dependencies: Object.fromEntries(Object.entries(dependencies).sort(([a], [b]) => a.localeCompare(b))),
   };
-  await fs.writeJson(join(paths.bundleDir, 'package.json'), packageJson, { spaces: 2 });
+  await fs.writeJson(join(paths.rootOutDir, 'package.json'), packageJson, { spaces: 2 });
   return { dependencies, unresolved };
 }
