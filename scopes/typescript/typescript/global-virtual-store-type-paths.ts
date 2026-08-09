@@ -119,8 +119,14 @@ function shipsOwnTypes(specifier: string, dirs: string[]): boolean {
 
 /**
  * `paths` entries that let a store slot resolve the types it used to reach by walking up out of
- * `node_modules/.pnpm`. Empty for a root that is not on the global virtual store - callers gate on
- * `isGlobalVirtualStoreLayout` - or one whose directories no longer exist.
+ * `node_modules/.pnpm`. Derived purely from {@link hoistedResolutionDirs}, so a root whose
+ * directories are gone yields an empty mapping.
+ *
+ * The layout is the caller's to check. This reads no `.modules.yaml` and asks no questions about
+ * the virtual store: a project-local root would get a mapping too, pointing at the same `@types`
+ * its own walk already reaches - unnecessary rather than wrong, but unnecessary is reason enough
+ * to keep it out. Callers decide per root, gating on `isGlobalVirtualStoreLayout`, because they
+ * are the ones holding several roots and deciding which of them participate.
  *
  * Reads the directories on every call rather than caching them: an install can move a workspace
  * onto the global virtual store mid-process, and the envs compiled right after it would otherwise
