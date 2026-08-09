@@ -49,6 +49,42 @@ describe('globalVirtualStoreTypePaths()', () => {
     expect(globalVirtualStoreTypePaths(root)).to.not.have.property('chalk');
   });
 
+  it('should not map a package whose declarations sit beside a nested entry point', () => {
+    write(path.join(root, 'node_modules', '@types', 'nested'), { name: '@types/nested' });
+    write(path.join(root, 'node_modules', 'nested'), { name: 'nested', main: 'dist/index.js' }, ['dist/index.d.ts']);
+    expect(globalVirtualStoreTypePaths(root)).to.not.have.property('nested');
+  });
+
+  it('should not map a package whose entry point is a directory with an index.d.ts', () => {
+    write(path.join(root, 'node_modules', '@types', 'dir-entry'), { name: '@types/dir-entry' });
+    write(path.join(root, 'node_modules', 'dir-entry'), { name: 'dir-entry', main: './lib' }, ['lib/index.d.ts']);
+    expect(globalVirtualStoreTypePaths(root)).to.not.have.property('dir-entry');
+  });
+
+  it('should not map a package that declares types through a conditional export', () => {
+    write(path.join(root, 'node_modules', '@types', 'exported'), { name: '@types/exported' });
+    write(path.join(root, 'node_modules', 'exported'), {
+      name: 'exported',
+      exports: { '.': { import: { types: './dist/index.d.ts', default: './dist/index.js' } } },
+    });
+    expect(globalVirtualStoreTypePaths(root)).to.not.have.property('exported');
+  });
+
+  it('should not map a package that ships types through typesVersions', () => {
+    write(path.join(root, 'node_modules', '@types', 'versioned'), { name: '@types/versioned' });
+    write(path.join(root, 'node_modules', 'versioned'), {
+      name: 'versioned',
+      typesVersions: { '>=4.0': { '*': ['types/*'] } },
+    });
+    expect(globalVirtualStoreTypePaths(root)).to.not.have.property('versioned');
+  });
+
+  it('should still map a package that only ships javascript beside its entry point', () => {
+    write(path.join(root, 'node_modules', '@types', 'plain'), { name: '@types/plain' });
+    write(path.join(root, 'node_modules', 'plain'), { name: 'plain', main: 'dist/index.js' }, ['dist/index.js']);
+    expect(globalVirtualStoreTypePaths(root)).to.have.property('plain');
+  });
+
   it('should map a @types package whose runtime package is not installed at all', () => {
     write(path.join(root, 'node_modules', '@types', 'node'), { name: '@types/node' });
     expect(globalVirtualStoreTypePaths(root)).to.have.property('node');

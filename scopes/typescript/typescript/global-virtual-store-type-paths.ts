@@ -38,23 +38,62 @@ export function typesDirToSpecifier(dirName: string): string {
   return `@${dirName.slice(0, separator)}/${dirName.slice(separator + 2)}`;
 }
 
+type PackageManifest = {
+  types?: unknown;
+  typings?: unknown;
+  typesVersions?: unknown;
+  exports?: unknown;
+  main?: unknown;
+};
+
+/** Whether an `exports` map declares a `types` condition anywhere in its conditional nesting. */
+function exportsDeclareTypes(exportsField: unknown): boolean {
+  if (!exportsField || typeof exportsField !== 'object') return false;
+  return Object.entries(exportsField as Record<string, unknown>).some(
+    ([condition, target]) => condition === 'types' || exportsDeclareTypes(target)
+  );
+}
+
+/**
+ * The declaration file TypeScript infers from an entry point, which is how a package ships types
+ * without saying so: `dist/index.js` is typed by `dist/index.d.ts`, and a directory entry point by
+ * an `index.d.ts` inside it.
+ */
+function declarationsBesideEntry(packageDir: string, main: unknown): boolean {
+  const entry = typeof main === 'string' && main ? main : 'index.js';
+  const resolved = path.join(packageDir, entry);
+  const withoutExtension = resolved.replace(/\.(js|cjs|mjs|jsx)$/, '');
+  return (
+    fs.existsSync(`${withoutExtension}.d.ts`) ||
+    fs.existsSync(path.join(resolved, 'index.d.ts')) ||
+    fs.existsSync(path.join(packageDir, 'index.d.ts'))
+  );
+}
+
 /**
  * Whether the package the specifier names ships typings of its own, judged at the first bridge
  * directory that holds it - the same copy the resolver reaches. A package that is not installed
  * at either counts as untyped: nothing shadows the `@types` mapping in that case.
+ *
+ * Every form a package can ship types in has to count, because a false negative here is not a
+ * missed optimization - it redirects a specifier to `@types` and *overrides* the package's own,
+ * usually newer, declarations. `types`/`typings`, a `types` condition in `exports`,
+ * `typesVersions`, and the declaration file inferred from the entry point all mean the same thing
+ * to the resolver, which reached the package itself and never looked at `@types` at all.
  */
 function shipsOwnTypes(specifier: string, dirs: string[]): boolean {
   for (const dir of dirs) {
     const packageDir = path.join(dir, specifier);
-    let manifest: { types?: unknown; typings?: unknown };
+    let manifest: PackageManifest;
     try {
       manifest = JSON.parse(fs.readFileSync(path.join(packageDir, 'package.json'), 'utf8'));
     } catch {
       continue; // not in this directory - keep looking in the next
     }
     if (typeof manifest.types === 'string' || typeof manifest.typings === 'string') return true;
-    // the implicit form: no `types` field, but an index.d.ts beside the entry point
-    return fs.existsSync(path.join(packageDir, 'index.d.ts'));
+    if (manifest.typesVersions && typeof manifest.typesVersions === 'object') return true;
+    if (exportsDeclareTypes(manifest.exports)) return true;
+    return declarationsBesideEntry(packageDir, manifest.main);
   }
   return false;
 }
