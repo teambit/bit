@@ -1,4 +1,5 @@
-import type { RuntimeDefinition } from '@teambit/harmony';
+import type { RuntimeDefinition, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { CLIAspect, type CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
@@ -23,6 +24,7 @@ import { CiCmd } from './ci.cmd';
 import { CiVerifyCmd } from './commands/verify.cmd';
 import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
+import { CiSyncCmd } from './commands/sync.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentID } from '@teambit/component-id';
@@ -37,6 +39,24 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
+import { adoptAndRetrySwitch, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
+
+export type CiSwitchLaneOptions = SwitchLaneOptions & {
+  /** after an adoption retry, write the adopted components' files (`checkout --reset`) */
+  writeAdoptedFiles?: boolean;
+};
+import type { CiSyncConfig } from './sync/sync-config';
+import { SyncOrchestrator } from './sync/sync-orchestrator';
+import type { GitHostProvider } from './sync/git-host-provider';
+import { GitHubHostProvider } from './sync/github-client';
+import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
+import { isValidGitBranchName } from './sync/sync-config';
+
+/**
+ * Registered git hosts (GitHub ships built-in; others register from their own aspect).
+ * @see GitHostProvider
+ */
+export type GitHostProviderSlot = SlotRegistry<GitHostProvider>;
 
 // Two distinct conflicts can surface from the remote on a concurrent `bit ci pr` race.
 // LANE_HASH_MISMATCH fires when both runners called `Lane.create` (the lane didn't exist on
@@ -108,6 +128,13 @@ export interface CiWorkspaceConfig {
    * ```
    */
   useExplicitBumpKeywords?: boolean;
+
+  /**
+   * Configuration for `bit ci sync` — bi-directional lane <-> branch/PR sync.
+   * See CiSyncConfig for fields. Example:
+   * { "teambit.git/ci": { "sync": { "branchPrefix": "lane/", "lanes": ["*"] } } }
+   */
+  sync?: CiSyncConfig;
 }
 
 export class CiMain {
@@ -126,7 +153,7 @@ export class CiMain {
     CheckoutAspect,
   ];
 
-  static slots: any = [];
+  static slots = [Slot.withType<GitHostProvider>()];
 
   constructor(
     private workspace: Workspace,
@@ -147,7 +174,9 @@ export class CiMain {
 
     private logger: Logger,
 
-    private config: CiWorkspaceConfig
+    private config: CiWorkspaceConfig,
+
+    private gitHostProviderSlot: GitHostProviderSlot
   ) {}
 
   static async provider(
@@ -163,19 +192,52 @@ export class CiMain {
       ImporterMain,
       CheckoutMain,
     ],
-    config: CiWorkspaceConfig
+    config: CiWorkspaceConfig,
+    [gitHostProviderSlot]: [GitHostProviderSlot]
   ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
+    const ci = new CiMain(
+      workspace,
+      builder,
+      status,
+      lanes,
+      snapping,
+      exporter,
+      importer,
+      checkout,
+      logger,
+      config,
+      gitHostProviderSlot
+    );
+    // GitHub ships built-in but is not privileged: registered through the same public slot any other
+    // host aspect uses. Credentials resolve lazily, so registering at aspect load is always safe.
+    ci.registerGitHostProvider(new GitHubHostProvider((message) => logger.consoleWarning(message)));
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
       new CiPrCmd(workspace, logger, ci),
       new CiMergeCmd(workspace, logger, ci),
+      new CiSyncCmd(workspace, logger, ci),
     ];
     cli.register(ciCmd);
 
     return ci;
+  }
+
+  /**
+   * Register a git host (GitHub, GitLab, …) that `bit ci sync` can use for its pull-request
+   * operations. Exactly one provider is selected per run, by the `origin` remote (see
+   * `selectGitHostProvider`); registering a provider never changes how a repository claimed by a
+   * different provider is handled.
+   */
+  registerGitHostProvider(provider: GitHostProvider) {
+    this.gitHostProviderSlot.register(provider);
+    return this;
+  }
+
+  /** Every registered git host provider, in registration order (one provider per registration). */
+  listGitHostProviders(): GitHostProvider[] {
+    return this.gitHostProviderSlot.values();
   }
 
   async getBranchName() {
@@ -246,29 +308,45 @@ export class CiMain {
    * @example convertBranchToLaneId("feature/New-Component") => "my-scope/feature-new-component"
    */
   convertBranchToLaneId(branchName: string): string {
-    // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
-    // and converting to lowercase
     const sanitizedBranch = branchName.replace(/[/.]/g, '-').toLowerCase();
     return `${this.workspace.defaultScope}/${sanitizedBranch}`;
   }
 
-  async getDefaultBranchName() {
+  /**
+   * The repository's default branch name, whole — slashes included (see `parseOriginHeadRef`).
+   * Local `origin/HEAD` symref first, then the remote's own answer, then the conventional probe.
+   */
+  async getDefaultBranchName(): Promise<string> {
     try {
-      // Try to get the default branch from git symbolic-ref
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
-      const defaultBranch = result.trim().split('/').pop();
-      return defaultBranch || 'master';
-    } catch (e: any) {
-      // Fallback to common default branch names
-      try {
-        const branches = await git.branch(['-r']);
-        if (branches.all.includes('origin/main')) return 'main';
-        if (branches.all.includes('origin/master')) return 'master';
-        return 'master'; // Final fallback
-      } catch {
-        this.logger.console(chalk.yellow(`Unable to detect default branch, using 'master': ${e.toString()}`));
-        return 'master';
-      }
+      const local = parseOriginHeadRef(result);
+      // Every candidate is validated before it is returned: this value becomes a checkout target and a
+      // push refspec, and an option-like name ("-x") would be read by git as a flag. An unusable answer
+      // falls through to the next source rather than reaching the argv.
+      if (local && isValidGitBranchName(local)) return local;
+    } catch {
+      // no local origin/HEAD — normal in a fresh CI clone; ask the remote itself below.
+    }
+    const remote = await remoteHeadBranch();
+    if (remote && isValidGitBranchName(remote)) return remote;
+    return this.probeDefaultBranchName();
+  }
+
+  /**
+   * Last-resort fallback: the two conventional names among the remote branches, then `master`.
+   * Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
+   */
+  private async probeDefaultBranchName(originalError?: Error): Promise<string> {
+    try {
+      const branches = await git.branch(['-r']);
+      if (branches.all.includes('origin/main')) return 'main';
+      if (branches.all.includes('origin/master')) return 'master';
+      return 'master';
+    } catch {
+      this.logger.console(
+        chalk.yellow(`Unable to detect default branch, using 'master'${originalError ? `: ${originalError}` : ''}`)
+      );
+      return 'master';
     }
   }
 
@@ -384,25 +462,74 @@ export class CiMain {
    * out" no-op case). Callers that need to react to a specific failure mode (e.g. stale lane) can
    * inspect the returned error; existing callers ignore it and rely on a follow-up
    * `getCurrentLane()` check.
+   *
+   * A switch that fails because the lane provides a component the workspace tracks as new retries
+   * once after adopting the lane's version — see `adoptNewComponentsTheLaneProvides`.
    */
-  private async switchToLane(laneName: string, options: SwitchLaneOptions = {}): Promise<Error | undefined> {
+  private async switchToLane(laneName: string, options: CiSwitchLaneOptions = {}): Promise<Error | undefined> {
     this.logger.console(chalk.blue(`Switching to ${laneName}`));
-    try {
-      await this.lanes.switchLanes(laneName, {
+    const { writeAdoptedFiles, ...switchOptions } = options;
+    const doSwitch = () =>
+      this.lanes.switchLanes(laneName, {
         forceOurs: true,
         workspaceOnly: true,
         skipDependencyInstallation: true,
-        ...options,
+        ...switchOptions,
       });
+    const failure = (err: any) => {
+      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${err?.toString() ?? err}`));
+      return err;
+    };
+    try {
+      await doSwitch();
     } catch (e: any) {
       if (e?.toString().includes('already checked out')) {
         this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
         return undefined;
       }
-      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e?.toString() ?? e}`));
-      return e;
+      if (!isLaneMissingComponentError(e)) return failure(e);
+      const retryErr = await adoptAndRetrySwitch(laneName, e, doSwitch, writeAdoptedFiles, {
+        workspace: this.workspace,
+        lanes: this.lanes,
+        logger: this.logger,
+        checkout: this.checkout,
+        reloadWorkspace: () => this.reloadWorkspaceFromDisk(),
+      });
+      if (retryErr) return failure(retryErr);
     }
     return undefined;
+  }
+
+  /**
+   * Public entry point onto `switchToLane` for the lane-sync executor; returns the error instead of
+   * throwing. `switchToLane` spreads caller options AFTER its defaults, so `forceOurs: true` is
+   * overridable — the sync import direction depends on that. Do not reorder that spread.
+   */
+  async switchToLaneForSync(laneName: string, options: CiSwitchLaneOptions = {}): Promise<Error | undefined> {
+    return this.switchToLane(laneName, options);
+  }
+
+  /**
+   * Re-read `.bitmap` from disk into the live workspace. `bit ci sync` moves the git checkout
+   * underneath a running process, and until the reload every bit operation resolves against the
+   * `.bitmap` loaded at startup — and the next write would persist that stale state.
+   */
+  async reloadWorkspaceFromDisk(): Promise<void> {
+    await this.workspace._reloadConsumer();
+  }
+
+  /** `bit ci sync` — reconcile Bit lanes and the main scope with git branches and PRs (see `SyncOrchestrator`). */
+  async sync(
+    opts: { lane?: string; branch?: string; all?: boolean; main?: boolean; dryRun?: boolean; init?: boolean } = {}
+  ): Promise<string> {
+    return new SyncOrchestrator({
+      ci: this,
+      workspace: this.workspace,
+      logger: this.logger,
+      lanes: this.lanes,
+      checkout: this.checkout,
+      config: this.config,
+    }).sync(opts);
   }
 
   /**
@@ -691,6 +818,7 @@ export class CiMain {
     keepLane,
     skipCleanup,
     skipTasks,
+    noDestructiveRecovery,
   }: {
     laneIdStr: string;
     message: string;
@@ -700,6 +828,14 @@ export class CiMain {
     keepLane?: boolean;
     skipCleanup?: boolean;
     skipTasks?: string;
+    /**
+     * Opt out of the `--keep-lane` stale-lane recovery that deletes the remote lane and recreates it
+     * from main. That trade is fine for a PR lane (a throwaway mirror of a git branch, recreated on
+     * every commit) but unacceptable for `bit ci sync`, where the lane is the *authored* artifact and
+     * the branch is its mirror — deleting it would destroy the very thing being synced. When set, the
+     * stale-lane case throws instead, which the sync executor surfaces as a halt for a human.
+     */
+    noDestructiveRecovery?: boolean;
   }) {
     // The post-export cleanup switches the workspace back to main, which re-checks-out main's HEAD
     // and re-imports every workspace component — pointless when the workspace is about to be
@@ -759,6 +895,7 @@ export class CiMain {
         dryRun,
         skipCleanup: resolvedSkipCleanup,
         skipTasks: resolvedSkipTasks,
+        noDestructiveRecovery,
       });
     }
     return this.snapAndExportWithTempLane({
@@ -830,6 +967,7 @@ export class CiMain {
     dryRun,
     skipCleanup,
     skipTasks,
+    noDestructiveRecovery,
   }: {
     laneId: LaneId;
     originalLane: Lane | undefined;
@@ -838,6 +976,7 @@ export class CiMain {
     dryRun?: boolean;
     skipCleanup: boolean;
     skipTasks?: string;
+    noDestructiveRecovery?: boolean;
   }) {
     // Query the remote (by name, to avoid fetching all lanes) so we know whether to reuse or create
     const existingLanes = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
@@ -895,6 +1034,19 @@ export class CiMain {
               `Failed to switch to remote lane ${laneId.toString()}: ${errMsg || '(no error captured)'}. ` +
                 `Refusing destructive recovery for this failure class — the error doesn't match the ` +
                 `stale-lane marker, so deleting the lane could destroy real history. Investigate or retry.`
+            );
+          }
+          if (noDestructiveRecovery) {
+            // `bit ci sync` mirrors an authored lane onto a branch. Recovering by deleting the remote
+            // lane and re-forking it from main would discard the lane's components and history — the
+            // exact artifact the sync exists to preserve — and the next sync would then happily
+            // mirror the now-empty lane onto the branch. Fail loudly instead; the executor turns this
+            // into a halt so a human resolves the lane on bit.cloud.
+            throw new Error(
+              `Failed to switch to remote lane ${laneId.toString()}: ${errMsg || '(no error captured)'}. ` +
+                `The stale-lane recovery (delete the remote lane and recreate it from main) is disabled ` +
+                `for this caller, because the lane is an authored artifact rather than a throwaway PR ` +
+                `lane. Resolve the lane on bit.cloud and re-run.`
             );
           }
           this.logger.console(
@@ -1603,7 +1755,11 @@ export class CiMain {
 
     // Stage everything: `bit checkout head` earlier in the flow may modify files
     // beyond .bitmap and pnpm-lock.yaml, so a narrow `git add` would miss them.
-    await git.add(['.']);
+    // The two exclusions in the shared helper keep the local bit scope (`.bit`) and `node_modules` out
+    // of the commit in a workspace whose `.gitignore` lacks Bit's block — otherwise this stages the
+    // object store into the default branch. Same helper the sync executors use, so all three commit
+    // paths agree on what counts as workspace content.
+    await addAllExceptScopeAndModules();
     const commitMessage = await this.getCustomCommitMessage();
     await git.commit(commitMessage);
 

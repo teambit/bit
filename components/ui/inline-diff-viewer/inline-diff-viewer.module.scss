@@ -214,6 +214,49 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
   background: rgba(108, 92, 231, 0.04) !important;
 }
 
+// Only applied while the consumer supplies onLineClick — an inert diff must not
+// advertise a click it does not handle.
+.diffRowClickable {
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(108, 92, 231, 0.03);
+  }
+}
+
+// Hidden until its row is hovered, and only clickable rows carry that class, so
+// a diff with no onLineClick never reveals it. It covers the line number rather
+// than sitting beside it — the gutter has no spare width.
+.commentIcon {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color, #5d48ff);
+  background: var(--surface-neutral-color, var(--surface-color, #fff));
+  z-index: 1;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.diffRowClickable:hover .commentIcon {
+  display: flex;
+}
+
+// A full-width row hosting whatever renderLineWidget returned. It sits inside
+// the diff table, so it opts out of the code cells' monospace metrics.
+.widgetRow {
+  td {
+    padding: 0;
+    font-family: inherit;
+    white-space: normal;
+  }
+}
+
 .lineNumCell {
   width: 1px;
   white-space: nowrap;

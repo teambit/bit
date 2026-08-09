@@ -5,13 +5,14 @@ labels: ['aspect', 'ci']
 
 # Bit CI
 
-Bit's **`bit ci`** commands (plus one BVM enhancement) wrap several routine Bit tasks into single-purpose scripts so your CI pipelines stay short, readable and consistent.
+The `bit ci` commands wrap routine Bit tasks in single-purpose scripts. Each command keeps a CI pipeline short and consistent.
 
-| Command                           | Purpose                                               | Typical CI Stage       |
-| --------------------------------- | ----------------------------------------------------- | ---------------------- |
-| [`bit ci verify`](#bit-ci-verify) | Lint + build gate on every commit                     | pre-push / commit hook |
-| [`bit ci pr`](#bit-ci-pr)         | Snap + export a feature lane when a PR opens/updates  | pull-request pipeline  |
-| [`bit ci merge`](#bit-ci-merge)   | Tag + export new semantic versions on merge to `main` | merge-to-main pipeline |
+| Command                           | Purpose                                                                                        | Typical CI stage           |
+| --------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------- |
+| [`bit ci verify`](#bit-ci-verify) | Checks the status and builds every commit                                                      | pre-push hook, commit hook |
+| [`bit ci pr`](#bit-ci-pr)         | Snaps and exports a lane when a pull request opens or updates                                  | pull-request pipeline      |
+| [`bit ci merge`](#bit-ci-merge)   | Tags and exports new semantic versions after a merge to `main`                                 | merge-to-main pipeline     |
+| [`bit ci sync`](#bit-ci-sync)     | Reconciles a lane with its branch and pull request, and the main scope with the default branch | webhook, push, cron        |
 
 ---
 
@@ -20,40 +21,42 @@ Bit's **`bit ci`** commands (plus one BVM enhancement) wrap several routine Bit 
 |                  |                                                   |
 | ---------------- | ------------------------------------------------- |
 | **Syntax**       | `bit ci verify`                                   |
-| **What it does** | Ensures the component passes CI on every commit   |
+| **What it does** | Confirms that the component passes CI             |
 | **Runs**         | `bit install && bit status --strict && bit build` |
 
-### When to run
+### When to run the command
 
-- Every commit that **is not** part of an open Pull Request (e.g. a pre-push hook).
-- As an early CI job to fail fast on dependency drift or broken builds.
+- Run the command on every commit that is not part of an open pull request. A pre-push hook is one place.
+- Run the command early in CI. The command then fails on dependency drift or on a broken build immediately.
 
 ### Exit behaviour
 
-The command stops at the first failing step (`status`, then `build`) and returns a non-zero exit code.
+The command stops at the first step that fails. The command runs `status` first, then `build`. The command returns a non-zero exit code.
 
 ---
 
 ## `bit ci pr`
 
-Export a lane to Bit Cloud whenever a Pull Request is opened or updated.
+The command exports a lane to Bit Cloud. Run the command when a pull request opens or updates.
 
 ```bash
 bit ci pr [--message <string>] [--build] [--lane <string>]
 ```
 
-| Flag        | Shorthand | Description                                                                               |
-| ----------- | --------- | ----------------------------------------------------------------------------------------- |
-| `--message` | `-m`      | Changelog entry. If omitted, tries the latest Git commit message (fails if unavailable).  |
-| `--build`   | `-b`      | Build locally before export. If absent, Ripple-CI builds the components.                  |
-| `--lane`    | `-l`      | Explicit lane name. Falls back to the current Git branch name. Performs input validation. |
+| Flag        | Shorthand | Description                                                                                                                           |
+| ----------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--message` | `-m`      | The changelog entry. Without the flag, the command reads the latest git commit message. The command fails if no message is available. |
+| `--build`   | `-b`      | The command builds locally before the export. Without the flag, Ripple CI builds the components.                                      |
+| `--lane`    | `-l`      | The lane name. Without the flag, the command uses the current git branch name. The command validates the name.                        |
 
-### Internal flow (fail-fast on any step)
+### Internal flow
 
-1. **Resolve lane name**
-   - From `--lane` or current Git branch.
-   - If the lane doesn’t exist remotely, create it; otherwise, `bit lane checkout <lane>`.
-2. **Run wrapped Bit commands**
+The command stops at the first step that fails.
+
+1. **Resolve the lane name**
+   - The command reads `--lane`, or the current git branch.
+   - If the lane is absent on the remote, the command creates the lane. If the lane is present, the command runs `bit lane checkout <lane>`.
+2. **Run the wrapped Bit commands**
 
    ```bash
    bit install
@@ -63,7 +66,7 @@ bit ci pr [--message <string>] [--build] [--lane <string>]
    bit export
    ```
 
-3. **Clean-up**
+3. **Clean up**
 
    ```bash
    bit lane switch main   # leaves .bitmap unchanged in the working tree
@@ -71,92 +74,93 @@ bit ci pr [--message <string>] [--build] [--lane <string>]
 
 ### Typical CI placement
 
-Run on the _pull-request_ event after tests but before any deploy step.
+Run the command on the pull-request event. Put the command after the tests and before every deploy step.
 
 ---
 
 ## `bit ci merge`
 
-Publishes new semantic versions after a PR merges to `main`.
+The command publishes new semantic versions. Run the command after a pull request merges to `main`.
 
 ```bash
 bit ci merge [--message <string>] [--build] [--increment <level>] [--patch|--minor|--major] [--increment-by <number>]
 ```
 
-| Flag                   | Shorthand | Description                                                                                                         |
-| ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
-| `--message`            | `-m`      | Changelog entry (defaults to last Git commit message).                                                              |
-| `--build`              | `-b`      | Build locally (otherwise Ripple-CI does it). Required if workspace contains _soft-tagged_ components.               |
-| `--strict`             | `-s`      | Fail on warnings as well as errors (default: only fails on errors).                                                 |
-| `--increment`          | `-l`      | Version bump level: `major`, `premajor`, `minor`, `preminor`, `patch`, `prepatch`, `prerelease` (default: `patch`). |
-| `--patch`              | `-p`      | Shortcut for `--increment patch`.                                                                                   |
-| `--minor`              |           | Shortcut for `--increment minor`.                                                                                   |
-| `--major`              |           | Shortcut for `--increment major`.                                                                                   |
-| `--pre-release`        |           | Shortcut for `--increment prerelease` with optional identifier.                                                     |
-| `--prerelease-id`      |           | Prerelease identifier (e.g. "dev" to get "1.0.0-dev.1").                                                            |
-| `--increment-by`       |           | Increment by more than 1 (e.g. `--increment-by 2` with patch: 0.0.1 → 0.0.3).                                       |
-| `--auto-tag-increment` |           | Version bump level for auto-tagged dependents. See below.                                                           |
+| Flag                   | Shorthand | Description                                                                                                                          |
+| ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `--message`            | `-m`      | The changelog entry. Without the flag, the command uses the last git commit message.                                                 |
+| `--build`              | `-b`      | The command builds locally. Without the flag, Ripple CI builds. The flag is necessary if the workspace holds soft-tagged components. |
+| `--strict`             | `-s`      | The command fails on a warning and on an error. Without the flag, the command fails only on an error.                                |
+| `--increment`          | `-l`      | The version bump level: `major`, `premajor`, `minor`, `preminor`, `patch`, `prepatch` or `prerelease`. The default is `patch`.       |
+| `--patch`              | `-p`      | The same as `--increment patch`.                                                                                                     |
+| `--minor`              |           | The same as `--increment minor`.                                                                                                     |
+| `--major`              |           | The same as `--increment major`.                                                                                                     |
+| `--pre-release`        |           | The same as `--increment prerelease`, with an optional identifier.                                                                   |
+| `--prerelease-id`      |           | The prerelease identifier. The value `dev` gives `1.0.0-dev.1`.                                                                      |
+| `--increment-by`       |           | The command increments by more than 1. `--increment-by 2` with a patch gives 0.0.1 → 0.0.3.                                          |
+| `--auto-tag-increment` |           | The version bump level for the auto-tagged dependents. Read the text below.                                                          |
 
-### Bumping Dependents
+### How the command bumps dependents
 
-The version flags above apply only to the components that actually changed. Dependents that are
-picked up by auto-tag are bumped by a `patch`, regardless of `--major`/`--minor`:
+The version flags above apply only to the components that changed. Auto-tag also bumps the dependents, and
+it bumps them by a `patch`. The flags `--major` and `--minor` do not change that level:
 
 ```bash
 # button 1.0.0 -> 2.0.0, but its dependent lib 1.0.0 -> 1.0.1
 bit ci merge --major
 ```
 
-The one exception is a pre-release `--increment` (`prepatch`, `prerelease`, `preminor`,
-`premajor`), which the dependents do follow:
+A pre-release `--increment` is the one exception. The dependents follow `prepatch`, `prerelease`,
+`preminor` and `premajor`:
 
 ```bash
 # button 1.0.0 -> 1.0.1-0, and its dependent lib 1.0.0 -> 1.0.1-0 too
 bit ci merge --increment prerelease
 ```
 
-Use `--auto-tag-increment` to bump the dependents by an explicit level instead. It overrides both
-defaults above:
+Use `--auto-tag-increment` for an explicit dependent level. The flag overrides both defaults above:
 
 ```bash
 # button 1.0.0 -> 2.0.0, and its dependent lib 1.0.0 -> 2.0.0 as well
 bit ci merge --major --auto-tag-increment major
 ```
 
-The two levels are independent, so `--major --auto-tag-increment minor` is also valid.
+The two levels are independent. The pair `--major --auto-tag-increment minor` is valid.
 
-**Note**: auto-tag is transitive — a dependent of a dependent is auto-tagged too. So
-`--auto-tag-increment major` bumps the _entire_ dependents graph by a major, not just the direct
-dependents. It cannot be combined with `--skip-auto-tag`.
+**Note:** auto-tag is transitive. Auto-tag includes a dependent of a dependent. `--auto-tag-increment major`
+bumps the full dependents graph by a major, not only the direct dependents. The command refuses
+`--auto-tag-increment` together with `--skip-auto-tag`.
 
-### Automatic Version Bump Detection
+### How the command detects the version bump
 
-When **no explicit version flags** are provided, `bit ci merge` can automatically determine the version bump level from the commit message:
+If no explicit version flag is present, `bit ci merge` reads the version bump level from the commit message.
 
-1. **Explicit Keywords** (highest priority):
+1. **Explicit keywords** (the highest priority):
 
-   - `BIT-BUMP-MAJOR` anywhere in commit message → major version bump
-   - `BIT-BUMP-MINOR` anywhere in commit message → minor version bump
+   - `BIT-BUMP-MAJOR` anywhere in the commit message gives a major version bump.
+   - `BIT-BUMP-MINOR` anywhere in the commit message gives a minor version bump.
 
-2. **Conventional Commits** (when enabled):
+2. **Conventional commits** (when the config enables them):
 
-   - `feat!:` or `BREAKING CHANGE` → major version bump
-   - `feat:` → minor version bump
-   - `fix:` → patch version bump
+   - `feat!:` or `BREAKING CHANGE` gives a major version bump.
+   - `feat:` gives a minor version bump.
+   - `fix:` gives a patch version bump.
 
-3. **Default**: patch version bump
+3. **Default**: a patch version bump.
 
-**Note**: Auto-detection only occurs when no version flags (`--patch`, `--minor`, `--major`, etc.) are provided. Explicit flags always take precedence. `--auto-tag-increment` is not considered a version flag for this purpose — it only affects dependents, so it can be combined with auto-detection.
+**Note:** the command detects the level only when no version flag (`--patch`, `--minor`, `--major` or
+another) is present. An explicit flag always wins. `--auto-tag-increment` is not a version flag here. That
+flag changes only the dependents, so you can combine it with the detection.
 
 ### Internal flow
 
-1. **Ensure main lane**
+1. **Switch to the main lane**
 
    ```bash
    bit lane switch main   # preserves working tree files
    ```
 
-2. **Tag, build, export**
+2. **Tag, build and export**
 
    ```bash
    bit install
@@ -164,8 +168,8 @@ When **no explicit version flags** are provided, `bit ci merge` can automaticall
    bit export
    ```
 
-3. **Archive remote lane** (house-keeping).
-4. **Commit lock-file updates**
+3. **Archive the remote lane.** This step is house-keeping.
+4. **Commit the lock-file updates**
 
    ```bash
    git add .bitmap pnpm-lock.yaml
@@ -207,13 +211,213 @@ bit ci merge --pre-release dev --message "feat: experimental feature"
 
 ### CI hint
 
-Gate this step behind a branch-protection rule so only fast-forward merges trigger a release.
+Put a branch-protection rule in front of this step. Only a fast-forward merge then starts a release.
+
+---
+
+## `bit ci sync`
+
+The command keeps a lane and its branch converged in both directions. The command opens a pull request when
+the main scope moves ahead of the repository. Every pull-request operation goes through a git host provider.
+GitHub is built in.
+
+The command is a reconciler, not a pipeline. The command is stateless and idempotent. The command reads the
+current state of the lane and of the branch, then picks the action. A second run on a converged pair changes
+nothing. The trigger decides when the command runs. The trigger never decides what the command does.
+
+### First-time setup
+
+```bash
+bit ci sync --init
+```
+
+`--init` writes `.github/workflows/bit-sync.yml` and `bit-release.yml`, with the real default branch of this
+repository in both files. `--init` adds `"teambit.git/ci": { "sync": {} }` to `workspace.jsonc` if the key is
+absent. The edit keeps the comments in the file, and it changes no existing `sync` setting. `--init` then
+prints the steps that need a person:
+
+- the `BIT_CONFIG_ACCESS_TOKEN` secret
+- the optional `BIT_SYNC_GH_TOKEN` token
+- the bit.cloud webhook recipe
+- a `fetch-depth: 0` reminder
+
+`--init` reports an existing file as skipped, and overwrites no file, so a second run is safe. `--init`
+writes the files, then exits. Do not combine `--init` with a lane argument or with another flag.
+
+### Usage
+
+```bash
+bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run] [--init]
+```
+
+| Flag        | Description                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _(no args)_ | The same as `--all`.                                                                                                                                                                                                                                                                                                                                                                   |
+| `[lane]`    | One lane. Give the lane name, which the command resolves against `defaultScope`, or a scope-qualified id such as `other-org.other-scope/my-lane`. The `lanes` patterns still filter the lane, and those patterns match the lane **name**.                                                                                                                                              |
+| `--branch`  | The command resolves the lane from a branch name through the mapping config. Use the flag for a push-triggered run. The flag carries a branch name only, so the command assumes `defaultScope`.                                                                                                                                                                                        |
+| `--all`     | Every mapped lane, plus the main scope. The run includes a lane that exists only as a branch. The command therefore retires the branch and the pull request of a lane that bit.cloud deleted.                                                                                                                                                                                          |
+| `--main`    | Only the main scope, against the default branch.                                                                                                                                                                                                                                                                                                                                       |
+| `--dry-run` | The command reports the action for each target. The command pushes nothing, and the command creates, closes, labels and comments no pull request. The run is not read-only on disk: the command writes the working tree, `.bitmap` and the local scope, then restores them. The command therefore refuses a dirty working tree. The command exits non-zero if the plan needs a person. |
+| `--init`    | First-time setup, above. Do not combine `--init` with another flag.                                                                                                                                                                                                                                                                                                                    |
+
+### Triggers
+
+Every trigger works, because the command is a reconciler. The scaffolded workflow wires the three triggers
+that matter:
+
+- a bit.cloud webhook, for a lane that moved
+- a `push`, for a branch that moved
+- a cron schedule, as a safety net
+
+```yaml
+name: bit-sync
+on:
+  repository_dispatch: { types: [bit-lane-updated] }
+  push: { branches-ignore: ['bit-sync/**'] }
+  schedule: [{ cron: '0 * * * *' }]
+permissions: { contents: write, pull-requests: write }
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # full history is required
+      - run: npx @teambit/bvm install && bit ci sync
+        env:
+          BIT_CONFIG_ACCESS_TOKEN: ${{ secrets.BIT_CONFIG_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+The clone needs the full history, so set `fetch-depth: 0`. The state of a branch is the `.bitmap` at the
+newest commit that touched `.bitmap` on the first-parent line of that branch. A shallow clone does not hold
+that commit. A narrow refspec is acceptable, and a cold local scope is acceptable.
+
+### Per-lane reconciliation
+
+For each mapped lane, the command compares the remote head of the lane with the state that the committed
+`.bitmap` of the branch records. The command then picks one action:
+
+| Situation                                                            | Action           | Effect                                                                                                         |
+| -------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| the lane moved, the branch did not                                   | `import-lane`    | The command puts the lane on the branch, pushes, and opens the pull request if it is absent.                   |
+| the branch got dev commits, the lane did not move                    | `export-branch`  | The command snaps and exports the tree of the branch onto the lane.                                            |
+| both moved                                                           | `merge-diverged` | The command merges the lane into the tree of the branch, then snaps and exports.                               |
+| bit.cloud removed the lane, and the branch is ours                   | `close-pr`       | The command closes the pull request. The command deletes the branch, unless the branch holds unmerged commits. |
+| no lane, and the branch is not ours                                  | `noop`           | Nothing. Read [when the command deletes a branch](#when-the-command-deletes-a-branch).                         |
+| nothing moved, or the pull request has the `bit-sync-conflict` label | `noop`           | Nothing.                                                                                                       |
+
+An `--all` run visits two sets of targets: the lanes that match the `lanes` patterns, and the lane-mapped
+branches on `origin`. The second set makes the cleanup possible. A lane that bit.cloud deleted is absent from
+the first set, so a run that reads lanes only would leave an orphan branch and an open pull request.
+
+### Halts and conflicts
+
+The command halts a lane that it cannot reconcile without a person. The command puts the
+`bit-sync-conflict` label on the pull request of that lane, and adds a comment with the recovery steps. The
+command still syncs the other lanes, and the command exits non-zero. A halt covers one lane only: an
+unexpected failure never stops the lanes after it. A halt also suppresses itself. While the label is on the
+pull request, the command does nothing for that lane. Remove the label to sync the lane again.
+
+`onConflict` decides what the command does with one contested line during a `merge-diverged` action. Read
+[the three sync keys](#the-three-sync-keys-control-different-things) for the values. The command resolves at
+component granularity: every file of a conflicted component takes the winning side. The summary names what
+the command rewrote.
+
+### When the command deletes a branch
+
+With the default empty `branchPrefix`, every branch maps to a lane of the same name. The command therefore
+enumerates a developer branch too. Such a branch reaches the reconciler in the same shape as a lane branch
+whose lane is gone, and that action deletes the branch. Three tests gate the deletion, and the command
+judges all three from the git history alone:
+
+1. **Attribution** — the committed `.bitmap` of the branch must hold the scope-qualified pointer of Bit to
+   _this_ lane. The pointer is structural, so it survives a squash-merge message rewrite. A pointer that Bit
+   marked **not exported** does not count, because that lane was never on a remote.
+2. **Reachability** — either the state commit is not in the default branch yet _and_ nothing sits on top of
+   it, or the branch **tip** is already in the default branch. In the second case the deletion loses nothing.
+3. **Authorship** — for a live branch, the tip must carry the `[bit-sync]` marker on its own line. A
+   developer commits `.bitmap` too, so this test is necessary and never sufficient. The test can withhold a
+   deletion, and it can never authorize one.
+
+If the attribution test fails, the action is a plain `noop` and the command writes nothing. The command
+reports a **kept** branch on every later run, until a person deletes the branch, or until its commits reach
+the default branch. The report is idempotent, because the command closed the pull request on the first run.
+Set a `branchPrefix`, or an explicit `lanes` list, to leave developer branches out.
+
+### Cross-scope lanes
+
+The hosting scope of a lane holds the lane object. The scopes of the components of the lane show which
+repositories the change touches. The two are different. This version supports one shape only: the content of
+the lane must live in one scope, the `defaultScope` of this workspace. The hosting scope can be another
+scope, and a scope-qualified id addresses such a lane.
+
+```bash
+bit ci sync my-lane                       # hosted on this workspace's defaultScope
+bit ci sync other-org.other-scope/my-lane # hosted elsewhere, content still in this repo's scope
+```
+
+The branch mapping always uses the lane **name**, so a lane that another scope hosts maps to the same branch
+as before. Every request to Bit uses the full `hostScope/name` id.
+
+**The command never mirrors a lane that has components outside `defaultScope`.** Such a mirror writes the
+components of another repository into this repository, and exports them from here. A lane like this is still
+legitimate, so only the report depends on how the command reached the lane:
+
+| How the command reached the lane                                     | Outcome   | Exit | Pull request touched         |
+| -------------------------------------------------------------------- | --------- | ---- | ---------------------------- |
+| **Enumerated** — an `--all` run, or a push or webhook `--branch` run | `skipped` | 0    | no                           |
+| **Named** — `bit ci sync my-lane`                                    | refusal   | ≠ 0  | no                           |
+| **The lane became cross-scope during a live mirror**                 | `HALTED`  | ≠ 0  | yes — labelled and commented |
+
+The skip keeps the exit code at 0 on purpose: a permanent cross-scope lane must not fail every scheduled run.
+A named lane exits non-zero, so the user learns why nothing happened. That exit is a plain refusal, because
+the command writes nothing and labels no pull request. The command refuses two lanes that map to one branch
+in the same way, and neither lane takes the branch. The command never lane-maps the default branch or
+`mainSyncBranch`. No config key changes these rules.
+
+### Main-scope reconciliation
+
+A `--main` run, and the last step of an `--all` run, reconciles the `main` lane of the scope with the
+repository:
+
+1. The command runs `git checkout -B <mainSyncBranch>` from the existing sync branch, or from the default
+   branch. If a sync branch exists, the command merges the default branch into it, so the pull request stays
+   mergeable.
+2. The command runs `bit checkout head`, and includes the components that the scope holds but this workspace
+   does not. The command resolves a conflict **in favour of the scope**, with `--auto-merge-resolve theirs`.
+3. An empty `git status` **is** convergence. In every other case the command commits the drift with a
+   `[bit-sync]` marker, pushes the commit to `<mainSyncBranch>`, and proposes a pull request against the
+   default branch. The command never force-pushes.
+
+The one-sided resolution is the point. The pull request shows the repository at the latest exported versions
+of the scope, so the command **reverts** component source that nobody exported. The revert is visible in the
+pull-request diff, and a person rejects it: close the pull request. With `mainSync: "direct-push"` the
+command commits the same drift on the default branch, and uses no sync branch and no pull request. The push
+is a plain push, so the run stops if the default branch moved during the run.
+
+### Git host providers and credentials
+
+The command uses plain git for every git operation. The command uses a `GitHostProvider` for every
+pull-request operation. GitHub is built in, and `ci.registerGitHostProvider(...)` registers it — the same
+public slot that another provider uses. The command selects one provider per run at most, from the `origin`
+remote:
+
+- If a provider claims the remote, the command selects that provider exclusively. If no claimant holds
+  credentials, the command runs without pull-request operations, and acts on no other host.
+- If no provider claims the remote, and the config holds one provider, the command selects that provider.
+
+If the command selects no provider, the command reports the reason. The command still does every git
+operation and every Bit operation, and skips only the pull-request operations.
+
+For GitHub, the command reads **`BIT_GITHUB_TOKEN` before `GITHUB_TOKEN`**. GitHub Actions sets
+`GITHUB_TOKEN` on every job, so an override needs the higher priority. The command reads the repository from
+`GITHUB_REPOSITORY`. If that variable is absent, the command reads the `origin` remote.
 
 ---
 
 ## Configuration
 
-The CI aspect supports configuration in `workspace.jsonc`:
+Configure the CI aspect in `workspace.jsonc`:
 
 ```json
 {
@@ -227,12 +431,12 @@ The CI aspect supports configuration in `workspace.jsonc`:
 
 ### `commitMessageScript`
 
-**Optional.** Path to a script that generates custom commit messages for the `bit ci merge` command.
+**Optional.** The path to a script. The script writes the commit message for the `bit ci merge` command.
 
-- **Default**: Uses `"chore: update .bitmap and lockfiles as needed [skip ci]"`
-- **Usage**: The script should output the desired commit message to stdout
-- **Security**: Commands are parsed to avoid shell injection - no chaining allowed
-- **Working Directory**: Script runs in the workspace root directory
+- **Default**: the command uses `"chore: update .bitmap and lockfiles as needed [skip ci]"`.
+- **Usage**: the script writes the commit message to stdout.
+- **Security**: the command parses the script command and permits no chaining. This blocks shell injection.
+- **Working directory**: the script runs in the workspace root directory.
 
 **Example script:**
 
@@ -250,13 +454,14 @@ try {
 
 ### `useConventionalCommitsForVersionBump`
 
-**Optional.** Enable automatic version bump detection based on conventional commit patterns.
+**Optional.** Set the key to `true`. The command then reads the version bump level from a conventional commit
+message.
 
-- **Default**: `false` (disabled)
-- **When enabled**: Analyzes commit messages for conventional commit patterns:
-  - `feat!:` or `BREAKING CHANGE` → major version bump
-  - `feat:` → minor version bump
-  - `fix:` → patch version bump
+- **Default**: `false`.
+- **With the key set to `true`**, the command reads these patterns:
+  - `feat!:` or `BREAKING CHANGE` gives a major version bump.
+  - `feat:` gives a minor version bump.
+  - `fix:` gives a patch version bump.
 
 ```json
 {
@@ -268,12 +473,13 @@ try {
 
 ### `useExplicitBumpKeywords`
 
-**Optional.** Enable automatic version bump detection using explicit keywords.
+**Optional.** The command reads the version bump level from an explicit keyword. Set the key to `false` to
+stop this behaviour.
 
-- **Default**: `true` (enabled)
+- **Default**: `true`.
 - **Keywords**:
-  - `BIT-BUMP-MAJOR` anywhere in commit message → major version bump
-  - `BIT-BUMP-MINOR` anywhere in commit message → minor version bump
+  - `BIT-BUMP-MAJOR` anywhere in the commit message gives a major version bump.
+  - `BIT-BUMP-MINOR` anywhere in the commit message gives a minor version bump.
 
 ```json
 {
@@ -289,3 +495,58 @@ try {
 git commit -m "feat: add new feature BIT-BUMP-MINOR"
 bit ci merge --build  # → automatically uses minor version bump
 ```
+
+### `sync`
+
+**Optional.** The lane-to-branch mapping and the main-scope settings for [`bit ci sync`](#bit-ci-sync).
+
+```json
+{
+  "teambit.git/ci": {
+    "sync": { "branchPrefix": "lane/", "lanes": ["*"], "onConflict": "halt" }
+  }
+}
+```
+
+| Field                 | Default           | Description                                                                                                 |
+| --------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| `branchPrefix`        | `""`              | The prefix for a lane-mapped branch. The value `"lane/"` maps lane `my-lane` to branch `lane/my-lane`.      |
+| `branches`            | `{}`              | Explicit overrides that map a lane name to a branch name. An override wins over `branchPrefix`.             |
+| `lanes`               | `["*"]`           | The glob patterns of the lane names to sync. The command supports the `*` wildcard only.                    |
+| `mainSyncBranch`      | `"bit-sync/main"` | The branch that carries the main-scope drift. The command ignores the field with `mainSync: "direct-push"`. |
+| `mainSync`            | `"pr"`            | How main-scope drift reaches the default branch. Read the tables below.                                     |
+| `onConflict`          | `"halt"`          | What the command does with one contested line. Read the tables below.                                       |
+| `autoMergeMainSyncPr` | `false`           | **Reserved.** The command warns and enables no auto-merge on the sync pull request. Use a repository rule.  |
+
+The command validates every branch name at startup, and the error names the config field. The command never
+treats the default branch or `mainSyncBranch` as lane-mapped, even with an empty `branchPrefix`.
+
+#### The three sync keys control different things
+
+| Key          | The decision the key makes                           |
+| ------------ | ---------------------------------------------------- |
+| `onConflict` | What the command does with **one contested line**.   |
+| `mainSync`   | **How** main-scope drift reaches the default branch. |
+| `lanes`      | **Which** lanes get a branch.                        |
+
+No key changes which side wins a review. People merge pull requests.
+
+`onConflict` applies to one contested line during a merge of a diverged pair.
+
+| Value            | What the command does                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| `halt` (default) | The command stops. The command labels the pull request. The command writes the recovery steps. |
+| `git-wins`       | The command keeps the branch version of a contested line.                                      |
+| `lane-wins`      | The command takes the lane version of a contested line.                                        |
+
+Non-conflicting changes always merge, with every value of `onConflict`.
+
+`mainSync` decides how main-scope drift reaches the default branch.
+
+| Value          | What the command does                                                                |
+| -------------- | ------------------------------------------------------------------------------------ |
+| `pr` (default) | The command commits the drift to `mainSyncBranch`. The command opens a pull request. |
+| `direct-push`  | The command commits the drift on the default branch. The command pushes the commit.  |
+
+`lanes` decides which lanes get a branch. If the `lanes` list is empty, the command stops lane mirroring and
+reconciles the main scope only.

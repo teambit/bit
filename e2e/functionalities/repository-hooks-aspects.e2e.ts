@@ -24,7 +24,7 @@ chai.use(chaiFs);
       npmCiRegistry.configureCiInPackageJsonHarmony();
 
       // Create the hooks aspect
-      helper.command.create('bit-aspect', 'repository-hooks-aspect');
+      helper.fixtures.createAspect('repository-hooks-aspect');
       // throw new Error('hi')
 
       // Create the hooks aspect implementation

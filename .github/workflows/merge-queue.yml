@@ -1,0 +1,110 @@
+# Custom merge queue — see .github/scripts/merge-queue.js for the full design.
+#
+# Event-driven with a scheduled safety net (the loop is stateless, so a missed event costs one
+# cycle at most):
+# - pull_request_target: instant reaction to joining/leaving the queue, pushes to queued PRs, and
+#   `merge-queue:priority` label changes on queued PRs (the label reorders the queue, and the
+#   person applying it is usually watching — without this it waited for the cron).
+#   Deliberately NOT pull_request — that would execute the PR branch's copy of this workflow and
+#   script with CIRCLE_TOKEN in the environment, letting any same-repo PR exfiltrate the secret.
+#   pull_request_target runs master's workflow definition, and the checkout below pins ref: master,
+#   so PR-controlled code never runs here.
+# - repository_dispatch (merge-queue-reconcile): sent by the CircleCI bit_merge job when it ends
+#   (including the early-halt path of no-component merges). This is the turn-handoff trigger —
+#   nothing else can be: bump commits carry "[skip ci]", which suppresses Actions push runs too,
+#   and the cron is throttled to 5-15m. With the ping, the next PR gets its turn within seconds.
+# - push to master: PR merges landing (bump commits fire nothing, per the above).
+# - check_suite: a queued PR's CI finishing fires no push/PR event, so without this the
+#   green->turn transition waited for the throttled cron (10-20m in practice). Fires on every
+#   suite completion in the repo; the reconcile is idempotent and cheap, and the concurrency
+#   group collapses bursts. Master suites are filtered out in the job condition — push and
+#   repository_dispatch already cover master's transitions, and every bit_merge would otherwise
+#   fire a pointless reconcile ~40m after each merge. Not filtered on an associated PR:
+#   check_suite.pull_requests is empty for fork PRs, which can legitimately be queued (their
+#   head_branch is null, so the master filter keeps them). No self-recursion: this workflow's own
+#   runs complete their suites via GITHUB_TOKEN, whose events never trigger workflows. Runs the
+#   default branch's workflow copy, so PR code never runs here.
+# - workflow_run (merge-queue-review-ping): a review landing on a queued PR — approvals un-stick
+#   winners demoted for a missing review. Reviews can't trigger this workflow directly:
+#   pull_request_review runs the PR merge commit's workflow copy, which must never see
+#   CIRCLE_TOKEN; the secret-less ping workflow absorbs that context, and its completion lands
+#   here on master's trusted copy.
+# - schedule: safety net for missed events. Not the only one: a CircleCI scheduled workflow
+#   (merge_queue_heartbeat in .circleci/config.yml) runs the same script every 10m from
+#   independent infrastructure — GitHub's cron is heavily throttled, and an Actions outage
+#   (2026-08-06) froze this workflow entirely, blocking every non-admin merge.
+name: merge-queue
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'reconcile without mutating anything (no statuses, no branch updates, no dashboard writes)'
+        type: boolean
+        default: false
+  push:
+    branches: [master]
+  # only events that can affect the queue: auto-merge toggles, pushes to PRs already in it, and
+  # priority-label changes on queued PRs (filtered to the exact label in the job condition).
+  # opened/reopened/ready_for_review PRs can't be queued yet (closing a PR cancels auto-merge),
+  # and the scheduled safety net covers any residual case.
+  pull_request_target:
+    types: [synchronize, auto_merge_enabled, auto_merge_disabled, labeled, unlabeled]
+  repository_dispatch:
+    types: [merge-queue-reconcile]
+  check_suite:
+    types: [completed]
+  workflow_run:
+    workflows: [merge-queue-review-ping]
+    types: [completed]
+
+# never let two reconcile loops overlap; a queued run supersedes waiting duplicates
+concurrency:
+  group: merge-queue
+  cancel-in-progress: false
+
+permissions:
+  # contents: write AND pull-requests: write are both required by the update-branch API (master's
+  # strict up-to-date protection means the bot must press "Update branch" on the queue head, or
+  # the queue starves after every bump commit; read-only pulls yields 403 "Resource not
+  # accessible by integration")
+  contents: write
+  statuses: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  reconcile:
+    # skip full reconciles for pull_request_target events that can't change the queue: pushes to
+    # PRs that aren't in it, and label events for anything but the priority label on a queued PR;
+    # auto-merge toggle events always reconcile
+    if: >-
+      github.repository == 'teambit/bit' &&
+      (github.event_name != 'check_suite' ||
+       github.event.check_suite.head_branch != 'master') &&
+      (github.event_name != 'workflow_run' ||
+       github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'pull_request_target' ||
+       github.event.action == 'auto_merge_enabled' ||
+       github.event.action == 'auto_merge_disabled' ||
+       (github.event.action == 'synchronize' &&
+        github.event.pull_request.auto_merge != null) ||
+       ((github.event.action == 'labeled' || github.event.action == 'unlabeled') &&
+        github.event.label.name == 'merge-queue:priority' &&
+        github.event.pull_request.auto_merge != null))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # always run the trusted master copy of the script, never a branch's copy
+          ref: master
+          sparse-checkout: .github
+      - name: reconcile merge queue
+        run: node .github/scripts/merge-queue.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CIRCLE_TOKEN: ${{ secrets.CIRCLE_TOKEN }}
+          MERGE_QUEUE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && 'true' || 'false' }}

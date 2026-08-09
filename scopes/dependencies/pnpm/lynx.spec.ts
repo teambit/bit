@@ -1,11 +1,6 @@
 import { expect } from 'chai';
 import type { PackageManifest } from '@pnpm/types';
-import {
-  createReadPackageHooks,
-  mergeBitLockfileAttrs,
-  resolveScriptPolicies,
-  sortDepsRequiringBuild,
-} from './lynx';
+import { createReadPackageHooks, mergeBitLockfileAttrs, resolveScriptPolicies, sortDepsRequiringBuild } from './lynx';
 
 describe('resolveScriptPolicies()', () => {
   it('should pass through the pnpm allow-all builds flag', () => {

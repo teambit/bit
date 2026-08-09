@@ -86,6 +86,24 @@ orbs:
 # ========================================
 
 commands:
+  # Wakes the merge-queue GitHub workflow (see .github/workflows/merge-queue.yml). The queue's
+  # turn handoff depends on this ping: the bump commit is "[skip ci]" (fires no Actions run) and
+  # the cron is throttled, so without it the next queued PR waits minutes instead of seconds.
+  # Non-fatal on purpose — the queue's scheduled safety net covers a missed ping.
+  notify_merge_queue:
+    steps:
+      - run:
+          name: notify merge-queue
+          command: >
+            curl -sf -X POST
+            -H "Authorization: token $GH_RELEASE_GITHUB_API_TOKEN"
+            -H "Accept: application/vnd.github+json"
+            -H "Content-Type: application/json"
+            https://api.github.com/repos/teambit/bit/dispatches
+            -d '{"event_type":"merge-queue-reconcile"}'
+            || echo "merge-queue notify failed (non-fatal)"
+          when: always
+
   # Bundle installation with hoisting and overrides (Linux/macOS)
   install_bit_bundle:
     parameters:
@@ -638,7 +656,17 @@ jobs:
       - run: cd bit && bbit init
       - run:
           name: bbit install
-          command: cd bit && echo "user-agent=bit-repo-circleci" >> .npmrc && bbit install
+          # the user-agent append labels registry requests from CI installs (the committed .npmrc
+          # says bit-repo-local). skip-worktree keeps the mutation out of any later commit made
+          # from this workspace (e.g. the version-bump commit of `bit ci merge`, which stages all
+          # tracked changes) — without it, a duplicate user-agent line lands on master every
+          # release and, being last in the file, overrides bit-repo-local for local installs too.
+          # the flag lives in .git/index, so it survives persist_to_workspace into later jobs.
+          command: >
+            cd bit &&
+            echo "user-agent=bit-repo-circleci" >> .npmrc &&
+            git update-index --skip-worktree .npmrc &&
+            bbit install
       # - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
@@ -698,6 +726,27 @@ jobs:
       - run:
           name: 'check @teambit/harmony version synchronization'
           command: './scripts/check-harmony-version-sync.sh'
+
+  # Runs the same reconcile script the merge-queue GitHub workflow runs — see the
+  # merge_queue_reconcile workflow below for why it also lives here.
+  merge_queue_reconcile:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: 'reconcile the merge queue'
+          # no CIRCLE_TOKEN needed: the project is public, so the script's CircleCI reads work
+          # unauthenticated (it uses the token only when one is present in the environment).
+          # A hung API call would otherwise let a run outlive the 10m schedule interval — the
+          # tight no_output_timeout bounds it (the script normally finishes in seconds).
+          no_output_timeout: 5m
+          command: |
+            if [ -z "$GH_RELEASE_GITHUB_API_TOKEN" ]; then
+              echo "The GH_RELEASE_GITHUB_API_TOKEN project env var is not set — the reconcile"
+              echo "script needs it as GITHUB_TOKEN (statuses+issues write)."
+              exit 1
+            fi
+            GITHUB_TOKEN=$GH_RELEASE_GITHUB_API_TOKEN node .github/scripts/merge-queue.js
 
   generate_and_check_types:
     <<: *defaults
@@ -807,7 +856,13 @@ jobs:
           # NOTE: PR builds run the FULL pipeline by default. To trade specific tasks for speed on a
           # given PR (no YAML change needed), add a `[skip-tasks: <names>]` token to the commit
           # message, e.g. `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents]`.
-          command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup'
+          # No --keep-lane: the reusing flow serves components unchanged since an earlier export
+          # from the lane, with artifacts built from older commits of the branch. Capsules then mix
+          # generations of @teambit packages and cross-copy `instanceof` breaks in capsule spec
+          # runs - on a PR that snaps core components (so their specs actually run), bit_pr fails
+          # deterministically from the second push onward. The temp-lane flow rebuilds every run
+          # from one commit, trading the lane's persistent history on Bit Cloud for correctness.
+          command: 'cd bit && bit ci pr --build --skip-cleanup'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
@@ -847,6 +902,16 @@ jobs:
                 echo "No changes detected, but soft-tagged components found. Continuing workflow."
               else
                 echo "No changes detected, halting job to prevent further workflow execution."
+                # step halt skips all remaining steps, including the notify_merge_queue step at the
+                # end of this job — so ping the merge queue here first (master settles the moment
+                # this job halts). Non-fatal; the queue's scheduled safety net covers a miss.
+                curl -sf -X POST \
+                  -H "Authorization: token $GH_RELEASE_GITHUB_API_TOKEN" \
+                  -H "Accept: application/vnd.github+json" \
+                  -H "Content-Type: application/json" \
+                  https://api.github.com/repos/teambit/bit/dispatches \
+                  -d '{"event_type":"merge-queue-reconcile"}' \
+                  || echo "merge-queue notify failed (non-fatal)"
                 circleci-agent step halt
               fi
             fi
@@ -863,6 +928,8 @@ jobs:
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
+      # when: always on the inner step — success AND failure both settle master for the queue
+      - notify_merge_queue
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -1550,6 +1617,30 @@ workflows:
                 - master
     jobs:
       - update_e2e_timings
+
+  # Independent heartbeat for the merge queue. The GitHub Actions side of the queue is
+  # event-driven, but its only time-based fallback is the Actions cron — which GitHub throttles
+  # far beyond its 5m spec (20-40m silent gaps), and which vanishes entirely when Actions itself
+  # is down (2026-08-06 outage: the queue froze and only admins could bypass the gate). CircleCI
+  # is independent infrastructure that kept working through that outage, so this schedule runs the
+  # very same reconcile script from here. The script is stateless and idempotent — concurrent runs
+  # with the Actions-side reconciles are harmless. It can also be run from any laptop as a
+  # break-glass: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
+  merge_queue_heartbeat:
+    triggers:
+      - schedule:
+          # CircleCI's config-level cron rejects step syntax (*/10) — list the minutes explicitly
+          cron: '4,14,24,34,44,54 * * * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - merge_queue_reconcile:
+          # serialize heartbeat runs against each other (same mechanism bit_merge uses) so a
+          # slow run can't overlap the next tick; overlap with the Actions-side reconciles
+          # remains possible and harmless — the script is stateless and idempotent
+          serial-group: 'merge-queue-reconcile'
 
   # Windows nightly workflow
   # windows-nightly:
