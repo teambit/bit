@@ -856,13 +856,14 @@ jobs:
           # NOTE: PR builds run the FULL pipeline by default. To trade specific tasks for speed on a
           # given PR (no YAML change needed), add a `[skip-tasks: <names>]` token to the commit
           # message, e.g. `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents]`.
-          # No --keep-lane: the reusing flow serves components unchanged since an earlier export
-          # from the lane, with artifacts built from older commits of the branch. Capsules then mix
-          # generations of @teambit packages and cross-copy `instanceof` breaks in capsule spec
-          # runs - on a PR that snaps core components (so their specs actually run), bit_pr fails
-          # deterministically from the second push onward. The temp-lane flow rebuilds every run
-          # from one commit, trading the lane's persistent history on Bit Cloud for correctness.
-          command: 'cd bit && bit ci pr --build --skip-cleanup'
+          # --keep-lane: reuse the lane named after the branch across pushes, so the PR keeps one
+          # lane on Bit Cloud and pushes only re-snap what actually changed. Known hazard while
+          # #10583 is open: the reusing flow serves components unchanged since an earlier export
+          # with artifacts built from older commits, so capsules can mix generations of @teambit
+          # packages and cross-copy `instanceof` breaks in capsule spec runs. If a PR that snaps
+          # core components starts failing from the second push onward, that is this - rename the
+          # branch (fresh lane) or drop --keep-lane on that PR.
+          command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
