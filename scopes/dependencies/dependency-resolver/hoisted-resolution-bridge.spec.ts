@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
+import Module from 'module';
 import os from 'os';
 import path from 'path';
 import {
@@ -71,6 +72,11 @@ describe('ensureHoistedDependencyResolution()', () => {
   let root: string;
   let nodePath: string | undefined;
   let nodeOptions: string | undefined;
+  let register: unknown;
+  // the two process-global side effects of the function under test, neither of them scoped to a
+  // test: `_initPaths()` rederives Module.globalPaths from NODE_PATH, and `module.register()`
+  // installs an ESM loader that cannot be removed for the life of the process
+  const nodeModule = Module as unknown as { register?: unknown; _initPaths(): void };
   const hoisted = () => path.join(root, 'node_modules', '.pnpm', 'node_modules');
   const rootModules = () => path.join(root, 'node_modules');
   const entries = () => (process.env.NODE_PATH ?? '').split(path.delimiter).filter(Boolean);
@@ -80,12 +86,21 @@ describe('ensureHoistedDependencyResolution()', () => {
     fs.ensureDirSync(hoisted());
     nodePath = process.env.NODE_PATH;
     nodeOptions = process.env.NODE_OPTIONS;
+    // these cases are about NODE_PATH order; taking `register` away keeps the ESM half - the
+    // irreversible half - out of the test process, through the same guard that carries older
+    // runtimes
+    register = nodeModule.register;
+    nodeModule.register = undefined;
   });
   afterEach(() => {
     if (nodePath === undefined) delete process.env.NODE_PATH;
     else process.env.NODE_PATH = nodePath;
     if (nodeOptions === undefined) delete process.env.NODE_OPTIONS;
     else process.env.NODE_OPTIONS = nodeOptions;
+    nodeModule.register = register;
+    // restoring the variable is not enough: the resolver reads the paths derived from it, which
+    // would otherwise still point into the directory removed on the next line
+    nodeModule._initPaths();
     fs.removeSync(root);
   });
 
