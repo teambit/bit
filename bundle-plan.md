@@ -1,10 +1,10 @@
 # Bundling the Bit CLI with esbuild — Plan, Architecture & Status Report
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
-> Status: **working end-to-end**, including a Node single-executable build and e2e runners.
+> Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
 > §7 verification · §8 what's installed and why · §9 bundle vs SEA · §9b the published package shape
-> · §9c running e2e against the bundle · §9d first CI run results · §10 gaps.
-> Last updated: 2026-08-09
+> · §9c running e2e against the bundle · §9d first CI run results · §9e the build task · §10 gaps.
+> Last updated: 2026-08-10
 
 ---
 
@@ -680,6 +680,65 @@ Priority order for the next pass:
 4. **The startup budget** — check whether `module.enableCompileCache()` actually has a writable
    cache dir under the CI user, since the local measurement says the bundle should pass this test.
 
+## 9e. The build task — status as of 2026-08-10
+
+`BundleCliAppTask` is wired to `@teambit/bit` via `teambit.harmony/envs/bit-cli-app-env` and **runs
+green**: `bd build teambit.harmony/bit --reuse-capsules --tasks BundleCliApp` exits 0 in ~5 s and
+produces a 69 MB bundle, 107 shims, 107 locators, 105 runtime assets and 1722 `.d.ts` files.
+
+### What the first runs exposed
+
+The bundler located every package by path-joining onto `packagesRoot`. That holds for this repo and
+is wrong everywhere else: **capsules hoist most dependencies to a shared capsule root**, and pnpm
+puts a package's own dependencies inside its store slot. The first real run therefore found 71 of 106
+core aspects, 70 of them "without a main runtime", copied 0 of 4 asset patterns and resolved 3 of 11
+external versions — **all silently**, because a missing main runtime is legitimate for a UI-only
+aspect and a missing asset only surfaces at runtime.
+
+Fixed by `resolve-package-dir.ts`, which walks the `node_modules` chain the way node does and returns
+the **realpath** (returning the symlink instead broke pnpm resolution for transitive deps). Alongside
+it: `findRuntimeAndAspectFiles` now looks in `dist/` and prefers it (a bare `@teambit/x` resolves to
+`dist/index.js`, so a deep import to the top-level `.ts` would put the same aspect in the bundle
+twice — §6.2 again); specifiers keep the extension under `dist/` and drop it at the top level, since
+the two take different branches of the `exports` map and neither extension-probes; and the dist
+resolver keys off `componentId` rather than `_bit_local`, which a capsule's copies do not carry.
+
+### Freshness — checked, and correct
+
+Most aspects resolve to _published_ packages in the capsule-root store rather than to the workspace's
+just-compiled components, which looked alarming. The rule is right: **new or modified components are
+built into sibling capsules and linked fresh; unmodified ones install from the registry**, where the
+published package _is_ the current code. Confirmed by counting — the capsule root held 53 capsules
+against a `bit status` of 2 new + 51 modified — and it only gets more correct at tag time.
+
+### Types
+
+Shims now carry the aspect's `.d.ts` tree, copied verbatim rather than regenerated so that type
+identity is preserved across packages: declarations re-export their siblings and other `@teambit/*`
+packages, and those resolve through the sibling shims. Verified in an external workspace under
+`noImplicitAny`, with a negative control proving the types are enforced rather than silently `any` —
+`ws.path` resolves as `string`, `cm.toArray()` as `[Component, string][]` with `Component` coming
+from a sibling shim. Capsules always carry declarations; this repo needs
+`bit compile --generate-types` (~11 min).
+
+### Still open on the task
+
+- **4 externals are undeclared dependencies of `@teambit/bit`** — `webpack`, `@babel/core`,
+  `bufferutil`, `utf-8-validate` — so their versions cannot be resolved and they are dropped from the
+  generated package.json. They are marked external, i.e. _not in the bundle_, so this is a runtime
+  `Cannot find module` waiting to happen. The bundler now warns loudly. Fix is `bit deps set`, and it
+  belongs with §9b. `@teambit/mcp.mcp-config-writer` is likewise undeclared, so its runtime template
+  asset is not copied.
+- **`outDir` is `<capsule>/app-bundle`, not the capsule root**, so the build does not yet emit the
+  publishable shape of §9b. Moving it must pass `clean: false` — `cleanOutDir` deletes everything in
+  the out dir except `node_modules`, which at the capsule root would delete the capsule's own sources
+  and dist — and must merge into the capsule's real `package.json` rather than overwrite it with the
+  `@teambit/bit-bundle-externals` stand-in.
+- **`CoreExporterTask` still writes the same locators** for a non-bundled build; superseding it for
+  `@teambit/bit` is not done.
+- **The task's output is not yet consumed by the e2e runners**, which still test the hand-built
+  `/tmp/bit-bundle`. Pointing them at the task's artefact is what proves the two paths cannot drift.
+
 ## 10. Known gaps & limitations
 
 1. **`bit start` / the UI dev server does not work** in the default build (§7.1, §8.3). `bit build`'s
@@ -720,15 +779,32 @@ Priority order for the next pass:
 
 **B. Size** — see §8.2 for the ordered levers.
 
-**C. Packaging** 4. Emit the publishable layout described in §9b: externals as `dependencies` of `@teambit/bit`, the
-108 aspect packages as thin published shims. This removes the two-`node_modules` split entirely
-and needs no change to bvm. 5. Decide SEA's fate with §9.2 in hand: embed (tamper-proof, 2× slower) vs stub (same startup as the
-script, still one binary on PATH, JS stays on disk) vs drop it. 6. Wire `e2e-test:bundle-circle` / `e2e-test:sea-circle` into the CircleCI config so the bundle is
-exercised by the full suite on every run.
+**C. Packaging** — the critical path now that the task runs (§9e):
 
-**D. Hardening** 6. CI job that builds the bundle and runs a smoke suite (`--help`, `init`, `create`, `status`,
-`build`) so it cannot silently rot. 7. Land the `hook-require` fix (§6.2) on `master` independently. 8. Consider generating the repo's own `esm.mjs` files the way the bundle's are — same staleness
-hazard, just less visible.
+- Declare the 4 missing externals on `@teambit/bit` (`bit deps set`), plus
+  `@teambit/mcp.mcp-config-writer`. Without this the published bundle is missing modules it needs at
+  runtime.
+- Emit the publishable layout of §9b from the task itself: `outDir` at the capsule root with
+  `clean: false`, externals merged into the capsule's real `package.json`. Removes the
+  two-`node_modules` split and needs no bvm change.
+- Supersede `CoreExporterTask` for `@teambit/bit` — both write the same locators today.
+- Point the e2e runners at the task's artefact instead of the hand-built `/tmp/bit-bundle`, which is
+  what actually proves the two build paths cannot drift.
+- Decide SEA's fate with §9.2 in hand: embed (tamper-proof, 2× slower) vs stub (same startup as the
+  script, still one binary on PATH, JS stays on disk) vs drop it.
+
+**D. Hardening**
+
+- Wire `e2e-test:bundle-circle` / `e2e-test:sea-circle` into CircleCI so the bundle is exercised by
+  the full suite on every run, plus a smoke suite (`--help`, `init`, `create`, `status`, `build`) so
+  it cannot silently rot.
+- Land the `hook-require` fix (§6.2) on `master` independently.
+- Land the two install guards on `remove-core-envs-from-manifest` — **done**, cherry-picked as
+  `5f50bc2d5`. A third instance of the same defect remains: `bd install` reaches its own compile step
+  and dies on `@teambit/compiler/dist/index.js` lazily requiring `./types`. Fixing it would remove
+  the snapshot/restore dance local dev currently needs.
+- Consider generating the repo's own `esm.mjs` files the way the bundle's are — same staleness
+  hazard, just less visible.
 
 ---
 

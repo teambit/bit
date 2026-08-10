@@ -25,9 +25,13 @@ build.
 
 `bundle-cli.ts` is the orchestrator and reads top-to-bottom as the pipeline:
 
-1. discover the aspects → 2. generate an entry that imports them all → 3. run esbuild →
-2. build the workers → 5. emit the shims, locators, ESM bridges, launcher and package.json →
-3. copy runtime assets → 7. optionally build a single executable.
+- discover the aspects
+- generate an entry that imports them all
+- run esbuild
+- build the workers
+- emit the shims, locators, ESM bridges, launcher and package.json
+- copy runtime assets
+- optionally build a single executable
 
 ## Modules
 
