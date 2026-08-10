@@ -34,7 +34,6 @@ const RUNTIME_PATH = [
   // `ts-server-client` spawns `typescript/lib/tsserver.js`; the typescript aspect also hands lib
   // files to the compiler by path
   'typescript',
-  'mocha',
 ];
 
 /** C. toolchains resolved by string from user envs */
