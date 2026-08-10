@@ -699,6 +699,47 @@ describe('bit ci sync', function () {
     });
   });
 
+  // The defect this closes: `bit ci pr --keep-lane` creates the cloud lane from a git-native branch,
+  // but never commits the lane pointer to the branch's `.bitmap`. The very next `bit ci sync` then saw
+  // dev commits with no readable state for the lane and HALTed ("cannot tell which side is newer"),
+  // asking a human to run `bit lane import` and commit `.bitmap` by hand. Adoption converges instead:
+  // the planner routes this "lane exists, branch has commits, no prior sync state" shape into
+  // `adopt-branch`, whose ledger commit gives the branch a lane pointer, same as every other action.
+  describe('a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync)', () => {
+    const FEATURE_BRANCH = 'adopt-feature';
+    let defaultBranch: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      // A plain git-native branch — no bit lane involved yet.
+      helper.command.runCmd(`git checkout -b ${FEATURE_BRANCH}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('adopt-feature-v1'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: adopt-feature work"');
+      helper.command.runCmd(`git push -u origin ${FEATURE_BRANCH}`);
+
+      // Reproduces the live defect exactly: creates the cloud lane from this branch's content, but
+      // (unchanged, still) never commits the lane pointer back to the branch.
+      helper.command.runCmd('bit ci pr --keep-lane --message "adopt via keep-lane"');
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+    });
+
+    it('adopts the branch instead of halting, and writes the lane pointer to it', () => {
+      const { output, exitCode } = syncRun(FEATURE_BRANCH);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${FEATURE_BRANCH} -> adopt-branch`);
+      expect(output).to.not.include('HALTED');
+      const bitmapAtTip = fileOnBranch(FEATURE_BRANCH, '.bitmap');
+      expect(bitmapAtTip).to.include('"_bit_lane"');
+    });
+
+    it('a second run sees the pair as converged and does nothing further', () => {
+      const { output, exitCode } = syncRun(FEATURE_BRANCH);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${FEATURE_BRANCH} -> noop (converged)`);
+    });
+  });
+
   // The cross-scope split: foreign CONTENT is refused outright; a foreign HOST is fine as long as the
   // content is this repo's, addressed by its scope-qualified id.
   describe('a lane whose components span two scopes is refused, never half-mirrored', () => {

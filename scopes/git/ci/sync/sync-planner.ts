@@ -30,6 +30,12 @@ export type LaneSyncInput = {
    */
   tipIsSyncCommit: boolean;
   conflictLabelPresent: boolean;
+  /**
+   * Whether the branch's committed `.bitmap` names a DIFFERENT lane than the one being reconciled.
+   * Consulted only when `lastSyncedHead` is absent, to tell "no state at all" (safe to adopt) from
+   * "already claimed by another lane" (never silently adopt).
+   */
+  branchNamesDifferentLane?: boolean;
   /** @see LaneOwnershipEvidence — consulted only on the "lane is gone" path. */
   ownership: LaneOwnershipEvidence;
 };
@@ -45,6 +51,7 @@ export type LaneSyncAction =
   | { type: 'import-lane' }
   | { type: 'export-branch' }
   | { type: 'merge-diverged' }
+  | { type: 'adopt-branch' }
   // Two variants rather than an optional `keepReason` so the type enforces that a keep always says why.
   | { type: 'close-pr'; deleteBranch: true }
   | { type: 'close-pr'; deleteBranch: false; keepReason: BranchKeepReason }
@@ -52,7 +59,7 @@ export type LaneSyncAction =
 
 export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   const { laneHead, branchExists, lastSyncedHead, hasDevCommits, conflictLabelPresent, ownership } = input;
-  const { tipIsSyncCommit } = input;
+  const { tipIsSyncCommit, branchNamesDifferentLane } = input;
   if (conflictLabelPresent) {
     return { type: 'noop', reason: 'PR is labeled bit-sync-conflict; resolve and remove the label to resume' };
   }
@@ -84,10 +91,18 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   if (!branchExists) return { type: 'import-lane' };
   if (!lastSyncedHead) {
     if (hasDevCommits) {
-      return {
-        type: 'halt',
-        reason: 'branch has commits but its .bitmap records no state for this lane; cannot tell which side is newer',
-      };
+      // A branch that already names a DIFFERENT lane is never adopted here — that claim is someone
+      // else's to resolve, not something this lane's sync run may silently absorb or overwrite.
+      if (branchNamesDifferentLane) {
+        return {
+          type: 'halt',
+          reason: 'branch has commits but its .bitmap names a different lane; cannot tell which side is newer',
+        };
+      }
+      // No prior sync history for this lane/branch pair, and the branch has commits of its own — the
+      // lane exists, so this is first contact, not a conflict. Adopt: converge the pair and let the
+      // executor's ledger commit give the branch's `.bitmap` a lane pointer to read next time.
+      return { type: 'adopt-branch' };
     }
     return { type: 'import-lane' };
   }

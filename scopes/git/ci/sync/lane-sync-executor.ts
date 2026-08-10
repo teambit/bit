@@ -386,6 +386,11 @@ export class LaneSyncExecutor {
     // merely quotes the marker must not read as one we wrote.
     const tipIsSyncCommit = isSyncAuthoredMessage(branchState.tipMessage);
 
+    // First-contact adoption (see the planner's `!lastSyncedHead` branch) must never touch a branch
+    // some OTHER lane already claims — even one whose claim isn't (yet) `own-live` (no reachable state
+    // commit). The line-349 guard above only catches the `own-live` case; this catches the rest.
+    const branchNamesDifferentLane = Boolean(mirroredLane) && mirroredLane !== laneIdStr;
+
     const action = planLaneSync({
       laneHead,
       branchExists,
@@ -393,6 +398,7 @@ export class LaneSyncExecutor {
       hasDevCommits: branchState.hasDevCommits,
       tipIsSyncCommit,
       conflictLabelPresent,
+      branchNamesDifferentLane,
       ownership,
     });
 
@@ -459,6 +465,8 @@ export class LaneSyncExecutor {
         return this.executeExportBranch({ target, laneIdStr, branch, defaultBranch });
       case 'merge-diverged':
         return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch });
+      case 'adopt-branch':
+        return this.executeAdoptBranch({ target, laneIdStr, branch, defaultBranch, pr });
       case 'close-pr':
         return this.executeClosePr({
           laneName,
@@ -644,6 +652,72 @@ export class LaneSyncExecutor {
         });
       }
       return `${laneName} -> export-branch (lane ${laneIdStr} @ ${laneHead.slice(0, 9)}, branch ${branch} updated)`;
+    } finally {
+      await this.restoreWorkspace(defaultBranch);
+    }
+  }
+
+  /**
+   * First contact: the lane exists on the remote, and the branch maps to it by name, but the branch's
+   * OWN committed `.bitmap` has no state for it — typically `bit ci pr --keep-lane` created the lane
+   * from this very branch without ever recording the pointer in git (the defect this adopts around).
+   * There is no known common base to merge from, so — same as `bit ci pr --keep-lane` itself, reusing
+   * an existing lane — the branch's content wins outright (`snapAndExportOntoLane`'s internal switch
+   * defaults to `forceOurs`): snap+export it onto the lane, then the ledger commit below gives the
+   * branch's `.bitmap` a lane pointer, so the next run reads this as a normal converged pair. The
+   * planner only reaches this action when the branch's `.bitmap` names no OTHER lane, so nothing here
+   * may overwrite a claim that belongs to a different lane.
+   */
+  private async executeAdoptBranch({
+    target,
+    laneIdStr,
+    branch,
+    defaultBranch,
+    pr,
+  }: {
+    target: LaneTarget;
+    laneIdStr: string;
+    branch: string;
+    defaultBranch: string;
+    pr?: PrInfo;
+  }): Promise<string> {
+    const { logger } = this.deps;
+    const laneName = target.name;
+    logger.console(
+      formatWarningSummary(
+        `Adopting branch ${branch}: lane ${laneIdStr} exists, but the branch's committed .bitmap has no state for it (first contact)`
+      )
+    );
+
+    const message = await this.lastNonSyncCommitMessage(branch, defaultBranch);
+    await this.checkoutFromRemote(branch, `origin/${branch}`);
+
+    try {
+      const exportErr = await this.snapAndExportOntoLane(laneIdStr, message);
+      if (exportErr) {
+        return await this.executeHalt({
+          laneName,
+          laneIdStr,
+          branch,
+          reason: `failed to adopt branch ${branch} onto lane ${laneIdStr}: ${exportErr.message}`,
+          pr: pr ?? (await this.findPr(branch)),
+        });
+      }
+
+      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      if (!laneHead) {
+        return await this.executeHalt({
+          laneName,
+          laneIdStr,
+          branch,
+          reason: `lane ${laneIdStr} could not be read back from the remote after adopting branch ${branch}`,
+          pr: pr ?? (await this.findPr(branch)),
+        });
+      }
+      return (
+        `${laneName} -> adopt-branch (branch ${branch} had no lane state; adopted onto lane ${laneIdStr} @ ` +
+        `${laneHead.slice(0, 9)})`
+      );
     } finally {
       await this.restoreWorkspace(defaultBranch);
     }

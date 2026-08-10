@@ -108,9 +108,20 @@ const table: Array<{
     type: 'import-lane',
   },
   {
-    name: 'existing branch, never synced, has dev commits, lane EXISTS -> halt (ambiguous)',
+    name: 'existing branch, never synced, has dev commits, lane EXISTS -> adopt-branch (first contact)',
     input: { lastSyncedHead: undefined, ownership: 'inherited-or-none', hasDevCommits: true },
+    type: 'adopt-branch',
+  },
+  {
+    name: 'existing branch, never synced, has dev commits, but .bitmap names a DIFFERENT lane -> halt',
+    input: {
+      lastSyncedHead: undefined,
+      ownership: 'inherited-or-none',
+      hasDevCommits: true,
+      branchNamesDifferentLane: true,
+    },
     type: 'halt',
+    reason: 'names a different lane',
   },
 ];
 
