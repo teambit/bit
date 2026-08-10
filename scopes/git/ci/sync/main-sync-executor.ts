@@ -177,7 +177,11 @@ export class MainSyncExecutor {
         // Drop the losing commit: left on the local sync branch, its orphan sibling would trip the
         // next run's `checkoutPristine` guard. Best-effort — a failed drop must not escalate a
         // confirmed-benign race. The original rejection text is kept for diagnosability.
-        await git.raw(['reset', '--hard', `origin/${branch}`]).catch(() => undefined);
+        await git.raw(['reset', '--hard', `origin/${branch}`]).catch((resetErr: any) => {
+          logger.consoleWarning(
+            `Could not drop the unpushed sync commit on ${branch}: ${resetErr?.message || resetErr}`
+          );
+        });
         logger.console(formatWarningSummary(`main -> push to ${branch} lost to a concurrent run: ${message}`));
         return racedMainSummary(branch);
       }

@@ -57,14 +57,26 @@ describe('bit ci sync', function () {
   /**
    * Arm a `pre-push` hook in the suite's local clone — the only way to interleave a remote update into
    * the command's own push. Pins `core.hooksPath` as insurance against a global override on the machine
-   * running the suite. Returns the disarm callback for the test's `finally`.
+   * running the suite. Returns the disarm callback for the test's `finally`; it removes the hook AND
+   * restores the prior `core.hooksPath`, so no config change leaks into later tests.
    */
   function armPrePushHook(script: string): () => void {
     const hookPath = path.join(helper.scopes.localPath, '.git', 'hooks', 'pre-push');
+    let priorHooksPath: string | undefined;
+    try {
+      priorHooksPath = helper.command.runCmd('git config --local --get core.hooksPath').trim() || undefined;
+    } catch {
+      priorHooksPath = undefined; // unset — `git config --get` exits non-zero
+    }
     helper.command.runCmd('git config core.hooksPath .git/hooks');
     fs.outputFileSync(hookPath, `#!/bin/sh\n${script}\nexit 0\n`);
     fs.chmodSync(hookPath, 0o755);
-    return () => fs.removeSync(hookPath);
+    return () => {
+      fs.removeSync(hookPath);
+      helper.command.runCmd(
+        priorHooksPath ? `git config core.hooksPath ${priorHooksPath}` : 'git config --unset core.hooksPath'
+      );
+    };
   }
 
   // Successive states of the same lane/branch pair: one workspace, run in order — the only way to

@@ -1301,7 +1301,7 @@ export class LaneSyncExecutor {
       // Keep the original rejection text: the raced verdict exits green, and without it a persistent
       // wording-matched failure on a busy branch would leave no diagnosable trace anywhere.
       this.deps.logger.console(
-        chalk.yellow(
+        formatWarningSummary(
           `Push to ${branch} was rejected and the branch has since moved — a concurrent run got there first; ` +
             `re-planning on the next sync. The rejection: ${String(e?.message || e)}`
         )
