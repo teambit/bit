@@ -80,25 +80,38 @@ bd build teambit.harmony/bit --reuse-capsules --tasks BundleCliApp
 does a literal `join(packagesRoot, 'node_modules', packageName)` **path check instead of node
 resolution**, so it never looks there.
 
-Three defects, in dependency order:
+Five defects, all the same root assumption, all fixed in `resolve-package-dir.ts` and its callers:
 
-1. **`getCoreAspectsInfo` must resolve, not path-join.** Use node resolution from `packagesRoot`
-   (`resolveFrom(packagesRoot, `${packageName}/package.json`)`) so hoisted and nested layouts both
-   work. This alone turns 71 → ~106.
-2. **`findRuntimeAndAspectFiles` reads the wrong level.** It `readdir`s the package dir for
-   `*.main.runtime.{ts,js}` at the _top level_. True of this repo's `node_modules/@teambit/*` (dirs of
-   symlinks to sources), false everywhere else: published packages and capsules keep them in `dist/`
-   (`@teambit/cli` has no top-level match but `dist/cli.main.runtime.js` and `dist/cli.aspect.js`).
-   Hence "70 of 71 without a main runtime" — near-total, and **silent**, since a missing main runtime
-   is treated as a legitimate UI-only aspect.
-3. **`teambit-dist-resolver-plugin` has the same path-join bug**, so it fails to normalise these
-   packages and esbuild falls through to the `exports` map and picks the ESM bridge. The single
-   esbuild error is the §6.2 hazard resurfacing:
+1. **`getCoreAspectsInfo` path-joined instead of resolving.** `resolvePackageDir` now walks the
+   `node_modules` chain the way node does. 71 → 106.
+2. **It returned the symlink, not the realpath.** Under pnpm a `node_modules` entry links into a store
+   slot and the package's own dependencies live in _that_ slot. Normalising to the link walks the
+   consumer's tree instead and misses them — a wall of `Could not resolve` for transitive deps that
+   were installed all along. `realpathSync` fixed it.
+3. **`findRuntimeAndAspectFiles` read only the top level**, true of this repo's symlink-farm-of-sources
+   and false for published packages and capsules, which keep the compiled runtime files in `dist/`
+   (`@teambit/cli` has no top-level match but has `dist/cli.main.runtime.js`). Hence "70 of 71 without
+   a main runtime" — near-total and **silent**, since a missing main runtime is legitimate for a
+   UI-only aspect. It now checks `dist` **first**: a bare `@teambit/x` resolves to `dist/index.js`, so
+   a deep import to the top-level `.ts` would put the same aspect in the bundle twice (§6.2).
+4. **Specifiers must keep the extension under `dist/` and drop it at the top level.** The two take
+   different branches of the exports map and neither extension-probes — verified:
+   `@teambit/cli/dist/cli.main.runtime` does not resolve, `…/cli.main.runtime.js` does, and
+   `@teambit/envs/environments.main.runtime` resolves to the raw `.ts`.
+5. **`teambit-dist-resolver-plugin` keyed off `_bit_local`**, which a capsule's copies do not carry —
+   so normalisation silently stopped applying and esbuild fell through to the ESM bridge, producing
+   the one error of the first run:
 
    ```
    bit.main.runtime.ts:2:9: ERROR: No matching export in
      ".../capsules/root/c0abd8062/teambit.envs_envs@1.0.1097/dist/esm.mjs" for import "getLegacyCoreEnvsIds"
    ```
+
+   It now keys off `componentId` (present in all 298 capsule-root components) and falls back to
+   esbuild for non-workspace components instead of failing the build.
+
+The same assumption also broke `copy-assets` (0 of 4 asset patterns matched → now 105 files),
+`create-package-json`'s version lookup (3 of 11 externals → 7) and `build-workers`' entry points.
 
 **The freshness question — asked, then answered: the premise is sound.** It looked alarming at first,
 because most aspects resolve to _published_ packages in the capsule-root store (`@teambit/cli@0.0.1364`)
@@ -121,7 +134,12 @@ The residual risk is narrow and is not a bundling concern: a component whose pub
 drifted from its workspace source while bit still reports it unmodified. That is a workspace-integrity
 question.
 
-The bundler itself is fine: it ran end to end in 12.6 s and produced one error, not a pile.
+**Still open from this run:** 4 externals (`webpack`, `@babel/core`, `bufferutil`, `utf-8-validate`)
+have no resolvable version because they are genuinely **not declared dependencies of `@teambit/bit`**.
+They are marked external, so the bundle does not contain them and the published package must declare
+them — a `bit deps set` change, part of §9b rather than a resolver bug. The bundler now warns loudly
+instead of dropping them silently. `@teambit/mcp.mcp-config-writer` is likewise not a dependency, so
+its runtime template asset is not copied.
 
 ### 2.2 The published layout (already implemented, not yet exercised by a real build)
 
