@@ -58,6 +58,9 @@ export type BundleCliResult = {
   assetsCopied: number;
   workers: string[];
   esmBridges: { generated: number; skipped: number };
+  /** `.d.ts` files copied into the shims, and how many shims got any */
+  typeFiles: number;
+  shimsWithTypes: number;
   sea?: { exePath: string; sizeMb: number; nodeVersion: string };
   errors: number;
   warnings: number;
@@ -108,7 +111,7 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
 
   const workers = await buildWorkers(paths, externals);
   const bitVersion = await readBitVersion(packagesRoot);
-  await generateShimPackages(paths, aspects, extraPackages);
+  const shims = await generateShimPackages(paths, aspects, extraPackages);
   await generateBin(paths);
   const assetCount = await copyAssets(paths);
   const esmBridges = await generateEsmBridges(paths, exportsByPackage);
@@ -134,6 +137,8 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
     assetsCopied: assetCount,
     workers: workers.map((w) => w.outPath),
     esmBridges,
+    typeFiles: shims.typeFiles,
+    shimsWithTypes: shims.shimsWithTypes,
     sea,
     errors: result.errors.length,
     warnings: result.warnings.length,

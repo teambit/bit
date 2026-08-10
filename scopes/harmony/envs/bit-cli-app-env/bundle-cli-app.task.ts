@@ -74,6 +74,8 @@ export class BundleCliAppTask implements BuildTask {
           metadata: {
             bundleSizeMb: result.bundleSizeMb,
             coreAspects: result.coreAspects,
+            typeFiles: result.typeFiles,
+            shimsWithTypes: result.shimsWithTypes,
             externals: result.externalsInstalled,
             warnings: result.warnings,
           },

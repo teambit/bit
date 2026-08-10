@@ -1,6 +1,8 @@
 import fs from 'fs-extra';
+import globby from 'globby';
 import { join, relative } from 'path';
 import type { BundlePaths } from './config';
+import { resolvePackageDir } from './resolve-package-dir';
 import type { CoreAspectInfo } from './core-aspects-info';
 import { toExportName } from './core-aspects-info';
 
@@ -56,6 +58,37 @@ async function readSourcePackageJson(sourceDir?: string): Promise<Record<string,
 }
 
 /**
+ * Copy the aspect's `.d.ts` tree into the shim, so a user's workspace keeps types and autocomplete
+ * for `@teambit/<aspect>` even though the implementation is now one opaque bundle file.
+ *
+ * The declarations are taken verbatim from the package being shimmed rather than regenerated. They
+ * are the same ones the published package shipped, which matters for *type identity*: a declaration
+ * re-exports its siblings and other `@teambit/*` packages, and those references resolve through the
+ * sibling shims - so every aspect sees the same `Component`, `Workspace` and so on. Rolling the
+ * declarations up per package (api-extractor style) would break exactly that, and two
+ * structurally-identical-but-distinct types are worse for a user than none.
+ *
+ * The whole tree is copied, not just `index.d.ts`, because those sibling re-exports are relative
+ * paths into it. Cost is small - declarations are a fraction of a percent of the distribution.
+ *
+ * A package with no declarations is normal and not an error: this repo compiles without them unless
+ * `bit compile --generate-types` was used, whereas a capsule's packages always carry them.
+ */
+async function copyTypeDeclarations(sourceDir: string | undefined, shimDistDir: string): Promise<number> {
+  if (!sourceDir) return 0;
+  const from = join(sourceDir, 'dist');
+  const files = await globby('**/*.d.ts', { cwd: from, dot: true });
+  await Promise.all(
+    files.map(async (file) => {
+      const target = join(shimDistDir, file);
+      await fs.ensureDir(join(target, '..'));
+      await fs.copy(join(from, file), target, { dereference: true, overwrite: true });
+    })
+  );
+  return files.length;
+}
+
+/**
  * `linkCoreAspect` computes the package root as `resolve(module.path, '..', '..')`, so the locator
  * must name a file exactly two levels below the shim root - `<shim>/dist/index.js`.
  */
@@ -91,15 +124,24 @@ async function generateOne(paths: BundlePaths, target: ShimTarget) {
   }
 
   const original = await readSourcePackageJson(target.sourceDir);
+  const typesCopied = await copyTypeDeclarations(target.sourceDir, distDir);
+  const hasTypes = typesCopied > 0 && (await fs.pathExists(join(distDir, 'index.d.ts')));
+
   const packageJson: Record<string, any> = {
     name: target.packageName,
     version: original.version || '0.0.0',
     componentId: original.componentId,
     main: 'dist/index.js',
+    // point at the copied declarations. the original map's `types` entries point at `.ts` *sources*
+    // (`"types": "./index.ts"`, `"./dist/*": { "types": "./*.ts" }`), which a shim does not have -
+    // inheriting them would leave every import untyped.
+    ...(hasTypes ? { types: 'dist/index.d.ts' } : {}),
     // the bundle carries every dependency; declaring them would make `npm i` re-download the world.
     dependencies: {},
     exports: {
       '.': {
+        // `types` must come first - node/TS pick the first matching condition
+        ...(hasTypes ? { types: './dist/index.d.ts' } : {}),
         // `generate-esm-bridges` derives dist/esm.mjs from the built bundle
         node: { require: './dist/index.js', import: './dist/esm.mjs' },
         default: './dist/index.js',
@@ -119,6 +161,7 @@ async function generateOne(paths: BundlePaths, target: ShimTarget) {
     const rel = relative(locatorDir, join(distDir, 'index.js')).split('\\').join('/');
     await fs.writeFile(join(locatorDir, 'index.js'), locatorContent(rel.startsWith('.') ? rel : `./${rel}`));
   }
+  return typesCopied;
 }
 
 export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspectInfo[], extraPackages: string[]) {
@@ -131,8 +174,24 @@ export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspe
     mainRuntimeFileBase: basenameOf(aspect.mainRuntimeImport),
   }));
   extraPackages.forEach((packageName) => {
-    targets.push({ packageName, exportName: toExportName(packageName.replace('@teambit/', '')) });
+    targets.push({
+      packageName,
+      exportName: toExportName(packageName.replace('@teambit/', '')),
+      // extras are shimmed like aspects and deserve types like aspects - `@teambit/harmony` is
+      // imported directly by user code, so leaving it untyped would be an odd hole.
+      sourceDir: resolvePackageDir(paths.packagesRoot, packageName),
+    });
   });
-  await Promise.all(targets.map((target) => generateOne(paths, target)));
-  return targets.map((t) => t.packageName);
+  const typeCounts = await Promise.all(targets.map((target) => generateOne(paths, target)));
+  const typeFiles = typeCounts.reduce((a, b) => a + b, 0);
+  const withTypes = typeCounts.filter(Boolean).length;
+  // types are optional, but their absence is worth saying out loud: it is the difference between a
+  // user's workspace getting autocomplete for `@teambit/*` and getting `any`. In this repo it means
+  // the components were compiled without `bit compile --generate-types`.
+  // eslint-disable-next-line no-console
+  console.log(
+    `[bundle] type declarations: ${typeFiles} files across ${withTypes}/${targets.length} shims` +
+      (withTypes ? '' : ' - the distribution will have no types (compile with --generate-types)')
+  );
+  return { packageNames: targets.map((t) => t.packageName), typeFiles, shimsWithTypes: withTypes };
 }
