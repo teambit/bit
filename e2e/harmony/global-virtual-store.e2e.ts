@@ -1,7 +1,23 @@
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { Helper } from '@teambit/legacy.e2e-helper';
+
+/** this file lives at <repo>/e2e/harmony */
+// @ts-ignore
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+/**
+ * the versions of the given typings packages that the running bit repo itself resolves. Read at
+ * runtime rather than pinned here, so a repo-side bump does not silently put this suite back into
+ * the version mismatch it is avoiding.
+ */
+function typesVersionsOfThisRepo(names: string[]): Record<string, string> {
+  return Object.fromEntries(
+    names.map((name) => [name, fs.readJsonSync(path.join(repoRoot, 'node_modules', name, 'package.json')).version])
+  );
+}
 
 /**
  * `enableGlobalVirtualStore` moves the dependency directories out of the workspace's
@@ -68,6 +84,16 @@ describe('installing with the global virtual store', function () {
       helper.workspaceJsonc.disablePreview();
       helper.fixtures.populateExtensions(1);
       helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
+      // the aspect env pins older typings than this repo uses (@types/react@17 against its 19).
+      // The bridge maps the program's `react` to whatever the workspace hoisted, which is right
+      // for the workspace's own packages - but bit's sources share that program, because a core
+      // aspect in the dev repo exposes `types: index.ts`, and they need the repo's typings. The
+      // mismatch fails the compile for reasons that have nothing to do with reachability, which
+      // is what this suite measures. Align the workspace on the repo's versions so the bridge is
+      // the only variable left: with it disabled the compile still fails, with 47 errors.
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
+        dependencies: typesVersionsOfThisRepo(['@types/react', '@types/react-dom', '@types/mime']),
+      });
       helper.command.install();
       // throws on a failed build pipeline, which is the assertion: the TSCompiler task is what
       // breaks when the types below cannot be reached
