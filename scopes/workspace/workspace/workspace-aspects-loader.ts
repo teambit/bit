@@ -263,6 +263,36 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     });
   }
 
+  /**
+   * `getAspectDef` throws when a core aspect has no compiled `dist` - normally the right thing, since
+   * a core aspect that cannot be resolved means bit itself is broken. But callers that pass
+   * `throwOnError: false` are asking for best-effort resolution, and one such caller runs at a moment
+   * when that condition is expected and temporary: `InstallMain.reloadMovedEnvs` executes right after
+   * the package manager rewrote node_modules, which in a workspace that injects its own components
+   * has just deleted every core aspect's `dist` - and *before* the compile step of the same install
+   * that rebuilds them. Aborting there leaves the workspace with no compiled dists at all and no way
+   * to run bit, so honour the flag and let the caller proceed with whatever resolved.
+   */
+  private async resolveCoreAspectDefs(
+    coreAspectsIds: string[],
+    runtimeName?: string,
+    throwOnError?: boolean
+  ): Promise<AspectDefinition[]> {
+    const defs = await Promise.all(
+      coreAspectsIds.map(async (coreId) => {
+        try {
+          const rawDef = await getAspectDef(coreId, runtimeName);
+          return this.aspectLoader.loadDefinition(rawDef);
+        } catch (err: any) {
+          if (throwOnError) throw err;
+          this.logger.warn(`unable to resolve the core aspect "${coreId}", skipping it. ${err.message}`);
+          return undefined;
+        }
+      })
+    );
+    return compact(defs);
+  }
+
   private async loadFromScopeAspectsCapsule(ids: ComponentID[], throwOnError?: boolean, neededFor?: string) {
     let scopeAspectIds: string[] = [];
     const currentLane = await this.consumer.getCurrentLaneObject();
@@ -377,12 +407,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         this.getWorkspaceAspectResolver([], runtimeName)
       );
 
-      const coreAspectDefs = await Promise.all(
-        coreAspectsIds.map(async (coreId) => {
-          const rawDef = await getAspectDef(coreId, runtimeName);
-          return this.aspectLoader.loadDefinition(rawDef);
-        })
-      );
+      const coreAspectDefs = await this.resolveCoreAspectDefs(coreAspectsIds, runtimeName, mergedOpts.throwOnError);
 
       const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
       const targetDefs = wsAspectDefs.concat(coreAspectDefs).concat(localDefs);
@@ -550,12 +575,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         )
       : [];
 
-    let coreAspectDefs = await Promise.all(
-      coreAspectsIds.map(async (coreId) => {
-        const rawDef = await getAspectDef(coreId, runtimeName);
-        return this.aspectLoader.loadDefinition(rawDef);
-      })
-    );
+    let coreAspectDefs = await this.resolveCoreAspectDefs(coreAspectsIds, runtimeName, mergedOpts.throwOnError);
 
     // due to lack of workspace and scope runtimes. TODO: fix after adding them.
     if (runtimeName && mergedOpts.filterByRuntime) {

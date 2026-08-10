@@ -662,6 +662,22 @@ export class DependencyLinker {
    * Only reached from a workspace with `linkCoreAspects` off, i.e. one that authors them.
    */
   async syncCoreAspectLinksForEnvs(rootDir: string, componentIds: ComponentID[]): Promise<void> {
+    // The whole reconciler is best-effort, not just the `createLinks` call at the end of it. It runs
+    // right after the package manager has rewritten node_modules, which in a workspace that injects
+    // its own components (`injectWorkspacePackages`) means every core aspect's `dist` has just been
+    // deleted and not yet rebuilt by the compile step that follows. Anything this method reaches
+    // through a lazily-required module - `getCoreAspectName` and friends come from
+    // `@teambit/aspect-loader` - can therefore throw MODULE_NOT_FOUND on a dist that existed when
+    // the process started. Letting that escape aborts the install *before* the compile that would
+    // have restored those dists, leaving the workspace unable to run bit at all.
+    try {
+      await this.syncCoreAspectLinksForEnvsUnsafe(rootDir, componentIds);
+    } catch (err: any) {
+      this.logger.warn(`syncCoreAspectLinksForEnvs: skipped, ${err.message}`);
+    }
+  }
+
+  private async syncCoreAspectLinksForEnvsUnsafe(rootDir: string, componentIds: ComponentID[]): Promise<void> {
     const idsInWorkspace = componentIds.map((id) => id.toString({ ignoreVersion: true }));
     const authoredCoreAspects = this.aspectLoader.getCoreAspectIds().filter((aspectId) => {
       if (aspectId === this.aspectLoader.mainAspect?.id) return false;
