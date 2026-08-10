@@ -220,6 +220,15 @@ export async function confirmPushRace(
 }
 
 /**
+ * Strip URL userinfo (`https://user:token@host` → `https://***@host`) from a git message before it
+ * reaches a log or a summary: git prints the remote URL in push errors, and a remote may embed
+ * credentials. Over-redaction is the safe direction — `ssh://git@host` loses nothing that matters.
+ */
+export function redactUrlCredentials(text: string): string {
+  return text.replace(/\/\/[^\s@/]+@/g, '//***@');
+}
+
+/**
  * Move the local `branch` back to `origin/<branch>`, dropping unpushed commits — the cleanup after a
  * lost push race, so the orphan commit cannot trip `checkoutPristine`'s guard on the clone's next run.
  * `reset --hard` writes the index, so a stale `index.lock` blocks it; the `update-ref` fallback does

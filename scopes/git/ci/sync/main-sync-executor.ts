@@ -22,6 +22,7 @@ import {
   gitWithIdentity,
   isNonContentPath,
   isStaleLeaseRejection,
+  redactUrlCredentials,
 } from './git-ops';
 
 export type MainSyncDeps = {
@@ -181,7 +182,9 @@ export class MainSyncExecutor {
         if (dropErr) {
           logger.consoleWarning(`Could not drop the unpushed sync commit on ${branch}: ${dropErr}`);
         }
-        logger.console(formatWarningSummary(`main -> push to ${branch} lost to a concurrent run: ${message}`));
+        logger.console(
+          formatWarningSummary(`main -> push to ${branch} lost to a concurrent run: ${redactUrlCredentials(message)}`)
+        );
         return racedMainSummary(branch);
       }
       logger.console(chalk.green(`Pushed ${branch}`));

@@ -36,6 +36,7 @@ import {
   fetchRemoteHeads,
   isAncestor,
   isStaleLeaseRejection,
+  redactUrlCredentials,
   refetchBranchTip,
 } from './git-ops';
 
@@ -1297,12 +1298,13 @@ export class LaneSyncExecutor {
       if (dropErr) {
         this.deps.logger.consoleWarning(`Could not drop the unpushed sync commit on ${branch}: ${dropErr}`);
       }
-      // Keep the original rejection text: the raced verdict exits green, and without it a persistent
-      // wording-matched failure on a busy branch would leave no diagnosable trace anywhere.
+      // Keep the original rejection text (redacted: git prints the remote URL, which may embed
+      // credentials): the raced verdict exits green, and without the text a persistent wording-matched
+      // failure on a busy branch would leave no diagnosable trace anywhere.
       this.deps.logger.console(
         formatWarningSummary(
           `Push to ${branch} was rejected and the branch has since moved — a concurrent run got there first; ` +
-            `re-planning on the next sync. The rejection: ${String(e?.message || e)}`
+            `re-planning on the next sync. The rejection: ${redactUrlCredentials(String(e?.message || e))}`
         )
       );
       return { raced: true };

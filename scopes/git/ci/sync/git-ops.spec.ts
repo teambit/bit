@@ -16,6 +16,7 @@ import {
   isNonContentPath,
   isNonFastForwardRejection,
   isStaleLeaseRejection,
+  redactUrlCredentials,
   parseLsRemoteSymref,
   parseOriginHeadRef,
   refetchBranchTip,
@@ -271,6 +272,19 @@ describe('isNonFastForwardRejection', () => {
       isNonFastForwardRejection('!\tHEAD:refs/heads/main\t[remote rejected] (pre-receive hook declined)')
     ).to.equal(false);
     expect(isNonFastForwardRejection('remote: GH006: Protected branch update failed')).to.equal(false);
+  });
+});
+
+describe('redactUrlCredentials', () => {
+  it('strips embedded credentials from a push-error remote URL', () => {
+    expect(
+      redactUrlCredentials("error: failed to push some refs to 'https://x-access-token:ghs_abc123@github.com/o/r'")
+    ).to.equal("error: failed to push some refs to 'https://***@github.com/o/r'");
+  });
+
+  it('leaves a credential-free message unchanged', () => {
+    const message = "error: failed to push some refs to 'https://github.com/o/r'\n ! [rejected] (fetch first)";
+    expect(redactUrlCredentials(message)).to.equal(message);
   });
 });
 
