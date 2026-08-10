@@ -23,6 +23,10 @@ describe('installing with the global virtual store', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('enableGlobalVirtualStore', true);
       helper.fixtures.populateComponents(1);
+      // the default env has no compiler, and the last assertion here is about a dist. a
+      // workspace-local env keeps the subject of this suite intact - it installs nothing, so what
+      // the global store does or does not serve is still what the assertions measure.
+      helper.env.setTsEnv();
       helper.command.install('is-positive@1.0.0');
     });
     it('should not create the dependency directories inside the workspace', () => {
