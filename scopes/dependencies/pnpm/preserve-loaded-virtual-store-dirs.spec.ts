@@ -1,4 +1,6 @@
 import { expect } from 'chai';
+import fs from 'fs-extra';
+import os from 'os';
 import path from 'path';
 import {
   findDonorDirName,
@@ -91,5 +93,50 @@ describe('loaded-module scanning', () => {
   });
   it('loadedVirtualStoreDirNames() should return CJS and ESM slot dir names', () => {
     expect([...loadedVirtualStoreDirNames(virtualStoreDir)].sort()).to.deep.equal([dirName, esmDirName].sort());
+  });
+});
+
+describe('loaded-module scanning in a workspace reached through a symlink', () => {
+  // node resolves a module's filename through its realpath, so require.cache is keyed by the real
+  // spelling even when the install was handed the symlinked one. this is the everyday case on
+  // macOS, where a temp dir under /var is really under /private/var.
+  const tmpDir = fs.realpathSync(os.tmpdir());
+  const realRoot = path.join(tmpDir, 'preserve-loaded-vsd-spec-real');
+  const linkedRoot = path.join(tmpDir, 'preserve-loaded-vsd-spec-link');
+  const dirName = '@teambit+aspect@1.0.1042_somehash';
+  const realSlotDir = path.join(realRoot, 'node_modules', '.pnpm', dirName);
+  const realCachedFile = path.join(realSlotDir, 'node_modules', '@teambit', 'aspect', 'dist', 'env.js');
+  let symlinksSupported = true;
+
+  before(() => {
+    fs.removeSync(linkedRoot);
+    fs.removeSync(realRoot);
+    fs.mkdirpSync(path.dirname(realCachedFile));
+    try {
+      fs.symlinkSync(realRoot, linkedRoot, 'dir');
+    } catch {
+      symlinksSupported = false; // unprivileged Windows
+    }
+    require.cache[realCachedFile] = {} as any;
+  });
+  after(() => {
+    delete require.cache[realCachedFile];
+    fs.removeSync(linkedRoot);
+    fs.removeSync(realRoot);
+  });
+
+  it('snapshotLoadedVirtualStoreDirs() should find a slot loaded by its realpath', function () {
+    if (!symlinksSupported) this.skip();
+    const snapshot = snapshotLoadedVirtualStoreDirs(linkedRoot);
+    expect(snapshot.map((dir) => dir.dirName)).to.deep.equal([dirName]);
+    expect(snapshot[0].pkgName).to.equal('@teambit/aspect');
+    // the recorded path addresses the same directory the module was loaded from, so the existence
+    // check and the restore that follow act on it rather than on a path that never matched
+    expect(fs.realpathSync(snapshot[0].dirPath)).to.equal(realSlotDir);
+  });
+  it('loadedVirtualStoreDirNames() should find it through the symlinked spelling', function () {
+    if (!symlinksSupported) this.skip();
+    const dirNames = loadedVirtualStoreDirNames(path.join(linkedRoot, 'node_modules', '.pnpm'));
+    expect([...dirNames]).to.deep.equal([dirName]);
   });
 });
