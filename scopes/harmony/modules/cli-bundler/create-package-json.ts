@@ -40,11 +40,23 @@ async function resolveVersion(paths: BundlePaths, packageName: string, wsPolicy:
   );
 }
 
+/**
+ * Both fallbacks are repo-root files: they exist when `packagesRoot` is this repo, and do not when it
+ * is a capsule. That is not an error - in a capsule every external is a real dependency, so the
+ * installed copy read by `resolveVersion` answers first and the fallbacks are never consulted.
+ */
+async function readJsonIfExists(filePath: string, parseFn: (raw: string) => any): Promise<any> {
+  try {
+    return parseFn(await fs.readFile(filePath, 'utf8'));
+  } catch {
+    return undefined;
+  }
+}
+
 export async function generatePackageJson(paths: BundlePaths, bitVersion: string, externals: string[]) {
-  const wsJsoncRaw = await fs.readFile(join(paths.packagesRoot, 'workspace.jsonc'), 'utf8');
-  const wsJsonc: any = parse(wsJsoncRaw);
+  const wsJsonc = await readJsonIfExists(join(paths.packagesRoot, 'workspace.jsonc'), (raw) => parse(raw));
   const wsPolicy = wsJsonc?.['teambit.dependencies/dependency-resolver']?.policy;
-  const repoPkgJson = await fs.readJson(join(paths.packagesRoot, 'package.json'));
+  const repoPkgJson = await readJsonIfExists(join(paths.packagesRoot, 'package.json'), JSON.parse);
 
   const names = Array.from(new Set(externals.map(rootPackageName))).filter((n) => !externalsNotInstalled.has(n));
   const dependencies: Record<string, string> = {};

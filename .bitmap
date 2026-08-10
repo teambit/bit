@@ -267,7 +267,13 @@
         "scope": "teambit.harmony",
         "version": "2.0.72",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit"
+        "rootDir": "scopes/harmony/bit",
+        "config": {
+            "teambit.harmony/envs/bit-cli-app-env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/bit-cli-app-env"
+            }
+        }
     },
     "bit-map": {
         "name": "bit-map",
