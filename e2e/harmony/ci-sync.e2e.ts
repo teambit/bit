@@ -73,8 +73,9 @@ describe('bit ci sync', function () {
     fs.chmodSync(hookPath, 0o755);
     return () => {
       fs.removeSync(hookPath);
+      // quoted: a machine-level prior value can hold whitespace, and runCmd goes through a shell
       helper.command.runCmd(
-        priorHooksPath ? `git config core.hooksPath ${priorHooksPath}` : 'git config --unset core.hooksPath'
+        priorHooksPath ? `git config core.hooksPath "${priorHooksPath}"` : 'git config --unset core.hooksPath'
       );
     };
   }

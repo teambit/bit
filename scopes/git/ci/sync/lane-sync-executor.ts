@@ -32,6 +32,7 @@ import {
   commitWithIdentity,
   confirmPushRace,
   deleteBranchArgs,
+  dropLocalBranchToRemoteTip,
   fetchRemoteHeads,
   isAncestor,
   isStaleLeaseRejection,
@@ -1291,13 +1292,11 @@ export class LaneSyncExecutor {
       if ((await this.classifyPushRejection(branch, baseSha, e)) !== 'confirmed-race') throw e;
       // Drop the losing commit: left on refs/heads/<branch>, its orphan sibling would trip
       // `checkoutPristine`'s guard on this clone's next branch-touching run. The confirmation just
-      // refetched the winner's tip, so `origin/<branch>` resolves. Best-effort: a failed drop must not
-      // escalate a confirmed-benign race into the halt it exists to avoid.
-      await git.raw(['reset', '--hard', `origin/${branch}`]).catch((resetErr: any) => {
-        this.deps.logger.consoleWarning(
-          `Could not drop the unpushed sync commit on ${branch}: ${resetErr?.message || resetErr}`
-        );
-      });
+      // refetched the winner's tip, so `origin/<branch>` resolves.
+      const dropErr = await dropLocalBranchToRemoteTip(branch);
+      if (dropErr) {
+        this.deps.logger.consoleWarning(`Could not drop the unpushed sync commit on ${branch}: ${dropErr}`);
+      }
       // Keep the original rejection text: the raced verdict exits green, and without it a persistent
       // wording-matched failure on a busy branch would leave no diagnosable trace anywhere.
       this.deps.logger.console(

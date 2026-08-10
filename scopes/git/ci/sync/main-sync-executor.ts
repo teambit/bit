@@ -17,6 +17,7 @@ import {
   checkoutPristineRestore,
   commitWithIdentity,
   confirmPushRace,
+  dropLocalBranchToRemoteTip,
   fetchRemoteHeads,
   gitWithIdentity,
   isNonContentPath,
@@ -175,13 +176,11 @@ export class MainSyncExecutor {
         const message = String(e?.message || e);
         if (directPush || (await confirmPushRace(branch, baseSha, message)) !== 'confirmed-race') throw e;
         // Drop the losing commit: left on the local sync branch, its orphan sibling would trip the
-        // next run's `checkoutPristine` guard. Best-effort — a failed drop must not escalate a
-        // confirmed-benign race. The original rejection text is kept for diagnosability.
-        await git.raw(['reset', '--hard', `origin/${branch}`]).catch((resetErr: any) => {
-          logger.consoleWarning(
-            `Could not drop the unpushed sync commit on ${branch}: ${resetErr?.message || resetErr}`
-          );
-        });
+        // next run's `checkoutPristine` guard. The original rejection text is kept for diagnosability.
+        const dropErr = await dropLocalBranchToRemoteTip(branch);
+        if (dropErr) {
+          logger.consoleWarning(`Could not drop the unpushed sync commit on ${branch}: ${dropErr}`);
+        }
         logger.console(formatWarningSummary(`main -> push to ${branch} lost to a concurrent run: ${message}`));
         return racedMainSummary(branch);
       }

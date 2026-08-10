@@ -219,6 +219,28 @@ export async function confirmPushRace(
   return remoteMoved ? 'confirmed-race' : 'not-a-race';
 }
 
+/**
+ * Move the local `branch` back to `origin/<branch>`, dropping unpushed commits — the cleanup after a
+ * lost push race, so the orphan commit cannot trip `checkoutPristine`'s guard on the clone's next run.
+ * `reset --hard` writes the index, so a stale `index.lock` blocks it; the `update-ref` fallback does
+ * not touch the index and still moves the ref off the orphan commit (the callers force-clean the tree
+ * afterwards, in `restoreWorkspace`). Returns the failure message instead of throwing: the drop is
+ * best-effort, and a failed drop must not escalate a confirmed-benign race.
+ */
+export async function dropLocalBranchToRemoteTip(branch: string): Promise<string | undefined> {
+  try {
+    await git.raw(['reset', '--hard', `origin/${branch}`]);
+    return undefined;
+  } catch (resetErr: any) {
+    try {
+      await git.raw(['update-ref', `refs/heads/${branch}`, `refs/remotes/origin/${branch}`]);
+      return undefined;
+    } catch {
+      return String(resetErr?.message || resetErr);
+    }
+  }
+}
+
 /** Whether `origin` has the given branch. Assumes a `git fetch` isn't required (uses `ls-remote`). */
 export async function branchExistsOnRemote(branch: string): Promise<boolean> {
   const out = await git.raw(['ls-remote', '--heads', 'origin', branch]);
