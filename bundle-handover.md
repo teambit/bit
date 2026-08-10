@@ -54,8 +54,9 @@ bd build teambit.harmony/bit --reuse-capsules --tasks BundleCliApp
 
 1. ✅ **Not a problem.** `readCoreAspectIds()` found `<capsule>/dist/manifests.js` and returned the
    ids. The `location: 'end'` ordering is fine.
-2. ❌ **A problem, and a worse one than predicted** — see §2.1a. The capsule does not contain the
-   workspace's freshly compiled core aspects at all.
+2. ❌ **A problem, but a fixable one** — see §2.1a. The aspects are present; the bundler path-joins
+   where it should resolve, so it misses the ones hoisted to the capsule root. The separate question
+   of whether the resolved copies are _fresh_ is a design decision, also in §2.1a.
 3. ✅ **Not applicable.** `outDir` is `<capsule>/app-bundle`, _not_ the capsule root — the task has
    `BUNDLE_OUT_DIR = 'app-bundle'`. The doc previously claimed the capsule root; that was wrong.
    Note `bundle-cli.ts`'s `cleanOutDir` deletes everything in the out dir except `node_modules`, so
