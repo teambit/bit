@@ -7,6 +7,7 @@ import { setExitOnUnhandledRejection } from '@teambit/cli';
 import { Aspect } from '@teambit/harmony';
 import type { PluginDefinition } from './plugin-definition';
 import { isEsmModule } from './is-esm-module';
+import { recordLoadedEsmFile } from './record-loaded-esm-file';
 import { Plugin } from './plugin';
 import type { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
 
@@ -63,6 +64,8 @@ export class Plugins {
     const realPath = exists ? realpathSync(path) : path;
     const resolvedPathFromRealPath = require.resolve(realPath);
     const module = await esmLoader(realPath, true);
+    // only a load that succeeded leaves something in memory that needs its files kept around
+    recordLoadedEsmFile(resolvedPathFromRealPath);
     const defaultModule = module.default;
     if (!defaultModule) {
       throw new Error(`Failed to load plugin. Ensure you use "export default" in your index.ts file.\nPath: ${path}`);
