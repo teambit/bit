@@ -78,6 +78,7 @@ package-lock.json
 !.claude/skills/
 !.claude/settings.json
 !.claude/hooks/
+CLAUDE.local.md
 
 # Release notes temp files (for review only)
 releases-docs/temp-files/
