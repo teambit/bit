@@ -37,6 +37,25 @@ const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
 const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1042';
 
 /**
+ * every legacy-core-env package an old-format fixture env needs before it can load, as a
+ * dependency-resolver policy. Loading such an env pulls its whole env chain, and each missing link
+ * fails the load on its own - the fixture's own imports are only the first of them.
+ *
+ * for a test that skips setCustomEnv's install because it measures what each install does: stating
+ * these as a policy lets the *first* install fetch them, so the env is still unloadable going into
+ * that install (what makes it an "old env" there) and loadable by the second. Installing them
+ * beforehand instead would make the env load on the first install and defeat the test.
+ *
+ * versions must match the pinned versions in legacy-core-envs.ts (scopes/envs/envs).
+ */
+const LEGACY_CORE_ENV_POLICY: Record<string, string> = {
+  '@teambit/env': '1.0.1042',
+  '@teambit/node': '1.0.1042',
+  '@teambit/react': '1.0.1042',
+  '@teambit/aspect': '1.0.1042',
+};
+
+/**
  * peers required by the published legacy env packages (via @teambit/cloud UI hooks and
  * graphql-request) that yarn's hoisted linker doesn't auto-install (pnpm auto-installs peers).
  * without them the env fails to load under yarn with "Cannot find module '@apollo/client'" (or
@@ -142,6 +161,11 @@ export default class EnvHelper {
     this.scopeHelper = scopeHelper;
     this.fixtures = fixtures;
     this.extensions = extensions;
+  }
+
+  /** see LEGACY_CORE_ENV_POLICY */
+  getLegacyCoreEnvPolicyDependencies(): Record<string, string> {
+    return { ...LEGACY_CORE_ENV_POLICY };
   }
 
   rootCompDirDep(envName: string, depComponentName: string) {

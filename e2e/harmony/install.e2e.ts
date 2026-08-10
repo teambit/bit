@@ -53,6 +53,14 @@ describe('install command', function () {
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       envName = helper.env.setCustomEnv('env-add-dependencies', { skipCompile: true, skipInstall: true });
       envId = `${helper.scopes.remote}/${envName}`;
+      // setCustomEnv's install is skipped because this suite measures what each install does, but
+      // the fixture env cannot load at all until its legacy-core-env chain is installed - those
+      // envs used to be core aspects, always present. State them as a policy so the first install
+      // brings them in: the env is still unloadable during that install, which is what makes it an
+      // "old env" here, and becomes loadable for the second.
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
+        dependencies: helper.env.getLegacyCoreEnvPolicyDependencies(),
+      });
       helper.fixtures.populateComponents(1, undefined, undefined, false);
       helper.extensions.addExtensionToVariant('*', envId);
       // Clean the node_modules as we want to run tests when node_modules is empty
