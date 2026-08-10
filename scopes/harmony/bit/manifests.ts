@@ -71,7 +71,6 @@ import { ComponentLogAspect } from '@teambit/component-log';
 import { ClearCacheAspect } from '@teambit/clear-cache';
 import { DiagnosticAspect } from '@teambit/diagnostic';
 import { NewComponentHelperAspect } from '@teambit/new-component-helper';
-import { MochaAspect } from '@teambit/mocha';
 import { CommunityAspect } from '@teambit/community';
 import { CloudAspect } from '@teambit/cloud';
 import { StatusAspect } from '@teambit/status';
@@ -184,7 +183,6 @@ export const manifestsMap = {
   [NewComponentHelperAspect.id]: NewComponentHelperAspect,
   [ComponentLogAspect.id]: ComponentLogAspect,
   [ClearCacheAspect.id]: ClearCacheAspect,
-  [MochaAspect.id]: MochaAspect,
   [DiagnosticAspect.id]: DiagnosticAspect,
   [StatusAspect.id]: StatusAspect,
   [CommunityAspect.id]: CommunityAspect,
