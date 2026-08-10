@@ -1297,7 +1297,11 @@ export class LaneSyncExecutor {
     const pushErrMessage = String(e?.message || e);
     if (!isNonFastForwardRejection(pushErrMessage)) throw e;
     const currentTip = await this.currentBranchTip(branch);
-    const remoteMoved = baseSha === undefined ? currentTip !== undefined : currentTip !== baseSha;
+    // A failed re-fetch (`currentTip === undefined`) is UNKNOWN, not confirmation — withhold like
+    // everywhere else in this file (`assessBranchOwnership`, `parseDevCommitCount`), don't treat not
+    // knowing as proof of a race. This one expression also covers the brand-new-branch case
+    // (`baseSha === undefined`): a defined `currentTip` there already proves the branch now exists.
+    const remoteMoved = currentTip !== undefined && currentTip !== baseSha;
     if (!remoteMoved) throw e;
     this.deps.logger.console(
       chalk.yellow(

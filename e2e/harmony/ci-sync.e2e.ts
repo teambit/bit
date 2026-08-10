@@ -743,7 +743,15 @@ describe('bit ci sync', function () {
         );
         expect(output).to.not.include('HALTED');
         expect(output).to.not.include('bit-sync-conflict');
+        // Anti-clobber: the surviving remote tip is the WINNER's own pushed sha, not some third value —
+        // read independently from the winner's own clone. `origin/<LANE>` (not HEAD: the winner's sync
+        // run restores its local checkout to the default branch once done) reflects what IT pushed,
+        // since `git push` updates the local remote-tracking ref immediately, no fetch needed.
+        const winnerOwnPushedSha = helper.command.runCmd(`git rev-parse origin/${LANE}`, winnerPath).trim();
         winnerTip = branchTipSha(LANE);
+        expect(winnerTip, "the surviving remote tip must be the winner's own pushed commit").to.equal(
+          winnerOwnPushedSha
+        );
       } finally {
         fs.removeSync(hookPath);
       }

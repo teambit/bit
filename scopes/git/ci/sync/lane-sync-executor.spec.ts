@@ -430,10 +430,54 @@ describe('classifyPushRejection confirms a race before reporting it as benign', 
     expect(await caught(classify(undefined, REJECTION))).to.equal(REJECTION);
   });
 
+  // The polarity bug this guards: `currentTip === undefined` here means the re-fetch FAILED (network
+  // blip, auth hiccup) — unknown, not evidence the branch moved. `undefined !== baseSha` reads as
+  // truthy if compared naively, which would misreport an unanswerable check as a confirmed race and
+  // paper over a real, persistent failure. Withhold like every other unknown-answer path in this file.
+  it('rethrows loud when the re-fetch itself fails, even though a base sha is known', async () => {
+    const { classify } = classifier(undefined);
+    expect(await caught(classify(BASE_SHA, REJECTION))).to.equal(REJECTION);
+  });
+
   it('rethrows immediately for a rejection whose wording is not a non-fast-forward race at all', async () => {
     const { classify } = classifier(MOVED_SHA);
     const unrelated = new Error('remote: GH006: Protected branch update failed');
     expect(await caught(classify(BASE_SHA, unrelated))).to.equal(unrelated);
+  });
+});
+
+// The live incident's actual shape: the snap/export onto the lane already succeeded — the lane truly
+// moved — and only the branch's OWN ledger-commit push (recordLaneHeadOnBranch) lost the race. Nothing
+// exercised `racedLedgerPushSummary` before this; a wording regression there would have gone unnoticed.
+describe('executeExportBranch reports the ledger-race wording when only the ledger push races', () => {
+  it('surfaces "lane updated; branch ledger commit lost the push race" without halting', async () => {
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {} as any,
+      logger: { console: () => {}, consoleWarning: () => {}, error: () => {} } as any,
+      gitHost: undefined,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    (executor as any).lastNonSyncCommitMessage = async () => 'feat: some change';
+    (executor as any).checkoutFromRemote = async () => {};
+    (executor as any).restoreWorkspace = async () => {};
+    // The export half already succeeded (undefined = no error, matching this file's `Error | undefined`
+    // contract for `snapAndExportOntoLane`); only the ledger commit that follows raced.
+    (executor as any).snapAndExportOntoLane = async () => undefined;
+    (executor as any).recordLaneHeadOnBranch = async () => ({ status: 'raced' });
+
+    const summary = await (executor as any).executeExportBranch({
+      target: { hostScope: 'acme.shop', name: 'my-lane' },
+      laneIdStr: 'acme.shop/my-lane',
+      branch: 'my-lane',
+      defaultBranch: 'main',
+    });
+
+    expect(summary).to.equal(
+      'my-lane -> raced (lane updated; branch ledger commit lost the push race — next run re-plans)'
+    );
+    expect(summary).to.not.include('HALTED');
   });
 });
 
