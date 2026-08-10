@@ -230,10 +230,11 @@ describe('deleteBranchArgs', () => {
 });
 
 describe('isNonFastForwardRejection', () => {
-  // The GitHub-style client-side check: git recognizes locally, from its cached view of the remote,
-  // that a plain (non-lease) push can't fast-forward, before it even talks to the server.
+  // The GitHub-style client-side check, in the shape this code actually receives: simple-git appends
+  // `--porcelain` to every push, so the rejected ref arrives as a TAB-separated status line, not the
+  // human `! [rejected]` wording.
   const CLIENT_SIDE_REJECTION =
-    'To /remote\n ! [rejected]        HEAD -> feature (fetch first)\n' +
+    '!\tHEAD:refs/heads/feature\t[rejected] (fetch first)\n' +
     "error: failed to push some refs to '/remote'\n" +
     'hint: Updates were rejected because the remote contains work that you do\n' +
     'hint: not have locally.';
@@ -246,9 +247,12 @@ describe('isNonFastForwardRejection', () => {
     "remote: error: cannot lock ref 'refs/heads/import-race-lane': is at abc123 but expected def456\n" +
     "error: failed to push some refs to '/remote'";
 
-  it('recognizes the client-side non-fast-forward wording', () => {
+  it('recognizes the client-side non-fast-forward wording, porcelain and human', () => {
     expect(isNonFastForwardRejection(CLIENT_SIDE_REJECTION)).to.equal(true);
+    expect(isNonFastForwardRejection('!\tmain:refs/heads/main\t[rejected] (non-fast-forward)')).to.equal(true);
+    // the human layout (no --porcelain) still matches — the token test is layout-independent
     expect(isNonFastForwardRejection('! [rejected] main -> main (non-fast-forward)')).to.equal(true);
+    expect(isNonFastForwardRejection('To /remote\n ! [rejected]        HEAD -> feature (fetch first)')).to.equal(true);
   });
 
   it('recognizes the server-side ref-lock wording a plain push can also hit', () => {
@@ -263,6 +267,9 @@ describe('isNonFastForwardRejection', () => {
     expect(isNonFastForwardRejection('! [remote rejected] main -> main (protected branch hook declined)')).to.equal(
       false
     );
+    expect(
+      isNonFastForwardRejection('!\tHEAD:refs/heads/main\t[remote rejected] (pre-receive hook declined)')
+    ).to.equal(false);
     expect(isNonFastForwardRejection('remote: GH006: Protected branch update failed')).to.equal(false);
   });
 });

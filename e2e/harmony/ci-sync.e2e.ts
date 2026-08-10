@@ -54,6 +54,19 @@ describe('bit ci sync', function () {
     helper.scopeHelper.destroy();
   });
 
+  /**
+   * Arm a `pre-push` hook in the suite's local clone — the only way to interleave a remote update into
+   * the command's own push. Pins `core.hooksPath` as insurance against a global override on the machine
+   * running the suite. Returns the disarm callback for the test's `finally`.
+   */
+  function armPrePushHook(script: string): () => void {
+    const hookPath = path.join(helper.scopes.localPath, '.git', 'hooks', 'pre-push');
+    helper.command.runCmd('git config core.hooksPath .git/hooks');
+    fs.outputFileSync(hookPath, `#!/bin/sh\n${script}\nexit 0\n`);
+    fs.chmodSync(hookPath, 0o755);
+    return () => fs.removeSync(hookPath);
+  }
+
   // Successive states of the same lane/branch pair: one workspace, run in order — the only way to
   // prove the reconciler is stateless is to drive one pair through a whole lifecycle.
   describe('lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted)', () => {
@@ -658,7 +671,6 @@ describe('bit ci sync', function () {
     const LANE = 'race-lane';
     let defaultBranch: string;
     let bareRepoPath: string;
-    let hookPath: string;
 
     before(() => {
       ({ defaultBranch, bareRepoPath } = setupSyncWorkspace({ lanes: ['*'] }));
@@ -671,19 +683,12 @@ describe('bit ci sync', function () {
       helper.command.runCmd(`git push origin ${defaultBranch}`);
       gitFetch();
       helper.command.removeRemoteLane(LANE, '--force');
-      hookPath = path.join(helper.scopes.localPath, '.git', 'hooks', 'pre-push');
-      // insurance against a global core.hooksPath on the machine running the suite
-      helper.command.runCmd('git config core.hooksPath .git/hooks');
     });
 
     it('should keep the branch, name the race, and leave the racing commit as the tip', () => {
       const racedTo = branchTipSha(defaultBranch);
       // Runs while the delete push is in flight — after the command re-read the tip, before it lands.
-      fs.outputFileSync(
-        hookPath,
-        `#!/bin/sh\ngit --git-dir='${bareRepoPath}' update-ref refs/heads/${LANE} ${racedTo}\nexit 0\n`
-      );
-      fs.chmodSync(hookPath, 0o755);
+      const disarm = armPrePushHook(`git --git-dir='${bareRepoPath}' update-ref refs/heads/${LANE} ${racedTo}`);
       try {
         const { output, exitCode } = syncRun('--all');
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
@@ -694,7 +699,7 @@ describe('bit ci sync', function () {
         expect(remoteBranchExists(LANE), `origin/${LANE} must survive a racing update`).to.be.true;
         expect(branchTipSha(LANE)).to.equal(racedTo);
       } finally {
-        fs.removeSync(hookPath);
+        disarm();
       }
     });
   });
@@ -707,7 +712,6 @@ describe('bit ci sync', function () {
     const LANE = 'import-race-lane';
     let devPath: string;
     let winnerPath: string;
-    let hookPath: string;
 
     before(() => {
       setupSyncWorkspace({ lanes: ['*'] });
@@ -718,9 +722,6 @@ describe('bit ci sync', function () {
       laneSideEdit(devPath, 'comp1/index.js', comp1Src('import-race-v2'), 'v2');
       // A second clone of this same workspace, at this same pre-race state — the run that will win.
       winnerPath = helper.scopeHelper.cloneWorkspace();
-      hookPath = path.join(helper.scopes.localPath, '.git', 'hooks', 'pre-push');
-      // insurance against a global core.hooksPath on the machine running the suite
-      helper.command.runCmd('git config core.hooksPath .git/hooks');
     });
 
     it('reports a plain race instead of halting, and a follow-up run converges cleanly', () => {
@@ -729,11 +730,7 @@ describe('bit ci sync', function () {
       // independent clone of this same workspace: it completes the identical import and lands its own
       // valid ledger commit on the branch first. That is the actual shape of this race (two real
       // reconciler runs), not just a rejection that happens to look like one.
-      fs.outputFileSync(
-        hookPath,
-        `#!/bin/sh\ncd '${winnerPath}' && ${helper.command.bitBin} ci sync ${LANE}\nexit 0\n`
-      );
-      fs.chmodSync(hookPath, 0o755);
+      const disarm = armPrePushHook(`cd '${winnerPath}' && ${helper.command.bitBin} ci sync ${LANE}`);
       let winnerTip: string;
       try {
         const { output, exitCode } = syncRun(LANE);
@@ -753,7 +750,7 @@ describe('bit ci sync', function () {
           winnerOwnPushedSha
         );
       } finally {
-        fs.removeSync(hookPath);
+        disarm();
       }
 
       // Idempotence: with no hook armed, the next run sees the winner's already-converged state and
@@ -762,6 +759,15 @@ describe('bit ci sync', function () {
       expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
       expect(rerun.output).to.include(`${LANE} -> noop (converged)`);
       expect(branchTipSha(LANE), 'the follow-up run must not have pushed anything new').to.equal(winnerTip);
+
+      // The loser's clone stays usable: the raced run dropped its unpushed sync commit, so a later
+      // BRANCH-TOUCHING run in this same clone (the lane moves again -> import-lane) checks the branch
+      // out cleanly instead of tripping the pristine-checkout orphan guard and halting.
+      laneSideEdit(devPath, 'comp1/index.js', comp1Src('import-race-v3'), 'v3');
+      const reuse = syncRun(LANE);
+      expect(reuse.exitCode, `bit ci sync output:\n${reuse.output}`).to.equal(0);
+      expect(reuse.output).to.include(`${LANE} -> import-lane`);
+      expect(reuse.output).to.not.include('HALTED');
     });
   });
 

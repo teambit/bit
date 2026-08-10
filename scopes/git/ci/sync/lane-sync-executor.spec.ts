@@ -13,8 +13,26 @@ import {
   laneHeadFingerprint,
   LaneSyncExecutor,
   laneSyncPrBody,
+  racedLedgerPushSummary,
 } from './lane-sync-executor';
 import { resolveSyncConfig } from './sync-config';
+
+/**
+ * One stub executor for every seam-based test: real executor code over stubbed deps, no repository.
+ * `warnings` collects `consoleWarning` lines for tests that assert on them.
+ */
+function stubExecutor(): { executor: LaneSyncExecutor; warnings: string[] } {
+  const warnings: string[] = [];
+  const executor = new LaneSyncExecutor({
+    lanes: {} as any,
+    ci: {} as any,
+    logger: { console: () => {}, consoleWarning: (msg: string) => warnings.push(msg), error: () => {} } as any,
+    gitHost: undefined,
+    cfg: resolveSyncConfig({}),
+    defaultScope: 'acme.shop',
+  });
+  return { executor, warnings };
+}
 
 type LaneComponents = Parameters<typeof laneHeadFingerprint>[0];
 
@@ -314,16 +332,8 @@ describe('close-pr re-verifies the tip before retiring a branch', () => {
   const MOVED_SHA = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2';
 
   function retirer(currentTip: string | undefined, pushError?: Error) {
-    const warnings: string[] = [];
+    const { executor, warnings } = stubExecutor();
     const pushes: string[][] = [];
-    const executor = new LaneSyncExecutor({
-      lanes: {} as any,
-      ci: {} as any,
-      logger: { console: () => {}, consoleWarning: (msg: string) => warnings.push(msg), error: () => {} } as any,
-      gitHost: undefined,
-      cfg: resolveSyncConfig({}),
-      defaultScope: 'acme.shop',
-    });
     (executor as any).currentBranchTip = async () => currentTip;
     (executor as any).pushBranchDeletion = async (branch: string, sha: string) => {
       pushes.push([branch, sha]);
@@ -383,14 +393,7 @@ describe('classifyPushRejection confirms a race before calling it one', () => {
   const REJECTION = new Error('! [rejected]        HEAD -> feature (fetch first)\nerror: failed to push some refs');
 
   function classifier(currentTip: string | undefined) {
-    const executor = new LaneSyncExecutor({
-      lanes: {} as any,
-      ci: {} as any,
-      logger: { console: () => {}, consoleWarning: () => {}, error: () => {} } as any,
-      gitHost: undefined,
-      cfg: resolveSyncConfig({}),
-      defaultScope: 'acme.shop',
-    });
+    const { executor } = stubExecutor();
     (executor as any).currentBranchTip = async () => currentTip;
     return (baseSha: string | undefined, e: Error) =>
       (executor as any).classifyPushRejection('my-branch', baseSha, e) as Promise<'confirmed-race' | 'not-a-race'>;
@@ -439,14 +442,7 @@ describe('classifyPushRejection confirms a race before calling it one', () => {
 // exercised `racedLedgerPushSummary` before this; a wording regression there would have gone unnoticed.
 describe('executeExportBranch reports the ledger-race wording when only the ledger push races', () => {
   it('surfaces "lane updated; branch ledger commit lost the push race" without halting', async () => {
-    const executor = new LaneSyncExecutor({
-      lanes: {} as any,
-      ci: {} as any,
-      logger: { console: () => {}, consoleWarning: () => {}, error: () => {} } as any,
-      gitHost: undefined,
-      cfg: resolveSyncConfig({}),
-      defaultScope: 'acme.shop',
-    });
+    const { executor } = stubExecutor();
     (executor as any).lastNonSyncCommitMessage = async () => 'feat: some change';
     (executor as any).checkoutFromRemote = async () => {};
     (executor as any).restoreWorkspace = async () => {};
@@ -466,6 +462,17 @@ describe('executeExportBranch reports the ledger-race wording when only the ledg
       'my-lane -> raced (lane updated; branch ledger commit lost the push race — next run re-plans)'
     );
     expect(summary).to.not.include('HALTED');
+  });
+});
+
+// A destructive auto-resolution (onConflict git-wins/lane-wins) that already exported must not vanish
+// from the summary just because the ledger push raced.
+describe('racedLedgerPushSummary keeps the conflict-policy clause', () => {
+  it('carries the merge path’s policyClause through the raced ledger line', () => {
+    expect(racedLedgerPushSummary('my-lane', 'conflicts auto-resolved: git-wins on 3 file(s); ')).to.equal(
+      'my-lane -> raced (conflicts auto-resolved: git-wins on 3 file(s); lane updated; branch ledger commit ' +
+        'lost the push race — next run re-plans)'
+    );
   });
 });
 

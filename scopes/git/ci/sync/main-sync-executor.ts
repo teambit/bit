@@ -16,6 +16,7 @@ import {
   checkoutPristine,
   checkoutPristineRestore,
   commitWithIdentity,
+  confirmPushRace,
   fetchRemoteHeads,
   gitWithIdentity,
   isNonContentPath,
@@ -89,7 +90,7 @@ export class MainSyncExecutor {
         if (catchUpErr) {
           const refork = await this.reforkIfMachineOwned(branch);
           if (refork === 'human-owned') return `${HALT_SUMMARY_PREFIX} main -> ${catchUpErr}`;
-          if (refork === 'raced') return `main -> ${branch} was updated by a concurrent run — deferring to it`;
+          if (refork === 'raced') return racedMainSummary(branch);
         }
       }
 
@@ -156,14 +157,30 @@ export class MainSyncExecutor {
 
       await addAllExceptScopeAndModules();
       await commitWithIdentity(mainSyncCommitMessage(drift.length));
-      // Never force: a rejected push means a concurrent run pushed in between, and in direct-push mode
-      // that rejection is the whole safety story for the default branch. Unambiguous refspec — see
-      // `lane-sync-executor.commitAllAndPush`.
-      // Deliberately NOT classified/downgraded the way a lane's push race is: a lane's rejection always
-      // resolves benignly (the next run reads the winner's tip and converges via import-lane), but a
-      // rejection here is pushing straight onto the DEFAULT branch — halting loud is the correct,
-      // conservative default until this mode gets its own confirmed-race handling.
-      await git.push(['origin', `HEAD:refs/heads/${branch}`]);
+      // The local knowledge of `origin/<branch>` — the tip this run built on; after a rejection it is
+      // the baseline `confirmPushRace` checks the re-fetched remote against.
+      const baseSha = await git
+        .revparse([`origin/${branch}`])
+        .then((sha) => sha.trim() || undefined)
+        .catch(() => undefined);
+      // Never force. Unambiguous refspec — see `lane-sync-executor.commitAllAndPush`. A rejection means
+      // a concurrent run pushed in between; what happens next depends on the mode. Direct-push: the
+      // rejection IS the default branch's safety story — stay loud, never swallow. 'pr' mode: the push
+      // targets the machine-owned sync branch, where a concurrent-run overlap is the same benign race
+      // the lane executor tolerates (`reforkIfMachineOwned` already defers the same way) — confirm it
+      // and defer.
+      try {
+        await git.push(['origin', `HEAD:refs/heads/${branch}`]);
+      } catch (e: any) {
+        const message = String(e?.message || e);
+        if (directPush || (await confirmPushRace(branch, baseSha, message)) !== 'confirmed-race') throw e;
+        // Drop the losing commit: left on the local sync branch, its orphan sibling would trip the
+        // next run's `checkoutPristine` guard. Best-effort — a failed drop must not escalate a
+        // confirmed-benign race. The original rejection text is kept for diagnosability.
+        await git.raw(['reset', '--hard', `origin/${branch}`]).catch(() => undefined);
+        logger.console(formatWarningSummary(`main -> push to ${branch} lost to a concurrent run: ${message}`));
+        return racedMainSummary(branch);
+      }
       logger.console(chalk.green(`Pushed ${branch}`));
 
       if (directPush) {
@@ -331,6 +348,11 @@ export class MainSyncExecutor {
       logger.consoleWarning(`Could not restore the workspace after the main sync: ${e?.message || e}`);
     }
   }
+}
+
+/** The deferral line both raced shapes share: the catch-up refork race and the sync-branch push race. */
+function racedMainSummary(branch: string): string {
+  return `main -> ${branch} was updated by a concurrent run — deferring to it`;
 }
 
 /** The sync commit message: no `Bit-Lane-Head` trailer — main sync keeps no state. */
