@@ -63,8 +63,9 @@ export class Plugins {
     // In case the path not exists we don't need to resolve it (it will throw an error)
     const realPath = exists ? realpathSync(path) : path;
     const resolvedPathFromRealPath = require.resolve(realPath);
-    recordLoadedEsmFile(resolvedPathFromRealPath);
     const module = await esmLoader(realPath, true);
+    // only a load that succeeded leaves something in memory that needs its files kept around
+    recordLoadedEsmFile(resolvedPathFromRealPath);
     const defaultModule = module.default;
     if (!defaultModule) {
       throw new Error(`Failed to load plugin. Ensure you use "export default" in your index.ts file.\nPath: ${path}`);

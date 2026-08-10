@@ -10,13 +10,11 @@ import type { Logger } from '@teambit/logger';
  * changes the dependency set gives the same name@version a NEW directory and deletes the one this
  * process loaded its modules from. Node keeps the loaded module objects, but not the files - so any
  * require the loaded code deferred past load time resolves against the deleted directory and throws
- * MODULE_NOT_FOUND. The envs that used to be core aspects made this fatal: they are now ordinary
- * packages resolved out of the workspace's virtual store (on master they were core aspects,
- * resolved from bit's own installation, which no workspace install relocates), and e.g.
- * `@teambit/aspect` defers `require('./babel/babel-config')` until `getCompiler()` is called -
- * which the install flow itself does right after the package-manager run, when it compiles
- * components and reloads envs. The whole install then dies with
- * `Cannot find module './babel/babel-config'`.
+ * MODULE_NOT_FOUND. Any package loaded out of the workspace's own virtual store is exposed to this,
+ * and an env is the worst case: `@teambit/aspect`, for instance, defers
+ * `require('./babel/babel-config')` until `getCompiler()` is called - which the install flow itself
+ * does right after the package-manager run, when it compiles components and reloads envs. The whole
+ * install then dies with `Cannot find module './babel/babel-config'`.
  *
  * Replacing the in-memory instances instead is not an option: every reload path (reloadMovedEnvs,
  * loading components as aspects) has to consult the registered env to do its work, and consulting
@@ -26,7 +24,7 @@ import type { Logger } from '@teambit/logger';
  * install, any of them that vanished is restored from its re-keyed twin - same name@version, new
  * peer hash - whose package content is identical (it comes from the same tarball; the peer set only
  * affects the dependency symlinks alongside it, which are relative and stay valid from the restored
- * location).
+ * location). A differently patched twin is not such a donor and `findDonorDirName` excludes it.
  *
  * The restored directory is intentionally absent from the lockfile. `pnpmPruneModules` skips
  * directories that back `require.cache` entries for the same reason this module exists, and a later
@@ -44,9 +42,55 @@ import type { Logger } from '@teambit/logger';
 const LOADED_ESM_FILES = Symbol.for('bit.loaded-esm-module-files');
 
 function loadedModuleFiles(): string[] {
-  const esmFiles = (globalThis as { [LOADED_ESM_FILES]?: Set<string> })[LOADED_ESM_FILES];
-  return esmFiles ? [...Object.keys(require.cache), ...esmFiles] : Object.keys(require.cache);
+  return [...Object.keys(require.cache), ...recordedEsmFiles()];
 }
+
+/**
+ * the ESM loads aspect-loader recorded. the contract is a global under a well-known symbol, so it
+ * is held by convention rather than by types and anything could occupy the key - a value that is
+ * not a set of paths is treated as absent rather than allowed to throw, since this runs inside
+ * every install and prune, where CJS preservation still works without it.
+ */
+function recordedEsmFiles(): string[] {
+  const recorded = (globalThis as { [LOADED_ESM_FILES]?: unknown })[LOADED_ESM_FILES] as
+    | Iterable<unknown>
+    | undefined;
+  if (!recorded || typeof recorded[Symbol.iterator] !== 'function') return [];
+  return [...recorded].filter((file): file is string => typeof file === 'string');
+}
+
+/**
+ * the spellings of the virtual store that loaded module paths can start with: the given one and its
+ * realpath. node resolves a module's filename through its realpath, so the require.cache keys for a
+ * workspace reached through a symlink - the normal case on macOS, where a temp dir under /var is
+ * really under /private/var - are spelled differently from the rootDir the install was handed.
+ * Comparing against the given spelling alone would match nothing there and silently turn the whole
+ * preservation into a no-op. The given spelling is kept too, for --preserve-symlinks.
+ */
+function virtualStoreDirSpellings(virtualStoreDir: string): string[] {
+  const resolved = path.resolve(virtualStoreDir);
+  let real: string;
+  try {
+    real = fs.realpathSync(resolved);
+  } catch {
+    return [resolved]; // not there yet (a first install, a lockfile-only run) - nothing is loaded from it either
+  }
+  return real === resolved ? [resolved] : [resolved, real];
+}
+
+/**
+ * the loaded module files (require.cache plus the recorded ESM loads) that live under the given
+ * virtual store, as the spelling of the store each one matched plus the path segments below it.
+ */
+function* loadedFilesUnderVirtualStore(virtualStoreDir: string): Generator<{ storeDir: string; segments: string[] }> {
+  const stores = virtualStoreDirSpellings(virtualStoreDir).map((dir) => ({ dir, prefix: `${dir}${path.sep}` }));
+  for (const filename of loadedModuleFiles()) {
+    const store = stores.find(({ prefix }) => filename.startsWith(prefix));
+    if (!store) continue;
+    yield { storeDir: store.dir, segments: filename.slice(store.prefix.length).split(path.sep) };
+  }
+}
+
 export interface LoadedVirtualStoreDir {
   /** directory name directly under node_modules/.pnpm, e.g. "@teambit+aspect@1.0.1042_<peers>" */
   dirName: string;
@@ -64,16 +108,24 @@ export interface LoadedVirtualStoreDir {
  */
 export function snapshotLoadedVirtualStoreDirs(rootDir: string): LoadedVirtualStoreDir[] {
   const virtualStoreDir = path.join(path.resolve(rootDir), 'node_modules', '.pnpm');
-  const prefix = `${virtualStoreDir}${path.sep}`;
   const byDirName = new Map<string, LoadedVirtualStoreDir>();
-  for (const filename of loadedModuleFiles()) {
-    if (!filename.startsWith(prefix)) continue;
-    const relative = filename.slice(prefix.length).split(path.sep);
-    const dirName = relative[0];
-    if (!dirName || byDirName.has(dirName)) continue;
-    const pkgName = parsePkgName(relative);
+  for (const { storeDir, segments } of loadedFilesUnderVirtualStore(virtualStoreDir)) {
+    const dirName = segments[0];
+    if (!dirName) continue;
+    const pkgName = parsePkgName(segments);
     if (!pkgName) continue;
-    byDirName.set(dirName, { dirName, dirPath: path.join(virtualStoreDir, dirName), pkgName });
+    // a slot also holds its dependencies, as symlinks under the same node_modules. a path that kept
+    // such a spelling instead of being realpathed (--preserve-symlinks, or an ESM load recorded by
+    // the name it was given) names the dependency, not the package the slot is keyed by - and a
+    // slot attributed to the wrong package finds no donor and never gets restored. prefer whichever
+    // loaded path names the owner, whatever order the paths arrive in; keep a non-owner attribution
+    // only as a fallback, for a slot named after something other than <pkg>@<version> (a tarball or
+    // git dependency), where no path can match and a restore was never possible anyway.
+    const previous = byDirName.get(dirName);
+    if (previous && (isSlotOfPkg(previous.dirName, previous.pkgName) || !isSlotOfPkg(dirName, pkgName))) continue;
+    // the dir is spelled the way the file that revealed it was, so the later existence check and
+    // restore address the same directory node reached the loaded module through
+    byDirName.set(dirName, { dirName, dirPath: path.join(storeDir, dirName), pkgName });
   }
   return [...byDirName.values()];
 }
@@ -158,12 +210,9 @@ async function restoreOneDir(
  * using.
  */
 export function loadedVirtualStoreDirNames(virtualStoreDir: string): Set<string> {
-  const prefix = `${path.resolve(virtualStoreDir)}${path.sep}`;
   const dirNames = new Set<string>();
-  for (const filename of loadedModuleFiles()) {
-    if (!filename.startsWith(prefix)) continue;
-    const [dirName] = filename.slice(prefix.length).split(path.sep);
-    if (dirName) dirNames.add(dirName);
+  for (const { segments } of loadedFilesUnderVirtualStore(virtualStoreDir)) {
+    if (segments[0]) dirNames.add(segments[0]);
   }
   return dirNames;
 }
@@ -173,17 +222,43 @@ export function loadedVirtualStoreDirNames(virtualStoreDir: string): Set<string>
  * exported for tests.
  *
  * the version is read off the missing directory's own name rather than parsed structurally: the
- * name is `<escaped-pkg-name>@<version>[_<peer-hash>]` where the escaped name (\/ replaced by +) is
+ * name is `<escaped-pkg-name>@<version>[_<suffix>]` where the escaped name (\/ replaced by +) is
  * known exactly, and `_` cannot appear in a semver version, so everything between the name's `@`
  * and the first `_` after it is the version.
+ *
+ * a donor is only equivalent if it holds the same files. differing peer sets do not affect them -
+ * they only change the sibling dependency symlinks - but a patch does, and pnpm encodes one in the
+ * same suffix as a `patch_hash=<hash>` segment. so a patched directory is never a donor for an
+ * unpatched one or for one patched differently: without the check, the process would go on reading
+ * files that do not match the modules it already loaded.
  */
 export function findDonorDirName(missingDirName: string, pkgName: string, currentDirs: string[]): string | undefined {
-  const escapedName = pkgName.replace(/\//g, '+');
-  const namePrefix = `${escapedName}@`;
-  if (!missingDirName.startsWith(namePrefix)) return undefined;
+  if (!isSlotOfPkg(missingDirName, pkgName)) return undefined;
+  const namePrefix = slotNamePrefix(pkgName);
   const version = missingDirName.slice(namePrefix.length).split('_')[0];
   const exact = `${namePrefix}${version}`;
-  return currentDirs.find((dir) => dir !== missingDirName && (dir === exact || dir.startsWith(`${exact}_`)));
+  const wantedPatch = patchHashOf(missingDirName, exact);
+  return currentDirs.find(
+    (dir) =>
+      dir !== missingDirName &&
+      (dir === exact || dir.startsWith(`${exact}_`)) &&
+      patchHashOf(dir, exact) === wantedPatch
+  );
+}
+
+/** how a virtual-store dir name for the given package begins: the name with `/` escaped to `+` */
+function slotNamePrefix(pkgName: string): string {
+  return `${pkgName.replace(/\//g, '+')}@`;
+}
+
+/** whether the given virtual-store dir is the slot of the given package rather than of another */
+function isSlotOfPkg(dirName: string, pkgName: string): boolean {
+  return dirName.startsWith(slotNamePrefix(pkgName));
+}
+
+/** the patch a virtual-store dir name encodes in the suffix following `<name>@<version>`, if any */
+function patchHashOf(dirName: string, namePlusVersion: string): string | undefined {
+  return dirName.slice(namePlusVersion.length).match(/(?:^|_)patch_hash=([^_]+)/)?.[1];
 }
 
 /** the package name owning a file at .pnpm/<dir>/node_modules/<pkgName>/..., or undefined */

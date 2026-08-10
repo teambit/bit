@@ -16,6 +16,14 @@ describe('recordLoadedEsmFile()', () => {
     else delete globalRecord[LOADED_ESM_FILES];
   });
 
+  it('should replace a record of the wrong type instead of losing every later recording', () => {
+    (globalRecord as { [LOADED_ESM_FILES]?: unknown })[LOADED_ESM_FILES] = { not: 'a set' };
+    recordLoadedEsmFile('/some/store/dir/node_modules/pkg/index.mjs');
+    expect(globalRecord[LOADED_ESM_FILES]).to.be.instanceOf(Set);
+    expect([...globalRecord[LOADED_ESM_FILES]!]).to.include('/some/store/dir/node_modules/pkg/index.mjs');
+    delete globalRecord[LOADED_ESM_FILES];
+  });
+
   it('should create the global set on first use and record the file', () => {
     recordLoadedEsmFile('/some/store/dir/node_modules/pkg/index.mjs');
     expect([...(globalRecord[LOADED_ESM_FILES] ?? [])]).to.include('/some/store/dir/node_modules/pkg/index.mjs');

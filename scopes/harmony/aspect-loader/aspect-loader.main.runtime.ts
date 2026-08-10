@@ -561,8 +561,10 @@ export class AspectLoaderMain {
   }
 
   async loadEsm(path: string) {
+    const module = await esmLoader(path);
+    // only a load that succeeded leaves something in memory that needs its files kept around
     recordLoadedEsmFile(path);
-    return esmLoader(path);
+    return module;
   }
 
   getPluginsFromDefs(component: Component, componentPath: string, defs: PluginDefinition[]): Plugins {

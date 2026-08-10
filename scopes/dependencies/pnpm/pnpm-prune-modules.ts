@@ -30,6 +30,10 @@ export async function pnpmPruneModules(rootDir: string): Promise<void> {
   const { readCurrentLockfile } = await loadLockfileFs();
   const lockfile = await readCurrentLockfile(virtualStoreDir, { ignoreIncompatible: false });
   const dirsShouldBePresent = Object.keys(lockfile?.packages ?? {}).map((depPath) => depPathToDirName(depPath));
+  const extraneous = difference(pkgDirs, dirsShouldBePresent);
+  // the usual case, and the one worth keeping cheap: scanning the loaded modules below is
+  // proportional to how much this process has loaded, and with nothing to remove it decides nothing
+  if (extraneous.length === 0) return;
   // never remove a directory the running process has loaded modules from. an install that re-keys
   // a loaded package to a new peer hash restores the old directory so deferred requires keep
   // working (see preserve-loaded-virtual-store-dirs.ts); that directory is intentionally absent
@@ -37,7 +41,7 @@ export async function pnpmPruneModules(rootDir: string): Promise<void> {
   // command's prune, whose process has nothing loaded from it, cleans it up.
   const loadedByThisProcess = loadedVirtualStoreDirNames(virtualStoreDir);
   await Promise.all(
-    difference(pkgDirs, dirsShouldBePresent)
+    extraneous
       .filter((dir) => !loadedByThisProcess.has(dir))
       .map((dir) => fs.remove(path.join(virtualStoreDir, dir)))
   );
