@@ -80,6 +80,12 @@ export function snapshotLoadedVirtualStoreDirs(rootDir: string): LoadedVirtualSt
  * restore every snapshotted directory the install removed, copying it from a directory holding the
  * same name@version under a different peer hash. best-effort: a failure to restore leaves things no
  * worse than without this module.
+ *
+ * restores run sequentially, deliberately: this sits right after every install, where the engine
+ * has just saturated the disk, and each restore is a recursive copy. the common case is zero
+ * removed directories (the checks are cheap), and when there are any, there are few - serial
+ * keeps the worst case from piling unbounded deep copies on top of each other in constrained
+ * CI/container environments.
  */
 export async function restoreRemovedLoadedVirtualStoreDirs(
   snapshot: LoadedVirtualStoreDir[],
@@ -92,6 +98,7 @@ export async function restoreRemovedLoadedVirtualStoreDirs(
     if (!(await fs.pathExists(dir.dirPath))) removed.push(dir);
   }
   if (removed.length === 0) return;
+  const startTime = Date.now();
   const virtualStoreDir = path.dirname(removed[0].dirPath);
   let currentDirs: string[];
   try {
@@ -99,31 +106,48 @@ export async function restoreRemovedLoadedVirtualStoreDirs(
   } catch {
     return; // no virtual store left (e.g. hoisted install) - nothing to restore from
   }
-  await Promise.all(
-    removed.map(async ({ dirName, dirPath, pkgName }) => {
-      const donorDirName = findDonorDirName(dirName, pkgName, currentDirs);
-      if (!donorDirName) {
-        logger?.debug(
-          `preserve-loaded-virtual-store-dirs: ${dirName} was removed by the install and no same-version donor exists; ` +
-            `modules loaded from it may fail deferred requires`
-        );
-        return;
-      }
-      const donorPath = path.join(virtualStoreDir, donorDirName);
-      try {
-        // guard against a donor that does not actually hold the package's files
-        if (!(await fs.pathExists(path.join(donorPath, 'node_modules', pkgName)))) return;
-        // dereference:false keeps the donor's dependency symlinks as symlinks; they are relative
-        // (../<other-dir>/node_modules/<dep>) and stay valid from the restored location.
-        await fs.copy(donorPath, dirPath, { dereference: false, overwrite: false, errorOnExist: false });
-        logger?.debug(
-          `preserve-loaded-virtual-store-dirs: restored ${dirName} (loaded by this process, removed by the install) from ${donorDirName}`
-        );
-      } catch (err: any) {
-        logger?.warn(`preserve-loaded-virtual-store-dirs: failed restoring ${dirName}: ${err.message}`);
-      }
-    })
+  let restored = 0;
+  for (const dir of removed) {
+    // eslint-disable-next-line no-await-in-loop
+    if (await restoreOneDir(dir, virtualStoreDir, currentDirs, logger)) restored += 1;
+  }
+  logger?.debug(
+    `preserve-loaded-virtual-store-dirs: the install removed ${removed.length} loaded dir(s), restored ${restored} in ${
+      Date.now() - startTime
+    }ms`
   );
+}
+
+/** restore one removed directory from a same-version donor. returns whether a copy was made. */
+async function restoreOneDir(
+  { dirName, dirPath, pkgName }: LoadedVirtualStoreDir,
+  virtualStoreDir: string,
+  currentDirs: string[],
+  logger?: Logger
+): Promise<boolean> {
+  const donorDirName = findDonorDirName(dirName, pkgName, currentDirs);
+  if (!donorDirName) {
+    logger?.debug(
+      `preserve-loaded-virtual-store-dirs: ${dirName} was removed by the install and no same-version donor exists; ` +
+        `modules loaded from it may fail deferred requires`
+    );
+    return false;
+  }
+  const donorPath = path.join(virtualStoreDir, donorDirName);
+  try {
+    // guard against a donor that does not actually hold the package's files
+    if (!(await fs.pathExists(path.join(donorPath, 'node_modules', pkgName)))) return false;
+    // dereference:false keeps the donor's dependency symlinks as symlinks; they are relative
+    // (../<other-dir>/node_modules/<dep>) and stay valid from the restored location.
+    await fs.copy(donorPath, dirPath, { dereference: false, overwrite: false, errorOnExist: false });
+    logger?.debug(
+      `preserve-loaded-virtual-store-dirs: restored ${dirName} (loaded by this process, removed by the install) from ${donorDirName}`
+    );
+    return true;
+  } catch (err: any) {
+    logger?.warn(`preserve-loaded-virtual-store-dirs: failed restoring ${dirName}: ${err.message}`);
+    return false;
+  }
 }
 
 /**
