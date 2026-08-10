@@ -13,7 +13,12 @@ import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-m
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { Workspace } from '@teambit/workspace';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverAspect,
+  isGlobalVirtualStoreLayout,
+  selfInstallationRoot,
+} from '@teambit/dependency-resolver';
+import { globalVirtualStoreTypePaths, mergeTypePaths } from './global-virtual-store-type-paths';
 import pMapSeries from 'p-map-series';
 import type { TsserverClientOpts } from '@teambit/ts-server';
 import { TsserverClient } from '@teambit/ts-server';
@@ -136,9 +141,36 @@ export class TypescriptMain {
       TypescriptAspect.id,
       this.logger,
       afterMutationWithoutTsconfig,
-      afterMutation.raw.tsconfig,
+      this.bridgeTypeResolution(afterMutation.raw.tsconfig),
       tsModule as any
     );
+  }
+
+  /**
+   * Give the compiled program the types a store slot can no longer reach by walking up. Applied
+   * last, after every transformer, so it sees the final `paths` and yields to anything configured
+   * there. See `./global-virtual-store-type-paths`.
+   *
+   * Two roots, each gated on the layout its own last install recorded, and both for the same
+   * reason the runtime bridge covers both: the workspace, whose components are what gets compiled,
+   * and the running installation, whose core aspects the compiled program reaches through the
+   * links `DependencyLinker` writes. A bvm installation is project-local and stays out.
+   */
+  private bridgeTypeResolution(tsconfig: any): any {
+    const roots = [this.workspace?.path, selfInstallationRoot()].filter(
+      (root, index, all): root is string => Boolean(root) && all.indexOf(root) === index
+    );
+    const bridged = roots
+      .filter((root) => isGlobalVirtualStoreLayout(root))
+      .map((root) => globalVirtualStoreTypePaths(root));
+    if (!bridged.length) return tsconfig;
+    // workspace first: where both roots map a specifier, the workspace's copy is the one its
+    // components already compile against
+    const merged = bridged.reduceRight((acc, paths) => ({ ...acc, ...paths }), {});
+    if (!Object.keys(merged).length) return tsconfig;
+    const compilerOptions = { ...tsconfig?.compilerOptions };
+    compilerOptions.paths = mergeTypePaths(compilerOptions.paths, merged);
+    return { ...tsconfig, compilerOptions };
   }
 
   /**
