@@ -1268,7 +1268,12 @@ export class LaneSyncExecutor {
       // reinterpreted — the configured branch name is user input (see `sync-config.ts`).
       await git.push(['origin', `HEAD:refs/heads/${branch}`]);
     } catch (e: any) {
-      await this.classifyPushRejection(branch, baseSha, e); // rethrows unless the race is confirmed
+      if ((await this.classifyPushRejection(branch, baseSha, e)) !== 'confirmed-race') throw e;
+      this.deps.logger.console(
+        chalk.yellow(
+          `Push to ${branch} was rejected and the branch has since moved — a concurrent run got there first; re-planning on the next sync`
+        )
+      );
       return { raced: true };
     }
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
@@ -1285,29 +1290,28 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * Confirms a rejected push was really a race before reporting it as benign — matching the wording
+   * Whether a rejected push was really a race — matching the wording
    * (`isNonFastForwardRejection`) is not proof by itself: that regex, like `isStaleLeaseRejection`'s,
    * is deliberately broad, so a PERSISTENT, unrelated push failure (bad credentials, a flaky transport)
    * could repeat the same wording forever. Re-fetching and requiring the branch to have actually moved
-   * off `baseSha` — the tip our commit was based on — is what keeps that from going permanently green:
-   * unconfirmed, this rethrows loud instead of returning. A seam (`currentBranchTip`, shared with the
-   * close-pr retirement path) so the confirmation is unit-testable without a real remote.
+   * off `baseSha` — the tip our commit was based on — is what keeps that from going permanently green.
+   * Only answers; the caller decides to swallow or rethrow. A seam (`currentBranchTip`, shared with
+   * the close-pr retirement path) so the confirmation is unit-testable without a real remote.
    */
-  private async classifyPushRejection(branch: string, baseSha: string | undefined, e: any): Promise<void> {
+  private async classifyPushRejection(
+    branch: string,
+    baseSha: string | undefined,
+    e: any
+  ): Promise<'confirmed-race' | 'not-a-race'> {
     const pushErrMessage = String(e?.message || e);
-    if (!isNonFastForwardRejection(pushErrMessage)) throw e;
+    if (!isNonFastForwardRejection(pushErrMessage)) return 'not-a-race';
     const currentTip = await this.currentBranchTip(branch);
     // A failed re-fetch (`currentTip === undefined`) is UNKNOWN, not confirmation — withhold like
     // everywhere else in this file (`assessBranchOwnership`, `parseDevCommitCount`), don't treat not
     // knowing as proof of a race. This one expression also covers the brand-new-branch case
     // (`baseSha === undefined`): a defined `currentTip` there already proves the branch now exists.
     const remoteMoved = currentTip !== undefined && currentTip !== baseSha;
-    if (!remoteMoved) throw e;
-    this.deps.logger.console(
-      chalk.yellow(
-        `Push to ${branch} was rejected and the branch has since moved — a concurrent run got there first; re-planning on the next sync`
-      )
-    );
+    return remoteMoved ? 'confirmed-race' : 'not-a-race';
   }
 
   private async openPrForLane({
