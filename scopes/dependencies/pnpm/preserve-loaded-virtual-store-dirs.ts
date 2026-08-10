@@ -32,9 +32,21 @@ import type { Logger } from '@teambit/logger';
  * directories that back `require.cache` entries for the same reason this module exists, and a later
  * command's prune - whose process has nothing loaded from it - removes it.
  *
- * Limitation: only CJS modules appear in `require.cache`, so only they are protected. That covers
- * the legacy core envs, which are all CJS.
+ * CJS modules are found in `require.cache`. ESM modules live in node's ESM module map, which has
+ * no enumeration API, so aspect-loader records every file it loads through dynamic `import()` in a
+ * `Symbol.for`-keyed global set (see aspect-loader's record-loaded-esm-file.ts, the writer side of
+ * this contract - keep the two in sync; a symbol rather than an import because the dependency
+ * between these packages runs the other way). For ESM only entry files are recorded, not their
+ * transitive static imports - those are fully loaded into memory and are not re-read, while an
+ * entry's own package directory, where deferred imports and config-file reads point, is restored
+ * wholly.
  */
+const LOADED_ESM_FILES = Symbol.for('bit.loaded-esm-module-files');
+
+function loadedModuleFiles(): string[] {
+  const esmFiles = (globalThis as { [LOADED_ESM_FILES]?: Set<string> })[LOADED_ESM_FILES];
+  return esmFiles ? [...Object.keys(require.cache), ...esmFiles] : Object.keys(require.cache);
+}
 export interface LoadedVirtualStoreDir {
   /** directory name directly under node_modules/.pnpm, e.g. "@teambit+aspect@1.0.1042_<peers>" */
   dirName: string;
@@ -45,15 +57,16 @@ export interface LoadedVirtualStoreDir {
 }
 
 /**
- * the virtual-store directories currently backing entries in require.cache, with the package each
- * one holds. require.cache keys are realpaths, so a module reached through a dependency symlink is
- * attributed to the directory that really owns it.
+ * the virtual-store directories currently backing loaded modules (require.cache plus the recorded
+ * ESM loads), with the package each one holds. require.cache keys are realpaths, and the ESM
+ * recorder stores realpaths alongside the given spellings, so a module reached through a
+ * dependency symlink is attributed to the directory that really owns it.
  */
 export function snapshotLoadedVirtualStoreDirs(rootDir: string): LoadedVirtualStoreDir[] {
   const virtualStoreDir = path.join(path.resolve(rootDir), 'node_modules', '.pnpm');
   const prefix = `${virtualStoreDir}${path.sep}`;
   const byDirName = new Map<string, LoadedVirtualStoreDir>();
-  for (const filename of Object.keys(require.cache)) {
+  for (const filename of loadedModuleFiles()) {
     if (!filename.startsWith(prefix)) continue;
     const relative = filename.slice(prefix.length).split(path.sep);
     const dirName = relative[0];
@@ -116,13 +129,14 @@ export async function restoreRemovedLoadedVirtualStoreDirs(
 }
 
 /**
- * the directory names under the given virtual store that back entries in require.cache. used by
- * pnpmPruneModules to leave alone what the running process is using.
+ * the directory names under the given virtual store that back loaded modules (require.cache plus
+ * the recorded ESM loads). used by pnpmPruneModules to leave alone what the running process is
+ * using.
  */
 export function loadedVirtualStoreDirNames(virtualStoreDir: string): Set<string> {
   const prefix = `${path.resolve(virtualStoreDir)}${path.sep}`;
   const dirNames = new Set<string>();
-  for (const filename of Object.keys(require.cache)) {
+  for (const filename of loadedModuleFiles()) {
     if (!filename.startsWith(prefix)) continue;
     const [dirName] = filename.slice(prefix.length).split(path.sep);
     if (dirName) dirNames.add(dirName);

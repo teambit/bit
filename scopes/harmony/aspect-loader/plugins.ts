@@ -7,6 +7,7 @@ import { setExitOnUnhandledRejection } from '@teambit/cli';
 import { Aspect } from '@teambit/harmony';
 import type { PluginDefinition } from './plugin-definition';
 import { isEsmModule } from './is-esm-module';
+import { recordLoadedEsmFile } from './record-loaded-esm-file';
 import { Plugin } from './plugin';
 import type { OnAspectLoadErrorHandler } from './aspect-loader.main.runtime';
 
@@ -62,6 +63,7 @@ export class Plugins {
     // In case the path not exists we don't need to resolve it (it will throw an error)
     const realPath = exists ? realpathSync(path) : path;
     const resolvedPathFromRealPath = require.resolve(realPath);
+    recordLoadedEsmFile(resolvedPathFromRealPath);
     const module = await esmLoader(realPath, true);
     const defaultModule = module.default;
     if (!defaultModule) {
