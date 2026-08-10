@@ -4,8 +4,6 @@ import { bundleCli } from '@teambit/harmony.modules.cli-bundler';
 
 export const BIT_COMPONENT_ID = 'teambit.harmony/bit';
 export const BUNDLE_TASK_NAME = 'BundleCliApp';
-/** relative to the capsule root - i.e. relative to the published package root */
-export const BUNDLE_OUT_DIR = 'app-bundle';
 
 /**
  * Produces the bundled CLI as part of `@teambit/bit`'s own build.
@@ -62,7 +60,12 @@ export class BundleCliAppTask implements BuildTask {
       // core aspects, which is exactly what should ship - not whatever the building bit runs from.
       packagesRoot: capsule.path,
       coreAspectIds,
-      outDir: join(capsule.path, BUNDLE_OUT_DIR),
+      // the capsule *is* the package that gets published, so build the distribution into it directly
+      // rather than into a subdirectory that something would later have to lift out. `inPlace` also
+      // stops the bundler cleaning the out dir - which here holds the component's own sources and
+      // compiled dist - and merges into the real package.json instead of writing a stand-in.
+      outDir: capsule.path,
+      inPlace: true,
       sea: this.options.sea,
       uiBundling: this.options.uiBundling,
     });

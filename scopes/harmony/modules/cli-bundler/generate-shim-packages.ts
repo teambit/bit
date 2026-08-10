@@ -77,7 +77,10 @@ async function readSourcePackageJson(sourceDir?: string): Promise<Record<string,
 async function copyTypeDeclarations(sourceDir: string | undefined, shimDistDir: string): Promise<number> {
   if (!sourceDir) return 0;
   const from = join(sourceDir, 'dist');
-  const files = await globby('**/*.d.ts', { cwd: from, dot: true });
+  // Skip our own output. When building in place, `@teambit/bit`'s source dir *is* the capsule, whose
+  // `dist/core-aspects/` now holds every generated shim - so an unfiltered glob copies all 106 shims'
+  // declarations into the `bit` shim, recursively and racily (1158 files instead of ~20).
+  const files = await globby(['**/*.d.ts', '!core-aspects/**'], { cwd: from, dot: true });
   await Promise.all(
     files.map(async (file) => {
       const target = join(shimDistDir, file);

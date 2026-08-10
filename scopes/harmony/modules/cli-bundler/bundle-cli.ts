@@ -43,6 +43,16 @@ export type BundleCliOptions = {
   uiBundling?: boolean;
   /** wipe the out dir first, keeping the installed externals */
   clean?: boolean;
+  /**
+   * The out dir **is** an existing package root that should become the distribution - i.e. the
+   * capsule of `@teambit/bit` during a build, whose contents get published as the package.
+   *
+   * Changes three things versus writing a standalone prototype dir:
+   *  - never clean (the out dir holds the component's own sources and dist);
+   *  - merge into the existing package.json instead of writing a stand-in;
+   *  - no `.npmrc`, which only exists to make the prototype's local `npm install` work.
+   */
+  inPlace?: boolean;
 };
 
 export type BundleCliResult = {
@@ -85,7 +95,8 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
   console.log(`[bundle] packages: ${packagesRoot}`);
   console.log(`[bundle] output:   ${paths.rootOutDir}`);
 
-  if (options.clean ?? true) await cleanOutDir(paths);
+  // never clean in place: the out dir is the capsule, holding the component's own sources and dist
+  if (options.clean ?? !options.inPlace) await cleanOutDir(paths);
   await fs.ensureDir(paths.bundleDir);
 
   const aspects = await getCoreAspectsInfo(coreAspectIds, packagesRoot);
@@ -115,8 +126,10 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
   await generateBin(paths);
   const assetCount = await copyAssets(paths);
   const esmBridges = await generateEsmBridges(paths, exportsByPackage);
-  generateNpmrc(paths.rootOutDir);
-  const { dependencies, unresolved } = await generatePackageJson(paths, bitVersion, externals);
+  if (!options.inPlace) generateNpmrc(paths.rootOutDir);
+  const { dependencies, unresolved } = await generatePackageJson(paths, bitVersion, externals, {
+    inPlace: options.inPlace,
+  });
   const sea = options.sea ? await buildSea(paths, seaEntryFilePath, { minify: options.minify, externals }) : undefined;
 
   if (result.metafile) {
