@@ -111,9 +111,18 @@ export function snapshotLoadedVirtualStoreDirs(rootDir: string): LoadedVirtualSt
   const byDirName = new Map<string, LoadedVirtualStoreDir>();
   for (const { storeDir, segments } of loadedFilesUnderVirtualStore(virtualStoreDir)) {
     const dirName = segments[0];
-    if (!dirName || byDirName.has(dirName)) continue;
+    if (!dirName) continue;
     const pkgName = parsePkgName(segments);
     if (!pkgName) continue;
+    // a slot also holds its dependencies, as symlinks under the same node_modules. a path that kept
+    // such a spelling instead of being realpathed (--preserve-symlinks, or an ESM load recorded by
+    // the name it was given) names the dependency, not the package the slot is keyed by - and a
+    // slot attributed to the wrong package finds no donor and never gets restored. prefer whichever
+    // loaded path names the owner, whatever order the paths arrive in; keep a non-owner attribution
+    // only as a fallback, for a slot named after something other than <pkg>@<version> (a tarball or
+    // git dependency), where no path can match and a restore was never possible anyway.
+    const previous = byDirName.get(dirName);
+    if (previous && (isSlotOfPkg(previous.dirName, previous.pkgName) || !isSlotOfPkg(dirName, pkgName))) continue;
     // the dir is spelled the way the file that revealed it was, so the later existence check and
     // restore address the same directory node reached the loaded module through
     byDirName.set(dirName, { dirName, dirPath: path.join(storeDir, dirName), pkgName });
@@ -224,9 +233,8 @@ export function loadedVirtualStoreDirNames(virtualStoreDir: string): Set<string>
  * files that do not match the modules it already loaded.
  */
 export function findDonorDirName(missingDirName: string, pkgName: string, currentDirs: string[]): string | undefined {
-  const escapedName = pkgName.replace(/\//g, '+');
-  const namePrefix = `${escapedName}@`;
-  if (!missingDirName.startsWith(namePrefix)) return undefined;
+  if (!isSlotOfPkg(missingDirName, pkgName)) return undefined;
+  const namePrefix = slotNamePrefix(pkgName);
   const version = missingDirName.slice(namePrefix.length).split('_')[0];
   const exact = `${namePrefix}${version}`;
   const wantedPatch = patchHashOf(missingDirName, exact);
@@ -236,6 +244,16 @@ export function findDonorDirName(missingDirName: string, pkgName: string, curren
       (dir === exact || dir.startsWith(`${exact}_`)) &&
       patchHashOf(dir, exact) === wantedPatch
   );
+}
+
+/** how a virtual-store dir name for the given package begins: the name with `/` escaped to `+` */
+function slotNamePrefix(pkgName: string): string {
+  return `${pkgName.replace(/\//g, '+')}@`;
+}
+
+/** whether the given virtual-store dir is the slot of the given package rather than of another */
+function isSlotOfPkg(dirName: string, pkgName: string): boolean {
+  return dirName.startsWith(slotNamePrefix(pkgName));
 }
 
 /** the patch a virtual-store dir name encodes in the suffix following `<name>@<version>`, if any */

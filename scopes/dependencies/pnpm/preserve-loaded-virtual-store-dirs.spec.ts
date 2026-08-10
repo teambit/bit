@@ -113,6 +113,47 @@ describe('loaded-module scanning', () => {
   });
 });
 
+describe('a slot whose dependency was loaded through its symlink spelling', () => {
+  // a slot holds its dependencies as symlinks under the same node_modules. a path that kept that
+  // spelling instead of being realpathed names the dependency, while the slot is keyed by its owner
+  const rootDir = path.join(__dirname, 'fake-ws-for-symlinked-dep-spec');
+  const virtualStoreDir = path.join(rootDir, 'node_modules', '.pnpm');
+  const dirName = '@teambit+aspect@1.0.1042_somehash';
+  const depFile = path.join(virtualStoreDir, dirName, 'node_modules', 'lodash', 'index.js');
+  const ownerFile = path.join(virtualStoreDir, dirName, 'node_modules', '@teambit', 'aspect', 'dist', 'env.js');
+
+  afterEach(() => {
+    delete require.cache[depFile];
+    delete require.cache[ownerFile];
+  });
+
+  it('should attribute the slot to its owner even when the dependency was seen first', () => {
+    require.cache[depFile] = {} as any;
+    require.cache[ownerFile] = {} as any;
+    const snapshot = snapshotLoadedVirtualStoreDirs(rootDir);
+    expect(snapshot).to.have.lengthOf(1);
+    // attributing it to lodash would leave findDonorDirName() unable to match the slot, so the
+    // removed directory would never be restored
+    expect(snapshot[0].pkgName).to.equal('@teambit/aspect');
+    expect(findDonorDirName(dirName, snapshot[0].pkgName, [`@teambit+aspect@1.0.1042_otherhash`])).to.equal(
+      '@teambit+aspect@1.0.1042_otherhash'
+    );
+  });
+  it('should fall back to the only package it saw when none names the slot', () => {
+    // a slot named after something other than <pkg>@<version> - a tarball or git dependency - which
+    // no loaded path can match and which was never restorable anyway
+    const tarballDir = 'foo.tgz_hash';
+    const tarballFile = path.join(virtualStoreDir, tarballDir, 'node_modules', 'foo', 'index.js');
+    require.cache[tarballFile] = {} as any;
+    try {
+      const entry = snapshotLoadedVirtualStoreDirs(rootDir).find((dir) => dir.dirName === tarballDir);
+      expect(entry?.pkgName).to.equal('foo');
+    } finally {
+      delete require.cache[tarballFile];
+    }
+  });
+});
+
 describe('a global ESM record of the wrong type', () => {
   // the record is a global under a well-known symbol, so nothing stops another party from
   // occupying the key. an install must not die over it
