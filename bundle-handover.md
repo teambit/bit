@@ -58,12 +58,10 @@ bd build teambit.harmony/bit --reuse-capsules --tasks BundleCliApp
    path-joined where it should have resolved. The task now reports **106 core aspects (9 genuinely
    UI-only)**, copies 105 assets, and produces a 69 MB bundle with 107 shims and 107 locators,
    exit 0. The freshness of the resolved copies was also checked and is correct (§2.1a).
-3. ✅ **Not applicable.** `outDir` is `<capsule>/app-bundle`, _not_ the capsule root — the task has
-   `BUNDLE_OUT_DIR = 'app-bundle'`. The doc previously claimed the capsule root; that was wrong.
-   Note `bundle-cli.ts`'s `cleanOutDir` deletes everything in the out dir except `node_modules`, so
-   pointing `outDir` at the capsule root would **delete the capsule's sources and dist**. Any move to
-   the publishable-shape-in-place layout (§2.2) must pass `clean: false` and merge into the capsule's
-   existing `package.json` rather than overwrite it with `@teambit/bit-bundle-externals`.
+3. ✅ **Resolved.** `outDir` is now the capsule root, so the build emits the §2.2 publishable shape
+   directly. `inPlace` stops `cleanOutDir` running — it deletes everything but `node_modules`, which
+   at the capsule root would have deleted the component's own sources and dist — and merges into the
+   real `package.json`, pruning **168 declared dependencies down to the 7 externals**.
 
 ### 2.1a What the first runs showed — the bundler was looking in the wrong place (fixed)
 

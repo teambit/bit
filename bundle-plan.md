@@ -729,13 +729,47 @@ from a sibling shim. Capsules always carry declarations; this repo needs
   `Cannot find module` waiting to happen. The bundler now warns loudly. Fix is `bit deps set`, and it
   belongs with §9b. `@teambit/mcp.mcp-config-writer` is likewise undeclared, so its runtime template
   asset is not copied.
-- **`outDir` is `<capsule>/app-bundle`, not the capsule root**, so the build does not yet emit the
-  publishable shape of §9b. Moving it must pass `clean: false` — `cleanOutDir` deletes everything in
-  the out dir except `node_modules`, which at the capsule root would delete the capsule's own sources
-  and dist — and must merge into the capsule's real `package.json` rather than overwrite it with the
-  `@teambit/bit-bundle-externals` stand-in.
 - **`CoreExporterTask` still writes the same locators** for a non-bundled build; superseding it for
   `@teambit/bit` is not done.
+- **`main` still points at `dist/index.js`**, the compiled component source, so `require('@teambit/bit')`
+  loads bit's own code _outside_ the bundle while the same code is also inside it. The CLI path is
+  unaffected (`bin/bit` requires the bundle directly) and `linkCoreAspect` goes through the locator to
+  the shim, so nothing observed is broken — but pointing `main` at the `bit` shim would remove a
+  duplicate module instance. Deliberate decision, not yet taken.
+
+### The published shape is now built in place (§9b) — done
+
+`outDir` is the capsule itself rather than `<capsule>/app-bundle`, so the build emits the §9b layout
+directly instead of a prototype dir something would later have to lift out:
+
+```
+<capsule>/                              ← @teambit/bit, exactly as published
+├── package.json                        ← 7 externals only, + bin
+├── bin/bit
+└── dist/
+    ├── <aspect-name>/index.js          ← 107 locators
+    └── core-aspects/
+        ├── bundle/bit.app.js
+        └── node_modules/@teambit/…     ← 107 shims, with their .d.ts
+```
+
+`inPlace` also stops `cleanOutDir` running (it would delete the capsule's own sources and dist) and
+skips the `.npmrc`, which exists only for the prototype's local `npm install`.
+
+**The dependency surface is pruned to the externals alone — 168 declarations replaced by 7.** This is
+not tidiness: those ~160 packages are _inside_ `bit.app.js`, so leaving them declared would make a
+consumer's install re-download the very 1.2 GB tree the bundle replaces, and would put a second copy
+of every core aspect next to the shims — where `@teambit/workspace` could resolve to a published
+package instead of the bundle slice. `devDependencies`, `peerDependencies`, `optionalDependencies`
+and `peerDependenciesMeta` are dropped too; identity fields are untouched.
+
+Verified: the capsule's sources and `dist` survive the run, and the built package runs `--version`,
+`init`, `status` and `list` from a fresh workspace.
+
+One trap this surfaced: in place, `@teambit/bit`'s source dir _is_ the capsule, whose `dist/` now
+contains the generated shims — so the `.d.ts` copy globbed its own output and put all 106 shims'
+declarations inside the `bit` shim (1158 files instead of 18). `dist/core-aspects` is now excluded.
+
 - **The task's output is not yet consumed by the e2e runners**, which still test the hand-built
   `/tmp/bit-bundle`. Pointing them at the task's artefact is what proves the two paths cannot drift.
 
@@ -783,11 +817,10 @@ from a sibling shim. Capsules always carry declarations; this repo needs
 
 - Declare the 4 missing externals on `@teambit/bit` (`bit deps set`), plus
   `@teambit/mcp.mcp-config-writer`. Without this the published bundle is missing modules it needs at
-  runtime.
-- Emit the publishable layout of §9b from the task itself: `outDir` at the capsule root with
-  `clean: false`, externals merged into the capsule's real `package.json`. Removes the
-  two-`node_modules` split and needs no bvm change.
+  runtime. **This is now the single blocking item for a publishable artefact.**
+- ~~Emit the publishable layout of §9b from the task itself~~ — **done**, see §9e.
 - Supersede `CoreExporterTask` for `@teambit/bit` — both write the same locators today.
+- Decide whether `main` should point at the `bit` shim rather than `dist/index.js` (§9e).
 - Point the e2e runners at the task's artefact instead of the hand-built `/tmp/bit-bundle`, which is
   what actually proves the two build paths cannot drift.
 - Decide SEA's fate with §9.2 in hand: embed (tamper-proof, 2× slower) vs stub (same startup as the
