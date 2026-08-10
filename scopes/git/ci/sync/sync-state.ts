@@ -136,11 +136,12 @@ export function oldestCommitIsNonSync(rawLog: string): boolean {
 /**
  * Marks a ledger commit as `adopt-branch`'s: the branch pre-existed independently of this reconciler
  * (a human's own git-native branch), and this commit merely recorded a lane pointer on top of it — it
- * did not mirror a lane bit itself created. `assessBranchOwnership` reads this to withhold `own-live`
- * (the only claim `close-pr` deletes on) for such a branch: nothing here proves the branch's ORIGINAL
- * content is disposable, only that adoption succeeded. `own-merged`/`own-superseded` (the branch is
- * reachable from the default branch — genuinely merged) are unaffected; only the "delete an unreachable
- * tip" path is guarded.
+ * did not mirror a lane bit itself created. Audit-only: nothing reads it back. The deletion guard
+ * (`assessBranchOwnership` / `hasIndependentHistoryBelowStateCommit`) answers the same question from
+ * the branch's own ancestry instead, because a trailer marks only the ONE commit it is on, and the
+ * very next ordinary ledger commit (a ordinary `export-branch`/`merge-diverged` cycle) would carry no
+ * such tag — the ancestry survives that; a tag-based check would not. Kept purely so `git log` on an
+ * adopted branch names the commit that did it.
  */
 export const ADOPTION_TRAILER = 'Bit-Adopted';
 
@@ -156,11 +157,6 @@ export function buildSyncCommitMessage(laneIdStr: string, laneHead: string, opts
     ...(opts.adopted ? [`${ADOPTION_TRAILER}: true`] : []),
     SYNC_COMMIT_MARKER,
   ].join('\n');
-}
-
-/** Whether a sync commit's message carries the `adopt-branch` trailer — see `ADOPTION_TRAILER`. */
-export function isAdoptionAuthoredMessage(message: string): boolean {
-  return new RegExp(`^${ADOPTION_TRAILER}:\\s*true\\r?$`, 'm').test(message);
 }
 
 export type BranchSyncState = {

@@ -521,16 +521,18 @@ export class CiMain {
   }
 
   /**
-   * Whether the workspace, as currently checked out, has any component the CURRENT lane doesn't
-   * already reflect — new or modified, per `bit status`. Read-only: no snap, no export, no config
-   * sync, nothing written anywhere. `bit ci sync`'s adoption path uses this to decide "would adopting
-   * this branch actually change the lane" without ever creating a local snap to find out — a real
-   * snap is a write (an unexported Version object in the local scope) regardless of whether a caller
-   * later discards the result, so probing via a snap can never be truly side-effect-free.
+   * Whether the workspace, as checked out, has anything the CURRENT lane doesn't already reflect —
+   * new, modified, OR already staged (a local snap never exported), per `bit status`. Read-only: no
+   * snap, no export, no config sync — a real snap is a write regardless of whether a caller discards
+   * the result, so probing via one can never be side-effect-free. `stagedComponents` matters even
+   * though this path never snaps itself: a warm workspace can already carry an unrelated staged snap,
+   * and adoption must not paper over that unresolved divergence by committing the ledger anyway.
    */
   async hasUnsyncedWorkChanges(): Promise<boolean> {
     const status = await this.status.status({ lanes: true });
-    return status.newComponents.length > 0 || status.modifiedComponents.length > 0;
+    return (
+      status.newComponents.length > 0 || status.modifiedComponents.length > 0 || status.stagedComponents.length > 0
+    );
   }
 
   /** `bit ci sync` — reconcile Bit lanes and the main scope with git branches and PRs (see `SyncOrchestrator`). */

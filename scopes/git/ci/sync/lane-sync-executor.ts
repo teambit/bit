@@ -938,8 +938,10 @@ export class LaneSyncExecutor {
    * Record on the branch which lane state it now mirrors: re-query the lane (the export just moved it,
    * so any earlier fingerprint is stale), commit — crucially the `.bitmap` the snap rewrote — and push.
    * Returns undefined when the lane can no longer be read, in which case the caller halts. `adopted`
-   * tags the commit (`ADOPTION_TRAILER`) so a later `assessBranchOwnership` never treats an unreachable
-   * adopted branch as ours to delete — see `executeAdoptBranch`.
+   * tags the commit (`ADOPTION_TRAILER`) as an audit-only annotation — see `executeAdoptBranch`. The
+   * deletion guard itself reads the branch's ancestry (`hasIndependentHistoryBelowStateCommit`), not
+   * this trailer: a trailer marks only the one commit it is on, and would not survive a later ordinary
+   * ledger commit.
    */
   private async recordLaneHeadOnBranch(
     target: LaneTarget,
