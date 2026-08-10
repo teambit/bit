@@ -40,6 +40,23 @@ describe('findDonorDirName()', () => {
       'weird_name@1.0.0_def'
     );
   });
+  it('should not accept a patched directory as donor for an unpatched one', () => {
+    // a patch changes the package's own files, so the donor would not match the modules already
+    // loaded from the missing directory - unlike a differing peer set, which changes only the
+    // sibling symlinks
+    const dirs = ['foo@1.0.0_patch_hash=deadbeef', 'foo@1.0.0_patch_hash=deadbeef_react@18.0.0'];
+    expect(findDonorDirName('foo@1.0.0', 'foo', dirs)).to.equal(undefined);
+  });
+  it('should not accept a differently patched directory as donor', () => {
+    const dirs = ['foo@1.0.0_patch_hash=cafe', 'foo@1.0.0'];
+    expect(findDonorDirName('foo@1.0.0_patch_hash=deadbeef', 'foo', dirs)).to.equal(undefined);
+  });
+  it('should accept a same-patch directory under a different peer hash as donor', () => {
+    const dirs = ['foo@1.0.0_patch_hash=deadbeef_react@18.0.0', 'foo@1.0.0_patch_hash=cafe'];
+    expect(findDonorDirName('foo@1.0.0_patch_hash=deadbeef_react@17.0.0', 'foo', dirs)).to.equal(
+      'foo@1.0.0_patch_hash=deadbeef_react@18.0.0'
+    );
+  });
   it('should handle prerelease versions', () => {
     expect(findDonorDirName('typescript@5.0.0-beta_abc', 'typescript', ['typescript@5.0.0-beta_def'])).to.equal(
       'typescript@5.0.0-beta_def'
@@ -93,6 +110,38 @@ describe('loaded-module scanning', () => {
   });
   it('loadedVirtualStoreDirNames() should return CJS and ESM slot dir names', () => {
     expect([...loadedVirtualStoreDirNames(virtualStoreDir)].sort()).to.deep.equal([dirName, esmDirName].sort());
+  });
+});
+
+describe('a global ESM record of the wrong type', () => {
+  // the record is a global under a well-known symbol, so nothing stops another party from
+  // occupying the key. an install must not die over it
+  const LOADED_ESM_FILES = Symbol.for('bit.loaded-esm-module-files');
+  const globalRecord = globalThis as { [LOADED_ESM_FILES]?: unknown };
+  const rootDir = path.join(__dirname, 'fake-ws-for-spec');
+  let previousEsmSet: unknown;
+
+  before(() => {
+    previousEsmSet = globalRecord[LOADED_ESM_FILES];
+  });
+  afterEach(() => {
+    delete globalRecord[LOADED_ESM_FILES];
+  });
+  after(() => {
+    if (previousEsmSet) globalRecord[LOADED_ESM_FILES] = previousEsmSet;
+    else delete globalRecord[LOADED_ESM_FILES];
+  });
+
+  it('should be ignored rather than thrown over', () => {
+    globalRecord[LOADED_ESM_FILES] = { not: 'a set' };
+    expect(() => snapshotLoadedVirtualStoreDirs(rootDir)).to.not.throw();
+    expect(() => loadedVirtualStoreDirNames(path.join(rootDir, 'node_modules', '.pnpm'))).to.not.throw();
+  });
+  it('should keep the entries that are paths when the record holds mixed values', () => {
+    const dirName = 'lodash@4.17.21';
+    const file = path.join(rootDir, 'node_modules', '.pnpm', dirName, 'node_modules', 'lodash', 'index.js');
+    globalRecord[LOADED_ESM_FILES] = new Set([42, file]);
+    expect([...loadedVirtualStoreDirNames(path.join(rootDir, 'node_modules', '.pnpm'))]).to.deep.equal([dirName]);
   });
 });
 

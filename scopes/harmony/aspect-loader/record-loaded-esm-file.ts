@@ -25,12 +25,18 @@ const LOADED_ESM_FILES = Symbol.for('bit.loaded-esm-module-files');
 export function recordLoadedEsmFile(filePath: string): void {
   try {
     const globalRecord = globalThis as { [LOADED_ESM_FILES]?: Set<string> };
-    globalRecord[LOADED_ESM_FILES] ??= new Set<string>();
-    globalRecord[LOADED_ESM_FILES].add(filePath);
+    // a global under a well-known symbol can be occupied by anything; replace a value that is not
+    // a set rather than letting every later add() throw and lose the recording for good
+    let files = globalRecord[LOADED_ESM_FILES];
+    if (!(files instanceof Set)) {
+      files = new Set<string>();
+      globalRecord[LOADED_ESM_FILES] = files;
+    }
+    files.add(filePath);
     // record the realpath as well: virtual-store attribution needs the path inside .pnpm, and
     // callers may pass a path that reaches it through a node_modules symlink
     const real = realpathSync(filePath);
-    if (real !== filePath) globalRecord[LOADED_ESM_FILES].add(real);
+    if (real !== filePath) files.add(real);
   } catch {
     // recording is best-effort; a missing file will fail at the import itself
   }

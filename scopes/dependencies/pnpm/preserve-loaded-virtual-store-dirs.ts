@@ -24,7 +24,7 @@ import type { Logger } from '@teambit/logger';
  * install, any of them that vanished is restored from its re-keyed twin - same name@version, new
  * peer hash - whose package content is identical (it comes from the same tarball; the peer set only
  * affects the dependency symlinks alongside it, which are relative and stay valid from the restored
- * location).
+ * location). A differently patched twin is not such a donor and `findDonorDirName` excludes it.
  *
  * The restored directory is intentionally absent from the lockfile. `pnpmPruneModules` skips
  * directories that back `require.cache` entries for the same reason this module exists, and a later
@@ -42,8 +42,21 @@ import type { Logger } from '@teambit/logger';
 const LOADED_ESM_FILES = Symbol.for('bit.loaded-esm-module-files');
 
 function loadedModuleFiles(): string[] {
-  const esmFiles = (globalThis as { [LOADED_ESM_FILES]?: Set<string> })[LOADED_ESM_FILES];
-  return esmFiles ? [...Object.keys(require.cache), ...esmFiles] : Object.keys(require.cache);
+  return [...Object.keys(require.cache), ...recordedEsmFiles()];
+}
+
+/**
+ * the ESM loads aspect-loader recorded. the contract is a global under a well-known symbol, so it
+ * is held by convention rather than by types and anything could occupy the key - a value that is
+ * not a set of paths is treated as absent rather than allowed to throw, since this runs inside
+ * every install and prune, where CJS preservation still works without it.
+ */
+function recordedEsmFiles(): string[] {
+  const recorded = (globalThis as { [LOADED_ESM_FILES]?: unknown })[LOADED_ESM_FILES] as
+    | Iterable<unknown>
+    | undefined;
+  if (!recorded || typeof recorded[Symbol.iterator] !== 'function') return [];
+  return [...recorded].filter((file): file is string => typeof file === 'string');
 }
 
 /**
@@ -200,9 +213,15 @@ export function loadedVirtualStoreDirNames(virtualStoreDir: string): Set<string>
  * exported for tests.
  *
  * the version is read off the missing directory's own name rather than parsed structurally: the
- * name is `<escaped-pkg-name>@<version>[_<peer-hash>]` where the escaped name (\/ replaced by +) is
+ * name is `<escaped-pkg-name>@<version>[_<suffix>]` where the escaped name (\/ replaced by +) is
  * known exactly, and `_` cannot appear in a semver version, so everything between the name's `@`
  * and the first `_` after it is the version.
+ *
+ * a donor is only equivalent if it holds the same files. differing peer sets do not affect them -
+ * they only change the sibling dependency symlinks - but a patch does, and pnpm encodes one in the
+ * same suffix as a `patch_hash=<hash>` segment. so a patched directory is never a donor for an
+ * unpatched one or for one patched differently: without the check, the process would go on reading
+ * files that do not match the modules it already loaded.
  */
 export function findDonorDirName(missingDirName: string, pkgName: string, currentDirs: string[]): string | undefined {
   const escapedName = pkgName.replace(/\//g, '+');
@@ -210,7 +229,18 @@ export function findDonorDirName(missingDirName: string, pkgName: string, curren
   if (!missingDirName.startsWith(namePrefix)) return undefined;
   const version = missingDirName.slice(namePrefix.length).split('_')[0];
   const exact = `${namePrefix}${version}`;
-  return currentDirs.find((dir) => dir !== missingDirName && (dir === exact || dir.startsWith(`${exact}_`)));
+  const wantedPatch = patchHashOf(missingDirName, exact);
+  return currentDirs.find(
+    (dir) =>
+      dir !== missingDirName &&
+      (dir === exact || dir.startsWith(`${exact}_`)) &&
+      patchHashOf(dir, exact) === wantedPatch
+  );
+}
+
+/** the patch a virtual-store dir name encodes in the suffix following `<name>@<version>`, if any */
+function patchHashOf(dirName: string, namePlusVersion: string): string | undefined {
+  return dirName.slice(namePlusVersion.length).match(/(?:^|_)patch_hash=([^_]+)/)?.[1];
 }
 
 /** the package name owning a file at .pnpm/<dir>/node_modules/<pkgName>/..., or undefined */
