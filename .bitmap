@@ -689,9 +689,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/envs/bit-cli-app-env",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.6": {},
+            "teambit.envs/env": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.envs/env"
             }
         }
     },
@@ -1088,9 +1088,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/cli-bundler",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@2.0.6": {},
+            "teambit.node/envs/node-babel-mocha@2.0.4": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.node/envs/node-babel-mocha"
             }
         }
     },
