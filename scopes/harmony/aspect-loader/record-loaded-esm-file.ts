@@ -15,6 +15,10 @@ import { realpathSync } from 'fs';
  * to the same key even when this module is duplicated in node_modules. The reader in
  * preserve-loaded-virtual-store-dirs.ts mirrors this contract - keep the two in sync.
  *
+ * Callers record after their `import()` resolves: a load that failed leaves nothing in memory whose
+ * files have to stay around, and recording it would keep a prune off a directory nothing is using
+ * for the rest of the process's life.
+ *
  * Only entry files are recorded, not their transitive static imports. That restores the entry's
  * own package directory - where an env's deferred imports and config-file reads point - but not
  * directories only ever reached through static imports of other packages; those are already fully
