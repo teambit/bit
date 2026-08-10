@@ -63,39 +63,48 @@ bd build teambit.harmony/bit --reuse-capsules --tasks BundleCliApp
    the publishable-shape-in-place layout (§2.2) must pass `clean: false` and merge into the capsule's
    existing `package.json` rather than overwrite it with `@teambit/bit-bundle-externals`.
 
-### 2.1a What the first run actually showed — the capsule premise is wrong
+### 2.1a What the first run actually showed — the bundler looks in the wrong place
 
-The task's comment says the capsule "node_modules holds the freshly compiled core aspects, which is
-exactly what should ship - not whatever the building bit runs from". **It does not.** In
-`<capsule>/node_modules/@teambit/`:
+`getCoreAspectsInfo` reported `core aspects: 71 (70 without a main runtime)` and skipped 35 with
+`is not installed under <capsule>`. **The aspects are not missing.** Capsules share a hoisted root:
 
-| what                                                                                     | count |
-| ---------------------------------------------------------------------------------------- | ----- |
-| symlinks into the capsule-root pnpm store, i.e. **published** `@teambit/*@1.0.1097`      | 71    |
-| symlinks to sibling capsules                                                             | 3     |
-| core aspects absent entirely (`cli`, `aspect-loader`, `workspace`, `envs`, `builder`, …) | 35    |
+| location                                | `@teambit/*` entries | what they are                                    |
+| --------------------------------------- | -------------------- | ------------------------------------------------ |
+| `<capsule>/node_modules/@teambit/`      | 74                   | 71 pnpm-store symlinks + 3 sibling-capsule links |
+| `<capsule-root>/node_modules/@teambit/` | **299**              | everything else, incl. all 35 "missing" ones     |
 
-So a bundle built from this capsule would ship **the last published core aspects, not the code being
-built** — and would be missing a third of them outright. `getCoreAspectsInfo` reported
-`core aspects: 71 (70 without a main runtime)`.
+`<capsule>/package.json` declares 128 `@teambit` dependencies including `@teambit/cli` and
+`@teambit/envs`; they simply hoist one level up, where node's upward walk finds them. The bundler
+does a literal `join(packagesRoot, 'node_modules', packageName)` **path check instead of node
+resolution**, so it never looks there.
 
-Three separate defects fall out of this, in dependency order:
+Three defects, in dependency order:
 
-1. **Wrong source of truth.** `packagesRoot: capsule.path` has to become whatever holds the
-   just-compiled workspace components. Decide this first — the other two only matter afterwards.
-2. **`findRuntimeAndAspectFiles` reads the wrong level.** It `readdir`s the package dir and looks for
-   `*.main.runtime.{ts,js}` at the _top level_. That is true of this repo's `node_modules/@teambit/*`
-   (dirs of symlinks to sources) but false for a published package or a capsule, where the compiled
-   files are under `dist/`. Hence "70 of 71 without a main runtime" — near-total, and silent.
-3. **`teambit-dist-resolver-plugin` does not normalise capsule paths.** It resolves a first-party
-   package via `join(repoRoot, 'node_modules', packageName)`, which never matches a capsule layout,
-   so esbuild fell through to the package's `exports` map and picked the ESM bridge. The one esbuild
-   error was exactly the §6.2 hazard resurfacing:
+1. **`getCoreAspectsInfo` must resolve, not path-join.** Use node resolution from `packagesRoot`
+   (`resolveFrom(packagesRoot, `${packageName}/package.json`)`) so hoisted and nested layouts both
+   work. This alone turns 71 → ~106.
+2. **`findRuntimeAndAspectFiles` reads the wrong level.** It `readdir`s the package dir for
+   `*.main.runtime.{ts,js}` at the _top level_. True of this repo's `node_modules/@teambit/*` (dirs of
+   symlinks to sources), false everywhere else: published packages and capsules keep them in `dist/`
+   (`@teambit/cli` has no top-level match but `dist/cli.main.runtime.js` and `dist/cli.aspect.js`).
+   Hence "70 of 71 without a main runtime" — near-total, and **silent**, since a missing main runtime
+   is treated as a legitimate UI-only aspect.
+3. **`teambit-dist-resolver-plugin` has the same path-join bug**, so it fails to normalise these
+   packages and esbuild falls through to the `exports` map and picks the ESM bridge. The single
+   esbuild error is the §6.2 hazard resurfacing:
 
    ```
    bit.main.runtime.ts:2:9: ERROR: No matching export in
      ".../capsules/root/c0abd8062/teambit.envs_envs@1.0.1097/dist/esm.mjs" for import "getLegacyCoreEnvsIds"
    ```
+
+**Separately — the freshness question, which is a design decision, not a bug.** The copies that get
+resolved are _published_ packages from the capsule-root store (`@teambit/cli@0.0.1364`), not the
+workspace's just-compiled components, because `bd build teambit.harmony/bit` isolates one component
+and its dependencies come from the registry. A real release tags every component at once, so the
+capsule network should carry fresh sibling capsules instead — **this needs to be confirmed against a
+full build/tag before trusting the artefact**, since a single-component build will always bundle the
+previously published aspects.
 
 The bundler itself is fine: it ran end to end in 12.6 s and produced one error, not a pile.
 
