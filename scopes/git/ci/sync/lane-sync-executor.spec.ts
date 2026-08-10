@@ -377,6 +377,66 @@ describe('close-pr re-verifies the tip before retiring a branch', () => {
   });
 });
 
+describe('classifyPushRejection confirms a race before reporting it as benign', () => {
+  const BASE_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
+  const MOVED_SHA = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2';
+  const REJECTION = new Error('! [rejected]        HEAD -> feature (fetch first)\nerror: failed to push some refs');
+
+  function classifier(currentTip: string | undefined) {
+    const warnings: string[] = [];
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {} as any,
+      logger: { console: () => {}, consoleWarning: (msg: string) => warnings.push(msg), error: () => {} } as any,
+      gitHost: undefined,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    (executor as any).currentBranchTip = async () => currentTip;
+    const classify = (baseSha: string | undefined, e: Error) =>
+      (executor as any).classifyPushRejection('my-branch', baseSha, e) as Promise<void>;
+    return { classify, warnings };
+  }
+
+  /** Runs `classify`, returning the thrown error (or undefined if it resolved). */
+  async function caught(promise: Promise<void>): Promise<Error | undefined> {
+    try {
+      await promise;
+      return undefined;
+    } catch (e: any) {
+      return e;
+    }
+  }
+
+  it('confirms the race when the branch actually moved off the base we pushed against', async () => {
+    const { classify } = classifier(MOVED_SHA);
+    expect(await caught(classify(BASE_SHA, REJECTION))).to.equal(undefined);
+  });
+
+  it('confirms the race for a brand-new branch that now exists on the remote', async () => {
+    const { classify } = classifier(MOVED_SHA);
+    expect(await caught(classify(undefined, REJECTION))).to.equal(undefined);
+  });
+
+  // Message-text matching alone is not proof: a persistent, unrelated rejection could repeat the same
+  // wording forever. Without this re-fetch-and-compare, that would go permanently green.
+  it('rethrows loud when the branch did NOT move — the wording matched but nothing raced', async () => {
+    const { classify } = classifier(BASE_SHA);
+    expect(await caught(classify(BASE_SHA, REJECTION))).to.equal(REJECTION);
+  });
+
+  it('rethrows loud when a brand-new branch still does not exist on the remote', async () => {
+    const { classify } = classifier(undefined);
+    expect(await caught(classify(undefined, REJECTION))).to.equal(REJECTION);
+  });
+
+  it('rethrows immediately for a rejection whose wording is not a non-fast-forward race at all', async () => {
+    const { classify } = classifier(MOVED_SHA);
+    const unrelated = new Error('remote: GH006: Protected branch update failed');
+    expect(await caught(classify(BASE_SHA, unrelated))).to.equal(unrelated);
+  });
+});
+
 describe('isProtectedBranch', () => {
   it('refuses the default branch and the main sync branch', () => {
     expect(isProtectedBranch('develop', 'develop', 'bit-sync/main')).to.equal(true);

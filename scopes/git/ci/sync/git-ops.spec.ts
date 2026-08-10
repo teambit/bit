@@ -230,16 +230,17 @@ describe('deleteBranchArgs', () => {
 });
 
 describe('isNonFastForwardRejection', () => {
-  // Captured from two independent `git push` calls racing a plain (non-lease) push to the same
-  // branch: the GitHub-style client-side check.
+  // The GitHub-style client-side check: git recognizes locally, from its cached view of the remote,
+  // that a plain (non-lease) push can't fast-forward, before it even talks to the server.
   const CLIENT_SIDE_REJECTION =
     'To /remote\n ! [rejected]        HEAD -> feature (fetch first)\n' +
     "error: failed to push some refs to '/remote'\n" +
     'hint: Updates were rejected because the remote contains work that you do\n' +
     'hint: not have locally.';
 
-  // Captured from this repo's own e2e suite: a plain push racing a concurrent ref update on the
-  // local/file transport surfaces the SAME wording as a lease refusal, with no lease involved.
+  // The server-side ref-lock check: a plain push racing a concurrent ref update on the local/file
+  // transport surfaces the SAME wording as a lease refusal, with no lease involved (reproduced in
+  // ci-sync.e2e.ts's "a rejected sync-commit push" test).
   const SERVER_SIDE_REJECTION =
     '!\tHEAD:refs/heads/import-race-lane\t[remote rejected] (failed to update ref)\n' +
     "remote: error: cannot lock ref 'refs/heads/import-race-lane': is at abc123 but expected def456\n" +

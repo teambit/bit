@@ -701,47 +701,59 @@ describe('bit ci sync', function () {
 
   // `commitAllAndPush`'s own comment says a rejected push means "someone pushed concurrently; re-plan
   // rather than clobber" — this proves the caller actually does that instead of halting and labeling
-  // the PR `bit-sync-conflict` over a race that isn't a real content conflict.
+  // the PR `bit-sync-conflict` over a race that isn't a real content conflict, AND that the pair is
+  // left in a state the very next run converges cleanly — the race leaves no unresolved trail.
   describe('a rejected sync-commit push reports a benign race, not a conflict', () => {
     const LANE = 'import-race-lane';
-    let defaultBranch: string;
-    let bareRepoPath: string;
     let devPath: string;
+    let winnerPath: string;
     let hookPath: string;
 
     before(() => {
-      ({ defaultBranch, bareRepoPath } = setupSyncWorkspace({ lanes: ['*'] }));
+      setupSyncWorkspace({ lanes: ['*'] });
       devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('import-race-v1') }, 'v1');
       // First run: plain import-lane, no race — creates the branch and its lane pointer.
       seedSync(LANE);
       // Move the lane again so the next run's plan is import-lane once more.
       laneSideEdit(devPath, 'comp1/index.js', comp1Src('import-race-v2'), 'v2');
+      // A second clone of this same workspace, at this same pre-race state — the run that will win.
+      winnerPath = helper.scopeHelper.cloneWorkspace();
       hookPath = path.join(helper.scopes.localPath, '.git', 'hooks', 'pre-push');
       // insurance against a global core.hooksPath on the machine running the suite
       helper.command.runCmd('git config core.hooksPath .git/hooks');
     });
 
-    it('reports a plain noop instead of halting when the branch push is rejected', () => {
-      // An unrelated commit, so our sync commit (built on the branch's old tip) can no longer
-      // fast-forward onto it — the same shape a genuinely concurrent run's push would leave behind.
-      const racedTo = branchTipSha(defaultBranch);
-      // Runs while our own sync-commit push is in flight — after we committed locally, before the
-      // push lands — simulating a concurrent run that already pushed its own update to this branch.
+    it('reports a plain race instead of halting, and a follow-up run converges cleanly', () => {
+      // Fires while our own sync-commit push is in flight — after we committed locally, before the
+      // push lands. Rather than a raw ref move, this runs a SECOND, real `bit ci sync` against an
+      // independent clone of this same workspace: it completes the identical import and lands its own
+      // valid ledger commit on the branch first. That is the actual shape of this race (two real
+      // reconciler runs), not just a rejection that happens to look like one.
       fs.outputFileSync(
         hookPath,
-        `#!/bin/sh\ngit --git-dir='${bareRepoPath}' update-ref refs/heads/${LANE} ${racedTo}\nexit 0\n`
+        `#!/bin/sh\ncd '${winnerPath}' && ${helper.command.bitBin} ci sync ${LANE}\nexit 0\n`
       );
       fs.chmodSync(hookPath, 0o755);
+      let winnerTip: string;
       try {
         const { output, exitCode } = syncRun(LANE);
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
-        expect(output).to.include(`${LANE} -> noop (raced with a concurrent sync run`);
+        expect(output).to.include(
+          `${LANE} -> raced (branch push lost the race to a concurrent run; next run re-plans)`
+        );
         expect(output).to.not.include('HALTED');
         expect(output).to.not.include('bit-sync-conflict');
-        expect(branchTipSha(LANE), 'the racing update must survive, not get overwritten').to.equal(racedTo);
+        winnerTip = branchTipSha(LANE);
       } finally {
         fs.removeSync(hookPath);
       }
+
+      // Idempotence: with no hook armed, the next run sees the winner's already-converged state and
+      // does nothing further.
+      const rerun = syncRun(LANE);
+      expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+      expect(rerun.output).to.include(`${LANE} -> noop (converged)`);
+      expect(branchTipSha(LANE), 'the follow-up run must not have pushed anything new').to.equal(winnerTip);
     });
   });
 

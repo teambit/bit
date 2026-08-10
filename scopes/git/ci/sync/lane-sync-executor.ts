@@ -53,12 +53,23 @@ export const HALT_SUMMARY_PREFIX = 'HALTED';
 export const REFUSED_SUMMARY_PREFIX = 'REFUSED';
 
 /**
- * A lane's sync commit lost the push race to a concurrent run. The state is already converging (the
- * winner pushed the same reconciliation), so this reports a plain noop — never a halt, never the
- * `bit-sync-conflict` label. The next scheduled run re-plans against the winner's tip.
+ * `executeImportLane`'s own push (materializing the lane onto the branch) lost the race. Nothing on
+ * the LANE changed here — only the branch-side commit failed to land — so the next run's plan is
+ * unaffected: it simply retries the same import against the winner's tip.
  */
-function racedNoopSummary(laneName: string): string {
-  return `${laneName} -> noop (raced with a concurrent sync run; re-planning on the next run)`;
+function racedBranchPushSummary(laneName: string): string {
+  return `${laneName} -> raced (branch push lost the race to a concurrent run; next run re-plans)`;
+}
+
+/**
+ * `recordLaneHeadOnBranch`'s ledger-commit push lost the race, AFTER the snap/export that precedes it
+ * already succeeded — the lane genuinely moved. Only the branch's own acknowledgment of that (the
+ * `.bitmap` pointer commit) failed to land, so the next run reads the branch as behind the lane it
+ * itself just updated and plans `import-lane` to catch it up. Never a halt, never the
+ * `bit-sync-conflict` label — a raced push is not a content conflict.
+ */
+function racedLedgerPushSummary(laneName: string): string {
+  return `${laneName} -> raced (lane updated; branch ledger commit lost the push race — next run re-plans)`;
 }
 
 export type LaneSyncDeps = {
@@ -594,7 +605,7 @@ export class LaneSyncExecutor {
       }
 
       const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
-      if (pushResult.raced) return racedNoopSummary(laneName);
+      if (pushResult.raced) return racedBranchPushSummary(laneName);
 
       let prUrl = pr?.htmlUrl;
       if (!pr) {
@@ -645,7 +656,7 @@ export class LaneSyncExecutor {
       }
 
       const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (recorded.status === 'raced') return racedNoopSummary(laneName);
+      if (recorded.status === 'raced') return racedLedgerPushSummary(laneName);
       if (recorded.status === 'unreadable') {
         return await this.executeHalt({
           laneName,
@@ -767,7 +778,7 @@ export class LaneSyncExecutor {
 
       // ---- step 3: record the new lane head on the branch --------------------------------------
       const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (recorded.status === 'raced') return racedNoopSummary(laneName);
+      if (recorded.status === 'raced') return racedLedgerPushSummary(laneName);
       if (recorded.status === 'unreadable') {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
       }
@@ -1242,10 +1253,14 @@ export class LaneSyncExecutor {
    * Stage everything, commit with the annotated sync message, and push. NEVER force-pushes: a rejected
    * push means someone pushed concurrently and the next run should re-plan rather than clobber.
    * `--allow-empty` is only insurance against `git commit` failing the lane outright. Returns whether
-   * the push was rejected by that race (`isNonFastForwardRejection`) — the caller's cue to report a
+   * the push was rejected by a CONFIRMED race (`classifyPushRejection`) — the caller's cue to report a
    * benign noop instead of halting; any other push failure still throws.
    */
   private async commitAllAndPush(branch: string, message: string): Promise<{ raced: boolean }> {
+    // The local knowledge of `origin/<branch>` right now — no fetch, `fetchOnce` already ran for this
+    // whole executor run — is exactly what our about-to-be-made commit is based on. After a rejection,
+    // this is the baseline `classifyPushRejection` checks the remote against to confirm a real race.
+    const baseSha = await this.localRemoteTip(branch);
     await addAllExceptScopeAndModules();
     await commitWithIdentity(message, { extraArgs: ['--allow-empty'] });
     try {
@@ -1253,15 +1268,42 @@ export class LaneSyncExecutor {
       // reinterpreted — the configured branch name is user input (see `sync-config.ts`).
       await git.push(['origin', `HEAD:refs/heads/${branch}`]);
     } catch (e: any) {
-      const pushErrMessage = String(e?.message || e);
-      if (!isNonFastForwardRejection(pushErrMessage)) throw e;
-      this.deps.logger.console(
-        chalk.yellow(`Push to ${branch} was rejected by a concurrent run — re-planning on the next sync`)
-      );
+      await this.classifyPushRejection(branch, baseSha, e); // rethrows unless the race is confirmed
       return { raced: true };
     }
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
     return { raced: false };
+  }
+
+  /** `origin/<branch>`'s tip as this local clone currently knows it — no fetch. Undefined if unknown. */
+  private async localRemoteTip(branch: string): Promise<string | undefined> {
+    try {
+      return String(await git.raw(['rev-parse', `origin/${branch}`])).trim() || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Confirms a rejected push was really a race before reporting it as benign — matching the wording
+   * (`isNonFastForwardRejection`) is not proof by itself: that regex, like `isStaleLeaseRejection`'s,
+   * is deliberately broad, so a PERSISTENT, unrelated push failure (bad credentials, a flaky transport)
+   * could repeat the same wording forever. Re-fetching and requiring the branch to have actually moved
+   * off `baseSha` — the tip our commit was based on — is what keeps that from going permanently green:
+   * unconfirmed, this rethrows loud instead of returning. A seam (`currentBranchTip`, shared with the
+   * close-pr retirement path) so the confirmation is unit-testable without a real remote.
+   */
+  private async classifyPushRejection(branch: string, baseSha: string | undefined, e: any): Promise<void> {
+    const pushErrMessage = String(e?.message || e);
+    if (!isNonFastForwardRejection(pushErrMessage)) throw e;
+    const currentTip = await this.currentBranchTip(branch);
+    const remoteMoved = baseSha === undefined ? currentTip !== undefined : currentTip !== baseSha;
+    if (!remoteMoved) throw e;
+    this.deps.logger.console(
+      chalk.yellow(
+        `Push to ${branch} was rejected and the branch has since moved — a concurrent run got there first; re-planning on the next sync`
+      )
+    );
   }
 
   private async openPrForLane({

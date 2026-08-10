@@ -159,6 +159,10 @@ export class MainSyncExecutor {
       // Never force: a rejected push means a concurrent run pushed in between, and in direct-push mode
       // that rejection is the whole safety story for the default branch. Unambiguous refspec — see
       // `lane-sync-executor.commitAllAndPush`.
+      // Deliberately NOT classified/downgraded the way a lane's push race is: a lane's rejection always
+      // resolves benignly (the next run reads the winner's tip and converges via import-lane), but a
+      // rejection here is pushing straight onto the DEFAULT branch — halting loud is the correct,
+      // conservative default until this mode gets its own confirmed-race handling.
       await git.push(['origin', `HEAD:refs/heads/${branch}`]);
       logger.console(chalk.green(`Pushed ${branch}`));
 
