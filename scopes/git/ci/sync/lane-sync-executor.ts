@@ -33,6 +33,7 @@ import {
   deleteBranchArgs,
   fetchRemoteHeads,
   isAncestor,
+  isNonFastForwardRejection,
   isStaleLeaseRejection,
   refetchBranchTip,
 } from './git-ops';
@@ -50,6 +51,15 @@ export const HALT_SUMMARY_PREFIX = 'HALTED';
  * sync conflict.
  */
 export const REFUSED_SUMMARY_PREFIX = 'REFUSED';
+
+/**
+ * A lane's sync commit lost the push race to a concurrent run. The state is already converging (the
+ * winner pushed the same reconciliation), so this reports a plain noop — never a halt, never the
+ * `bit-sync-conflict` label. The next scheduled run re-plans against the winner's tip.
+ */
+function racedNoopSummary(laneName: string): string {
+  return `${laneName} -> noop (raced with a concurrent sync run; re-planning on the next run)`;
+}
 
 export type LaneSyncDeps = {
   lanes: LanesMain;
@@ -583,7 +593,8 @@ export class LaneSyncExecutor {
         });
       }
 
-      await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+      const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+      if (pushResult.raced) return racedNoopSummary(laneName);
 
       let prUrl = pr?.htmlUrl;
       if (!pr) {
@@ -633,8 +644,9 @@ export class LaneSyncExecutor {
         });
       }
 
-      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (!laneHead) {
+      const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      if (recorded.status === 'raced') return racedNoopSummary(laneName);
+      if (recorded.status === 'unreadable') {
         return await this.executeHalt({
           laneName,
           laneIdStr,
@@ -643,7 +655,10 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
-      return `${laneName} -> export-branch (lane ${laneIdStr} @ ${laneHead.slice(0, 9)}, branch ${branch} updated)`;
+      return (
+        `${laneName} -> export-branch (lane ${laneIdStr} @ ${recorded.laneHead.slice(0, 9)}, ` +
+        `branch ${branch} updated)`
+      );
     } finally {
       await this.restoreWorkspace(defaultBranch);
     }
@@ -751,13 +766,14 @@ export class LaneSyncExecutor {
       }
 
       // ---- step 3: record the new lane head on the branch --------------------------------------
-      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (!laneHead) {
+      const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      if (recorded.status === 'raced') return racedNoopSummary(laneName);
+      if (recorded.status === 'unreadable') {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
       }
       return (
         `${laneName} -> merge-diverged (${policyClause}merged lane into branch, then exported; lane ${laneIdStr} @ ` +
-        `${laneHead.slice(0, 9)}, branch ${branch} updated)`
+        `${recorded.laneHead.slice(0, 9)}, branch ${branch} updated)`
       );
     } catch (e: any) {
       // Something unforeseen — halt anyway: no single lane may abort the rest of the run.
@@ -799,18 +815,21 @@ export class LaneSyncExecutor {
   /**
    * Record on the branch which lane state it now mirrors: re-query the lane (the export just moved it,
    * so any earlier fingerprint is stale), commit — crucially the `.bitmap` the snap rewrote — and push.
-   * Returns undefined when the lane can no longer be read, in which case the caller halts.
+   * `unreadable` means the lane could no longer be read back, in which case the caller halts;
+   * `raced` means a concurrent run's push already got there first, in which case the caller reports
+   * a benign noop instead.
    */
   private async recordLaneHeadOnBranch(
     target: LaneTarget,
     laneIdStr: string,
     branch: string
-  ): Promise<string | undefined> {
+  ): Promise<{ status: 'unreadable' } | { status: 'raced' } | { status: 'ok'; laneHead: string }> {
     const remoteLane = await this.getRemoteLane(target);
-    if (!remoteLane) return undefined;
+    if (!remoteLane) return { status: 'unreadable' };
     const laneHead = laneHeadFingerprint(remoteLane.components);
-    await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
-    return laneHead;
+    const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+    if (pushResult.raced) return { status: 'raced' };
+    return { status: 'ok', laneHead };
   }
 
   /**
@@ -1222,15 +1241,27 @@ export class LaneSyncExecutor {
   /**
    * Stage everything, commit with the annotated sync message, and push. NEVER force-pushes: a rejected
    * push means someone pushed concurrently and the next run should re-plan rather than clobber.
-   * `--allow-empty` is only insurance against `git commit` failing the lane outright.
+   * `--allow-empty` is only insurance against `git commit` failing the lane outright. Returns whether
+   * the push was rejected by that race (`isNonFastForwardRejection`) — the caller's cue to report a
+   * benign noop instead of halting; any other push failure still throws.
    */
-  private async commitAllAndPush(branch: string, message: string) {
+  private async commitAllAndPush(branch: string, message: string): Promise<{ raced: boolean }> {
     await addAllExceptScopeAndModules();
     await commitWithIdentity(message, { extraArgs: ['--allow-empty'] });
-    // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or reinterpreted —
-    // the configured branch name is user input (see `sync-config.ts`).
-    await git.push(['origin', `HEAD:refs/heads/${branch}`]);
+    try {
+      // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or
+      // reinterpreted — the configured branch name is user input (see `sync-config.ts`).
+      await git.push(['origin', `HEAD:refs/heads/${branch}`]);
+    } catch (e: any) {
+      const pushErrMessage = String(e?.message || e);
+      if (!isNonFastForwardRejection(pushErrMessage)) throw e;
+      this.deps.logger.console(
+        chalk.yellow(`Push to ${branch} was rejected by a concurrent run — re-planning on the next sync`)
+      );
+      return { raced: true };
+    }
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
+    return { raced: false };
   }
 
   private async openPrForLane({

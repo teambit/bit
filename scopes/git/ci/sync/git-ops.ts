@@ -178,6 +178,21 @@ export function isStaleLeaseRejection(message: string): boolean {
   return /stale info|force-with-lease|but expected|incorrect old value/i.test(message);
 }
 
+/**
+ * Whether a failed push was a plain non-fast-forward rejection: a concurrent run already advanced
+ * `branch`, so ours is now stale. `commitAllAndPush` never uses `--force-with-lease`, yet a race can
+ * still surface the SAME wording `isStaleLeaseRejection` matches: git's ref-update transaction rejects
+ * an ordinary push exactly like a lease refusal once the remote's ref changed underneath it (confirmed
+ * empirically on the local/file transport this repo's e2e remotes use — "cannot lock ref … is at X but
+ * expected Y" — no lease involved). A GitHub-style remote instead says "[rejected] … (fetch first)" for
+ * the same condition. `[remote rejected]` (a server hook decline, e.g. a protected branch) is excluded:
+ * that is a real problem to surface, not a race to swallow.
+ */
+export function isNonFastForwardRejection(message: string): boolean {
+  if (isStaleLeaseRejection(message)) return true;
+  return /! \[rejected\]/.test(message) && /fetch first|non-fast-forward/i.test(message);
+}
+
 /** Whether `origin` has the given branch. Assumes a `git fetch` isn't required (uses `ls-remote`). */
 export async function branchExistsOnRemote(branch: string): Promise<boolean> {
   const out = await git.raw(['ls-remote', '--heads', 'origin', branch]);
