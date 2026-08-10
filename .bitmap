@@ -44,7 +44,6 @@
         "mainFile": "find-duplications.ts",
         "rootDir": "scopes/toolbox/array/duplications-finder"
     },
-    
     "aspect-docs/babel": {
         "name": "aspect-docs/babel",
         "scope": "teambit.compilation",
@@ -669,7 +668,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/entities/semantic-schema-diff"
     },
- 
     "envs": {
         "name": "envs",
         "scope": "teambit.envs",
@@ -999,7 +997,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/mcp/mcp-config-writer"
     },
-   
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
@@ -1013,13 +1010,6 @@
         "version": "1.0.1100",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/merging"
-    },
-    "mocha": {
-        "name": "mocha",
-        "scope": "teambit.defender",
-        "version": "1.0.882",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/defender/mocha"
     },
     "model/composition-id": {
         "name": "model/composition-id",
@@ -1349,7 +1339,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/new-component-helper"
     },
-    
     "notifications": {
         "name": "notifications",
         "scope": "teambit.ui-foundation",
@@ -1476,7 +1465,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/pubsub"
     },
-   
     "react-router": {
         "name": "react-router",
         "scope": "teambit.ui-foundation",
@@ -1484,7 +1472,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
-    
     "refactoring": {
         "name": "refactoring",
         "scope": "teambit.component",
