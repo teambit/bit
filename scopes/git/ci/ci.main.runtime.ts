@@ -69,6 +69,13 @@ export type GitHostProviderSlot = SlotRegistry<GitHostProvider>;
 // Both recover through the same adopt-and-rebase path in `rebaseOntoRemoteLane`.
 const LANE_HASH_MISMATCH_MARKER = 'a lane with the same id already exists with a different hash';
 const COMPONENT_DIVERGENCE_MARKER = 'merge error occurred when exporting';
+
+/**
+ * `snapPrCommit`'s return value when `snapping.snap()` found nothing to snap. Exported so a caller
+ * (the sync executor's adoption path) can tell "genuinely nothing changed" from "a real snap
+ * happened" without re-parsing prose — the only signal `snapPrCommit` currently gives either way.
+ */
+export const NO_CHANGES_TO_SNAP = 'No changes detected, nothing to snap';
 export interface CiWorkspaceConfig {
   /**
    * Path to a custom script that generates commit messages for `bit ci merge` operations.
@@ -1142,8 +1149,8 @@ export class CiMain {
       });
 
       if (!results) {
-        this.logger.console(chalk.yellow('No changes detected, nothing to snap'));
-        return 'No changes detected, nothing to snap';
+        this.logger.console(chalk.yellow(NO_CHANGES_TO_SNAP));
+        return NO_CHANGES_TO_SNAP;
       }
 
       const { snappedComponents }: SnapResults = results;
@@ -1231,7 +1238,7 @@ export class CiMain {
         this.logger.console(chalk.yellow('No changes detected, removing temporary lane'));
         await this.switchToLane(originalLane?.name ?? 'main');
         await this.lanes.removeLanes([tempLaneName], { remote: false, force: true });
-        return 'No changes detected, nothing to snap';
+        return NO_CHANGES_TO_SNAP;
       }
 
       const { snappedComponents }: SnapResults = results;

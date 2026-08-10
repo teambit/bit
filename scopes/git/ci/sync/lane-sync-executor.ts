@@ -18,6 +18,7 @@ import {
   fingerprintIdVersions,
   readBranchSyncState,
   hasSyncMarker,
+  isAdoptionAuthoredMessage,
   isSyncAuthoredMessage,
 } from './sync-state';
 import { currentLaneIdStr, ensureCurrentLaneObject } from './workspace-lane';
@@ -50,6 +51,14 @@ export const HALT_SUMMARY_PREFIX = 'HALTED';
  * sync conflict.
  */
 export const REFUSED_SUMMARY_PREFIX = 'REFUSED';
+
+/**
+ * `ci.main.runtime.ts`'s `snapPrCommit` returns this exact string when `snapping.snap()` found
+ * nothing to snap — its only signal either way. Duplicated here rather than imported: `ci.main.runtime`
+ * reaches this file indirectly (via `SyncOrchestrator`), so a value import the other way would create a
+ * module cycle. Kept in sync by the `adopt-branch` tests, which exercise both a no-op and a real snap.
+ */
+const NO_CHANGES_TO_SNAP = 'No changes detected, nothing to snap';
 
 export type LaneSyncDeps = {
   lanes: LanesMain;
@@ -207,6 +216,7 @@ export const KEPT_BECAUSE: Record<BranchKeepReason, string> = {
   'unmerged-commits': `it carries commits that are not in the default branch`,
   'tip-not-a-sync-commit': `its tip is not one of this reconciler's own commits, so the work in it may exist nowhere else`,
   'tip-advanced-during-run': `its tip advanced after the ownership evidence was read, so it may carry work this run never saw`,
+  'adopted-branch': `it was adopted from a pre-existing branch, and only merging (not deleting) proves its history is safe to retire`,
 };
 
 export class LaneSyncExecutor {
@@ -385,11 +395,14 @@ export class LaneSyncExecutor {
     // `isSyncAuthoredMessage`, NOT `hasSyncMarker`: this feeds a branch deletion, and a message that
     // merely quotes the marker must not read as one we wrote.
     const tipIsSyncCommit = isSyncAuthoredMessage(branchState.tipMessage);
+    // Meaningful only alongside `tipIsSyncCommit`: when there are no dev commits (the only case the
+    // planner reads it for), the tip IS the state commit, so its message is the ledger commit's own —
+    // see `ADOPTION_TRAILER`.
+    const tipIsAdoptionCommit = isAdoptionAuthoredMessage(branchState.tipMessage);
 
     // First-contact adoption (see the planner's `!lastSyncedHead` branch) must never touch a branch
-    // some OTHER lane already claims — even one whose claim isn't (yet) `own-live` (no reachable state
-    // commit). The line-349 guard above only catches the `own-live` case; this catches the rest.
-    const branchNamesDifferentLane = Boolean(mirroredLane) && mirroredLane !== laneIdStr;
+    // some OTHER lane still LIVELY claims — see `differentLaneStillClaims`.
+    const branchNamesDifferentLane = this.differentLaneStillClaims(mirroredLane, laneIdStr, claim);
 
     const action = planLaneSync({
       laneHead,
@@ -397,6 +410,7 @@ export class LaneSyncExecutor {
       lastSyncedHead,
       hasDevCommits: branchState.hasDevCommits,
       tipIsSyncCommit,
+      tipIsAdoptionCommit,
       conflictLabelPresent,
       branchNamesDifferentLane,
       ownership,
@@ -434,6 +448,14 @@ export class LaneSyncExecutor {
         )
       );
     }
+
+    const differentLaneHalt = await this.haltForDifferentLaneOnAdopt(action, branchNamesDifferentLane, mirroredLane, {
+      laneName,
+      laneIdStr,
+      branch,
+      pr,
+    });
+    if (differentLaneHalt) return differentLaneHalt;
 
     switch (action.type) {
       case 'noop':
@@ -629,14 +651,14 @@ export class LaneSyncExecutor {
     await this.checkoutFromRemote(branch, `origin/${branch}`);
 
     try {
-      const exportErr = await this.snapAndExportOntoLane(laneIdStr, message);
-      if (exportErr) {
+      const exported = await this.snapAndExportOntoLane(laneIdStr, message);
+      if (exported.status === 'error') {
         // Halt rather than propagate: one lane's failed snap/export must not abort the lanes after it.
         return await this.executeHalt({
           laneName,
           laneIdStr,
           branch,
-          reason: `failed to snap and export branch ${branch} onto lane ${laneIdStr}: ${exportErr.message}`,
+          reason: `failed to snap and export branch ${branch} onto lane ${laneIdStr}: ${exported.error.message}`,
           pr: await this.findPr(branch),
         });
       }
@@ -661,12 +683,16 @@ export class LaneSyncExecutor {
    * First contact: the lane exists on the remote, and the branch maps to it by name, but the branch's
    * OWN committed `.bitmap` has no state for it — typically `bit ci pr --keep-lane` created the lane
    * from this very branch without ever recording the pointer in git (the defect this adopts around).
-   * There is no known common base to merge from, so — same as `bit ci pr --keep-lane` itself, reusing
-   * an existing lane — the branch's content wins outright (`snapAndExportOntoLane`'s internal switch
-   * defaults to `forceOurs`): snap+export it onto the lane, then the ledger commit below gives the
-   * branch's `.bitmap` a lane pointer, so the next run reads this as a normal converged pair. The
-   * planner only reaches this action when the branch's `.bitmap` names no OTHER lane, so nothing here
-   * may overwrite a claim that belongs to a different lane.
+   *
+   * There is no known common base to merge from, so this is NOT a bare export: adoption only ever
+   * RECORDS a pointer, never resolves content. It probes with `snapAndExportOntoLane(..., { dryRun:
+   * true })` first — snapping locally without ever exporting — and proceeds only when that snap is a
+   * no-op, i.e. the branch's content already matches the lane's (exactly the live defect's shape: `ci
+   * pr --keep-lane` already exported this very content, it just never wrote the pointer back). If the
+   * branch would actually CHANGE the lane, that is real, unresolved divergence — halt with the same
+   * "cannot tell which side is newer" reason the planner used before this action existed, leaving the
+   * lane untouched. The planner only reaches this action when the branch's `.bitmap` names no OTHER
+   * lane, so nothing here may overwrite a claim that belongs to a different lane.
    */
   private async executeAdoptBranch({
     target,
@@ -693,18 +719,33 @@ export class LaneSyncExecutor {
     await this.checkoutFromRemote(branch, `origin/${branch}`);
 
     try {
-      const exportErr = await this.snapAndExportOntoLane(laneIdStr, message);
-      if (exportErr) {
+      const probe = await this.snapAndExportOntoLane(laneIdStr, message, { dryRun: true });
+      if (probe.status === 'error') {
         return await this.executeHalt({
           laneName,
           laneIdStr,
           branch,
-          reason: `failed to adopt branch ${branch} onto lane ${laneIdStr}: ${exportErr.message}`,
+          reason: `failed to check whether adopting branch ${branch} would change lane ${laneIdStr}: ${probe.error.message}`,
+          pr: pr ?? (await this.findPr(branch)),
+        });
+      }
+      if (probe.status === 'would-change') {
+        // Nothing was exported (dry-run) — the lane is untouched. This is the pre-adoption halt,
+        // reached from a different planner verdict but reported with the same reason.
+        return await this.executeHalt({
+          laneName,
+          laneIdStr,
+          branch,
+          reason:
+            'branch has commits but its .bitmap records no state for this lane; cannot tell which side is ' +
+            `newer (adopting would change lane ${laneIdStr}'s content, not just record a pointer)`,
           pr: pr ?? (await this.findPr(branch)),
         });
       }
 
-      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      // Confirmed no-op: the branch's content already matches the lane's. Nothing left to export —
+      // the ledger commit below is all that is missing. Tagged as adopted — see `ADOPTION_TRAILER`.
+      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch, { adopted: true });
       if (!laneHead) {
         return await this.executeHalt({
           laneName,
@@ -813,14 +854,14 @@ export class LaneSyncExecutor {
       }
 
       // ---- step 2: snap + export the merged tree onto the lane ---------------------------------
-      const exportErr = await this.snapAndExportOntoLane(
+      const exported = await this.snapAndExportOntoLane(
         laneIdStr,
         `merge remote lane ${laneIdStr} into ${branch} ${SYNC_COMMIT_MARKER}`
       );
-      if (exportErr) {
+      if (exported.status === 'error') {
         return await halt(
           `merged lane ${laneIdStr} into branch ${branch} cleanly, but snapping/exporting the merged ` +
-            `result failed: ${exportErr.message}`
+            `result failed: ${exported.error.message}`
         );
       }
 
@@ -844,18 +885,27 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * Snap the workspace's current tree onto the lane and export it; returns the error so the caller can
-   * halt. Snaps WHATEVER is in the workspace (the switch uses `forceOurs` and never merges files), so
-   * a diverged tree must already hold the merged content. `keepLane` preserves the lane's history,
-   * `skipCleanup` keeps the snap's `.bitmap` for the caller to commit, `noDestructiveRecovery` turns
-   * stale-lane recovery (delete + re-fork the remote lane) into a throw. The lane object must be
-   * imported BEFORE delegating: a switch onto the lane the workspace is already on no-ops before any
-   * fetch, so it never warms a cold scope.
+   * Snap the workspace's current tree onto the lane and export it. Snaps WHATEVER is in the workspace
+   * (the switch uses `forceOurs` and never merges files), so a diverged tree must already hold the
+   * merged content. `keepLane` preserves the lane's history, `skipCleanup` keeps the snap's `.bitmap`
+   * for the caller to commit, `noDestructiveRecovery` turns stale-lane recovery (delete + re-fork the
+   * remote lane) into a throw. The lane object must be imported BEFORE delegating: a switch onto the
+   * lane the workspace is already on no-ops before any fetch, so it never warms a cold scope.
+   *
+   * `dryRun: true` snaps LOCALLY only — nothing is exported to the remote lane either way — so a
+   * caller that needs to know WOULD this change the lane, without any risk of exporting it, uses that
+   * to probe first (`executeAdoptBranch`'s guard against a bare export). A genuine no-op snap has
+   * identical (zero) side effects with or without `dryRun`, so `status: 'noop'` means the same thing
+   * regardless of which mode produced it.
    */
-  private async snapAndExportOntoLane(laneIdStr: string, message: string): Promise<Error | undefined> {
+  private async snapAndExportOntoLane(
+    laneIdStr: string,
+    message: string,
+    opts: { dryRun?: boolean } = {}
+  ): Promise<{ status: 'noop' | 'exported' | 'would-change' } | { status: 'error'; error: Error }> {
     try {
       await ensureCurrentLaneObject(this.deps.lanes);
-      await this.deps.ci.snapPrCommit({
+      const result = await this.deps.ci.snapPrCommit({
         laneIdStr,
         message,
         build: undefined,
@@ -863,27 +913,32 @@ export class LaneSyncExecutor {
         keepLane: true,
         skipCleanup: true,
         noDestructiveRecovery: true,
+        dryRun: opts.dryRun,
       });
-      return undefined;
+      if (result === NO_CHANGES_TO_SNAP) return { status: 'noop' };
+      return { status: opts.dryRun ? 'would-change' : 'exported' };
     } catch (e: any) {
-      return e instanceof Error ? e : new Error(String(e?.message ?? e));
+      return { status: 'error', error: e instanceof Error ? e : new Error(String(e?.message ?? e)) };
     }
   }
 
   /**
    * Record on the branch which lane state it now mirrors: re-query the lane (the export just moved it,
    * so any earlier fingerprint is stale), commit — crucially the `.bitmap` the snap rewrote — and push.
-   * Returns undefined when the lane can no longer be read, in which case the caller halts.
+   * Returns undefined when the lane can no longer be read, in which case the caller halts. `adopted`
+   * tags the commit (`ADOPTION_TRAILER`) so a later `assessBranchOwnership` never treats an unreachable
+   * adopted branch as ours to delete — see `executeAdoptBranch`.
    */
   private async recordLaneHeadOnBranch(
     target: LaneTarget,
     laneIdStr: string,
-    branch: string
+    branch: string,
+    opts: { adopted?: boolean } = {}
   ): Promise<string | undefined> {
     const remoteLane = await this.getRemoteLane(target);
     if (!remoteLane) return undefined;
     const laneHead = laneHeadFingerprint(remoteLane.components);
-    await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+    await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead, opts));
     return laneHead;
   }
 
@@ -997,6 +1052,44 @@ export class LaneSyncExecutor {
       );
       return 'inherited-or-none';
     }
+  }
+
+  /**
+   * Whether first-contact adoption must refuse `branch` because its `.bitmap` still names a DIFFERENT,
+   * live-or-ambiguous lane claim. The TWO-LANES-ONE-BRANCH guard in `reconcileLane` already halts the
+   * `own-live` case (a real, unmerged claim) before this is ever consulted. What reaches here instead:
+   * a different lane's pointer whose claim resolved to `own-merged`/`own-superseded` — the ordinary
+   * shape of a branch cut from the default branch after some OTHER lane's sync PR merged into it
+   * (`mirroredLane`'s own doc comment: "a merged sync PR's state is inherited by every branch cut from
+   * the default branch afterwards"). That pointer is history, not a claim — adoption may proceed. Only
+   * an unreadable/ambiguous claim (`inherited-or-none` from a failed reachability check, not from "no
+   * pointer at all") stays conservative and blocks adoption.
+   */
+  private differentLaneStillClaims(
+    mirroredLane: string | undefined,
+    laneIdStr: string,
+    claim: LaneOwnershipEvidence
+  ): boolean {
+    return Boolean(mirroredLane) && mirroredLane !== laneIdStr && claim !== 'own-merged' && claim !== 'own-superseded';
+  }
+
+  /**
+   * The planner can only say THAT the branch names a different lane (a boolean); the actual id, and
+   * the tailored PR advice for it, live here — same helper the TWO-LANES-ONE-BRANCH guard uses.
+   * Returns undefined when this halt does not apply, so the caller falls through to the generic switch.
+   */
+  private async haltForDifferentLaneOnAdopt(
+    action: LaneSyncAction,
+    branchNamesDifferentLane: boolean,
+    mirroredLane: string | undefined,
+    ctx: { laneName: string; laneIdStr: string; branch: string; pr?: PrInfo }
+  ): Promise<string | undefined> {
+    if (action.type !== 'halt' || !branchNamesDifferentLane || !mirroredLane) return undefined;
+    return this.haltOrReport({
+      ...ctx,
+      reason: action.reason,
+      commentNote: branchMirrorsOtherLaneNote(mirroredLane, ctx.laneIdStr),
+    });
   }
 
   /**

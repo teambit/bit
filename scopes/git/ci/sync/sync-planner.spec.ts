@@ -63,6 +63,15 @@ const table: Array<{
     action: { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' },
   },
   {
+    // `adopt-branch`'s ledger commit only ever proved the branch's CONTENT matched the lane's — never
+    // that its pre-existing (human-authored) history is disposable. Reachable claims (own-merged /
+    // own-superseded, below) are unaffected: this guard is only about the unreachable "delete now" path.
+    name: 'own-live, no dev commits, OUR tip, but it is the adoption ledger commit -> KEEP, never delete',
+    input: { ...laneGone('own-live'), tipIsAdoptionCommit: true },
+    type: 'close-pr',
+    action: { type: 'close-pr', deleteBranch: false, keepReason: 'adopted-branch' },
+  },
+  {
     name: 'own-merged (branch tip already in the default branch) -> close-pr AND delete',
     input: laneGone('own-merged'),
     type: 'close-pr',
@@ -72,6 +81,14 @@ const table: Array<{
     // Reachability alone proves deleting loses nothing, so no marker conjunction applies here.
     name: 'own-merged deletes even with a foreign tip and dev commits',
     input: { ...laneGone('own-merged'), tipIsSyncCommit: false, hasDevCommits: true },
+    type: 'close-pr',
+    action: { type: 'close-pr', deleteBranch: true },
+  },
+  {
+    // The adoption guard only withholds the UNREACHABLE ("delete now") path; once genuinely merged,
+    // deleting an adopted branch is exactly as safe as deleting any other.
+    name: 'own-merged deletes even when the tip is the adoption ledger commit — reachability is enough',
+    input: { ...laneGone('own-merged'), tipIsAdoptionCommit: true },
     type: 'close-pr',
     action: { type: 'close-pr', deleteBranch: true },
   },
@@ -122,6 +139,20 @@ const table: Array<{
     },
     type: 'halt',
     reason: 'names a different lane',
+  },
+  {
+    // The executor computes `branchNamesDifferentLane` FALSE for a different-lane pointer whose claim
+    // is reachable from the default branch (own-merged/own-superseded) — a branch cut after some OTHER
+    // lane's sync PR merged inherits that stale pointer; it is history, not a live claim. This row
+    // documents the planner's contract given that already-resolved `false`: it adopts, not halts.
+    name: 'existing branch, has dev commits, .bitmap names a MERGED-AND-INHERITED different lane -> adopt-branch',
+    input: {
+      lastSyncedHead: undefined,
+      ownership: 'inherited-or-none',
+      hasDevCommits: true,
+      branchNamesDifferentLane: false,
+    },
+    type: 'adopt-branch',
   },
 ];
 

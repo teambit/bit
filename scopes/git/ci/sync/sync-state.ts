@@ -95,16 +95,33 @@ export function isSyncAuthoredMessage(message: string): boolean {
 }
 
 /**
+ * Marks a ledger commit as `adopt-branch`'s: the branch pre-existed independently of this reconciler
+ * (a human's own git-native branch), and this commit merely recorded a lane pointer on top of it — it
+ * did not mirror a lane bit itself created. `assessBranchOwnership` reads this to withhold `own-live`
+ * (the only claim `close-pr` deletes on) for such a branch: nothing here proves the branch's ORIGINAL
+ * content is disposable, only that adoption succeeded. `own-merged`/`own-superseded` (the branch is
+ * reachable from the default branch — genuinely merged) are unaffected; only the "delete an unreachable
+ * tip" path is guarded.
+ */
+export const ADOPTION_TRAILER = 'Bit-Adopted';
+
+/**
  * The sync commit's message. Every part is an annotation (audit trail + loop-guard marker); nothing reads
  * it as state — messages are forgeable and rewritten on squash-merge. State comes from `.bitmap`.
  */
-export function buildSyncCommitMessage(laneIdStr: string, laneHead: string): string {
+export function buildSyncCommitMessage(laneIdStr: string, laneHead: string, opts: { adopted?: boolean } = {}): string {
   return [
     `chore(bit-sync): sync lane ${laneIdStr} @ ${laneHead.slice(0, 9)}`,
     '',
     `${LANE_HEAD_TRAILER}: ${laneHead}`,
+    ...(opts.adopted ? [`${ADOPTION_TRAILER}: true`] : []),
     SYNC_COMMIT_MARKER,
   ].join('\n');
+}
+
+/** Whether a sync commit's message carries the `adopt-branch` trailer — see `ADOPTION_TRAILER`. */
+export function isAdoptionAuthoredMessage(message: string): boolean {
+  return new RegExp(`^${ADOPTION_TRAILER}:\\s*true\\r?$`, 'm').test(message);
 }
 
 export type BranchSyncState = {

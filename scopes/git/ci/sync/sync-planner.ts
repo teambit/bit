@@ -29,6 +29,15 @@ export type LaneSyncInput = {
    * with `isSyncAuthoredMessage`, not the loop guard's substring match.
    */
   tipIsSyncCommit: boolean;
+  /**
+   * Whether that same tip commit is `adopt-branch`'s ledger commit (`ADOPTION_TRAILER`) rather than an
+   * ordinary sync commit. Consulted only alongside `tipIsSyncCommit` with no dev commits (the tip IS
+   * the state commit then) to withhold an immediate delete: adoption only ever proved the BRANCH's
+   * content matched the lane's, never that the branch's own pre-existing history is disposable. A
+   * merged/superseded claim (reachable from the default branch) is unaffected — only the unreachable,
+   * "delete now" path is guarded.
+   */
+  tipIsAdoptionCommit?: boolean;
   conflictLabelPresent: boolean;
   /**
    * Whether the branch's committed `.bitmap` names a DIFFERENT lane than the one being reconciled.
@@ -44,7 +53,11 @@ export type LaneSyncInput = {
  * Why a `close-pr` is keeping the branch rather than deleting it. `tip-advanced-during-run` is the one
  * the planner never emits: it is discovered when the executor re-reads the branch just before deleting.
  */
-export type BranchKeepReason = 'unmerged-commits' | 'tip-not-a-sync-commit' | 'tip-advanced-during-run';
+export type BranchKeepReason =
+  | 'unmerged-commits'
+  | 'tip-not-a-sync-commit'
+  | 'tip-advanced-during-run'
+  | 'adopted-branch';
 
 export type LaneSyncAction =
   | { type: 'noop'; reason: string }
@@ -59,7 +72,7 @@ export type LaneSyncAction =
 
 export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   const { laneHead, branchExists, lastSyncedHead, hasDevCommits, conflictLabelPresent, ownership } = input;
-  const { tipIsSyncCommit, branchNamesDifferentLane } = input;
+  const { tipIsSyncCommit, tipIsAdoptionCommit, branchNamesDifferentLane } = input;
   if (conflictLabelPresent) {
     return { type: 'noop', reason: 'PR is labeled bit-sync-conflict; resolve and remove the label to resume' };
   }
@@ -67,16 +80,25 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
     if (!branchExists) return { type: 'noop', reason: 'lane and branch both absent' };
     switch (ownership) {
       case 'own-live':
-        // DELETION NEEDS BOTH HALVES: `.bitmap` attribution alone is not enough — a developer who commits
-        // their own `.bitmap` write (bit create / unexported snap / deps set) looks exactly like
-        // "own-live, nothing above the state commit". The marker can only withhold a deletion, never
-        // authorize one; a false keep is harmless, a false delete destroys the only copy of the work.
-        if (!hasDevCommits && tipIsSyncCommit) return { type: 'close-pr', deleteBranch: true };
-        return {
-          type: 'close-pr',
-          deleteBranch: false,
-          keepReason: hasDevCommits ? 'unmerged-commits' : 'tip-not-a-sync-commit',
-        };
+        // DELETION NEEDS EVERY HALF — a cascade, each one a separate reason to withhold:
+        // 1. dev commits on top: real work that exists nowhere else.
+        // 2. the tip isn't our own commit: `.bitmap` attribution alone is not enough — a developer who
+        //    commits their own `.bitmap` write (bit create / unexported snap / deps set) looks exactly
+        //    like "own-live, nothing above the state commit".
+        // 3. the tip IS our commit, but it's `adopt-branch`'s: adoption only proved the branch's
+        //    content matched the lane's, never that its pre-existing (human-authored) history is
+        //    disposable — a false keep is harmless, a false delete destroys the only copy of the work.
+        // Only past all three does a same-content mirror license its own deletion.
+        if (hasDevCommits) {
+          return { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' };
+        }
+        if (!tipIsSyncCommit) {
+          return { type: 'close-pr', deleteBranch: false, keepReason: 'tip-not-a-sync-commit' };
+        }
+        if (tipIsAdoptionCommit) {
+          return { type: 'close-pr', deleteBranch: false, keepReason: 'adopted-branch' };
+        }
+        return { type: 'close-pr', deleteBranch: true };
       case 'own-merged':
         // No marker conjunction needed: the tip being an ancestor of the default branch is unforgeable
         // proof that deleting loses nothing.

@@ -708,6 +708,7 @@ describe('bit ci sync', function () {
   describe('a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync)', () => {
     const FEATURE_BRANCH = 'adopt-feature';
     let defaultBranch: string;
+    let devPath: string;
 
     before(() => {
       ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
@@ -722,6 +723,14 @@ describe('bit ci sync', function () {
       // (unchanged, still) never commits the lane pointer back to the branch.
       helper.command.runCmd('bit ci pr --keep-lane --message "adopt via keep-lane"');
       helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+      // An independent clone, switched onto the (already-existing) lane, to read the LANE's own
+      // content — as opposed to the branch's mirror of it.
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit switch ${helper.scopes.remote}/${FEATURE_BRANCH} --get-all`, devPath);
+    });
+
+    it('starts with no lane pointer at all on the branch — the exact pre-adoption shape', () => {
+      expect(fileOnBranch(FEATURE_BRANCH, '.bitmap')).to.not.include('"_bit_lane"');
     });
 
     it('adopts the branch instead of halting, and writes the lane pointer to it', () => {
@@ -731,12 +740,60 @@ describe('bit ci sync', function () {
       expect(output).to.not.include('HALTED');
       const bitmapAtTip = fileOnBranch(FEATURE_BRANCH, '.bitmap');
       expect(bitmapAtTip).to.include('"_bit_lane"');
+      // Not just the branch's pointer — the LANE itself carries the adopted content.
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('adopt-feature-v1');
     });
 
     it('a second run sees the pair as converged and does nothing further', () => {
       const { output, exitCode } = syncRun(FEATURE_BRANCH);
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
       expect(output).to.include(`${FEATURE_BRANCH} -> noop (converged)`);
+    });
+  });
+
+  // The HIGH-priority guard: adoption must never be a bare export. When the branch's content would
+  // actually CHANGE the lane — genuine, unresolved divergence with no known common history — it halts
+  // exactly as it did before this action existed, and the lane is left untouched.
+  describe('a branch whose content would change the lane at first contact halts instead of adopting', () => {
+    const FEATURE_BRANCH = 'adopt-conflict';
+    let defaultBranch: string;
+    let devPath: string;
+    let laneFingerprintBeforeRun: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      helper.command.runCmd(`git checkout -b ${FEATURE_BRANCH}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('adopt-conflict-v1'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: adopt-conflict work"');
+      helper.command.runCmd(`git push -u origin ${FEATURE_BRANCH}`);
+
+      // Creates the cloud lane from the branch's v1 content, same as the adoption test above.
+      helper.command.runCmd('bit ci pr --keep-lane --message "adopt via keep-lane"');
+
+      // A SECOND git commit lands on the branch WITHOUT another `ci pr` run — real, unresolved
+      // divergence with no known common sync history: the lane still holds v1, the branch now holds
+      // v2, and nothing has ever reconciled the two.
+      helper.fs.outputFile('comp1/index.js', comp1Src('adopt-conflict-v2'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: adopt-conflict v2, never re-synced"');
+      helper.command.runCmd(`git push origin ${FEATURE_BRANCH}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit switch ${helper.scopes.remote}/${FEATURE_BRANCH} --get-all`, devPath);
+      laneFingerprintBeforeRun = remoteLaneFingerprint(FEATURE_BRANCH);
+    });
+
+    it('halts instead of adopting, and leaves the lane content untouched', () => {
+      const { output, exitCode } = syncRun(FEATURE_BRANCH);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+      expect(output).to.include('HALTED');
+      expect(output).to.include('cannot tell which side is newer');
+      expect(output).to.include('adopting would change');
+      // Nothing was exported: the lane's content is exactly what it was before this run.
+      expect(remoteLaneFingerprint(FEATURE_BRANCH)).to.equal(laneFingerprintBeforeRun);
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('adopt-conflict-v1');
     });
   });
 
