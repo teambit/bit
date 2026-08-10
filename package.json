@@ -41,7 +41,7 @@
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors ./e2e/bit-hub/*.ts",
     "bundle": "node node_modules/@teambit/bit/dist/bundle/bundle.js",
     "bundle:sea": "node node_modules/@teambit/bit/dist/bundle/bundle.js --sea",
-    "bundle:ensure": "node node_modules/@teambit/bit/dist/bundle/ensure-bundle.js",
+    "bundle:ensure": "node node_modules/@teambit/harmony.modules.cli-bundler/dist/ensure-bundle.js",
     "e2e-test:bundle": "node ./scripts/e2e-with-bundle.js",
     "e2e-test:sea": "node ./scripts/e2e-with-bundle.js --sea",
     "e2e-test:bundle-circle": "node ./scripts/e2e-with-bundle.js --circle",

@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import { createHash } from 'crypto';
 import { execFileSync } from 'child_process';
-import { join } from 'path';
+import { join, relative } from 'path';
 import type { BundlePaths } from './config';
 import { getBundlePaths, DEFAULT_OUT_DIR } from './config';
 import { getExternals } from './externals';
@@ -72,8 +72,17 @@ async function fingerprintDists(repoRoot: string): Promise<string> {
   return `${counted}:${Math.round(newest)}`;
 }
 
+/**
+ * Both halves of the bundler: the thin arg parser that stayed in `@teambit/bit` and the logic that
+ * now lives in this component. Fingerprinting only the former would leave the stamp unchanged after
+ * every edit to the actual bundling code - i.e. `ensure-bundle` would happily reuse a stale artefact.
+ */
+const bundlerDirs = (repoRoot: string) => [
+  join(repoRoot, 'node_modules', '@teambit', 'bit', 'dist', 'bundle'),
+  join(repoRoot, 'node_modules', '@teambit', 'harmony.modules.cli-bundler', 'dist'),
+];
+
 async function fingerprintBundler(repoRoot: string): Promise<string> {
-  const bundlerDir = join(repoRoot, 'node_modules', '@teambit', 'bit', 'dist', 'bundle');
   const parts: string[] = [];
   const walk = async (dir: string) => {
     const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
@@ -85,11 +94,16 @@ async function fingerprintBundler(repoRoot: string): Promise<string> {
       } else if (entry.name.endsWith('.js')) {
         // eslint-disable-next-line no-await-in-loop
         const stat = await fs.stat(full);
-        parts.push(`${entry.name}:${Math.round(stat.mtimeMs)}`);
+        // the basename alone collides across the two dirs (both have an `index.js`), so key by the
+        // path relative to the dir being walked.
+        parts.push(`${relative(repoRoot, full)}:${Math.round(stat.mtimeMs)}`);
       }
     }
   };
-  await walk(bundlerDir);
+  for (const dir of bundlerDirs(repoRoot)) {
+    // eslint-disable-next-line no-await-in-loop
+    await walk(dir);
+  }
   return hash(parts.sort().join('|'));
 }
 

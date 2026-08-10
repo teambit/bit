@@ -48,7 +48,9 @@ const mochaArgs = argv; // whatever is left
 
 async function main() {
   // eslint-disable-next-line import/no-dynamic-require, global-require
-  const { ensureBundle } = require(path.join(repoRoot, 'node_modules/@teambit/bit/dist/bundle/ensure-bundle.js'));
+  const { ensureBundle } = require(
+    path.join(repoRoot, 'node_modules/@teambit/harmony.modules.cli-bundler/dist/ensure-bundle.js')
+  );
   const result = await ensureBundle(repoRoot, { outDir, sea, uiBundling, force, noBuild });
   console.log(`[e2e-with-bundle] ${result.built ? 'built' : 'reused'} ${result.outDir} (${result.reason})`);
   console.log(`[e2e-with-bundle] bit_bin = ${result.bitBin}`);
