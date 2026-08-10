@@ -36,7 +36,7 @@ artefact and the published one cannot drift.
 
 ## 2. Next steps, in order
 
-### 2.1 Wire the env to `@teambit/bit` and run its build — **the immediate task**
+### 2.1 Wire the env to `@teambit/bit` and run its build — **DONE, and it found the real problem**
 
 ```bash
 bd env set teambit.harmony/bit teambit.harmony/envs/bit-cli-app-env
@@ -50,17 +50,54 @@ Then iterate cheaply, as intended:
 bd build teambit.harmony/bit --reuse-capsules --tasks BundleCliApp
 ```
 
-**`BundleCliAppTask` has never been executed.** Expect the first run to surface problems; the
-likely ones, in order:
+**`BundleCliAppTask` has now been executed.** Results against the three predicted failure modes:
 
-1. `readCoreAspectIds()` requires `<capsule>/dist/manifests.js`. If the compiler task writes
-   elsewhere, or has not run for `@teambit/bit` by the time a `location: 'end'` task executes, this
-   throws. That is the first thing to check.
-2. The bundler reads every core aspect's compiled `dist` from `<capsule>/node_modules/@teambit/*`.
-   Whether the capsule contains all ~107 of them, compiled, at task time is unverified.
-3. `outDir` is the capsule root, which produces the publishable shape directly (§2.2). Confirm the
-   capsule's own `dist/` is not clobbered — the task writes `dist/<aspect>/` locators alongside the
-   compiler's output.
+1. ✅ **Not a problem.** `readCoreAspectIds()` found `<capsule>/dist/manifests.js` and returned the
+   ids. The `location: 'end'` ordering is fine.
+2. ❌ **A problem, and a worse one than predicted** — see §2.1a. The capsule does not contain the
+   workspace's freshly compiled core aspects at all.
+3. ✅ **Not applicable.** `outDir` is `<capsule>/app-bundle`, _not_ the capsule root — the task has
+   `BUNDLE_OUT_DIR = 'app-bundle'`. The doc previously claimed the capsule root; that was wrong.
+   Note `bundle-cli.ts`'s `cleanOutDir` deletes everything in the out dir except `node_modules`, so
+   pointing `outDir` at the capsule root would **delete the capsule's sources and dist**. Any move to
+   the publishable-shape-in-place layout (§2.2) must pass `clean: false` and merge into the capsule's
+   existing `package.json` rather than overwrite it with `@teambit/bit-bundle-externals`.
+
+### 2.1a What the first run actually showed — the capsule premise is wrong
+
+The task's comment says the capsule "node_modules holds the freshly compiled core aspects, which is
+exactly what should ship - not whatever the building bit runs from". **It does not.** In
+`<capsule>/node_modules/@teambit/`:
+
+| what                                                                                     | count |
+| ---------------------------------------------------------------------------------------- | ----- |
+| symlinks into the capsule-root pnpm store, i.e. **published** `@teambit/*@1.0.1097`      | 71    |
+| symlinks to sibling capsules                                                             | 3     |
+| core aspects absent entirely (`cli`, `aspect-loader`, `workspace`, `envs`, `builder`, …) | 35    |
+
+So a bundle built from this capsule would ship **the last published core aspects, not the code being
+built** — and would be missing a third of them outright. `getCoreAspectsInfo` reported
+`core aspects: 71 (70 without a main runtime)`.
+
+Three separate defects fall out of this, in dependency order:
+
+1. **Wrong source of truth.** `packagesRoot: capsule.path` has to become whatever holds the
+   just-compiled workspace components. Decide this first — the other two only matter afterwards.
+2. **`findRuntimeAndAspectFiles` reads the wrong level.** It `readdir`s the package dir and looks for
+   `*.main.runtime.{ts,js}` at the _top level_. That is true of this repo's `node_modules/@teambit/*`
+   (dirs of symlinks to sources) but false for a published package or a capsule, where the compiled
+   files are under `dist/`. Hence "70 of 71 without a main runtime" — near-total, and silent.
+3. **`teambit-dist-resolver-plugin` does not normalise capsule paths.** It resolves a first-party
+   package via `join(repoRoot, 'node_modules', packageName)`, which never matches a capsule layout,
+   so esbuild fell through to the package's `exports` map and picked the ESM bridge. The one esbuild
+   error was exactly the §6.2 hazard resurfacing:
+
+   ```
+   bit.main.runtime.ts:2:9: ERROR: No matching export in
+     ".../capsules/root/c0abd8062/teambit.envs_envs@1.0.1097/dist/esm.mjs" for import "getLegacyCoreEnvsIds"
+   ```
+
+The bundler itself is fine: it ran end to end in 12.6 s and produced one error, not a pile.
 
 ### 2.2 The published layout (already implemented, not yet exercised by a real build)
 
@@ -170,6 +207,62 @@ curl -s "https://circleci.com/api/v2/project/gh/teambit/bit/<job-number>/tests" 
 ```
 
 ---
+
+## 5a. The local install loop on this branch — read before running any install
+
+This cost a full session. The workspace can be driven into a state where **no binary can repair it**,
+and the way out is not obvious.
+
+**The two binaries are not interchangeable, and the split is asymmetric:**
+
+- **The bvm release `bit` cannot be used once `@teambit/{node,aspect,env,mdx,readme}` are installed.**
+  Release 2.0.72 still has those five in its core-aspect manifest, so it cannot load the workspace's
+  envs while real packages by those names exist. It then falls back to a **TypeScript** compiler
+  instead of `core-aspect-env`'s **Babel** one — silently, with only a `was not loaded (run "bit
+install")` warning per env.
+- **`bd` cannot run an install to completion on a populated workspace.** Every `bd install` re-injects
+  the workspace packages (`injectWorkspacePackages: true`), deleting every component's `dist/`, and
+  the compile that would rebuild them runs last. Anything reached by a _lazy_ require in between dies
+  on a dist that existed when the process started.
+
+**Why the tsc fallback is catastrophic rather than cosmetic.** Babel emits lazy requires; tsc emits
+eager ones. Eager requires expose a latent cycle — `legacy.analytics` → `config-store` →
+`global-config` → `legacy.constants`, whose module body calls `getConfig()` at top level
+(`constants.ts:169,234,236,238,250`). `bd` then cannot boot at all. And since the envs can no longer
+load, the next compile is tsc again: **the state is self-perpetuating**. Restoring the three modules'
+Babel dists from bvm breaks the cycle but not the ESM fallout (tsc dists drag published `@teambit/design.*`
+packages through the ESM loader, where their extensionless imports and `.scss` imports both fail).
+
+**The recovery that works.** Incremental repair does not converge; do this:
+
+```bash
+mv node_modules .node_modules_old && (rm -rf .node_modules_old &)   # delete alone costs ~10 min
+bit install            # RELEASE binary. only a *clean* install repairs env loading; it self-compiles
+                       # in-process, which is the only compile that works. ~6 min. leaves the five out.
+tar -cf /tmp/dists.tar $(<list of the 328 node_modules/@teambit/*/dist>)   # snapshot while good
+bd install             # installs the five, wipes the dists, dies at its own compile step
+tar -xf /tmp/dists.tar -C .                                                # restore
+bd compile             # bd is the ONLY binary that can compile once the five are installed
+```
+
+The snapshot is valid across `bd install` because dists are a function of sources and env, and an
+install changes neither. This yields the state nothing else produces: Babel dists **and** the five.
+
+**Two source fixes were needed to get `bd install` that far**, both the same defect in two places —
+post-install code treating the expected, transient missing-`dist` window as fatal, aborting the
+install before the compile that repairs it. Both are base-branch territory, not bundling; cherry-pick
+them onto `remove-core-envs-from-manifest`:
+
+- `dependency-linker.ts` — `syncCoreAspectLinksForEnvs` guarded its trailing `createLinks` but not the
+  body that actually throws (a lazy `require('@teambit/aspect-loader')` for `getCoreAspectName`). Its
+  own comment already says the bridge is best-effort.
+- `workspace-aspects-loader.ts` — core-aspect defs were resolved with an unguarded
+  `Promise.all(coreAspectsIds.map(getAspectDef))` that ignored the `throwOnError: false` its caller
+  (`InstallMain.reloadMovedEnvs`) explicitly passes.
+
+`bd install` still does not finish: it now reaches its compile step and dies there on
+`@teambit/compiler/dist/index.js` lazily requiring `./types`. Fixing that one too would make the whole
+loop unnecessary — it is the highest-leverage remaining fix for local dev on this branch.
 
 ## 6. Repo gotchas worth knowing up front
 
