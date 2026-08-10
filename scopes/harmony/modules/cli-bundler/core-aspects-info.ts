@@ -1,7 +1,7 @@
 import { readdir } from 'fs-extra';
-import { existsSync } from 'fs';
 import { join } from 'path';
 import { getCoreAspectName, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import { resolvePackageDir } from './resolve-package-dir';
 
 export type CoreAspectInfo = {
   /** e.g. `teambit.workspace/workspace` */
@@ -10,8 +10,14 @@ export type CoreAspectInfo = {
   name: string;
   /** e.g. `@teambit/workspace` */
   packageName: string;
-  /** the resolved package dir in the repo's node_modules (a dir of symlinks to the sources) */
+  /** the resolved package dir - see `resolvePackageDir` for the layouts this can be */
   dir: string;
+  /**
+   * where inside the package the runtime/aspect files were found: `''` for this repo's
+   * symlink-farm-of-sources layout, `'dist'` for a published package or a capsule. Import specifiers
+   * are built from it, so it is the difference between importing the compiled JS and the raw TS.
+   */
+  filesSubDir: string;
   /** the export name used in the bundle's barrel, e.g. `dependencyResolver` */
   exportName: string;
   /**
@@ -42,7 +48,7 @@ const CANDIDATE_EXTRA_PACKAGES = ['@teambit/harmony'];
  */
 export function getExtraPackages(packagesRoot: string): string[] {
   return CANDIDATE_EXTRA_PACKAGES.filter((packageName) => {
-    const exists = existsSync(join(packagesRoot, 'node_modules', packageName, 'package.json'));
+    const exists = Boolean(resolvePackageDir(packagesRoot, packageName));
     // eslint-disable-next-line no-console
     if (!exists) console.warn(`[bundle] extra package "${packageName}" is not installed, skipping it`);
     return exists;
@@ -53,21 +59,52 @@ export function toExportName(name: string): string {
   return name.replace(/[.\-/]+(.)/g, (_, chr) => chr.toUpperCase());
 }
 
-async function findRuntimeAndAspectFiles(dir: string) {
-  let files: string[] = [];
-  try {
-    files = await readdir(dir);
-  } catch {
-    return {};
-  }
-  // prefer the TypeScript sources - in this repo the package dir is a dir of symlinks to the source
-  // files, and esbuild is happiest compiling the sources directly.
-  const pick = (suffix: string) =>
-    files.find((f) => f.endsWith(`${suffix}.ts`)) || files.find((f) => f.endsWith(`${suffix}.js`));
-  return {
-    mainRuntimeFile: pick('.main.runtime'),
-    aspectFile: pick('.aspect'),
+const RUNTIME_SUFFIX = '.main.runtime';
+const ASPECT_SUFFIX = '.aspect';
+
+/**
+ * Locate the `*.aspect.*` and `*.main.runtime.*` files, which cannot be derived from the aspect id -
+ * `teambit.envs/envs` lives in `environments.main.runtime.ts`, `teambit.harmony/panels` in
+ * `panel-ui.main.runtime.ts`.
+ *
+ * Two layouts have to work. In this repo the package dir is a dir of symlinks to the **sources**, so
+ * the files sit at the top level as `.ts`. In a published package or a capsule they are compiled and
+ * live under `dist/` as `.js`. Looking only at the top level - which is what this did - silently
+ * reports "no main runtime" for the compiled layout, and since a missing main runtime is legitimate
+ * for a UI-only aspect, nothing complains: a real build reported 70 of 71 aspects "without a main
+ * runtime" and produced a bundle with almost no runtimes in it.
+ */
+async function findRuntimeAndAspectFiles(dir: string): Promise<{
+  mainRuntimeFile?: string;
+  aspectFile?: string;
+  filesSubDir: string;
+}> {
+  const readDirSafe = async (target: string) => {
+    try {
+      return await readdir(target);
+    } catch {
+      return [] as string[];
+    }
   };
+  // `dist` first, and that is not a preference - it is what keeps one module one module. A bare
+  // `@teambit/x` resolves through `main`/`exports` to `dist/index.js`; were the deep import to go to
+  // the top-level `.ts` instead, the same aspect would land in the bundle twice, once compiled and
+  // once from source - two `XAspect` objects and two runtime registries (§6.2). Verified against a
+  // real capsule: `@teambit/envs/environments.main.runtime` resolves to the raw `.ts`, whereas
+  // `@teambit/envs/dist/environments.main.runtime.js` resolves to the compiled file.
+  for (const subDir of ['dist', '']) {
+    // eslint-disable-next-line no-await-in-loop
+    const files = await readDirSafe(subDir ? join(dir, subDir) : dir);
+    const pick = (suffix: string) =>
+      subDir
+        ? files.find((f) => f.endsWith(`${suffix}.js`))
+        : files.find((f) => f.endsWith(`${suffix}.ts`) && !f.endsWith('.d.ts')) ||
+          files.find((f) => f.endsWith(`${suffix}.js`));
+    const aspectFile = pick(ASPECT_SUFFIX);
+    const mainRuntimeFile = pick(RUNTIME_SUFFIX);
+    if (aspectFile || mainRuntimeFile) return { mainRuntimeFile, aspectFile, filesSubDir: subDir };
+  }
+  return { filesSubDir: '' };
 }
 
 const stripExt = (file: string) => file.replace(/\.(ts|js)$/, '');
@@ -90,21 +127,30 @@ export async function getCoreAspectsInfo(coreAspectIds: string[], packagesRoot: 
     ids.map(async (id): Promise<CoreAspectInfo | undefined> => {
       const name = getCoreAspectName(id);
       const packageName = getCoreAspectPackageName(id);
-      const dir = join(packagesRoot, 'node_modules', packageName);
-      if (!existsSync(join(dir, 'package.json'))) {
+      const dir = resolvePackageDir(packagesRoot, packageName);
+      if (!dir) {
         // eslint-disable-next-line no-console
-        console.warn(`[bundle] core aspect "${id}" is not installed under ${packagesRoot}, skipping`);
+        console.warn(`[bundle] core aspect "${id}" is not resolvable from ${packagesRoot}, skipping`);
         return undefined;
       }
-      const { mainRuntimeFile, aspectFile } = await findRuntimeAndAspectFiles(dir);
+      const { mainRuntimeFile, aspectFile, filesSubDir } = await findRuntimeAndAspectFiles(dir);
+      // The extension has to survive under `dist` and has to go at the top level, because the two
+      // take different branches of the exports map and **neither branch extension-probes**:
+      //   "./dist/*": "./dist/*"   =>  `<pkg>/dist/x.main.runtime.js` -> ./dist/x.main.runtime.js
+      //   "./*":      "./*.ts"     =>  `<pkg>/x.main.runtime`         -> ./x.main.runtime.ts
+      // Dropping `.js` from the first yields a specifier that simply does not resolve (verified), and
+      // keeping `.ts` on the second yields `./x.main.runtime.ts.ts`.
+      const specifier = (file: string) =>
+        filesSubDir ? `${packageName}/${filesSubDir}/${file}` : `${packageName}/${stripExt(file)}`;
       return {
         id,
         name,
         packageName,
         dir,
+        filesSubDir,
         exportName: toExportName(name),
-        mainRuntimeImport: mainRuntimeFile ? `${packageName}/${stripExt(mainRuntimeFile)}` : undefined,
-        aspectImport: aspectFile ? `${packageName}/${stripExt(aspectFile)}` : undefined,
+        mainRuntimeImport: mainRuntimeFile ? specifier(mainRuntimeFile) : undefined,
+        aspectImport: aspectFile ? specifier(aspectFile) : undefined,
       };
     })
   );

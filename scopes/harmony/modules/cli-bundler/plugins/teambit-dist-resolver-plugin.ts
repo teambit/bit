@@ -1,6 +1,7 @@
-import { existsSync, readFileSync, statSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import { join } from 'path';
 import type { Plugin } from 'esbuild';
+import { resolvePackageDir } from '../resolve-package-dir';
 
 /**
  * Resolve every `@teambit/*` workspace component to its **compiled `dist`**, uniformly.
@@ -28,7 +29,7 @@ import type { Plugin } from 'esbuild';
  * doesn't exist.
  */
 
-type PkgInfo = { dir: string; isLocal: boolean; main: string };
+type PkgInfo = { dir: string; isBitComponent: boolean; hasLocalSources: boolean; main: string };
 
 const CANDIDATE_SUFFIXES = ['.js', '/index.js', '', '.json', '.cjs'];
 
@@ -54,15 +55,26 @@ export function teambitDistResolverPlugin(repoRoot: string): Plugin {
 
   const getPkgInfo = (packageName: string): PkgInfo | undefined => {
     if (pkgCache.has(packageName)) return pkgCache.get(packageName);
-    const dir = join(repoRoot, 'node_modules', packageName);
+    // resolve rather than path-join: under a capsule most packages hoist to the capsule root, which
+    // a join from `repoRoot` never sees. See `resolve-package-dir.ts`.
+    const dir = resolvePackageDir(repoRoot, packageName);
     let info: PkgInfo | undefined;
-    const packageJsonPath = join(dir, 'package.json');
-    if (existsSync(packageJsonPath)) {
+    if (dir) {
       try {
-        const parsed = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-        // the entry file is NOT always `dist/index.js` - a component whose source root is
-        // `constants.ts` compiles to `dist/constants.js`, so `main` is the only reliable answer.
-        info = { dir, isLocal: Boolean(parsed._bit_local), main: parsed.main || 'dist/index.js' };
+        const parsed = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+        // `_bit_local` is set only in this workspace. A capsule's copies of the very same components
+        // do not carry it, which is why normalisation silently stopped applying during a real build
+        // and esbuild fell through to the `exports` map. `componentId` marks a bit component in every
+        // layout - workspace, capsule and published alike - and all 298 of them in a capsule root
+        // ship a `dist`.
+        info = {
+          dir,
+          isBitComponent: Boolean(parsed._bit_local || parsed.componentId),
+          hasLocalSources: Boolean(parsed._bit_local),
+          // the entry file is NOT always `dist/index.js` - a component whose source root is
+          // `constants.ts` compiles to `dist/constants.js`, so `main` is the only reliable answer.
+          main: parsed.main || 'dist/index.js',
+        };
       } catch {
         info = undefined;
       }
@@ -79,7 +91,7 @@ export function teambitDistResolverPlugin(repoRoot: string): Plugin {
         const { packageName, subPath } = splitSpecifier(args.path);
         const info = getPkgInfo(packageName);
 
-        if (info?.isLocal) {
+        if (info?.isBitComponent) {
           // package.json must stay literal - it is read as data, not imported as code
           if (subPath === 'package.json') return { path: join(info.dir, 'package.json') };
           // paths that already address a real on-disk location keep their shape
@@ -89,13 +101,19 @@ export function teambitDistResolverPlugin(repoRoot: string): Plugin {
             : join(info.dir, info.main);
           const resolved = firstExisting(subPath ? CANDIDATE_SUFFIXES.map((s) => `${base}${s}`) : [base]);
           if (resolved) return { path: resolved };
-          return {
-            errors: [
-              {
-                text: `[teambit-dist-resolver] cannot find a compiled file for "${args.path}" under ${info.dir}/dist - is the workspace compiled? (run "bit compile")`,
-              },
-            ],
-          };
+          // A workspace component that has no compiled file is a real error - the whole bundle is
+          // built from `dist`, so an uncompiled one would be silently missing. A *published* bit
+          // component with an unexpected layout is not: let esbuild resolve it its own way rather
+          // than fail the build over a normalisation that was only ever an optimisation for it.
+          if (info.hasLocalSources) {
+            return {
+              errors: [
+                {
+                  text: `[teambit-dist-resolver] cannot find a compiled file for "${args.path}" under ${info.dir}/dist - is the workspace compiled? (run "bit compile")`,
+                },
+              ],
+            };
+          }
         }
 
         // a regular npm package. let esbuild resolve it, but if the ESM branch of its exports map

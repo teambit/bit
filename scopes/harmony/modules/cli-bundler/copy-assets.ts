@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import { basename, dirname, join } from 'path';
 import globby from 'globby';
 import type { BundlePaths } from './config';
+import { resolvePackageDir } from './resolve-package-dir';
 
 /**
  * Files that must exist on disk next to the bundle, because something reads them as *files* at
@@ -12,24 +13,34 @@ import type { BundlePaths } from './config';
  * those reads resolve. A name collision between two such files would be a real bug, so `copyAssets`
  * reports one rather than silently overwriting.
  *
- * `from` is a glob relative to the repo root, `to` a directory relative to the bundle dir.
+ * `pkg` is the owning package, `from` a glob **relative to that package's root**, `to` a directory
+ * relative to the bundle dir. The package is resolved rather than assumed to sit at
+ * `<packagesRoot>/node_modules/<pkg>`: under a capsule these all hoist to the capsule root, and the
+ * previous repo-relative globs silently matched nothing there - which is invisible until a user hits
+ * `bit init` or the typescript compiler at runtime.
  */
-const ASSETS: Array<{ from: string; to: string; flatten?: boolean }> = [
+const ASSETS: Array<{ pkg: string; from: string; to: string; flatten?: boolean }> = [
   // the typescript aspect hands lib files to the compiler by path
-  { from: 'node_modules/typescript/lib/*.d.ts', to: '.', flatten: true },
+  { pkg: 'typescript', from: 'lib/*.d.ts', to: '.', flatten: true },
   // `WorkspaceConfig.getTemplate` - the workspace.jsonc scaffold written by `bit init`
-  { from: 'node_modules/@teambit/config/dist/workspace-template.jsonc', to: '.', flatten: true },
+  { pkg: '@teambit/config', from: 'dist/workspace-template.jsonc', to: '.', flatten: true },
   // `HostInitializerMain.loadAgentsTemplate`
-  { from: 'node_modules/@teambit/host-initializer/dist/agents-template*.md', to: '.', flatten: true },
+  { pkg: '@teambit/host-initializer', from: 'dist/agents-template*.md', to: '.', flatten: true },
   // `McpConfigWriter.loadRulesTemplate`
-  { from: 'node_modules/@teambit/mcp.mcp-config-writer/dist/bit-*-template.md', to: '.', flatten: true },
+  { pkg: '@teambit/mcp.mcp-config-writer', from: 'dist/bit-*-template.md', to: '.', flatten: true },
 ];
 
 async function copyOne(paths: BundlePaths, asset: (typeof ASSETS)[number], seen: Map<string, string>) {
-  const files = await globby(asset.from, { cwd: paths.packagesRoot, dot: true });
+  const packageDir = resolvePackageDir(paths.packagesRoot, asset.pkg);
+  if (!packageDir) {
+    // eslint-disable-next-line no-console
+    console.warn(`[bundle] asset package "${asset.pkg}" is not resolvable from ${paths.packagesRoot}`);
+    return 0;
+  }
+  const files = await globby(asset.from, { cwd: packageDir, dot: true });
   if (!files.length) {
     // eslint-disable-next-line no-console
-    console.warn(`[bundle] asset pattern matched nothing: ${asset.from}`);
+    console.warn(`[bundle] asset pattern matched nothing: ${asset.pkg}/${asset.from}`);
     return 0;
   }
   await Promise.all(
@@ -42,7 +53,7 @@ async function copyOne(paths: BundlePaths, asset: (typeof ASSETS)[number], seen:
       }
       seen.set(target, file);
       await fs.ensureDir(dirname(target));
-      await fs.copy(join(paths.packagesRoot, file), target, { dereference: true, overwrite: true });
+      await fs.copy(join(packageDir, file), target, { dereference: true, overwrite: true });
     })
   );
   return files.length;

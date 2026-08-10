@@ -3,6 +3,7 @@ import { join } from 'path';
 import { parse } from 'comment-json';
 import { externalsNotInstalled } from './externals';
 import type { BundlePaths } from './config';
+import { resolvePackageDir } from './resolve-package-dir';
 
 /** `@scope/name/deep/path` -> `@scope/name` */
 export function rootPackageName(specifier: string): string {
@@ -25,9 +26,13 @@ const FALLBACK_VERSIONS: Record<string, string> = {
  * declared (e.g. resolved through a peer) and the repo's package.json after that.
  */
 async function resolveVersion(paths: BundlePaths, packageName: string, wsPolicy: any, repoPkgJson: any) {
-  const installed = join(paths.packagesRoot, 'node_modules', packageName, 'package.json');
-  if (await fs.pathExists(installed)) {
-    const { version } = await fs.readJson(installed);
+  // resolve rather than path-join - under a capsule the externals hoist to the capsule root, and a
+  // join only sees the capsule's own node_modules. Getting this wrong is quiet: the version simply
+  // falls through to the workspace.jsonc/package.json fallbacks, which do not exist in a capsule
+  // either, so the external lands in `unresolved` and is dropped from the published dependencies.
+  const packageDir = resolvePackageDir(paths.packagesRoot, packageName);
+  if (packageDir) {
+    const { version } = await fs.readJson(join(packageDir, 'package.json'));
     if (version) return version;
   }
   const fromPolicy = wsPolicy?.dependencies?.[packageName] ?? wsPolicy?.peerDependencies?.[packageName];
@@ -71,6 +76,18 @@ export async function generatePackageJson(paths: BundlePaths, bitVersion: string
       dependencies[name] = version;
     })
   );
+
+  if (unresolved.length) {
+    // These are marked external, so the bundle does NOT contain them - they have to be installed
+    // alongside it. Dropping one silently produces a bundle that builds cleanly and then fails at
+    // runtime with "Cannot find module". Usually it means the package is not a declared dependency
+    // of `@teambit/bit`, which is exactly what has to be fixed for the published layout (§9b).
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[bundle] ${unresolved.length} external(s) have no resolvable version and were left out of the ` +
+        `package.json - the bundle will fail at runtime unless they are installed: ${unresolved.join(', ')}`
+    );
+  }
 
   const packageJson = {
     name: '@teambit/bit-bundle-externals',
