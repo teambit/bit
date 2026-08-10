@@ -36,7 +36,7 @@ artefact and the published one cannot drift.
 
 ## 2. Next steps, in order
 
-### 2.1 Wire the env to `@teambit/bit` and run its build — **DONE, and it found the real problem**
+### 2.1 Wire the env to `@teambit/bit` and run its build — **DONE; the task now passes**
 
 ```bash
 bd env set teambit.harmony/bit teambit.harmony/envs/bit-cli-app-env
@@ -54,9 +54,10 @@ bd build teambit.harmony/bit --reuse-capsules --tasks BundleCliApp
 
 1. ✅ **Not a problem.** `readCoreAspectIds()` found `<capsule>/dist/manifests.js` and returned the
    ids. The `location: 'end'` ordering is fine.
-2. ❌ **A problem, but a fixable one** — see §2.1a. The aspects are present; the bundler path-joins
-   where it should resolve, so it misses the ones hoisted to the capsule root. The separate question
-   of whether the resolved copies are _fresh_ is a design decision, also in §2.1a.
+2. ✅ **Was a problem, now fixed** — see §2.1a. The aspects were present all along; the bundler
+   path-joined where it should have resolved. The task now reports **106 core aspects (9 genuinely
+   UI-only)**, copies 105 assets, and produces a 69 MB bundle with 107 shims and 107 locators,
+   exit 0. The freshness of the resolved copies was also checked and is correct (§2.1a).
 3. ✅ **Not applicable.** `outDir` is `<capsule>/app-bundle`, _not_ the capsule root — the task has
    `BUNDLE_OUT_DIR = 'app-bundle'`. The doc previously claimed the capsule root; that was wrong.
    Note `bundle-cli.ts`'s `cleanOutDir` deletes everything in the out dir except `node_modules`, so
@@ -64,7 +65,7 @@ bd build teambit.harmony/bit --reuse-capsules --tasks BundleCliApp
    the publishable-shape-in-place layout (§2.2) must pass `clean: false` and merge into the capsule's
    existing `package.json` rather than overwrite it with `@teambit/bit-bundle-externals`.
 
-### 2.1a What the first run actually showed — the bundler looks in the wrong place
+### 2.1a What the first runs showed — the bundler was looking in the wrong place (fixed)
 
 `getCoreAspectsInfo` reported `core aspects: 71 (70 without a main runtime)` and skipped 35 with
 `is not installed under <capsule>`. **The aspects are not missing.** Capsules share a hoisted root:
@@ -99,13 +100,26 @@ Three defects, in dependency order:
      ".../capsules/root/c0abd8062/teambit.envs_envs@1.0.1097/dist/esm.mjs" for import "getLegacyCoreEnvsIds"
    ```
 
-**Separately — the freshness question, which is a design decision, not a bug.** The copies that get
-resolved are _published_ packages from the capsule-root store (`@teambit/cli@0.0.1364`), not the
-workspace's just-compiled components, because `bd build teambit.harmony/bit` isolates one component
-and its dependencies come from the registry. A real release tags every component at once, so the
-capsule network should carry fresh sibling capsules instead — **this needs to be confirmed against a
-full build/tag before trusting the artefact**, since a single-component build will always bundle the
-previously published aspects.
+**The freshness question — asked, then answered: the premise is sound.** It looked alarming at first,
+because most aspects resolve to _published_ packages in the capsule-root store (`@teambit/cli@0.0.1364`)
+rather than to the workspace's just-compiled components. The rule turns out to be exactly the right
+one. Of `@teambit/bit`'s capsule links, three point at sibling capsules:
+
+- `bit -> ../..` — the self-reference
+- `harmony.modules.cli-bundler` — **no version in the dir name**, i.e. new and never tagged
+- `workspace.modules.node-modules-linker@0.0.376` — modified in the workspace
+
+and the capsule root holds **53** capsules against a `bit status` of **2 new + 51 modified = 53**.
+
+So: **a new or modified component is built into a sibling capsule and linked fresh; an unmodified one
+installs from the registry** - and for an unmodified component the published package _is_ its current
+code, which is what "unmodified" means. The bundle therefore carries fresh code for everything that
+changed and published packages for everything that didn't, which is correct by construction, and gets
+_more_ correct at tag time when everything being released is modified.
+
+The residual risk is narrow and is not a bundling concern: a component whose published version has
+drifted from its workspace source while bit still reports it unmodified. That is a workspace-integrity
+question.
 
 The bundler itself is fine: it ran end to end in 12.6 s and produced one error, not a pile.
 
