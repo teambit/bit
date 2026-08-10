@@ -6,6 +6,8 @@ import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
+const EMPTY_ENV = 'teambit.harmony/empty-env';
+
 describe('compile extension', function () {
   this.timeout(0);
   let helper: Helper;
@@ -215,6 +217,24 @@ describe('compile extension', function () {
     it('should compile when path has ./ prefix', () => {
       const output = helper.command.compile('./nested/comp1');
       expect(output).to.have.string('1/1');
+    });
+  });
+  describe('a component whose env provides no compiler', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', EMPTY_ENV);
+      output = helper.command.compile();
+    });
+    it('should say that the component was not compiled and why', () => {
+      expect(output).to.have.string('comp1');
+      expect(output).to.have.string('not compiled');
+      expect(output).to.have.string(EMPTY_ENV);
+    });
+    it('should not report the run as a successful compilation', () => {
+      expect(output).to.not.have.string('compiled successfully');
+      expect(output).to.have.string('nothing was compiled');
     });
   });
 });
