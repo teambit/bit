@@ -1119,14 +1119,14 @@ jobs:
       - run:
           name: smoke test the bundle
           command: |
-            node /home/circleci/bit/esbuild-bundle/node_modules/@teambit/bit/bin/bit --version
-            node /home/circleci/bit/esbuild-bundle/node_modules/@teambit/bit/bin/bit --help > /dev/null
+            node /home/circleci/bit/esbuild-bundle/bin/bit --version
+            node /home/circleci/bit/esbuild-bundle/bin/bit --help > /dev/null
       - persist_to_workspace:
           root: .
           paths:
             - esbuild-bundle
       - store_artifacts:
-          path: /home/circleci/bit/esbuild-bundle/bundle/metafile.json
+          path: /home/circleci/bit/esbuild-bundle/dist/core-aspects/bundle/metafile.json
       - store_artifacts:
           path: /home/circleci/bit/esbuild-bundle/bundle-stamp.json
 
@@ -1148,7 +1148,7 @@ jobs:
           # the launcher resolves the bundle relative to its own realpath, so a symlink is enough.
           command: |
             mkdir -p /home/circleci/.npm-global/bin
-            BIT_BUNDLED=/home/circleci/bit/esbuild-bundle/node_modules/@teambit/bit/bin/bit
+            BIT_BUNDLED=/home/circleci/bit/esbuild-bundle/bin/bit
             chmod +x "$BIT_BUNDLED"
             ln -sf "$BIT_BUNDLED" /home/circleci/.npm-global/bin/bit-bundled
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
