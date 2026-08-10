@@ -14,6 +14,7 @@ import {
   LaneSyncExecutor,
   laneSyncPrBody,
 } from './lane-sync-executor';
+import type { LaneOwnershipEvidence } from './sync-planner';
 import { resolveSyncConfig } from './sync-config';
 
 type LaneComponents = Parameters<typeof laneHeadFingerprint>[0];
@@ -374,6 +375,98 @@ describe('close-pr re-verifies the tip before retiring a branch', () => {
   it('an unrelated push failure still reads as "left in place", not as a race', async () => {
     const { closePr } = retirer(EVIDENCE_SHA, new Error('remote: GH006: Protected branch update failed'));
     expect(await closePr()).to.equal('my-lane -> close-pr (no open PR, branch my-lane left in place)');
+  });
+});
+
+// `own-merged`/`own-superseded` commit-reachability used to be treated as "inherited, adoption may
+// proceed" — dropped because `own-superseded` by definition still has live commits after the point it
+// superseded another lane, i.e. ongoing work, not dead history. The `.bitmap`-blob-equality check
+// replaces both: only a branch whose `.bitmap` has not diverged AT ALL from the default branch's
+// current one is provably inherited.
+describe('differentLaneStillClaims uses .bitmap blob equality, not commit reachability', () => {
+  function executorWithInheritance(inherited: boolean) {
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {} as any,
+      logger: { console: () => {}, consoleWarning: () => {}, error: () => {} } as any,
+      gitHost: undefined,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    (executor as any).branchInheritsBitmapFromDefault = async () => inherited;
+    return (mirroredLane: string | undefined, laneIdStr: string) =>
+      (executor as any).differentLaneStillClaims(mirroredLane, laneIdStr, 'my-branch', 'main') as Promise<boolean>;
+  }
+
+  it('does not claim when there is no mirrored lane pointer at all — never even checks the blob', async () => {
+    const differentLaneStillClaims = executorWithInheritance(true);
+    expect(await differentLaneStillClaims(undefined, 'acme.shop/my-lane')).to.equal(false);
+  });
+
+  it("does not claim for this lane's own pointer — never even checks the blob", async () => {
+    const differentLaneStillClaims = executorWithInheritance(true);
+    expect(await differentLaneStillClaims('acme.shop/my-lane', 'acme.shop/my-lane')).to.equal(false);
+  });
+
+  it("does not claim when the different-lane .bitmap is byte-identical to the default branch's — inherited", async () => {
+    const differentLaneStillClaims = executorWithInheritance(true);
+    expect(await differentLaneStillClaims('acme.shop/other-lane', 'acme.shop/my-lane')).to.equal(false);
+  });
+
+  // The superseded-but-live case this guard exists for: `own-superseded` would have (wrongly) exempted
+  // this before — the branch's `.bitmap` has genuinely diverged, so the pointer is a real, live claim.
+  it("STILL claims when the different-lane .bitmap has diverged from the default branch's — halt, not adopt", async () => {
+    const differentLaneStillClaims = executorWithInheritance(false);
+    expect(await differentLaneStillClaims('acme.shop/other-lane', 'acme.shop/my-lane')).to.equal(true);
+  });
+});
+
+// The durable deletion guard: unlike a single trailer on one commit (undone by the very next ledger
+// commit), this reads the branch's ANCESTRY below its state commit, so it survives any number of later
+// sync cycles. Gated to the one ownership claim it can change the outcome for — `own-live`, the only
+// one an immediate delete is even on the table for.
+describe('computeHasIndependentHistory gates the ancestry check to own-live claims with a state commit', () => {
+  function executorWithAncestryResult(result: boolean) {
+    const calls: Array<[string, string]> = [];
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {} as any,
+      logger: { console: () => {}, consoleWarning: () => {}, error: () => {} } as any,
+      gitHost: undefined,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    (executor as any).hasIndependentHistoryBelowStateCommit = async (stateCommit: string, defaultBranch: string) => {
+      calls.push([stateCommit, defaultBranch]);
+      return result;
+    };
+    const compute = (ownership: LaneOwnershipEvidence, stateCommit: string | undefined, defaultBranch: string) =>
+      (executor as any).computeHasIndependentHistory(ownership, stateCommit, defaultBranch) as Promise<boolean>;
+    return { compute, calls };
+  }
+
+  it('skips the ancestry check entirely for a reachable claim (own-merged)', async () => {
+    const { compute, calls } = executorWithAncestryResult(true);
+    expect(await compute('own-merged', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1', 'main')).to.equal(false);
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('skips the ancestry check entirely for own-superseded too', async () => {
+    const { compute, calls } = executorWithAncestryResult(true);
+    expect(await compute('own-superseded', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1', 'main')).to.equal(false);
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('skips the check when there is no state commit to inspect, even for an own-live claim', async () => {
+    const { compute, calls } = executorWithAncestryResult(true);
+    expect(await compute('own-live', undefined, 'main')).to.equal(false);
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('defers to the ancestry check for an own-live claim with a state commit', async () => {
+    const { compute, calls } = executorWithAncestryResult(true);
+    expect(await compute('own-live', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1', 'main')).to.equal(true);
+    expect(calls).to.deep.equal([['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1', 'main']]);
   });
 });
 

@@ -42,6 +42,7 @@ describe('bit ci sync', function () {
     laneTipFile,
     laneSideEdit,
     branchSideCommit,
+    scopeObjectCount,
   } = syncE2eHelpers(() => helper);
 
   before(() => {
@@ -794,6 +795,67 @@ describe('bit ci sync', function () {
       // Nothing was exported: the lane's content is exactly what it was before this run.
       expect(remoteLaneFingerprint(FEATURE_BRANCH)).to.equal(laneFingerprintBeforeRun);
       expect(laneTipFile(devPath, 'comp1/index.js')).to.include('adopt-conflict-v1');
+    });
+
+    // A snap-based probe would create a NEW local Version object on every attempt (an unexported snap
+    // is never idempotent — it re-snaps every time there's "something to snap"). The status-based
+    // decision never snaps at all, so a second identical attempt should fetch nothing new: the lane's
+    // objects are already cached locally from the first attempt's switch.
+    it('leaves the local scope byte-clean — a repeat halt attempt creates no additional objects', () => {
+      const afterFirstHalt = scopeObjectCount();
+      const { output, exitCode } = syncRun(FEATURE_BRANCH);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+      expect(output).to.include('HALTED');
+      expect(scopeObjectCount(), 'a residue-free halt must not grow the local scope on a repeat attempt').to.equal(
+        afterFirstHalt
+      );
+    });
+  });
+
+  // Blast radius: the whole point of deciding adoption via a `bit status` read instead of a probe snap
+  // is that a diverged adoption target leaves nothing behind — no unexported snap, no unmerged config,
+  // no lingering lane switch — that could trip a DIFFERENT, healthy lane processed in the SAME --all
+  // run. Named so the halting lane sorts before the healthy one alphabetically: if adoption left any
+  // residue, this is the ordering that would let it poison the lane processed right after it.
+  describe('one lane halting during adoption does not affect a healthy lane in the same --all run', () => {
+    const HALTING_LANE = 'adopt-conflict-blast';
+    const HEALTHY_LANE = 'healthy-blast';
+    let defaultBranch: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+
+      // The halting lane: adoption with real, unresolved divergence — same shape as the standalone
+      // halt test above.
+      helper.command.runCmd(`git checkout -b ${HALTING_LANE}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('blast-v1'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: blast work"');
+      helper.command.runCmd(`git push -u origin ${HALTING_LANE}`);
+      helper.command.runCmd('bit ci pr --keep-lane --message "adopt via keep-lane"');
+      helper.fs.outputFile('comp1/index.js', comp1Src('blast-v2'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: blast v2, never re-synced"');
+      helper.command.runCmd(`git push origin ${HALTING_LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+
+      // The healthy lane: created and moved independently — an ordinary import-lane target.
+      createLaneWithSnap(HEALTHY_LANE, { 'comp2/index.js': comp2Src('healthy-v1') }, 'healthy v1');
+    });
+
+    it('the healthy lane converges and the halting one is left untouched, in the same run', () => {
+      const { output, exitCode } = syncRun('--all');
+      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+      expect(output).to.include(`HALTED ${HALTING_LANE}`);
+      expect(output).to.include('adopting would change');
+      expect(output).to.include(`${HEALTHY_LANE} -> import-lane`);
+      expect(fileOnBranch(HEALTHY_LANE, 'comp2/index.js')).to.include('healthy-v1');
+    });
+
+    it('a follow-up targeted run confirms the healthy lane converged cleanly — no residue tripped it', () => {
+      const rerun = syncRun(HEALTHY_LANE);
+      expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+      expect(rerun.output).to.include(`${HEALTHY_LANE} -> noop (converged)`);
     });
   });
 

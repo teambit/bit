@@ -30,14 +30,16 @@ export type LaneSyncInput = {
    */
   tipIsSyncCommit: boolean;
   /**
-   * Whether that same tip commit is `adopt-branch`'s ledger commit (`ADOPTION_TRAILER`) rather than an
-   * ordinary sync commit. Consulted only alongside `tipIsSyncCommit` with no dev commits (the tip IS
-   * the state commit then) to withhold an immediate delete: adoption only ever proved the BRANCH's
-   * content matched the lane's, never that the branch's own pre-existing history is disposable. A
-   * merged/superseded claim (reachable from the default branch) is unaffected — only the unreachable,
+   * Whether the branch's history, below its state commit, holds real (non-bit-authored) work that
+   * predates this reconciler and is absent from the default branch — proof the branch was ADOPTED
+   * (`adopt-branch`) rather than a mirror this reconciler manufactured wholesale. Durable across any
+   * number of later ledger commits (history is append-only), unlike checking a single trailer on one
+   * commit. Consulted only for an `own-live` claim, to withhold an immediate delete: adoption only ever
+   * proved the branch's content matched the lane's, never that its pre-existing history is disposable.
+   * A merged/superseded claim (reachable from the default branch) is unaffected — only the unreachable,
    * "delete now" path is guarded.
    */
-  tipIsAdoptionCommit?: boolean;
+  hasIndependentHistory?: boolean;
   conflictLabelPresent: boolean;
   /**
    * Whether the branch's committed `.bitmap` names a DIFFERENT lane than the one being reconciled.
@@ -72,7 +74,7 @@ export type LaneSyncAction =
 
 export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   const { laneHead, branchExists, lastSyncedHead, hasDevCommits, conflictLabelPresent, ownership } = input;
-  const { tipIsSyncCommit, tipIsAdoptionCommit, branchNamesDifferentLane } = input;
+  const { tipIsSyncCommit, hasIndependentHistory, branchNamesDifferentLane } = input;
   if (conflictLabelPresent) {
     return { type: 'noop', reason: 'PR is labeled bit-sync-conflict; resolve and remove the label to resume' };
   }
@@ -95,7 +97,7 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
         if (!tipIsSyncCommit) {
           return { type: 'close-pr', deleteBranch: false, keepReason: 'tip-not-a-sync-commit' };
         }
-        if (tipIsAdoptionCommit) {
+        if (hasIndependentHistory) {
           return { type: 'close-pr', deleteBranch: false, keepReason: 'adopted-branch' };
         }
         return { type: 'close-pr', deleteBranch: true };

@@ -6,6 +6,7 @@ import {
   branchStateFingerprint,
   buildSyncCommitMessage,
   fingerprintIdVersions,
+  oldestCommitIsNonSync,
   hasSyncMarker,
   isSyncAuthoredMessage,
   parseBranchBitmap,
@@ -204,6 +205,36 @@ describe('parseDevCommitCount', () => {
     it(`${hasDevCommits ? 'keeps the branch' : 'permits retirement'} for ${name}`, () => {
       expect(parseDevCommitCount(raw), JSON.stringify(raw)).to.equal(hasDevCommits);
     });
+  });
+});
+
+// The pure half of `hasIndependentHistoryBelowStateCommit`'s `git log --reverse ... --format=%B%x1e`
+// classifier: is the OLDEST record — the commit right where the branch first diverges from the
+// default branch — bit-authored or not. The durable, ancestry-based signal that a branch had real
+// (human) history before this reconciler ever touched it. Checks the oldest record ONLY: a normal,
+// bit-created branch that later went through real export-branch/merge-diverged cycles has genuine dev
+// commits ABOVE its first (bit-authored) one too — those must not read as "adopted".
+describe('oldestCommitIsNonSync', () => {
+  it('is false for an empty range — no commits at all', () => {
+    expect(oldestCommitIsNonSync('')).to.equal(false);
+  });
+
+  it('is false when the oldest (first, with --reverse) record is bit-authored', () => {
+    // A normal bit-created branch: its own first ledger commit, then a later human dev commit and a
+    // second ledger commit from export-branch — non-sync work, but never the OLDEST record.
+    const log = [LANE_SYNC, 'feat: a later, normal dev commit\n', MAIN_SYNC].join('\x1e');
+    expect(oldestCommitIsNonSync(log)).to.equal(false);
+  });
+
+  it('is true when the oldest (first, with --reverse) record is a genuine, non-sync commit', () => {
+    // Adoption's exact shape: the branch's own first commit was a human's, before bit ever touched it.
+    const log = ['feat: a human created this branch before adoption\n', LANE_SYNC].join('\x1e');
+    expect(oldestCommitIsNonSync(log)).to.equal(true);
+  });
+
+  it('ignores a trailing separator with nothing after it', () => {
+    const log = `${LANE_SYNC}\x1e`;
+    expect(oldestCommitIsNonSync(log)).to.equal(false);
   });
 });
 

@@ -68,6 +68,15 @@ export function branchStateFingerprint(state: BranchBitmapState, laneComponentId
   return fingerprintIdVersions(laneComponentIds.map((id) => `${id}@${state.versions[id] ?? ABSENT_ON_BRANCH}`));
 }
 
+/**
+ * `ci.main.runtime.ts`'s `snapPrCommit` returns this exact string when `snapping.snap()` found nothing
+ * to snap — its only signal either way. The single source of truth for both `ci.main.runtime.ts` and
+ * `lane-sync-executor.ts` (the sync executor's adoption path reads it back to tell "genuinely nothing
+ * changed" from "a real snap happened"): this module is a leaf neither of them creates a cycle by
+ * importing, unlike importing across each other directly.
+ */
+export const NO_CHANGES_TO_SNAP = 'No changes detected, nothing to snap';
+
 export const LANE_HEAD_TRAILER = 'Bit-Lane-Head';
 /**
  * Marks a commit as machine-generated. Duplicated in the `bit-git-sync` action repo's event router
@@ -92,6 +101,36 @@ export function hasSyncMarker(message: string): boolean {
  */
 export function isSyncAuthoredMessage(message: string): boolean {
   return new RegExp(`^${SYNC_COMMIT_MARKER.replace(/[[\]]/g, '\\$&')}\\r?$`, 'm').test(message);
+}
+
+/** The record separator `hasIndependentHistoryBelowStateCommit`'s `git log --format=%B%x1e` uses. */
+const COMMIT_MESSAGE_RECORD_SEPARATOR = '\x1e';
+
+/**
+ * Whether the OLDEST commit in a `git log --reverse --format=%B<separator>` run is NOT bit-authored —
+ * the pure classification half of `hasIndependentHistoryBelowStateCommit`, split out so it is testable
+ * without a real git log.
+ *
+ * Deliberately the OLDEST record only, not "any": an ordinary, bit-manufactured branch that went
+ * through several NORMAL export-branch/merge-diverged cycles has real dev commits interspersed with
+ * its ledger commits too (that IS what those actions export) — checking "any non-sync commit in the
+ * whole range" would misclassify nearly every active lane branch as "adopted" and defeat deletion
+ * entirely. The question that actually distinguishes adoption is narrower: was the FIRST commit this
+ * branch ever has, right where it diverges from the default branch, already someone else's — i.e. did
+ * a human create the branch before this reconciler touched it — or did bit's own `import-lane`/
+ * `adopt-branch` create the divergence point itself. Every ledger/dev commit ABOVE that first one is
+ * irrelevant to the question.
+ *
+ * Requires `--reverse` in the caller's `git log` so index 0 is the oldest. Empty entries (a trailing
+ * separator, or no commits at all) are dropped first, so an empty range correctly answers `false`.
+ */
+export function oldestCommitIsNonSync(rawLog: string): boolean {
+  const messages = rawLog
+    .split(COMMIT_MESSAGE_RECORD_SEPARATOR)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  const oldest = messages[0];
+  return oldest !== undefined && !isSyncAuthoredMessage(oldest);
 }
 
 /**
@@ -178,6 +217,31 @@ export async function readBranchSyncState(
   const count = await git.raw(['rev-list', range, '--count']);
 
   return { stateCommit, bitmap, hasDevCommits: parseDevCommitCount(count), tipMessage, tipSha };
+}
+
+/**
+ * Whether `branch`'s committed `.bitmap`, at its current remote tip, is byte-identical to
+ * `defaultBranch`'s own CURRENT `.bitmap` — compared by blob sha (git already content-addresses blobs,
+ * so equal shas mean equal bytes, no need to read either file). True is the precise definition of
+ * "inherited": the branch has not diverged from the default branch's `.bitmap` AT ALL, so whatever
+ * lane pointer that content carries (if any) belongs to the default branch, never a claim the branch
+ * itself asserted — unlike commit-reachability (`own-merged`/`own-superseded`), which a branch can
+ * satisfy while its `.bitmap` has since diverged in its own right (e.g. still-active work after the
+ * lane it once mirrored was superseded). False on any git error or a missing blob on either side —
+ * unreadable is not proof of inheritance, the conservative direction for a check that gates adoption.
+ */
+export async function branchBitmapMatchesDefault(branch: string, defaultBranch: string): Promise<boolean> {
+  try {
+    const [branchBlob, defaultBlob] = await Promise.all([
+      git.raw(['rev-parse', `origin/${branch}:./${BIT_MAP}`]),
+      git.raw(['rev-parse', `origin/${defaultBranch}:./${BIT_MAP}`]),
+    ]);
+    const branchSha = branchBlob.trim();
+    const defaultSha = defaultBlob.trim();
+    return Boolean(branchSha) && branchSha === defaultSha;
+  } catch {
+    return false;
+  }
 }
 
 /**

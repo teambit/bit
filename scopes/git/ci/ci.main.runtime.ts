@@ -51,6 +51,7 @@ import type { GitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider } from './sync/github-client';
 import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
 import { isValidGitBranchName } from './sync/sync-config';
+import { NO_CHANGES_TO_SNAP } from './sync/sync-state';
 
 /**
  * Registered git hosts (GitHub ships built-in; others register from their own aspect).
@@ -70,12 +71,6 @@ export type GitHostProviderSlot = SlotRegistry<GitHostProvider>;
 const LANE_HASH_MISMATCH_MARKER = 'a lane with the same id already exists with a different hash';
 const COMPONENT_DIVERGENCE_MARKER = 'merge error occurred when exporting';
 
-/**
- * `snapPrCommit`'s return value when `snapping.snap()` found nothing to snap. Exported so a caller
- * (the sync executor's adoption path) can tell "genuinely nothing changed" from "a real snap
- * happened" without re-parsing prose — the only signal `snapPrCommit` currently gives either way.
- */
-export const NO_CHANGES_TO_SNAP = 'No changes detected, nothing to snap';
 export interface CiWorkspaceConfig {
   /**
    * Path to a custom script that generates commit messages for `bit ci merge` operations.
@@ -523,6 +518,19 @@ export class CiMain {
    */
   async reloadWorkspaceFromDisk(): Promise<void> {
     await this.workspace._reloadConsumer();
+  }
+
+  /**
+   * Whether the workspace, as currently checked out, has any component the CURRENT lane doesn't
+   * already reflect — new or modified, per `bit status`. Read-only: no snap, no export, no config
+   * sync, nothing written anywhere. `bit ci sync`'s adoption path uses this to decide "would adopting
+   * this branch actually change the lane" without ever creating a local snap to find out — a real
+   * snap is a write (an unexported Version object in the local scope) regardless of whether a caller
+   * later discards the result, so probing via a snap can never be truly side-effect-free.
+   */
+  async hasUnsyncedWorkChanges(): Promise<boolean> {
+    const status = await this.status.status({ lanes: true });
+    return status.newComponents.length > 0 || status.modifiedComponents.length > 0;
   }
 
   /** `bit ci sync` — reconcile Bit lanes and the main scope with git branches and PRs (see `SyncOrchestrator`). */

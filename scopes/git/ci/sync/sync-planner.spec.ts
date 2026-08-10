@@ -67,7 +67,7 @@ const table: Array<{
     // that its pre-existing (human-authored) history is disposable. Reachable claims (own-merged /
     // own-superseded, below) are unaffected: this guard is only about the unreachable "delete now" path.
     name: 'own-live, no dev commits, OUR tip, but it is the adoption ledger commit -> KEEP, never delete',
-    input: { ...laneGone('own-live'), tipIsAdoptionCommit: true },
+    input: { ...laneGone('own-live'), hasIndependentHistory: true },
     type: 'close-pr',
     action: { type: 'close-pr', deleteBranch: false, keepReason: 'adopted-branch' },
   },
@@ -88,7 +88,7 @@ const table: Array<{
     // The adoption guard only withholds the UNREACHABLE ("delete now") path; once genuinely merged,
     // deleting an adopted branch is exactly as safe as deleting any other.
     name: 'own-merged deletes even when the tip is the adoption ledger commit — reachability is enough',
-    input: { ...laneGone('own-merged'), tipIsAdoptionCommit: true },
+    input: { ...laneGone('own-merged'), hasIndependentHistory: true },
     type: 'close-pr',
     action: { type: 'close-pr', deleteBranch: true },
   },
