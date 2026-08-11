@@ -1000,6 +1000,15 @@ jobs:
   # ========== Testing Jobs ==========
   e2e_test:
     <<: *defaults
+    # medium+ is for MEMORY, not speed. Tests that install an env package (a legacy core env, or a
+    # modern one like @teambit/react.react-env) pull the env's full dependency closure - thousands
+    # of packages - and the install peaks over 3GB, which does not fit in medium's 4GB alongside
+    # node. Dropping back to medium OOM-kills them: job #437962 came back with 12 bare `Killed`
+    # failures, 11 of them on the `bit install` of an env package, and 155 fewer tests run because
+    # the suites whose before-hooks died never reported.
+    # This is not waiting on a bit-side fix: pnpm/pnpm#13681 tracks the engine still peaking ~2x
+    # pnpm v10 (4.4GB for a 3.8k-package graph) and is open, so 4GB is not enough regardless.
+    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
@@ -1010,6 +1019,8 @@ jobs:
   # makes sure the newly published version doesn't break bit
   e2e_test_bbit:
     <<: *defaults
+    # medium+ for the same OOM reason as e2e_test: env-package installs peak over 3GB.
+    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
