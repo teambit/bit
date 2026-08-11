@@ -378,3 +378,5 @@ export class Component implements IComponent {
     return component.id.toString() === this.id.toString();
   }
 }
+
+// load-test marker 2: fresh lane retry after bit.cloud 500 aborted attempt 1 (throwaway branch)
