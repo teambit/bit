@@ -4,8 +4,10 @@
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
 > §7 verification · §8 what's installed and why · §9 bundle vs SEA · §9b the published package shape
 > · §9c running e2e against the bundle · §9d first CI run results · §9e the build task · §10 gaps
-> · §15 webpack/mocha externals research.
-> Last updated: 2026-08-10
+> · §15 webpack/mocha externals research · §16 babel/ws/mcp-config-writer externals research (§16e:
+> babel aspect usage & pre-bundle interaction) · §17 making `bit start` work from the pre-bundles
+> · §18 mcp-config-writer inlined into the bundle instead of copied.
+> Last updated: 2026-08-11
 
 ---
 
@@ -14,14 +16,14 @@
 Ship the Bit CLI as a **single bundled JavaScript file** plus a thin ring of packages that genuinely
 cannot be inlined, instead of a 1.2 GB `node_modules` tree.
 
-|                     | released bit (bvm 2.0.72) | bundled bit (this branch)                                   |
-| ------------------- | ------------------------- | ----------------------------------------------------------- |
-| install size        | **1.2 GB**                | **231 MB** (67 MB bundle + 161 MB externals + 2.5 MB shims) |
-| files on disk       | **141,008**               | **~7,300**                                                  |
-| `bit --help` (warm) | 0.662 s                   | **0.642 s** (SEA: 1.324 s — §9)                             |
-| `bit list` (warm)   | 0.914 s                   | **0.848 s** (SEA: 1.574 s)                                  |
-| single executable   | —                         | **179 MB `bit-app`** (+ the `bundle/` support dir)          |
-| build time          | n/a                       | ~11 s esbuild + ~5 s codegen (+ ~40 s for the SEA variant)  |
+|                     | released bit (bvm 2.0.72) | bundled bit (this branch)                                                                  |
+| ------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
+| install size        | **1.2 GB**                | **322 MB** (61 MB bundle + 133 MB externals + shims + 91 MB pre-bundled UI/preview — §17g) |
+| files on disk       | **141,008**               | **~7,300**                                                                                 |
+| `bit --help` (warm) | 0.662 s                   | **0.642 s** (SEA: 1.324 s — §9)                                                            |
+| `bit list` (warm)   | 0.914 s                   | **0.848 s** (SEA: 1.574 s)                                                                 |
+| single executable   | —                         | **179 MB `bit-app`** (+ the `bundle/` support dir)                                         |
+| build time          | n/a                       | ~11 s esbuild + ~5 s codegen (+ ~40 s for the SEA variant)                                 |
 
 Every command on the target list — and a good deal more — runs from `/tmp/bit-bundle` against
 workspaces in `/tmp/bundle-tests/*`, with **zero** reads from this repo or from `~/.bvm` (§7.3).
@@ -297,9 +299,9 @@ All against `/tmp/bundle-tests/ws2` (a real workspace with a created, snapped, t
 released `bit`** on the same workspace, so they are pre-existing behaviour, not bundle regressions
 (verified side by side).
 
-| ❌ not working |                                                                                                                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `bit start`    | `Cannot find module '@teambit/mdx.modules.mdx-v3-options'` — the UI dev server needs the UI-bundling packages on disk. Works with `--ui-bundling`, at a cost of 1.1 GB (§8.3). |
+| ✅ working since 2026-08-11 |                                                                                                                                                                                                                |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bit start`                 | serves the shipped UI and preview pre-bundles from the shims — no bundler runs, and none of the UI-bundling externals are needed. Was `Cannot find module '@teambit/mdx.modules.mdx-v3-options'` before (§17). |
 
 ### 7.2 Single executable
 
@@ -338,12 +340,12 @@ files in `bit.app.js` that actually `require()` it.
 | `@rspack/core`                  | **42 MB**  | 7      | native Rust binary                                                                                        | `@teambit/preview` (rspack.config, pre-bundle), `@teambit/ui` (dev/browser/ssr configs, ui-server)       | **only for `bit start` / preview + UI bundling.** Biggest single win if made optional. |
 | `@pnpm/napi`                    | **40 MB**  | 3      | Rust engine, per-platform optional dep                                                                    | `@teambit/pnpm` (read-config, lynx), `@teambit/pkg` (packer)                                             | no — `bit install` / `bit create` need it                                              |
 | `typescript`                    | **23 MB**  | 92     | `ts-server-client` spawns `typescript/lib/tsserver.js` by path; the compiler is handed `lib.*.d.ts` paths | `@teambit/typescript`, `@teambit/envs` fallback compiler, `tsutils`                                      | partly — see §8.2                                                                      |
-| `@babel/core`                   | **17 MB**  | 77     | plugin graph resolved by name at runtime                                                                  | `@teambit/compilation.modules.babel-compiler`, `react-docgen`, dozens of bundled babel plugins           | partly — see §8.2                                                                      |
+| `@babel/core`                   | **17 MB**  | 77     | plugin graph resolved by name at runtime                                                                  | `@teambit/compilation.modules.babel-compiler`, `react-docgen`, dozens of bundled babel plugins           | partly — see §8.2, §16a                                                                |
 | `webpack`                       | **14 MB**  | 8      | plugin/loader graph resolved by name                                                                      | `@teambit/webpack` dev config, `@rspack/dev-server`, `workbox-webpack-plugin`, `webpack-assets-manifest` | **only for user envs that use webpack**                                                |
 | ~~`mocha`~~                     | ~~2.2 MB~~ | ~~2~~  | —                                                                                                         | —                                                                                                        | **done — removed 2026-08-10, see §15e**                                                |
 | `@parcel/watcher`               | 588 KB     | 1      | native `.node`                                                                                            | `@teambit/watcher`                                                                                       | no                                                                                     |
 | `@lydell/node-pty`              | ~1 MB      | 1      | native `.node`                                                                                            | `@teambit/bit` server-forever (the PTY daemon)                                                           | only if `bit server-forever` is dropped                                                |
-| `bufferutil` / `utf-8-validate` | small      | 2 each | native `.node`                                                                                            | optional accelerators for `ws`                                                                           | **yes** — `ws` works without them                                                      |
+| `bufferutil` / `utf-8-validate` | small      | 2 each | native `.node`                                                                                            | optional accelerators for `ws`                                                                           | product-level yes, bundler-level no — see §16b                                         |
 | `source-map-support`            | small      | 1      | installs a process-wide `Error.prepareStackTrace` hook                                                    | `@babel/register`                                                                                        | no                                                                                     |
 | `pnpapi` / `fsevents`           | —          | 0      | declared external, never installed                                                                        | guarded/optional requires                                                                                | n/a                                                                                    |
 
@@ -728,8 +730,9 @@ from a sibling shim. Capsules always carry declarations; this repo needs
   `bufferutil`, `utf-8-validate` — so their versions cannot be resolved and they are dropped from the
   generated package.json. They are marked external, i.e. _not in the bundle_, so this is a runtime
   `Cannot find module` waiting to happen. The bundler now warns loudly. Fix is `bit deps set`, and it
-  belongs with §9b. `@teambit/mcp.mcp-config-writer` is likewise undeclared, so its runtime template
-  asset is not copied.
+  belongs with §9b. ~~`@teambit/mcp.mcp-config-writer` is likewise undeclared, so its runtime template
+  asset is not copied.~~ No longer applicable (2026-08-11): its templates are now inlined into the
+  bundle at build time instead of copied as a runtime asset — see §18.
 - **`CoreExporterTask` still writes the same locators** for a non-bundled build; superseding it for
   `@teambit/bit` is not done.
 - **`main` still points at `dist/index.js`**, the compiled component source, so `require('@teambit/bit')`
@@ -776,8 +779,11 @@ declarations inside the `bit` shim (1158 files instead of 18). `dist/core-aspect
 
 ## 10. Known gaps & limitations
 
-1. **`bit start` / the UI dev server does not work** in the default build (§7.1, §8.3). `bit build`'s
-   `BundleUI` and `PreBundlePreview` tasks _do_ pass, so this is specifically the interactive server.
+1. ~~**`bit start` / the UI dev server does not work** in the default build.~~ **Closed 2026-08-11
+   (§17)** — the default build now ships the pre-built UI and preview bundles inside the shims and
+   serves them without running a bundler. Remaining limitation: a workspace whose env contributes its
+   own preview-runtime aspects misses the `.hash` and falls into the rebuild path, which a default
+   bundle cannot perform (§17d, §17h).
 2. **41 `require.resolve` calls remain unresolved in the output.** esbuild warns
    _"X should be marked as external for use with require.resolve"_ for `@svgr/webpack`,
    `babel-loader`, `expose-loader`, the `*-browserify` polyfills, `@rspack/dev-server/client/*`, etc.
@@ -816,9 +822,10 @@ declarations inside the `bit` shim (1158 files instead of 18). `dist/core-aspect
 
 **C. Packaging** — the critical path now that the task runs (§9e):
 
-- Declare the 4 missing externals on `@teambit/bit` (`bit deps set`), plus
-  `@teambit/mcp.mcp-config-writer`. Without this the published bundle is missing modules it needs at
-  runtime. **This is now the single blocking item for a publishable artefact.**
+- Declare the 4 missing externals on `@teambit/bit` (`bit deps set`). Without this the published bundle
+  is missing modules it needs at runtime. **This is now the single blocking item for a publishable
+  artefact.** (`@teambit/mcp.mcp-config-writer` no longer needs to be on this list — 2026-08-11, §18 —
+  its templates are inlined at build time instead of read from a copied runtime asset.)
 - ~~Emit the publishable layout of §9b from the task itself~~ — **done**, see §9e.
 - Supersede `CoreExporterTask` for `@teambit/bit` — both write the same locators today.
 - Decide whether `main` should point at the `bit` shim rather than `dist/index.js` (§9e).
@@ -863,19 +870,23 @@ declarations inside the `bit` shim (1158 files instead of 18). `dist/core-aspect
 
 ## 13. Decisions taken (and why)
 
-| #   | decision                                                                                                                                                                                                  | rationale                                                                                                                                                                                                                                                                                                                |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| D1  | esbuild `0.28.2` (repo previously had only a transitive `0.14.29`)                                                                                                                                        | continuation of bit-bundle2; fast, good CJS/node output                                                                                                                                                                                                                                                                  |
-| D2  | bundler lives in-repo at `scopes/harmony/bit/bundle`, run via `npm run bundle`                                                                                                                            | dogfooding; same place bit-bundle2 used                                                                                                                                                                                                                                                                                  |
-| D3  | output defaults to `/tmp/bit-bundle`, overridable                                                                                                                                                         | keeps the repo clean and forces isolation testing                                                                                                                                                                                                                                                                        |
-| D4  | **did not merge `bit-bundle2`**; ported ideas, not code                                                                                                                                                   | stale, carries ~50 unrelated `esm.mjs` edits and a rewritten `manifests.ts`                                                                                                                                                                                                                                              |
-| D5  | **`manifests.ts` untouched**; main runtimes registered by a _generated_ side-effect module                                                                                                                | bundle2 rewrote it to deep-import both `.aspect` and `.main.runtime`, making every future core-aspect addition a two-place edit. It is also mirrored into `teambit.harmony/testing/load-aspect` by CI.                                                                                                                   |
-| D6  | **`core-aspects.ts`, `load-bit.ts`, `config.main.runtime.ts`, `cli-parser.ts` untouched**                                                                                                                 | bundle2 patched all four. Emitting shim packages that _look like_ real aspect packages made every patch unnecessary. Net runtime-source change: **one file** (`hook-require.ts`), fixing a genuine bug.                                                                                                                  |
-| D7  | bundle from `dist/`, not from TypeScript source                                                                                                                                                           | `dist` is what ships today, produced by bit's own compiler. Compiling ~2000 TS files with esbuild would introduce a second set of TS semantics (decorators, class fields, enums) for no benefit.                                                                                                                         |
-| D8  | externals list starts at **11**, not bundle2's ~120                                                                                                                                                       | most of bundle2's entries were react/node/mdx env deps deleted by `remove-core-envs-from-manifest`. Verified against the emitted bundle: `@swc/core`, `yoga-layout`, `canvas`, `jest-*`, `css-loader`, `style-loader`, `less-loader`, `source-map-loader`, `ink`, `esbuild`, `lightningcss` have **zero** require sites. |
-| D9  | `bin/bit` calls `module.enableCompileCache()`                                                                                                                                                             | V8 parsing a 67 MB file every run cost more than the requires it replaced (1.07 s). With the cache: 0.61 s, faster than the released bit's 0.70 s.                                                                                                                                                                       |
-| D10 | UI-bundling externals behind `--ui-bundling`, off by default                                                                                                                                              | measured at +1.1 GB (§8.3) — shipping it by default would erase the entire point                                                                                                                                                                                                                                         |
-| D11 | removed the `@teambit/mocha` core aspect entirely (source, `manifests.ts`, `core-aspects-ids.json`), landed on `remove-core-envs-from-manifest` (`750f930c9`) and merged into `bit-bundle3` (`9158ab42a`) | zero callers of `MochaMain.createTester()` anywhere, and zero dependency (declared or phantom) of `@teambit/defender.mocha-tester` on it (§15d/§15e) — a clean deletion, unlike webpack which has one surviving phantom-dependency blocker                                                                               |
+| #   | decision                                                                                                                                                                                                  | rationale                                                                                                                                                                                                                                                                                                                       |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | esbuild `0.28.2` (repo previously had only a transitive `0.14.29`)                                                                                                                                        | continuation of bit-bundle2; fast, good CJS/node output                                                                                                                                                                                                                                                                         |
+| D2  | bundler lives in-repo at `scopes/harmony/bit/bundle`, run via `npm run bundle`                                                                                                                            | dogfooding; same place bit-bundle2 used                                                                                                                                                                                                                                                                                         |
+| D3  | output defaults to `/tmp/bit-bundle`, overridable                                                                                                                                                         | keeps the repo clean and forces isolation testing                                                                                                                                                                                                                                                                               |
+| D4  | **did not merge `bit-bundle2`**; ported ideas, not code                                                                                                                                                   | stale, carries ~50 unrelated `esm.mjs` edits and a rewritten `manifests.ts`                                                                                                                                                                                                                                                     |
+| D5  | **`manifests.ts` untouched**; main runtimes registered by a _generated_ side-effect module                                                                                                                | bundle2 rewrote it to deep-import both `.aspect` and `.main.runtime`, making every future core-aspect addition a two-place edit. It is also mirrored into `teambit.harmony/testing/load-aspect` by CI.                                                                                                                          |
+| D6  | **`core-aspects.ts`, `load-bit.ts`, `config.main.runtime.ts`, `cli-parser.ts` untouched**                                                                                                                 | bundle2 patched all four. Emitting shim packages that _look like_ real aspect packages made every patch unnecessary. Net runtime-source change: **one file** (`hook-require.ts`), fixing a genuine bug.                                                                                                                         |
+| D7  | bundle from `dist/`, not from TypeScript source                                                                                                                                                           | `dist` is what ships today, produced by bit's own compiler. Compiling ~2000 TS files with esbuild would introduce a second set of TS semantics (decorators, class fields, enums) for no benefit.                                                                                                                                |
+| D8  | externals list starts at **11**, not bundle2's ~120                                                                                                                                                       | most of bundle2's entries were react/node/mdx env deps deleted by `remove-core-envs-from-manifest`. Verified against the emitted bundle: `@swc/core`, `yoga-layout`, `canvas`, `jest-*`, `css-loader`, `style-loader`, `less-loader`, `source-map-loader`, `ink`, `esbuild`, `lightningcss` have **zero** require sites.        |
+| D9  | `bin/bit` calls `module.enableCompileCache()`                                                                                                                                                             | V8 parsing a 67 MB file every run cost more than the requires it replaced (1.07 s). With the cache: 0.61 s, faster than the released bit's 0.70 s.                                                                                                                                                                              |
+| D10 | UI-bundling externals behind `--ui-bundling`, off by default                                                                                                                                              | measured at +1.1 GB (§8.3) — shipping it by default would erase the entire point                                                                                                                                                                                                                                                |
+| D11 | removed the `@teambit/mocha` core aspect entirely (source, `manifests.ts`, `core-aspects-ids.json`), landed on `remove-core-envs-from-manifest` (`750f930c9`) and merged into `bit-bundle3` (`9158ab42a`) | zero callers of `MochaMain.createTester()` anywhere, and zero dependency (declared or phantom) of `@teambit/defender.mocha-tester` on it (§15d/§15e) — a clean deletion, unlike webpack which has one surviving phantom-dependency blocker                                                                                      |
+| D12 | **the shipped pre-bundles contain bit's own (core) aspects only** — `filterCoreAspectDefs` in `BundleUiTask` / `PreBundlePreviewTask`                                                                     | the artifact must describe bit, not whichever workspace built it. bit's repo uses `teambit.react/react` as an env, which dragged a _versioned_ workspace aspect into the artifact and made its `.hash` unmatchable by every user workspace (§17b/§17d). Alternatives — subset matching, or re-adding react everywhere — in §17d |
+| D13 | **the shims emit a file per non-main runtime** (`*.preview.runtime.js`, `*.ui.runtime.js`), contents unused                                                                                               | `resolveAspects(runtime)` drops any aspect without such a file, so a bundled bit resolved zero preview aspects and hashed the empty string. Existence is what makes the aspect visible; only the main runtime ever executes in the CLI process (§17f)                                                                           |
+| D14 | **pre-bundle artifacts are resolved from the _running_ bit first**, bvm second (`getAspectArtifactDir`)                                                                                                   | `getBundleUiPath`/`getBundlePath` went only through `getAspectDirFromBvm`, so a bundled bit silently served the artifacts of whatever bit bvm had linked — and would find nothing at all on a machine without bvm (§17a)                                                                                                        |
+| D15 | **`bit start` in a bundled bit serves the pre-bundle or fails**; the rebuild fallback stays behind `--ui-bundling`                                                                                        | the fallback costs 231 MB → 1.3 GB, i.e. the entire saving, to cover a case the artifact should have covered. Shipping it by default would defeat the bundle (§17d, §17g)                                                                                                                                                       |
 
 ---
 
@@ -957,6 +968,13 @@ createDevServer/createBundler` and `MochaMain.createTester` both have **zero cal
   dropped from `cli-bundler`'s externals, rebuild verified `externalsInstalled: 10` (was 11),
   `coreAspects: 105` (was 106), zero `mocha` require sites in `bit.app.js`. `lint` clean on both
   branches; bundled binary smoke-tested (`--version`, `--help`, `init`, `status`).
+
+- **2026-08-11** — `bit start` was broken on this branch **independently of bundling**: `bd start` fails on `Cannot find module 'autoprefixer'`, the bundle on 228 rspack errors. Released bit 2.0.72 serves both pre-bundles in the same workspace instantly, so the pre-bundle path — not the rebuild path — is the one to make work (§17a/§17c).
+- **2026-08-11** — the pre-bundle `.hash` is a sha1 over the sorted aspect ids for that runtime, and all three values were reproduced exactly: released 2.0.72 = 5 core + `teambit.react/react` (`11341fbe`), a user workspace on this branch = the 5 core alone (`e23f10da`), this branch's build in bit's repo = 5 core + `teambit.react/react@1.0.1042` (`d3040e74`). `remove-core-envs-from-manifest` took react out of the core aspects, so bit's own repo and every user workspace stopped agreeing (§17b).
+- **2026-08-11** — a bundled bit resolved **zero** preview aspects (`currentBundleHash` = sha1 of the empty string): the shims emitted no `*.preview.runtime.js`, and `resolveAspects` drops aspects without one (§17f).
+- **2026-08-11** — with core-only artifacts shipped inside the shims, `bit start` works from the default (non-`--ui-bundling`) bundle: HTTP 200 immediately, served from `dist/core-aspects/node_modules/@teambit/ui/artifacts/…`, bit's own rspack never runs. Distribution **1.3 GB → 322 MB**, externals **31 → 12** (§17g).
+- **2026-08-11** — the shipped UI artifact measures **90.4 MB**: two independent full browser builds of the same app (22.6 MB `workspace` + 22.6 MB `scope`, only 25 files / 1.9 MB byte-identical between them) plus a **45.2 MB** scope-only SSR build that `bit start` in a workspace never serves. Filed as [teambit/bit#10596](https://github.com/teambit/bit/issues/10596); it is now the largest single item in the distribution (§17h).
+- **2026-08-11** — two unrelated resolution bugs blocked the build tasks: `@apollo/client` is a peer of `@teambit/component` and unresolvable from a capsule's pnpm store (fixed with a directory alias — it carries React context, so one copy is required anyway), and `@teambit/cloud.hooks.use-cloud-scopes` declares `"import": "./dist/esm.mjs"` without shipping one — including in the **published** 2.0.72 package (OQ3 biting in practice).
 
 ---
 
@@ -1187,3 +1205,557 @@ on the `webpack-bundler`/`webpack-dev-server` phantom-dependency fix before a fu
 (de-registering it from `manifests.ts` alone, without deleting the source, does not have that blocker).
 
 ---
+
+## 16. Externals research: `@babel/core`, `bufferutil`/`utf-8-validate`, `mcp-config-writer` (2026-08-10)
+
+Prompted by: "research these externals — could they be removed?" Read-only investigation, no code
+changed. Unlike §15's webpack/mocha (both turned out orphaned), all three of these are confirmed
+load-bearing today — the useful output is _why_, precisely enough to know what would have to change
+first.
+
+### 16a. `@babel/core` — not droppable; sharper reason than "resolved by name"
+
+**Not referenced by `babel-loader` string anywhere in this repo's tracked `scopes/` source.**
+`grep -rn "babel-loader" scopes/` returns exactly one hit: the comment in `externals.ts:12` itself.
+
+**Direct imports of `@babel/core`** (would need inlining if it weren't external):
+
+- `scopes/compilation/babel/babel.main.runtime.ts:7` — `import * as babel from '@babel/core'`
+- `scopes/compilation/modules/babel-compiler/babel-compiler.ts:1,3` — value import + `TransformOptions`
+- `scopes/react/bit-react-transformer/bit-react-transformer.ts:1` — type-only import
+- `scopes/compilation/babel/compiler-options.ts:1` — type-only import
+
+**`BabelAspect` is still a core aspect** despite the react/node/mdx core-env removal on this branch:
+`scopes/harmony/bit/manifests.ts:41,164`. So `@babel/core` has a live, direct consumer in the shipped
+CLI regardless of the `babel-loader` question below.
+
+**Where `babel-loader` string-resolution actually lives**: not in this repo's tracked source at all —
+only in the _published_ `@teambit/react` package's webpack config builder
+(`node_modules/.pnpm/@teambit+react@1.0.1042.../webpack/webpack.config.base.ts`, confirmed via
+`grep -rl "require.resolve('babel-loader')" node_modules/.pnpm`). This repo's own
+`scopes/react/react/` (the workspace-tracked react-env component) has no `webpack/` source dir left —
+consistent with react-env removal. `@teambit/react` is externalized only under
+`UI_BUNDLING_EXTERNALS` (`externals.ts`, the `--ui-bundling` opt-in group), not the base 10-entry
+list — so this path is gated behind `bit start`/UI bundling, not the default CLI bundle. Matches §10
+item 2's existing note that the 41 `require-resolve-not-external` warnings sit inside "config builders
+for bundling _someone else's_ browser code."
+
+**The load-bearing reason, sharper than "resolved by name at runtime"**: `babel-loader`
+(`workspace.jsonc:448`, pinned `9.2.1`) declares `@babel/core` as a peer dependency it resolves via its
+_own_ `require('@babel/core')` once webpack loads it as an installed package. If `@babel/core` were
+inlined into `bit.app.js` instead of installed on disk as a real package, `babel-loader`'s internal
+peer resolution has nothing to find — this fails independent of whether bit's own code imports it
+directly. So `@babel/core` needs to stay resolvable as an installed package for as long as any
+`babel-loader`/webpack-config-building path exists anywhere in the dependency graph, even one gated
+behind `--ui-bundling`.
+
+Also still unresolved: `@babel/core` is one of the 4 externals flagged at line ~727 as an _undeclared_
+dependency of `@teambit/bit` — its version can't be resolved into the generated `package.json`, a real
+`Cannot find module` risk at runtime for a published build. Fix is the same `bit deps set` noted in
+§11C.
+
+**Verdict**: not droppable today. This sharpens §8.2 item 3's existing "partly droppable" note — the
+77 require sites being "bundled babel plugins asking for their peer" (§8.1) is exactly the
+`babel-loader`-peer pattern above, generalized. Dropping it would require either (a) removing
+`BabelAspect` from core (mirroring §15's webpack/mocha work — not yet investigated whether it's as
+clean) or (b) resolving `webpack.config.base.ts`'s `babel-loader` dependency from the user's workspace
+instead of bit's own installation, which is the same "resolve from workspace, don't ship a second
+copy" direction as §8.2 items 1–2.
+
+### 16b. `bufferutil` / `utf-8-validate` — load-bearing, not a no-op
+
+**`ws` usage**: exactly one import site in `scopes/`:
+`scopes/harmony/graphql/create-remote-schemas/create-remote-schemas.ts:9` (`import ws from 'ws'`).
+
+**Genuinely installed here, with compiled native binaries** — unlike `pnpapi`/`fsevents`
+(`externals.ts:100`, `externalsNotInstalled`, confirmed never-installed no-ops):
+
+- `node_modules/.pnpm/bufferutil@4.0.3/.../build/Release/bufferutil.node`
+- `node_modules/.pnpm/utf-8-validate@5.0.5/.../build/Release/validation.node`
+- Pinned directly: `workspace.jsonc:673` (`"ws": "7.5.10"`), with both native packages listed in
+  `allowScripts` (`workspace.jsonc:15-22`, needed so pnpm runs their native build scripts) and present
+  as root-importer deps in `pnpm-lock.yaml`.
+
+**Confirmed optional peer with graceful fallback**, in the installed `ws@8.21.1`:
+`package.json` — `peerDependenciesMeta: { bufferutil: {optional:true}, utf-8-validate: {optional:true} }`.
+Source has the try/catch:
+
+- `ws/lib/buffer-util.js:114-127` — `try { require('bufferutil') ... } catch (e) { /* Continue regardless */ }`
+- `ws/lib/validation.js:143-149` — same pattern for `utf-8-validate`
+
+**Why esbuild can't just skip them if externalized status were dropped**: `bufferutil`/`utf-8-validate`
+are literal `require('bufferutil')` calls — statically analyzable, and since the packages are actually
+installed (not absent like `pnpapi`), esbuild would successfully resolve and attempt to inline them
+rather than skip them. Both load their `.node` binary via the standard node-gyp-build
+`path.join(__dirname, ...)` pattern; under esbuild's bundle `__dirname` collapses to the flat bundle
+dir, so the binary lookup breaks. This is exactly category A's own rationale
+(`externals.ts:8-9`, "esbuild can only inline JavaScript").
+
+**Verdict**: §8.1's "droppable: yes" is a _product_ question — do we want `ws`'s native perf
+accelerators at all, or is the pure-JS fallback acceptable, in which case the two packages could be
+removed from `workspace.jsonc`/`allowScripts` entirely and `ws` would fall back gracefully with zero
+code changes. It is not a statement that bundling them while installed is safe — it isn't. The actual
+lever here is upstream of `externals.ts`: stop installing the two native packages (or drop `ws`'s
+optional peer deps in an override), and the externals-list entries become removable as a consequence,
+not the other way around.
+
+### 16c. `@teambit/mcp.mcp-config-writer` — structurally required; not a "could be removed" item
+
+**Real source in this repo**: `components/mcp/mcp-config-writer/mcp-config-writer.ts` — a workspace
+component, not just a published dependency (resolves via a `file+components+mcp+mcp-config-writer`
+pnpm link).
+
+**The template-reading method isn't literally `loadRulesTemplate`** — `copy-assets.ts:29`'s comment
+paraphrases; the real method is `static async getDefaultRulesContent(...)`
+(`mcp-config-writer.ts:503-527`), which reads a template by disk path exactly as `copy-assets.ts`'s own
+doc comment describes for this whole asset category:
+
+```
+mcp-config-writer.ts:525  const templatePath = path.join(__dirname, templateName);
+mcp-config-writer.ts:526  return fs.readFile(templatePath, 'utf8');
+```
+
+**The three templates** (`components/mcp/mcp-config-writer/`), selected by
+`consumerProject`/git-presence flags at `mcp-config-writer.ts:516-523`:
+
+- `bit-rules-template.md` — default Bit MCP agent instructions (non-git workspace)
+- `bit-git-rules-template.md` — same, for git-integrated workflows
+- `bit-rules-consumer-template.md` — instructions for projects that _consume_ Bit components
+  (npm-install flow) rather than develop them
+
+Written out to AI-coding-assistant config locations — `.claude/bit.md`
+(`mcp-config-writer.ts:491-496`), `.cursor/rules/bit.rules.mdc` (`:444`), etc. — so these are rules
+files that teach agents like Claude Code / Cursor how to use Bit's MCP tools.
+
+**Confirmed genuinely necessary**: the published package's `dist/` layout
+(`node_modules/.pnpm/@teambit+mcp.mcp-config-writer@0.0.9/.../dist/`) has all three `.md` files
+sitting alongside the compiled JS, matching `copy-assets.ts:30`'s glob `dist/bit-*-template.md`.
+Since these are non-JS assets read by disk path at runtime, esbuild cannot pull them into `bit.app.js`
+— `copyAssets` is structurally required for as long as this feature exists.
+
+**Possible alternative** (not implemented, just noted for later): the templates could become build-time
+JS string constants instead — e.g. an esbuild `text`-loader import, or a small codegen step emitting a
+template-literal module — turning `getDefaultRulesContent` into a pure in-memory lookup with zero disk
+I/O and removing this `copy-assets.ts` entry entirely. Trade-off: loses the ability to edit/inspect the
+templates as loose files post-build, and requires touching `mcp-config-writer.ts`'s read path (component
+code, not just the bundler) plus its own compile step.
+
+**Same undeclared-dependency issue as §16a**: `@teambit/mcp.mcp-config-writer` is, per the note at line
+~731, likewise an undeclared dependency of `@teambit/bit` — same `bit deps set` fix needed alongside the
+4 externals already tracked there.
+
+_(superseded 2026-08-11: the "possible alternative" below is now implemented and shipped — see §18.
+`copy-assets.ts` no longer has an entry for this package, and the undeclared-dependency note above no
+longer applies to it specifically, since there's no longer a copied asset depending on the published
+package's resolvable version.)_
+
+### 16d. Bottom line
+
+None of the three are droppable _from the externals list_ in isolation — each has a structural reason
+(native-binary-can't-be-inlined for the `ws` pair, peer-resolved-from-disk for babel, non-JS-asset for
+mcp-config-writer) that `externals.ts`/`copy-assets.ts`'s own category comments already predict. The
+real levers all live one layer up, and match §8.2's existing ordering:
+
+- `@babel/core` — droppable only if `BabelAspect` leaves the core manifest (unexamined; same shape as
+  §15's webpack/mocha work) or `babel-loader`'s dependency is resolved from the user's workspace.
+- `bufferutil`/`utf-8-validate` — droppable only if the native accelerators are removed from `ws`'s
+  install (a `workspace.jsonc`/`allowScripts` change, not a bundler change).
+- `mcp-config-writer` — not droppable at all while the feature exists; only its _mechanism_ (copied
+  asset vs. inlined string) is a lever, and a small one.
+
+### 16e. Follow-up — does anything call the local `BabelAspect`? Does the UI/preview pre-bundle change babel's runtime necessity? (2026-08-11)
+
+Two follow-ups on §16a, mirroring §15d's split between "is the tool used" and "is the _local aspect
+wrapper_ used."
+
+**Does anything use the babel aspect?**
+
+Zero callers of `BabelMain.createCompiler()` (`babel.main.runtime.ts:17`) in this repo's shipped
+application code — same shape as mocha (§15b) and webpack's `WebpackMain.createDevServer()`/
+`createBundler()` (§15d). Every call site is either:
+
+- Documentation usage examples: `scopes/harmony/aspect-docs/node/node.mdx:151`,
+  `scopes/envs/aspect-docs/envs/envs.mdx:315`, `scopes/react/aspect-docs/react/react.mdx:157`.
+- e2e test fixtures under `components/legacy/e2e-helper/excluded-fixtures/extensions/{babel-env,
+multiple-compilers-env}/*.extension.ts` — copied into throwaway workspaces by
+  `e2e-fixtures-helper.ts:81`, exercised by a dedicated suite, `e2e/harmony/babel.e2e.ts` ("compile
+  with babel" / "compile simple javascript component").
+
+Unlike mocha, this isn't dead code — `e2e/harmony/babel.e2e.ts` is a maintained, first-class test
+proving `teambit.compilation/babel`'s public API (`createCompiler()`, composed into a custom env via
+`react.overrideCompiler()`) works end to end for a user authoring their own babel-based env. It's a
+documented, supported feature, just one with zero consumers among bit's own shipped core envs. So:
+**not orphaned like mocha, but also not exercised by anything that ships inside `bit.app.js`** — the
+CLI bundle carries `BabelAspect`/`BabelMain` (`manifests.ts:41,164`) purely so a user _could_ call this
+API, not because bit's own code calls it. Same conclusion as webpack/mocha in §15d: `BabelAspect` is a
+candidate for the same "de-register from the core manifest" treatment — this was flagged as unexamined
+in §16d and is now confirmed structurally identical to the two already-actioned cases.
+
+This is independent of §16a's `babel-loader`-peer-resolution argument — that's about the _npm package_
+`@babel/core` needing to remain an installed peer for `babel-loader`, which is published inside
+`@teambit/react` (an external package, unrelated to the local `BabelAspect`). Removing `BabelAspect`
+from `manifests.ts` would eliminate the 4 direct-import call sites in `babel.main.runtime.ts`/
+`babel-compiler.ts`/`bit-react-transformer.ts`/`compiler-options.ts`, but has **zero effect** on the
+`babel-loader` peer-dependency requirement below — these are two independent reasons `@babel/core` is
+external, and de-registering the aspect only removes one of them.
+
+**Does the UI/preview pre-bundle change whether `babel-loader` needs `@babel/core` at runtime?**
+
+No — the pre-bundle work in flight on this branch (`pre-bundle.task.ts`, `pre-bundle-utils.ts`,
+`preview.main.runtime.ts`, `RUNTIME_NAME = 'preview'` at `pre-bundle.ts:22`) is orthogonal to the
+`babel-loader` path, for two independent reasons:
+
+1. **What gets pre-built doesn't use babel at all.** The pre-bundle mechanism pre-builds the _preview
+   app shell_ — the Harmony bootstrap code that renders a component's composition/docs inside its
+   iframe — via `createRspackConfig` (`pre-bundle.ts:18`, `scopes/preview/preview/rspack/
+rspack.config.ts`). That config has no `babel-loader` reference (the only `babel` match in that file
+   is an unrelated comment about `@babel/register` and the mocha-tester, `rspack.config.ts:33`); rspack
+   uses its own built-in loader for this shell, not babel. So regardless of whether the pre-bundle hash
+   matches and the shell is served from a shipped artifact instead of rebuilt
+   (`preview.main.runtime.ts:906-910`, `writePreviewEntry`'s branch on `currentBundleHash ===
+preBundleHash`), babel was never in that code path either way.
+2. **`babel-loader` lives in a separate, inherently per-component pipeline that can't be pre-baked.**
+   It's inside the _published_ `@teambit/react` package's webpack config (`webpack.config.base.ts:
+137,161`, per §16a) — used by `@teambit/preview.react-preview`'s webpack-based bundler/dev-server,
+   which `mdx-env` and `node.node` still route through (§15a). That pipeline transpiles _each
+   component's own source code_ for its composition/docs preview — content that differs per workspace
+   and changes on every edit, so by nature it cannot be built once and shipped as a static artifact the
+   way the shell can. It runs live, on the user's machine, every time `bit start` dev-serves or
+   `bit build` previews an mdx-env/node.node component.
+
+So the pre-bundle feature reduces the frequency of _one specific_ rspack invocation (the app shell), but
+has no bearing on the _other_, webpack+`babel-loader` pipeline that `mdx-env`/`node.node` depend on —
+`@babel/core` remains a **runtime** dependency, not a build-time-only one, for as long as those two envs
+(or any other env using the webpack-based `react-preview`) exist and get dev-served or previewed. The
+only way to make `@babel/core` purely build-time here is the direction already implied by §15a: migrate
+`mdx-env`/`node.node` off the webpack-based `react-preview` onto the pure-rspack pipeline `react-env`
+already uses. That's unstarted, and a materially bigger change than the current pre-bundle work.
+
+---
+
+## 17. Making `bit start` work from the pre-bundles (2026-08-11)
+
+Prompted by: "let's try to make it work using the pre-bundle of the ui and preview code … it should
+also suppose to remove most of the deps that are added as part of the ui-bundling flag."
+
+### 17a. The two pre-bundles, and why neither was being used
+
+`bit start` has two independent pre-built artifacts, both produced by `location: 'end'` build tasks
+and both shipped inside a released bit:
+
+|                 | produced by                                           | artifact                                                     | consumed by                                                      |
+| --------------- | ----------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| UI shell        | `BundleUiTask` (`ui/bundle-ui.task.ts`)               | `@teambit/ui/artifacts/ui-bundle/{workspace,scope}/` (58 MB) | `UIServer.start({bundleUiRoot})` → `express.static`              |
+| preview runtime | `PreBundlePreviewTask` (`preview/pre-bundle.task.ts`) | `@teambit/preview/artifacts/ui-bundle/` (0.9 MB)             | `writePreviewEntry` → a generated one-line entry that imports it |
+
+Each is gated on a `.hash` file: sha1 of the **sorted ids of every aspect carrying that runtime**,
+compared against the same list recomputed in the user's workspace. On a match, `bit start` runs **no
+bundler at all** — that is the whole point, and it is why the `--ui-bundling` externals are not
+needed at runtime (§8.3, §17d).
+
+Measured on `/tmp/bundle-tests/start-ws` (one component, symphony env):
+
+- **released bit 2.0.72**: HTTP 200 immediately, no `public/` written → both pre-bundles served.
+- **this branch, `bd start`**: both hashes mismatch → falls back to the rspack builds, which fail.
+- **this branch, bundled**: same, plus the 228-error rspack wall in §17c.
+
+So `bit start` was broken on this branch **independently of bundling** — the bundle merely had no
+way to reach a pre-bundle at all, because `getBundleUiPath`/`getBundlePath` resolved artifacts
+**only** via `getAspectDirFromBvm`. A bundled bit has no bvm install of itself; on this machine it
+silently read the artifacts of the _released_ 2.0.72 sitting in `~/.bvm`.
+
+### 17b. Root cause of the hash mismatch — arithmetic, not guesswork
+
+Every hash below was reproduced with `sha1(sortedIds.join(''))`:
+
+| list                                                                            | hash                                                |
+| ------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `compositions, docs, command-bar, pubsub, preview` + `teambit.react/react`      | `11341fbe…` = **released 2.0.72's shipped `.hash`** |
+| the same 5, **no react** — what a user workspace resolves on this branch        | `e23f10da…`                                         |
+| the same 5 + `teambit.react/react@1.0.1042` — what this branch's build produced | `d3040e74…`                                         |
+
+`remove-core-envs-from-manifest` dropped react from the core aspects. Under released bit react was a
+core aspect, so _every_ workspace resolved it and bit's own build agreed with all of them. Now:
+
+- a user workspace resolves 5 aspects;
+- **bit's own repo still resolves react**, because some of bit's components use `teambit.react/react`
+  as their env, which drags its preview runtime in — and as a _workspace component_ it carries a
+  **version**, so even a workspace that did use react would have to match `@1.0.1042` exactly.
+
+The artifact was therefore keyed to bit's dev workspace and unmatchable by anyone. This is fallout
+from the core-env removal, not from bundling.
+
+### 17c. Why the rspack fallback cannot be the answer
+
+When the hash misses, `bit start` rebuilds. That path is broken on this branch in both builds:
+
+- **bundled**: 228 errors, 356 of them `resolve-url-loader: webpack misconfiguration / upstream
+loader did not supply a source-map`, plus `ESModulesLinkingError: export 'URL' … not found in
+'url'` on `bit.app.js` itself.
+- **non-bundled `bd start`**: `Cannot find module 'autoprefixer'`.
+
+Fixing the fallback would mean shipping the whole UI dependency tree — the 1.1 GB the bundle exists
+to avoid. Serving the pre-bundle is the only direction that pays.
+
+### 17d. Alternatives considered for what goes _into_ the shipped pre-bundle
+
+The artifact's aspect set is fixed at bit-build time; the workspace's varies. Three ways out:
+
+| option                                                                                                              | effect                                                                                                                                                                                           | verdict                                                                    |
+| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| **(a) core aspects only** — filter the task's resolved aspects to those bit itself ships                            | artifact = the 5 core aspects → `e23f10da`, exactly what a plain workspace computes → pre-bundle served, no rspack. A workspace using a react env resolves 6 and still falls back to rebuilding. | **chosen**                                                                 |
+| (b) subset matching — (a) plus relaxing the runtime check from equality to "workspace aspects ⊆ pre-bundle aspects" | additionally avoids a pointless rebuild when a workspace needs _fewer_ aspects than the artifact carries; requires storing the id **list** in the artifact, not just its sha1                    | deferred — strictly better, but a behaviour change for non-bundled bit too |
+| (c) keep react in the pre-bundle and make workspaces resolve it again                                               | closest to released-bit behaviour, but re-adds the react dependency surface the branch is shedding, and still mismatches unless every workspace pins the same react **version**                  | rejected                                                                   |
+
+### 17e. Changes made
+
+- **`getAspectArtifactDir(id, artifactDir)`** (`aspect-loader/core-aspects.ts`) — resolves an
+  aspect's shipped `artifacts/` dir, trying the **running** bit first and falling back to bvm.
+  `getBundleUiPath` and `getBundlePath` now use it, so a bundled bit serves _its own_ artifacts
+  instead of a bvm install's. Verified: `bundleUiPath` now resolves locally.
+- **`filterCoreAspectDefs(defs)`** (`aspect-loader/aspect-definition.ts`) — keeps aspects with no
+  `component`, i.e. the ones resolved from bit's own installation. Applied in `PreBundlePreviewTask`
+  and, via a `forPreBundle` flag on `UiMain.build`/`createBundleUiHash`, in `BundleUiTask`.
+- **`generateBundleHash(aspects, outputPath)`** now hashes _the list that was bundled_ instead of
+  re-resolving from the ui root, so the artifact and its `.hash` cannot disagree.
+- **`cli-bundler`** copies each aspect's `artifacts/**` into its shim package and reports when none
+  were shipped — a missing pre-bundle silently costs the whole UI dependency tree.
+- **Debug logging** of both hashes, the chosen branch and the aspect id list in `writePreviewEntry`
+  and `shouldServeBundleUi`. These decisions were entirely opaque before; the diagnosis above was
+  only possible after adding them.
+
+Two unrelated bugs surfaced and were fixed to get the build tasks green at all:
+
+- **`@apollo/client` was unresolvable** from capsule pnpm stores (it is a peer of
+  `@teambit/component`, so an aspect resolved out of a capsule has none above it). Added as a
+  **directory** alias in `ui/rspack/rspack.common.ts` so the subpath entries share one copy — it
+  carries React context, so a second copy silently breaks every `useQuery`, the same reason react is
+  pinned there.
+- **`@teambit/cloud.hooks.use-cloud-scopes` had no `dist/esm.mjs`** while its `exports` map declares
+  `"import": "./dist/esm.mjs"`. Added the bridge. Note the **published** 2.0.72 package has the same
+  hole — this is OQ3 biting in practice.
+
+---
+
+## 18. `mcp-config-writer` — inlined into the bundle instead of copied (2026-08-11)
+
+§16c called the three rules templates "structurally required" as a _copied asset_, and noted inlining
+as JS strings as a possible-but-unexplored alternative. Tried it on this session; it works and is now
+the shipped mechanism — `copy-assets.ts` no longer touches `@teambit/mcp.mcp-config-writer` at all.
+
+### 18a. The change
+
+`getDefaultRulesContent` (`components/mcp/mcp-config-writer/mcp-config-writer.ts:503-530`) now branches
+on `process.env.BIT_IS_BUNDLE` — the compile-time constant `run-esbuild.ts` already `define`d but no
+component had consumed yet (§8's Startup section names it; grep confirmed zero prior usages anywhere in
+the repo):
+
+```ts
+if (process.env.BIT_IS_BUNDLE) {
+  const bundledTemplates: Record<string, string> = {
+    'bit-rules-template.md': require('./bit-rules-template.md'),
+    'bit-git-rules-template.md': require('./bit-git-rules-template.md'),
+    'bit-rules-consumer-template.md': require('./bit-rules-consumer-template.md'),
+  };
+  return bundledTemplates[templateName];
+}
+const templatePath = path.join(__dirname, templateName);
+return fs.readFile(templatePath, 'utf8');
+```
+
+Two things make this sound in both contexts:
+
+- **Outside the bundle** (the plain published package, compiled by the ordinary `tsc`-based
+  component compiler): TypeScript does not module-resolve a bare `require('str')` call the way it does
+  `import` — `NodeRequire`'s call signature is `(id: string) => any`, so no `declare module '*.md'`
+  ambient type is needed and `tsc --noEmit` stays clean. At runtime `process.env.BIT_IS_BUNDLE` is
+  actually unset, so the branch is never entered and the `require('./bit-rules-template.md')` calls
+  inside it never execute — avoiding the real failure mode (Node has no loader for `.md`, so an
+  unconditional top-level `require` would break every normal install). The disk read below runs
+  exactly as before.
+- **Inside the bundle**: `run-esbuild.ts`'s `define` (`'process.env.BIT_IS_BUNDLE': '"true"'`) turns the
+  condition into a compile-time `if ("true")`; esbuild resolves each literal-string `require(...)` at
+  build time (CJS `require` calls with literal specifiers are statically analyzed the same as `import`)
+  and, with `.md` now in the `loader` map as `'text'` (`run-esbuild.ts`), inlines the file's raw text as
+  a string literal — confirmed in the emitted bundle:
+  `require_bit_rules_template = __commonJS({ "...dist/bit-rules-template.md"(exports2, module2) {
+module2.exports = "# Bit MCP Agent Instructions\n\n..."; } })`.
+
+### 18b. One real trap: the existing `.md` ignore plugin ate the requires silently
+
+First attempt returned `undefined` for every rules request (`bit mcp-server rules claude-code --print`
+printed literally `undefined`, no thrown error). Root cause: `ignoreAssetsPlugin`
+(`plugins/ignore-assets-plugin.ts`) already had an `onResolve` filter matching
+`/\.(css|scss|sass|less|mdx|md)$/` — added because the main runtime transitively imports UI modules
+that pull in stylesheets/mdx docs, which would otherwise fail the build — and it resolves _every_
+matching path to `{ contents: 'module.exports = {};', loader: 'js' }` unconditionally, in a
+`bit-ignored-asset` namespace that runs before the extension-based `loader` map ever sees the file.
+`.md` was in that ignore list too, so the new `require()`s silently became empty objects instead of
+either failing loudly or being inlined - `bundledTemplates[templateName]` was `undefined`, not a thrown
+error, which is why it fell through the whole call chain as literal text `"undefined"` instead of
+crashing anywhere.
+
+Fix: `onResolve` now special-cases the three known filenames and returns `undefined` (the esbuild
+plugin-API idiom for "not handled, let the next resolver decide") instead of routing them into the
+ignored-asset namespace, so they fall through to normal resolution and the `.md`/`text` loader:
+
+```ts
+const KEEP_MD = new Set(['bit-rules-template.md', 'bit-git-rules-template.md', 'bit-rules-consumer-template.md']);
+build.onResolve({ filter: IGNORED }, (args) => {
+  if (KEEP_MD.has(basename(args.path))) return undefined;
+  return { path: args.path, namespace: 'bit-ignored-asset' };
+});
+```
+
+**General lesson for this bundler**: an existing catch-all resolve/ignore plugin can shadow a new
+per-extension `loader` entry entirely, silently and without a build error — esbuild plugin `onResolve`
+hooks run before the loader map is consulted for a given path, so "add an extension to `loader`" is not
+enough by itself if something else already claims that extension in a plugin. Verify by grepping actual
+emitted bundle output for the real content, not just a clean/warning-free build (`npm run bundle`
+finished with 0 errors both before and after this fix — the failure was purely a runtime `undefined`,
+invisible at build time).
+
+### 18b-2. Single-sourced the filename list after review feedback
+
+First cut hardcoded the three filenames as a literal `Set` inside `ignore-assets-plugin.ts` — a second,
+easy-to-forget place to edit if a fourth template is ever added to `mcp-config-writer` (miss it, and the
+new file silently falls back to the old ignore-and-empty behavior, reproducing 18b's bug with no error
+at build time). Fixed by making the component the single source of truth:
+
+- `mcp-config-writer.ts` now exports `MCP_RULES_TEMPLATE_FILENAMES = [...] as const` and derives a
+  `McpRulesTemplateFilename` union type from it; `getDefaultRulesContent`'s `templateName` and the
+  `bundledTemplates` record are both typed against that union, so a filename added to the exported list
+  without a matching `require(...)` line makes `Record<McpRulesTemplateFilename, string>` fail to
+  compile ("Property '...' is missing") instead of shipping a silent gap. The `require()` calls
+  themselves still have to stay individually literal — esbuild resolves the `.md` text loader per
+  static specifier, so this part can't be turned into a loop over the array.
+- `index.ts` re-exports the constant.
+- `ignore-assets-plugin.ts` imports `MCP_RULES_TEMPLATE_FILENAMES` from `@teambit/mcp.mcp-config-writer`
+  instead of hand-copying the list, and builds `KEEP_MD` from it.
+
+This adds a real dependency edge (`modules/cli-bundler` → `@teambit/mcp.mcp-config-writer`) that didn't
+exist before (previously `copy-assets.ts` only referenced the package by string for path resolution,
+never imported it). Bit's dependency resolver picked it up automatically — `bit deps get
+modules/cli-bundler` lists it as a `prod` dependency with no manual `bit deps set` needed, and `bit
+status -w` raised no missing-dependency warning for either component. Re-verified after the refactor:
+`npm run lint` clean, full rebuild + reinstall, and the same end-to-end `bit mcp-server rules
+claude-code --print` check against the rebuilt bundle still byte-identical to the source template.
+
+### 18c. Verification
+
+- `bit compile mcp-config-writer` + `bit compile modules/cli-bundler`, then `npm run bundle` — 0
+  errors, 0 change in warning count (68, all pre-existing `require-resolve-not-external` webpack/rspack
+  config-builder warnings, see §10).
+- `grep` the emitted `bit.app.js`: all three templates present as full string literals under
+  `require_bit_rules_template` / `require_bit_git_rules_template` / `require_bit_rules_consumer_template`,
+  each keyed to its real `dist/<name>.md` source path in the generated module id.
+- **No loose `bit-*-template.md` files land in the bundle dir anymore** — confirmed via `find
+dist/core-aspects/bundle -maxdepth 1 -iname "*template*"`, which now shows only
+  `agents-template*.md`/`workspace-template.jsonc` (host-initializer's and config's own assets, both
+  untouched by this change) and none of the three mcp ones.
+- End-to-end against the rebuilt, `npm install`'d bundle in `/tmp/bit-bundle`, run from
+  `/tmp/bundle-tests/*` scratch workspaces (real CLI invocation, not just static inspection):
+  - `bit mcp-server rules claude-code --print` in a non-git workspace → byte-identical to
+    `bit-rules-template.md` (mod. trailing newline from the CLI's own `console.log`).
+  - Same command inside a `git init`'d workspace → byte-identical to `bit-git-rules-template.md`.
+  - `--consumer-project` → byte-identical to `bit-rules-consumer-template.md`.
+  - `bit mcp-server rules claude-code` (no `--print`, writes `.claude/bit.md`) → identical to
+    `bit-rules-template.md` once `writeRulesFile`'s own pre-existing header comment (unrelated to this
+    change) is stripped.
+- `npm run lint` (`tsc --noEmit` + `oxlint`): 0 errors, 0 warnings, repo-wide.
+
+### 18d. Status and what's now stale elsewhere in this doc
+
+**Done.** `copy-assets.ts`'s `ASSETS` array no longer has an entry for
+`@teambit/mcp.mcp-config-writer`; §16c's "possible alternative, not implemented" is now the shipped
+mechanism, and its "same undeclared-dependency issue as §16a" note about `bit deps set` needing to cover
+`@teambit/mcp.mcp-config-writer` is now moot — the package's JS is bundled as before (it was never
+external), and nothing about it needs declaring as an external dependency anymore since there is no
+longer a copied asset relying on the published package's version being resolvable. §11C's "Still open"
+bullet listing `@teambit/mcp.mcp-config-writer` alongside the 4 undeclared externals should be read with
+that in mind next time someone works the packaging checklist.
+
+This is also a reusable pattern for the other `copy-assets.ts` entries that exist only because a
+component reads a file via `path.join(__dirname, …)`: `@teambit/config`'s `workspace-template.jsonc`
+and `@teambit/host-initializer`'s `agents-template*.md` are structurally the same shape (single static
+file, read whole, returned as a string) and could take the identical `BIT_IS_BUNDLE` + `require()` +
+text-loader treatment if their copy-assets entries are ever worth removing too - not done here, scope
+was mcp-config-writer only.
+
+### 17f. The shims resolved **zero** preview aspects
+
+With the artifacts shipped and the hashes agreeing under `bd`, the bundle still rebuilt. The log gave
+it away: `currentBundleHash: da39a3ee5e6b4b0d3255bfef95601890afd80709` — the sha1 of the **empty
+string**. A bundled bit resolved no preview aspects at all.
+
+`getAspectDef(id, runtime)` discovers a runtime by globbing `<pkg>/dist` for `*.<runtime>.runtime.js`,
+and `resolveAspects(runtime)` drops any aspect without one. The shims only ever emitted
+`*.aspect.js` and `*.main.runtime.js`, so nothing was discoverable for `preview` or `ui` — and the
+`.hash`, computed over that list, could never match a real artifact no matter how it was built.
+
+Fixed by discovering every `*.<runtime>.runtime.*` in `core-aspects-info` and emitting one file per
+runtime in the shim (5 `preview`, 28 `ui`). Their contents are never used — only the main runtime runs
+in the CLI process, and the browser code was pre-bundled into `artifacts/` at build time — but their
+_existence_ is what makes the aspect visible to `resolveAspects`.
+
+Same pass fixed a latent naming bug: shim files were emitted as `compositions.aspect.js.js`, because a
+`dist`-layout specifier keeps its `.js` and `generateOne` appended another. It worked only because
+`getAspectDef` matches with `.includes('.aspect.js')`.
+
+### 17g. Result
+
+`bit start` from the bundle, against `/tmp/bundle-tests/start-ws`:
+
+```
+UI createRuntime of teambit.workspace/workspace, bundle will be served from
+  /private/tmp/bit-bundle/dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/workspace/public/bit
+writePreviewEntry, currentBundleHash: e23f10da…, preBundleHash: e23f10da…
+Rspack 2.1.8 compiled successfully in 4.15 s      ← the *env's* rspack, from the workspace
+View 'start-ws' components at http://localhost:3800
+```
+
+HTTP 200 on the first poll, no `public/` written — both pre-bundles served, bit's own rspack never
+runs.
+
+|                                       | before                       | after                      |
+| ------------------------------------- | ---------------------------- | -------------------------- |
+| distribution with `bit start` working | **1.3 GB** (`--ui-bundling`) | **322 MB** (default build) |
+| externals installed                   | 31                           | **12**                     |
+| `bit start` in the default build      | fails                        | **works**                  |
+
+The 322 MB is 231 MB of prior distribution + ~91 MB of shipped artifacts (72 MB scope UI bundle,
+25 MB workspace UI bundle, 1.6 MB preview). The scope/workspace UI bundles are ~2× the released
+2.0.72 ones (50 MB / 8.2 MB) — unexplained, and the obvious next size lever (§17h).
+
+### 17h. Open after this
+
+- **The UI artifact is 90.4 MB and is the biggest remaining size lever** — filed as
+  [teambit/bit#10596](https://github.com/teambit/bit/issues/10596). Measured breakdown:
+
+  | part                             | size        | files |
+  | -------------------------------- | ----------- | ----- |
+  | `ui-bundle/workspace` (browser)  | 22.6 MB     | 39    |
+  | `ui-bundle/scope` (browser)      | 22.6 MB     | 54    |
+  | `ui-bundle/scope/public/bit/ssr` | **45.2 MB** | 45    |
+
+  Two separate problems. **(1)** `BundleUiTask` loops over both UI roots and runs a _full independent
+  build_ per root, so the same React/monaco/component-compare code is compiled into both — they
+  differ only in the root aspect id. Only 25 files / 1.9 MB are byte-identical, so file-level dedup
+  buys nothing; the fix is one build with two entries sharing chunks. **(2)** the 45 MB SSR build is
+  reachable only through `setupServerSideRendering`, which returns early unless `buildOptions.ssr` -
+  set on `scope.ui-root.ts` only. `bit start` in a workspace never touches it, yet every install
+  carries it. Largest single file is `scope/public/bit/ssr/index.js` at 38 MB.
+
+  Also unexplained: the released 2.0.72 artifact is 58 MB against this branch's 90 MB, so it has
+  grown as well.
+
+- **A workspace whose env contributes preview aspects** still misses the hash and falls into the
+  rebuild path, which a default bundle cannot do. It should fail with a clear message naming the
+  aspects that forced it, rather than a wall of rspack module-not-founds. Option (b) in §17d (subset
+  matching, storing the id list rather than just its sha1) would also shrink how often this happens.
+- **`BundleCliAppTask` ordering**: `BundleUI`/`PreBundlePreview` and `BundleCliApp` are all
+  `location: 'end'`. The bundler copies `artifacts/` out of the ui/preview packages, so it has to run
+  _after_ they are produced. Unverified in a single real `bit build` of `@teambit/bit`.
+- `postcss-flexbugs-fixes` / `postcss-normalize` are externals only because `postCssConfig` is a
+  module-scope const (§E in `externals.ts`). Making it a function would drop two more externals and
+  stop `postcss-preset-env` being evaluated on every bit command.
