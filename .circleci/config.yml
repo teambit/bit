@@ -907,13 +907,14 @@ jobs:
           # NOTE: PR builds run the FULL pipeline by default. To trade specific tasks for speed on a
           # given PR (no YAML change needed), add a `[skip-tasks: <names>]` token to the commit
           # message, e.g. `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents]`.
-          # No --keep-lane: the reusing flow serves components unchanged since an earlier export
-          # from the lane, with artifacts built from older commits of the branch. Capsules then mix
-          # generations of @teambit packages and cross-copy `instanceof` breaks in capsule spec
-          # runs - on a PR that snaps core components (so their specs actually run), bit_pr fails
-          # deterministically from the second push onward. The temp-lane flow rebuilds every run
-          # from one commit, trading the lane's persistent history on Bit Cloud for correctness.
-          command: 'cd bit && bit ci pr --build --skip-cleanup'
+          # --keep-lane: reuse the lane named after the branch across pushes, so the PR keeps one
+          # lane on Bit Cloud and pushes only re-snap what actually changed. Known hazard while
+          # #10583 is open: the reusing flow serves components unchanged since an earlier export
+          # with artifacts built from older commits, so capsules can mix generations of @teambit
+          # packages and cross-copy `instanceof` breaks in capsule spec runs. If a PR that snaps
+          # core components starts failing from the second push onward, that is this - rename the
+          # branch (fresh lane) or drop --keep-lane on that PR.
+          command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
@@ -999,10 +1000,14 @@ jobs:
   # ========== Testing Jobs ==========
   e2e_test:
     <<: *defaults
-    # changing from medium to large, doesn't affect the performance (speed-wise).
-    # medium+ is for MEMORY: tests that install a legacy-core env (node/react/aspect/env) pull the
-    # env package's full dependency closure (~3.6k packages, the whole bit runtime at its published
-    # version) and `bit install` peaks over 3GB — on medium (4GB) the process gets OOM-killed.
+    # medium+ is for MEMORY, not speed. Tests that install an env package (a legacy core env, or a
+    # modern one like @teambit/react.react-env) pull the env's full dependency closure - thousands
+    # of packages - and the install peaks over 3GB, which does not fit in medium's 4GB alongside
+    # node. Dropping back to medium OOM-kills them: job #437962 came back with 12 bare `Killed`
+    # failures, 11 of them on the `bit install` of an env package, and 155 fewer tests run because
+    # the suites whose before-hooks died never reported.
+    # This is not waiting on a bit-side fix: pnpm/pnpm#13681 tracks the engine still peaking ~2x
+    # pnpm v10 (4.4GB for a 3.8k-package graph) and is open, so 4GB is not enough regardless.
     resource_class: medium+
     environment:
       BITSRC_ENV: stg
@@ -1014,7 +1019,7 @@ jobs:
   # makes sure the newly published version doesn't break bit
   e2e_test_bbit:
     <<: *defaults
-    # medium+ for the same OOM reason as e2e_test: legacy-core-env installs peak over 3GB.
+    # medium+ for the same OOM reason as e2e_test: env-package installs peak over 3GB.
     resource_class: medium+
     environment:
       BITSRC_ENV: stg

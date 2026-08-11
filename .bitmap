@@ -248,13 +248,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect-loader"
     },
-    "babel": {
-        "name": "babel",
-        "scope": "teambit.compilation",
-        "version": "1.0.1097",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/babel"
-    },
     "babel/bit-react-transformer": {
         "name": "babel/bit-react-transformer",
         "scope": "teambit.react",

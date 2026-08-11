@@ -97,16 +97,15 @@ describe('build command', function () {
       helper.fixtures.populateComponents(1);
       // the default env (empty env) has no compiler hence no dist artifact. set a compiling env
       // so the tag produces one
-      helper.env.setTsEnv();
+      helper.env.setBitdevNodeEnv();
       helper.command.tagAllComponents();
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
-      // import the env of the imported component so the build below runs with it. it must be
-      // imported (not installed) - the env is a scope component, not a published npm package
-      helper.command.importComponent('ts-env');
+      // install the env of the imported component so the build below runs with it
+      helper.command.install();
 
       const artifacts = helper.command.getArtifacts(`${helper.scopes.remote}/comp1`);
       const artifactDist = artifacts.find((a) => a.name === 'dist');

@@ -77,7 +77,13 @@ describe('SchemaAspect', function () {
       const compDir = path.join(workspacePath, 'default-export');
       const src = path.join(getMockDir(), 'default-export');
       await fs.copy(src, compDir);
-      const harmony = await loadManyAspects([WorkspaceAspect, SchemaAspect, TrackerAspect], workspacePath);
+      // TypescriptAspect must be loaded: the mock component gets the default empty-env, which
+      // provides no schema extractor - extraction relies on the fallback the typescript aspect
+      // registers (always present in a real bit runtime, where typescript is a core aspect).
+      const harmony = await loadManyAspects(
+        [WorkspaceAspect, SchemaAspect, TrackerAspect, TypescriptAspect],
+        workspacePath
+      );
       const ws = harmony.get<Workspace>(WorkspaceAspect.id);
       const tracker = harmony.get<TrackerMain>(TrackerAspect.id);
       await tracker.track({ rootDir: compDir, defaultScope: 'org.scope' });
@@ -85,7 +91,8 @@ describe('SchemaAspect', function () {
       const schemaMain = harmony.get<SchemaMain>(SchemaAspect.id);
       const compId = await ws.resolveComponentId('default-export');
       const comp = await ws.get(compId);
-      const api = await schemaMain.getSchema(comp, true);
+      const { schema: api, availability } = await schemaMain.getSchemaWithAvailability(comp, true);
+      expect(availability.available, `schema should be extracted live (got reason: ${availability.reason})`).to.be.true;
       exports = (api.toObject() as any).module.exports || [];
     });
 

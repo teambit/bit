@@ -23,6 +23,7 @@ type SetCustomEnvOpts = {
 const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
   '@teambit/node': '@teambit/node@1.0.1042',
   '@teambit/react': '@teambit/react@1.0.1042',
+  '@teambit/babel': '@teambit/babel@1.0.1042',
   '@teambit/mdx': '@teambit/mdx@1.0.1043',
   // not env bases - the tiny runtime deps of the minimal fixture envs (node-env-1/node-env-2),
   // listed here so setCustomEnv installs them and the fixtures load without MissingPackages
@@ -35,6 +36,25 @@ const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
  * aspect, now its package must be installed for the fixture env to be compiled and loaded.
  */
 const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1042';
+
+/**
+ * every legacy-core-env package an old-format fixture env needs before it can load, as a
+ * dependency-resolver policy. Loading such an env pulls its whole env chain, and each missing link
+ * fails the load on its own - the fixture's own imports are only the first of them.
+ *
+ * for a test that skips setCustomEnv's install because it measures what each install does: stating
+ * these as a policy lets the *first* install fetch them, so the env is still unloadable going into
+ * that install (what makes it an "old env" there) and loadable by the second. Installing them
+ * beforehand instead would make the env load on the first install and defeat the test.
+ *
+ * versions must match the pinned versions in legacy-core-envs.ts (scopes/envs/envs).
+ */
+const LEGACY_CORE_ENV_POLICY: Record<string, string> = {
+  '@teambit/env': '1.0.1042',
+  '@teambit/node': '1.0.1042',
+  '@teambit/react': '1.0.1042',
+  '@teambit/aspect': '1.0.1042',
+};
 
 /**
  * peers required by the published legacy env packages (via @teambit/cloud UI hooks and
@@ -144,6 +164,11 @@ export default class EnvHelper {
     this.extensions = extensions;
   }
 
+  /** see LEGACY_CORE_ENV_POLICY */
+  getLegacyCoreEnvPolicyDependencies(): Record<string, string> {
+    return { ...LEGACY_CORE_ENV_POLICY };
+  }
+
   rootCompDirDep(envName: string, depComponentName: string) {
     return path.join(this.rootCompDir(envName), 'node_modules', `@${this.scopes.remote}/${depComponentName}`);
   }
@@ -187,6 +212,10 @@ export default class EnvHelper {
       },
     });
     this.command.install([...ASPECT_ENV_PACKAGES, ...this.getFixtureEnvBasePackages(EXTENSIONS_BASE_FOLDER)].join(' '));
+    // the env is loaded only at the end of the first install. run a second install so its
+    // dependency policies (e.g. @teambit/babel as a runtime dep of the babel compiler) are
+    // applied to the components - the standard flow for old-style envs (see setNodeEnv above).
+    this.command.install();
     this.command.compile();
     return EXTENSIONS_BASE_FOLDER;
   }

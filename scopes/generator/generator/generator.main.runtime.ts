@@ -396,7 +396,7 @@ export class GeneratorMain {
 
     ComponentConfig.componentConfigLoadingRegistry = componentConfigLoadingRegistry;
 
-    if (!templateWithId) throw new BitError(`template "${templateName}" was not found`);
+    if (!templateWithId) throw new BitError(templateNotFoundMessage(templateName));
     return templateWithId;
   }
 
@@ -417,8 +417,14 @@ export class GeneratorMain {
       if (!env || env === aspect) throw err;
       try {
         return await this.getTemplateWithId(templateName, resolveLegacyCoreEnvId(env));
-      } catch {
-        throw err; // the original "template not found" error is more relevant
+      } catch (envErr: any) {
+        // the env not carrying this template is the uninteresting case - the original error is
+        // the relevant one. anything else means the env itself failed to load (a missing module
+        // in its published package, a failed capsule install, an unresolved dependency), and
+        // that is the actual cause: reporting it as "template not found" hides the real failure
+        // and sends whoever debugs it looking in the generator instead of at the env.
+        if (isTemplateNotFoundError(envErr, templateName)) throw err;
+        throw envErr;
       }
     }
   }
@@ -845,6 +851,18 @@ the reason is that after refactoring, the code will have this invalid class: "cl
 
     return generator;
   }
+}
+
+function templateNotFoundMessage(templateName: string): string {
+  return `template "${templateName}" was not found`;
+}
+
+/**
+ * distinguishes "this aspect has no such template" from every other reason a template lookup can
+ * fail. only the former is safe to swallow in favor of an earlier error.
+ */
+function isTemplateNotFoundError(err: unknown, templateName: string): boolean {
+  return err instanceof BitError && err.message === templateNotFoundMessage(templateName);
 }
 
 GeneratorAspect.addRuntime(GeneratorMain);

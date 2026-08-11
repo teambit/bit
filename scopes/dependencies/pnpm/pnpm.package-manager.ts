@@ -36,6 +36,11 @@ import {
 } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
+import {
+  snapshotLoadedVirtualStoreDirs,
+  restoreRemovedLoadedVirtualStoreDirs,
+} from './preserve-loaded-virtual-store-dirs';
+import { snapshotLoadedNestedPkgDirs, restoreRemovedLoadedNestedPkgDirs } from './preserve-loaded-nested-pkg-dirs';
 import type { RebuildFn } from './lynx';
 import type * as LynxModule from './lynx';
 import { type DependenciesGraph } from '@teambit/objects';
@@ -193,6 +198,11 @@ export class PnpmPackageManager implements PackageManager {
     }
     this.modulesManifestCache.delete(rootDir);
     const hoistPattern = resolveHoistPattern(installOptions.hoistPatterns, config.hoistPattern);
+    // packages this process already loaded modules from must stay requireable even if this install
+    // re-keys them to a new peer hash - see preserve-loaded-virtual-store-dirs.ts - or drops a
+    // nested copy in favour of a hoisted one - see preserve-loaded-nested-pkg-dirs.ts
+    const loadedVirtualStoreDirs = snapshotLoadedVirtualStoreDirs(rootDir);
+    const loadedNestedPkgDirs = snapshotLoadedNestedPkgDirs(rootDir);
     const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
       rootDir,
       manifests,
@@ -258,6 +268,8 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
+    await restoreRemovedLoadedVirtualStoreDirs(loadedVirtualStoreDirs, this.logger);
+    await restoreRemovedLoadedNestedPkgDirs(rootDir, loadedNestedPkgDirs, this.logger);
     return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
   }
 

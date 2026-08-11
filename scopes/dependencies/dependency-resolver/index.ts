@@ -83,6 +83,8 @@ export { DetectorHook, DependencyDetector, FileContext } from './detector-hook';
 export {
   ensureHoistedDependencyResolution,
   ensureSelfInstallationBridge,
+  hoistedResolutionDirs,
   isGlobalVirtualStoreLayout,
+  selfInstallationRoot,
 } from './hoisted-resolution-bridge';
 export { DependencyResolverAspect as default, DependencyResolverAspect };
