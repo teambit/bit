@@ -977,13 +977,18 @@ jobs:
       # workflow manually in that case.)
       - run:
           name: halt when no new version was published since the previous nightly
+          # fail-open by design: this step only ever SAVES work, so any hiccup in the metadata
+          # lookup (npm outage, missing time entry, non-numeric output) must run the tests rather
+          # than fail the job. one npm invocation, not two — this runs on every parallel node.
           command: |
             LATEST_AGE_HOURS=$(node -e "
               const { execSync } = require('child_process');
-              const time = JSON.parse(execSync('npm view @teambit/bit time --json', { encoding: 'utf8' }));
-              const version = execSync('npm view @teambit/bit version', { encoding: 'utf8' }).trim();
-              console.log(Math.floor((Date.now() - new Date(time[version]).getTime()) / 36e5));
-            ")
+              const meta = JSON.parse(execSync('npm view @teambit/bit version time --json', { encoding: 'utf8' }));
+              const published = meta.time && meta.time[meta.version];
+              if (!published) { console.log(0); process.exit(0); }
+              console.log(Math.floor((Date.now() - new Date(published).getTime()) / 36e5));
+            " 2>/dev/null || echo 0)
+            case "$LATEST_AGE_HOURS" in (*[!0-9]*|'') LATEST_AGE_HOURS=0;; esac
             echo "latest @teambit/bit version was published ${LATEST_AGE_HOURS}h ago"
             if [ "$LATEST_AGE_HOURS" -ge 24 ]; then
               echo "already bundled and tested by the previous nightly — halting"
