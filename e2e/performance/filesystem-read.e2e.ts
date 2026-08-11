@@ -24,7 +24,14 @@ const MAX_FILES_READ = 1100;
 // metric stays — but the threshold now has headroom for layout drift, and failures print the
 // per-file diff (see files-snapshot-status.txt) so the next red is a 2-minute diagnosis instead
 // of a 3-week mystery.
-const MAX_FILES_READ_STATUS = 1650;
+//
+// Why 1600 and not tighter: the post-fix baseline is a PROJECTION (1541 measured on 2.0.74 minus
+// ~36 reads the lazy hard-link-directory import removes ≈ 1505), and layout-drift events arrive
+// in lumps of ~+20, not +1. 1600 = projected baseline + projection error margin (~25) + two drift
+// events (~40). A 1550 ceiling leaves ~45, which one drift event plus a slightly-optimistic
+// projection would cross, putting the nightly back into flapping. Once 2-3 post-fix nightlies
+// establish the real baseline, tighten this to measured + ~50.
+const MAX_FILES_READ_STATUS = 1600;
 
 /**
  * as of now (2026/08/08) ~1,072 files are loaded during bit-bootstrap (recent additions: the
@@ -88,6 +95,12 @@ describe('Filesystem read count', function () {
         });
         const numberOfReads = getNumberOfReads(output);
         if (numberOfReads >= MAX_FILES_READ_STATUS) {
+          // the snapshot is generated offline (released bundle in a clean container) and is a
+          // superset of what CI's leaner fixture reads, so the diff below can in principle miss a
+          // file that exists in the snapshot but is newly-read on CI. printing the full current
+          // list on every failure closes that gap: the red run itself carries the exact data to
+          // inspect and to regenerate a perfect snapshot from.
+          makeSnapshot(output);
           throw new Error(
             buildExceededError(
               'bit status',
@@ -198,14 +211,14 @@ function getLinesFromBitInstallation(cmdOutput: string) {
 }
 
 /**
- * in case a new snapshot is needed, call this function during the test.
- * then go to the output and paste the files into files-snapshot.txt (bit --help / bootstrap)
- * or files-snapshot-status.txt (bit status). generate against the flavor that is failing:
- * the released bundle (bvm install <version>, hoisted layout) for e2e_test_bbit reds, or the
- * repo-run bit for e2e_test reds — the two layouts differ and their snapshots are not
- * interchangeable.
+ * prints the current bit-installation file list (snapshot format). called automatically when the
+ * bit-status guard trips, so every failure carries the data to regenerate its snapshot; can also
+ * be called manually during the test when a fresh baseline is needed. paste the output into
+ * files-snapshot.txt (bit --help / bootstrap) or files-snapshot-status.txt (bit status).
+ * generate against the flavor that is failing: the released bundle (bvm install <version>,
+ * hoisted layout) for e2e_test_bbit reds, or the repo-run bit for e2e_test reds — the two
+ * layouts differ and their snapshots are not interchangeable.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function makeSnapshot(cmdOutput: string) {
   const { linesFromBitInstallation } = getLinesFromBitInstallation(cmdOutput);
   console.log('************** start snapshot **************');
