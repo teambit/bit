@@ -70,7 +70,6 @@ export type GitHostProviderSlot = SlotRegistry<GitHostProvider>;
 // Both recover through the same adopt-and-rebase path in `rebaseOntoRemoteLane`.
 const LANE_HASH_MISMATCH_MARKER = 'a lane with the same id already exists with a different hash';
 const COMPONENT_DIVERGENCE_MARKER = 'merge error occurred when exporting';
-
 export interface CiWorkspaceConfig {
   /**
    * Path to a custom script that generates commit messages for `bit ci merge` operations.

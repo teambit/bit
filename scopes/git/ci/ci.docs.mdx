@@ -330,14 +330,15 @@ A lane can exist on bit.cloud before its branch ever records a pointer to it —
 that `bit ci pr --keep-lane` turned into a lane, on a branch a developer pushed with plain git. The branch
 has dev commits, and the lane exists, but the committed `.bitmap` of the branch holds no state for it: a
 first-contact pair, not a conflict. `adopt-branch` handles it, PROVIDED the branch would not change the lane.
-The command snaps the tree of the branch locally, without exporting, to check that first. Two outcomes:
+The command switches onto the lane, keeping the files of the branch, and asks `bit status` whether anything
+is new or modified relative to the lane — a read, never a snap. Two outcomes:
 
-- **The snap is a no-op.** The content of the branch already matches the lane's — the common shape, since
+- **Nothing changed.** The content of the branch already matches the lane's — the common shape, since
   `bit ci pr --keep-lane` exported that very content already. The command records the lane pointer on the
   branch (the same commit every other action pushes) and moves on. The next run reads a converged pair.
-- **The snap would change something.** The two sides genuinely disagree, with no known common history to
-  merge from. The command halts, the same way it halted before this action existed: it cannot tell which
-  side is newer. Nothing is exported; the lane is untouched.
+- **Something changed.** The two sides genuinely disagree, with no known common history to merge from.
+  The command halts, the same way it halted before this action existed: it cannot tell which side is
+  newer. Nothing is snapped or exported; the lane is untouched, and the workspace is left clean.
 
 Adoption never touches a branch whose `.bitmap` already names a DIFFERENT lane with a live, unmerged claim.
 A different-lane pointer that is already merged into the default branch — the ordinary shape of a branch cut

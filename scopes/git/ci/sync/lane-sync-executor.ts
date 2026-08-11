@@ -449,14 +449,6 @@ export class LaneSyncExecutor {
       );
     }
 
-    const differentLaneHalt = await this.haltForDifferentLaneOnAdopt(action, branchNamesDifferentLane, mirroredLane, {
-      laneName,
-      laneIdStr,
-      branch,
-      pr,
-    });
-    if (differentLaneHalt) return differentLaneHalt;
-
     switch (action.type) {
       case 'noop':
         return `${laneName} -> noop (${action.reason})`;
@@ -500,8 +492,13 @@ export class LaneSyncExecutor {
           keepReason: action.deleteBranch ? undefined : action.keepReason,
           expectedTipSha: branchState.tipSha,
         });
-      case 'halt':
-        return this.executeHalt({ laneName, laneIdStr, branch, reason: action.reason, pr });
+      case 'halt': {
+        // The planner can only say THAT the branch names a different lane (a boolean); the actual id,
+        // and the tailored PR advice for it, live here — same note the TWO-LANES-ONE-BRANCH guard uses.
+        const commentNote =
+          branchNamesDifferentLane && mirroredLane ? branchMirrorsOtherLaneNote(mirroredLane, laneIdStr) : undefined;
+        return this.executeHalt({ laneName, laneIdStr, branch, reason: action.reason, pr, commentNote });
+      }
       default: {
         // exhaustiveness guard
         const unhandled: never = action;
@@ -1143,25 +1140,6 @@ export class LaneSyncExecutor {
   /** Seam over `branchBitmapMatchesDefault`, so `differentLaneStillClaims` is unit-testable without a real remote. */
   private branchInheritsBitmapFromDefault(branch: string, defaultBranch: string): Promise<boolean> {
     return branchBitmapMatchesDefault(branch, defaultBranch);
-  }
-
-  /**
-   * The planner can only say THAT the branch names a different lane (a boolean); the actual id, and
-   * the tailored PR advice for it, live here — same helper the TWO-LANES-ONE-BRANCH guard uses.
-   * Returns undefined when this halt does not apply, so the caller falls through to the generic switch.
-   */
-  private async haltForDifferentLaneOnAdopt(
-    action: LaneSyncAction,
-    branchNamesDifferentLane: boolean,
-    mirroredLane: string | undefined,
-    ctx: { laneName: string; laneIdStr: string; branch: string; pr?: PrInfo }
-  ): Promise<string | undefined> {
-    if (action.type !== 'halt' || !branchNamesDifferentLane || !mirroredLane) return undefined;
-    return this.haltOrReport({
-      ...ctx,
-      reason: action.reason,
-      commentNote: branchMirrorsOtherLaneNote(mirroredLane, ctx.laneIdStr),
-    });
   }
 
   /**
