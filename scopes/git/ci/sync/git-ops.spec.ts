@@ -14,7 +14,9 @@ import {
   DEFAULT_GIT_USER_NAME,
   fetchRemoteHeads,
   isNonContentPath,
+  isNonFastForwardRejection,
   isStaleLeaseRejection,
+  redactUrlCredentials,
   parseLsRemoteSymref,
   parseOriginHeadRef,
   refetchBranchTip,
@@ -225,6 +227,64 @@ describe('deleteBranchArgs', () => {
       isStaleLeaseRejection('!\t:refs/heads/race-lane\t[remote rejected] (incorrect old value provided)')
     ).to.equal(true);
     expect(isStaleLeaseRejection('remote: GH006: Protected branch update failed')).to.equal(false);
+  });
+});
+
+describe('isNonFastForwardRejection', () => {
+  // The GitHub-style client-side check, in the shape this code actually receives: simple-git appends
+  // `--porcelain` to every push, so the rejected ref arrives as a TAB-separated status line, not the
+  // human `! [rejected]` wording.
+  const CLIENT_SIDE_REJECTION =
+    '!\tHEAD:refs/heads/feature\t[rejected] (fetch first)\n' +
+    "error: failed to push some refs to '/remote'\n" +
+    'hint: Updates were rejected because the remote contains work that you do\n' +
+    'hint: not have locally.';
+
+  // The server-side ref-lock check: a plain push racing a concurrent ref update on the local/file
+  // transport surfaces the SAME wording as a lease refusal, with no lease involved (reproduced in
+  // ci-sync.e2e.ts's "a rejected sync-commit push" test).
+  const SERVER_SIDE_REJECTION =
+    '!\tHEAD:refs/heads/import-race-lane\t[remote rejected] (failed to update ref)\n' +
+    "remote: error: cannot lock ref 'refs/heads/import-race-lane': is at abc123 but expected def456\n" +
+    "error: failed to push some refs to '/remote'";
+
+  it('recognizes the client-side non-fast-forward wording, porcelain and human', () => {
+    expect(isNonFastForwardRejection(CLIENT_SIDE_REJECTION)).to.equal(true);
+    expect(isNonFastForwardRejection('!\tmain:refs/heads/main\t[rejected] (non-fast-forward)')).to.equal(true);
+    // the human layout (no --porcelain) still matches — the token test is layout-independent
+    expect(isNonFastForwardRejection('! [rejected] main -> main (non-fast-forward)')).to.equal(true);
+    expect(isNonFastForwardRejection('To /remote\n ! [rejected]        HEAD -> feature (fetch first)')).to.equal(true);
+  });
+
+  it('recognizes the server-side ref-lock wording a plain push can also hit', () => {
+    expect(isNonFastForwardRejection(SERVER_SIDE_REJECTION)).to.equal(true);
+    // Same wording `isStaleLeaseRejection` matches — a plain push can legitimately race into it too.
+    expect(isNonFastForwardRejection('! [rejected] (delete) -> my-lane (stale info)')).to.equal(true);
+  });
+
+  it('does not mistake a server-side hook decline for a race', () => {
+    // `[remote rejected]` alone (no ref-lock/fetch-first wording) — a protected-branch/hook decline,
+    // a real problem to surface, not a race to swallow.
+    expect(isNonFastForwardRejection('! [remote rejected] main -> main (protected branch hook declined)')).to.equal(
+      false
+    );
+    expect(
+      isNonFastForwardRejection('!\tHEAD:refs/heads/main\t[remote rejected] (pre-receive hook declined)')
+    ).to.equal(false);
+    expect(isNonFastForwardRejection('remote: GH006: Protected branch update failed')).to.equal(false);
+  });
+});
+
+describe('redactUrlCredentials', () => {
+  it('strips embedded credentials from a push-error remote URL', () => {
+    expect(
+      redactUrlCredentials("error: failed to push some refs to 'https://x-access-token:ghs_abc123@github.com/o/r'")
+    ).to.equal("error: failed to push some refs to 'https://***@github.com/o/r'");
+  });
+
+  it('leaves a credential-free message unchanged', () => {
+    const message = "error: failed to push some refs to 'https://github.com/o/r'\n ! [rejected] (fetch first)";
+    expect(redactUrlCredentials(message)).to.equal(message);
   });
 });
 

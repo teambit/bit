@@ -38,6 +38,11 @@ export type BuildResult = {
   component: string;
   buildResults: string[];
   errors: CompileError[];
+  /**
+   * set when nothing was compiled for the component because its env provides no compiler. such a
+   * component is neither a success nor a failure, so it is counted and reported on its own.
+   */
+  skipped?: { reason: string };
 };
 
 export type CompileOptions = {
@@ -553,6 +558,7 @@ export class WorkspaceCompiler {
     noThrow?: boolean
   ): Promise<BuildResult[]> {
     const componentsCompilers: ComponentCompiler[] = [];
+    const skipped: BuildResult[] = [];
 
     components.forEach((c) => {
       const env = this.envs.getOrCalculateEnv(c);
@@ -566,6 +572,12 @@ export class WorkspaceCompiler {
         );
       } else {
         this.logger.warn(`unable to find a compiler instance for ${c.id.toString()}`);
+        skipped.push({
+          component: c.id.toString(),
+          buildResults: [],
+          errors: [],
+          skipped: { reason: `the env "${env.id}" provides no compiler` },
+        });
       }
     });
 
@@ -585,7 +597,7 @@ export class WorkspaceCompiler {
       await this.generateTypesOnWorkspace(typeGeneratorParamsPerEnv, componentsCompilers);
     }
 
-    return resultOnWorkspace;
+    return [...resultOnWorkspace, ...skipped];
   }
 
   private async getTypesCompilerPerEnv(componentsCompilers: ComponentCompiler[]): Promise<TypeGeneratorParamsPerEnv[]> {
@@ -765,9 +777,9 @@ export class WorkspaceCompiler {
 }
 
 function formatCompileResults(buildResults: BuildResult[], verbose?: boolean) {
-  if (!buildResults.length) return '';
   // this gets called when a file is changed, so the buildResults array always has only one item
-  const buildResult = buildResults[0];
+  const buildResult = buildResults.find((result) => !result.skipped);
+  if (!buildResult) return '';
   const title = ` ${chalk.underline('STATUS\tCOMPONENT ID')}`;
   const verboseComponentFilesArrayToString = () => {
     return buildResult.buildResults.map((filePath) => ` \t - ${filePath}`).join('\n');

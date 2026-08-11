@@ -4,6 +4,7 @@ import esmLoader from '@teambit/node.utils.esm-loader';
 import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { reportLoadFailure } from '@teambit/harmony.modules.load-trace';
+import { recordLoadedEsmFile } from './record-loaded-esm-file';
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/cli';
@@ -535,7 +536,10 @@ export class AspectLoaderMain {
   }
 
   async loadEsm(path: string) {
-    return esmLoader(path);
+    const module = await esmLoader(path);
+    // only a load that succeeded leaves something in memory that needs its files kept around
+    recordLoadedEsmFile(path);
+    return module;
   }
 
   getPluginsFromDefs(component: Component, componentPath: string, defs: PluginDefinition[]): Plugins {

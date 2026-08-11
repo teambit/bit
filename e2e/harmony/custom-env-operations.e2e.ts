@@ -209,9 +209,11 @@ export default createMounter(MyReactProvider) as any;`
       fs.removeSync(path.join(helper.scopes.localPath, 'node_modules'));
       helper.command.install();
     });
-    it('bit compile should not compile the component', () => {
+    it('bit compile should not compile the component and should say why', () => {
       const output = helper.command.compile();
-      expect(output).to.not.have.string('comp1');
+      // the env component itself does compile, so only comp1 is reported as skipped here
+      expect(output).to.have.string('comp1 ... not compiled');
+      expect(output).to.have.string('1 component(s) skipped, no compiler.');
     });
     it('should not create dist dir in the node_modules', () => {
       const dir = path.join(helper.scopes.localPath, 'node_modules', helper.scopes.remote, 'comp1/dist');

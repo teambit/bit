@@ -23,6 +23,9 @@ describe('installing with the global virtual store', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('enableGlobalVirtualStore', true);
       helper.fixtures.populateComponents(1);
+      // the compile assertion below needs an env that has a compiler. name it, so that what this
+      // file covers stays the store layout rather than whatever the default env provides.
+      helper.command.setEnv('comp1', 'teambit.harmony/node');
       helper.command.install('is-positive@1.0.0');
     });
     it('should not create the dependency directories inside the workspace', () => {
