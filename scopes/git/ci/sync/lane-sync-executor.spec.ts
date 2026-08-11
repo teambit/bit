@@ -15,6 +15,7 @@ import {
   laneSyncPrBody,
   racedLedgerPushSummary,
 } from './lane-sync-executor';
+import type { LaneOwnershipEvidence } from './sync-planner';
 import { resolveSyncConfig } from './sync-config';
 
 /**
@@ -387,6 +388,87 @@ describe('close-pr re-verifies the tip before retiring a branch', () => {
   });
 });
 
+describe('differentLaneStillClaims uses .bitmap blob equality, not commit reachability', () => {
+  function executorWithInheritance(inherited: boolean) {
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {} as any,
+      logger: { console: () => {}, consoleWarning: () => {}, error: () => {} } as any,
+      gitHost: undefined,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    (executor as any).branchInheritsBitmapFromDefault = async () => inherited;
+    return (mirroredLane: string | undefined, laneIdStr: string) =>
+      (executor as any).differentLaneStillClaims(mirroredLane, laneIdStr, 'my-branch', 'main') as Promise<boolean>;
+  }
+
+  it('does not claim when there is no mirrored lane pointer at all — never even checks the blob', async () => {
+    const differentLaneStillClaims = executorWithInheritance(true);
+    expect(await differentLaneStillClaims(undefined, 'acme.shop/my-lane')).to.equal(false);
+  });
+
+  it("does not claim for this lane's own pointer — never even checks the blob", async () => {
+    const differentLaneStillClaims = executorWithInheritance(true);
+    expect(await differentLaneStillClaims('acme.shop/my-lane', 'acme.shop/my-lane')).to.equal(false);
+  });
+
+  it("does not claim when the different-lane .bitmap is byte-identical to the default branch's — inherited", async () => {
+    const differentLaneStillClaims = executorWithInheritance(true);
+    expect(await differentLaneStillClaims('acme.shop/other-lane', 'acme.shop/my-lane')).to.equal(false);
+  });
+
+  it("STILL claims when the different-lane .bitmap has diverged from the default branch's — halt, not adopt", async () => {
+    const differentLaneStillClaims = executorWithInheritance(false);
+    expect(await differentLaneStillClaims('acme.shop/other-lane', 'acme.shop/my-lane')).to.equal(true);
+  });
+});
+
+describe('computeHasIndependentHistory gates the ancestry check to own-live claims with a state commit', () => {
+  function executorWithAncestryResult(result: boolean) {
+    const calls: Array<[string, string]> = [];
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {} as any,
+      logger: { console: () => {}, consoleWarning: () => {}, error: () => {} } as any,
+      gitHost: undefined,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    (executor as any).hasIndependentHistoryBelowStateCommit = async (stateCommit: string, defaultBranch: string) => {
+      calls.push([stateCommit, defaultBranch]);
+      return result;
+    };
+    const compute = (ownership: LaneOwnershipEvidence, stateCommit: string | undefined, defaultBranch: string) =>
+      (executor as any).computeHasIndependentHistory(ownership, stateCommit, defaultBranch) as Promise<boolean>;
+    return { compute, calls };
+  }
+
+  it('skips the ancestry check entirely for a reachable claim (own-merged)', async () => {
+    const { compute, calls } = executorWithAncestryResult(true);
+    expect(await compute('own-merged', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1', 'main')).to.equal(false);
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('skips the ancestry check entirely for own-superseded too', async () => {
+    const { compute, calls } = executorWithAncestryResult(true);
+    expect(await compute('own-superseded', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1', 'main')).to.equal(false);
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('skips the check when there is no state commit to inspect, even for an own-live claim', async () => {
+    const { compute, calls } = executorWithAncestryResult(true);
+    expect(await compute('own-live', undefined, 'main')).to.equal(false);
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('defers to the ancestry check for an own-live claim with a state commit', async () => {
+    const { compute, calls } = executorWithAncestryResult(true);
+    expect(await compute('own-live', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1', 'main')).to.equal(true);
+    expect(calls).to.deep.equal([['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1', 'main']]);
+  });
+});
+
 describe('classifyPushRejection confirms a race before calling it one', () => {
   const BASE_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
   const MOVED_SHA = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2';
@@ -446,9 +528,8 @@ describe('executeExportBranch reports the ledger-race wording when only the ledg
     (executor as any).lastNonSyncCommitMessage = async () => 'feat: some change';
     (executor as any).checkoutFromRemote = async () => {};
     (executor as any).restoreWorkspace = async () => {};
-    // The export half already succeeded (undefined = no error, matching this file's `Error | undefined`
-    // contract for `snapAndExportOntoLane`); only the ledger commit that follows raced.
-    (executor as any).snapAndExportOntoLane = async () => undefined;
+    // The export half already succeeded; only the ledger commit that follows raced.
+    (executor as any).snapAndExportOntoLane = async () => ({ status: 'exported' });
     (executor as any).recordLaneHeadOnBranch = async () => ({ status: 'raced' });
 
     const summary = await (executor as any).executeExportBranch({
@@ -461,6 +542,32 @@ describe('executeExportBranch reports the ledger-race wording when only the ledg
     expect(summary).to.equal(
       'my-lane -> raced (lane updated; branch ledger commit lost the push race — next run re-plans)'
     );
+    expect(summary).to.not.include('HALTED');
+  });
+});
+
+// Adoption never snaps or exports, so its raced line must NOT claim the lane was updated — the lane
+// is untouched and only the branch's pointer commit lost the race.
+describe('executeAdoptBranch reports a lane-untouched race when its ledger push races', () => {
+  it('surfaces "lane untouched; adoption ledger commit lost the push race" without halting', async () => {
+    const { executor } = stubExecutor();
+    (executor as any).deps.ci = { hasUnsyncedWorkChanges: async () => false };
+    (executor as any).checkoutFromRemote = async () => {};
+    (executor as any).restoreWorkspace = async () => {};
+    (executor as any).materializeLane = async () => undefined;
+    (executor as any).recordLaneHeadOnBranch = async () => ({ status: 'raced' });
+
+    const summary = await (executor as any).executeAdoptBranch({
+      target: { hostScope: 'acme.shop', name: 'my-lane' },
+      laneIdStr: 'acme.shop/my-lane',
+      branch: 'my-lane',
+      defaultBranch: 'main',
+    });
+
+    expect(summary).to.equal(
+      'my-lane -> raced (lane untouched; adoption ledger commit lost the push race — next run re-plans)'
+    );
+    expect(summary).to.not.include('lane updated');
     expect(summary).to.not.include('HALTED');
   });
 });
