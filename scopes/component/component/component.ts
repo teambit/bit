@@ -378,3 +378,5 @@ export class Component implements IComponent {
     return component.id.toString() === this.id.toString();
   }
 }
+
+// load-test marker: trivial change to force a full dependents cascade in bit ci pr (throwaway branch)
