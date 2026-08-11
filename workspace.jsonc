@@ -11,6 +11,19 @@
     "resolveEnvsFromRoots": true
   },
   "teambit.dependencies/dependency-resolver": {
+    /**
+     * `ComponentID` is immutable - its fields are readonly, `BitId` freezes itself, and
+     * `changeVersion`/`changeScope` return new ids - yet nothing shares them, so a `bit status` of
+     * this workspace constructs ~5.3M of them for ~3.8k distinct ids. The duplicates dominate the
+     * heap: 1.8M live `ComponentID` plus 1.8M live `BitId`, and each holds its own copy of the
+     * strings (341k copies of a single scope name). Interning them cuts `bit status` peak RSS by
+     * ~26% with identical output - see the patch header for the measurements.
+     * Patched rather than changed in place because the component is published separately; fold it
+     * into teambit.component/component-id and drop this once a version carrying it is released.
+     */
+    "patchedDependencies": {
+      "@teambit/component-id@1.2.4": "patches/@teambit__component-id@1.2.4.patch"
+    },
     "allowScripts": {
       "@apollo/protobufjs": true,
       "@parcel/watcher": true,

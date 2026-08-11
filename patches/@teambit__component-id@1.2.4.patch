@@ -1,0 +1,30 @@
+diff --git a/dist/component-id.js b/dist/component-id.js
+--- a/dist/component-id.js
++++ b/dist/component-id.js
+@@ -3,6 +3,12 @@
+ exports.ComponentID = void 0;
+ const legacy_bit_id_1 = require("@teambit/legacy-bit-id");
+ const exceptions_1 = require("./exceptions");
++/**
++ * every distinct id is represented by one instance, shared by all its holders. see the patch
++ * header for why. bounded so a long-lived process cannot grow it without limit.
++ */
++const __interned = new Map();
++const __MAX_INTERNED = 200000;
+ class ComponentID {
+     constructor(
+     /**
+@@ -16,6 +22,13 @@
+         }
+         if (!_scope && !_legacy.scope)
+             throw new exceptions_1.MissingScope(_legacy);
++        const __key = `${_scope || _legacy.scope || ''}/${_legacy.name}@${_legacy.version || ''}`;
++        const __existing = __interned.get(__key);
++        if (__existing)
++            return __existing;
++        if (__interned.size >= __MAX_INTERNED)
++            __interned.clear();
++        __interned.set(__key, this);
+     }
+     /**
+      * determine whether ID has a version.
