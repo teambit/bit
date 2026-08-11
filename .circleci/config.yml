@@ -672,11 +672,15 @@ jobs:
       # - run: cd bit && ls -l node_modules/@babel
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
       # - run: cd bit && ls -l node_modules/.bin
+      # NOTE: .pnpm-store is deliberately NOT persisted. Nothing downstream reads it —
+      # every job (bit_pr/bit_merge/e2e) points bit at package-manager.cache instead, and
+      # node_modules is self-contained after attach. Persisting it roughly doubled the
+      # workspace size, and "Attaching workspace" ran on every node of every job
+      # (~2.7min x 40 e2e nodes x ~600 runs/month = a five-figure credit line item).
       - persist_to_workspace:
           root: .
           paths:
             - bit
-            - .pnpm-store
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
@@ -835,13 +839,18 @@ jobs:
 
   # ========== Bit CI Jobs ==========
   bit_pr:
-    # uncomment in case this job fails with "Killed".
-    resource_class: 2xlarge
-    # resource_class: xlarge
+    # xlarge (8 vCPU / 16GB) instead of 2xlarge: the build is CPU-bound and dominated by ONE
+    # env (see the concurrency note below), so 16 cores sat mostly idle at 2x the credit rate
+    # (80 vs 40 credits/min — this job alone was ~800k credits/month on 2xlarge).
+    # If this job starts dying with "Killed" (cgroup OOM), bump back to 2xlarge AND restore
+    # max-old-space-size=30000.
+    resource_class: xlarge
+    # resource_class: 2xlarge
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=30000
+      # heap capped below the 16GB xlarge RAM (leave room for non-heap memory + child processes)
+      NODE_OPTIONS: --max-old-space-size=12288
     steps:
       - attach_workspace:
           at: ./
@@ -866,7 +875,7 @@ jobs:
           command: 'cd bit && bit ci pr --build --keep-lane --skip-cleanup'
           no_output_timeout: '50m'
           environment:
-            NODE_OPTIONS: --max-old-space-size=30000
+            NODE_OPTIONS: --max-old-space-size=12288
             # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
             # this build is CPU-bound and dominated by one env, so concurrency only added contention.
             # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
@@ -942,7 +951,12 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 40
+    # 30, not more: total suite time is ~507 min (sum of scripts/e2e-test-timings.json), so test
+    # credits are the same at any node count — but each node pays a fixed ~2-3 min of spin-up +
+    # workspace attach + setup, billed per node. 40 -> 30 trims that fixed overhead ~25% for a
+    # wall-clock cost of ~4 min (507/30 = ~17 min/node vs ~13). Going below ~25 starts to hurt
+    # PR latency for real.
+    parallelism: 30
     steps:
       - e2e_test_cmd
 
@@ -956,6 +970,25 @@ jobs:
       E2E_RELEASED_BINARY: "true"
     parallelism: 32
     steps:
+      # On days with no master merge, the nightly re-bundles the exact same @teambit/bit
+      # version the previous nightly already bundled and e2e-tested — 32 nodes x ~30 min
+      # for a result we already have. Halt all nodes in seconds instead. (Trade-off: if the
+      # previous nightly failed for infra reasons, the quiet day won't retest — rerun the
+      # workflow manually in that case.)
+      - run:
+          name: halt when no new version was published since the previous nightly
+          command: |
+            LATEST_AGE_HOURS=$(node -e "
+              const { execSync } = require('child_process');
+              const time = JSON.parse(execSync('npm view @teambit/bit time --json', { encoding: 'utf8' }));
+              const version = execSync('npm view @teambit/bit version', { encoding: 'utf8' }).trim();
+              console.log(Math.floor((Date.now() - new Date(time[version]).getTime()) / 36e5));
+            ")
+            echo "latest @teambit/bit version was published ${LATEST_AGE_HOURS}h ago"
+            if [ "$LATEST_AGE_HOURS" -ge 24 ]; then
+              echo "already bundled and tested by the previous nightly — halting"
+              circleci-agent step halt
+            fi
       - attach_workspace:
           at: ./
       - bit_global_for_npm
@@ -1514,6 +1547,14 @@ workflows:
       - e2e_test:
           requires:
             - setup_harmony
+          # Not on master pushes: nothing gates on it there — bit_merge requires only
+          # generate_and_check_types, and the merge queue's "settled" check watches bit_merge
+          # alone (.github/scripts/merge-queue.js). Every PR already ran the full suite to get
+          # merged, so the per-merge master run was a ~5.5k-credit informational canary
+          # (~440k credits/month). A daily master canary still runs in the nightly workflow.
+          filters:
+            branches:
+              ignore: master
       - setup_bundle_simulation:
           filters:
             branches:
@@ -1570,6 +1611,11 @@ workflows:
       - setup_harmony:
           requires:
             - checkout_code
+      # daily master canary — replaces the former per-master-push e2e_test run in
+      # build_and_test (see the filter comment there)
+      - e2e_test:
+          requires:
+            - setup_harmony
       - bundle_version_linux:
           <<: *master_only_filter
           requires:
