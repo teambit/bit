@@ -76,7 +76,7 @@ import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
 import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
 import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
-import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
+import { createBundleHash, getBundleAspectIds, getBundlePath, readBundleHash } from './pre-bundle-utils';
 import { GeneratePreviewCmd } from './generate-preview.cmd';
 import { ServePreviewCmd } from './serve-preview.cmd';
 
@@ -888,6 +888,15 @@ export class PreviewMain {
     const lastBundleHash = await this.cache.get(cacheKey);
 
     let bundlePath = '';
+
+    this.logger.debug(
+      `writePreviewEntry, currentBundleHash: ${currentBundleHash}, preBundleHash: ${preBundleHash}, lastBundleHash: ${lastBundleHash}, preBundlePath: ${getBundlePath(
+        PreviewAspect.id,
+        BUNDLE_DIR,
+        ''
+      )}, workspaceBundleDir exists: ${existsSync(workspaceBundleDir)}, rebuild: ${rebuild}, skipUiBuild: ${skipUiBuild}`
+    );
+    this.logger.debug(`writePreviewEntry, aspect ids: ${(await getBundleAspectIds(uiRoot, RUNTIME_NAME)).join(', ')}`);
 
     // ensure the pre-bundle is ready
     if (!rebuild && !existsSync(workspaceBundleDir) && (currentBundleHash === preBundleHash || skipUiBuild)) {

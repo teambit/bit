@@ -1,3 +1,4 @@
+import path from 'path';
 import type { RuleSetRule } from '@rspack/core';
 import { fallbacks } from '@teambit/webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
@@ -37,6 +38,12 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
       'react-dom$': 'react-dom/profiling',
       'scheduler/tracing': 'scheduler/tracing-profiling',
     }),
+    // aliased as a *directory* so the subpath entries (`/utilities`, `/link/ws`, `/react/ssr`, …)
+    // land in the same copy. apollo carries React context, so a second copy in the bundle silently
+    // breaks every `useQuery` - the same reason react is pinned above. It also has to be aliased to
+    // resolve at all: it is a peer dependency of `@teambit/component`, so an aspect resolved out of a
+    // capsule's pnpm store has no `@apollo/client` anywhere above it.
+    '@apollo/client': path.dirname(require.resolve('@apollo/client/package.json')),
     '@teambit/component.ui.component-compare.context': require.resolve(
       '@teambit/component.ui.component-compare.context'
     ),

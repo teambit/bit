@@ -35,9 +35,15 @@ type ShimTarget = {
   sourceDir?: string;
   aspectFileBase?: string;
   mainRuntimeFileBase?: string;
+  /** `preview`/`ui`/... runtimes - emitted for discovery only, see `otherRuntimeFileBases` */
+  otherRuntimeFileBases?: string[];
 };
 
-const basenameOf = (importSpecifier?: string) => importSpecifier?.split('/').pop();
+// the specifier keeps its `.js` under a `dist` layout and drops the extension at the top level (see
+// `core-aspects-info`), so strip it here - otherwise the emitted shim is `x.aspect.js.js`. That name
+// still *worked*, because `getAspectDef` matches with `.includes('.aspect.js')`, but it is not the
+// file name a published package would have.
+const basenameOf = (importSpecifier?: string) => importSpecifier?.split('/').pop()?.replace(/\.js$/, '');
 
 function reExport(relativeToBundle: string, exportName: string) {
   return [
@@ -92,6 +98,32 @@ async function copyTypeDeclarations(sourceDir: string | undefined, shimDistDir: 
 }
 
 /**
+ * Copy an aspect's `artifacts/` tree into the shim - today that means the pre-built UI and preview
+ * bundles produced by `BundleUI` / `PreBundlePreview`.
+ *
+ * These are not an optimisation, they are what makes `bit start` possible at all in a bundled bit.
+ * The alternative is the runtime rspack build, which resolves its loaders and aliases with
+ * `require.resolve('<pkg>')` and therefore needs the whole UI dependency tree on disk - measured at
+ * +1.1 GB. Serving the pre-built bundle needs no bundler: it is `express.static` for the UI, and a
+ * generated one-line entry that imports the pre-bundle for the preview.
+ *
+ * `getAspectArtifactDir` looks for them at the shim root, which is what a bare
+ * `require.resolve('@teambit/ui')` resolves to from inside the bundle.
+ */
+async function copyShippedArtifacts(sourceDir: string | undefined, shimDir: string): Promise<number> {
+  if (!sourceDir) return 0;
+  const files = await globby(['artifacts/**'], { cwd: sourceDir, dot: true });
+  await Promise.all(
+    files.map(async (file) => {
+      const target = join(shimDir, file);
+      await fs.ensureDir(join(target, '..'));
+      await fs.copy(join(sourceDir, file), target, { dereference: true, overwrite: true });
+    })
+  );
+  return files.length;
+}
+
+/**
  * `linkCoreAspect` computes the package root as `resolve(module.path, '..', '..')`, so the locator
  * must name a file exactly two levels below the shim root - `<shim>/dist/index.js`.
  */
@@ -126,8 +158,21 @@ async function generateOne(paths: BundlePaths, target: ShimTarget) {
     await fs.writeFile(join(distDir, `${target.mainRuntimeFileBase}.js`), reExport(fromDistDir, target.exportName));
   }
 
+  // The non-main runtimes (`preview`, `ui`, ...) exist purely so `getAspectDef(id, runtime)` can
+  // still find them: it globs `<pkg>/dist` for `*.<runtime>.runtime.js`, and an aspect with no match
+  // is dropped from `uiRoot.resolveAspects(runtime)`. That list is what the pre-bundle `.hash` is
+  // computed over, so without these files a bundled bit hashes an empty list and can never match a
+  // shipped pre-bundle. Their *contents* are never used: only the main runtime runs in the CLI
+  // process, and the browser code was pre-bundled at build time into `artifacts/`.
+  await Promise.all(
+    (target.otherRuntimeFileBases || []).map((base) =>
+      fs.writeFile(join(distDir, `${base}.js`), reExport(fromDistDir, target.exportName))
+    )
+  );
+
   const original = await readSourcePackageJson(target.sourceDir);
   const typesCopied = await copyTypeDeclarations(target.sourceDir, distDir);
+  const artifactsCopied = await copyShippedArtifacts(target.sourceDir, pkgDir);
   const hasTypes = typesCopied > 0 && (await fs.pathExists(join(distDir, 'index.d.ts')));
 
   const packageJson: Record<string, any> = {
@@ -164,7 +209,7 @@ async function generateOne(paths: BundlePaths, target: ShimTarget) {
     const rel = relative(locatorDir, join(distDir, 'index.js')).split('\\').join('/');
     await fs.writeFile(join(locatorDir, 'index.js'), locatorContent(rel.startsWith('.') ? rel : `./${rel}`));
   }
-  return typesCopied;
+  return { typesCopied, artifactsCopied };
 }
 
 export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspectInfo[], extraPackages: string[]) {
@@ -175,6 +220,7 @@ export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspe
     sourceDir: aspect.dir,
     aspectFileBase: basenameOf(aspect.aspectImport),
     mainRuntimeFileBase: basenameOf(aspect.mainRuntimeImport),
+    otherRuntimeFileBases: aspect.otherRuntimeFileBases,
   }));
   extraPackages.forEach((packageName) => {
     targets.push({
@@ -185,9 +231,10 @@ export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspe
       sourceDir: resolvePackageDir(paths.packagesRoot, packageName),
     });
   });
-  const typeCounts = await Promise.all(targets.map((target) => generateOne(paths, target)));
-  const typeFiles = typeCounts.reduce((a, b) => a + b, 0);
-  const withTypes = typeCounts.filter(Boolean).length;
+  const results = await Promise.all(targets.map((target) => generateOne(paths, target)));
+  const typeFiles = results.reduce((acc, r) => acc + r.typesCopied, 0);
+  const withTypes = results.filter((r) => r.typesCopied).length;
+  const artifactFiles = results.reduce((acc, r) => acc + r.artifactsCopied, 0);
   // types are optional, but their absence is worth saying out loud: it is the difference between a
   // user's workspace getting autocomplete for `@teambit/*` and getting `any`. In this repo it means
   // the components were compiled without `bit compile --generate-types`.
@@ -196,5 +243,19 @@ export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspe
     `[bundle] type declarations: ${typeFiles} files across ${withTypes}/${targets.length} shims` +
       (withTypes ? '' : ' - the distribution will have no types (compile with --generate-types)')
   );
-  return { packageNames: targets.map((t) => t.packageName), typeFiles, shimsWithTypes: withTypes };
+  // an absent pre-bundle is not a cosmetic gap: without it `bit start` falls back to the runtime
+  // rspack build, which needs the UI dependency tree the bundle exists to avoid shipping.
+  // eslint-disable-next-line no-console
+  console.log(
+    artifactFiles
+      ? `[bundle] shipped artifacts: ${artifactFiles} files (pre-built UI/preview bundles)`
+      : `[bundle] shipped artifacts: none - "bit start" will try to build the UI at runtime. run the ` +
+          `BundleUI and PreBundlePreview build tasks so @teambit/ui and @teambit/preview carry artifacts/.`
+  );
+  return {
+    packageNames: targets.map((t) => t.packageName),
+    typeFiles,
+    shimsWithTypes: withTypes,
+    artifactFiles,
+  };
 }

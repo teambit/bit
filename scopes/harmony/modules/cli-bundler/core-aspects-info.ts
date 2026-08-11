@@ -28,6 +28,18 @@ export type CoreAspectInfo = {
   mainRuntimeImport?: string;
   /** deep import specifier of the `*.aspect` file, e.g. `@teambit/envs/environments.aspect` */
   aspectImport?: string;
+  /**
+   * basenames (no extension) of the aspect's *other* runtimes - `preview`, `ui`, ... - e.g.
+   * `preview.preview.runtime`.
+   *
+   * They are never imported into the bundle: only the main runtime runs in the CLI process. They are
+   * listed so the shims can emit a file per runtime, because `getAspectDef(id, runtime)` discovers a
+   * runtime by globbing `<pkg>/dist` for `*.<runtime>.runtime.js` and an aspect with no such file is
+   * dropped from `uiRoot.resolveAspects(runtime)`. Without them a bundled bit resolves **zero**
+   * preview aspects, and the pre-bundle `.hash` - a sha1 over that list - comes out as the sha1 of
+   * the empty string, so no shipped pre-bundle can ever match. See `bundle-plan.md` §17f.
+   */
+  otherRuntimeFileBases: string[];
 };
 
 /**
@@ -74,9 +86,13 @@ const ASPECT_SUFFIX = '.aspect';
  * for a UI-only aspect, nothing complains: a real build reported 70 of 71 aspects "without a main
  * runtime" and produced a bundle with almost no runtimes in it.
  */
+/** any `<something>.<runtime>.runtime.<ext>`, e.g. `preview.preview.runtime.tsx` */
+const ANY_RUNTIME = /\.[a-z0-9-]+\.runtime\.(ts|tsx|js|jsx)$/;
+
 async function findRuntimeAndAspectFiles(dir: string): Promise<{
   mainRuntimeFile?: string;
   aspectFile?: string;
+  otherRuntimeFiles: string[];
   filesSubDir: string;
 }> {
   const readDirSafe = async (target: string) => {
@@ -102,12 +118,17 @@ async function findRuntimeAndAspectFiles(dir: string): Promise<{
           files.find((f) => f.endsWith(`${suffix}.js`));
     const aspectFile = pick(ASPECT_SUFFIX);
     const mainRuntimeFile = pick(RUNTIME_SUFFIX);
-    if (aspectFile || mainRuntimeFile) return { mainRuntimeFile, aspectFile, filesSubDir: subDir };
+    if (aspectFile || mainRuntimeFile) {
+      const otherRuntimeFiles = files.filter(
+        (f) => ANY_RUNTIME.test(f) && !f.endsWith('.d.ts') && !f.includes(RUNTIME_SUFFIX)
+      );
+      return { mainRuntimeFile, aspectFile, otherRuntimeFiles, filesSubDir: subDir };
+    }
   }
-  return { filesSubDir: '' };
+  return { otherRuntimeFiles: [], filesSubDir: '' };
 }
 
-const stripExt = (file: string) => file.replace(/\.(ts|js)$/, '');
+const stripExt = (file: string) => file.replace(/\.(tsx|jsx|ts|js)$/, '');
 
 /**
  * The core aspect ids are an *input*, not something this component discovers.
@@ -133,7 +154,7 @@ export async function getCoreAspectsInfo(coreAspectIds: string[], packagesRoot: 
         console.warn(`[bundle] core aspect "${id}" is not resolvable from ${packagesRoot}, skipping`);
         return undefined;
       }
-      const { mainRuntimeFile, aspectFile, filesSubDir } = await findRuntimeAndAspectFiles(dir);
+      const { mainRuntimeFile, aspectFile, otherRuntimeFiles, filesSubDir } = await findRuntimeAndAspectFiles(dir);
       // The extension has to survive under `dist` and has to go at the top level, because the two
       // take different branches of the exports map and **neither branch extension-probes**:
       //   "./dist/*": "./dist/*"   =>  `<pkg>/dist/x.main.runtime.js` -> ./dist/x.main.runtime.js
@@ -151,6 +172,7 @@ export async function getCoreAspectsInfo(coreAspectIds: string[], packagesRoot: 
         exportName: toExportName(name),
         mainRuntimeImport: mainRuntimeFile ? specifier(mainRuntimeFile) : undefined,
         aspectImport: aspectFile ? specifier(aspectFile) : undefined,
+        otherRuntimeFileBases: otherRuntimeFiles.map(stripExt),
       };
     })
   );

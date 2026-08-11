@@ -123,6 +123,31 @@ export function getAspectDistDir(id: string, isCore = true) {
   return resolve(`${getAspectDir(id, isCore)}/dist`);
 }
 
+/**
+ * resolve a directory that ships *inside* an aspect's own package - currently the pre-built UI and
+ * preview bundles under `artifacts/`, which `bit start` serves instead of running rspack.
+ *
+ * the aspect as resolved for the *running* bit is tried first, so a distribution serves the
+ * artifacts it shipped with rather than whichever bit happens to be linked in bvm. only then does it
+ * fall back to the bvm installation, which is what a bit running from source needs: there
+ * `@teambit/<aspect>` is a symlink to the workspace component and carries no artifacts.
+ *
+ * returns `undefined` rather than throwing - a missing pre-bundle is a normal state that callers
+ * answer by building one.
+ */
+export function getAspectArtifactDir(id: string, artifactDir: string): string | undefined {
+  const resolvers = [() => getAspectDir(id), () => getAspectDirFromBvm(id)];
+  for (const resolver of resolvers) {
+    try {
+      const dirPath = join(resolver(), artifactDir);
+      if (existsSync(dirPath)) return dirPath;
+    } catch {
+      // an aspect that resolves nowhere is handled by the next resolver, or by returning undefined
+    }
+  }
+  return undefined;
+}
+
 export function getCoreAspectName(id: string): string {
   const [, ...name] = id.split('/');
   const aspectName = name.join('.');

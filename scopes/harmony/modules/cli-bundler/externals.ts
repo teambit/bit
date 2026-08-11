@@ -40,18 +40,27 @@ const RUNTIME_PATH = [
 const TOOLCHAINS = ['webpack', '@babel/core'];
 
 /**
- * D. the UI/preview bundling surface - **opt-in, off by default** (`npm run bundle -- --ui-bundling`).
+ * D. the UI/preview *rebuild* surface - **opt-in, off by default** (`npm run bundle -- --ui-bundling`).
  *
- * `bit start` hands rspack a config full of `require.resolve('<pkg>')` - loader paths and
- * `resolve.alias` entries. rspack loads those files itself, so they must exist on disk as ordinary
- * packages; a copy inlined into `bit.app.js` is invisible to it. Without them `bit start` fails with
- * `Cannot find module '@teambit/mdx.modules.mdx-v3-options'`.
+ * These are the packages the UI and preview rspack configs reach for by name -
+ * `resolveAlias()`, `styleRules()`, `postCssConfig`. rspack loads those files itself, so a copy
+ * inlined into `bit.app.js` is invisible to it and they have to exist on disk.
  *
- * MEASURED COST: including this group takes the distribution from **231 MB to 1.3 GB** - it wipes
- * out the entire saving. `@teambit/*` UI packages alone are 365 MB, `monaco-editor` 77 MB (via
- * `@teambit/code.ui.code-editor`), `@teambit/react` 9.9 MB and its transitive env another ~29 MB.
- * The flag exists so the trade-off stays measurable; shipping it by default would be pointless.
- * See `bundle-plan.md` §9 for what to do about it instead.
+ * **`bit start` no longer needs any of them.** It serves the pre-built UI and preview bundles that
+ * ship in `@teambit/ui/artifacts` and `@teambit/preview/artifacts` (copied into the shims by
+ * `generate-shim-packages`), and that path runs no bundler at all: `express.static` for the shell,
+ * and a generated one-line entry that imports the preview pre-bundle. Component previews are built
+ * by the *env's* own bundler, resolved from the user's workspace, not from bit. See
+ * `bundle-plan.md` §17.
+ *
+ * What is left is only the *fallback*: if a workspace resolves preview/ui aspects the shipped
+ * artifact was not built with (an env contributing its own preview runtime, say), the hash misses
+ * and bit rebuilds. That rebuild is what this group buys, and it costs the entire saving -
+ * **231 MB to 1.3 GB** measured: `@teambit/*` UI packages alone are 365 MB, `monaco-editor` 77 MB
+ * (via `@teambit/code.ui.code-editor`), `@teambit/react` 9.9 MB plus ~29 MB of transitive env.
+ *
+ * So it stays off by default: a bundled bit serves the pre-bundle or reports that it cannot, rather
+ * than shipping a gigabyte to cover a case the artifact should have covered.
  */
 export const UI_BUNDLING_EXTERNALS = [
   // aliased into the browser bundle so every component shares one copy
@@ -71,13 +80,21 @@ export const UI_BUNDLING_EXTERNALS = [
   '@teambit/lanes.entities.lane-diff',
   // loaders
   'postcss-loader',
-  'postcss-flexbugs-fixes',
-  'postcss-normalize',
   'resolve-url-loader',
   'sass-loader',
   'sass',
   '@rspack/dev-server',
 ];
+
+/**
+ * E. evaluated when the UI aspect is *imported*, not when the UI is built.
+ *
+ * `postcss.config.ts` builds `postCssConfig` at module scope, and `rspack.browser.config.ts` imports
+ * it at module scope, and `ui.main.runtime.ts` imports *that* - so these two `require.resolve` calls
+ * run on every bit command that loads the UI aspect, whether or not anything is ever bundled.
+ * They are ~50 KB together, so they are cheaper to ship than to make lazy.
+ */
+const UI_EAGER = ['postcss-flexbugs-fixes', 'postcss-normalize'];
 
 /** misc - things known to break when inlined */
 const MISC = [
@@ -87,7 +104,7 @@ const MISC = [
   'source-map-support',
 ];
 
-const BASE_EXTERNALS = [...NATIVE, ...RUNTIME_PATH, ...TOOLCHAINS, ...MISC];
+const BASE_EXTERNALS = [...NATIVE, ...RUNTIME_PATH, ...TOOLCHAINS, ...UI_EAGER, ...MISC];
 
 export function getExternals(opts: { uiBundling?: boolean } = {}): string[] {
   return opts.uiBundling ? [...BASE_EXTERNALS, ...UI_BUNDLING_EXTERNALS] : BASE_EXTERNALS;

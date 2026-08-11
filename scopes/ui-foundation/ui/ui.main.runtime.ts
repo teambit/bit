@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import type { ComponentType } from 'react';
 import type { AspectDefinition } from '@teambit/aspect-loader';
-import { getAspectDirFromBvm } from '@teambit/aspect-loader';
+import { getAspectArtifactDir, filterCoreAspectDefs } from '@teambit/aspect-loader';
 import type { CacheMain } from '@teambit/cache';
 import { CacheAspect } from '@teambit/cache';
 import type { CLIMain } from '@teambit/cli';
@@ -235,8 +235,8 @@ export class UiMain {
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<any> {
-    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}"`);
+  async build(uiRootAspectIdOrName?: string, customOutputPath?: string, forPreBundle = false): Promise<any> {
+    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}", forPreBundle: ${forPreBundle}`);
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
 
     if (!maybeUiRoot) throw new UnknownUI(uiRootAspectIdOrName, this.possibleUis());
@@ -244,7 +244,8 @@ export class UiMain {
 
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const ssr = uiRoot.buildOptions?.ssr || false;
-    const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId);
+    const aspects = await this.resolveUiAspects(uiRoot, forPreBundle);
+    const mainEntry = await this.generateRoot(aspects, uiRootAspectId);
     const outputPath = customOutputPath || uiRoot.path;
     const publicDir = await this.publicDir(uiRoot);
 
@@ -556,6 +557,12 @@ export class UiMain {
     const cachedBundleUiHash = this.readBundleUiHash(uiRootAspectId);
     const isLocalBuildAvailable = existsSync(join(uiRoot.path, await this.publicDir(uiRoot)));
 
+    this.logger.debug(
+      `shouldServeBundleUi, currentBundleUiHash: ${currentBundleUiHash}, cachedBundleUiHash: ${cachedBundleUiHash}, bundleUiPath: ${this.getBundleUiPath(
+        uiRootAspectId
+      )}, isLocalBuildAvailable: ${isLocalBuildAvailable}, force: ${force}`
+    );
+
     return currentBundleUiHash === cachedBundleUiHash && !isLocalBuildAvailable && !force;
   }
 
@@ -610,19 +617,33 @@ export class UiMain {
     return this.createBuildUiHash(uiRoot, runtime);
   }
 
-  async createBundleUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
-    const aspects = await uiRoot.resolveAspects(runtime);
+  /**
+   * the aspects a UI bundle is built from.
+   *
+   * for a *shipped* pre-bundle (`forPreBundle`) only bit's own aspects count: the artifact has to
+   * describe bit, not whichever workspace produced it. bit's repo uses `teambit.react/react` as an
+   * env, and letting that leak in bakes a versioned workspace aspect into an artifact no user
+   * workspace can match. see `bundle-plan.md` §17.
+   */
+  private async resolveUiAspects(uiRoot: UIRoot, forPreBundle = false): Promise<AspectDefinition[]> {
+    const aspects = await uiRoot.resolveAspects(UIRuntime.name);
+    return forPreBundle ? filterCoreAspectDefs(aspects) : aspects;
+  }
+
+  async createBundleUiHash(uiRoot: UIRoot, runtime = 'ui', forPreBundle = false): Promise<string> {
+    const resolved = await uiRoot.resolveAspects(runtime);
+    const aspects = forPreBundle ? filterCoreAspectDefs(resolved) : resolved;
     aspects.sort((a, b) => ((a.getId || a.aspectPath) > (b.getId || b.aspectPath) ? 1 : -1));
     const aspectIds = aspects.map((aspect) => aspect.getId || aspect.aspectPath);
     return sha1(aspectIds.join(''));
   }
 
   private readBundleUiHash(uiRootAspectId: string) {
-    const bundleUiPathFromBvm = this.getBundleUiPath(uiRootAspectId);
-    if (!bundleUiPathFromBvm) {
+    const bundleUiPath = this.getBundleUiPath(uiRootAspectId);
+    if (!bundleUiPath) {
       return '';
     }
-    const hashFilePath = join(bundleUiPathFromBvm, BUNDLE_UI_HASH_FILENAME);
+    const hashFilePath = join(bundleUiPath, BUNDLE_UI_HASH_FILENAME);
     if (existsSync(hashFilePath)) {
       return readFileSync(hashFilePath).toString();
     }
@@ -630,13 +651,11 @@ export class UiMain {
   }
 
   private getBundleUiPath(uiRootAspectId: string): string | undefined {
-    try {
-      const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
-      return join(uiPathFromBvm, BundleUiTask.getArtifactDirectory(uiRootAspectId));
-    } catch (err) {
-      this.logger.error(`getBundleUiPath, getAspectDirFromBvm failed with err: ${err}`);
-      return undefined;
+    const bundleUiPath = getAspectArtifactDir(UIAspect.id, BundleUiTask.getArtifactDirectory(uiRootAspectId));
+    if (!bundleUiPath) {
+      this.logger.debug(`getBundleUiPath, no pre-built UI bundle found for ${uiRootAspectId}`);
     }
+    return bundleUiPath;
   }
 
   private async buildIfNoBundle(uiRootAspectId: string, uiRoot: UIRoot): Promise<boolean> {

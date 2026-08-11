@@ -41,7 +41,8 @@ export class BundleUiTask implements BuildTask {
         Object.values(UIROOT_ASPECT_IDS).map(async (uiRootAspectId) => {
           const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory(uiRootAspectId));
           this.logger.info(`Generating UI bundle at ${outputPath}...`);
-          await this.ui.build(uiRootAspectId, outputPath);
+          // `forPreBundle`: the artifact describes bit, not the workspace it was built in
+          await this.ui.build(uiRootAspectId, outputPath, true);
           await this.generateHash(outputPath);
         })
       );
@@ -61,7 +62,8 @@ export class BundleUiTask implements BuildTask {
     if (!maybeUiRoot) throw new Error('no uiRoot found');
 
     const [, uiRoot] = maybeUiRoot;
-    const hash = await this.ui.createBundleUiHash(uiRoot);
+    // must match what `build` above bundled, or the artifact can never be served
+    const hash = await this.ui.createBundleUiHash(uiRoot, 'ui', true);
 
     if (!existsSync(outputPath)) mkdirSync(outputPath);
     writeFileSync(join(outputPath, BUNDLE_UI_HASH_FILENAME), hash);

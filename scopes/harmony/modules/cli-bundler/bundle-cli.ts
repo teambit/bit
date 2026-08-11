@@ -71,6 +71,8 @@ export type BundleCliResult = {
   /** `.d.ts` files copied into the shims, and how many shims got any */
   typeFiles: number;
   shimsWithTypes: number;
+  /** files copied from the aspects' `artifacts/` - the pre-built UI and preview bundles */
+  artifactFiles: number;
   sea?: { exePath: string; sizeMb: number; nodeVersion: string };
   errors: number;
   warnings: number;
@@ -152,6 +154,7 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
     esmBridges,
     typeFiles: shims.typeFiles,
     shimsWithTypes: shims.shimsWithTypes,
+    artifactFiles: shims.artifactFiles,
     sea,
     errors: result.errors.length,
     warnings: result.warnings.length,
