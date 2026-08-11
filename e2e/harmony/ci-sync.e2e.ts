@@ -283,10 +283,10 @@ describe('bit ci sync', function () {
       expect(remoteBranchExists(SYNC_BRANCH)).to.be.false;
     });
 
-    // A planned halt must exit non-zero exactly as the real run would — `summarizeSync` recognizes the
-    // HALTED prefix and nothing else. The shape: the lane's branch carries dev commits but records no bit
-    // state for it, so the planner cannot tell which side is newer.
-    it('F2: a --dry-run whose PLAN is a halt exits non-zero, with the prefix the real run uses', () => {
+    // The shape that used to PLAN a halt here ("cannot tell which side is newer") now plans
+    // adopt-branch: first contact, not a conflict. The dry run reports the plan, exits 0, and writes
+    // nothing. Dry-run HALT coverage (non-zero exit, HALTED prefix) lives in the cross-scope suite.
+    it('F2: a --dry-run that plans a first-contact adoption reports it and exits 0', () => {
       const refsBefore = remoteRefs();
       helper.command.runCmd(`git checkout -f -b ${LANE} origin/${defaultBranch}`);
       helper.fs.outputFile('docs/plan.md', 'dev work this repository never gave bit any state for\n');
@@ -296,10 +296,9 @@ describe('bit ci sync', function () {
       helper.command.runCmd(`git checkout -f ${defaultBranch}`);
       try {
         const { output, exitCode } = syncRun(`${LANE} --dry-run`);
-        expect(exitCode, `bit ci sync --dry-run output:\n${output}`).to.not.equal(0);
-        expect(output).to.include(`HALTED ${LANE} -> branch has commits but its .bitmap records no state`);
-        expect(output).to.include('bit ci sync could not reconcile 1 target(s)');
-        expect(output).to.include('Dry-run:');
+        expect(exitCode, `bit ci sync --dry-run output:\n${output}`).to.equal(0);
+        expect(output).to.include(`Dry-run: ${LANE} -> adopt-branch`);
+        expect(output).to.not.include('HALTED');
       } finally {
         // leave the block's refs as F found them — the local branch too, or the next run refuses to reset it
         helper.command.runCmd(`git push origin :refs/heads/${LANE}`);
