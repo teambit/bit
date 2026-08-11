@@ -12,13 +12,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const MAX_FILES_READ = 1100;
-const MAX_FILES_READ_STATUS = 1515;
+// 1650, up from 1515 (2026/08/11): the released bundle crossed 1515 on 2026-07-23 (2.0.35) and
+// crept to 1541 by 2.0.74, failing e2e_test_bbit nightly for three weeks. Root cause (found by
+// diffing BIT_DEBUG_READ_FILE output of bvm-installed 2.0.33 vs 2.0.35): NOT new runtime reads —
+// #10515 changed dependencies, which reshaped the bundle's pnpm hoisted layout so
+// @teambit/toolbox.fs.hard-link-directory plus a full private fs-extra tree load from a nested
+// copy under @teambit/compilation.compiler-task instead of a shared hoisted copy (~+21 reads).
+// The nightly +1-3 creep is the same mechanism: each nightly bundle re-resolves latest transitive
+// deps and hoisting shifts occasionally add nested duplicates (p-limit, pify, ssri, mimic-fn
+// between 2.0.35 and 2.0.74). Duplicated copies are a real (small) I/O cost, so the total-reads
+// metric stays — but the threshold now has headroom for layout drift, and failures print the
+// per-file diff (see files-snapshot-status.txt) so the next red is a 2-minute diagnosis instead
+// of a 3-week mystery.
+const MAX_FILES_READ_STATUS = 1650;
 
 /**
  * as of now (2026/08/08) ~1,072 files are loaded during bit-bootstrap (recent additions: the
  * ci-sync commands, harmony 0.4.12's dist layout, and the global-virtual-store bridge - the
  * bridge module plus one .modules.yaml read per install root).
- * for "bit status", around 1,433 files are loaded.
+ * for "bit status", around 1,433 files are loaded when running from the repo; the released
+ * hoisted bundle loads ~1,540 (its node_modules layout duplicates some packages).
  *
  * two weeks ago we were at 2,964 files. a few PRs helped to reduce the number of files. among them:
  * #9568, #9572, #9576, #9577, #9578, #9584, #9587, #9588, #9590, #9593, #9594, #9598.
@@ -75,7 +88,14 @@ describe('Filesystem read count', function () {
         });
         const numberOfReads = getNumberOfReads(output);
         if (numberOfReads >= MAX_FILES_READ_STATUS) {
-          throw new Error(buildExceededError('bit status', numberOfReads, MAX_FILES_READ_STATUS));
+          throw new Error(
+            buildExceededError(
+              'bit status',
+              numberOfReads,
+              MAX_FILES_READ_STATUS,
+              getNewlyLoadedFiles(output, 'files-snapshot-status.txt')
+            )
+          );
         }
       });
       it('should take less than 2 seconds', () => {
@@ -121,12 +141,20 @@ function getNumberOfReads(cmdOutput: string): number {
  * builds a concise, readable failure message for when the file-count threshold is exceeded.
  * instead of dumping the entire command output (thousands of lines), it shows only the diff:
  * the files that are loaded now but were not present in the last snapshot.
- * `newFiles` is omitted for commands without a snapshot (e.g. "bit status").
  */
 function buildExceededError(label: string, numberOfReads: number, max: number, newFiles?: string[]): string {
   const lines = [`${label} loaded ${numberOfReads} files, exceeding the allowed maximum of ${max}.`];
   if (newFiles) {
-    if (newFiles.length) {
+    if (newFiles.length > 150) {
+      // the run's node_modules layout doesn't match the snapshot's flavor (repo `.pnpm` layout vs
+      // the released hoisted bundle), so a per-file diff would be pure noise. show a sample only.
+      lines.push(
+        `${newFiles.length} file(s) differ from the last snapshot — too many for a layout-compatible ` +
+          'diff (the snapshot was likely generated from the other install flavor: repo vs released bundle).'
+      );
+      lines.push('First 20:');
+      lines.push(...newFiles.slice(0, 20).map((file) => `  + ${file}`));
+    } else if (newFiles.length) {
       lines.push(`The following ${newFiles.length} file(s) are loaded now but were not in the last snapshot:`);
       lines.push(...newFiles.map((file) => `  + ${file}`));
     } else {
@@ -135,16 +163,19 @@ function buildExceededError(label: string, numberOfReads: number, max: number, n
   }
   lines.push(
     'If this increase is intentional, bump the threshold in filesystem-read.e2e.ts and regenerate ' +
-      'e2e/performance/files-snapshot.txt (see makeSnapshot()).'
+      'the corresponding snapshot file in e2e/performance/ (see makeSnapshot()).'
   );
   return `\n${lines.join('\n')}`;
 }
 
 /**
  * returns the bit-installation files that are loaded now but were not present in the last snapshot.
+ * `snapshotFile`: files-snapshot.txt covers bit-bootstrap; files-snapshot-status.txt covers
+ * "bit status" (generated from the released bundle, where the recurring failures happen — a run
+ * from the repo has a different node_modules layout and falls into the >150 sample branch above).
  */
-function getNewlyLoadedFiles(cmdOutput: string): string[] {
-  const fromLastSnapshot = fs.readFileSync(path.join(__dirname, 'files-snapshot.txt')).toString();
+function getNewlyLoadedFiles(cmdOutput: string, snapshotFile = 'files-snapshot.txt'): string[] {
+  const fromLastSnapshot = fs.readFileSync(path.join(__dirname, snapshotFile)).toString();
   const fromLastSnapshotLines = fromLastSnapshot.split('\n');
   const { linesFromBitInstallation } = getLinesFromBitInstallation(cmdOutput);
   return _.difference(linesFromBitInstallation, fromLastSnapshotLines);
@@ -168,7 +199,11 @@ function getLinesFromBitInstallation(cmdOutput: string) {
 
 /**
  * in case a new snapshot is needed, call this function during the test.
- * then go to the output and paste the files into files-snapshot.txt.
+ * then go to the output and paste the files into files-snapshot.txt (bit --help / bootstrap)
+ * or files-snapshot-status.txt (bit status). generate against the flavor that is failing:
+ * the released bundle (bvm install <version>, hoisted layout) for e2e_test_bbit reds, or the
+ * repo-run bit for e2e_test reds — the two layouts differ and their snapshots are not
+ * interchangeable.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function makeSnapshot(cmdOutput: string) {
