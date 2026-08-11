@@ -340,9 +340,10 @@ is new or modified relative to the lane — a read, never a snap. Two outcomes:
   The command halts, the same way it halted before this action existed: it cannot tell which side is
   newer. Nothing is snapped or exported; the lane is untouched, and the workspace is left clean.
 
-Adoption never touches a branch whose `.bitmap` already names a DIFFERENT lane with a live, unmerged claim.
-A different-lane pointer that is already merged into the default branch — the ordinary shape of a branch cut
-after some other lane's sync pull request landed — is history, not a claim, and does not block adoption.
+Adoption never touches a branch whose `.bitmap` asserts a DIFFERENT lane's claim of its own.
+A different-lane pointer the branch merely inherited — its `.bitmap` is unchanged since the branch forked
+from the default branch, the ordinary shape of a branch cut after some other lane's sync pull request
+landed — is history, not a claim, and does not block adoption.
 
 A pointer Bit marked **not exported**, same as for [deletion attribution](#when-the-command-deletes-a-branch),
 does not count as state either: it is intentional, not a gap. Nothing was ever proven about that lane, so

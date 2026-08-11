@@ -378,11 +378,6 @@ describe('close-pr re-verifies the tip before retiring a branch', () => {
   });
 });
 
-// `own-merged`/`own-superseded` commit-reachability used to be treated as "inherited, adoption may
-// proceed" — dropped because `own-superseded` by definition still has live commits after the point it
-// superseded another lane, i.e. ongoing work, not dead history. The `.bitmap`-blob-equality check
-// replaces both: only a branch whose `.bitmap` has not diverged AT ALL from the default branch's
-// current one is provably inherited.
 describe('differentLaneStillClaims uses .bitmap blob equality, not commit reachability', () => {
   function executorWithInheritance(inherited: boolean) {
     const executor = new LaneSyncExecutor({
@@ -413,18 +408,12 @@ describe('differentLaneStillClaims uses .bitmap blob equality, not commit reacha
     expect(await differentLaneStillClaims('acme.shop/other-lane', 'acme.shop/my-lane')).to.equal(false);
   });
 
-  // The superseded-but-live case this guard exists for: `own-superseded` would have (wrongly) exempted
-  // this before — the branch's `.bitmap` has genuinely diverged, so the pointer is a real, live claim.
   it("STILL claims when the different-lane .bitmap has diverged from the default branch's — halt, not adopt", async () => {
     const differentLaneStillClaims = executorWithInheritance(false);
     expect(await differentLaneStillClaims('acme.shop/other-lane', 'acme.shop/my-lane')).to.equal(true);
   });
 });
 
-// The durable deletion guard: unlike a single trailer on one commit (undone by the very next ledger
-// commit), this reads the branch's ANCESTRY below its state commit, so it survives any number of later
-// sync cycles. Gated to the one ownership claim it can change the outcome for — `own-live`, the only
-// one an immediate delete is even on the table for.
 describe('computeHasIndependentHistory gates the ancestry check to own-live claims with a state commit', () => {
   function executorWithAncestryResult(result: boolean) {
     const calls: Array<[string, string]> = [];

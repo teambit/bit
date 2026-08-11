@@ -30,22 +30,12 @@ export type LaneSyncInput = {
    */
   tipIsSyncCommit: boolean;
   /**
-   * Whether the branch's history, below its state commit, holds real (non-bit-authored) work that
-   * predates this reconciler and is absent from the default branch — proof the branch was ADOPTED
-   * (`adopt-branch`) rather than a mirror this reconciler manufactured wholesale. Durable across any
-   * number of later ledger commits (history is append-only), unlike checking a single trailer on one
-   * commit. Consulted only for an `own-live` claim, to withhold an immediate delete: adoption only ever
-   * proved the branch's content matched the lane's, never that its pre-existing history is disposable.
-   * A merged/superseded claim (reachable from the default branch) is unaffected — only the unreachable,
-   * "delete now" path is guarded.
+   * The branch had real (non-bit) commits before this reconciler touched it — it was adopted, not
+   * manufactured. Can only withhold a delete, never authorize one.
    */
   hasIndependentHistory?: boolean;
   conflictLabelPresent: boolean;
-  /**
-   * Whether the branch's committed `.bitmap` names a DIFFERENT lane than the one being reconciled.
-   * Consulted only when `lastSyncedHead` is absent, to tell "no state at all" (safe to adopt) from
-   * "already claimed by another lane" (never silently adopt).
-   */
+  /** The branch's committed `.bitmap` names a DIFFERENT lane — another lane's claim, never adopted. */
   branchNamesDifferentLane?: boolean;
   /** @see LaneOwnershipEvidence — consulted only on the "lane is gone" path. */
   ownership: LaneOwnershipEvidence;
@@ -82,15 +72,10 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
     if (!branchExists) return { type: 'noop', reason: 'lane and branch both absent' };
     switch (ownership) {
       case 'own-live':
-        // DELETION NEEDS EVERY HALF — a cascade, each one a separate reason to withhold:
-        // 1. dev commits on top: real work that exists nowhere else.
-        // 2. the tip isn't our own commit: `.bitmap` attribution alone is not enough — a developer who
-        //    commits their own `.bitmap` write (bit create / unexported snap / deps set) looks exactly
-        //    like "own-live, nothing above the state commit".
-        // 3. the tip IS our commit, but it's `adopt-branch`'s: adoption only proved the branch's
-        //    content matched the lane's, never that its pre-existing (human-authored) history is
-        //    disposable — a false keep is harmless, a false delete destroys the only copy of the work.
-        // Only past all three does a same-content mirror license its own deletion.
+        // Each check is a separate reason to withhold a delete: dev commits are work that exists
+        // nowhere else; a non-sync tip may be a developer's own `.bitmap` write; an adopted branch's
+        // pre-existing history was never proven disposable. A false keep is harmless, a false delete
+        // destroys the only copy.
         if (hasDevCommits) {
           return { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' };
         }
@@ -115,17 +100,13 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   if (!branchExists) return { type: 'import-lane' };
   if (!lastSyncedHead) {
     if (hasDevCommits) {
-      // A branch that already names a DIFFERENT lane is never adopted here — that claim is someone
-      // else's to resolve, not something this lane's sync run may silently absorb or overwrite.
       if (branchNamesDifferentLane) {
         return {
           type: 'halt',
           reason: 'branch has commits but its .bitmap names a different lane; cannot tell which side is newer',
         };
       }
-      // No prior sync history for this lane/branch pair, and the branch has commits of its own — the
-      // lane exists, so this is first contact, not a conflict. Adopt: converge the pair and let the
-      // executor's ledger commit give the branch's `.bitmap` a lane pointer to read next time.
+      // The lane exists but the pair has no sync history: first contact, not a conflict.
       return { type: 'adopt-branch' };
     }
     return { type: 'import-lane' };

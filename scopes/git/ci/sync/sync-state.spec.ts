@@ -208,12 +208,6 @@ describe('parseDevCommitCount', () => {
   });
 });
 
-// The pure half of `hasIndependentHistoryBelowStateCommit`'s `git log --reverse ... --format=%B%x1e`
-// classifier: is the OLDEST record — the commit right where the branch first diverges from the
-// default branch — bit-authored or not. The durable, ancestry-based signal that a branch had real
-// (human) history before this reconciler ever touched it. Checks the oldest record ONLY: a normal,
-// bit-created branch that later went through real export-branch/merge-diverged cycles has genuine dev
-// commits ABOVE its first (bit-authored) one too — those must not read as "adopted".
 describe('oldestCommitIsNonSync', () => {
   it('is false for an empty range — no commits at all', () => {
     expect(oldestCommitIsNonSync('')).to.equal(false);

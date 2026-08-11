@@ -700,12 +700,8 @@ describe('bit ci sync', function () {
     });
   });
 
-  // The defect this closes: `bit ci pr --keep-lane` creates the cloud lane from a git-native branch,
-  // but never commits the lane pointer to the branch's `.bitmap`. The very next `bit ci sync` then saw
-  // dev commits with no readable state for the lane and HALTed ("cannot tell which side is newer"),
-  // asking a human to run `bit lane import` and commit `.bitmap` by hand. Adoption converges instead:
-  // the planner routes this "lane exists, branch has commits, no prior sync state" shape into
-  // `adopt-branch`, whose ledger commit gives the branch a lane pointer, same as every other action.
+  // The defect this closes: `bit ci pr --keep-lane` creates the lane but never commits the pointer to
+  // the branch's `.bitmap`, and the next `bit ci sync` used to halt on the pair.
   describe('a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync)', () => {
     const FEATURE_BRANCH = 'adopt-feature';
     let defaultBranch: string;
@@ -720,12 +716,10 @@ describe('bit ci sync', function () {
       helper.command.runCmd('git commit -m "feat: adopt-feature work"');
       helper.command.runCmd(`git push -u origin ${FEATURE_BRANCH}`);
 
-      // Reproduces the live defect exactly: creates the cloud lane from this branch's content, but
-      // (unchanged, still) never commits the lane pointer back to the branch.
+      // Creates the cloud lane from this branch's content without committing the pointer back to it.
       helper.command.runCmd('bit ci pr --keep-lane --message "adopt via keep-lane"');
       helper.command.runCmd(`git checkout -f ${defaultBranch}`);
-      // An independent clone, switched onto the (already-existing) lane, to read the LANE's own
-      // content — as opposed to the branch's mirror of it.
+      // An independent clone on the lane, to read the LANE's own content rather than the branch's mirror.
       devPath = helper.scopeHelper.cloneWorkspace();
       helper.command.runCmd(`bit switch ${helper.scopes.remote}/${FEATURE_BRANCH} --get-all`, devPath);
     });
@@ -752,9 +746,7 @@ describe('bit ci sync', function () {
     });
   });
 
-  // The HIGH-priority guard: adoption must never be a bare export. When the branch's content would
-  // actually CHANGE the lane — genuine, unresolved divergence with no known common history — it halts
-  // exactly as it did before this action existed, and the lane is left untouched.
+  // Adoption must never be a bare export: real divergence halts and the lane is left untouched.
   describe('a branch whose content would change the lane at first contact halts instead of adopting', () => {
     const FEATURE_BRANCH = 'adopt-conflict';
     let defaultBranch: string;
@@ -772,9 +764,7 @@ describe('bit ci sync', function () {
       // Creates the cloud lane from the branch's v1 content, same as the adoption test above.
       helper.command.runCmd('bit ci pr --keep-lane --message "adopt via keep-lane"');
 
-      // A SECOND git commit lands on the branch WITHOUT another `ci pr` run — real, unresolved
-      // divergence with no known common sync history: the lane still holds v1, the branch now holds
-      // v2, and nothing has ever reconciled the two.
+      // A second commit lands without another `ci pr` run: the lane holds v1, the branch v2.
       helper.fs.outputFile('comp1/index.js', comp1Src('adopt-conflict-v2'));
       helper.command.runCmd('git add .');
       helper.command.runCmd('git commit -m "feat: adopt-conflict v2, never re-synced"');
@@ -797,10 +787,7 @@ describe('bit ci sync', function () {
       expect(laneTipFile(devPath, 'comp1/index.js')).to.include('adopt-conflict-v1');
     });
 
-    // A snap-based probe would create a NEW local Version object on every attempt (an unexported snap
-    // is never idempotent — it re-snaps every time there's "something to snap"). The status-based
-    // decision never snaps at all, so a second identical attempt should fetch nothing new: the lane's
-    // objects are already cached locally from the first attempt's switch.
+    // A snap-based probe would grow the local scope on every attempt; the status-based decision never snaps.
     it('leaves the local scope byte-clean — a repeat halt attempt creates no additional objects', () => {
       const afterFirstHalt = scopeObjectCount();
       const { output, exitCode } = syncRun(FEATURE_BRANCH);
@@ -812,11 +799,7 @@ describe('bit ci sync', function () {
     });
   });
 
-  // Blast radius: the whole point of deciding adoption via a `bit status` read instead of a probe snap
-  // is that a diverged adoption target leaves nothing behind — no unexported snap, no unmerged config,
-  // no lingering lane switch — that could trip a DIFFERENT, healthy lane processed in the SAME --all
-  // run. Named so the halting lane sorts before the healthy one alphabetically: if adoption left any
-  // residue, this is the ordering that would let it poison the lane processed right after it.
+  // Lane names chosen so the halting lane sorts first: any adoption residue would poison the lane after it.
   describe('one lane halting during adoption does not affect a healthy lane in the same --all run', () => {
     const HALTING_LANE = 'adopt-conflict-blast';
     const HEALTHY_LANE = 'healthy-blast';
@@ -825,8 +808,6 @@ describe('bit ci sync', function () {
     before(() => {
       ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
 
-      // The halting lane: adoption with real, unresolved divergence — same shape as the standalone
-      // halt test above.
       helper.command.runCmd(`git checkout -b ${HALTING_LANE}`);
       helper.fs.outputFile('comp1/index.js', comp1Src('blast-v1'));
       helper.command.runCmd('git add .');

@@ -63,9 +63,7 @@ const table: Array<{
     action: { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' },
   },
   {
-    // `adopt-branch`'s ledger commit only ever proved the branch's CONTENT matched the lane's — never
-    // that its pre-existing (human-authored) history is disposable. Reachable claims (own-merged /
-    // own-superseded, below) are unaffected: this guard is only about the unreachable "delete now" path.
+    // Adoption proved content matched, never that the branch's pre-existing history is disposable.
     name: 'own-live, no dev commits, OUR tip, but it is the adoption ledger commit -> KEEP, never delete',
     input: { ...laneGone('own-live'), hasIndependentHistory: true },
     type: 'close-pr',
@@ -85,8 +83,6 @@ const table: Array<{
     action: { type: 'close-pr', deleteBranch: true },
   },
   {
-    // The adoption guard only withholds the UNREACHABLE ("delete now") path; once genuinely merged,
-    // deleting an adopted branch is exactly as safe as deleting any other.
     name: 'own-merged deletes even when the tip is the adoption ledger commit — reachability is enough',
     input: { ...laneGone('own-merged'), hasIndependentHistory: true },
     type: 'close-pr',
@@ -141,10 +137,7 @@ const table: Array<{
     reason: 'names a different lane',
   },
   {
-    // The executor computes `branchNamesDifferentLane` FALSE for a different-lane pointer whose claim
-    // is reachable from the default branch (own-merged/own-superseded) — a branch cut after some OTHER
-    // lane's sync PR merged inherits that stale pointer; it is history, not a live claim. This row
-    // documents the planner's contract given that already-resolved `false`: it adopts, not halts.
+    // The executor resolves an inherited (merged) different-lane pointer to `false` — history, not a claim.
     name: 'existing branch, has dev commits, .bitmap names a MERGED-AND-INHERITED different lane -> adopt-branch',
     input: {
       lastSyncedHead: undefined,

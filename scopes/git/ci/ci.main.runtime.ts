@@ -520,12 +520,9 @@ export class CiMain {
   }
 
   /**
-   * Whether the workspace, as checked out, has anything the CURRENT lane doesn't already reflect —
-   * new, modified, OR already staged (a local snap never exported), per `bit status`. Read-only: no
-   * snap, no export, no config sync — a real snap is a write regardless of whether a caller discards
-   * the result, so probing via one can never be side-effect-free. `stagedComponents` matters even
-   * though this path never snaps itself: a warm workspace can already carry an unrelated staged snap,
-   * and adoption must not paper over that unresolved divergence by committing the ledger anyway.
+   * Whether the workspace has anything the current lane doesn't reflect — new, modified, or staged,
+   * per `bit status`. Read-only: adoption uses this instead of a probe snap, which writes even under
+   * dryRun. Staged counts too: a pre-existing unexported snap is divergence adoption must not bury.
    */
   async hasUnsyncedWorkChanges(): Promise<boolean> {
     const status = await this.status.status({ lanes: true });
