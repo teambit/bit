@@ -92,6 +92,15 @@ export function racedLedgerPushSummary(laneName: string, policyClause = ''): str
   );
 }
 
+/**
+ * `executeAdoptBranch`'s ledger-commit push lost the race. Unlike the export paths, adoption never
+ * snaps or exports — the LANE is untouched; only the branch's pointer commit failed to land. The next
+ * run re-plans first contact against the winner's tip.
+ */
+export function racedAdoptionPushSummary(laneName: string): string {
+  return racedSummary(laneName, 'lane untouched; adoption ledger commit lost the push race — next run re-plans');
+}
+
 export type LaneSyncDeps = {
   lanes: LanesMain;
   /** for snapPrCommit + getDefaultBranchName + switchToLaneForSync */
@@ -783,7 +792,7 @@ export class LaneSyncExecutor {
 
       // Branch content already matches the lane — the ledger commit is all that is missing.
       const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch, { adopted: true });
-      if (recorded.status === 'raced') return racedLedgerPushSummary(laneName);
+      if (recorded.status === 'raced') return racedAdoptionPushSummary(laneName);
       if (recorded.status === 'unreadable') {
         return await this.executeHalt({
           laneName,

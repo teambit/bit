@@ -546,6 +546,32 @@ describe('executeExportBranch reports the ledger-race wording when only the ledg
   });
 });
 
+// Adoption never snaps or exports, so its raced line must NOT claim the lane was updated — the lane
+// is untouched and only the branch's pointer commit lost the race.
+describe('executeAdoptBranch reports a lane-untouched race when its ledger push races', () => {
+  it('surfaces "lane untouched; adoption ledger commit lost the push race" without halting', async () => {
+    const { executor } = stubExecutor();
+    (executor as any).deps.ci = { hasUnsyncedWorkChanges: async () => false };
+    (executor as any).checkoutFromRemote = async () => {};
+    (executor as any).restoreWorkspace = async () => {};
+    (executor as any).materializeLane = async () => undefined;
+    (executor as any).recordLaneHeadOnBranch = async () => ({ status: 'raced' });
+
+    const summary = await (executor as any).executeAdoptBranch({
+      target: { hostScope: 'acme.shop', name: 'my-lane' },
+      laneIdStr: 'acme.shop/my-lane',
+      branch: 'my-lane',
+      defaultBranch: 'main',
+    });
+
+    expect(summary).to.equal(
+      'my-lane -> raced (lane untouched; adoption ledger commit lost the push race — next run re-plans)'
+    );
+    expect(summary).to.not.include('lane updated');
+    expect(summary).to.not.include('HALTED');
+  });
+});
+
 // A destructive auto-resolution (onConflict git-wins/lane-wins) that already exported must not vanish
 // from the summary just because the ledger push raced.
 describe('racedLedgerPushSummary keeps the conflict-policy clause', () => {
