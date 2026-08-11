@@ -30,10 +30,13 @@ import {
   checkoutPristine,
   checkoutPristineRestore,
   commitWithIdentity,
+  confirmPushRace,
   deleteBranchArgs,
+  dropLocalBranchToRemoteTip,
   fetchRemoteHeads,
   isAncestor,
   isStaleLeaseRejection,
+  redactUrlCredentials,
   refetchBranchTip,
 } from './git-ops';
 
@@ -50,6 +53,41 @@ export const HALT_SUMMARY_PREFIX = 'HALTED';
  * sync conflict.
  */
 export const REFUSED_SUMMARY_PREFIX = 'REFUSED';
+
+/**
+ * A raced verdict: the run lost a push race to a concurrent run and exits green — never a halt, never
+ * the `bit-sync-conflict` label; a raced push is not a content conflict. Nothing retries in-run, so
+ * convergence waits on the NEXT trigger (webhook or scheduled run): a deployment without the cron can
+ * mirror stale content until the next event. One builder so the `-> raced (` stem a consumer routes on
+ * lives at one site, like `HALT_SUMMARY_PREFIX`.
+ */
+function racedSummary(laneName: string, detail: string): string {
+  return `${laneName} -> raced (${detail})`;
+}
+
+/**
+ * `executeImportLane`'s own push (materializing the lane onto the branch) lost the race. Nothing on
+ * the LANE changed here — only the branch-side commit failed to land — so the next run's plan is
+ * unaffected: it simply retries the same import against the winner's tip.
+ */
+function racedBranchPushSummary(laneName: string): string {
+  return racedSummary(laneName, 'branch push lost the race to a concurrent run; next run re-plans');
+}
+
+/**
+ * `recordLaneHeadOnBranch`'s ledger-commit push lost the race, AFTER the snap/export that precedes it
+ * already succeeded — the lane genuinely moved. Only the branch's own acknowledgment of that (the
+ * `.bitmap` pointer commit) failed to land, so the next run reads the branch as behind the lane it
+ * itself just updated and plans `import-lane` to catch it up. `policyClause` carries a destructive
+ * auto-resolution (onConflict git-wins/lane-wins) that already exported — it must not vanish from the
+ * summary just because the ledger push raced.
+ */
+export function racedLedgerPushSummary(laneName: string, policyClause = ''): string {
+  return racedSummary(
+    laneName,
+    `${policyClause}lane updated; branch ledger commit lost the push race — next run re-plans`
+  );
+}
 
 export type LaneSyncDeps = {
   lanes: LanesMain;
@@ -583,7 +621,13 @@ export class LaneSyncExecutor {
         });
       }
 
-      await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+      const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+      if (pushResult.raced) {
+        // Still ensure the PR: this early return skips the file's only PR-creation site, and the
+        // converged state every later run reads plans a bare noop, which never repairs a missing PR.
+        if (!pr) await this.openPrForLane({ target, laneIdStr, branch, defaultBranch, laneHead, remoteLane });
+        return racedBranchPushSummary(laneName);
+      }
 
       let prUrl = pr?.htmlUrl;
       if (!pr) {
@@ -633,8 +677,9 @@ export class LaneSyncExecutor {
         });
       }
 
-      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (!laneHead) {
+      const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      if (recorded.status === 'raced') return racedLedgerPushSummary(laneName);
+      if (recorded.status === 'unreadable') {
         return await this.executeHalt({
           laneName,
           laneIdStr,
@@ -643,7 +688,10 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
-      return `${laneName} -> export-branch (lane ${laneIdStr} @ ${laneHead.slice(0, 9)}, branch ${branch} updated)`;
+      return (
+        `${laneName} -> export-branch (lane ${laneIdStr} @ ${recorded.laneHead.slice(0, 9)}, ` +
+        `branch ${branch} updated)`
+      );
     } finally {
       await this.restoreWorkspace(defaultBranch);
     }
@@ -751,13 +799,14 @@ export class LaneSyncExecutor {
       }
 
       // ---- step 3: record the new lane head on the branch --------------------------------------
-      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (!laneHead) {
+      const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      if (recorded.status === 'raced') return racedLedgerPushSummary(laneName, policyClause);
+      if (recorded.status === 'unreadable') {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
       }
       return (
         `${laneName} -> merge-diverged (${policyClause}merged lane into branch, then exported; lane ${laneIdStr} @ ` +
-        `${laneHead.slice(0, 9)}, branch ${branch} updated)`
+        `${recorded.laneHead.slice(0, 9)}, branch ${branch} updated)`
       );
     } catch (e: any) {
       // Something unforeseen — halt anyway: no single lane may abort the rest of the run.
@@ -799,18 +848,21 @@ export class LaneSyncExecutor {
   /**
    * Record on the branch which lane state it now mirrors: re-query the lane (the export just moved it,
    * so any earlier fingerprint is stale), commit — crucially the `.bitmap` the snap rewrote — and push.
-   * Returns undefined when the lane can no longer be read, in which case the caller halts.
+   * `unreadable` means the lane could no longer be read back, in which case the caller halts;
+   * `raced` means a concurrent run's push already got there first, in which case the caller reports
+   * a benign noop instead.
    */
   private async recordLaneHeadOnBranch(
     target: LaneTarget,
     laneIdStr: string,
     branch: string
-  ): Promise<string | undefined> {
+  ): Promise<{ status: 'unreadable' } | { status: 'raced' } | { status: 'ok'; laneHead: string }> {
     const remoteLane = await this.getRemoteLane(target);
-    if (!remoteLane) return undefined;
+    if (!remoteLane) return { status: 'unreadable' };
     const laneHead = laneHeadFingerprint(remoteLane.components);
-    await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
-    return laneHead;
+    const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+    if (pushResult.raced) return { status: 'raced' };
+    return { status: 'ok', laneHead };
   }
 
   /**
@@ -1222,15 +1274,68 @@ export class LaneSyncExecutor {
   /**
    * Stage everything, commit with the annotated sync message, and push. NEVER force-pushes: a rejected
    * push means someone pushed concurrently and the next run should re-plan rather than clobber.
-   * `--allow-empty` is only insurance against `git commit` failing the lane outright.
+   * `--allow-empty` is only insurance against `git commit` failing the lane outright. Returns whether
+   * the push was rejected by a CONFIRMED race (`classifyPushRejection`) — the caller's cue to report a
+   * benign noop instead of halting; any other push failure still throws.
    */
-  private async commitAllAndPush(branch: string, message: string) {
+  private async commitAllAndPush(branch: string, message: string): Promise<{ raced: boolean }> {
+    // The local knowledge of `origin/<branch>` right now — no fetch, `fetchOnce` already ran for this
+    // whole executor run — is exactly what our about-to-be-made commit is based on. After a rejection,
+    // this is the baseline `classifyPushRejection` checks the remote against to confirm a real race.
+    const baseSha = await this.localRemoteTip(branch);
     await addAllExceptScopeAndModules();
     await commitWithIdentity(message, { extraArgs: ['--allow-empty'] });
-    // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or reinterpreted —
-    // the configured branch name is user input (see `sync-config.ts`).
-    await git.push(['origin', `HEAD:refs/heads/${branch}`]);
+    try {
+      // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or
+      // reinterpreted — the configured branch name is user input (see `sync-config.ts`).
+      await git.push(['origin', `HEAD:refs/heads/${branch}`]);
+    } catch (e: any) {
+      if ((await this.classifyPushRejection(branch, baseSha, e)) !== 'confirmed-race') throw e;
+      // Drop the losing commit: left on refs/heads/<branch>, its orphan sibling would trip
+      // `checkoutPristine`'s guard on this clone's next branch-touching run. The confirmation just
+      // refetched the winner's tip, so `origin/<branch>` resolves.
+      const dropErr = await dropLocalBranchToRemoteTip(branch);
+      if (dropErr) {
+        this.deps.logger.consoleWarning(`Could not drop the unpushed sync commit on ${branch}: ${dropErr}`);
+      }
+      // Keep the original rejection text (redacted: git prints the remote URL, which may embed
+      // credentials): the raced verdict exits green, and without the text a persistent wording-matched
+      // failure on a busy branch would leave no diagnosable trace anywhere.
+      this.deps.logger.console(
+        formatWarningSummary(
+          `Push to ${branch} was rejected and the branch has since moved — a concurrent run got there first; ` +
+            `re-planning on the next sync. The rejection: ${redactUrlCredentials(String(e?.message || e))}`
+        )
+      );
+      return { raced: true };
+    }
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
+    return { raced: false };
+  }
+
+  /** `origin/<branch>`'s tip as this local clone currently knows it — no fetch. Undefined if unknown. */
+  private async localRemoteTip(branch: string): Promise<string | undefined> {
+    try {
+      return String(await git.raw(['rev-parse', `origin/${branch}`])).trim() || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * `confirmPushRace` (git-ops) with this executor's seam: `currentBranchTip` (shared with the close-pr
+   * retirement path) keeps the confirmation unit-testable without a real remote. Residual risk,
+   * accepted: "the branch moved" is not "a sync run won" — on a branch that moves during every run
+   * window, a persistent wording-matched failure still classifies as raced each time. The caller logs
+   * the original rejection text so that shape stays diagnosable. Only answers; the caller decides to
+   * swallow or rethrow.
+   */
+  private async classifyPushRejection(
+    branch: string,
+    baseSha: string | undefined,
+    e: any
+  ): Promise<'confirmed-race' | 'not-a-race'> {
+    return confirmPushRace(branch, baseSha, String(e?.message || e), (b) => this.currentBranchTip(b));
   }
 
   private async openPrForLane({

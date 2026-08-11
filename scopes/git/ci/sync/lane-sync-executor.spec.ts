@@ -13,8 +13,26 @@ import {
   laneHeadFingerprint,
   LaneSyncExecutor,
   laneSyncPrBody,
+  racedLedgerPushSummary,
 } from './lane-sync-executor';
 import { resolveSyncConfig } from './sync-config';
+
+/**
+ * One stub executor for every seam-based test: real executor code over stubbed deps, no repository.
+ * `warnings` collects `consoleWarning` lines for tests that assert on them.
+ */
+function stubExecutor(): { executor: LaneSyncExecutor; warnings: string[] } {
+  const warnings: string[] = [];
+  const executor = new LaneSyncExecutor({
+    lanes: {} as any,
+    ci: {} as any,
+    logger: { console: () => {}, consoleWarning: (msg: string) => warnings.push(msg), error: () => {} } as any,
+    gitHost: undefined,
+    cfg: resolveSyncConfig({}),
+    defaultScope: 'acme.shop',
+  });
+  return { executor, warnings };
+}
 
 type LaneComponents = Parameters<typeof laneHeadFingerprint>[0];
 
@@ -314,16 +332,8 @@ describe('close-pr re-verifies the tip before retiring a branch', () => {
   const MOVED_SHA = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2';
 
   function retirer(currentTip: string | undefined, pushError?: Error) {
-    const warnings: string[] = [];
+    const { executor, warnings } = stubExecutor();
     const pushes: string[][] = [];
-    const executor = new LaneSyncExecutor({
-      lanes: {} as any,
-      ci: {} as any,
-      logger: { console: () => {}, consoleWarning: (msg: string) => warnings.push(msg), error: () => {} } as any,
-      gitHost: undefined,
-      cfg: resolveSyncConfig({}),
-      defaultScope: 'acme.shop',
-    });
     (executor as any).currentBranchTip = async () => currentTip;
     (executor as any).pushBranchDeletion = async (branch: string, sha: string) => {
       pushes.push([branch, sha]);
@@ -374,6 +384,95 @@ describe('close-pr re-verifies the tip before retiring a branch', () => {
   it('an unrelated push failure still reads as "left in place", not as a race', async () => {
     const { closePr } = retirer(EVIDENCE_SHA, new Error('remote: GH006: Protected branch update failed'));
     expect(await closePr()).to.equal('my-lane -> close-pr (no open PR, branch my-lane left in place)');
+  });
+});
+
+describe('classifyPushRejection confirms a race before calling it one', () => {
+  const BASE_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
+  const MOVED_SHA = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2';
+  const REJECTION = new Error('! [rejected]        HEAD -> feature (fetch first)\nerror: failed to push some refs');
+
+  function classifier(currentTip: string | undefined) {
+    const { executor } = stubExecutor();
+    (executor as any).currentBranchTip = async () => currentTip;
+    return (baseSha: string | undefined, e: Error) =>
+      (executor as any).classifyPushRejection('my-branch', baseSha, e) as Promise<'confirmed-race' | 'not-a-race'>;
+  }
+
+  it('confirms the race when the branch actually moved off the base we pushed against', async () => {
+    const classify = classifier(MOVED_SHA);
+    expect(await classify(BASE_SHA, REJECTION)).to.equal('confirmed-race');
+  });
+
+  it('confirms the race for a brand-new branch that now exists on the remote', async () => {
+    const classify = classifier(MOVED_SHA);
+    expect(await classify(undefined, REJECTION)).to.equal('confirmed-race');
+  });
+
+  // Message-text matching alone is not proof: a persistent, unrelated rejection could repeat the same
+  // wording forever. Without this re-fetch-and-compare, that would go permanently green.
+  it('answers not-a-race when the branch did NOT move — the wording matched but nothing raced', async () => {
+    const classify = classifier(BASE_SHA);
+    expect(await classify(BASE_SHA, REJECTION)).to.equal('not-a-race');
+  });
+
+  it('answers not-a-race when a brand-new branch still does not exist on the remote', async () => {
+    const classify = classifier(undefined);
+    expect(await classify(undefined, REJECTION)).to.equal('not-a-race');
+  });
+
+  // The polarity bug this guards: `currentTip === undefined` here means the re-fetch FAILED (network
+  // blip, auth hiccup) — unknown, not evidence the branch moved. `undefined !== baseSha` reads as
+  // truthy if compared naively, which would misreport an unanswerable check as a confirmed race and
+  // paper over a real, persistent failure. Withhold like every other unknown-answer path in this file.
+  it('answers not-a-race when the re-fetch itself fails, even though a base sha is known', async () => {
+    const classify = classifier(undefined);
+    expect(await classify(BASE_SHA, REJECTION)).to.equal('not-a-race');
+  });
+
+  it('answers not-a-race for a rejection whose wording is not a non-fast-forward race at all', async () => {
+    const classify = classifier(MOVED_SHA);
+    const unrelated = new Error('remote: GH006: Protected branch update failed');
+    expect(await classify(BASE_SHA, unrelated)).to.equal('not-a-race');
+  });
+});
+
+// The live incident's actual shape: the snap/export onto the lane already succeeded — the lane truly
+// moved — and only the branch's OWN ledger-commit push (recordLaneHeadOnBranch) lost the race. Nothing
+// exercised `racedLedgerPushSummary` before this; a wording regression there would have gone unnoticed.
+describe('executeExportBranch reports the ledger-race wording when only the ledger push races', () => {
+  it('surfaces "lane updated; branch ledger commit lost the push race" without halting', async () => {
+    const { executor } = stubExecutor();
+    (executor as any).lastNonSyncCommitMessage = async () => 'feat: some change';
+    (executor as any).checkoutFromRemote = async () => {};
+    (executor as any).restoreWorkspace = async () => {};
+    // The export half already succeeded (undefined = no error, matching this file's `Error | undefined`
+    // contract for `snapAndExportOntoLane`); only the ledger commit that follows raced.
+    (executor as any).snapAndExportOntoLane = async () => undefined;
+    (executor as any).recordLaneHeadOnBranch = async () => ({ status: 'raced' });
+
+    const summary = await (executor as any).executeExportBranch({
+      target: { hostScope: 'acme.shop', name: 'my-lane' },
+      laneIdStr: 'acme.shop/my-lane',
+      branch: 'my-lane',
+      defaultBranch: 'main',
+    });
+
+    expect(summary).to.equal(
+      'my-lane -> raced (lane updated; branch ledger commit lost the push race — next run re-plans)'
+    );
+    expect(summary).to.not.include('HALTED');
+  });
+});
+
+// A destructive auto-resolution (onConflict git-wins/lane-wins) that already exported must not vanish
+// from the summary just because the ledger push raced.
+describe('racedLedgerPushSummary keeps the conflict-policy clause', () => {
+  it('carries the merge path’s policyClause through the raced ledger line', () => {
+    expect(racedLedgerPushSummary('my-lane', 'conflicts auto-resolved: git-wins on 3 file(s); ')).to.equal(
+      'my-lane -> raced (conflicts auto-resolved: git-wins on 3 file(s); lane updated; branch ledger commit ' +
+        'lost the push race — next run re-plans)'
+    );
   });
 });
 
