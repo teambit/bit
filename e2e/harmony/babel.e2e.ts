@@ -39,9 +39,11 @@ describe('babel compiler', function () {
             },
           },
         });
-        // the aspect and react envs used to be core aspects, now their packages must be installed
+        // the aspect, react and babel envs used to be core aspects, now their packages must be installed
         // for the babel-env fixture (which composes on the react env) to be compiled and loaded
-        helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042 @teambit/react@1.0.1042');
+        helper.command.install(
+          '@teambit/aspect@1.0.1042 @teambit/node@1.0.1042 @teambit/react@1.0.1042 @teambit/babel@1.0.1042'
+        );
         helper.command.compile(); // compile the new env
 
         helper.fs.outputFile('bar/foo.js', 'export function sayHello() { console.log("hello"); }; sayHello();');

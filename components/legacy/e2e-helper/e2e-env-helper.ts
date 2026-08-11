@@ -23,6 +23,7 @@ type SetCustomEnvOpts = {
 const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
   '@teambit/node': '@teambit/node@1.0.1042',
   '@teambit/react': '@teambit/react@1.0.1042',
+  '@teambit/babel': '@teambit/babel@1.0.1042',
   '@teambit/mdx': '@teambit/mdx@1.0.1043',
   // not env bases - the tiny runtime deps of the minimal fixture envs (node-env-1/node-env-2),
   // listed here so setCustomEnv installs them and the fixtures load without MissingPackages
@@ -211,6 +212,10 @@ export default class EnvHelper {
       },
     });
     this.command.install([...ASPECT_ENV_PACKAGES, ...this.getFixtureEnvBasePackages(EXTENSIONS_BASE_FOLDER)].join(' '));
+    // the env is loaded only at the end of the first install. run a second install so its
+    // dependency policies (e.g. @teambit/babel as a runtime dep of the babel compiler) are
+    // applied to the components - the standard flow for old-style envs (see setNodeEnv above).
+    this.command.install();
     this.command.compile();
     return EXTENSIONS_BASE_FOLDER;
   }

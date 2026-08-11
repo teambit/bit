@@ -47,7 +47,6 @@
   "teambit.ui-foundation/react-router",
   "teambit.typescript/typescript",
   "teambit.ui-foundation/panels",
-  "teambit.compilation/babel",
   "teambit.ui-foundation/notifications",
   "teambit.compilation/bundler",
   "teambit.defender/jest",
