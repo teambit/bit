@@ -1000,11 +1000,6 @@ jobs:
   # ========== Testing Jobs ==========
   e2e_test:
     <<: *defaults
-    # changing from medium to large, doesn't affect the performance (speed-wise).
-    # medium+ is for MEMORY: tests that install a legacy-core env (node/react/aspect/env) pull the
-    # env package's full dependency closure (~3.6k packages, the whole bit runtime at its published
-    # version) and `bit install` peaks over 3GB — on medium (4GB) the process gets OOM-killed.
-    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
@@ -1015,8 +1010,6 @@ jobs:
   # makes sure the newly published version doesn't break bit
   e2e_test_bbit:
     <<: *defaults
-    # medium+ for the same OOM reason as e2e_test: legacy-core-env installs peak over 3GB.
-    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
