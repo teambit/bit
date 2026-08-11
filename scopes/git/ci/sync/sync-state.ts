@@ -114,7 +114,17 @@ export function oldestCommitIsNonSync(rawLog: string): boolean {
     .map((entry) => entry.trim())
     .filter(Boolean);
   const oldest = messages[0];
-  return oldest !== undefined && !isSyncAuthoredMessage(oldest);
+  return oldest !== undefined && !isLedgerCommitMessage(oldest);
+}
+
+/**
+ * Strict probe for "this is one of our LEDGER commits": the sync marker on its own line AND the
+ * `Bit-Lane-Head` trailer — `buildSyncCommitMessage` always writes both. The deletion guard reads
+ * this instead of `isSyncAuthoredMessage` so a human commit merely quoting `[bit-sync]` still counts
+ * as independent history (a false "human" only ever keeps a branch).
+ */
+export function isLedgerCommitMessage(message: string): boolean {
+  return isSyncAuthoredMessage(message) && new RegExp(`^${LANE_HEAD_TRAILER}: `, 'm').test(message);
 }
 
 /**

@@ -230,6 +230,14 @@ describe('oldestCommitIsNonSync', () => {
     const log = `${LANE_SYNC}\x1e`;
     expect(oldestCommitIsNonSync(log)).to.equal(false);
   });
+
+  // A ledger commit needs the marker AND the Bit-Lane-Head trailer; a human message that merely
+  // quotes [bit-sync] on its own line must still read as independent history (a keep, never a delete).
+  it('is true when the oldest human commit quotes the [bit-sync] marker but has no ledger trailer', () => {
+    const spoof = 'feat: mention our tooling\n\n[bit-sync]\n';
+    const log = [spoof, LANE_SYNC].join('\x1e');
+    expect(oldestCommitIsNonSync(log)).to.equal(true);
+  });
 });
 
 describe('fingerprintIdVersions', () => {
