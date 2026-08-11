@@ -520,15 +520,22 @@ export class CiMain {
   }
 
   /**
-   * Whether the workspace has anything the current lane doesn't reflect — new, modified, or staged,
-   * per `bit status`. Read-only: adoption uses this instead of a probe snap, which writes even under
-   * dryRun. Staged counts too: a pre-existing unexported snap is divergence adoption must not bury.
+   * Whether the workspace has anything the current lane doesn't reflect, per `bit status`. Read-only:
+   * adoption uses this instead of a probe snap, which writes even under dryRun. Every signal a later
+   * snap/export would push counts — including soft removals, hidden pending exports, and merge state.
    */
   async hasUnsyncedWorkChanges(): Promise<boolean> {
     const status = await this.status.status({ lanes: true });
-    return (
-      status.newComponents.length > 0 || status.modifiedComponents.length > 0 || status.stagedComponents.length > 0
-    );
+    const divergence = [
+      status.newComponents,
+      status.modifiedComponents,
+      status.stagedComponents,
+      status.locallySoftRemoved,
+      status.pendingUpdateDependents,
+      status.mergePendingComponents,
+      status.componentsDuringMergeState,
+    ];
+    return divergence.some((components) => components.length > 0);
   }
 
   /** `bit ci sync` — reconcile Bit lanes and the main scope with git branches and PRs (see `SyncOrchestrator`). */
