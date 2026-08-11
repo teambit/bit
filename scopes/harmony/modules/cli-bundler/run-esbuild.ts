@@ -95,6 +95,8 @@ export function runEsbuild({
       '.svg': 'file',
       '.txt': 'text',
       '.html': 'text',
+      // inlines mcp-config-writer's rules templates as strings instead of needing a copy-assets step
+      '.md': 'text',
     },
     alias: {
       // `batch` (pulled in through express/serve-index) requires a package called `emitter` that

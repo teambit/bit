@@ -26,8 +26,8 @@ const ASSETS: Array<{ pkg: string; from: string; to: string; flatten?: boolean }
   { pkg: '@teambit/config', from: 'dist/workspace-template.jsonc', to: '.', flatten: true },
   // `HostInitializerMain.loadAgentsTemplate`
   { pkg: '@teambit/host-initializer', from: 'dist/agents-template*.md', to: '.', flatten: true },
-  // `McpConfigWriter.loadRulesTemplate`
-  { pkg: '@teambit/mcp.mcp-config-writer', from: 'dist/bit-*-template.md', to: '.', flatten: true },
+  // McpConfigWriter's rules templates are no longer copied - `getDefaultRulesContent` inlines them
+  // via esbuild's `.md` text loader instead (see `run-esbuild.ts`, gated on `BIT_IS_BUNDLE`).
 ];
 
 async function copyOne(paths: BundlePaths, asset: (typeof ASSETS)[number], seen: Map<string, string>) {
