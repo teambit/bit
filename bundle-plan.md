@@ -1175,6 +1175,39 @@ undefined &&` before the comparison, so the RHS is never evaluated when `initiat
     confirmed by reading the source, only guessed from the stack shape. Externals.ts left at just
     `process/browser` (the confirmed-necessary, already-verified-working one) with a comment pointing
     here, pending that investigation.
+  - **Reverted** a from-first-principles attempt to add the full ~21-package `webpack-fallbacks.ts`
+    polyfill set to `externals.ts`: all 21 resolve fine locally and it mechanically works, but was
+    reverted on instruction before pushing. "Why does this trivial fixture need webpack's full
+    browser-polyfill surface at all" is a better question to answer than "which package is still
+    missing", and stays open.
+- **2026-08-12** — the third `bit_pr` fix (previous entries, same day) got past the
+  `CompilationInitiator` crash entirely - confirmed by the next CI run (`bit_pr` job `fefc434d`, run
+  `bf3c6ae0`, commit `8eb67a7`) failing on a **different, unrelated** file for the first time. New
+  crash: `Component.isComponentInvalidByErrorType` (`consumer-component.ts:425`) throws
+  `Cannot find module './exceptions/main-file-removed'` while classifying an error inside
+  `ComponentLoader.loadOne`'s `handleError` - same install-time transient-dist-window symptom
+  (a named cross-component import compiling to a per-property lazy-`require` getter, unsafe while
+  pnpm's `injectWorkspacePackages` is mid-rewrite), completely different subsystem
+  (`@teambit/legacy.consumer-component`, not `@teambit/compiler`). This is the "3+ fixes failed"
+  threshold from the debugging process - instead of a 4th narrow patch, traced it one level up and
+  found the actual architectural gap: `WorkspaceAspectsLoader.importAndGetAspects`
+  (`workspace-aspects-loader.ts:1080`) has an unconditional `throw err` in its catch block that
+  **ignores its own `throwOnError` parameter** - the exact class of defect `resolveCoreAspectDefs`
+  in the same file was already fixed for (5f50bc2d5) and documents in its own comment, just present
+  in a sibling method that fix didn't reach. `reloadMovedEnvs` passes `throwOnError: false` through
+  `resolveAspects` expecting best-effort behaviour; `importAndGetAspects` didn't honour it, so the
+  classifier's incidental crash escaped anyway and aborted the install regardless of the flag. Its
+  sibling `loadFromScopeAspectsCapsule` already gets this right (falls through to a best-effort
+  return); `importAndGetAspects` now matches it - `throwOnError` false → log + return `[]`, `true` →
+  unchanged. **Also hardened the direct trigger** (defense in depth, not just the one caller):
+  `isComponentInvalidByErrorType` now wraps its classifier-array construction in try/catch, returning
+  `false` (i.e. "not a recognized invalid-component type", same as a genuine non-match) instead of
+  crashing, so `handleError` re-throws the _original_ error unchanged rather than a secondary,
+  more confusing one - independent of which caller reaches it or what `throwOnError` is set to.
+  `npm run lint`: 0 errors. Not yet re-verified against a fresh CI run - attempt #4 for this bug
+  class; if a 5th instance turns up, that is a strong signal to stop patching call sites and instead
+  question whether `injectWorkspacePackages` (or the timing of compile relative to it) is the thing
+  that should change.
 
 ---
 

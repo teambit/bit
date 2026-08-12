@@ -1076,6 +1076,16 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
 
   /**
    * same as `this.importAndGetMany()` with a specific error handling of ComponentNotFound
+   *
+   * the catch below used to re-throw unconditionally, ignoring `throwOnError` - the same class of
+   * defect `resolveCoreAspectDefs` above documents and was already fixed for (§ same install-time
+   * transient-dist window), just in a sibling method the earlier fix didn't reach. A caller passing
+   * `throwOnError: false` (e.g. `InstallMain.reloadMovedEnvs` via `resolveAspects`) is asking for
+   * best-effort resolution for the same reason as there; failing to honour it here let a downstream
+   * classification error (`Component.isComponentInvalidByErrorType` hitting the same transient
+   * window on its own lazily-resolved exception classes) escape and abort the whole install anyway.
+   * `loadFromScopeAspectsCapsule` above already gets this right - falls through to its best-effort
+   * return instead of re-throwing - this now matches it.
    */
   private async importAndGetAspects(componentIds: ComponentID[], throwOnError = true): Promise<Component[]> {
     try {
@@ -1094,7 +1104,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     } catch (err: any) {
       this.throwWsJsoncAspectNotFoundError(err);
 
-      throw err;
+      if (throwOnError) throw err;
+      this.logger.warn(`importAndGetAspects: unable to import/load aspects, skipping. ${err.message}`);
+      return [];
     }
   }
 
