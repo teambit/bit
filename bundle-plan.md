@@ -994,6 +994,19 @@ createDevServer/createBundler` and `MochaMain.createTester` both have **zero cal
   missing value from its own already-resolved local import (not the barrel) rather than re-touching
   the risky getter. `npm run lint`: 0 errors. The `handle-errors.ts` secondary-failure fragility is
   still latent for any _other_ trigger of the same window — not hardened here, flagged for later.
+- **2026-08-12** — pulled pipeline `48986` / workflow `bb0cac22` directly via the `circleci` CLI
+  (`circleci workflow get`, `circleci job output get --step-num 119 --condensed`,
+  `circleci testresult list`) rather than guessing from pasted logs. Confirmed byte-for-byte: the
+  `bit_pr` step-119 crash is exactly the `CompilationInitiator`/`compiler/dist/index.js:14` getter
+  called from `InstallMain._installModules(...install.main.runtime.js:640:33)` diagnosed above — the
+  fix already targets the right line. e2e comparison on the **same pipeline** (pre-fix): baseline
+  `e2e_test` (`c3dca288`) — **1** failure, a pre-existing root-components nesting test, not bundle-
+  related. `e2e_test_esbuild_bundle` (`9a81342f`) — **18** failures, including that same 1. The other
+  17 fall into the exact categories §9d already triaged and prioritized — UI/HTTP-remote server (4×
+  `http protocol export/import`, 1× lane-export-skip-main-history, 3× `bit ci pr` concurrent-runner
+  `before all` hooks), custom-env preview/mdx-bundler externals (2), yarn root-components / plugin-npm
+  (2), `node-gyp`, the `get-uid-gid`/shared-flag export pair, and the `bit --help` timing budget.
+  **No new, unexplained bundle regressions** — the delta is stable and already has an owner (§11A.2/3).
 
 ---
 
