@@ -1,5 +1,4 @@
 import fs from 'fs-extra';
-import uidNumber from 'uid-number';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
@@ -756,25 +755,23 @@ async function removeFile(filePath: string, propagateDirs = false): Promise<bool
   return true;
 }
 
-function resolveGroupId(groupName: string): Promise<number | null | undefined> {
-  return new Promise((resolve, reject) => {
-    uidNumber(null, groupName, (err, uid, gid) => {
-      if (err) {
-        logger.error('resolveGroupId', err);
-        if (err.message.includes('EPERM')) {
-          return reject(
-            new BitError(
-              `unable to resolve group id of "${groupName}", current user does not have sufficient permissions`
-            )
-          );
-        }
-        if (err.message.includes('group id does not exist')) {
-          return reject(new BitError(`unable to resolve group id of "${groupName}", the group does not exist`));
-        }
-        return reject(new BitError(`unable to resolve group id of "${groupName}", got an error ${err.message}`));
-      }
-      // on Windows it'll always be null
-      return resolve(gid);
-    });
-  });
+async function resolveGroupId(groupName: string): Promise<number | null | undefined> {
+  // unix group ids are meaningless on Windows, which has no /etc/group and no process.getgid
+  if (!process.getgid) return null;
+  let groupFileContent: string;
+  try {
+    groupFileContent = await fs.readFile('/etc/group', 'utf8');
+  } catch (err: any) {
+    logger.error('resolveGroupId', err);
+    throw new BitError(`unable to resolve group id of "${groupName}", got an error ${err.message}`);
+  }
+  const groupLine = groupFileContent.split('\n').find((line) => line.split(':')[0] === groupName);
+  if (!groupLine) {
+    throw new BitError(`unable to resolve group id of "${groupName}", the group does not exist`);
+  }
+  const gid = Number(groupLine.split(':')[2]);
+  if (Number.isNaN(gid)) {
+    throw new BitError(`unable to resolve group id of "${groupName}", got an error parsing /etc/group`);
+  }
+  return gid;
 }
