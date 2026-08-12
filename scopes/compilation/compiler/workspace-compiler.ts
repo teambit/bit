@@ -49,7 +49,7 @@ export type CompileOptions = {
    * start` to avoid webpack "EINTR" error.
    */
   deleteDistDir?: boolean;
-  initiator: CompilationInitiator; // describes where the compilation is coming from
+  initiator?: CompilationInitiator; // describes where the compilation is coming from
   // should we create links in node_modules for the compiled components (default = true)
   // this will link the source files, and create the package.json
   linkComponents?: boolean;
@@ -100,16 +100,19 @@ export class ComponentCompiler {
     const canTranspileFile = compilers.find((c) => c.transpileFile);
     const canTranspileComponent = compilers.find((c) => c.transpileComponent);
 
+    // options.initiator can be omitted by a caller that couldn't safely resolve a
+    // CompilationInitiator value (see InstallMain.getInstallCompilationInitiator) - default it here,
+    // using this module's own already-resolved import rather than re-touching that lazy resolution.
+    const initiator = options.initiator ?? CompilationInitiator.ComponentAdded;
+
     if (canTranspileFile) {
       await Promise.all(
-        this.component.filesystem.files.map((file: AbstractVinyl) =>
-          this.compileOneFile(file, options.initiator, distDirs)
-        )
+        this.component.filesystem.files.map((file: AbstractVinyl) => this.compileOneFile(file, initiator, distDirs))
       );
     }
 
     if (canTranspileComponent) {
-      await this.compileAllFiles(options.initiator, distDirs);
+      await this.compileAllFiles(initiator, distDirs);
     }
 
     if (!canTranspileFile && !canTranspileComponent) {

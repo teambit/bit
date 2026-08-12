@@ -502,7 +502,7 @@ export class InstallMain {
           await this.workspace.clearCache();
           cacheCleared = true;
         }
-        await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+        await this.compiler.compileOnWorkspace([], { initiator: this.getInstallCompilationInitiator() });
 
         // Right now we don't need to load extensions/execute load slot at this point
         // await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install }, undefined, {
@@ -557,6 +557,25 @@ export class InstallMain {
   private shouldClearCacheOnInstall(): boolean {
     const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
     return nonLoadedEnvs.length > 0;
+  }
+
+  /**
+   * The install re-injects workspace packages before this point, which deletes every local
+   * component's `dist` and only rebuilds it in the `compileOnWorkspace` call this feeds. Reading
+   * `CompilationInitiator.Install` reaches a lazy `require` inside `@teambit/compiler`'s own dist
+   * (its barrel re-exports `./types` via a getter), so on a workspace that authors that aspect
+   * itself, this can throw `MODULE_NOT_FOUND` on a dist wiped moments ago - aborting the install
+   * *before* the compile call that would have restored it. Same defect/fix shape as
+   * `syncCoreAspectLinksForEnvs` and `resolveAspects`; `undefined` is safe here since
+   * `compileComponents` only ever compares `initiator` against `CompilationInitiator.AspectLoadFail`.
+   */
+  private getInstallCompilationInitiator(): CompilationInitiator | undefined {
+    try {
+      return CompilationInitiator.Install;
+    } catch (err: any) {
+      this.logger.warn(`getInstallCompilationInitiator: falling back to no initiator, ${err.message}`);
+      return undefined;
+    }
   }
 
   /**

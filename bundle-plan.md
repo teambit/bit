@@ -8,7 +8,7 @@
 > babel aspect usage & pre-bundle interaction) · §17 making `bit start` work from the pre-bundles
 > · §18 mcp-config-writer inlined into the bundle instead of copied · §19 `BabelAspect` removed from
 > core, `@babel/core` verified still load-bearing via aspect-loader + scope's version.ts.
-> Last updated: 2026-08-12
+> Last updated: 2026-08-12 (bit_pr install-crash fix)
 
 ---
 
@@ -842,9 +842,9 @@ declarations inside the `bit` shim (1158 files instead of 18). `dist/core-aspect
   it cannot silently rot.
 - Land the `hook-require` fix (§6.2) on `master` independently.
 - Land the two install guards on `remove-core-envs-from-manifest` — **done**, cherry-picked as
-  `5f50bc2d5`. A third instance of the same defect remains: `bd install` reaches its own compile step
-  and dies on `@teambit/compiler/dist/index.js` lazily requiring `./types`. Fixing it would remove
-  the snapshot/restore dance local dev currently needs.
+  `5f50bc2d5`. The third instance — `bd install` reaching its own compile step and dying on
+  `@teambit/compiler/dist/index.js` lazily requiring `./types` — is **fixed 2026-08-12**, see §14.
+  Fixing it removed the snapshot/restore dance local dev used to need.
 - Consider generating the repo's own `esm.mjs` files the way the bundle's are — same staleness
   hazard, just less visible.
 
@@ -976,6 +976,24 @@ createDevServer/createBundler` and `MochaMain.createTester` both have **zero cal
 - **2026-08-11** — with core-only artifacts shipped inside the shims, `bit start` works from the default (non-`--ui-bundling`) bundle: HTTP 200 immediately, served from `dist/core-aspects/node_modules/@teambit/ui/artifacts/…`, bit's own rspack never runs. Distribution **1.3 GB → 322 MB**, externals **31 → 12** (§17g).
 - **2026-08-11** — the shipped UI artifact measures **90.4 MB**: two independent full browser builds of the same app (22.6 MB `workspace` + 22.6 MB `scope`, only 25 files / 1.9 MB byte-identical between them) plus a **45.2 MB** scope-only SSR build that `bit start` in a workspace never serves. Filed as [teambit/bit#10596](https://github.com/teambit/bit/issues/10596); it is now the largest single item in the distribution (§17h).
 - **2026-08-11** — two unrelated resolution bugs blocked the build tasks: `@apollo/client` is a peer of `@teambit/component` and unresolvable from a capsule's pnpm store (fixed with a directory alias — it carries React context, so one copy is required anyway), and `@teambit/cloud.hooks.use-cloud-scopes` declares `"import": "./dist/esm.mjs"` without shipping one — including in the **published** 2.0.72 package (OQ3 biting in practice).
+- **2026-08-12** — the CI `bit_pr` job (`node bin/bit.js install`, runs on every non-master branch)
+  hit the §11D "third instance" of the transient-missing-dist install bug live: `InstallMain._installModules`
+  (`install.main.runtime.ts:505`) reads `CompilationInitiator.Install` off `@teambit/compiler`'s
+  barrel (`dist/index.js`), whose re-export of `./types` is a getter that does a fresh `require`
+  on every access — right as the preceding package-reinjection step has that dist mid-rewrite, so
+  it throws `Cannot find module './types'` and aborts the install _before_ the trailing
+  `compileOnWorkspace` call that would have fixed it. A second, compounding symptom rode along:
+  once that error escapes, `handleErrorAndExit` (`scopes/harmony/cli/handle-errors.ts`) tries to log
+  it and independently needs a fresh resolution of `@teambit/legacy.loader`, which can hit the same
+  window and throw too — burying the real error under two garbled "failed to log the error
+  properly" lines instead of one clear one. **Fixed**: `InstallMain.getInstallCompilationInitiator()`
+  wraps the read in try/catch, falling back to `undefined`; `CompileOptions.initiator` (and the two
+  `ComponentCompiler` call sites that read it) made optional to carry that through — safe because no
+  compiler plugin reads `.initiator` anywhere in `scopes/`, it's only compared against
+  `CompilationInitiator.AspectLoadFail` inside `workspace-compiler.ts` itself, which now defaults a
+  missing value from its own already-resolved local import (not the barrel) rather than re-touching
+  the risky getter. `npm run lint`: 0 errors. The `handle-errors.ts` secondary-failure fragility is
+  still latent for any _other_ trigger of the same window — not hardened here, flagged for later.
 
 ---
 
@@ -1916,3 +1934,39 @@ identical to the one verified working in `dummy-bit`, `bit compile` (326/326) an
 errors) both pass clean on `bit-bundle3` with it in place. Flagging as unresolved locally rather than
 claiming a verification that didn't actually happen here; next session working in this checkout should
 expect `bit install --add-missing-deps` to need retrying or a fresh `node_modules` if it repeats.
+
+### 19d. Resolved differently: dropped the two suites and the dependency entirely (2026-08-12)
+
+§19c's fix worked but kept `@teambit/babel` installed workspace-wide just to satisfy
+`babel.e2e.ts`/`multiple-compilers.e2e.ts`. Revisited whether that was worth it: `BabelMain.createCompiler()`
+is a one-line wrapper around `BabelCompiler` from the separately-published `@teambit/compilation.babel-compiler`
+— unlike the react/aspect/node fixtures (which genuinely test _env composition_, so bypassing the aspect
+would test something different), nothing about these two suites required going through the Harmony aspect
+at all. Rather than rewrite them to construct `BabelCompiler` directly, the call was made to drop them —
+deleted outright, on `remove-core-envs-from-manifest` via `dummy-bit`, mirroring §19a/§19c's procedure:
+
+1. Removed `e2e/harmony/babel.e2e.ts`, `e2e/harmony/multiple-compilers.e2e.ts`, and the
+   `babel-env`/`multiple-compilers-env` fixture folders under `components/legacy/e2e-helper/
+excluded-fixtures/extensions/`.
+2. Removed the now-dead `setBabelWithTsHarmony()` helper from `e2e-env-helper.ts` (its only caller was
+   `multiple-compilers.e2e.ts`) and the `'@teambit/babel'` entry from `FIXTURE_ENV_BASE_PACKAGES` (its
+   only consumer was that same helper). Fixed one stale doc-comment cross-reference left pointing at the
+   deleted method.
+3. Removed `"@teambit/babel": "1.0.1042"` from `workspace.jsonc`'s root policy — the §19c fix, now
+   itself unnecessary.
+4. `npm run lint`: 0 errors. `bd2 status` in `dummy-bit`: 0 `✖` component issues (down from the 1 §19c
+   was chasing). Committed as `f3f63c02a`, pushed to `origin/remove-core-envs-from-manifest`, merged into
+   `bit-bundle3` clean (no conflicts — nothing else on this branch touched these files).
+5. Re-verified in `bit-bundle3` post-merge: `npm run lint` 0 errors, `bit compile` 326/326. `bd2 status`
+   still shows unrelated `✖` issues (`teambit.legacy/e2e-helper` among them) — confirmed these are the
+   same pre-existing `teambit.node/envs/node-babel-mocha`/`node-typescript-mocha` "failed loading env"
+   class from §19c's local-flakiness note, affecting dozens of unrelated components
+   (`teambit.legacy/dependency-graph`, `.../extension-data`, `.../loader`, …), not anything babel-specific
+   — the exact `excluded-fixtures -> @teambit/babel` line is gone.
+
+**Net result**: `@teambit/babel` is no longer installed anywhere in this repo — not in the CLI bundle
+(§19a), not in `workspace.jsonc`'s root policy, not in any e2e fixture. The only remaining references are
+`scopes/compilation/aspect-docs/babel/` (docs for the aspect, untouched — out of scope for this pass) and
+the inert `scripts/circular-deps-check/baseline-cycles-full.json` snapshot noted since §15e. `@babel/core`
+itself is unaffected by any of this — §19b's two reachability paths (`aspect-loader` → `babel-compiler`,
+`scope`'s `version.ts` → `react-docgen`) are unrelated to the aspect or these test suites.
