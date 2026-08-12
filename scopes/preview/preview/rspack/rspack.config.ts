@@ -4,6 +4,18 @@ import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 import { RspackManifestPlugin } from 'rspack-manifest-plugin';
 import { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
 
+/**
+ * node_modules JavaScript is already transpiled, and skipping it is what keeps the bundle from
+ * re-processing every third-party file. TypeScript is not the same: a `.ts` file is never valid
+ * bundler input, wherever it sits. A bit component consumed through node_modules can resolve to its
+ * sources - an injected pnpm copy is taken from the package dir before the compile fills its
+ * `dist`, so the package entry falls back to `index.ts` - and excluding node_modules wholesale then
+ * fails the whole bundle on the first `export type`.
+ * (kept local rather than imported from @teambit/ui to avoid an aspect-level dependency)
+ */
+const excludeNodeModulesJs = (path: string) =>
+  /node_modules/.test(path) && !(/\.tsx?$/.test(path) && !/\.d\.tsx?$/.test(path));
+
 const moduleFileExtensions = [
   'web.mjs',
   'mjs',
@@ -123,7 +135,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
         },
         {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
-          exclude: /node_modules/,
+          exclude: excludeNodeModulesJs,
           use: {
             loader: 'builtin:swc-loader',
             options: {
