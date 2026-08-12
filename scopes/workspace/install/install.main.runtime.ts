@@ -970,6 +970,16 @@ export class InstallMain {
           if (inWs) {
             return undefined;
           }
+          // envs that used to be core aspects are configured without a version (see
+          // legacy-core-envs.ts). install their pinned version. resolving them like a regular env
+          // would leave the version as "*" - `resolveEnvIdWithPotentialVersionForConfig` returns
+          // them version-less on purpose - and "*" resolves to a release that may be newer than
+          // this bit, whose deps can point at bit packages that are not published yet.
+          if (!parsedId.hasVersion() && this.envs.isLegacyCoreEnv(envIdStr)) {
+            const pinnedVersion = getPinnedLegacyCoreEnvVersion(envIdStr);
+            if (!pinnedVersion) return undefined;
+            return { packageName: getLegacyCoreEnvPackageName(envIdStr), version: pinnedVersion };
+          }
           const comps = await this.workspace.importAndGetMany(
             [parsedId],
             `to get the env ${parsedId.toString()} for installation`
