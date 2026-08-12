@@ -672,11 +672,13 @@ jobs:
       # - run: cd bit && ls -l node_modules/@babel
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
       # - run: cd bit && ls -l node_modules/.bin
-      # NOTE: .pnpm-store is deliberately NOT persisted. Nothing downstream reads it —
-      # every job (bit_pr/bit_merge/e2e) points bit at package-manager.cache instead, and
-      # node_modules is self-contained after attach. Persisting it roughly doubled the
-      # workspace size, and "Attaching workspace" ran on every node of every job
-      # (~2.7min x 40 e2e nodes x ~600 runs/month = a five-figure credit line item).
+      # NOTE: .pnpm-store is deliberately NOT persisted. Nothing downstream reads it, and
+      # node_modules is self-contained after attach. Measured when this was removed: workspace
+      # attach time was UNCHANGED (165s vs 162s median/node) — the directory was near-empty,
+      # because bit's pnpm engine resolves its store from pnpm's own config cascade (defaulting
+      # to the platform data dir, discarded with each container), NOT from the
+      # `bit config set package-manager.cache` value (that setting only ever fed the yarn
+      # package manager). The attach payload is dominated by bit/node_modules.
       - persist_to_workspace:
           root: .
           paths:
