@@ -40,6 +40,13 @@ const RUNTIME_PATH = [
   // entry (§6.4). Confirmed via e2e: bundled `bit export --shared` failed with `Cannot find module
   // './get-uid-gid.js'`.
   'uid-number',
+  // `addNodeGypToPath()` (`scopes/dependencies/pnpm/node-gyp-bin.ts`) does
+  // `require.resolve('node-gyp/bin/node-gyp.js')` to write a PATH wrapper before pnpm spawns a
+  // native package's `"install": "node-gyp rebuild"` script - inlined, there is no on-disk file for
+  // that resolve to point at, so the wrapper never gets written (the failure is caught and only
+  // warned on) and `node-gyp rebuild` finds nothing on PATH. Confirmed via e2e: bundled install of a
+  // node-gyp-built dependency failed with `node-gyp rebuild exited with exit status: 127`.
+  'node-gyp',
 ];
 
 /** C. toolchains resolved by string from user envs */
@@ -51,6 +58,13 @@ const TOOLCHAINS = [
   // global - same "resolved by string, must exist on disk" shape as webpack/babel-loader above, just
   // one level deeper and far smaller. Confirmed via e2e: bundled `bit tag --build` on a workspace
   // whose env still uses webpack failed with `Cannot find module 'process/browser'`.
+  //
+  // NOT extended to the rest of `webpack-fallbacks.ts`'s ~20-package polyfill list (2026-08-12): that
+  // module blows up on the *first* missing one, so a repro surfaced `buffer/` right behind this one,
+  // and reading the file shows ~19 more behind that. Adding them all was tried and reverted - open
+  // question first, not "keep adding packages": why does building the preview/bundle for a trivial
+  // env-aspect component reach a full node-core-module browser-polyfill path at all. See
+  // bundle-plan.md §14 (2026-08-12) for the still-open investigation.
   'process/browser',
 ];
 

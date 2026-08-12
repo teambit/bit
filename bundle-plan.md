@@ -1127,6 +1127,54 @@ components for scope aspect capsules using Yarn`, both in `root-components-yarn.
     `bit.js` launcher to `PATH` as `bit`. So `getNonBundledBitBin()`'s fallback (`'bit'`, reached via
     the "invoked through mocha" branch) is a real, working binary in that job, not a dangling name.
     `npm run lint`: 0 errors. Not yet re-verified against a fresh CI run.
+- **2026-08-12** — the second `bit_pr` fix (§14, same day, "the first fix was incomplete") was
+  _itself_ still incomplete. The next CI run on `bit-bundle3` (`bit_pr` job `dcccc061`, run
+  `0ee0147f`, commit `a15fa1b`) crashed a **third** time, same `Cannot find module './types'`, same
+  frame (`workspace-compiler.js:127` inside `WorkspaceCompiler.compileComponents`, now at `:503`).
+  Root cause: `compileComponents` itself has `if (options.initiator === CompilationInitiator.AspectLoadFail)`
+  (`workspace-compiler.ts:496`) as its first statement — `===` evaluates **both** operands regardless
+  of the left one, so this reaches the same unsafe lazy getter even when `options.initiator` is
+  `undefined`. Two rounds of "make the value optional" fixes both missed this because it isn't a
+  _write_ of `CompilationInitiator` anywhere, it's a _read_ sitting in a comparison, and neither prior
+  pass grepped for every `CompilationInitiator.<Member>` reference in the whole call path - they each
+  fixed the one call site that had just been observed crashing. **Fixed properly this time** by
+  grepping `workspace-compiler.ts` for every remaining `CompilationInitiator.` reference and confirming
+  each one is unreachable from the install path or safely short-circuited: added `options.initiator !==
+undefined &&` before the comparison, so the RHS is never evaluated when `initiator` is absent.
+  `npm run lint`: 0 errors. Not yet re-verified against a fresh CI run - this is attempt #3 for this
+  specific bug, which is the "3+ fixes failed, question the architecture" threshold; logged here
+  explicitly in case a 4th instance turns up, rather than assuming attempt #3 is the end of it.
+- **2026-08-12** — applied the `node-gyp` externals fix that had been left as investigation-only:
+  added to `RUNTIME_PATH` in `externals.ts`, same shape as `uid-number`/`typescript`. Not yet
+  rebuilt/verified locally or in CI.
+- **2026-08-12** — reproduced the `process/browser` failure locally end to end (`bd compile` +
+  `npm run e2e-test:bundle -- ./e2e/harmony/custom-env-operations.e2e.ts --debug`, workspace kept on
+  disk) instead of reasoning about it from e2e logs alone. Two findings, one of them a correction:
+  - The fix from earlier today (`process/browser` in `TOOLCHAINS`) **does work** - rebuilding the
+    bundle from freshly-compiled `dist/` (the previous local `/tmp/bit-bundle` predated the source
+    change and silently reused its stale stamp) got past that specific error.
+  - It then failed on the **next** missing module, `Cannot find module 'buffer/'`. Reading
+    `webpack-fallbacks.ts` end to end (not just the one line that happened to throw) shows it
+    `require.resolve()`s a **full webpack-5 browser-polyfill set - ~21 packages** (`assert/`,
+    `buffer/`, `constants-browserify`, `crypto-browserify`, `domain-browser`, `stream-http`,
+    `https-browserify`, `os-browserify/browser`, `path-browserify`, `punycode/`, `process/browser`,
+    `events/`, `querystring-es3`, `stream-browserify`, `string_decoder/`, `util/`,
+    `timers-browserify`, `tty-browserify`, `url/`, `vm-browserify`, `browserify-zlib`) **eagerly, all
+    at once**, so the module throws on whichever one esbuild happens to resolve first and would
+    throw on each of the rest in turn, one e2e failure at a time, if "add the missing one" were
+    repeated blindly.
+  - **Tried adding all 21 to `TOOLCHAINS`, then reverted it** (instructed not to): confirmed all 21
+    resolve fine locally, so it would have "worked" mechanically, but that's not the same question as
+    whether it's _right_. The real question, still open: why does tagging/building a trivial
+    old-format env-aspect component (`node-env-1`, a bare `{name, __getDescriptor}` object with no
+    `getBundler` of its own) reach `@teambit/webpack`'s full browser-polyfill machinery at all. Not
+    yet traced past "`_WebpackMain.createBundler` → `createConfigs` → `configFactory` →
+    `webpackFallbacksAliases`" (the e2e stack trace) to _whose_ `getBundler()` this is - most likely
+    whatever env `teambit.harmony/aspect` (bit's built-in env for building aspect/extension
+    components, still core) uses for previewing an aspect component, but that link is not yet
+    confirmed by reading the source, only guessed from the stack shape. Externals.ts left at just
+    `process/browser` (the confirmed-necessary, already-verified-working one) with a comment pointing
+    here, pending that investigation.
 
 ---
 
