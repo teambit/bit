@@ -2074,9 +2074,6 @@ importers:
       ua-parser-js:
         specifier: 0.7.40
         version: 0.7.40
-      uid-number:
-        specifier: 0.0.6
-        version: 0.0.6
       uniqid:
         specifier: 5.3.0
         version: 5.3.0
@@ -25718,9 +25715,6 @@ importers:
       tar-stream:
         specifier: 2.2.0
         version: 2.2.0
-      uid-number:
-        specifier: 0.0.6
-        version: 0.0.6
       uuid:
         specifier: 8.3.2
         version: 8.3.2
@@ -48831,9 +48825,6 @@ packages:
     resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
     engines: {node: '>=0.8.0'}
     hasBin: true
-
-  uid-number@0.0.6:
-    resolution: {integrity: sha512-c461FXIljswCuscZn67xq9PpszkPT6RjheWFQTgCyabJrTUozElanb0YEqv2UGgk247YpcJkFBuSGNvBlpXM9w==}
 
   unbox-primitive@1.0.2:
     resolution: {integrity: sha512-61pPlCD9h51VoreyJ0BReideM3MDKMKnh6+V9L08331ipq6Q8OFXZYiqP6n/tbHx4s5I9uRhcye6BrbkizkBDw==}
@@ -87324,7 +87315,6 @@ snapshots:
       react-router-dom: 6.30.1(react-dom@19.2.7)(react@19.2.7)
       semver: 7.7.1
       tar-stream: 2.2.0
-      uid-number: 0.0.6
       uuid: 8.3.2
     transitivePeerDependencies:
       - '@types/react'
@@ -87378,7 +87368,6 @@ snapshots:
       react-router-dom: 6.30.1(react-dom@18.3.1)(react@18.3.1)
       semver: 7.7.1
       tar-stream: 2.2.0
-      uid-number: 0.0.6
       uuid: 8.3.2
     transitivePeerDependencies:
       - '@types/react'
@@ -87432,7 +87421,6 @@ snapshots:
       react-router-dom: 6.30.1(react-dom@19.2.7)(react@19.2.7)
       semver: 7.7.1
       tar-stream: 2.2.0
-      uid-number: 0.0.6
       uuid: 8.3.2
     transitivePeerDependencies:
       - '@types/react'
@@ -87486,7 +87474,6 @@ snapshots:
       react-router-dom: 6.30.1(react-dom@19.2.7)(react@19.2.7)
       semver: 7.7.1
       tar-stream: 2.2.0
-      uid-number: 0.0.6
       uuid: 8.3.2
     transitivePeerDependencies:
       - '@types/react'
@@ -121587,8 +121574,6 @@ snapshots:
 
   uglify-js@3.19.3:
     optional: true
-
-  uid-number@0.0.6: {}
 
   unbox-primitive@1.0.2:
     dependencies:
