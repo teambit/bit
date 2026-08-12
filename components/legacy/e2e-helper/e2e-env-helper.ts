@@ -385,7 +385,14 @@ export default new EmptyEnv();
     this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
     if (!options.skipLink) this.command.link();
     if (!options.skipInstall) {
-      this.command.install([ENVS_ENV_PACKAGE, ...this.getFixtureEnvBasePackages(extensionsBaseFolder)].join(' '));
+      // `bit install` compiles the workspace on its way out, so when this function is going to
+      // compile anyway (right below) that compile is done twice. The workspace compile is the
+      // memory peak of an env-scaffolding test, so let the install skip it and keep the explicit
+      // one. When the caller asked for no compile, the install's compile is the only one there is.
+      this.command.install(
+        [ENVS_ENV_PACKAGE, ...this.getFixtureEnvBasePackages(extensionsBaseFolder)].join(' '),
+        options.skipCompile ? undefined : { 'skip-compile': '' }
+      );
     }
     if (!options.skipCompile) this.command.compile();
     return extensionsBaseFolder;
