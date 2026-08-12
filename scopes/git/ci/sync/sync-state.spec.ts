@@ -6,6 +6,7 @@ import {
   branchStateFingerprint,
   buildSyncCommitMessage,
   fingerprintIdVersions,
+  oldestCommitIsNonSync,
   hasSyncMarker,
   isSyncAuthoredMessage,
   parseBranchBitmap,
@@ -204,6 +205,38 @@ describe('parseDevCommitCount', () => {
     it(`${hasDevCommits ? 'keeps the branch' : 'permits retirement'} for ${name}`, () => {
       expect(parseDevCommitCount(raw), JSON.stringify(raw)).to.equal(hasDevCommits);
     });
+  });
+});
+
+describe('oldestCommitIsNonSync', () => {
+  it('is false for an empty range — no commits at all', () => {
+    expect(oldestCommitIsNonSync('')).to.equal(false);
+  });
+
+  it('is false when the oldest (first, with --reverse) record is bit-authored', () => {
+    // A normal bit-created branch: its own first ledger commit, then a later human dev commit and a
+    // second ledger commit from export-branch — non-sync work, but never the OLDEST record.
+    const log = [LANE_SYNC, 'feat: a later, normal dev commit\n', MAIN_SYNC].join('\x1e');
+    expect(oldestCommitIsNonSync(log)).to.equal(false);
+  });
+
+  it('is true when the oldest (first, with --reverse) record is a genuine, non-sync commit', () => {
+    // Adoption's exact shape: the branch's own first commit was a human's, before bit ever touched it.
+    const log = ['feat: a human created this branch before adoption\n', LANE_SYNC].join('\x1e');
+    expect(oldestCommitIsNonSync(log)).to.equal(true);
+  });
+
+  it('ignores a trailing separator with nothing after it', () => {
+    const log = `${LANE_SYNC}\x1e`;
+    expect(oldestCommitIsNonSync(log)).to.equal(false);
+  });
+
+  // A ledger commit needs the marker AND the Bit-Lane-Head trailer; a human message that merely
+  // quotes [bit-sync] on its own line must still read as independent history (a keep, never a delete).
+  it('is true when the oldest human commit quotes the [bit-sync] marker but has no ledger trailer', () => {
+    const spoof = 'feat: mention our tooling\n\n[bit-sync]\n';
+    const log = [spoof, LANE_SYNC].join('\x1e');
+    expect(oldestCommitIsNonSync(log)).to.equal(true);
   });
 });
 
