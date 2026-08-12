@@ -25,7 +25,6 @@
       "dependencies": {
         "@teambit/node": "1.0.1042",
         "@teambit/aspect": "1.0.1042",
-        "@teambit/babel": "1.0.1042",
         "@teambit/env": "1.0.1042",
         "@teambit/mdx": "1.0.1043",
         "@teambit/readme": "1.0.1043",
