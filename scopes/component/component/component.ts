@@ -378,3 +378,5 @@ export class Component implements IComponent {
     return component.id.toString() === this.id.toString();
   }
 }
+
+// load-test marker 3: cascade probe on resource_class large (throwaway branch)
