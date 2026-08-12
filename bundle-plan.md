@@ -681,8 +681,8 @@ Priority order for the next pass:
    resolving the UI graph from the pre-bundled artefact, not by growing the externals list.
 3. **Cheap externals** — `process/browser` and `uid-number`/`get-uid-gid`: **done 2026-08-12**, see
    §14. `@yarnpkg/plugin-npm` (the yarn plugin family): not pursued, yarn is being dropped from the
-   bundle (§10 item 9 / next section). `node-gyp`: separate PATH problem, not an externals gap —
-   still open, see §14/§10.
+   bundle (§10 item 9 / next section). `node-gyp`: root-caused 2026-08-12 (§14) — it IS the same
+   RUNTIME_PATH gap, just not yet applied; still open pending confirmation.
 4. **The startup budget** — check whether `module.enableCompileCache()` actually has a writable
    cache dir under the CI user, since the local measurement says the bundle should pass this test.
 
@@ -1056,6 +1056,34 @@ CompilationInitiator.ComponentAdded` fallback the first fix added. That disprove
   - **`@yarnpkg/plugin-npm`** (yarn root-components tests) — not investigated further; per product
     direction yarn support is being removed from the bundle entirely, see the next bullet.
     `npm run lint`: 0 errors after the externals.ts change. Not yet re-verified against a fresh CI run.
+- **2026-08-12** — root-caused `node-gyp` (§9d/§10 item, `node-gyp.e2e.ts`, exit 127). Bit already has
+  a purpose-built mechanism for this exact problem: `addNodeGypToPath()`
+  (`scopes/dependencies/pnpm/node-gyp-bin.ts`) — pnpm's engine ships no `node-gyp` of its own, so any
+  native package with an `"install": "node-gyp rebuild"` script needs one put on `PATH` by hand.
+  It does `require.resolve('node-gyp/bin/node-gyp.js')` to get an absolute path, writes a tiny shell
+  wrapper that execs `node <that path>`, and prepends the wrapper's directory to `PATH` before pnpm
+  spawns install scripts. `node-gyp` is **not** in `externals.ts`, so esbuild inlines it into
+  `bit.app.js` — and an inlined module has no on-disk file for `require.resolve()` to point at, so
+  `writeShims()` throws, is caught (by design — "not fatal on its own", the function only warns and
+  returns), and no wrapper is ever written. `node-gyp rebuild` then finds nothing on `PATH` at all →
+  exit 127. Exactly the same shape as `typescript` (`tsserver.js` by path) and the `uid-number` fix
+  above — `node-gyp` needs `RUNTIME_PATH`, not a special case. **Not applied** — investigation only,
+  per instruction; the one-line `externals.ts` addition (`RUNTIME_PATH.push('node-gyp')`, same shape
+  as the two additions above) is ready whenever it's wanted.
+- **2026-08-12** — looked into the `bit --help` timing budget miss (2221ms vs 1500ms in CI,
+  `filesystem-read.e2e.ts`) before assuming it's cache warm-up. `enableCompileCache()` uses no
+  explicit directory (`generate-bin.ts:24`), so it defaults to Node's own cache dir under `tmpdir()` -
+  process/machine-global, not tied to `cwd`. `e2e-command-helper.ts`'s `runCmd` spreads
+  `...process.env` unmodified into every spawned command (no per-test `HOME`/`TMPDIR` override), and
+  the timing test already runs _after_ a sibling test in the same `describe('bit --help')` block that
+  also invokes `bit --help` (with `BIT_DEBUG_READ_FILE` set) - so in theory the cache should already
+  be warm by the time the timed call runs, and the 2221ms may not be a cold-start artifact at all.
+  Rather than guess, added an explicit warm-up `bit --help` call immediately before the timed one (a
+  fresh, identical, back-to-back call with nothing else running in between), per instruction, so the
+  next CI run answers empirically: if the _second_ call still misses budget, the regression is real
+  and worth chasing (candidates: CI container fs/CPU noise, or the compile cache not actually
+  persisting for a reason the above didn't surface); if it passes, this was one-time cost and the
+  test's ordering (not the bundle) was the problem. Not yet re-verified against a fresh CI run.
 
 ---
 
