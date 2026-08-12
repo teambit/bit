@@ -21,7 +21,6 @@ export type PackageExtension = {
 };
 
 export type PackageManagerInstallOptions = {
-  cacheRootDir?: string;
   /**
    * decide whether to dedup dependencies.
    */

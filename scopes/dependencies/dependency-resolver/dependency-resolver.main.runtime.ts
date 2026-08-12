@@ -125,7 +125,6 @@ export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) =>
 export type GetInstallerOptions = {
   rootDir?: string;
   packageManager?: string;
-  cacheRootDirectory?: string;
   installingContext?: DepInstallerContext;
   nodeLinker?: NodeLinker;
 };
@@ -710,26 +709,19 @@ export class DependencyResolverMain {
   getInstaller(options: GetInstallerOptions = {}) {
     const packageManagerName = options.packageManager || this.packageManagerName;
     const packageManager = this.packageManagerSlot.get(packageManagerName);
-    const cacheRootDir = options.cacheRootDirectory || this.configStore.getConfig(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.packageManagerName);
     }
 
-    if (cacheRootDir && !fs.pathExistsSync(cacheRootDir)) {
-      this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
-      fs.ensureDirSync(cacheRootDir);
-    }
     const preInstallSubscribers = this.getPreInstallSubscribers();
     const postInstallSubscribers = this.getPostInstallSubscribers();
-    // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyInstaller(
       packageManager,
       this.aspectLoader,
       this.logger,
       this,
       options.rootDir,
-      cacheRootDir,
       preInstallSubscribers,
       postInstallSubscribers,
       options.nodeLinker || this.nodeLinker(),

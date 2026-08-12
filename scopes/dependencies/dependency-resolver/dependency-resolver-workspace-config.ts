@@ -9,9 +9,8 @@ export type ComponentRangePrefix = '~' | '^' | '+' | '-';
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
   /**
-   * choose the package manager for Bit to use.
-   * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
-   * and totally removes the need of a 'node_modules' directory in your project.
+   * ID of the package-manager aspect Bit should use. The aspect must register a `PackageManager`
+   * implementation with the dependency resolver. Defaults to `teambit.dependencies/pnpm`.
    */
   packageManager?: string;
 
@@ -108,12 +107,6 @@ export interface DependencyResolverWorkspaceConfig {
    *
    */
   installFromBitDevRegistry?: boolean;
-
-  /*
-   * map of extra arguments to pass to the configured package manager upon the installation
-   * of dependencies.
-   */
-  packageManagerArgs?: string[];
 
   /*
    * This field allows to instruct the package manager to override any dependency in the dependency graph.

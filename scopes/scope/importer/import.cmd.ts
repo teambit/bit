@@ -168,7 +168,6 @@ without arguments, fetches all workspace components' latest versions from their 
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
-  _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
   constructor(private importer: ImporterMain) {}
 
@@ -371,7 +370,7 @@ without arguments, fetches all workspace components' latest versions from their 
       owner,
       writeToEmptyDir,
     };
-    return this.importer.import(importOptions, this._packageManagerArgs);
+    return this.importer.import(importOptions);
   }
 }
 

@@ -66,8 +66,9 @@ The hierarchy in a descending order:
 
 ### Select a package manager
 
-The Dependency resolver uses pnpm to install dependencies. Set the `packageManager` property to
-`teambit.dependencies/pnpm` to configure it explicitly.
+The Dependency resolver uses pnpm by default. Set the `packageManager` property to the ID of an aspect that registers
+a `PackageManager` implementation with the Dependency resolver. Use `teambit.dependencies/pnpm` to configure the
+built-in package manager explicitly.
 
 ```json
 // At the root-level of the workspace configuration JSON

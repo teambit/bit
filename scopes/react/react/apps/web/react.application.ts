@@ -201,7 +201,6 @@ export class ReactApp implements Application {
     const installer = this.dependencyResolver.getInstaller({
       packageManager: 'teambit.dependencies/pnpm',
       rootDir: capsuleSsrDir,
-      cacheRootDirectory: capsuleSsrDir,
     });
     await installer.install(capsuleSsrDir, this.getSsrPolicy(), new ComponentMap(new Map()));
     return ssrAppDir;

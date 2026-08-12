@@ -223,11 +223,6 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   getExistingAsIs?: boolean;
 
   /**
-   * place the package-manager cache on the capsule-root
-   */
-  cachePackagesOnCapsulesRoot?: boolean;
-
-  /**
    * do not build graph with all dependencies. isolate the seeders only.
    */
   seedersOnly?: boolean;
@@ -874,7 +869,6 @@ export class IsolatorMain {
     await this.writeComponentsInCapsules(components, capsuleList, legacyScope, opts);
     await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
     if (installOptions.installPackages) {
-      const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
       const linkingOptions = opts.linkingOptions ?? {};
       let installLongProcessLogger: LongProcessLogger | undefined;
       // Only show the log message in case we are going to install something
@@ -905,7 +899,6 @@ export class IsolatorMain {
             const linkedDependencies = await this.linkInCapsules(cyclicCapsuleList, capsulesWithPackagesData);
             linkedDependencies[capsulesDir] = rootLinks;
             await this.installInCapsules(capsulesDir, cyclicCapsuleList, installOptions, {
-              cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
               nodeLinker: opts.nodeLinker,
@@ -940,7 +933,6 @@ export class IsolatorMain {
               linkedDependencies[capsulesDir] = rootLinks;
             }
             await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
-              cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
               nodeLinker: opts.nodeLinker,
@@ -958,7 +950,6 @@ export class IsolatorMain {
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
-          cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
           dependenciesGraph,
@@ -1084,7 +1075,6 @@ export class IsolatorMain {
     capsuleList: CapsuleList,
     isolateInstallOptions: IsolateComponentsInstallOptions,
     opts: {
-      cachePackagesOnCapsulesRoot?: boolean;
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
       nodeLinker?: NodeLinker;
@@ -1093,7 +1083,6 @@ export class IsolatorMain {
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
-      cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
       installingContext: { inCapsule: true },
       packageManager: opts.packageManager,
       nodeLinker: opts.nodeLinker,

@@ -4,21 +4,14 @@
 import type { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import type { AbstractVinyl } from '@teambit/component.sources';
 
-// to make sure all the legacy code can work without need to change
-export type PackageManagerClients = 'npm' | undefined;
-
 interface DependencyResolverExtensionProps {
-  packageManager: PackageManagerClients;
-  strictPeerDependencies?: boolean;
-  extraArgs?: string[];
-  packageManagerProcessOptions?: any;
+  packageManager?: string;
 }
 
 export interface ILegacyWorkspaceConfig {
   lang: string;
   defaultScope: string;
   dependencyResolver?: DependencyResolverExtensionProps;
-  packageManager?: PackageManagerClients;
   componentsDefaultDirectory?: string;
   path: string;
   isLegacy: boolean;

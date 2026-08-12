@@ -256,8 +256,7 @@ export class WorkspaceGenerator {
           installNpmPackages: false,
           writeConfigFiles: false,
           writeToPath: componentToImport.path,
-        },
-        []
+        }
       );
     });
 

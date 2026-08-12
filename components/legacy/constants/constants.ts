@@ -101,8 +101,6 @@ export const SUPPORTED_EXTENSIONS = [
 
 export const NO_PLUGIN_TYPE = 'none';
 
-export const DEFAULT_PACKAGE_MANAGER = 'npm';
-
 export const DEFAULT_HARMONY_PACKAGE_MANAGER = 'teambit.dependencies/pnpm';
 
 export const DEFAULT_EXTENSIONS = {};

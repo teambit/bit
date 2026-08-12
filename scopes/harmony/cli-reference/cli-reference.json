@@ -2077,11 +2077,6 @@
       ],
       [
         "",
-        "cache-packages-on-capsule-root",
-        "set the package-manager cache on the capsule root"
-      ],
-      [
-        "",
         "list-tasks <string>",
         "list tasks of an env or a component-id for each one of the pipelines: build, tag and snap"
       ],

@@ -44,13 +44,8 @@ export type WorkspaceExtensionProps = {
   ignoredFiles?: string[];
 };
 
-export type PackageManagerClients = 'npm' | undefined;
-
 export interface DependencyResolverExtensionProps {
-  packageManager: PackageManagerClients;
-  strictPeerDependencies?: boolean;
-  extraArgs?: string[];
-  packageManagerProcessOptions?: any;
+  packageManager?: string;
   externalPackageManager?: boolean;
 }
 
@@ -397,7 +392,6 @@ export class WorkspaceConfig implements HostConfig {
       lang: DEFAULT_LANGUAGE,
       defaultScope: this.extension('teambit.workspace/workspace', true)?.defaultScope,
       dependencyResolver: this.extension('teambit.dependencies/dependency-resolver', true),
-      packageManager: this.extension('teambit.dependencies/dependency-resolver', true)?.packageManager,
       componentsDefaultDirectory,
       ignoredFiles: this.extension('teambit.workspace/workspace', true)?.ignoredFiles,
       extensions: this.extensions.toConfigObject(),
