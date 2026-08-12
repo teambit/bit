@@ -68,6 +68,12 @@ export function branchStateFingerprint(state: BranchBitmapState, laneComponentId
   return fingerprintIdVersions(laneComponentIds.map((id) => `${id}@${state.versions[id] ?? ABSENT_ON_BRANCH}`));
 }
 
+/**
+ * `snapPrCommit`'s return value when there was nothing to snap — its only signal either way. Lives in
+ * this leaf module so `ci.main.runtime.ts` and `lane-sync-executor.ts` share it without a cycle.
+ */
+export const NO_CHANGES_TO_SNAP = 'No changes detected, nothing to snap';
+
 export const LANE_HEAD_TRAILER = 'Bit-Lane-Head';
 /**
  * Marks a commit as machine-generated. Duplicated in the `bit-git-sync` action repo's event router
@@ -94,15 +100,49 @@ export function isSyncAuthoredMessage(message: string): boolean {
   return new RegExp(`^${SYNC_COMMIT_MARKER.replace(/[[\]]/g, '\\$&')}\\r?$`, 'm').test(message);
 }
 
+/** The record separator `hasIndependentHistoryBelowStateCommit`'s `git log --format=%B%x1e` uses. */
+const COMMIT_MESSAGE_RECORD_SEPARATOR = '\x1e';
+
+/**
+ * Whether the OLDEST record of a `git log --reverse --format=%B%x1e` run is NOT bit-authored — i.e. a
+ * human created the branch before this reconciler touched it. Oldest only, not "any": ordinary lane
+ * branches carry real dev commits between ledger commits too, and "any" would misclassify them all.
+ */
+export function oldestCommitIsNonSync(rawLog: string): boolean {
+  const messages = rawLog
+    .split(COMMIT_MESSAGE_RECORD_SEPARATOR)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  const oldest = messages[0];
+  return oldest !== undefined && !isLedgerCommitMessage(oldest);
+}
+
+/**
+ * Strict probe for "this is one of our LEDGER commits": the sync marker on its own line AND the
+ * `Bit-Lane-Head` trailer — `buildSyncCommitMessage` always writes both. The deletion guard reads
+ * this instead of `isSyncAuthoredMessage` so a human commit merely quoting `[bit-sync]` still counts
+ * as independent history (a false "human" only ever keeps a branch).
+ */
+export function isLedgerCommitMessage(message: string): boolean {
+  return isSyncAuthoredMessage(message) && new RegExp(`^${LANE_HEAD_TRAILER}: `, 'm').test(message);
+}
+
+/**
+ * Marks `adopt-branch`'s ledger commit. Audit-only — the deletion guard reads the branch's ancestry
+ * instead, since a trailer marks only the one commit it is on and later ledger commits carry none.
+ */
+export const ADOPTION_TRAILER = 'Bit-Adopted';
+
 /**
  * The sync commit's message. Every part is an annotation (audit trail + loop-guard marker); nothing reads
  * it as state — messages are forgeable and rewritten on squash-merge. State comes from `.bitmap`.
  */
-export function buildSyncCommitMessage(laneIdStr: string, laneHead: string): string {
+export function buildSyncCommitMessage(laneIdStr: string, laneHead: string, opts: { adopted?: boolean } = {}): string {
   return [
     `chore(bit-sync): sync lane ${laneIdStr} @ ${laneHead.slice(0, 9)}`,
     '',
     `${LANE_HEAD_TRAILER}: ${laneHead}`,
+    ...(opts.adopted ? [`${ADOPTION_TRAILER}: true`] : []),
     SYNC_COMMIT_MARKER,
   ].join('\n');
 }
@@ -161,6 +201,27 @@ export async function readBranchSyncState(
   const count = await git.raw(['rev-list', range, '--count']);
 
   return { stateCommit, bitmap, hasDevCommits: parseDevCommitCount(count), tipMessage, tipSha };
+}
+
+/**
+ * Whether `branch`'s committed `.bitmap` is byte-identical (by blob sha) to the one at its merge-base
+ * with the default branch — i.e. the branch never asserted a `.bitmap` change of its own, so whatever
+ * pointer it carries is INHERITED. Compared at the fork point, not the default branch's current tip,
+ * which moves on and would false-block. False on any git error: unreadable must not license adoption.
+ */
+export async function branchBitmapUnchangedSinceFork(branch: string, defaultBranch: string): Promise<boolean> {
+  try {
+    const base = (await git.raw(['merge-base', `origin/${defaultBranch}`, `origin/${branch}`])).trim();
+    if (!base) return false;
+    const [branchBlob, baseBlob] = await Promise.all([
+      git.raw(['rev-parse', `origin/${branch}:./${BIT_MAP}`]),
+      git.raw(['rev-parse', `${base}:./${BIT_MAP}`]),
+    ]);
+    const branchSha = branchBlob.trim();
+    return Boolean(branchSha) && branchSha === baseBlob.trim();
+  } catch {
+    return false;
+  }
 }
 
 /**

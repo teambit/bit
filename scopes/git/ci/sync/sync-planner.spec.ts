@@ -63,6 +63,13 @@ const table: Array<{
     action: { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' },
   },
   {
+    // Adoption proved content matched, never that the branch's pre-existing history is disposable.
+    name: 'own-live, no dev commits, OUR tip, but it is the adoption ledger commit -> KEEP, never delete',
+    input: { ...laneGone('own-live'), hasIndependentHistory: true },
+    type: 'close-pr',
+    action: { type: 'close-pr', deleteBranch: false, keepReason: 'adopted-branch' },
+  },
+  {
     name: 'own-merged (branch tip already in the default branch) -> close-pr AND delete',
     input: laneGone('own-merged'),
     type: 'close-pr',
@@ -72,6 +79,12 @@ const table: Array<{
     // Reachability alone proves deleting loses nothing, so no marker conjunction applies here.
     name: 'own-merged deletes even with a foreign tip and dev commits',
     input: { ...laneGone('own-merged'), tipIsSyncCommit: false, hasDevCommits: true },
+    type: 'close-pr',
+    action: { type: 'close-pr', deleteBranch: true },
+  },
+  {
+    name: 'own-merged deletes even when the tip is the adoption ledger commit — reachability is enough',
+    input: { ...laneGone('own-merged'), hasIndependentHistory: true },
     type: 'close-pr',
     action: { type: 'close-pr', deleteBranch: true },
   },
@@ -108,9 +121,31 @@ const table: Array<{
     type: 'import-lane',
   },
   {
-    name: 'existing branch, never synced, has dev commits, lane EXISTS -> halt (ambiguous)',
+    name: 'existing branch, never synced, has dev commits, lane EXISTS -> adopt-branch (first contact)',
     input: { lastSyncedHead: undefined, ownership: 'inherited-or-none', hasDevCommits: true },
+    type: 'adopt-branch',
+  },
+  {
+    name: 'existing branch, never synced, has dev commits, but .bitmap names a DIFFERENT lane -> halt',
+    input: {
+      lastSyncedHead: undefined,
+      ownership: 'inherited-or-none',
+      hasDevCommits: true,
+      branchNamesDifferentLane: true,
+    },
     type: 'halt',
+    reason: 'names a different lane',
+  },
+  {
+    // The executor resolves an inherited (merged) different-lane pointer to `false` — history, not a claim.
+    name: 'existing branch, has dev commits, .bitmap names a MERGED-AND-INHERITED different lane -> adopt-branch',
+    input: {
+      lastSyncedHead: undefined,
+      ownership: 'inherited-or-none',
+      hasDevCommits: true,
+      branchNamesDifferentLane: false,
+    },
+    type: 'adopt-branch',
   },
 ];
 
