@@ -23,7 +23,6 @@ type SetCustomEnvOpts = {
 const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
   '@teambit/node': '@teambit/node@1.0.1042',
   '@teambit/react': '@teambit/react@1.0.1042',
-  '@teambit/babel': '@teambit/babel@1.0.1042',
   '@teambit/mdx': '@teambit/mdx@1.0.1043',
   // not env bases - the tiny runtime deps of the minimal fixture envs (node-env-1/node-env-2),
   // listed here so setCustomEnv installs them and the fixtures load without MissingPackages
@@ -74,7 +73,7 @@ const BITDEV_NODE_ENV_PACKAGE = `@bitdev/node.node-env@${BITDEV_NODE_ENV_VERSION
 export const BITDEV_NODE_ENV_ID = `${BITDEV_NODE_ENV}@${BITDEV_NODE_ENV_VERSION}`;
 
 /**
- * the env configured on old-format aspect-style env fixtures (see setBabelWithTsHarmony). it used
+ * the env configured on old-format aspect-style env fixtures (see installAspectEnv). it used
  * to be a core aspect, now its package must be installed for the fixture env to be loaded.
  * the node env is a runtime dependency of the aspect env and must be installed at the root as
  * well for the aspect env to load.
@@ -188,36 +187,6 @@ export default class EnvHelper {
         },
       },
     };
-  }
-
-  /**
-   * set up a new environment with two compilers, babel for the dists and ts for the d.ts files
-   * returns the env name.
-   */
-  setBabelWithTsHarmony(): string {
-    const EXTENSIONS_BASE_FOLDER = 'multiple-compilers-env';
-    this.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
-    this.command.addComponent(EXTENSIONS_BASE_FOLDER);
-    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
-    this.command.link();
-    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
-      policy: {
-        dependencies: {
-          '@babel/runtime': '^7.8.4',
-          '@babel/core': '7.11.6',
-          '@babel/preset-env': '7.23.2',
-          '@babel/preset-typescript': '7.22.15',
-          '@babel/plugin-transform-class-properties': '7.22.5',
-        },
-      },
-    });
-    this.command.install([...ASPECT_ENV_PACKAGES, ...this.getFixtureEnvBasePackages(EXTENSIONS_BASE_FOLDER)].join(' '));
-    // the env is loaded only at the end of the first install. run a second install so its
-    // dependency policies (e.g. @teambit/babel as a runtime dep of the babel compiler) are
-    // applied to the components - the standard flow for old-style envs (see setNodeEnv above).
-    this.command.install();
-    this.command.compile();
-    return EXTENSIONS_BASE_FOLDER;
   }
 
   /**
