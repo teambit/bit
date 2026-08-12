@@ -589,6 +589,8 @@ export class CiMain {
     const componentsToSync = compact(
       await Promise.all(
         currentLane.components.map(async (laneComp) => {
+          // not tracked here = not snappable, and a staged unmerged entry for it breaks the snap
+          if (!workspaceIds.hasWithoutVersion(laneComp.id)) return undefined;
           try {
             const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
             const mainHead = modelComponent?.head; // the component's head on main
