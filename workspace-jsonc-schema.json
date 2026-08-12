@@ -75,10 +75,9 @@
         },
         "packageManager": {
           "type": "string",
-          "description": "The package manager to use (e.g., yarn, pnpm).",
+          "description": "The package manager to use.",
           "examples": [
-            "teambit.dependencies/pnpm",
-            "teambit.dependencies/yarn"
+            "teambit.dependencies/pnpm"
           ]
         },
         "proxy": {

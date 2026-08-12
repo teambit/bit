@@ -58,7 +58,6 @@ export class CapsuleCreateCmd implements Command {
     ['', 'use-hash', 'whether to use hash function (of base dir) as capsules root dir name'],
     ['j', 'json', 'json format'],
     ['d', 'install-packages', 'install packages by the package-manager'],
-    ['p', 'package-manager <name>', 'npm, yarn or pnpm, default to npm'],
   ] as CommandOptions;
 
   constructor(

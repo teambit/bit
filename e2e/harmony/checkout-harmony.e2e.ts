@@ -323,7 +323,6 @@ describe('bit checkout command', function () {
       it('should not run the package installation', () => {
         expect(output).not.to.have.string('installing dependencies');
         expect(output).not.to.have.string('pnpm');
-        expect(output).not.to.have.string('yarn');
       });
     });
     describe('using theirs strategy', () => {

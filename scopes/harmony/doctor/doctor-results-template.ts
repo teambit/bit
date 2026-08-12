@@ -87,7 +87,6 @@ function _createMetaSection(metaData: DoctorMetaData) {
   bit version   : ${metaData.bitVersion}
   node version  : ${metaData.nodeVersion}
   npm version   : ${metaData.npmVersion || 'NA'}
-  yarn version  : ${metaData.yarnVersion || 'NA'}
   platform      : ${metaData.platform}
   user details  : ${metaData.userDetails}
 `;

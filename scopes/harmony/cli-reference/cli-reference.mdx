@@ -286,7 +286,6 @@ ensures components work independently before publishing, similar to how they'll 
 | `--use-hash`               |                  | whether to use hash function (of base dir) as capsules root dir name                                    |
 | `--json`                   |       `-j`       | json format                                                                                             |
 | `--install-packages`       |       `-d`       | install packages by the package-manager                                                                 |
-| `--package-manager <name>` |       `-p`       | npm, yarn or pnpm, default to npm                                                                       |
 
 ### capsule delete
 
@@ -1253,7 +1252,7 @@ supports various reset options to recover from corrupted state or restart from s
 | `--force`                                 |       `-f`       | force workspace initialization without clearing local objects                                                                             |
 | `--bare [name]`                           |       `-b`       | initialize an empty bit bare scope                                                                                                        |
 | `--shared <groupname>`                    |       `-s`       | add group write permissions to a scope properly                                                                                           |
-| `--external-package-manager`              |                  | enable external package manager mode (npm/yarn/pnpm)                                                                                      |
+| `--external-package-manager`              |                  | enable external package manager mode (npm/pnpm)                                                                                           |
 | `--skip-interactive`                      |                  | skip interactive mode for Git repositories                                                                                                |
 | `--agent [type]`                          |                  | create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)                                               |
 

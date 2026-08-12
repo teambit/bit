@@ -9,7 +9,7 @@ export type ComponentRangePrefix = '~' | '^' | '+' | '-';
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
   /**
-   * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
+   * choose the package manager for Bit to use.
    * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
    * and totally removes the need of a 'node_modules' directory in your project.
    */

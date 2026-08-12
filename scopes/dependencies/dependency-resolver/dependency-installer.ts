@@ -421,7 +421,7 @@ export class DependencyInstaller {
         //
         // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules
         // and it never leaves node_modules in a broken state.
-        // Removing node_modules in that case would delete useful state information that is used by Yarn or pnpm.
+        // Removing node_modules in that case would delete useful state information that is used by pnpm.
         await this.cleanCompsNodeModules(componentDirectoryMap);
       } catch (err) {
         this.logger.debug('failed to remove node_modules directories from components', err);

@@ -269,7 +269,6 @@ export const IGNORE_LIST = [
   '**/component.json',
   '**/node_modules/**',
   '**/package-lock.json',
-  '**/yarn.lock',
 ];
 
 /**

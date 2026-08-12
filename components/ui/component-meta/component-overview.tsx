@@ -31,7 +31,7 @@ export type ComponentOverviewProps = {
   titleBadges?: TitleBadge[];
   componentDescriptor?: ComponentDescriptor;
   component?: ComponentModel;
-  pkgManager?: 'npm' | 'yarn' | 'pnpm' | 'bit';
+  pkgManager?: 'npm' | 'pnpm' | 'bit';
 } & SectionProps;
 
 export function ComponentOverview({
@@ -58,7 +58,6 @@ export function ComponentOverview({
   const [selectedPkgManager, setSelectedPkgManager] = React.useState(pkgManager);
 
   const installCmd = useMemo(() => {
-    if (selectedPkgManager === 'yarn') return 'add';
     if (selectedPkgManager === 'bit') return 'install';
     return 'i';
   }, [selectedPkgManager]);
@@ -78,8 +77,6 @@ export function ComponentOverview({
         return <img alt="npm-logo" className={styles.npm} src="https://static.bit.dev/brands/logo-npm-new.svg" />;
       case 'pnpm':
         return <img alt="pnpm-logo" className={styles.pnpm} src="https://static.bit.dev/brands/pnpm.svg" />;
-      case 'yarn':
-        return <img alt="yarn-logo" className={styles.yarn} src="https://static.bit.dev/brands/logo-yarn-text.svg" />;
       case 'bit':
         return <Icon className={styles.bit} of="bit-logo-mono" />;
       default:
@@ -149,20 +146,6 @@ export function ComponentOverview({
                     aria-label="Select pnpm package manager"
                   >
                     <img alt="pnpm-logo" className={styles.pnpm} src="https://static.bit.dev/brands/pnpm.svg" />
-                  </div>
-                  <div
-                    className={classNames(selectedPkgManager === 'yarn' && styles.selected)}
-                    onClick={() => setSelectedPkgManager('yarn')}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && setSelectedPkgManager('yarn')}
-                    aria-label="Select yarn package manager"
-                  >
-                    <img
-                      alt="yarn-logo"
-                      className={styles.yarn}
-                      src="https://static.bit.dev/brands/logo-yarn-text.svg"
-                    />
                   </div>
                   <div
                     className={classNames(selectedPkgManager === 'bit' && styles.selected)}

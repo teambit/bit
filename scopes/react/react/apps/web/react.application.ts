@@ -199,7 +199,7 @@ export class ReactApp implements Application {
     context.capsule.fs.writeFileSync(join(ssrAppDir, 'runner.js'), runner);
     const capsuleSsrDir = context.capsule.fs.getPath(ssrAppDir);
     const installer = this.dependencyResolver.getInstaller({
-      packageManager: 'teambit.dependencies/yarn',
+      packageManager: 'teambit.dependencies/pnpm',
       rootDir: capsuleSsrDir,
       cacheRootDirectory: capsuleSsrDir,
     });

@@ -960,11 +960,6 @@
             "d",
             "install-packages",
             "install packages by the package-manager"
-          ],
-          [
-            "p",
-            "package-manager <name>",
-            "npm, yarn or pnpm, default to npm"
           ]
         ],
         "description": "create capsules for components",
@@ -5419,7 +5414,7 @@
       [
         "",
         "external-package-manager",
-        "enable external package manager mode (npm/yarn/pnpm)"
+        "enable external package manager mode (npm/pnpm)"
       ],
       [
         "",

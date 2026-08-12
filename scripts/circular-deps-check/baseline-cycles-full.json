@@ -292,7 +292,6 @@
     "teambit.dependencies/aspect-docs/pnpm@0.0.171",
     "teambit.react/aspect-docs/react@0.0.172",
     "teambit.workspace/aspect-docs/variants@0.0.171",
-    "teambit.dependencies/aspect-docs/yarn@0.0.171",
     "teambit.compilation/babel@1.0.664",
     "teambit.harmony/bit@1.12.17",
     "teambit.harmony/content/cli-reference@2.0.671",
@@ -328,7 +327,6 @@
     "teambit.ui-foundation/user-agent@1.0.664",
     "teambit.scope/version-history@0.0.456",
     "teambit.vue/vue-aspect@0.0.30",
-    "teambit.dependencies/yarn@1.0.664",
     "teambit.pipelines/builder-data@0.0.396",
     "teambit.compositions/model/composition-type@0.0.509",
     "teambit.html/modules/create-element-from-string@0.0.115",
@@ -14715,62 +14713,6 @@
       "sourceId": "teambit.harmony/bit@1.12.17",
       "targetId": "teambit.workspace/workspace@1.0.664",
       "attr": "prod",
-      "bidirectional": false
-    },
-    {
-      "id": "teambit.harmony/bit@1.12.17->teambit.dependencies/yarn@1.0.664",
-      "sourceId": "teambit.harmony/bit@1.12.17",
-      "targetId": "teambit.dependencies/yarn@1.0.664",
-      "attr": "prod",
-      "bidirectional": false
-    },
-    {
-      "id": "teambit.dependencies/yarn@1.0.664->teambit.component/component@1.0.664",
-      "sourceId": "teambit.dependencies/yarn@1.0.664",
-      "targetId": "teambit.component/component@1.0.664",
-      "attr": "prod",
-      "bidirectional": false
-    },
-    {
-      "id": "teambit.dependencies/yarn@1.0.664->teambit.dependencies/dependency-resolver@1.0.664",
-      "sourceId": "teambit.dependencies/yarn@1.0.664",
-      "targetId": "teambit.dependencies/dependency-resolver@1.0.664",
-      "attr": "prod",
-      "bidirectional": false
-    },
-    {
-      "id": "teambit.dependencies/yarn@1.0.664->teambit.harmony/cli@0.0.1241",
-      "sourceId": "teambit.dependencies/yarn@1.0.664",
-      "targetId": "teambit.harmony/cli@0.0.1241",
-      "attr": "prod",
-      "bidirectional": false
-    },
-    {
-      "id": "teambit.dependencies/yarn@1.0.664->teambit.harmony/logger@0.0.1334",
-      "sourceId": "teambit.dependencies/yarn@1.0.664",
-      "targetId": "teambit.harmony/logger@0.0.1334",
-      "attr": "prod",
-      "bidirectional": false
-    },
-    {
-      "id": "teambit.dependencies/yarn@1.0.664->teambit.dependencies/fs/linked-dependencies@0.0.32",
-      "sourceId": "teambit.dependencies/yarn@1.0.664",
-      "targetId": "teambit.dependencies/fs/linked-dependencies@0.0.32",
-      "attr": "prod",
-      "bidirectional": false
-    },
-    {
-      "id": "teambit.dependencies/yarn@1.0.664->teambit.ui-foundation/ui@1.0.664",
-      "sourceId": "teambit.dependencies/yarn@1.0.664",
-      "targetId": "teambit.ui-foundation/ui@1.0.664",
-      "attr": "prod",
-      "bidirectional": false
-    },
-    {
-      "id": "teambit.dependencies/yarn@1.0.664->teambit.dependencies/aspect-docs/yarn@0.0.171",
-      "sourceId": "teambit.dependencies/yarn@1.0.664",
-      "targetId": "teambit.dependencies/aspect-docs/yarn@0.0.171",
-      "attr": "dev",
       "bidirectional": false
     },
     {

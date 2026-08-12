@@ -7,9 +7,6 @@ import InvalidPackageManager from './exceptions/invalid-package-manager';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ILegacyWorkspaceConfig, PackageManagerClients } from './legacy-workspace-config-interface';
 
-const DEFAULT_USE_WORKSPACES = false;
-const DEFAULT_MANAGE_WORKSPACES = true;
-
 export type WorkspaceConfigIsExistFunction = (dirPath: string | PathOsBased) => Promise<boolean | undefined>;
 
 export type WorkspaceConfigLoadFunction = (
@@ -24,8 +21,6 @@ export type WorkspaceConfigProps = {
   packageManager?: PackageManagerClients;
   packageManagerArgs?: string[];
   packageManagerProcessOptions?: Record<string, any>;
-  useWorkspaces?: boolean;
-  manageWorkspaces?: boolean;
   defaultScope?: string;
 };
 
@@ -39,8 +34,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   packageManager: PackageManagerClients;
   packageManagerArgs: string[] | undefined; // package manager client to use
   packageManagerProcessOptions: Record<string, any> | undefined; // package manager process options
-  useWorkspaces: boolean; // Enables integration with Yarn Workspaces
-  manageWorkspaces: boolean; // manage workspaces with yarn
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | undefined; // default remote scope to export to
 
@@ -61,12 +54,10 @@ export default class WorkspaceConfig extends AbstractConfig {
     packageManager = DEFAULT_PACKAGE_MANAGER,
     packageManagerArgs,
     packageManagerProcessOptions,
-    useWorkspaces = DEFAULT_USE_WORKSPACES,
-    manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     defaultScope,
   }: WorkspaceConfigProps) {
     super({ lang, extensions });
-    if (packageManager !== 'npm' && packageManager !== 'yarn') {
+    if (packageManager !== 'npm') {
       throw new InvalidPackageManager(packageManager);
     }
     this.componentsDefaultDirectory = componentsDefaultDirectory;
@@ -77,8 +68,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     this.packageManager = packageManager;
     this.packageManagerArgs = packageManagerArgs;
     this.packageManagerProcessOptions = packageManagerProcessOptions;
-    this.useWorkspaces = useWorkspaces;
-    this.manageWorkspaces = manageWorkspaces;
     this.defaultScope = defaultScope;
   }
 
@@ -90,14 +79,10 @@ export default class WorkspaceConfig extends AbstractConfig {
       packageManager: this.packageManager,
       packageManagerArgs: this.packageManagerArgs,
       packageManagerProcessOptions: this.packageManagerProcessOptions,
-      useWorkspaces: this.useWorkspaces,
-      manageWorkspaces: this.manageWorkspaces,
       defaultScope: this.defaultScope,
     };
 
     const isPropDefault = (val, key) => {
-      if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
-      if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'resolveModules') return !isEmpty(val);
       if (key === 'defaultScope') return Boolean(val);
       return true;

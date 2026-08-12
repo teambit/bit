@@ -706,7 +706,6 @@ export class Http implements Network {
               platform
               bitVersion
               npmVersion
-              yarnVersion
               userDetails
             }
           }

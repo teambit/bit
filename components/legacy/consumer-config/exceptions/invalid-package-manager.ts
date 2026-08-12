@@ -7,7 +7,7 @@ export default class InvalidPackageManager extends BitError {
 
   constructor(packageManager: string) {
     super(`error: the package manager provided ${chalk.bold(packageManager)} is not a valid package manager.
-please specify 'npm' or 'yarn'`);
+please specify 'npm'`);
     this.packageManager = packageManager;
     this.showDoctorMessage = false;
   }

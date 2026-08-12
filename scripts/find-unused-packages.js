@@ -33,7 +33,6 @@ const whitelist = [
   'mocha-junit-reporter',
   'prettier-eslint',
   'type-coverage',
-  '@yarnpkg/plugin-pack',
   'graceful-fs', // might be used as a peer by other stuff
   'mz', // needs to check what happens if gets removed.
   'npm', // needed for e2e tests

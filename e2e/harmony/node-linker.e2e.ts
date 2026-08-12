@@ -38,31 +38,4 @@ describe('installing with non-default nodeLinker', function () {
       });
     });
   });
-  // skipped: yarn support is deprecated and planned for removal
-  describe.skip('using Yarn as a package manager', () => {
-    describe(`setting nodeLinker to "hoisted"`, () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace();
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
-        helper.command.install('is-positive');
-      });
-      it('should create a hoisted node_modules', function () {
-        const depPath = path.join(helper.fixtures.scopes.localPath, 'node_modules/is-positive');
-        expect(fs.realpathSync(depPath)).to.eq(depPath);
-      });
-    });
-    describe.skip(`setting nodeLinker to "isolated"`, () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace();
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'isolated');
-        helper.command.install('is-positive');
-      });
-      it('should create node_modules', function () {
-        const depPath = path.join(helper.fixtures.scopes.localPath, 'node_modules/is-positive');
-        expect(fs.realpathSync(depPath)).to.contain('.store');
-      });
-    });
-  });
 });

@@ -235,16 +235,6 @@
             "teambit.mdx/mdx-env@3.1.1": {}
         }
     },
-    "aspect-docs/yarn": {
-        "name": "aspect-docs/yarn",
-        "scope": "teambit.dependencies",
-        "version": "0.0.179",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/aspect-docs/yarn",
-        "config": {
-            "teambit.mdx/mdx-env@3.1.1": {}
-        }
-    },
     "aspect-loader": {
         "name": "aspect-loader",
         "scope": "teambit.harmony",
@@ -2388,13 +2378,6 @@
         "version": "1.0.1099",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace-config-files"
-    },
-    "yarn": {
-        "name": "yarn",
-        "scope": "teambit.dependencies",
-        "version": "1.0.1100",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/yarn"
     },
     "$schema-version": "17.0.0"
 }

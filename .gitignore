@@ -35,9 +35,6 @@ node_modules
 # Optional REPL history
 .node_repl_history
 
-# Yarn Integrity file
-.yarn-Integrity
-
 # vscode
 .vscode
 
@@ -62,16 +59,7 @@ types/*
 .scannerwork
 
 # package managers
-yarn.lock
 package-lock.json
-
-# yarn2 (as suggested here https://yarnpkg.com/getting-started/qa)
-.yarn/*
-!.yarn/cache
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions
 
 # Claude Code files
 .claude/*
@@ -81,4 +69,3 @@ package-lock.json
 
 # Release notes temp files (for review only)
 releases-docs/temp-files/
-
