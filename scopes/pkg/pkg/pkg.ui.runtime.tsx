@@ -12,7 +12,7 @@ export class PkgUI {
 
   static async provider([componentUI]: [ComponentUI]) {
     const pkg = new PkgUI(componentUI);
-    componentUI.registerConsumeMethod(pkg.npmConsumeMethod);
+    componentUI.registerConsumeMethod(pkg.npmConsumeMethod, pkg.yarnConsumeMethod);
     return pkg;
   }
 
@@ -57,6 +57,40 @@ export class PkgUI {
         />
       ) : null,
       order: 30,
+    };
+  };
+
+  private yarnConsumeMethod: ConsumePlugin = ({
+    packageName: packageNameFromProps,
+    id: componentId,
+    latest: latestFromProps,
+    options,
+    componentModel,
+    authToken,
+  }) => {
+    const packageName = componentModel?.packageName || packageNameFromProps;
+    const latest = componentModel?.latest || latestFromProps;
+
+    const registry = packageName.split('/')[0];
+    const packageVersion =
+      componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version as string)}`;
+    const npmConfig = this.getNpmConfig(registry, authToken);
+
+    return {
+      Title: (
+        <img style={{ height: '17px', paddingTop: '4px' }} src="https://static.bit.dev/brands/logo-yarn-text.svg" />
+      ),
+      Component: !options?.hide ? (
+        <Install
+          config={npmConfig}
+          componentName={componentId.name}
+          packageManager="yarn"
+          copyString={`yarn add ${packageName}${packageVersion}`}
+          registryName={registry}
+          isInstallable={!options?.disableInstall}
+        />
+      ) : null,
+      order: 20,
     };
   };
 }

@@ -40,7 +40,7 @@ export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 export type OverviewOptions = () => {
   queryParams?: string;
   renderCompositionsFirst?: boolean;
-  defaultPkgManager?: 'npm' | 'pnpm' | 'bit';
+  defaultPkgManager?: 'npm' | 'yarn' | 'pnpm' | 'bit';
 };
 
 export type OverviewOptionsSlot = SlotRegistry<OverviewOptions>;
