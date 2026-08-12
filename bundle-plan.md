@@ -1097,6 +1097,36 @@ components for scope aspect capsules using Yarn`, both in `root-components-yarn.
   regardless of bundling, there is no ongoing value in keeping it green under the _normal_ suite
   either. Remove the two `describe.skip`s (and this file, if nothing else in it survives) once yarn
   package-manager support is actually removed from the codebase.
+- **2026-08-12** — built reusable infra for the 8 "failed to start the UI server" bundle-e2e failures
+  (§9d), instead of fixing them one at a time. Traced the spin-up mechanism (an Explore agent mapped
+  it first): two independent implementations both spawn a `bit start` server as test scaffolding —
+  `e2e/http-helper.ts`'s `HttpHelper` (used by `http.e2e.ts` ×4 and `ci-commands.e2e.ts` ×3) and a
+  hand-rolled `startBitServerInScope()` in `lane-export-skip-main-history-http.e2e.ts` (its own
+  comment already explains why it doesn't reuse `HttpHelper`: hardcoded port/path). Both used
+  `helper.command.bitBin` for the server, which is the bundle during a bundle e2e run - conflating
+  "does the bundle's `bit start` work for an arbitrary remote scope" (a separate, currently-
+  unsupported-by-default question, D15) with what these tests actually exercise: import/export over
+  HTTP, with the bundle as the _client_. Addressing (`http://localhost:<port>`) and readiness (a
+  stdout string match) are both binary-agnostic, so swapping only the server's binary is safe.
+  - Added `CommandHelper.nonBundledBitBin` (`components/legacy/e2e-helper/e2e-command-helper.ts`) -
+    the same fallback `getBitBin()` already used before its `npm_config_bit_bin` override, factored
+    out so it's available even when that override is set. A no-op outside a bundle run (the two
+    fields are equal there).
+  - `HttpHelper` gained a `serverBin` constructor param defaulting to `nonBundledBitBin`, used at
+    every spawn/match site (`start()`, `isBitServerProcess()`). All 7 existing `new HttpHelper(helper)`
+    call sites needed no changes - they pick up the fix automatically, which is the "infrastructure
+    for future tests too" the fix was asked for: any _future_ `HttpHelper` use gets correct behavior
+    by default, with an explicit override still available if a test ever wants to exercise the
+    bundle's server specifically.
+  - `lane-export-skip-main-history-http.e2e.ts`'s one call site changed from `bitBin` to
+    `nonBundledBitBin`, with a comment explaining why.
+  - Verified `nonBundledBitBin` actually resolves to something real in CI: `e2e_test_esbuild_bundle`
+    puts the bundle on `PATH` as `bit-bundled` (`.circleci/config.yml:1152-1164`) and runs
+    `e2e_test_cmd`, which includes the shared `bit_global_for_npm` command
+    (`.circleci/config.yml:260-269`) - the same one `bit_pr` uses - linking the plain, non-bundled
+    `bit.js` launcher to `PATH` as `bit`. So `getNonBundledBitBin()`'s fallback (`'bit'`, reached via
+    the "invoked through mocha" branch) is a real, working binary in that job, not a dangling name.
+    `npm run lint`: 0 errors. Not yet re-verified against a fresh CI run.
 
 ---
 

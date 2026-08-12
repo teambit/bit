@@ -113,8 +113,13 @@ function killProc(proc: ChildProcess) {
       helper.command.mergeLane('main', '--auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
 
-      // start HTTP server on the lane scope, swap workspace's lane remote to HTTP, then export
-      laneProc = await startBitServerInScope(helper.command.bitBin, laneScopePath, lanePort);
+      // start HTTP server on the lane scope, swap workspace's lane remote to HTTP, then export.
+      // uses the plain, non-bundled bit deliberately: what this test exercises is export over HTTP
+      // to a lane scope, not whether the bundle's `bit start` can serve an arbitrary remote scope
+      // (a separately tracked, currently-unsupported-by-default capability - see
+      // CommandHelper.getNonBundledBitBin() / bundle-plan.md §14, 2026-08-12). No-op outside a
+      // bundle run.
+      laneProc = await startBitServerInScope(helper.command.nonBundledBitBin, laneScopePath, lanePort);
       helper.scopeHelper.removeRemoteScope(laneScope);
       helper.command.runCmd(`bit remote add http://localhost:${lanePort}`);
       helper.command.export();

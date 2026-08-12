@@ -14,10 +14,23 @@ const HTTP_SERVER_READY_MSG = 'UI server of teambit.scope/scope is listening to 
 
 export class HttpHelper {
   httpProcess: ChildProcess;
+  /**
+   * the binary that spawns the remote scope's `bit start` server. Defaults to the plain,
+   * non-bundled bit - what's under test in an http-protocol e2e is import/export over HTTP, not
+   * whether the bundle's `bit start` can itself serve an arbitrary remote scope (a separately
+   * tracked, currently-unsupported-by-default capability, see bundle-plan.md §14/D15). This is a
+   * no-op outside a bundle run, since `nonBundledBitBin` then equals `bitBin` anyway. Pass an
+   * explicit `serverBin` to a constructor call if a future test specifically wants to exercise the
+   * bundle (or some other binary) as the server.
+   */
+  private serverBin: string;
   constructor(
     private helper: Helper,
-    private port = DEFAULT_HTTP_PORT
-  ) {}
+    private port = DEFAULT_HTTP_PORT,
+    serverBin?: string
+  ) {
+    this.serverBin = serverBin || helper.command.nonBundledBitBin;
+  }
   async start(): Promise<void> {
     // a `bit start` server from an earlier describe-block in the same file shares this port (and the
     // same remote-scope dir), and may still be shutting down when we get here — especially with a
@@ -28,11 +41,11 @@ export class HttpHelper {
     await this.waitForPortToBeFree();
     return new Promise((resolve, reject) => {
       const args = ['start', '--verbose', '--log', '--port', String(this.port)];
-      const cmd = `${this.helper.command.bitBin} ${args.join(' ')}`;
+      const cmd = `${this.serverBin} ${args.join(' ')}`;
       const cwd = this.helper.scopes.remotePath;
       if (this.helper.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
       if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
-      this.httpProcess = childProcess.spawn(this.helper.command.bitBin, args, { cwd });
+      this.httpProcess = childProcess.spawn(this.serverBin, args, { cwd });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
@@ -124,7 +137,7 @@ export class HttpHelper {
   private isBitServerProcess(pid: number): boolean {
     const cmd = this.processCommand(pid);
     if (!cmd) return false;
-    return cmd.includes('@teambit/bit') || cmd.includes(this.helper.command.bitBin) || /\bbit\b.*\bstart\b/.test(cmd);
+    return cmd.includes('@teambit/bit') || cmd.includes(this.serverBin) || /\bbit\b.*\bstart\b/.test(cmd);
   }
   private async waitForPortToBeFree(timeoutMs = PORT_FREE_TIMEOUT): Promise<void> {
     const startTime = Date.now();
