@@ -679,8 +679,10 @@ Priority order for the next pass:
    points at a cause yet, and it must be understood before the bundle is trusted with real scopes.
 2. **The UI server** (9 tests). Same root cause as `bit start`; §11A.1 still applies — fix by
    resolving the UI graph from the pre-bundled artefact, not by growing the externals list.
-3. **Cheap externals**: `@yarnpkg/plugin-npm` (and the yarn plugin family), `process/browser`,
-   `uid-number`/`get-uid-gid`, `node-gyp`. Small packages, mechanical, ~5 tests.
+3. **Cheap externals** — `process/browser` and `uid-number`/`get-uid-gid`: **done 2026-08-12**, see
+   §14. `@yarnpkg/plugin-npm` (the yarn plugin family): not pursued, yarn is being dropped from the
+   bundle (§10 item 9 / next section). `node-gyp`: separate PATH problem, not an externals gap —
+   still open, see §14/§10.
 4. **The startup budget** — check whether `module.enableCompileCache()` actually has a writable
    cache dir under the CI user, since the local measurement says the bundle should pass this test.
 
@@ -1025,6 +1027,35 @@ CompilationInitiator.ComponentAdded` fallback the first fix added. That disprove
   (`CompileOptions`/`TranspileComponentParams`/`compileOneFile`/`compileAllFiles`), so a failed read
   in `getInstallCompilationInitiator()` stays `undefined` all the way through with zero further
   enum access. `npm run lint`: 0 errors. Not yet re-verified against a fresh CI run.
+- **2026-08-12** — re-examined the 5 "cheap externals" bundle-e2e failures individually instead of
+  batching them; two turned out not to be cheap at all, and the externals.ts list corrected only for
+  the genuinely cheap two:
+  - **`process/browser`** (1 test, `custom-env-operations.e2e.ts`) — real gap, now fixed. It's not
+    bit's own CLI needing webpack; it's `@teambit/webpack`'s config builders
+    (`webpack-fallbacks*.ts`) doing `require.resolve('process/browser')` to hand webpack a browser
+    polyfill path, for workspaces whose _env_ still uses webpack as its bundler — same "resolved by
+    string, must exist on disk" shape `webpack`/`@babel/core` were already accepted for (category C),
+    one level deeper and far smaller (a single-file polyfill, no heavy deps). Added to `TOOLCHAINS`.
+  - **`uid-number`** (2 tests, `export.e2e.ts` shared-flag group) — real gap, now fixed. `uidNumber()`
+    (called from `scope/objects/objects/repository.ts` for `bit export --shared <group>`) spawns a
+    _child node process_ on `require.resolve('./get-uid-gid.js')`, a sibling file in the same 4-file
+    package — identical shape to the already-externalized `jest.worker`/`typescript` (§6.4), just
+    never noticed before because the shared-flag export path is rarely exercised. Added to
+    `RUNTIME_PATH`.
+  - **`@teambit/mdx.modules.mdx-v3-options`** (2 tests, `custom-env-operations-2.e2e.ts`) — **not a
+    gap, working as designed.** Traced the call site: `buildPreBundlePreview()`
+    (`scopes/preview/preview/pre-bundle.ts:103`) doesn't just need this one package — it calls
+    `rspack(createRspackConfig(...))`, a full rspack compilation that needs the _entire_
+    `UI_BUNDLING_EXTERNALS` group (react, `@teambit/react`, the loaders, …). Adding this one package
+    to the default build wouldn't even fix the test; it would just fail one `Cannot find module`
+    later on the next missing UI package. This is `bit build`/`bit tag --build` hitting the exact,
+    deliberate D10/D15 tradeoff — an env with its own preview/bundler config is the "hash misses the
+    shipped pre-bundle" case, and the rebuild fallback stays off by default on purpose (costs 231MB→
+    1.3GB, §8.3). Left alone; folded into the same known-limitation bucket as the UI-server failures
+    below, not tracked as a missing external.
+  - **`@yarnpkg/plugin-npm`** (yarn root-components tests) — not investigated further; per product
+    direction yarn support is being removed from the bundle entirely, see the next bullet.
+    `npm run lint`: 0 errors after the externals.ts change. Not yet re-verified against a fresh CI run.
 
 ---
 

@@ -34,10 +34,25 @@ const RUNTIME_PATH = [
   // `ts-server-client` spawns `typescript/lib/tsserver.js`; the typescript aspect also hands lib
   // files to the compiler by path
   'typescript',
+  // `scope/objects/objects/repository.ts` calls `uidNumber()` (for `bit export --shared <group>`),
+  // which spawns a *child node process* on `require.resolve('./get-uid-gid.js')` - a sibling file
+  // in the same tiny package, not something a bundle can inline - same shape as the jest.worker
+  // entry (§6.4). Confirmed via e2e: bundled `bit export --shared` failed with `Cannot find module
+  // './get-uid-gid.js'`.
+  'uid-number',
 ];
 
 /** C. toolchains resolved by string from user envs */
-const TOOLCHAINS = ['webpack', '@babel/core'];
+const TOOLCHAINS = [
+  'webpack',
+  '@babel/core',
+  // webpack's own dependency, `require.resolve()`'d by `@teambit/webpack`'s fallback/alias config
+  // builders (webpack-fallbacks*.ts) to hand webpack a browser polyfill path for node's `process`
+  // global - same "resolved by string, must exist on disk" shape as webpack/babel-loader above, just
+  // one level deeper and far smaller. Confirmed via e2e: bundled `bit tag --build` on a workspace
+  // whose env still uses webpack failed with `Cannot find module 'process/browser'`.
+  'process/browser',
+];
 
 /**
  * D. the UI/preview *rebuild* surface - **opt-in, off by default** (`npm run bundle -- --ui-bundling`).
