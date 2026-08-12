@@ -297,14 +297,15 @@ that commit. A narrow refspec is acceptable, and a cold local scope is acceptabl
 For each mapped lane, the command compares the remote head of the lane with the state that the committed
 `.bitmap` of the branch records. The command then picks one action:
 
-| Situation                                                            | Action           | Effect                                                                                                         |
-| -------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
-| the lane moved, the branch did not                                   | `import-lane`    | The command puts the lane on the branch, pushes, and opens the pull request if it is absent.                   |
-| the branch got dev commits, the lane did not move                    | `export-branch`  | The command snaps and exports the tree of the branch onto the lane.                                            |
-| both moved                                                           | `merge-diverged` | The command merges the lane into the tree of the branch, then snaps and exports.                               |
-| bit.cloud removed the lane, and the branch is ours                   | `close-pr`       | The command closes the pull request. The command deletes the branch, unless the branch holds unmerged commits. |
-| no lane, and the branch is not ours                                  | `noop`           | Nothing. Read [when the command deletes a branch](#when-the-command-deletes-a-branch).                         |
-| nothing moved, or the pull request has the `bit-sync-conflict` label | `noop`           | Nothing.                                                                                                       |
+| Situation                                                                                 | Action           | Effect                                                                                                         |
+| ----------------------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| the lane moved, the branch did not                                                        | `import-lane`    | The command puts the lane on the branch, pushes, and opens the pull request if it is absent.                   |
+| the branch got dev commits, the lane did not move                                         | `export-branch`  | The command snaps and exports the tree of the branch onto the lane.                                            |
+| both moved                                                                                | `merge-diverged` | The command merges the lane into the tree of the branch, then snaps and exports.                               |
+| the lane exists, the branch has dev commits, but the branch never recorded a lane pointer | `adopt-branch`   | First contact. Read [Adopting a branch on first contact](#adopting-a-branch-on-first-contact).                 |
+| bit.cloud removed the lane, and the branch is ours                                        | `close-pr`       | The command closes the pull request. The command deletes the branch, unless the branch holds unmerged commits. |
+| no lane, and the branch is not ours                                                       | `noop`           | Nothing. Read [when the command deletes a branch](#when-the-command-deletes-a-branch).                         |
+| nothing moved, or the pull request has the `bit-sync-conflict` label                      | `noop`           | Nothing.                                                                                                       |
 
 An `--all` run visits two sets of targets: the lanes that match the `lanes` patterns, and the lane-mapped
 branches on `origin`. The second set makes the cleanup possible. A lane that bit.cloud deleted is absent from
@@ -323,6 +324,31 @@ pull request, the command does nothing for that lane. Remove the label to sync t
 component granularity: every file of a conflicted component takes the winning side. The summary names what
 the command rewrote.
 
+### Adopting a branch on first contact
+
+A lane can exist on bit.cloud before its branch ever records a pointer to it — for example, a pull request
+that `bit ci pr --keep-lane` turned into a lane, on a branch a developer pushed with plain git. The branch
+has dev commits, and the lane exists, but the committed `.bitmap` of the branch holds no state for it: a
+first-contact pair, not a conflict. `adopt-branch` handles it, PROVIDED the branch would not change the lane.
+The command switches onto the lane, keeping the files of the branch, and asks `bit status` whether anything
+is new or modified relative to the lane — a read, never a snap. Two outcomes:
+
+- **Nothing changed.** The content of the branch already matches the lane's — the common shape, since
+  `bit ci pr --keep-lane` exported that very content already. The command records the lane pointer on the
+  branch (the same commit every other action pushes) and moves on. The next run reads a converged pair.
+- **Something changed.** The two sides genuinely disagree, with no known common history to merge from.
+  The command halts, the same way it halted before this action existed: it cannot tell which side is
+  newer. Nothing is snapped or exported; the lane is untouched, and the workspace is left clean.
+
+Adoption never touches a branch whose `.bitmap` asserts a DIFFERENT lane's claim of its own.
+A different-lane pointer the branch merely inherited — its `.bitmap` is unchanged since the branch forked
+from the default branch, the ordinary shape of a branch cut after some other lane's sync pull request
+landed — is history, not a claim, and does not block adoption.
+
+A pointer Bit marked **not exported**, same as for [deletion attribution](#when-the-command-deletes-a-branch),
+does not count as state either: it is intentional, not a gap. Nothing was ever proven about that lane, so
+there is nothing to protect, and the branch is a first-contact candidate exactly as if no pointer existed.
+
 ### When the command deletes a branch
 
 With the default empty `branchPrefix`, every branch maps to a lane of the same name. The command therefore
@@ -337,7 +363,11 @@ judges all three from the git history alone:
    it, or the branch **tip** is already in the default branch. In the second case the deletion loses nothing.
 3. **Authorship** — for a live branch, the tip must carry the `[bit-sync]` marker on its own line. A
    developer commits `.bitmap` too, so this test is necessary and never sufficient. The test can withhold a
-   deletion, and it can never authorize one.
+   deletion, and it can never authorize one. A tip from [adopting a branch on first
+   contact](#adopting-a-branch-on-first-contact) carries the marker too, but never authorizes a deletion
+   either, while the state commit is not yet reachable from the default branch: adoption proved the content
+   of the branch matched the lane's, never that the pre-existing history of the branch is disposable. Once
+   the branch is genuinely merged, reachability alone is enough, exactly as for any other branch.
 
 If the attribution test fails, the action is a plain `noop` and the command writes nothing. The command
 reports a **kept** branch on every later run, until a person deletes the branch, or until its commits reach
