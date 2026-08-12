@@ -100,19 +100,16 @@ export class ComponentCompiler {
     const canTranspileFile = compilers.find((c) => c.transpileFile);
     const canTranspileComponent = compilers.find((c) => c.transpileComponent);
 
-    // options.initiator can be omitted by a caller that couldn't safely resolve a
-    // CompilationInitiator value (see InstallMain.getInstallCompilationInitiator) - default it here,
-    // using this module's own already-resolved import rather than re-touching that lazy resolution.
-    const initiator = options.initiator ?? CompilationInitiator.ComponentAdded;
-
     if (canTranspileFile) {
       await Promise.all(
-        this.component.filesystem.files.map((file: AbstractVinyl) => this.compileOneFile(file, initiator, distDirs))
+        this.component.filesystem.files.map((file: AbstractVinyl) =>
+          this.compileOneFile(file, options.initiator, distDirs)
+        )
       );
     }
 
     if (canTranspileComponent) {
-      await this.compileAllFiles(initiator, distDirs);
+      await this.compileAllFiles(options.initiator, distDirs);
     }
 
     if (!canTranspileFile && !canTranspileComponent) {
@@ -264,7 +261,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
   private async compileOneFile(
     file: AbstractVinyl,
-    initiator: CompilationInitiator,
+    initiator: CompilationInitiator | undefined,
     distDirs: string[]
   ): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
@@ -297,7 +294,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFiles(initiator: CompilationInitiator, distDirs: string[]): Promise<void> {
+  private async compileAllFiles(initiator: CompilationInitiator | undefined, distDirs: string[]): Promise<void> {
     const filesToCompile: AbstractVinyl[] = [];
     for (const base of distDirs) {
       this.component.filesystem.files.forEach((file: AbstractVinyl) => {

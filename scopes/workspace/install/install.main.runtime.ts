@@ -561,13 +561,18 @@ export class InstallMain {
 
   /**
    * The install re-injects workspace packages before this point, which deletes every local
-   * component's `dist` and only rebuilds it in the `compileOnWorkspace` call this feeds. Reading
-   * `CompilationInitiator.Install` reaches a lazy `require` inside `@teambit/compiler`'s own dist
-   * (its barrel re-exports `./types` via a getter), so on a workspace that authors that aspect
-   * itself, this can throw `MODULE_NOT_FOUND` on a dist wiped moments ago - aborting the install
-   * *before* the compile call that would have restored it. Same defect/fix shape as
-   * `syncCoreAspectLinksForEnvs` and `resolveAspects`; `undefined` is safe here since
-   * `compileComponents` only ever compares `initiator` against `CompilationInitiator.AspectLoadFail`.
+   * component's `dist` - including `@teambit/compiler`'s own - and only rebuilds it in the
+   * `compileOnWorkspace` call this feeds. Every export of `@teambit/compiler` re-exports `./types`
+   * via a per-property getter that does a fresh `require` on each access (confirmed: this throws
+   * identically whether read through the package's barrel or through `workspace-compiler.ts`'s own
+   * internal import of the same file - it is not a barrel-specific problem, any access to this
+   * package's lazily-bound exports is unsafe during the window). Letting the throw escape aborts the
+   * install *before* the compile call that would have restored the dist. Same defect/fix shape as
+   * `syncCoreAspectLinksForEnvs` and `resolveAspects`. `undefined` must then stay `undefined` all the
+   * way through `compileOnWorkspace` (never defaulted back to another `CompilationInitiator` member,
+   * which would re-touch the same unsafe getter) - safe because `compileComponents` only ever
+   * compares `initiator` against `CompilationInitiator.AspectLoadFail`, and no compiler plugin reads
+   * it at all.
    */
   private getInstallCompilationInitiator(): CompilationInitiator | undefined {
     try {

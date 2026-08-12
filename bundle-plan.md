@@ -1007,6 +1007,24 @@ createDevServer/createBundler` and `MochaMain.createTester` both have **zero cal
   `before all` hooks), custom-env preview/mdx-bundler externals (2), yarn root-components / plugin-npm
   (2), `node-gyp`, the `get-uid-gid`/shared-flag export pair, and the `bit --help` timing budget.
   **No new, unexplained bundle regressions** — the delta is stable and already has an owner (§11A.2/3).
+- **2026-08-12** — the first `bit_pr` fix (previous bullet) was **incomplete**: the very next CI run
+  on `bit-bundle3` (`bit_pr` job `8fa95389`, run `4a344309`) crashed again, same `Cannot find module
+'./types'`, but at a **different** call site — `workspace-compiler.js:127` inside
+  `WorkspaceCompiler.compileComponents` (`:508`), which is exactly the `options.initiator ??
+CompilationInitiator.ComponentAdded` fallback the first fix added. That disproves the assumption
+  it was written on ("`workspace-compiler.ts`'s own top-level `./types` import is already resolved
+  and safe, unlike the barrel's") — confirmed by this evidence that **every** access to
+  `@teambit/compiler`'s lazily-bound exports is unsafe during the install's dist-rewrite window,
+  regardless of which file inside the package does the reading; `@teambit/compiler` here is a
+  workspace-authored core aspect (individually-symlinked source files under
+  `node_modules/@teambit/compiler`, real, non-symlinked `dist/*.js` written by `bit compile`), not a
+  `.pnpm`-virtual-store package, so `preserve-loaded-virtual-store-dirs.ts`'s peer-hash-rekey restore
+  mechanism doesn't cover it — this is bit's own compile step deleting and rewriting its own dist in
+  place, not a pnpm relocation. **Real fix**: never dereference `CompilationInitiator` as a fallback
+  at all — `initiator` is now `CompilationInitiator | undefined` end to end
+  (`CompileOptions`/`TranspileComponentParams`/`compileOneFile`/`compileAllFiles`), so a failed read
+  in `getInstallCompilationInitiator()` stays `undefined` all the way through with zero further
+  enum access. `npm run lint`: 0 errors. Not yet re-verified against a fresh CI run.
 
 ---
 
