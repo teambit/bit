@@ -115,15 +115,41 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
   const { mdxOptions } = await esmLoader(require.resolve('@teambit/mdx.modules.mdx-v3-options'));
   const config = createRspackConfig(outputDir, mainEntry, mdxOptions);
   const compiler = rspack(config as any);
-  const compilerRun = promisify(compiler.run.bind(compiler));
-  const results = await compilerRun();
-  if (!results) throw new Error();
-  if (results?.hasErrors()) {
-    clearConsole();
-    throw new Error(results?.toString({}));
+  try {
+    const compilerRun = promisify(compiler.run.bind(compiler));
+    const results = await compilerRun();
+    if (!results) throw new Error();
+    if (results?.hasErrors()) {
+      clearConsole();
+      throw new Error(results?.toString({}));
+    }
+    return results;
+  } finally {
+    await closeRspackCompiler(compiler);
   }
-  return results;
 }
+
+/**
+ * Release the compiler's module graph, and rspack's native side of it, as soon as the bundle is
+ * done. Both callers keep the process alive well past this point: the PreBundlePreview build task
+ * runs once per env inside a `bit build` that runs every task in one process, and `bit start`
+ * pre-bundles on demand in a server that then keeps running.
+ *
+ * Never throws - it runs from a `finally`, and a cleanup failure must not replace the build error
+ * that sent us there.
+ */
+async function closeRspackCompiler(compiler: { close?: (callback: () => void) => void }) {
+  const close = compiler.close;
+  if (typeof close !== 'function') return;
+  try {
+    await new Promise<void>((done) => {
+      close.call(compiler, () => done());
+    });
+  } catch {
+    // a failed cleanup is not worth failing (or masking) the bundle over
+  }
+}
+
 
 export async function generateBundlePreviewEntry(rootAspectId: string, previewPreBundlePath: string, config: object) {
   const manifestPath = join(previewPreBundlePath, 'asset-manifest.json');
