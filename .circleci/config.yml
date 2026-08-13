@@ -918,6 +918,12 @@ jobs:
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
+            # Same hazard as the install step above, and this command installs far more often: the
+            # isolator runs one install per capsule root (14 of them in a full PR build). Uncapped,
+            # pnpm v12 sizes its worker pool from the HOST's cpu count (~36) rather than the
+            # container's, and those V8 isolates are charged to a process that is already holding
+            # the build's capsule graphs.
+            PNPM_MAX_WORKERS: '6'
             # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
             # this build is CPU-bound and dominated by one env, so concurrency only added contention.
             # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
