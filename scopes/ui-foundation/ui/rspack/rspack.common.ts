@@ -1,5 +1,5 @@
 import type { RuleSetRule } from '@rspack/core';
-import { fallbacks } from '@teambit/webpack';
+import { fallbacks, excludeNodeModulesJs } from '@teambit/webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
 export { RspackManifestPlugin } from 'rspack-manifest-plugin';
@@ -78,17 +78,6 @@ export const cssParser = {
   'css/auto': { namedExports: false },
   'css/module': { namedExports: false },
 } as const;
-
-/**
- * node_modules JavaScript is already transpiled, and skipping it is what keeps a bundle from
- * re-processing every third-party file. TypeScript is not the same: a `.ts` file is never valid
- * bundler input, wherever it sits. A bit component consumed through node_modules can resolve to its
- * sources - an injected pnpm copy is taken from the package dir before the compile fills its
- * `dist`, so the package entry falls back to `index.ts` - and excluding node_modules wholesale then
- * fails the whole bundle on the first `export type`.
- */
-export const excludeNodeModulesJs = (path: string) =>
-  /node_modules/.test(path) && !(/\.tsx?$/.test(path) && !/\.d\.tsx?$/.test(path));
 
 export function swcRule(options?: { dev?: boolean; refresh?: boolean }): RuleSetRule {
   return {
