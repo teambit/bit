@@ -16,6 +16,9 @@ import type { SchemaMain } from './schema.main.runtime';
 export const SCHEMA_TASK_NAME = 'ExtractSchema';
 export const SCHEMA_ARTIFACT_NAME = 'schema';
 
+/** how many components one tsserver handles before it is restarted - see `extractForCapsules` */
+const EXTRACTIONS_PER_TSSERVER = 20;
+
 /**
  * extract and persist the component schema as a json file
  */
@@ -56,10 +59,20 @@ export class SchemaTask implements BuildTask {
     schemaResult: ComponentResult[],
     startTime: number
   ): Promise<void> {
+    let extractedSinceRestart = 0;
     await pMapSeries(capsules, async (capsule) => {
       const component = capsule.component;
       const isTaskDisabled = this.schema.isSchemaTaskDisabled(component);
       if (isTaskDisabled) return;
+      // The tsserver the extractions share keeps every file it has opened, so its footprint grows
+      // with each component and peaks at the end of a large env group - a `bit ci pr` build was
+      // measured at 16373MB of a 16384MB container right here. Restarting it every so often bounds
+      // that growth; the cost is one server startup per batch, against ~100 components in a group.
+      if (extractedSinceRestart >= EXTRACTIONS_PER_TSSERVER) {
+        this.schema.disposeExtractorResources();
+        extractedSinceRestart = 0;
+      }
+      extractedSinceRestart += 1;
       try {
         const schema = await this.schema.getSchema(component, false, true, rootDir, capsule.path);
         const schemaObj = schema.toObject();
