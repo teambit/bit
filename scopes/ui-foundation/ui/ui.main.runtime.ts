@@ -251,31 +251,41 @@ export class UiMain {
     const browserConfig = createRspackBrowserConfig(outputPath, [mainEntry], uiRoot.name, publicDir);
     const compiler = rspack(browserConfig as any);
     this.logger.debug(`rspack (build): running for browser`);
-    const [results, errors] = await this.runRspackPromise(compiler);
-    this.logger.debug(`rspack (build): completed browser`);
-    if (!results) throw new UnknownBuildError();
-    if (errors) {
-      this.clearConsole();
-      throw new Error(errors);
-    }
-    if (results?.hasErrors()) {
-      this.clearConsole();
-      throw new Error(results?.toString());
+    let results;
+    try {
+      const [browserResults, errors] = await this.runRspackPromise(compiler);
+      results = browserResults;
+      this.logger.debug(`rspack (build): completed browser`);
+      if (!results) throw new UnknownBuildError();
+      if (errors) {
+        this.clearConsole();
+        throw new Error(errors);
+      }
+      if (results?.hasErrors()) {
+        this.clearConsole();
+        throw new Error(results?.toString());
+      }
+    } finally {
+      await this.closeRspackCompiler(compiler);
     }
 
     if (ssr) {
       const ssrConfig = createRspackSsrConfig(outputPath, [mainEntry], publicDir);
       const ssrCompiler = rspack(ssrConfig as any);
       this.logger.debug(`rspack (build): running for SSR`);
-      const [ssrResults, ssrErrors] = await this.runRspackPromise(ssrCompiler);
-      this.logger.debug(`rspack (build): completed SSR build`);
-      if (ssrErrors) {
-        this.clearConsole();
-        throw new Error(ssrErrors);
-      }
-      if (ssrResults?.hasErrors()) {
-        this.clearConsole();
-        throw new Error(ssrResults?.toString());
+      try {
+        const [ssrResults, ssrErrors] = await this.runRspackPromise(ssrCompiler);
+        this.logger.debug(`rspack (build): completed SSR build`);
+        if (ssrErrors) {
+          this.clearConsole();
+          throw new Error(ssrErrors);
+        }
+        if (ssrResults?.hasErrors()) {
+          this.clearConsole();
+          throw new Error(ssrResults?.toString());
+        }
+      } finally {
+        await this.closeRspackCompiler(ssrCompiler);
       }
     }
 
@@ -285,6 +295,19 @@ export class UiMain {
   registerStartPlugin(startPlugin: StartPlugin) {
     this.startPluginSlot.register(startPlugin);
     return this;
+  }
+
+  /**
+   * A compiler keeps its whole module graph (and rspack's native side of it) alive. `bit build`
+   * runs every bundling task in one process - this bundle first, then a preview bundle per env - so
+   * a compiler left open stays resident for all of them and the process gets OOM-killed partway
+   * through. Mirrors what the webpack bundler already does after each run.
+   */
+  private async closeRspackCompiler(compiler: any): Promise<void> {
+    if (typeof compiler?.close !== 'function') return;
+    await new Promise<void>((resolve) => {
+      compiler.close(() => resolve());
+    });
   }
 
   private async runRspackPromise(compiler: any): Promise<[any | undefined, string | undefined]> {

@@ -37,14 +37,17 @@ export class BundleUiTask implements BuildTask {
     }
 
     try {
-      await Promise.all(
-        Object.values(UIROOT_ASPECT_IDS).map(async (uiRootAspectId) => {
-          const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory(uiRootAspectId));
-          this.logger.info(`Generating UI bundle at ${outputPath}...`);
-          await this.ui.build(uiRootAspectId, outputPath);
-          await this.generateHash(outputPath);
-        })
-      );
+      // One root at a time. Each is a full bundle of the whole UI (thousands of modules); running
+      // both at once doubles the peak for no real wall-clock win, since rspack already saturates
+      // the cores on its own, and this task runs in the same process as every later preview bundle.
+      for (const uiRootAspectId of Object.values(UIROOT_ASPECT_IDS)) {
+        const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory(uiRootAspectId));
+        this.logger.info(`Generating UI bundle at ${outputPath}...`);
+        // eslint-disable-next-line no-await-in-loop
+        await this.ui.build(uiRootAspectId, outputPath);
+        // eslint-disable-next-line no-await-in-loop
+        await this.generateHash(outputPath);
+      }
     } catch (error) {
       this.logger.error('Generating UI bundle failed', error);
       throw new Error('Generating UI bundle failed');
