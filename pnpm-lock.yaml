@@ -1084,6 +1084,9 @@ importers:
       '@teambit/ui-foundation.ui.use-box.tab':
         specifier: ^0.0.122
         version: 0.0.122(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.exclude-node-modules-js':
+        specifier: 0.0.1
+        version: 0.0.1
       '@teambit/workspace.content.variants':
         specifier: 1.96.7
         version: 1.96.7(react@19.2.7)
@@ -24441,6 +24444,9 @@ importers:
       '@teambit/preview.modules.preview-modules':
         specifier: ^1.0.3
         version: 1.0.3
+      '@teambit/webpack.modules.exclude-node-modules-js':
+        specifier: 0.0.1
+        version: 0.0.1
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
@@ -27144,6 +27150,9 @@ importers:
       '@teambit/ui-foundation.ui.hooks.use-user-agent':
         specifier: ^0.0.200
         version: 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/webpack.modules.exclude-node-modules-js':
+        specifier: 0.0.1
+        version: 0.0.1
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
@@ -37970,6 +37979,9 @@ packages:
 
   '@teambit/webpack.modules.config-mutator@file:scopes/webpack/config-mutator':
     resolution: {directory: scopes/webpack/config-mutator, type: directory}
+
+  '@teambit/webpack.modules.exclude-node-modules-js@0.0.1':
+    resolution: {integrity: sha512-vkXBA2yeZdo5z2bleUNO3woGZz9Q4kfSJ+Is+XAU7KTyLziC4zLViNGttVCa1sIQP+TbDCSFl7rM/TazKwXGgA==}
 
   '@teambit/webpack.modules.generate-expose-loaders@file:scopes/webpack/modules/generate-expose-loaders':
     resolution: {directory: scopes/webpack/modules/generate-expose-loaders, type: directory}
@@ -88798,6 +88810,7 @@ snapshots:
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/toolbox.path.to-windows-compatible-path': file:scopes/toolbox/path/to-windows-compatible-path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       camelcase: 6.2.0
       chai: 4.3.0
@@ -88864,6 +88877,7 @@ snapshots:
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@18.3.1)(react@18.3.1)
       '@teambit/toolbox.path.to-windows-compatible-path': file:scopes/toolbox/path/to-windows-compatible-path(react-dom@18.3.1)(react@18.3.1)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       camelcase: 6.2.0
       chai: 4.3.0
@@ -88930,6 +88944,7 @@ snapshots:
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/toolbox.path.to-windows-compatible-path': file:scopes/toolbox/path/to-windows-compatible-path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       camelcase: 6.2.0
       chai: 4.3.0
@@ -88996,6 +89011,7 @@ snapshots:
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/toolbox.path.to-windows-compatible-path': file:scopes/toolbox/path/to-windows-compatible-path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       camelcase: 6.2.0
       chai: 4.3.0
@@ -89062,6 +89078,7 @@ snapshots:
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/toolbox.path.to-windows-compatible-path': file:scopes/toolbox/path/to-windows-compatible-path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.pages.static-error': file:components/ui/pages/static-error(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       camelcase: 6.2.0
       chai: 5.2.1
@@ -101692,6 +101709,7 @@ snapshots:
       '@teambit/ui-foundation.ui.global-loader': 0.0.502(react-dom@18.3.1)(react@18.3.1)
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/ui-foundation.ui.hooks.use-user-agent': 0.0.200(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       chalk: 4.1.2
@@ -101784,6 +101802,7 @@ snapshots:
       '@teambit/ui-foundation.ui.global-loader': 0.0.502(react-dom@18.3.1)(react@18.3.1)
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/ui-foundation.ui.hooks.use-user-agent': 0.0.200(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       chalk: 4.1.2
@@ -101876,6 +101895,7 @@ snapshots:
       '@teambit/ui-foundation.ui.global-loader': 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-user-agent': 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       chalk: 4.1.2
@@ -101968,6 +101988,7 @@ snapshots:
       '@teambit/ui-foundation.ui.global-loader': 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-user-agent': 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       chalk: 4.1.2
@@ -102060,6 +102081,7 @@ snapshots:
       '@teambit/ui-foundation.ui.global-loader': 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-user-agent': 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       chalk: 4.1.2
@@ -102152,6 +102174,7 @@ snapshots:
       '@teambit/ui-foundation.ui.global-loader': 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-user-agent': 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/webpack.modules.exclude-node-modules-js': 0.0.1
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       chalk: 4.1.2
@@ -102715,6 +102738,8 @@ snapshots:
       - ts-node
       - uglify-js
       - webpack-cli
+
+  '@teambit/webpack.modules.exclude-node-modules-js@0.0.1': {}
 
   '@teambit/webpack.modules.generate-expose-loaders@file:scopes/webpack/modules/generate-expose-loaders(react-dom@18.3.1)(react@18.3.1)(webpack@5.97.1)':
     dependencies:
