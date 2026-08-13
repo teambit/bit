@@ -68,6 +68,7 @@ import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { CapsuleCache } from './capsule-cache';
+import { enforceDependencyClosedPackageSet } from './dependency-closed-package-set';
 import type { CapsuleKind, PruneCapsulesOptions, PruneCapsulesReport } from './capsule-cache';
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
@@ -1717,11 +1718,12 @@ export class IsolatorMain {
       : undefined;
 
     for (const component of components) {
+      const componentIdStr = component.id.toString();
       const componentIdNoVersion = component.id.toStringWithoutVersion();
 
       if (seederIdsNoVersion.has(componentIdNoVersion)) {
         // Always include seeders (modified components and their dependents)
-        capsuleIds.add(componentIdNoVersion);
+        capsuleIds.add(componentIdStr);
         continue;
       }
 
@@ -1731,7 +1733,7 @@ export class IsolatorMain {
       // then have to resolve it as an installed package instead of referencing the freshly-built capsule.
       // Keep it so the graph stays consistent across `bit build` and `bit tag` (both include it as a capsule).
       if (originalSeederIdsNoVersion?.has(componentIdNoVersion)) {
-        capsuleIds.add(componentIdNoVersion);
+        capsuleIds.add(componentIdStr);
         continue;
       }
       // For dependencies, check if they are exported and unmodified
@@ -1743,7 +1745,7 @@ export class IsolatorMain {
       const isModified = await component.isModified();
       if (isModified) {
         // Always include modified components
-        capsuleIds.add(componentIdNoVersion);
+        capsuleIds.add(componentIdStr);
         continue;
       }
 
@@ -1765,9 +1767,9 @@ export class IsolatorMain {
         wasPublished;
 
       if (canBeInstalled) {
-        packageCandidateIds.add(componentIdNoVersion);
+        packageCandidateIds.add(componentIdStr);
       } else {
-        capsuleIds.add(componentIdNoVersion);
+        capsuleIds.add(componentIdStr);
       }
     }
 
@@ -1782,32 +1784,15 @@ export class IsolatorMain {
      * transitive crossings without disabling optimization for a dependency subtree that is wholly
      * installable from the registry.
      */
-    const dependentsByDependencyId = new Map<string, Set<string>>();
-    graph.edges.forEach((edge) => {
-      const sourceId = graph.node(edge.sourceId)?.attr?.toStringWithoutVersion();
-      const targetId = graph.node(edge.targetId)?.attr?.toStringWithoutVersion();
-      if (!sourceId || !targetId) return;
-      const dependents = dependentsByDependencyId.get(targetId) ?? new Set<string>();
-      dependents.add(sourceId);
-      dependentsByDependencyId.set(targetId, dependents);
-    });
-
-    const capsuleQueue = [...capsuleIds];
-    for (let queueIndex = 0; queueIndex < capsuleQueue.length; queueIndex += 1) {
-      const dependencyId = capsuleQueue[queueIndex];
-      dependentsByDependencyId.get(dependencyId)?.forEach((dependentId) => {
-        if (!packageCandidateIds.delete(dependentId)) return;
-        capsuleIds.add(dependentId);
-        capsuleQueue.push(dependentId);
-        this.logger.debug(
-          `[OPTIMIZATION] Keeping ${dependentId} in capsule graph because it depends on capsule ${dependencyId}`
-        );
-      });
-    }
+    const promotions = enforceDependencyClosedPackageSet(graph, capsuleIds, packageCandidateIds);
+    promotions.forEach(({ dependentId, dependencyId }) =>
+      this.logger.debug(
+        `[OPTIMIZATION] Keeping ${dependentId} in capsule graph because it depends on capsule ${dependencyId}`
+      )
+    );
 
     const filtered = components.filter((component) => {
-      const componentIdNoVersion = component.id.toStringWithoutVersion();
-      if (capsuleIds.has(componentIdNoVersion)) return true;
+      if (capsuleIds.has(component.id.toString())) return true;
       this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${component.id.toString()}`);
       return false;
     });
