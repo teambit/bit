@@ -1,5 +1,6 @@
 import { rspack, type Configuration } from '@rspack/core';
-import { fallbacksProvidePluginConfig, fallbacks, excludeNodeModulesJs } from '@teambit/webpack';
+import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
+import { excludeNodeModulesJs } from '@teambit/webpack.modules.exclude-node-modules-js';
 import { RspackManifestPlugin } from 'rspack-manifest-plugin';
 import { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
 
