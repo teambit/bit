@@ -37,20 +37,23 @@ export class BundleUiTask implements BuildTask {
     }
 
     try {
-      // One root at a time. Each is a full bundle of the whole UI (thousands of modules); running
-      // both at once doubles the peak for no real wall-clock win, since rspack already saturates
-      // the cores on its own, and this task runs in the same process as every later preview bundle.
-      for (const uiRootAspectId of Object.values(UIROOT_ASPECT_IDS)) {
-        const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory(uiRootAspectId));
-        this.logger.info(`Generating UI bundle at ${outputPath}...`);
-        // eslint-disable-next-line no-await-in-loop
-        await this.ui.build(uiRootAspectId, outputPath);
-        // eslint-disable-next-line no-await-in-loop
-        await this.generateHash(outputPath);
-      }
+      await Promise.all(
+        Object.values(UIROOT_ASPECT_IDS).map(async (uiRootAspectId) => {
+          const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory(uiRootAspectId));
+          this.logger.info(`Generating UI bundle at ${outputPath}...`);
+          await this.ui.build(uiRootAspectId, outputPath);
+          await this.generateHash(outputPath);
+        })
+      );
     } catch (error) {
       this.logger.error('Generating UI bundle failed', error);
       throw new Error('Generating UI bundle failed');
+    } finally {
+      // Free both UI module graphs before the build moves on. Every remaining task - a preview
+      // bundle per env among them - runs in this same process, and holding these two graphs is what
+      // pushed it into the OOM killer. Closing here rather than inside `build()` keeps the two roots
+      // from ever closing a compiler while the other is still bundling.
+      await this.ui.closeBuildCompilers();
     }
     const artifacts = BundleUiTask.getArtifactDef();
     return {
