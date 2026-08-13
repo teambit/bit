@@ -1,6 +1,8 @@
 /**
- * A loader `exclude` for transpiling rules: skips JavaScript under node_modules, but lets
- * TypeScript through from anywhere (declaration files excluded).
+ * A loader `exclude` for transpiling rules. It decides only about paths under `node_modules`, and
+ * never excludes anything outside it - what happens there is up to the rule's own `test`. Under
+ * `node_modules`: JavaScript is excluded, TypeScript is not, and declaration files are (they are
+ * types, not modules to transpile).
  *
  * Excluding node_modules is about not re-processing already-transpiled third-party JavaScript. A
  * `.ts` file is never valid bundler input wherever it resolves from, and it does resolve from
