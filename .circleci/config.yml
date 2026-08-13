@@ -1028,6 +1028,11 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # pnpm v12 sizes its worker pool from `availableParallelism()`, which inside CircleCI docker
+      # reports the HOST's cpu count (~36) rather than this container's 2. The suites that install an
+      # env package pull thousands of packages, and ~36 V8 worker isolates on top of that is what
+      # OOM-kills them here (a bare `Killed` out of `bit install`). Same cap as the bit_pr install.
+      PNPM_MAX_WORKERS: '2'
     parallelism: 40
     steps:
       - e2e_test_cmd
@@ -1038,6 +1043,11 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # pnpm v12 sizes its worker pool from `availableParallelism()`, which inside CircleCI docker
+      # reports the HOST's cpu count (~36) rather than this container's 2. The suites that install an
+      # env package pull thousands of packages, and ~36 V8 worker isolates on top of that is what
+      # OOM-kills them here (a bare `Killed` out of `bit install`). Same cap as the bit_pr install.
+      PNPM_MAX_WORKERS: '2'
       # gate for released-binary-only e2e tests (see e2e/harmony/released-bit-core-exports.e2e.ts)
       E2E_RELEASED_BINARY: "true"
     parallelism: 32
@@ -1092,6 +1102,11 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # pnpm v12 sizes its worker pool from `availableParallelism()`, which inside CircleCI docker
+      # reports the HOST's cpu count (~36) rather than this container's 2. The suites that install an
+      # env package pull thousands of packages, and ~36 V8 worker isolates on top of that is what
+      # OOM-kills them here (a bare `Killed` out of `bit install`). Same cap as the bit_pr install.
+      PNPM_MAX_WORKERS: '2'
     parallelism: 32
     steps:
       - attach_workspace:
