@@ -572,11 +572,13 @@ commands:
           no_output_timeout: '50m'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
-            # pnpm v12 extracts tarballs in a worker pool sized by availableParallelism(), which
-            # inside CircleCI docker reports the HOST's cpu count (~36), not the resource class's.
-            # ~35 workers, each a V8 isolate inheriting the NODE_OPTIONS heap allowance, OOM-kill
-            # `bit install` on any container size. inherited by the bit processes the tests spawn.
-            PNPM_MAX_WORKERS: "3"
+            # The native pnpm engine parallelises extraction over rayon, and rust sizes its pools
+            # from the HOST's cpu count inside docker (~36) rather than this container's 2. Cap
+            # them, so the suites that install an env package - thousands of packages - don't add
+            # a host-sized thread pool on top and get OOM-killed (a bare `Killed` out of
+            # `bit install`). Inherited by the bit processes the tests spawn.
+            # NOTE: PNPM_MAX_WORKERS, which used to live here, is not read by pnpm v12 at all.
+            RAYON_NUM_THREADS: '2'
           when: always
       - store_test_results:
           path: bit/junit
@@ -680,9 +682,9 @@ jobs:
           # re-downloading the whole universe (which the native pnpm engine's fetch cannot
           # survive memory-wise).
           environment:
-            # see the "bit install (dev binary)" step of bit_pr - pnpm v12's worker pool is sized
-            # by the HOST's cpu count inside docker; cap it to the resource class's actual cpus.
-            PNPM_MAX_WORKERS: "4"
+            # see the "bit install (dev binary)" step of bit_pr - the pnpm engine's rayon pools are
+            # sized from the HOST's cpu count inside docker; cap them to this class's actual cpus.
+            RAYON_NUM_THREADS: '4'
       # - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
@@ -873,10 +875,11 @@ jobs:
           # the install manifest. the dev binary treats them as regular envs and needs their
           # packages in node_modules to load them - without them workspace-status verification
           # fails. reconcile here (2xlarge) rather than in setup_harmony.
-          # PNPM_MAX_WORKERS: pnpm v12 sizes its tarball-extraction worker pool by
-          # availableParallelism(), which inside CircleCI docker reports the HOST's cpu count
-          # (~36), not the resource class's - ~35 V8 worker isolates OOM-kill the fetch phase of
-          # this install (it downloads the legacy envs' full closure) on any container size.
+          # RAYON_NUM_THREADS: the native pnpm engine extracts over rayon, and rust sizes its
+          # pools from the HOST's cpu count inside docker (~36), not the resource class's - a
+          # host-sized pool makes the fetch phase of this install (it downloads the legacy envs'
+          # full closure) run out of memory on any container size. best-effort: a pool the engine
+          # builds with an explicit thread count of its own won't read the variable.
           # becomes a cheap no-op once a stable release without those core envs is out.
           command: |
             cd bit
@@ -899,7 +902,7 @@ jobs:
             exit $STATUS
           no_output_timeout: '30m'
           environment:
-            PNPM_MAX_WORKERS: "6"
+            RAYON_NUM_THREADS: '6'
       - run:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
@@ -934,15 +937,10 @@ jobs:
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
             # Caps the rayon pools inside the native toolchain (rspack's minifier, the pnpm engine).
-            # Rust sizes them from the HOST's cpu count inside docker, same trap as PNPM_MAX_WORKERS
-            # below - ~36 threads, each with its own working set, on an 8-cpu container.
+            # Rust sizes them from the HOST's cpu count inside docker - ~36 threads, each with its
+            # own working set, on an 8-cpu container. (PNPM_MAX_WORKERS, which this file used to
+            # set, is not read by pnpm v12 at all.)
             RAYON_NUM_THREADS: '6'
-            # Same hazard as the install step above, and this command installs far more often: the
-            # isolator runs one install per capsule root (14 of them in a full PR build). Uncapped,
-            # pnpm v12 sizes its worker pool from the HOST's cpu count (~36) rather than the
-            # container's, and those V8 isolates are charged to a process that is already holding
-            # the build's capsule graphs.
-            PNPM_MAX_WORKERS: '6'
             # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
             # this build is CPU-bound and dominated by one env, so concurrency only added contention.
             # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
@@ -996,14 +994,14 @@ jobs:
           name: bit install (dev binary)
           # same reconcile as in bit_pr: the released bbit filters the legacy-core-env packages
           # out of the manifest; the dev binary needs them installed to load those envs.
-          # PNPM_MAX_WORKERS and package-manager.cache: see the bit_pr step of the same name.
+          # RAYON_NUM_THREADS and package-manager.cache: see the bit_pr step of the same name.
           command: |
             cd bit
             node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
             node bin/bit.js install
           no_output_timeout: '30m'
           environment:
-            PNPM_MAX_WORKERS: "6"
+            RAYON_NUM_THREADS: '6'
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -1028,11 +1026,6 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-      # pnpm v12 sizes its worker pool from `availableParallelism()`, which inside CircleCI docker
-      # reports the HOST's cpu count (~36) rather than this container's 2. The suites that install an
-      # env package pull thousands of packages, and ~36 V8 worker isolates on top of that is what
-      # OOM-kills them here (a bare `Killed` out of `bit install`). Same cap as the bit_pr install.
-      PNPM_MAX_WORKERS: '2'
     parallelism: 40
     steps:
       - e2e_test_cmd
@@ -1043,11 +1036,6 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-      # pnpm v12 sizes its worker pool from `availableParallelism()`, which inside CircleCI docker
-      # reports the HOST's cpu count (~36) rather than this container's 2. The suites that install an
-      # env package pull thousands of packages, and ~36 V8 worker isolates on top of that is what
-      # OOM-kills them here (a bare `Killed` out of `bit install`). Same cap as the bit_pr install.
-      PNPM_MAX_WORKERS: '2'
       # gate for released-binary-only e2e tests (see e2e/harmony/released-bit-core-exports.e2e.ts)
       E2E_RELEASED_BINARY: "true"
     parallelism: 32
@@ -1102,11 +1090,6 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-      # pnpm v12 sizes its worker pool from `availableParallelism()`, which inside CircleCI docker
-      # reports the HOST's cpu count (~36) rather than this container's 2. The suites that install an
-      # env package pull thousands of packages, and ~36 V8 worker isolates on top of that is what
-      # OOM-kills them here (a bare `Killed` out of `bit install`). Same cap as the bit_pr install.
-      PNPM_MAX_WORKERS: '2'
     parallelism: 32
     steps:
       - attach_workspace:
