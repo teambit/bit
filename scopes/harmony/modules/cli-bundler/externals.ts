@@ -34,12 +34,6 @@ const RUNTIME_PATH = [
   // `ts-server-client` spawns `typescript/lib/tsserver.js`; the typescript aspect also hands lib
   // files to the compiler by path
   'typescript',
-  // `scope/objects/objects/repository.ts` calls `uidNumber()` (for `bit export --shared <group>`),
-  // which spawns a *child node process* on `require.resolve('./get-uid-gid.js')` - a sibling file
-  // in the same tiny package, not something a bundle can inline - same shape as the jest.worker
-  // entry (§6.4). Confirmed via e2e: bundled `bit export --shared` failed with `Cannot find module
-  // './get-uid-gid.js'`.
-  'uid-number',
   // `addNodeGypToPath()` (`scopes/dependencies/pnpm/node-gyp-bin.ts`) does
   // `require.resolve('node-gyp/bin/node-gyp.js')` to write a PATH wrapper before pnpm spawns a
   // native package's `"install": "node-gyp rebuild"` script - inlined, there is no on-disk file for

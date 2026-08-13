@@ -8,7 +8,7 @@
 > babel aspect usage & pre-bundle interaction) · §17 making `bit start` work from the pre-bundles
 > · §18 mcp-config-writer inlined into the bundle instead of copied · §19 `BabelAspect` removed from
 > core, `@babel/core` verified still load-bearing via aspect-loader + scope's version.ts.
-> Last updated: 2026-08-12 (bit_pr install-crash fix)
+> Last updated: 2026-08-13 (uid-number removed from externals)
 
 ---
 
@@ -1208,6 +1208,13 @@ undefined &&` before the comparison, so the RHS is never evaluated when `initiat
   class; if a 5th instance turns up, that is a strong signal to stop patching call sites and instead
   question whether `injectWorkspacePackages` (or the timing of compile relative to it) is the thing
   that should change.
+- **2026-08-13** — removed `uid-number` from `RUNTIME_PATH` in `externals.ts`. PR #10609 (merged
+  2026-08-12) replaced `scope/objects/objects/repository.ts`'s use of `uidNumber()` with a direct,
+  in-process read/parse of `/etc/group` and dropped the dependency from `workspace.jsonc`, so the
+  `get-uid-gid.js` child-process spawn this entry existed for (§8.1, §14 2026-08-12) no longer
+  happens - `uid-number` isn't referenced anywhere in source anymore, only as a stale transitive
+  entry in `pnpm-lock.yaml`. `node-gyp` and `typescript` remain in `RUNTIME_PATH` for the same
+  by-path-require shape.
 
 ---
 
