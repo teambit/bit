@@ -123,6 +123,22 @@ export class SchemaMain {
     return this.getSchemaExtractorFromEnv(env, tsserverPath, contextPath);
   }
 
+  /** the extractor of the most recent extraction, kept so its shared resources can be released */
+  private lastUsedExtractor?: SchemaExtractor;
+
+  /**
+   * Release what the extractors hold - above all the tsserver process, which they share across
+   * components and which keeps the TypeScript project of a whole capsule root in memory. A `bit
+   * build` runs every task in one process, so a tsserver left alive by a schema extraction stays
+   * resident (and still answering diagnostics) through the bundling tasks that follow, and its
+   * memory is charged against them. A new extraction starts a fresh server.
+   */
+  disposeExtractorResources() {
+    const extractor = this.lastUsedExtractor;
+    this.lastUsedExtractor = undefined;
+    extractor?.dispose();
+  }
+
   private fallbackExtractorFactory?: (
     tsserverPath?: string,
     contextPath?: string,
@@ -234,6 +250,7 @@ export class SchemaMain {
           apiTransformers
         );
 
+        this.lastUsedExtractor = schemaExtractor;
         const result = await schemaExtractor.extract(component, {
           formatter,
           tsserverPath,
@@ -241,7 +258,7 @@ export class SchemaMain {
           skipInternals,
           includeFiles,
         });
-        if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
+        if (shouldDisposeResourcesOnceDone) this.disposeExtractorResources();
 
         // `live`: extracted from source at call time, not read from the version's built artifact —
         // consumers that key results by version (API diff memo/cache) must not persist it.

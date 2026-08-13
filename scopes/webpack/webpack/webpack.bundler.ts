@@ -7,6 +7,35 @@ import type { Compiler, Configuration, StatsCompilation, StatsAsset } from 'webp
 import { sep } from 'path';
 
 type AssetsMap = { [assetId: string]: Asset };
+
+/**
+ * How many workers a minifier may use. Kept small on purpose: `parallel: true` -
+ * terser-webpack-plugin's default - sizes the pool from `os.cpus()`, which inside a container
+ * reports the HOST's cpu count. On CI that is ~36 node workers, each loading its own minifier, for a
+ * bundle of a handful of components, and the pool is charged to a process that is already holding
+ * the whole build's graphs. Bundles run one at a time here for the same reason (see `run`), so a
+ * small pool per bundle costs little wall-clock.
+ */
+const MAX_MINIFIER_WORKERS = 4;
+
+/**
+ * Clamp the worker pool of every minifier in the config that exposes one. An explicitly configured
+ * smaller pool is left alone.
+ */
+function capMinifierWorkers(config: Configuration, logger: Logger) {
+  const minimizers = config.optimization?.minimizer;
+  if (!Array.isArray(minimizers)) return;
+  minimizers.forEach((minimizer: any) => {
+    const options = minimizer?.options;
+    if (!options || !('parallel' in options)) return;
+    const current = options.parallel;
+    if (typeof current === 'number' && current <= MAX_MINIFIER_WORKERS) return;
+    options.parallel = MAX_MINIFIER_WORKERS;
+    logger.debug(
+      `webpack bundler: capped ${minimizer?.constructor?.name ?? 'minifier'} workers at ${options.parallel}`
+    );
+  });
+}
 export class WebpackBundler implements Bundler {
   constructor(
     /**
@@ -28,6 +57,7 @@ export class WebpackBundler implements Bundler {
 
   async run(): Promise<BundlerResult[]> {
     const startTime = Date.now();
+    this.configs.forEach((config) => capMinifierWorkers(config, this.logger));
     const compilers = this.configs.map((config: any) => this.webpack(config));
 
     const initiator = this.metaData?.initiator;

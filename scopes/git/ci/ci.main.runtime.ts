@@ -40,6 +40,7 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
+import { reportToString } from './report-to-string';
 import { adoptAndRetrySwitch, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
 
 export type CiSwitchLaneOptions = SwitchLaneOptions & {
@@ -52,6 +53,7 @@ import type { GitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider } from './sync/github-client';
 import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
 import { isValidGitBranchName } from './sync/sync-config';
+import { NO_CHANGES_TO_SNAP } from './sync/sync-state';
 
 /**
  * Registered git hosts (GitHub ships built-in; others register from their own aspect).
@@ -519,6 +521,25 @@ export class CiMain {
     await this.workspace._reloadConsumer();
   }
 
+  /**
+   * Whether the workspace has anything the current lane doesn't reflect, per `bit status`. Read-only:
+   * adoption uses this instead of a probe snap, which writes even under dryRun. Every signal a later
+   * snap/export would push counts — including soft removals, hidden pending exports, and merge state.
+   */
+  async hasUnsyncedWorkChanges(): Promise<boolean> {
+    const status = await this.status.status({ lanes: true });
+    const divergence = [
+      status.newComponents,
+      status.modifiedComponents,
+      status.stagedComponents,
+      status.locallySoftRemoved,
+      status.pendingUpdateDependents,
+      status.mergePendingComponents,
+      status.componentsDuringMergeState,
+    ];
+    return divergence.some((components) => components.length > 0);
+  }
+
   /** `bit ci sync` — reconcile Bit lanes and the main scope with git branches and PRs (see `SyncOrchestrator`). */
   async sync(
     opts: { lane?: string; branch?: string; all?: boolean; main?: boolean; dryRun?: boolean; init?: boolean } = {}
@@ -568,6 +589,8 @@ export class CiMain {
     const componentsToSync = compact(
       await Promise.all(
         currentLane.components.map(async (laneComp) => {
+          // not tracked here = not snappable, and a staged unmerged entry for it breaks the snap
+          if (!workspaceIds.hasWithoutVersion(laneComp.id)) return undefined;
           try {
             const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
             const mainHead = modelComponent?.head; // the component's head on main
@@ -1143,8 +1166,8 @@ export class CiMain {
       });
 
       if (!results) {
-        this.logger.console(chalk.yellow('No changes detected, nothing to snap'));
-        return 'No changes detected, nothing to snap';
+        this.logger.console(chalk.yellow(NO_CHANGES_TO_SNAP));
+        return NO_CHANGES_TO_SNAP;
       }
 
       const { snappedComponents }: SnapResults = results;
@@ -1232,7 +1255,7 @@ export class CiMain {
         this.logger.console(chalk.yellow('No changes detected, removing temporary lane'));
         await this.switchToLane(originalLane?.name ?? 'main');
         await this.lanes.removeLanes([tempLaneName], { remote: false, force: true });
-        return 'No changes detected, nothing to snap';
+        return NO_CHANGES_TO_SNAP;
       }
 
       const { snappedComponents }: SnapResults = results;
@@ -1972,10 +1995,6 @@ export class CiMain {
     this.logger.console(chalk.blue('No specific version bump detected, using default patch'));
     return releaseType;
   }
-}
-
-function reportToString(result: string | { data: string }): string {
-  return typeof result === 'string' ? result : result.data;
 }
 
 CiAspect.addRuntime(CiMain);

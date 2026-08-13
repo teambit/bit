@@ -1150,20 +1150,30 @@ if needed, use "bit env set" command to align the env id`;
         isFoundWithoutVersion = true;
         return true;
       }
-      const envComponent = await this.getEnvComponentByEnvId(id);
-      if (!envComponent) return false;
-      const hasManifest = this.hasEnvManifest(envComponent);
-      if (hasManifest) return true;
-      const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
-      if (isUsingEnvEnv) return true;
-      // when teambit.envs/env is not loaded (it is no longer a core aspect), the env component's
-      // env data falls back to the default env and its type is not 'env'. recognize the env by
-      // its configuration identity instead - old-style envs are configured with teambit.envs/env.
-      const envOfEnvFromConfig = this.getEnvIdFromEnvsConfig(envComponent);
-      if (envOfEnvFromConfig?.split('@')[0] === 'teambit.envs/env') return true;
-      return envComponent.state.aspects.entries.some(
-        (entry) => entry.id.toStringWithoutVersion() === 'teambit.envs/env'
-      );
+      // pLocate runs predicates concurrently; once it settles, a predicate that rejects later has
+      // no handler and crashes the process as an unhandled rejection (observed with a remote
+      // scope-fetch 500 inside getEnvComponentByEnvId during `bit ci pr`). this is a discovery
+      // heuristic — an id whose component cannot be loaded simply cannot be identified as an env
+      // here, so log and move on rather than racing an uncatchable rejection.
+      try {
+        const envComponent = await this.getEnvComponentByEnvId(id);
+        if (!envComponent) return false;
+        const hasManifest = this.hasEnvManifest(envComponent);
+        if (hasManifest) return true;
+        const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
+        if (isUsingEnvEnv) return true;
+        // when teambit.envs/env is not loaded (it is no longer a core aspect), the env component's
+        // env data falls back to the default env and its type is not 'env'. recognize the env by
+        // its configuration identity instead - old-style envs are configured with teambit.envs/env.
+        const envOfEnvFromConfig = this.getEnvIdFromEnvsConfig(envComponent);
+        if (envOfEnvFromConfig?.split('@')[0] === 'teambit.envs/env') return true;
+        return envComponent.state.aspects.entries.some(
+          (entry) => entry.id.toStringWithoutVersion() === 'teambit.envs/env'
+        );
+      } catch (err: any) {
+        this.logger.warn(`findFirstEnv: failed loading env-component "${id}", skipping it. error: ${err.message}`);
+        return false;
+      }
     });
     let finalEnvId;
     if (envId) {

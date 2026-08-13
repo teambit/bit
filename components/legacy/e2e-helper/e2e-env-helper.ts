@@ -384,6 +384,24 @@ export default new EmptyEnv();
   }
 
   /**
+   * an env whose only job is to carry configuration - its env.jsonc policy - for the components
+   * that use it. the fixture extends no base env, so the only thing installed for it is the
+   * `.bit-env` plugin provider (teambit.envs/env). the default fixture of `setCustomNewEnv`
+   * (`react-based-env`) instead drags in @teambit/react.react-env: a closure of thousands of
+   * packages, installed in the workspace and then again in the env's capsule on `tag --build` -
+   * enough, on top of the plugin provider's own closure, to OOM-kill a CI node.
+   *
+   * it provides no compiler/tester/preview, so use it only where nothing has to be built.
+   */
+  setPolicyOnlyEnv(
+    envJsoncOptions: GenerateEnvJsoncOptions,
+    targetFolder = 'custom-env/env',
+    id: string = targetFolder
+  ): string {
+    return this.setCustomNewEnv('policy-only-env', [], envJsoncOptions, false, targetFolder, id);
+  }
+
+  /**
    * This will generate env in the new format (using the *.bit-env.* plugin)
    * @param extensionsBaseFolder
    * @returns env name

@@ -1,5 +1,5 @@
 import { rspack, type Configuration } from '@rspack/core';
-import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
+import { fallbacksProvidePluginConfig, fallbacks, excludeNodeModulesJs } from '@teambit/webpack';
 import { RspackManifestPlugin } from 'rspack-manifest-plugin';
 import { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
 
@@ -128,7 +128,7 @@ export function createRspackConfig(outputDir: string, entryFile: string, mdxOpti
         },
         {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
-          exclude: /node_modules/,
+          exclude: excludeNodeModulesJs,
           use: {
             loader: 'builtin:swc-loader',
             options: {
