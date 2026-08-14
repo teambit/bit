@@ -667,7 +667,14 @@ jobs:
             echo "user-agent=bit-repo-circleci" >> .npmrc &&
             git update-index --skip-worktree .npmrc &&
             bbit install
-      # - run: cd bit && bbit compile
+      # `bbit install` compiles as part of the install, but that pass can fall back to the
+      # default TypeScript compiler for components whose env is still being imported - notably
+      # the node-babel-mocha ones (legacy.scope, legacy.consumer, scope.network, ...). tsc emits
+      # eager top-level requires where the env's babel config emits lazy thunks, so bit's own
+      # bootstrap then pulls in graphql/react-docgen/@babel/core and the filesystem-read budget
+      # blows up. compiling again once node_modules has settled rebuilds them with their real
+      # envs (measured: `bit --help` 2396 -> 976 file reads).
+      - run: cd bit && bbit compile
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
       # - run: cd bit && ls -l node_modules/@babel
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
@@ -923,8 +930,8 @@ jobs:
       - run: cd bit && npm run generate-core-aspects-ids
       - run:
           name: 'bit ci merge'
-          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
-          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 3 ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 3 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
