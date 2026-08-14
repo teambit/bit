@@ -1,5 +1,6 @@
 import type { RuleSetRule } from '@rspack/core';
 import { fallbacks } from '@teambit/webpack';
+import { excludeNodeModulesJs } from '@teambit/webpack.modules.exclude-node-modules-js';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
 export { RspackManifestPlugin } from 'rspack-manifest-plugin';
@@ -82,7 +83,7 @@ export const cssParser = {
 export function swcRule(options?: { dev?: boolean; refresh?: boolean }): RuleSetRule {
   return {
     test: /\.(js|mjs|jsx|ts|tsx)$/,
-    exclude: /node_modules/,
+    exclude: excludeNodeModulesJs,
     use: {
       loader: 'builtin:swc-loader',
       options: {
