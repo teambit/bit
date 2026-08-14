@@ -37,7 +37,12 @@ import type { JestWorker } from '@teambit/defender.jest-tester';
 import type { PackageJsonProps, PkgMain } from '@teambit/pkg';
 import type { Tester, TesterMain } from '@teambit/tester';
 import type { TsConfigTransformer, TypescriptMain, TypeScriptCompilerOptions } from '@teambit/typescript';
-import type { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
+import type { WebpackConfigDevServerTransformContext, WebpackConfigTransformer } from '@teambit/webpack';
+import { WebpackBundler, html as webpackHtmlTemplate } from '@teambit/webpack.webpack-bundler';
+import { WebpackDevServer } from '@teambit/webpack.webpack-dev-server';
+import type { PubsubMain } from '@teambit/pubsub';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import WebpackAssetsManifest from 'webpack-assets-manifest';
 import type { Workspace } from '@teambit/workspace';
 import type { EslintConfigTransformContext, EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
 import { EslintConfigMutator } from '@teambit/defender.eslint.config-mutator';
@@ -89,6 +94,65 @@ type GetBuildPipeModifiers = PipeServiceModifiersMap & {
 };
 
 /**
+ * @teambit/webpack.webpack-bundler builds its base config without the asset-manifest plugin that
+ * teambit.webpack/webpack's own bundler factory adds (used by SSR/consumers reading asset-manifest.json).
+ */
+const addAssetsManifestPlugin: WebpackConfigTransformer = (configMutator) => {
+  // inserted right after ProvidePlugin (index 0, always first in the base config) to match the
+  // plugin order teambit.webpack/webpack's own bundler factory produces - appending would land
+  // after plugins the base config conditionally adds later (e.g. CompressionPlugin).
+  configMutator.raw.plugins = configMutator.raw.plugins || [];
+  configMutator.raw.plugins.splice(1, 0, new WebpackAssetsManifest({ entrypoints: true }));
+  return configMutator;
+};
+
+/**
+ * @teambit/webpack.webpack-dev-server's base config factory has drifted from the tuning
+ * teambit.webpack/webpack's own dev-server factory applies (see PR description for the full list).
+ * This keeps the emitted config identical to what `WebpackMain.createDevServer` used to produce.
+ */
+function alignDevServerWithWorkspaceDefaults(workspace: Workspace): WebpackConfigTransformer {
+  return (configMutator, context) => {
+    const devServerContext = context as unknown as WebpackConfigDevServerTransformContext;
+    const raw = configMutator.raw;
+    // the package's base config sets `output.pathinfo` explicitly; the workspace's own factory
+    // leaves it unset and relies on webpack's per-mode default instead.
+    if (raw.output) delete raw.output.pathinfo;
+    raw.stats = { ...raw.stats, logging: 'error' };
+    const componentPathsRegExps = workspace.getComponentPathsRegExps();
+    raw.snapshot = componentPathsRegExps.length ? { managedPaths: componentPathsRegExps } : {};
+    if (raw.devServer) {
+      if (Array.isArray(raw.devServer.static)) {
+        raw.devServer.static.forEach((entry: any) => {
+          if (entry && typeof entry === 'object') entry.watch = false;
+        });
+      }
+      raw.devServer.historyApiFallback = {
+        ...raw.devServer.historyApiFallback,
+        index: resolve(workspace.path, `${devServerContext.rootPath}/${devServerContext.publicPath}`),
+      };
+      raw.devServer.client = { ...raw.devServer.client, logging: 'error' };
+    }
+    if (Array.isArray(raw.plugins)) {
+      // html-webpack-plugin resolves its `.options` inside the constructor itself, so mutating
+      // an existing instance's `userOptions` afterward has no effect - it has to be reconstructed.
+      // matched by constructor name rather than `instanceof`: the package resolves its own copy
+      // of html-webpack-plugin, so the class reference here would never match theirs.
+      raw.plugins = raw.plugins.map((plugin: any) =>
+        plugin?.constructor?.name === 'HtmlWebpackPlugin'
+          ? new HtmlWebpackPlugin({
+              templateContent: webpackHtmlTemplate(devServerContext.title || 'Component preview'),
+              filename: 'index.html',
+              favicon: plugin.userOptions?.favicon,
+            })
+          : plugin
+      );
+    }
+    return configMutator;
+  };
+}
+
+/**
  * a component environment built for [React](https://reactjs.org) .
  */
 export class ReactEnv
@@ -106,9 +170,9 @@ export class ReactEnv
     private compiler: CompilerMain,
 
     /**
-     * webpack extension.
+     * pubsub extension.
      */
-    private webpack: WebpackMain,
+    private pubsub: PubsubMain,
 
     /**
      * workspace extension.
@@ -369,11 +433,18 @@ export class ReactEnv
       return merged;
     };
 
-    return this.webpack.createDevServer(
-      context,
-      [defaultTransformer, ...transformers],
-      webpackModulePath,
-      webpackDevServerModulePath
+    return WebpackDevServer.create(
+      {
+        devServerContext: context,
+        transformers: [defaultTransformer, alignDevServerWithWorkspaceDefaults(this.workspace), ...transformers],
+        webpackModulePath,
+        webpackDevServerModulePath,
+      },
+      {
+        logger: this.logger,
+        workspacePath: this.workspace.path,
+        pubsub: this.pubsub,
+      }
     );
   }
 
@@ -424,7 +495,15 @@ export class ReactEnv
     transformers: WebpackConfigTransformer[] = [],
     webpackModulePath?: string
   ): Promise<Bundler> {
-    return this.webpack.createBundler(context, transformers, undefined, webpackModulePath);
+    return WebpackBundler.create(
+      {
+        targets: context.targets,
+        transformers: [addAssetsManifestPlugin, ...transformers],
+        bundlerContext: context,
+        webpackModulePath,
+      },
+      { logger: this.logger }
+    );
   }
 
   getAdditionalHostDependencies(): string[] {
