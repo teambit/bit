@@ -46,8 +46,6 @@ export class YargsAdapter implements CommandModule {
       acc[current] = val;
       return acc;
     }, {});
-    this.commanderCommand._packageManagerArgs = (argv['--'] || []) as string[];
-
     const commandRunner = new CommandRunner(this.commanderCommand, argsValues, flags, this.onCommandStartSlot);
     this.commandRunner = commandRunner;
   }

@@ -44,7 +44,7 @@ This is the decision-making process for executing any Bit operation.
 ## Installation Commands
 
 - Use `bit install` to install dependencies
-- **Exception**: If the workspace configuration has `externalPackageManager: true` in the dependency-resolver extension, DO NOT use `bit install`. Instead use your configured package manager (npm, yarn, or pnpm) and run it directly in the terminal.
+- **Exception**: If the workspace configuration has `externalPackageManager: true` in the dependency-resolver extension, DO NOT use `bit install`. Instead use your configured package manager (npm or pnpm) and run it directly in the terminal.
 
 ### Step 2: Check for Terminal Exceptions
 

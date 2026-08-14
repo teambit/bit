@@ -308,8 +308,6 @@
 @teambit/component-sizer/dist/component-sizer.aspect.js
 @teambit/docs/dist/index.js
 @teambit/docs/dist/docs.aspect.js
-@teambit/yarn/dist/index.js
-@teambit/yarn/dist/yarn.aspect.js
 @teambit/compositions/dist/index.js
 @teambit/compositions/dist/compositions.aspect.js
 @teambit/global-config/dist/index.js
@@ -547,7 +545,6 @@
 @teambit/preview/dist/preview.main.runtime.js
 @teambit/component-sizer/dist/component-sizer.main.runtime.js
 @teambit/docs/dist/docs.main.runtime.js
-@teambit/yarn/dist/yarn.main.runtime.js
 @teambit/compositions/dist/compositions.main.runtime.js
 @teambit/global-config/dist/global-config.main.runtime.js
 @teambit/graphql/dist/graphql.main.runtime.js
@@ -1007,7 +1004,6 @@
 @teambit/preview/dist/preview-assets.route.js
 @teambit/preview/dist/preview.service.js
 @teambit/compositions/dist/compositions.preview-definition.js
-@teambit/yarn/dist/yarn.package-manager.js
 @teambit/docs/dist/default-doc-reader.js
 @teambit/docs/dist/docs.preview-definition.js
 @teambit/mdx/dist/mdx.env.js

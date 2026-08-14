@@ -94,7 +94,6 @@ export class ComponentLoader {
         path.join(this.consumer.getPath(), 'node_modules'),
         path.join(this.consumer.getPath(), 'package.json'),
         path.join(this.consumer.getPath(), 'pnpm-lock.yaml'),
-        path.join(this.consumer.getPath(), 'yarn.lock'),
         path.join(this.consumer.getPath(), BIT_MAP),
         this.consumer.config.path,
       ];

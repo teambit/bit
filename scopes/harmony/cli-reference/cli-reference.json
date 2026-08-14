@@ -960,11 +960,6 @@
             "d",
             "install-packages",
             "install packages by the package-manager"
-          ],
-          [
-            "p",
-            "package-manager <name>",
-            "npm, yarn or pnpm, default to npm"
           ]
         ],
         "description": "create capsules for components",
@@ -2079,11 +2074,6 @@
         "",
         "tasks <string>",
         "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
-      ],
-      [
-        "",
-        "cache-packages-on-capsule-root",
-        "set the package-manager cache on the capsule root"
       ],
       [
         "",
@@ -5419,7 +5409,7 @@
       [
         "",
         "external-package-manager",
-        "enable external package manager mode (npm/yarn/pnpm)"
+        "enable external package manager mode (npm/pnpm)"
       ],
       [
         "",

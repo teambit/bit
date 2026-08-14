@@ -74,6 +74,38 @@ describe('DepenendencyResolverMain.isValidVersionSpecifier()', () => {
   }
 });
 
+describe('DepenendencyResolverMain package-manager plugins', () => {
+  it('should register and resolve a package manager by aspect ID', () => {
+    const packageManager = { name: 'custom' } as any;
+    const packageManagerSlot = {
+      register: sinon.spy(),
+      get: sinon.stub().withArgs('acme.dependencies/custom').returns(packageManager),
+    };
+    const depResolver = new DependencyResolverMain(
+      { packageManager: 'acme.dependencies/custom' } as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      logger as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      packageManagerSlot as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
+
+    depResolver.registerPackageManager(packageManager);
+
+    expect(packageManagerSlot.register.calledOnceWithExactly(packageManager)).to.equal(true);
+    expect(depResolver.packageManagerName).to.equal('acme.dependencies/custom');
+    expect(depResolver.getPackageManager()).to.equal(packageManager);
+  });
+});
+
 describe('DepenendencyResolverMain.getNetworkConfig()', () => {
   let httpStub: sinon.SinonStub;
   let packageManagerSlot: any;

@@ -2,7 +2,6 @@
 
 import fs from 'fs-extra';
 import path from 'path';
-import * as yaml from 'yaml';
 import * as ini from 'ini';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
@@ -20,7 +19,6 @@ type SetupWorkspaceOpts = {
   registry?: string;
   initGit?: boolean;
   generatePackageJson?: boolean;
-  yarnRCConfig?: any;
   npmrcConfig?: any;
   interactive?: boolean; // default to false. relevant only when ".git" exits.
 };
@@ -80,23 +78,12 @@ export default class ScopeHelper {
         registry: opts.registry,
         ...opts.npmrcConfig,
       });
-      this._writeYarnRC({
-        unsafeHttpWhitelist: ['localhost'],
-        ...opts?.yarnRCConfig,
-      });
     } else {
-      if (opts?.yarnRCConfig) {
-        this._writeYarnRC(opts.yarnRCConfig);
-      }
       if (opts?.npmrcConfig) {
         this._writeNpmrc(opts.npmrcConfig);
       }
     }
   }
-  private _writeYarnRC(yarnRCConfig: any) {
-    this.fsHelper.writeFile('.yarnrc.yml', yaml.stringify(yarnRCConfig));
-  }
-
   private _writeNpmrc(config: any) {
     this.fsHelper.writeFile('.npmrc', ini.stringify(config));
   }

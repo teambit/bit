@@ -39,39 +39,6 @@ async function readModulesManifest(modulesDir: string): Promise<Modules | null> 
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
     });
-    // skipped: yarn support is deprecated and planned for removal
-    describe.skip('using Yarn', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace({
-          yarnRCConfig: {
-            packageExtensions: {
-              'lodash.get@*': {
-                dependencies: {
-                  'is-positive': '1.0.0',
-                },
-              },
-            },
-          },
-        });
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
-        helper.scopeHelper.addRemoteScope();
-        helper.workspaceJsonc.setupDefault();
-        helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
-        helper.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', false);
-        helper.fixtures.populateComponents(1);
-        helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
-        helper.capsules.removeScopeAspectCapsules();
-        helper.command.status(); // populate capsules.
-      });
-      it('packageExtensions is taken into account when running install in the capsule', () => {
-        const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const isPositivePath = path.join(
-          scopeAspectsCapsulesRootDir,
-          `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/is-positive`
-        );
-        expect(isPositivePath).to.be.a.path();
-      });
-    });
     describe('using pnpm', () => {
       let modulesState: Modules | null;
       before(async () => {

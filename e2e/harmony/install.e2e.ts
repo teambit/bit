@@ -235,39 +235,6 @@ describe('install new dependencies', function () {
       );
     });
   });
-  // skipped: yarn support is deprecated and planned for removal
-  describe.skip('using yarn', () => {
-    before(() => {
-      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
-      helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
-      workspaceJsonc = helper.workspaceJsonc.read();
-    });
-    after(() => {
-      helper.scopeHelper.destroy();
-    });
-    it('should add new dependency preserving the ~ prefix', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
-        '~1.0.0'
-      );
-    });
-    it('should add new dependency with exact version if the dependency was installed by specifying the exact version', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal(
-        '1.0.0'
-      );
-    });
-    it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal(
-        '^1.0.0'
-      );
-    });
-    it('should add new dependency with ^ prefix by default', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal(
-        '^'
-      );
-    });
-  });
 });
 
 describe('named install', function () {

@@ -679,8 +679,6 @@ jobs:
             - .pnpm-store
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
-      - store_artifacts:
-          path: bit/yarn.lock
 
   # ========== Quality Assurance Jobs ==========
   lint:
@@ -1457,7 +1455,6 @@ jobs:
       # # - checkout
       # - run: node -v
       # - run: npm -v
-      # - run: yarn -v
       # # - run: choco install nodejs --version 22.22.0
       # # - run: node -v
       # - run: cinst nodejs --version 22.22.0

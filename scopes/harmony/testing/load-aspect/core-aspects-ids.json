@@ -17,7 +17,6 @@
   "teambit.preview/preview",
   "teambit.component/component-sizer",
   "teambit.docs/docs",
-  "teambit.dependencies/yarn",
   "teambit.compositions/compositions",
   "teambit.harmony/global-config",
   "teambit.harmony/graphql",

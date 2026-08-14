@@ -347,7 +347,7 @@ export class HostInitializerMain {
       const response = (await prompt({
         type: 'toggle',
         name: 'useExternalPackageManager',
-        message: 'Would you like to use your own package manager (npm/yarn/pnpm) instead of Bit?',
+        message: 'Would you like to use npm or pnpm externally instead of Bit-managed installation?',
         enabled: 'Yes',
         disabled: 'No',
         cancel: promptCancel,
@@ -538,7 +538,7 @@ node_modules
       if (interactiveConfig.externalPackageManager) {
         initMessage += `\n  External package manager mode enabled`;
         initMessage += formatHint(
-          `\n  Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`
+          `\n  Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('npm install')}) to install dependencies`
         );
       } else if (interactiveConfig.generator) {
         initMessage += formatHint(`\n  Run ${chalk.cyan('bit install')} to install dependencies`);

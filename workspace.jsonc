@@ -55,7 +55,6 @@
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
         "@pnpm/cli.default-reporter": "1100.3.15",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config.parse-overrides": "1100.1.2",
         "@pnpm/deps.inspection.list": "1100.1.0",
         "@pnpm/deps.inspection.tree-builder": "1100.1.0",
         "@pnpm/deps.path": "1100.1.0",
@@ -428,12 +427,6 @@
         "@typescript-eslint/parser": "8.39.0",
         "@typescript-eslint/typescript-estree": "8.39.0",
         "@viz-js/viz": "^3.4.0",
-        "@yarnpkg/cli": "3.6.1",
-        "@yarnpkg/core": "3.5.2",
-        "@yarnpkg/fslib": "2.10.3",
-        "@yarnpkg/parsers": "2.5.1",
-        "@yarnpkg/plugin-npm": "2.7.4",
-        "@yarnpkg/plugin-pack": "3.2.0",
         "agentkeepalive": "4.1.4",
         "apollo-link-context": "1.0.20",
         "apollo-link-http": "1.5.17",
@@ -656,7 +649,6 @@
         "util": "^0.12.5",
         "uuid": "8.3.2",
         "validate-npm-package-name": "6.0.0",
-        "version-selector-type": "3.0.0",
         "vinyl": "2.2.1",
         "vinyl-file": "3.0.0",
         "vscode-jsonrpc": "6.0.0",
@@ -739,14 +731,11 @@
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
-    "packageManagerArgs": [],
     "devFilePatterns": [
       "**/*.spec.ts"
     ],
-    "strictPeerDependencies": true,
     "autoInstallPeers": true,
     "savePrefix": "",
-    "extraArgs": [],
     "peerDependencyRules": {
       "allowAny": [
         "react",
@@ -841,10 +830,6 @@
             "@apollo/client": "3.12.11",
             // for backward compatibility only
             "@teambit/legacy": "2.1.0",
-            // These are the peer dependencies of Yarn
-            "@yarnpkg/cli": "3.6.1",
-            "@yarnpkg/core": "3.5.2",
-            "@yarnpkg/plugin-pack": "3.2.0",
             // ensure types/react in correct version in the root of bvm version
             "@types/react": "^19.0.0",
             "@types/react-dom": "^19.0.0",

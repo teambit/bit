@@ -30,7 +30,6 @@ export function doctorSchema(scopeMain: ScopeMain): Schema {
         platform: String!
         bitVersion: String!
         npmVersion: String
-        yarnVersion: String
         userDetails: String!
       }
 

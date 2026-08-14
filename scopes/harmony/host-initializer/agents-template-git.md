@@ -106,7 +106,7 @@ bit ripple <sub-command>             # manage Ripple CI jobs on bit.cloud — li
 
 > **Never run `bit build`** unless absolutely necessary. Always use `bit validate` instead — it's faster and sufficient.
 >
-> **Always use `bit install`** to install packages. Never use `npm install`, `yarn`, or `pnpm` directly — unless the workspace is configured with `externalPackageManager` mode in `workspace.jsonc`, in which case use your configured package manager.
+> **Always use `bit install`** to install packages. Never use `npm install` or `pnpm` directly — unless the workspace is configured with `externalPackageManager` mode in `workspace.jsonc`, in which case use your configured package manager.
 >
 > **Use Bit for type checking and testing.** Never use `tsc` or `npx tsc` directly. Use `bit validate` for a full check, or scope to specific components:
 >
@@ -341,5 +341,5 @@ export { User } from './user.js';
 | Creating or managing Bit lanes                             | Use Git branches instead — this workspace is Git-integrated                                                        |
 | Guessing a component ID                                    | Check `package.json` under `componentId` or use `bit list`                                                         |
 | Creating a component that already exists                   | Always run `bit list` and check the Bit Cloud MCP (`read_scopes` / `search`) first                                 |
-| Using `npm install`, `yarn`, or `pnpm`                     | Use `bit install`                                                                                                  |
+| Using `npm install` or `pnpm`                              | Use `bit install`                                                                                                  |
 | Using `tsc` or `npx tsc` to check types                    | Use `bit validate`, `bit check-types`, or `bit test`                                                               |

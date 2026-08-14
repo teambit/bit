@@ -44,7 +44,7 @@ export type LinkingOptions = {
 
   /**
    * link to another project, so that project could use components from this workspace.
-   * similar to npm/yarn link
+   * similar to npm link
    */
   linkToDir?: string;
 
