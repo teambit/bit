@@ -1084,6 +1084,24 @@ importers:
       '@teambit/ui-foundation.ui.use-box.tab':
         specifier: ^0.0.122
         version: 0.0.122(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.resolve-peer':
+        specifier: 0.1.0
+        version: 0.1.0
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin':
+        specifier: 0.1.0
+        version: 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-add-aliases-from-peers':
+        specifier: 0.1.0
+        version: 0.1.0(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals':
+        specifier: 0.1.0
+        version: 0.1.0(esbuild@0.14.29)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler':
+        specifier: 1.1.0
+        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.28.2)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server':
+        specifier: 1.1.0
+        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.97.1)
       '@teambit/workspace.content.variants':
         specifier: 1.96.7
         version: 1.96.7(react@19.2.7)
@@ -1705,6 +1723,9 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
@@ -2195,9 +2216,6 @@ importers:
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
 
   components/bit/get-bit-version:
     dependencies:
@@ -3768,6 +3786,43 @@ importers:
       '@teambit/api-reference.models.api-node-renderer':
         specifier: ^0.0.53
         version: 0.0.53(react-dom@19.2.7)(react@19.2.7)
+      core-js:
+        specifier: ^3.0.0
+        version: 3.13.0
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
+    devDependencies:
+      '@babel/runtime':
+        specifier: 7.20.0
+        version: 7.20.0
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      '@types/testing-library__jest-dom':
+        specifier: 5.9.5
+        version: 5.9.5
+
+  components/sandbox/webpack-poc:
+    dependencies:
+      '@testing-library/react':
+        specifier: ^14.3.1
+        version: 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       core-js:
         specifier: ^3.0.0
         version: 3.13.0
@@ -6756,6 +6811,9 @@ importers:
       '@rspack/plugin-react-refresh':
         specifier: ^2.0.0
         version: 2.0.2(@rspack/core@2.1.4)(react-refresh@0.10.0)
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
@@ -7703,7 +7761,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@18.3.1)
@@ -7833,6 +7891,9 @@ importers:
       '@mdx-js/react':
         specifier: 3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.2.7)
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
@@ -8771,7 +8832,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@7.0.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@7.0.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
@@ -8892,6 +8953,9 @@ importers:
 
   node_modules/.bit_roots/teambit.harmony_node:
     dependencies:
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -9824,7 +9888,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)
@@ -9900,6 +9964,9 @@ importers:
       '@mdx-js/react':
         specifier: 3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@18.3.1)
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
@@ -10844,7 +10911,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@18.3.1)(react@18.3.1)(typescript@6.0.3)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(typescript@6.0.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@18.3.1)
@@ -10965,6 +11032,9 @@ importers:
       '@mdx-js/react':
         specifier: 3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.2.7)
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
@@ -11903,7 +11973,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
@@ -12006,6 +12076,9 @@ importers:
       '@mdx-js/react':
         specifier: 3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.2.7)
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -12944,7 +13017,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)
@@ -13047,6 +13120,9 @@ importers:
       '@mdx-js/react':
         specifier: 3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.2.7)
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -13985,7 +14061,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)
@@ -14103,6 +14179,9 @@ importers:
       '@mdx-js/react':
         specifier: 3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.2.7)
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -15038,7 +15117,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(typescript@5.5.3)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.5.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)
@@ -15150,6 +15229,9 @@ importers:
 
   node_modules/.bit_roots/teambit.react_react:
     dependencies:
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -16082,7 +16164,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)
@@ -16167,6 +16249,9 @@ importers:
       '@rspack/plugin-react-refresh':
         specifier: ^2.0.0
         version: 2.0.2(@rspack/core@2.1.4)(react-refresh@0.10.0)
+      '@sandbox/webpack-test.sandbox.webpack-poc':
+        specifier: workspace:*
+        version: file:components/sandbox/webpack-poc(@testing-library/react@16.3.2)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference':
         specifier: workspace:*
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -17105,7 +17190,7 @@ importers:
         version: file:scopes/workspace/watcher(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack':
         specifier: workspace:*
-        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
+        version: file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
         version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)
@@ -19951,6 +20036,9 @@ importers:
       '@teambit/base-ui.surfaces.split-pane.split-pane':
         specifier: 1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/compositions.ui.composition-live-controls':
         specifier: ^0.0.6
         version: 0.0.6(react@19.2.7)
@@ -20057,9 +20145,6 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
@@ -21282,6 +21367,9 @@ importers:
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.2
         version: 1.0.2(react@19.2.7)
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/design.ui.surfaces.status-message-card':
         specifier: 0.0.18
         version: 0.0.18(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
@@ -21325,9 +21413,6 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/docs.content.docs-overview':
         specifier: 1.96.8
         version: 1.96.8(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -22319,9 +22404,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.4
         version: 1.2.4
-      '@teambit/design.ui.brand.logo':
-        specifier: 1.96.19
-        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
@@ -22428,6 +22510,9 @@ importers:
       '@teambit/bit.content.what-is-bit':
         specifier: 1.96.13
         version: 1.96.13(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/design.ui.brand.logo':
+        specifier: 1.96.19
+        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(type-fest@1.4.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
@@ -23335,6 +23420,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
+      '@teambit/ui-foundation.ui.is-browser':
+        specifier: ^0.0.500
+        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
@@ -23360,9 +23448,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
-      '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
-        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24453,6 +24538,9 @@ importers:
       chalk:
         specifier: 4.1.2
         version: 4.1.2
+      cross-fetch:
+        specifier: 3.1.5
+        version: 3.1.5
       filenamify:
         specifier: 4.2.0
         version: 4.2.0
@@ -24471,6 +24559,9 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
+      lru-cache:
+        specifier: 10.4.3
+        version: 10.4.3
       mime:
         specifier: 2.5.2
         version: 2.5.2
@@ -24535,12 +24626,6 @@ importers:
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
-      lru-cache:
-        specifier: 10.4.3
-        version: 10.4.3
 
   scopes/preview/ui/component-preview:
     dependencies:
@@ -24918,6 +25003,9 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
       mini-css-extract-plugin:
         specifier: 2.2.2
         version: 2.2.2(webpack@5.97.1)
@@ -25048,9 +25136,6 @@ importers:
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(esbuild@0.14.29)(uglify-js@3.19.3)
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
 
   scopes/react/ui/compositions-app:
     dependencies:
@@ -27489,9 +27574,18 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
-      '@teambit/preview.cli.dev-server-events-listener':
-        specifier: ^0.0.1
-        version: 0.0.1
+      '@teambit/webpack.modules.resolve-peer':
+        specifier: 0.1.0
+        version: 0.1.0
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin':
+        specifier: 0.1.0
+        version: 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-add-aliases-from-peers':
+        specifier: 0.1.0
+        version: 0.1.0(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals':
+        specifier: 0.1.0
+        version: 0.1.0(esbuild@0.14.29)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
@@ -27519,9 +27613,6 @@ importers:
       domain-browser:
         specifier: 4.19.0
         version: 4.19.0
-      enhanced-resolve:
-        specifier: 4.5.0
-        version: 4.5.0
       events:
         specifier: ^3.3.0
         version: 3.3.0
@@ -31881,6 +31972,13 @@ packages:
     peerDependenciesMeta:
       '@rspack/core':
         optional: true
+
+  '@sandbox/webpack-test.sandbox.webpack-poc@file:components/sandbox/webpack-poc':
+    resolution: {directory: components/sandbox/webpack-poc, type: directory}
+    peerDependencies:
+      '@testing-library/react': ^14.3.1
+      react: 19.2.7
+      react-dom: 19.2.7
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
@@ -37988,6 +38086,9 @@ packages:
   '@teambit/webpack.modules.generate-style-loaders@file:scopes/webpack/modules/generate-style-loaders':
     resolution: {directory: scopes/webpack/modules/generate-style-loaders, type: directory}
 
+  '@teambit/webpack.modules.resolve-peer@0.1.0':
+    resolution: {integrity: sha512-iQg69ZZZBX/5+CCP+1LHlNXZYwI2n5OaguUDGyZkytSUAiINVlb545QyyuxmvOb0YSTWZ6MdRlK5LcAR6uVf3A==}
+
   '@teambit/webpack.modules.style-regexps@1.0.10':
     resolution: {integrity: sha512-yw0JwfCyFB5YBK4dblPtgNRN4FnAEP5QqisAOcrapxb46boFT9InDvL2Yx54MQxuuCc83VdPi5NMk/VRSJXtTg==}
     engines: {node: '>=12.22.0'}
@@ -38000,14 +38101,26 @@ packages:
     peerDependencies:
       html-webpack-plugin: 5.3.2
 
+  '@teambit/webpack.plugins.webpack-bit-reporter-plugin@0.1.0':
+    resolution: {integrity: sha512-DJAen6oU02RTk45/Cmyd+UuWi5LgBYPMs/uTFAN2vMStYiS2bbwLIdL7B4WiwygswUfo0CtZ4MQHICZxjWf9Qw==}
+
   '@teambit/webpack.transformers.favicon-reload@1.0.0':
     resolution: {integrity: sha512-FPKaTpT0G4/OTciVg0A+RRn7zWiJwFLgymB36vhaIt6URsc0V+7mxpVQOSw2+lXQ5Yp9/sRlRd9MjzEpLoTamw==}
+
+  '@teambit/webpack.transformers.generate-add-aliases-from-peers@0.1.0':
+    resolution: {integrity: sha512-Vbbt4f37B3R9YLXkeQS4+T+Z6qAEB8h08dF28QmvZlBBTP9Veex+JRY+F9QW7Sg/uHPkCyN/tkZuTvqrxoBeqA==}
+
+  '@teambit/webpack.transformers.generate-externals@0.1.0':
+    resolution: {integrity: sha512-1ag9k8K4XtTMeZMGfAp7qMXSeidP6wtQIYe7/mcizIUieawOWxzKEZ4VYj9AzKWXmMFZ9cnm0F674Vjh532rPw==}
 
   '@teambit/webpack.webpack-bundler@1.0.18':
     resolution: {integrity: sha512-HOfTFKm9Mi3PZebGBBmHHDuO67FJ+ZnpI5/sNvbKya1mfVnfksxwvNUZxANBItS6TPYiUhNbHuNeTzBWDZ8Tqg==}
 
   '@teambit/webpack.webpack-bundler@1.0.19':
     resolution: {integrity: sha512-7f6vpEdT+UAwvHrownsrJvorlDS6FKjAaO/eiBBVAy5knVipwne4letVt6d6RHx4c8PS4Hwr+4IRH/BSwtg6XQ==}
+
+  '@teambit/webpack.webpack-bundler@1.1.0':
+    resolution: {integrity: sha512-jGmtJCmn77xBSRtlPinT6Ull1MWTEkMf5DlCnaYhM3CVbVXk5qk2DvZlqpH6fgwxvf3ZUVe2y6unl4hkXZp/3Q==}
 
   '@teambit/webpack.webpack-dev-server@1.0.24':
     resolution: {integrity: sha512-r1AvtCKmOmiL4Et+8EnduTewas7ouILr6FldFbPSQxLSNSv3CYdmkya+e9TyhO0Pq/Ufw2yYWF1UFYF9eqgVDQ==}
@@ -38016,6 +38129,11 @@ packages:
 
   '@teambit/webpack.webpack-dev-server@1.0.26':
     resolution: {integrity: sha512-KIYLiRFsFJCe9y04cl8tGP7k0atKk1uvguPKbIxgENXzi3A9vA2U9OLN2zB5jp9e5o8+X7ygtS4eCwPMS+1s+w==}
+    peerDependencies:
+      webpack: ^5.88.2
+
+  '@teambit/webpack.webpack-dev-server@1.1.0':
+    resolution: {integrity: sha512-lOJf3+BoepWngP9gdDp/HoE8zREIrfEFDQfGCguKMsu/85a/aM3vDbToWSYZJE2VpIuyxuHuTvBJ3lXabkzd7g==}
     peerDependencies:
       webpack: ^5.88.2
 
@@ -39652,6 +39770,11 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  acorn@8.18.0:
+    resolution: {integrity: sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
   address@1.2.2:
     resolution: {integrity: sha512-4B/qKCfeE/ODUaAUpSwfzazo5x29WD4r3vXiWsB7I2mSDAihwEqKO+g8GELZUQSSAo5e1XTYh3ZVfLyxBc12nA==}
     engines: {node: '>= 10.0.0'}
@@ -40515,6 +40638,10 @@ packages:
 
   camelcase@6.2.0:
     resolution: {integrity: sha512-c7wVvbw3f37nuobQNtgsgG9POC9qMbNuMQmTCqZv23b6MIz0fcYpBiOlv9gEN/hdLdnZTDQhg6e9Dq5M1vKvfg==}
+    engines: {node: '>=10'}
+
+  camelcase@6.3.0:
+    resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
 
   camelcase@7.0.0:
@@ -41823,6 +41950,10 @@ packages:
 
   enhanced-resolve@5.24.3:
     resolution: {integrity: sha512-PwKooW9JUzh5chmYfHM3IQl5OkK2u2Nm011MgeZrss3JmFraUx/fqrf78kk8GUMYoibx/14MdwTl/1WKkG7TpQ==}
+    engines: {node: '>=10.13.0'}
+
+  enhanced-resolve@5.24.5:
+    resolution: {integrity: sha512-L1l8TNvomm6UVW5B253AGxQagSQr+vGwhMlrrfRS2qmhx46AMpMVJKQYLvWYbysTMY8VoicOvzHzoHMbyzB+4A==}
     engines: {node: '>=10.13.0'}
 
   enquirer@2.4.1:
@@ -45142,6 +45273,49 @@ packages:
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
+  minimizer-webpack-plugin@5.6.1:
+    resolution: {integrity: sha512-DoeAZz8Q1C1znwsUzej1fdoi4jCf7/+Em27ouLqfK/+3m8G+D7yDhUwrc3CNhjSzGUN1kn7Iv4sWmjflQHenpw==}
+    engines: {node: '>= 10.13.0'}
+    peerDependencies:
+      '@minify-html/node': '*'
+      '@swc/core': '*'
+      '@swc/css': '*'
+      '@swc/html': '*'
+      clean-css: '*'
+      cssnano: '*'
+      csso: '*'
+      esbuild: '*'
+      html-minifier-terser: '*'
+      lightningcss: '*'
+      postcss: '*'
+      uglify-js: '*'
+      webpack: ^5.1.0
+    peerDependenciesMeta:
+      '@minify-html/node':
+        optional: true
+      '@swc/core':
+        optional: true
+      '@swc/css':
+        optional: true
+      '@swc/html':
+        optional: true
+      clean-css:
+        optional: true
+      cssnano:
+        optional: true
+      csso:
+        optional: true
+      esbuild:
+        optional: true
+      html-minifier-terser:
+        optional: true
+      lightningcss:
+        optional: true
+      postcss:
+        optional: true
+      uglify-js:
+        optional: true
+
   minio@7.1.3:
     resolution: {integrity: sha512-xPrLjWkTT5E7H7VnzOjF//xBp9I40jYB4aWhb2xTFopXXfw+Wo82DDWngdUju7Doy3Wk7R8C4LAgwhLHHnf0wA==}
     engines: {node: ^16 || ^18 || >=20}
@@ -47618,6 +47792,10 @@ packages:
     resolution: {integrity: sha512-L0jRsrPpjdckP3oPug3/VxNKt2trR8TcabrM6FOAAlvC/9Phcmm+cuAgTlxBqdBR1WJx7Naj9WHw+aOmheSVbw==}
     engines: {node: '>= 12.13.0'}
 
+  schema-utils@4.3.3:
+    resolution: {integrity: sha512-eflK8wEtyOE6+hsaRVPxvUKYCpRgzLqDTb8krvAsRIwOGlHoSgYLgBXoubGgLd2fT41/OUYdb48v4k4WWHQurA==}
+    engines: {node: '>= 10.13.0'}
+
   screenfull@5.2.0:
     resolution: {integrity: sha512-9BakfsO2aUQN2K9Fdbj87RJIEZ82Q9IGim7FqM5OsebfoFC6ZHXgDq/KvniuLTPdeM8wY2o6Dj3WQ7KeQCj3cA==}
     engines: {node: '>=0.10.0'}
@@ -49353,6 +49531,10 @@ packages:
     resolution: {integrity: sha512-TnbFSbcOCcDgjZ4piURLCbJ3nJhznVh9kw6F6iokjiFPl8ONxe9A6nMDVXDiNbrSfLILs6vB07F7wLBrwPYzJw==}
     engines: {node: '>=10.13.0'}
 
+  watchpack@2.5.2:
+    resolution: {integrity: sha512-6i/00NBjP4yGPs+caKSyRfpTF/8Torsu0MOW3mMzIbhgISFder8i7xbqgHlLMwJrdiN8ndBV3UA1/AfzPSr+jg==}
+    engines: {node: '>=10.13.0'}
+
   wbuf@1.7.3:
     resolution: {integrity: sha512-O84QOnr0icsbFGLS0O3bI5FswxzRr8/gHwWkDlQFskhSPryQXvrTMxjxGP4+iWYoauLoBvfDpkrOauZ+0iZpDA==}
 
@@ -49461,6 +49643,20 @@ packages:
   webpack-sources@3.2.3:
     resolution: {integrity: sha512-/DyMEOrDgLKKIG0fmvtz+4dUX/3Ghozwgm6iPp8KRhvn+eQf9+Q7GWxVNMk3+uCPWfdXYC4ExGBckIXdFEfH1w==}
     engines: {node: '>=10.13.0'}
+
+  webpack-sources@3.5.1:
+    resolution: {integrity: sha512-jyuiGJdtvY434z5bUZrjz67v76/ePNvFZTp9Mdz29IlH4+GPsgyGjiv0fKI+M7BdkU6ADjulUcKAd3tUK3WlEw==}
+    engines: {node: '>=10.13.0'}
+
+  webpack@5.109.2:
+    resolution: {integrity: sha512-U9/cvLzxObKNEZ9+TtdqrHM5/9z3lgl2c+c4BzbqGxFQvQvBAq87yql5A8pQ+rrMbS496MZJeF5enVBndIy2hw==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
+    peerDependencies:
+      webpack-cli: '*'
+    peerDependenciesMeta:
+      webpack-cli:
+        optional: true
 
   webpack@5.97.1:
     resolution: {integrity: sha512-EksG6gFY3L1eFMROS/7Wzgrii5mBAFe4rIr3r2BTfo7bcc+DWwFZ4OJ/miOuHJO/A85HwyI4eQ0F6IKXesO7Fg==}
@@ -56439,6 +56635,27 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 2.1.4
 
+  '@sandbox/webpack-test.sandbox.webpack-poc@file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@18.3.1)(react@18.3.1)':
+    dependencies:
+      '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  '@sandbox/webpack-test.sandbox.webpack-poc@file:components/sandbox/webpack-poc(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
+      core-js: 3.13.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
+  '@sandbox/webpack-test.sandbox.webpack-poc@file:components/sandbox/webpack-poc(@testing-library/react@16.3.2)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3)(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
+      core-js: 3.13.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
   '@sec-ant/readable-stream@0.4.1': {}
 
   '@shikijs/core@3.23.0':
@@ -61098,7 +61315,6 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.14)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
-      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/legacy-bit-id': 1.1.3
@@ -61170,7 +61386,6 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component-id': 1.2.4
-      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy-bit-id': 1.1.3
@@ -61242,7 +61457,6 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.14)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component-id': 1.2.4
-      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy-bit-id': 1.1.3
@@ -69923,6 +70137,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -69997,6 +70212,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -70071,6 +70287,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
@@ -70145,6 +70362,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
@@ -70219,6 +70437,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -70293,6 +70512,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -75576,6 +75796,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@4.3.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -75609,6 +75830,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@4.3.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@4.3.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@18.3.1)(react@18.3.1)
@@ -75642,6 +75864,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@4.3.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@4.3.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -75675,6 +75898,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@5.2.1)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -88802,12 +89026,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -88868,12 +89094,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -88934,12 +89162,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -89000,12 +89230,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -89066,12 +89298,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 5.2.1
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -89108,6 +89342,7 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/harmony': 0.4.12
+      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -89122,6 +89357,7 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/harmony': 0.4.12
+      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -93926,6 +94162,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -94065,6 +94302,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -94204,6 +94442,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -94343,6 +94582,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -102782,6 +103022,11 @@ snapshots:
       - supports-color
       - ts-node
 
+  '@teambit/webpack.modules.resolve-peer@0.1.0':
+    dependencies:
+      enhanced-resolve: 5.24.5
+      find-root: 1.1.0
+
   '@teambit/webpack.modules.style-regexps@1.0.10': {}
 
   '@teambit/webpack.modules.style-regexps@file:scopes/webpack/style-regexps(react-dom@18.3.1)(react@18.3.1)':
@@ -102826,7 +103071,112 @@ snapshots:
       - react
       - react-dom
 
+  '@teambit/webpack.plugins.webpack-bit-reporter-plugin@0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(uglify-js@3.19.3)':
+    dependencies:
+      '@teambit/preview.cli.dev-server-events-listener': 0.0.1
+      webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(uglify-js@3.19.3)
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
+      - webpack-cli
+
+  '@teambit/webpack.plugins.webpack-bit-reporter-plugin@0.1.0(esbuild@0.14.29)(postcss@8.4.45)':
+    dependencies:
+      '@teambit/preview.cli.dev-server-events-listener': 0.0.1
+      webpack: 5.109.2(esbuild@0.14.29)(postcss@8.4.45)
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
+      - webpack-cli
+
+  '@teambit/webpack.plugins.webpack-bit-reporter-plugin@0.1.0(esbuild@0.14.29)(postcss@8.4.45)(uglify-js@3.19.3)':
+    dependencies:
+      '@teambit/preview.cli.dev-server-events-listener': 0.0.1
+      webpack: 5.109.2(esbuild@0.14.29)(postcss@8.4.45)(uglify-js@3.19.3)
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
+      - webpack-cli
+
   '@teambit/webpack.transformers.favicon-reload@1.0.0': {}
+
+  '@teambit/webpack.transformers.generate-add-aliases-from-peers@0.1.0(esbuild@0.14.29)(react@18.3.1)':
+    dependencies:
+      '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@18.3.1)
+      '@teambit/webpack.modules.resolve-peer': 0.1.0
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - react
+      - uglify-js
+      - webpack-cli
+
+  '@teambit/webpack.transformers.generate-add-aliases-from-peers@0.1.0(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)':
+    dependencies:
+      '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.modules.resolve-peer': 0.1.0
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - react
+      - uglify-js
+      - webpack-cli
+
+  '@teambit/webpack.transformers.generate-externals@0.1.0(esbuild@0.14.29)(react-dom@18.3.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@18.3.1)
+      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@18.3.1)(react@18.3.1)
+      camelcase: 6.3.0
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - react
+      - react-dom
+      - uglify-js
+      - webpack-cli
+
+  '@teambit/webpack.transformers.generate-externals@0.1.0(esbuild@0.14.29)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)':
+    dependencies:
+      '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@19.2.7)(react@19.2.7)
+      camelcase: 6.3.0
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - react
+      - react-dom
+      - uglify-js
+      - webpack-cli
 
   '@teambit/webpack.webpack-bundler@1.0.18(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(react@19.2.7)':
     dependencies:
@@ -103365,6 +103715,54 @@ snapshots:
       - esbuild
       - lightningcss
       - react
+      - uglify-js
+      - webpack-cli
+
+  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.28.2)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)':
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(esbuild@0.14.29)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      assert: 2.0.0
+      browserify-zlib: 0.2.0
+      buffer: 6.0.3
+      compression-webpack-plugin: 11.1.0(webpack@5.97.1)
+      constants-browserify: 1.0.0
+      crypto-browserify: 3.12.0
+      css-loader: 6.7.1(webpack@5.97.1)
+      css-minimizer-webpack-plugin: 5.0.1(@parcel/css@1.14.0)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1)
+      domain-browser: 4.19.0
+      events: 3.3.0
+      html-webpack-plugin: 5.6.3(@rspack/core@1.7.8)(webpack@5.97.1)
+      https-browserify: 1.0.0
+      lodash: 4.17.21
+      os-browserify: 0.3.0
+      p-map-series: 2.1.0
+      path-browserify: 1.0.1
+      process: 0.11.10
+      punycode: 2.1.1
+      querystring-es3: 0.2.1
+      stream-browserify: 3.0.0
+      stream-http: 3.2.0
+      string_decoder: 1.3.0
+      timers-browserify: 2.0.12
+      tty-browserify: 0.0.1
+      url: 0.11.2
+      util: 0.12.3
+      vm-browserify: 1.1.2
+      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
+    transitivePeerDependencies:
+      - '@parcel/css'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@swc/css'
+      - clean-css
+      - csso
+      - esbuild
+      - lightningcss
+      - react
+      - react-dom
       - uglify-js
       - webpack-cli
 
@@ -104019,16 +104417,56 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.5)':
+  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.97.1)':
+    dependencies:
+      '@teambit/toolbox.path.path': 0.0.8
+      '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.28.2)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      find-root: 1.1.0
+      html-webpack-plugin: 5.6.3(@rspack/core@1.7.8)(webpack@5.97.1)
+      object-hash: 3.0.0
+      react-dev-utils: 12.0.1(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)(webpack@5.97.1)
+      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
+      webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(supports-color@9.4.0)(utf-8-validate@5.0.5)(webpack@5.97.1)
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@parcel/css'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - bufferutil
+      - clean-css
+      - cssnano
+      - csso
+      - debug
+      - esbuild
+      - eslint
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - react
+      - react-dom
+      - supports-color
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+
+  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.2)(utf-8-validate@5.0.5)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.12
-      '@teambit/preview.cli.dev-server-events-listener': 0.0.1
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@18.3.1)
       '@teambit/webpack.modules.generate-expose-loaders': file:scopes/webpack/modules/generate-expose-loaders(react-dom@18.3.1)(react@18.3.1)(webpack@5.97.1)
-      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/webpack.modules.resolve-peer': 0.1.0
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(esbuild@0.14.29)(postcss@8.4.45)
+      '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(esbuild@0.14.29)(react@18.3.1)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(esbuild@0.14.29)(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -104038,7 +104476,6 @@ snapshots:
       constants-browserify: 1.0.0
       crypto-browserify: 3.12.0
       domain-browser: 4.19.0
-      enhanced-resolve: 4.5.0
       events: 3.3.0
       expose-loader: 3.1.0(webpack@5.97.1)
       find-root: 1.1.0
@@ -104070,15 +104507,24 @@ snapshots:
       webpack-dev-server: 4.15.2(bufferutil@4.0.3)(debug@4.3.4)(supports-color@9.4.0)(utf-8-validate@5.0.5)(webpack@5.97.1)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
+      - '@minify-html/node'
       - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
       - '@types/node'
       - '@types/react'
       - babel-plugin-macros
       - bufferutil
+      - clean-css
+      - cssnano
+      - csso
       - debug
       - esbuild
       - eslint
+      - html-minifier-terser
+      - lightningcss
       - node-notifier
+      - postcss
       - react-dom
       - supports-color
       - ts-node
@@ -104088,16 +104534,18 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@18.3.1)(react@18.3.1)(typescript@6.0.3)(utf-8-validate@5.0.5)':
+  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(typescript@6.0.3)(utf-8-validate@5.0.5)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.12
-      '@teambit/preview.cli.dev-server-events-listener': 0.0.1
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@18.3.1)
       '@teambit/webpack.modules.generate-expose-loaders': file:scopes/webpack/modules/generate-expose-loaders(react-dom@18.3.1)(react@18.3.1)(webpack@5.97.1)
-      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/webpack.modules.resolve-peer': 0.1.0
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(esbuild@0.14.29)(postcss@8.4.45)
+      '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(esbuild@0.14.29)(react@18.3.1)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(esbuild@0.14.29)(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -104107,7 +104555,6 @@ snapshots:
       constants-browserify: 1.0.0
       crypto-browserify: 3.12.0
       domain-browser: 4.19.0
-      enhanced-resolve: 4.5.0
       events: 3.3.0
       expose-loader: 3.1.0(webpack@5.97.1)
       find-root: 1.1.0
@@ -104139,15 +104586,24 @@ snapshots:
       webpack-dev-server: 4.15.2(bufferutil@4.0.3)(debug@4.3.4)(supports-color@9.4.0)(utf-8-validate@5.0.5)(webpack@5.97.1)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
+      - '@minify-html/node'
       - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
       - '@types/node'
       - '@types/react'
       - babel-plugin-macros
       - bufferutil
+      - clean-css
+      - cssnano
+      - csso
       - debug
       - esbuild
       - eslint
+      - html-minifier-terser
+      - lightningcss
       - node-notifier
+      - postcss
       - react-dom
       - supports-color
       - ts-node
@@ -104157,16 +104613,18 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)':
+  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.12
-      '@teambit/preview.cli.dev-server-events-listener': 0.0.1
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
       '@teambit/webpack.modules.generate-expose-loaders': file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.97.1)
-      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.resolve-peer': 0.1.0
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(esbuild@0.14.29)(postcss@8.4.45)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(esbuild@0.14.29)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -104176,7 +104634,6 @@ snapshots:
       constants-browserify: 1.0.0
       crypto-browserify: 3.12.0
       domain-browser: 4.19.0
-      enhanced-resolve: 4.5.0
       events: 3.3.0
       expose-loader: 3.1.0(webpack@5.97.1)
       find-root: 1.1.0
@@ -104208,15 +104665,24 @@ snapshots:
       webpack-dev-server: 4.15.2(bufferutil@4.0.3)(debug@4.3.4)(supports-color@9.4.0)(utf-8-validate@5.0.5)(webpack@5.97.1)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
+      - '@minify-html/node'
       - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
       - '@types/node'
       - '@types/react'
       - babel-plugin-macros
       - bufferutil
+      - clean-css
+      - cssnano
+      - csso
       - debug
       - esbuild
       - eslint
+      - html-minifier-terser
+      - lightningcss
       - node-notifier
+      - postcss
       - react-dom
       - supports-color
       - ts-node
@@ -104226,16 +104692,18 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@7.0.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)':
+  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@7.0.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.12
-      '@teambit/preview.cli.dev-server-events-listener': 0.0.1
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
       '@teambit/webpack.modules.generate-expose-loaders': file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.97.1)
-      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.resolve-peer': 0.1.0
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(esbuild@0.14.29)(postcss@8.4.45)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(esbuild@0.14.29)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -104245,7 +104713,6 @@ snapshots:
       constants-browserify: 1.0.0
       crypto-browserify: 3.12.0
       domain-browser: 4.19.0
-      enhanced-resolve: 4.5.0
       events: 3.3.0
       expose-loader: 3.1.0(webpack@5.97.1)
       find-root: 1.1.0
@@ -104277,15 +104744,24 @@ snapshots:
       webpack-dev-server: 4.15.2(bufferutil@4.0.3)(debug@4.3.4)(supports-color@9.4.0)(utf-8-validate@5.0.5)(webpack@5.97.1)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
+      - '@minify-html/node'
       - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
       - '@types/node'
       - '@types/react'
       - babel-plugin-macros
       - bufferutil
+      - clean-css
+      - cssnano
+      - csso
       - debug
       - esbuild
       - eslint
+      - html-minifier-terser
+      - lightningcss
       - node-notifier
+      - postcss
       - react-dom
       - supports-color
       - ts-node
@@ -104295,16 +104771,18 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(typescript@5.5.3)(utf-8-validate@5.0.5)':
+  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.5.3)(utf-8-validate@5.0.5)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.12
-      '@teambit/preview.cli.dev-server-events-listener': 0.0.1
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)
       '@teambit/webpack.modules.generate-expose-loaders': file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.97.1)
-      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.resolve-peer': 0.1.0
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(esbuild@0.14.29)(postcss@8.4.45)
+      '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(esbuild@0.14.29)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -104314,7 +104792,6 @@ snapshots:
       constants-browserify: 1.0.0
       crypto-browserify: 3.12.0
       domain-browser: 4.19.0
-      enhanced-resolve: 4.5.0
       events: 3.3.0
       expose-loader: 3.1.0(webpack@5.97.1)
       find-root: 1.1.0
@@ -104346,15 +104823,24 @@ snapshots:
       webpack-dev-server: 4.15.2(bufferutil@4.0.3)(debug@4.3.4)(supports-color@9.4.0)(utf-8-validate@5.0.5)(webpack@5.97.1)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
+      - '@minify-html/node'
       - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
       - '@types/node'
       - '@types/react'
       - babel-plugin-macros
       - bufferutil
+      - clean-css
+      - cssnano
+      - csso
       - debug
       - esbuild
       - eslint
+      - html-minifier-terser
+      - lightningcss
       - node-notifier
+      - postcss
       - react-dom
       - supports-color
       - ts-node
@@ -104364,16 +104850,18 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)':
+  '@teambit/webpack@file:scopes/webpack/webpack(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/harmony': 0.4.12
-      '@teambit/preview.cli.dev-server-events-listener': 0.0.1
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(react@19.2.7)
       '@teambit/webpack.modules.generate-expose-loaders': file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.97.1)
-      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.resolve-peer': 0.1.0
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(esbuild@0.14.29)(postcss@8.4.45)
+      '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(esbuild@0.14.29)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -104383,7 +104871,6 @@ snapshots:
       constants-browserify: 1.0.0
       crypto-browserify: 3.12.0
       domain-browser: 4.19.0
-      enhanced-resolve: 4.5.0
       events: 3.3.0
       expose-loader: 3.1.0(webpack@5.97.1)
       find-root: 1.1.0
@@ -104415,15 +104902,24 @@ snapshots:
       webpack-dev-server: 4.15.2(bufferutil@4.0.3)(debug@4.3.4)(supports-color@9.4.0)(utf-8-validate@5.0.5)(webpack@5.97.1)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
+      - '@minify-html/node'
       - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
       - '@types/node'
       - '@types/react'
       - babel-plugin-macros
       - bufferutil
+      - clean-css
+      - cssnano
+      - csso
       - debug
       - esbuild
       - eslint
+      - html-minifier-terser
+      - lightningcss
       - node-notifier
+      - postcss
       - react-dom
       - supports-color
       - ts-node
@@ -109087,6 +109583,8 @@ snapshots:
 
   acorn@8.15.0: {}
 
+  acorn@8.18.0: {}
+
   address@1.2.2: {}
 
   adjust-sourcemap-loader@4.0.0:
@@ -110302,6 +110800,8 @@ snapshots:
 
   camelcase@6.2.0: {}
 
+  camelcase@6.3.0: {}
+
   camelcase@7.0.0: {}
 
   caniuse-api@3.0.0:
@@ -111067,7 +111567,7 @@ snapshots:
 
   css-minimizer-webpack-plugin@5.0.1(@parcel/css@1.14.0)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.28.2)(webpack@5.97.1):
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.30
+      '@jridgewell/trace-mapping': 0.3.31
       cssnano: 6.1.2(postcss@8.4.45)
       jest-worker: 29.7.0
       postcss: 8.4.45
@@ -111084,7 +111584,7 @@ snapshots:
 
   css-minimizer-webpack-plugin@5.0.1(@parcel/css@1.14.0)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.33.0)(webpack@5.97.1):
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.30
+      '@jridgewell/trace-mapping': 0.3.31
       cssnano: 6.1.2(postcss@8.4.45)
       jest-worker: 29.7.0
       postcss: 8.4.45
@@ -111763,6 +112263,11 @@ snapshots:
       tapable: 2.3.3
 
   enhanced-resolve@5.24.3:
+    dependencies:
+      graceful-fs: 4.2.10
+      tapable: 2.3.3
+
+  enhanced-resolve@5.24.5:
     dependencies:
       graceful-fs: 4.2.10
       tapable: 2.3.3
@@ -113940,7 +114445,7 @@ snapshots:
       html-minifier-terser: 6.1.0
       lodash: 4.17.21
       pretty-error: 4.0.0
-      tapable: 2.2.1
+      tapable: 2.3.3
     optionalDependencies:
       '@rspack/core': 1.7.12
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
@@ -113951,7 +114456,7 @@ snapshots:
       html-minifier-terser: 6.1.0
       lodash: 4.17.21
       pretty-error: 4.0.0
-      tapable: 2.2.1
+      tapable: 2.3.3
     optionalDependencies:
       '@rspack/core': 1.7.8
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
@@ -113962,7 +114467,7 @@ snapshots:
       html-minifier-terser: 6.1.0
       lodash: 4.17.21
       pretty-error: 4.0.0
-      tapable: 2.2.1
+      tapable: 2.3.3
     optionalDependencies:
       '@rspack/core': 2.1.4
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
@@ -116537,6 +117042,47 @@ snapshots:
       brace-expansion: 2.0.1
 
   minimist@1.2.8: {}
+
+  minimizer-webpack-plugin@5.6.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(uglify-js@3.19.3)(webpack@5.109.2):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      jest-worker: 27.5.1
+      schema-utils: 4.3.3
+      terser: 5.37.0
+      webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(uglify-js@3.19.3)
+    optionalDependencies:
+      '@swc/css': 0.0.20
+      clean-css: 5.3.3
+      cssnano: 6.1.2(postcss@8.4.45)
+      csso: 5.0.5
+      esbuild: 0.14.29
+      html-minifier-terser: 6.1.0
+      lightningcss: 1.28.2
+      postcss: 8.4.45
+      uglify-js: 3.19.3
+
+  minimizer-webpack-plugin@5.6.1(esbuild@0.14.29)(postcss@8.4.45)(uglify-js@3.19.3)(webpack@5.109.2):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      jest-worker: 27.5.1
+      schema-utils: 4.3.3
+      terser: 5.37.0
+      webpack: 5.109.2(esbuild@0.14.29)(postcss@8.4.45)(uglify-js@3.19.3)
+    optionalDependencies:
+      esbuild: 0.14.29
+      postcss: 8.4.45
+      uglify-js: 3.19.3
+
+  minimizer-webpack-plugin@5.6.1(esbuild@0.14.29)(postcss@8.4.45)(webpack@5.109.2):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      jest-worker: 27.5.1
+      schema-utils: 4.3.3
+      terser: 5.37.0
+      webpack: 5.109.2(esbuild@0.14.29)(postcss@8.4.45)
+    optionalDependencies:
+      esbuild: 0.14.29
+      postcss: 8.4.45
 
   minio@7.1.3:
     dependencies:
@@ -120216,6 +120762,13 @@ snapshots:
       ajv-formats: 2.1.1(ajv@8.17.1)
       ajv-keywords: 5.1.0(ajv@8.17.1)
 
+  schema-utils@4.3.3:
+    dependencies:
+      '@types/json-schema': 7.0.15
+      ajv: 8.17.1
+      ajv-formats: 2.1.1(ajv@8.17.1)
+      ajv-keywords: 5.1.0(ajv@8.17.1)
+
   screenfull@5.2.0: {}
 
   secure-json-parse@2.7.0: {}
@@ -121162,7 +121715,7 @@ snapshots:
   terser@5.37.0:
     dependencies:
       '@jridgewell/source-map': 0.3.6
-      acorn: 8.15.0
+      acorn: 8.18.0
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -122291,6 +122844,10 @@ snapshots:
       glob-to-regexp: 0.4.1
       graceful-fs: 4.2.10
 
+  watchpack@2.5.2:
+    dependencies:
+      graceful-fs: 4.2.10
+
   wbuf@1.7.3:
     dependencies:
       minimalistic-assert: 1.0.1
@@ -122542,6 +123099,116 @@ snapshots:
       source-map: 0.6.1
 
   webpack-sources@3.2.3: {}
+
+  webpack-sources@3.5.1: {}
+
+  webpack@5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(uglify-js@3.19.3):
+    dependencies:
+      '@types/estree': 1.0.8
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.18.0
+      browserslist: 4.28.2
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.24.5
+      es-module-lexer: 2.3.1
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      graceful-fs: 4.2.11
+      mime-db: 1.54.0
+      minimizer-webpack-plugin: 5.6.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.28.2)(postcss@8.4.45)(uglify-js@3.19.3)(webpack@5.109.2)
+      neo-async: 2.6.2
+      schema-utils: 4.3.3
+      tapable: 2.3.3
+      watchpack: 2.5.2
+      webpack-sources: 3.5.1
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
+
+  webpack@5.109.2(esbuild@0.14.29)(postcss@8.4.45):
+    dependencies:
+      '@types/estree': 1.0.8
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.18.0
+      browserslist: 4.28.2
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.24.5
+      es-module-lexer: 2.3.1
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      graceful-fs: 4.2.11
+      mime-db: 1.54.0
+      minimizer-webpack-plugin: 5.6.1(esbuild@0.14.29)(postcss@8.4.45)(webpack@5.109.2)
+      neo-async: 2.6.2
+      schema-utils: 4.3.3
+      tapable: 2.3.3
+      watchpack: 2.5.2
+      webpack-sources: 3.5.1
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
+
+  webpack@5.109.2(esbuild@0.14.29)(postcss@8.4.45)(uglify-js@3.19.3):
+    dependencies:
+      '@types/estree': 1.0.8
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.18.0
+      browserslist: 4.28.2
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.24.5
+      es-module-lexer: 2.3.1
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      graceful-fs: 4.2.11
+      mime-db: 1.54.0
+      minimizer-webpack-plugin: 5.6.1(esbuild@0.14.29)(postcss@8.4.45)(uglify-js@3.19.3)(webpack@5.109.2)
+      neo-async: 2.6.2
+      schema-utils: 4.3.3
+      tapable: 2.3.3
+      watchpack: 2.5.2
+      webpack-sources: 3.5.1
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
 
   webpack@5.97.1(esbuild@0.14.29)(uglify-js@3.19.3):
     dependencies:
