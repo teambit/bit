@@ -8,7 +8,7 @@ import type { Logger } from '@teambit/logger';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { WorkspacePolicy } from '@teambit/dependency-resolver';
 import compact from 'lodash.compact';
-import type { WebpackConfigTransformer } from '@teambit/webpack';
+import type { WebpackConfigTransformer } from '@teambit/webpack.webpack-bundler';
 import { BitError } from '@teambit/bit-error';
 import type { ReactEnv } from '../../react.env';
 import type { ReactAppBuildResult } from './react-build-result';

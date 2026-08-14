@@ -37,7 +37,10 @@ import type { JestWorker } from '@teambit/defender.jest-tester';
 import type { PackageJsonProps, PkgMain } from '@teambit/pkg';
 import type { Tester, TesterMain } from '@teambit/tester';
 import type { TsConfigTransformer, TypescriptMain, TypeScriptCompilerOptions } from '@teambit/typescript';
-import type { WebpackConfigDevServerTransformContext, WebpackConfigTransformer } from '@teambit/webpack';
+import type {
+  WebpackConfigDevServerTransformContext,
+  WebpackConfigTransformer,
+} from '@teambit/webpack.webpack-bundler';
 import { WebpackBundler, html as webpackHtmlTemplate } from '@teambit/webpack.webpack-bundler';
 import { WebpackDevServer } from '@teambit/webpack.webpack-dev-server';
 import type { PubsubMain } from '@teambit/pubsub';
