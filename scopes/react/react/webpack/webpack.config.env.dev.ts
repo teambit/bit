@@ -1,4 +1,4 @@
-import type { WebpackConfigWithDevServer } from '@teambit/webpack';
+import type { WebpackConfigWithDevServer } from '@teambit/webpack.webpack-dev-server';
 
 export default function envConfig(envId: string): WebpackConfigWithDevServer {
   return {
