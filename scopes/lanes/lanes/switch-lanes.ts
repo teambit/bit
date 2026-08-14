@@ -122,6 +122,22 @@ export class LaneSwitcher {
       this.switchProps.laneBitIds = idsOnLaneOnly;
     }
     await this.populateIdsAccordingToPattern();
+    this.filterIdsNotInWorkspaceIfNeeded();
+  }
+
+  /**
+   * `--workspace-only`: switch only the components the workspace already tracks. a lane can carry
+   * components this workspace doesn't have - e.g. one that was removed from the source after it was
+   * snapped onto the lane - and checking those out would write them back into .bitmap and to the
+   * filesystem. this flag is how a caller says "move the lane pointer, leave my working tree as is"
+   * (`bit ci pr` relies on it: the git checkout is the source of truth there).
+   */
+  private filterIdsNotInWorkspaceIfNeeded() {
+    if (!this.switchProps.existingOnWorkspaceOnly) return;
+    const bitMapIds = this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
+    const isInWorkspace = (id: ComponentID) => Boolean(bitMapIds.searchWithoutVersion(id));
+    this.switchProps.ids = (this.switchProps.ids || []).filter(isInWorkspace);
+    this.switchProps.laneBitIds = (this.switchProps.laneBitIds || []).filter(isInWorkspace);
   }
 
   private async populateIdsAccordingToPattern() {
