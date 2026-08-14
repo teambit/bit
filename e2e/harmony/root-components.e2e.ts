@@ -87,7 +87,7 @@ module.exports.default = {
           react: '17',
         },
       });
-      helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
+      helper.command.install('@teambit/aspect@1.0.1102 @teambit/node@1.0.1102');
       // the envs were not loaded during the first install, so the component manifests were built
       // without their dependency policies. a second install applies them (the standard flow for
       // old-style envs, see the "run bit install again" suggestion).
@@ -514,7 +514,7 @@ module.exports.default = {
           'is-odd': '2',
         },
       });
-      helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
+      helper.command.install('@teambit/aspect@1.0.1102 @teambit/node@1.0.1102');
       // the envs were not loaded during the first install, so the component manifests were built
       // without their dependency policies. a second install applies them (the standard flow for
       // old-style envs, see the "run bit install again" suggestion).

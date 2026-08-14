@@ -133,7 +133,7 @@ describe('build command', function () {
       // these envs used to be core aspects, now their packages must be installed for the envs
       // to load
       helper.command.install(
-        '@teambit/aspect@1.0.1042 @teambit/react@1.0.1042 @teambit/node@1.0.1042 @teambit/env@1.0.1042'
+        '@teambit/aspect@1.0.1102 @teambit/react@1.0.1102 @teambit/node@1.0.1102 @teambit/env@1.0.1102'
       );
       helper.command.setEnv('comp1', 'teambit.harmony/aspect');
       helper.command.setEnv('comp2', 'teambit.react/react');
