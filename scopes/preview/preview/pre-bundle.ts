@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import { rspack } from '@rspack/core';
 import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
 import type { AspectDefinition } from '@teambit/aspect-loader';
+import { logger } from '@teambit/legacy.logger';
 import {
   createHarmonyImports,
   createImports,
@@ -131,17 +132,21 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
  * pre-bundles on demand in a server that then keeps running.
  *
  * Never throws - it runs from a `finally`, and a cleanup failure must not replace the build error
- * that sent us there.
+ * that sent us there. A failure is logged rather than swallowed, otherwise a compiler that never
+ * releases looks exactly like one that does.
  */
-async function closeRspackCompiler(compiler: { close?: (callback: () => void) => void }) {
+async function closeRspackCompiler(compiler: { close?: (callback: (err?: Error | null) => void) => void }) {
   const close = compiler.close;
   if (typeof close !== 'function') return;
   try {
     await new Promise<void>((done) => {
-      close.call(compiler, () => done());
+      close.call(compiler, (err) => {
+        if (err) logger.debug(`failed closing the preview rspack compiler: ${err.message || err}`);
+        done();
+      });
     });
-  } catch {
-    // a failed cleanup is not worth failing (or masking) the bundle over
+  } catch (err: any) {
+    logger.debug(`failed closing the preview rspack compiler: ${err?.message || err}`);
   }
 }
 
