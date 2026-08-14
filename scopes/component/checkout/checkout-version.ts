@@ -63,10 +63,10 @@ export async function applyVersion(
     throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
   const { mergeStrategy, forceOurs } = checkoutProps;
   let filesStatus = {};
-  if ((mergeResults?.hasConflicts && mergeStrategy === MergeOptions.ours) || forceOurs) {
-    // even when isLane is true, the mergeResults is possible only when the component is on the filesystem
-    // otherwise it's impossible to have conflicts
-    if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
+  // "keep ours" is meaningful only when the component is on the filesystem. during a lane
+  // switch/import (isLane), a component may exist on the lane but not in the workspace at all -
+  // there are no local files to preserve, so fall through and write it from the model.
+  if (componentFromFS && ((mergeResults?.hasConflicts && mergeStrategy === MergeOptions.ours) || forceOurs)) {
     componentFromFS.files.forEach((file) => {
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
