@@ -6,7 +6,12 @@ import { CLIParser } from './cli-parser';
 class SubCmd implements Command {
   name = 'sub <arg>';
   description = 'a sub command';
-  options = [['f', 'force', 'force it']] as CommandOptions;
+  options = [
+    ['f', 'force', 'force it'],
+    // the parent declares "remote" as a flag that takes a value. this one is a boolean, so the
+    // parent's must not reach here, otherwise yargs demands a value that was never meant to exist.
+    ['r', 'remote', 'a boolean here, unlike the parent'],
+  ] as CommandOptions;
   group = 'general';
   async report() {
     return '';
@@ -19,6 +24,7 @@ class ParentCmd implements Command {
   options = [
     ['j', 'json', 'return the output in json format'],
     ['d', 'details', 'show more details'],
+    ['r', 'remote <scope-name>', 'a flag that takes a value'],
   ] as CommandOptions;
   group = 'general';
   commands: Command[] = [new SubCmd()];
@@ -79,6 +85,23 @@ describe('CLIParser', () => {
       const runner = await parse(['parent', '--log=error']);
 
       expect(flagsOf(runner).log).to.equal('error');
+    });
+
+    it('accepts a value for a parent flag that takes one', async () => {
+      const runner = await parse(['parent', '--remote', 'my-scope']);
+
+      expect(flagsOf(runner).remote).to.equal('my-scope');
+    });
+
+    it('does not leak the parent flags into a sub-command that declares the same name', async () => {
+      // the parent's "remote" takes a value while the sub-command's is a boolean. if the parent's
+      // is registered globally it shadows the sub-command's, and yargs rejects the next token as a
+      // missing value: `Not enough arguments following: remote`.
+      const runner = await parse(['parent', 'sub', 'some-arg', '--remote', '--force']);
+
+      expect(flagsOf(runner).remote).to.be.true;
+      expect(flagsOf(runner).force).to.be.true;
+      expect(argsOf(runner)[0]).to.equal('some-arg');
     });
   });
 });
