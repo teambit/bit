@@ -1699,9 +1699,11 @@ workflows:
           <<: *semver_tags_only_filters
           requires:
             - setup_harmony
-      - e2e_test:
-          requires:
-            - setup_harmony
+      # temporarily disabled to focus CI cycles on the esbuild-bundle jobs below - it's green, not
+      # what's being iterated on right now. re-enable by uncommenting.
+      # - e2e_test:
+      #     requires:
+      #       - setup_harmony
       - setup_bundle_simulation:
           filters:
             branches:
