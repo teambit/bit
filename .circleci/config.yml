@@ -754,19 +754,19 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - bvm_upgrade
+      # run the bvm-linked build first: it's the known-good baseline (not this branch's code), and
+      # it's non-blocking (|| true) so it can never skip the repo-bit gate that follows regardless
+      # of its own outcome.
+      - run:
+          name: 'check circular dependencies (bvm bit, diagnostic only)'
+          command: 'cd bit && (BIT_BIN=bbit ./scripts/circular-deps-check/ci-check.sh || true)'
+          no_output_timeout: 6m
       - run:
           name: 'check circular dependencies (repo bit)'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
           # the script normally finishes in seconds; bound it well under the platform's default
           # 10m no-output kill so a stall fails with a clear message instead of a silent timeout.
           no_output_timeout: 6m
-      # comparison run against the bvm-linked build set up above. informational only: never fails
-      # the job, and when:always so it still runs even if the repo-bit check above failed/timed out.
-      - run:
-          name: 'check circular dependencies (bvm bit, diagnostic only)'
-          command: 'cd bit && (BIT_BIN=bbit ./scripts/circular-deps-check/ci-check.sh || true)'
-          no_output_timeout: 6m
-          when: always
       # bit writes debug-level logs to debug.log by default (independent of BIT_LOG, which would
       # print to stdout and corrupt the JSON this check parses) - persist it so a future hang or
       # failure has the network/scope-import trail to look at, same as the other bit-running jobs.
