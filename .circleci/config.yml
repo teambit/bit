@@ -736,9 +736,8 @@ jobs:
       - bit_global_for_npm
       # was defaulting to the 'hub-stg' (staging) hub_domain via a bare bit_config call - every
       # other bit-executing job (bit_pr, bit_merge) goes through setup_bit_environment, which
-      # defaults to production 'hub'. building the workspace graph here can trigger a live import
-      # of any component objects not yet in the local scope (e.g. a just-bumped env version), and
-      # staging is less reliable than prod for that - suspected cause of the CI hangs on this job.
+      # defaults to production 'hub'. kept on prod for consistency, but this turned out NOT to be
+      # the cause of the hangs below - confirmed by reproducing the same stall against prod too.
       - bit_config:
           env: 'hub'
       - restore_cache:
@@ -746,11 +745,25 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - run:
-          name: 'check circular dependencies'
+          name: 'check circular dependencies (repo bit)'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
           # the script normally finishes in seconds; bound it well under the platform's default
           # 10m no-output kill so a stall fails with a clear message instead of a silent timeout.
           no_output_timeout: 6m
+      # TEMPORARY diagnostic - remove once the perf regression above is root-caused. Runs the same
+      # check against the bvm-linked nightly release build (not this branch's code) already fetched
+      # by setup_harmony, to see whether the slowdown is specific to the repo's own binary/workspace
+      # state or present in a normal release too. Informational only: never fails the job.
+      - install_bvm
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      - bvm_upgrade
+      - run:
+          name: 'check circular dependencies (bvm bit, diagnostic only)'
+          command: 'cd bit && (BIT_BIN=bbit ./scripts/circular-deps-check/ci-check.sh || true)'
+          no_output_timeout: 6m
+          when: always
       # bit writes debug-level logs to debug.log by default (independent of BIT_LOG, which would
       # print to stdout and corrupt the JSON this check parses) - persist it so a future hang or
       # failure has the network/scope-import trail to look at, same as the other bit-running jobs.
