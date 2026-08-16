@@ -275,7 +275,7 @@ describe('custom env (registry)', function () {
         // the mdx env used to be a core aspect, now its package (and its chain) must be
         // installed for the env to load
         helper.command.install(
-          '@teambit/mdx@1.0.1106 @teambit/react@1.0.1105 @teambit/node@1.0.1105 @teambit/aspect@1.0.1105'
+          '@teambit/mdx@1.0.1108 @teambit/react@1.0.1107 @teambit/node@1.0.1107 @teambit/aspect@1.0.1107'
         );
         helper.command.setEnv('comp1', 'teambit.mdx/mdx');
         helper.command.tagAllWithoutBuild();

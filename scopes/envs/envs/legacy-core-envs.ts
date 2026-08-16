@@ -9,12 +9,12 @@
  * the pinned versions should be bumped when new versions of these envs are released.
  */
 export const LEGACY_CORE_ENVS_VERSIONS: Record<string, string> = {
-  'teambit.harmony/node': '1.0.1105',
-  'teambit.react/react': '1.0.1105',
-  'teambit.harmony/aspect': '1.0.1105',
-  'teambit.envs/env': '1.0.1105',
-  'teambit.mdx/mdx': '1.0.1106',
-  'teambit.mdx/readme': '1.0.1106',
+  'teambit.harmony/node': '1.0.1107',
+  'teambit.react/react': '1.0.1107',
+  'teambit.harmony/aspect': '1.0.1107',
+  'teambit.envs/env': '1.0.1107',
+  'teambit.mdx/mdx': '1.0.1108',
+  'teambit.mdx/readme': '1.0.1108',
   'teambit.react/react-native': '1.0.491',
   'teambit.html/html': '1.0.509',
 };
@@ -44,7 +44,7 @@ export function getPinnedLegacyCoreEnvVersion(envId: string): string | undefined
 
 /**
  * for a legacy core env id without a version, return the id with the pinned version.
- * e.g. 'teambit.react/react' => 'teambit.react/react@1.0.1105'.
+ * e.g. 'teambit.react/react' => 'teambit.react/react@1.0.1107'.
  * if the id already has a version or no pinned version exists, return it as-is.
  */
 export function resolveLegacyCoreEnvId(envId: string): string {

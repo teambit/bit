@@ -23,7 +23,7 @@ describe('readme env', function () {
       // the readme/mdx envs used to be core aspects, now their packages (and their chain) must
       // be installed for the envs to load
       helper.command.install(
-        '@teambit/readme@1.0.1106 @teambit/mdx@1.0.1106 @teambit/react@1.0.1105 @teambit/node@1.0.1105 @teambit/aspect@1.0.1105'
+        '@teambit/readme@1.0.1108 @teambit/mdx@1.0.1108 @teambit/react@1.0.1107 @teambit/node@1.0.1107 @teambit/aspect@1.0.1107'
       );
       helper.command.setEnv('comp1', 'teambit.mdx/readme');
       helper.command.tagAllWithoutBuild();
