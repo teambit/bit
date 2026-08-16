@@ -24,7 +24,7 @@ import { writeFileSync, existsSync, mkdirSync, ensureDirSync, writeJSONSync } fr
 import { join } from 'path';
 import type { PkgMain } from '@teambit/pkg';
 import { PkgAspect } from '@teambit/pkg';
-import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, filterCoreAspectDefs, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
 import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
@@ -76,7 +76,7 @@ import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
 import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
 import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
-import { createBundleHash, getBundleAspectIds, getBundlePath, readBundleHash } from './pre-bundle-utils';
+import { hashAspects, getAspectIds, getBundlePath, readBundleHash } from './pre-bundle-utils';
 import { GeneratePreviewCmd } from './generate-preview.cmd';
 import { ServePreviewCmd } from './serve-preview.cmd';
 
@@ -882,7 +882,14 @@ export class PreviewMain {
 
     const [name, uiRoot] = this.getUi();
     const cacheKey = `${uiRoot.path}|${RUNTIME_NAME}`;
-    const currentBundleHash = await createBundleHash(uiRoot, RUNTIME_NAME);
+    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
+    const currentBundleHash = hashAspects(resolvedAspects);
+    // the shipped pre-bundle's `.hash` is generated from the core-aspects-only list
+    // (`PreBundlePreviewTask` hashes `filterCoreAspectDefs(...)`, not the raw resolution), so a
+    // workspace that resolves extra, non-core aspects anywhere (e.g. a component using
+    // `teambit.react/react` as its env) needs the same filtering before comparing, or the two hashes
+    // can never agree even when nothing that actually ships in the pre-bundle has changed.
+    const currentCoreBundleHash = hashAspects(filterCoreAspectDefs(resolvedAspects));
     const preBundleHash = readBundleHash(PreviewAspect.id, BUNDLE_DIR, '');
     const workspaceBundleDir = join(uiRoot.path, PUBLIC_DIR);
     const lastBundleHash = await this.cache.get(cacheKey);
@@ -890,16 +897,20 @@ export class PreviewMain {
     let bundlePath = '';
 
     this.logger.debug(
-      `writePreviewEntry, currentBundleHash: ${currentBundleHash}, preBundleHash: ${preBundleHash}, lastBundleHash: ${lastBundleHash}, preBundlePath: ${getBundlePath(
+      `writePreviewEntry, currentBundleHash: ${currentBundleHash}, currentCoreBundleHash: ${currentCoreBundleHash}, preBundleHash: ${preBundleHash}, lastBundleHash: ${lastBundleHash}, preBundlePath: ${getBundlePath(
         PreviewAspect.id,
         BUNDLE_DIR,
         ''
       )}, workspaceBundleDir exists: ${existsSync(workspaceBundleDir)}, rebuild: ${rebuild}, skipUiBuild: ${skipUiBuild}`
     );
-    this.logger.debug(`writePreviewEntry, aspect ids: ${(await getBundleAspectIds(uiRoot, RUNTIME_NAME)).join(', ')}`);
+    this.logger.debug(`writePreviewEntry, aspect ids: ${getAspectIds(resolvedAspects).join(', ')}`);
 
     // ensure the pre-bundle is ready
-    if (!rebuild && !existsSync(workspaceBundleDir) && (currentBundleHash === preBundleHash || skipUiBuild)) {
+    if (
+      !rebuild &&
+      !existsSync(workspaceBundleDir) &&
+      (currentBundleHash === preBundleHash || currentCoreBundleHash === preBundleHash || skipUiBuild)
+    ) {
       // use pre-bundle
       bundlePath = getBundlePath(PreviewAspect.id, BUNDLE_DIR, '') as string;
     } else if (!rebuild && existsSync(workspaceBundleDir) && (currentBundleHash === lastBundleHash || skipUiBuild)) {
@@ -907,7 +918,6 @@ export class PreviewMain {
       bundlePath = workspaceBundleDir;
     } else {
       // do build
-      const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
       const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
 
       await buildPreBundlePreview(filteredAspects);

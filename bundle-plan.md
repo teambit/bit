@@ -8,7 +8,9 @@
 > babel aspect usage & pre-bundle interaction) · §17 making `bit start` work from the pre-bundles
 > · §18 mcp-config-writer inlined into the bundle instead of copied · §19 `BabelAspect` removed from
 > core, `@babel/core` verified still load-bearing via aspect-loader + scope's version.ts.
-> Last updated: 2026-08-13 (uid-number removed from externals)
+> Last updated: 2026-08-13 (hash-gate fix + `buffer/` external implemented and both proved working -
+> `buffer/` on a live e2e run, the hash-gate fix via a hacky planted-artifact test; still need a real
+> shipped artifact in the normal build flow for CI to benefit — §14)
 
 ---
 
@@ -1215,6 +1217,183 @@ undefined &&` before the comparison, so the RHS is never evaluated when `initiat
   happens - `uid-number` isn't referenced anywhere in source anymore, only as a stale transitive
   entry in `pnpm-lock.yaml`. `node-gyp` and `typescript` remain in `RUNTIME_PATH` for the same
   by-path-require shape.
+- **2026-08-13** — traced why §11 A.1's "resolve from the pre-bundled artifact, like §17" doesn't
+  drop straight onto the `@teambit/mdx.modules.mdx-v3-options` gap (§9d row 2, §14 2026-08-12).
+  `writePreviewEntry` (`preview.main.runtime.ts:880-922`) is the single hash-gated fast path §17
+  built: it serves the shipped pre-bundle only when `currentBundleHash === preBundleHash`, and that
+  artifact was deliberately baked against a **fixed, env-agnostic set** - bit's 5 core aspects
+  (§17d option (a)) - specifically so an ordinary workspace's UI root would predictably match it.
+  `EnvPreviewTemplateTask.getEnvTargetFromComponent` (`env-preview-template.task.ts:152`) calls the
+  same function but passes `aspectsIdsToNotFilterOut: [envComponent.id.toString()]`, and the inline
+  comment there explains why: the env's own aspect must be folded into the preview-root bundle "to
+  make sure its providers registered there are running correctly." `filterAspectsByExecutionContext`
+  (`preview.main.runtime.ts:1016-1027`) then force-includes that id. So for this call site the
+  resolved aspect set is never the fixed 5 - it always includes a workspace/env-specific aspect the
+  shipped artifact could not have been built against - and `currentBundleHash` can structurally never
+  equal `preBundleHash`. This isn't a coverage gap in the existing fast path (like "workspace uses
+  react, artifact only has 5 aspects," §17d's noted remaining limitation); it's a different shape of
+  input entirely, so §17's exact mechanism (ship one static pre-bundle, hash-gate against it) cannot
+  be reused unchanged here. Extending the fix needs one of: (a) decouple "the env's providers must
+  run" from "the env's aspect must be rspack-compiled into the shared preview-root bundle" so the
+  fixed-5 artifact can still be served and the env wired in some other way, or (b) have
+  `buildPreBundlePreview`'s rspack run resolve react/mdx/the loaders from the _user's workspace_
+  `node_modules` instead of bit's own installation - which is arguably why a released, non-bundled
+  bit never hits this: it isn't avoiding the rebuild, its own `node_modules` already has the full
+  tree. Neither is implemented; this is genuinely open design work, not a small follow-on to §17.
+- **2026-08-13** — **correction to the bullet above**, from actually instrumenting and running the
+  `EnvPreviewTemplateTask` codepath (temporary `console.log` in `writePreviewEntry`'s "do build"
+  branch, `bd compile` + `npm run bundle`, then `npm run e2e-test:bundle -- ./e2e/harmony/custom-env-
+operations-2.e2e.ts --debug`, then the failing `bit build` re-run directly against the kept
+  workspace so stdout survives - `CommandHelper.runCmd`'s `execSync` swallows stdout on a thrown
+  error, only `.message`/stderr reaches the mocha failure text). Two calls into `writePreviewEntry`
+  happen during this build, not one:
+  - **comp1's own `GenerateEnvTemplate` (task 9/18, 449μs)** never reaches `writePreviewEntry` at
+    all - `EnvPreviewTemplateTask.execute()` calls `getBundlingStrategy(envDef.env)` first
+    (`env-preview-template.task.ts:72-75`), and `react-no-compiler-env` (extends `ReactEnv`) reports
+    strategy `'env'`, so the task returns `undefined` immediately. **Envs with their own
+    `getTemplateBundler` skip bit's shared preview-root mechanism entirely** - no mdx, no rspack, no
+    externals problem, confirmed by the 449μs no-op.
+  - **The env component's own `GenerateEnvTemplate` (task 16/18, `[dependency] (env)`)** is the one
+    that reaches `writePreviewEntry` and fails - `react-no-compiler-env` itself has no configured env
+    of its own, defaults to `teambit.envs/env` (`shouldUseDefaultBundler` true), which has no
+    `getTemplateBundler`. Logged both `resolvedAspects` (pre-filter) and `filteredAspects` (what's
+    actually handed to `buildPreBundlePreview`):
+    - `resolvedAspects` (6): `teambit.react/react@1.0.1042` (`isCore: false`, resolved from the
+      **workspace's** `node_modules`) + the 5 core aspects (`preview`, `docs`, `compositions`,
+      `pubsub`, `command-bar`, all `isCore: true`, resolved from `/tmp/bit-bundle`'s own
+      `node_modules`) - confirms §17b's "a workspace using a react env resolves 6."
+    - `filteredAspects` (5): **only the 5 core aspects. `teambit.react/react` is dropped by
+      `filterAspectsByExecutionContext`** - it's not in the env component's own attached-aspects
+      list, not in harmony's host config, and not in `aspectsIdsToNotFilterOut` here (that array
+      holds `react-no-compiler-env`'s own id, not react's).
+  - **The consequence changes the fix.** `currentBundleHash` (line 885) is computed from the
+    unfiltered 6-aspect `resolveAspects()` result (`createBundleHash(uiRoot, RUNTIME_NAME)`), so it
+    mismatches `preBundleHash` (baked from the fixed 5) and forces the "do build" branch. But the
+    _filtered_ content that branch actually builds is - in this case - **identical to the already-
+    shipped core-5 artifact**. So this specific failure is a **false-negative hash check**, not a
+    real content difference: the rebuild this triggers would (mdx-v3-options crash aside) almost
+    certainly reproduce what's already on disk. The two-part "core pre-bundle + env-specific pre-
+    bundle, stitched together" design floated as a next step is more machinery than this case needs -
+    **the smaller, more targeted fix is computing `currentBundleHash` from the same (or an
+    equivalently) filtered aspect set `buildPreBundlePreview` actually consumes**, instead of the raw
+    UI-root resolution. That would make this exact scenario (a workspace using react-env _anywhere_,
+    while the failing component's own env doesn't) correctly hit the existing fast path and never
+    reach `buildPreBundlePreview` at all. Not yet verified whether every env hitting this branch
+    filters down to the fixed 5 the same way, or whether some legitimately need extra aspects baked
+    into the shared root (in which case the hash-on-filtered-set fix would correctly still rebuild for
+    those) - that generalization is the next thing to check before implementing it.
+- **2026-08-13** — **implemented** the fix from the bullet above. `writePreviewEntry`
+  (`preview.main.runtime.ts:880-`) now resolves aspects once, computes both `currentBundleHash`
+  (unchanged, raw) and a new `currentCoreBundleHash` (`hashAspects(filterCoreAspectDefs(resolvedAspects))`
+  - the exact same call `PreBundlePreviewTask` uses to hash the artifact it ships), and the
+    pre-bundle branch now accepts either match:
+    `currentBundleHash === preBundleHash || currentCoreBundleHash === preBundleHash`. Also switched the
+    debug-logging and "do build" branch to reuse the single `resolvedAspects` resolution instead of
+    re-resolving (`getBundleAspectIds`/a second `resolveAspects` call), since `generateBundleHash`'s own
+    comment already establishes the principle ("hash the aspects the caller actually bundled, rather
+    than re-resolving them"). `bd compile teambit.preview/preview` + `npm run bundle`: 0 errors.
+    **Caveat on local validation**: this repo's own `npm run bundle`/`bundle:ensure` flow (same one
+    `setup_esbuild_bundle` runs on CI, confirmed by reading `.circleci/config.yml`) never runs
+    `teambit.preview/preview`'s own `PreBundlePreviewTask` first, so `getAspectDir('teambit.preview/preview')`
+    finds no local `artifacts/` and `getAspectArtifactDir` falls back to `getAspectDirFromBvm` - a real
+    bvm-installed release on the machine running the bundle. Locally that resolved to a **stale** bvm
+    install (2.0.74 and older, predating `remove-core-envs-from-manifest`), so `preBundleHash` there is
+    a 6-aspect hash pinned to an old `teambit.react/react` version neither `currentBundleHash` nor
+    `currentCoreBundleHash` can ever equal - meaning the target e2e test still fails locally, for a
+    reason unrelated to whether the fix is correct. CI's `setup_harmony` job runs `bvm_upgrade` (fetches
+    the _latest released_ bit) before `setup_esbuild_bundle` runs, so CI's fallback artifact is far more
+    likely to already reflect the post-core-env-removal 5-aspect scheme this branch computes - which is
+    the plausible reason `bit start`'s hash check already succeeds on CI (§7.1) despite the same "no
+    local artifact" gap. Did not `bvm upgrade` the local machine to test this, to avoid mutating shared
+    global state for an investigation. **Not yet verified against a fresh CI run** - the artifact-source
+    question (local-build vs bvm-fallback vs the real product build task, §9e) is itself still open and
+    is what determines whether this fix is suffient on its own or whether §9e's task needs to ship a
+    genuine local artifact before this matters in production.
+- **2026-08-13** — investigated the other CI failure the user pointed at (branch PR #10590, CircleCI
+  pipeline `bfee21ba`, `e2e_test_esbuild_bundle` build 439879, fetched via the public
+  `circleci.com/api/v1.1/project/github/teambit/bit/<build>` endpoint - no token needed, the project is
+  public). 3 of 40 parallel containers failed: index 20 is the pre-existing `bit --help` timing-budget
+  flake (§9d item 4, unrelated); index 18 is this exact mdx-v3-options gap; **index 4** is
+  `custom-env-operations.e2e.ts` "should be able to re-tag with no errors" (`bit tag --unmodified
+--build`) failing with `Cannot find module 'buffer/'` from `webpack-fallbacks-aliases.js` -
+  literally the next line after `process/browser` in the same 2-entry file
+  (`scopes/webpack/webpack/config/webpack-fallbacks-aliases.ts`: `{ process: require.resolve('process/
+browser'), buffer: require.resolve('buffer/') }`), exactly as anticipated in the 2026-08-12 TOOLCHAINS
+  comment. That comment held off adding it pending an open question: whether fixing it would just be
+  the first domino in `webpack-fallbacks.ts`'s ~20-package polyfill list. Resolved: the CI stack trace
+  only ever reaches `webpack-fallbacks-aliases.js` (this 2-entry file, consumed by
+  `WebpackMain.createConfigs`/`configFactory`) - `webpack-fallbacks.ts`'s 20-entry `fallbacks` /
+  `fallbacksProvidePluginConfig` exports are a separate module, consumed by the _preview_ rspack config
+  (`rspack.config.ts`), not this codepath. Added `'buffer/'` to `TOOLCHAINS` in `externals.ts`,
+  matching the `process/browser` entry's shape and reasoning exactly. `bd compile teambit.harmony/
+modules/cli-bundler` + `npm run bundle`: 0 errors. Unrelated to the mdx-v3-options/hash-check fix
+  above - different bundler (webpack, not the preview-root rspack build), different trigger (a
+  webpack-based env's own bundler config, not `writePreviewEntry`'s hash gate) - the user asked
+  whether the hash fix might also cover this one; it doesn't, this is a separate, independently
+  root-caused and fixed gap. Not yet re-verified against a fresh CI run.
+- **2026-08-13** — ran both e2e specs (`custom-env-operations.e2e.ts`,
+  `custom-env-operations-2.e2e.ts`) against a bundle rebuilt with both fixes above
+  (`npm run e2e-test:bundle -- <both files> --debug`, 17 passing / 3 failing, 49m). Confirms both
+  predictions from the two bullets above exactly:
+  - **`buffer/` fix: passing.** "should be able to re-tag with no errors" succeeds -
+    `running Webpack bundler. Succeeded in 907ms`, no `Cannot find module` anywhere in that run.
+  - **mdx-v3-options fix: still fails locally**, same error as before (`Cannot find module
+'@teambit/mdx.modules.mdx-v3-options'`) - exactly the "no real shipped artifact locally" caveat
+    predicted above, not a flaw in the fix's logic.
+  - **One unrelated, previously-unseen failure**: `custom-env-operations-2.e2e.ts` › "an empty env.
+    nothing is configured, not even a compiler" › "bit compile should not compile the component and
+    should say why" - expected output to contain `comp1 ... not compiled` but the component compiled
+    successfully instead. Not investigated (out of scope for this session, not one of the 3 known CI
+    failures, and not touched by either fix here) - flag if it also shows up on a fresh CI run.
+  - Looked for a fresher local artifact to unblock validating the mdx fix properly, per a suggestion
+    to check the capsule cache (`~/Library/Caches/Bit/capsules/root/*/node_modules/.pnpm/@teambit+preview@*/node_modules/@teambit/preview/artifacts/ui-bundle/.hash`)
+    instead of relying on the bvm fallback. Found several cached copies (`@teambit/preview@1.0.1097`,
+    3 pnpm-hash variants) - all three carry the **identical** hash `11341fbeaaeecffe80182c203c294aa7d824b59f`,
+    dated 2026-08-09 15:41 - i.e. the same old/stale (`react`-included) hash the bvm fallback already
+    resolves to, not a fresher one reflecting this branch's 5-core-aspect scheme. No usable fresher
+    artifact found this way either; the `bd build teambit.preview/preview` attempt to generate one
+    from scratch still fails on the pre-existing capsule/`@teambit/builder` version-mismatch TS errors
+    noted below, unrelated to anything in this investigation.
+  - **Revalidate once PR [#10610](https://github.com/teambit/bit/pull/10610) merges** (decouples
+    `ReactEnv` from `WebpackMain`, routing its bundler/dev-server through the standalone
+    `@teambit/webpack.webpack-bundler`/`webpack-dev-server` packages instead): re-run
+    `custom-env-operations.e2e.ts` › "should be able to re-tag with no errors" (the `buffer/` test) -
+    if `teambit.envs/env` does extend `ReactEnv` as suspected (unconfirmed here - its source isn't in
+    this workspace, it's a separately-published package), the default-bundler codepath that test
+    exercises would stop calling `WebpackMain.createBundler`/`webpack-fallbacks-aliases.ts` entirely,
+    which could make the `buffer/` externals entry unused rather than wrong. Does **not** apply to
+    `custom-env-operations-2.e2e.ts`'s mdx-v3-options test - that crash is in `@teambit/preview`'s own
+    `buildPreBundlePreview`/rspack path, structurally unrelated to `ReactEnv`/`WebpackMain` regardless
+    of #10610.
+- **2026-08-13** — **proved the hash-gate fix end to end**, hackily but conclusively, instead of
+  waiting on a real shipped artifact. Isolated the failing scenario to its own workspace (`.only` on
+  the describe block, `npm run e2e-test:bundle -- ./e2e/harmony/custom-env-operations-2.e2e.ts
+--debug`, then reverted the `.only`), captured the exact hash values `writePreviewEntry` computed
+  from `~/Library/Caches/Bit/logs/debug.log` (bit always logs debug lines to file regardless of
+  console verbosity):
+  `currentBundleHash: d3040e74...` (matches §17b's row 3 exactly - this branch's own react version),
+  `currentCoreBundleHash: e23f10da...` (matches §17b's row 2 exactly - the intended "5 core, no
+  react" value my fix computes), `preBundleHash: 11341fbe...` (the stale bvm 2.0.74 fallback,
+  confirming the caveat above - none of the three coincide only because of the missing local
+  artifact, not because the fix computes the wrong thing).
+  Then planted a fake artifact at the exact path the bundle's own `getAspectDir` resolver checks
+  first (`/tmp/bit-bundle/dist/core-aspects/node_modules/@teambit/preview/artifacts/ui-bundle/`):
+  a `.hash` file containing the captured `currentCoreBundleHash` value, plus a minimal
+  `{"entrypoints": []}` `asset-manifest.json` (enough for `generateBundlePreviewEntry` to not
+  crash - the artifact's actual _content_ is irrelevant to what's being tested, only whether the
+  hash match correctly skips `buildPreBundlePreview`). Re-ran the identical `bit build comp1
+--skip-tasks TSCompiler` directly against the same workspace: **`build succeeded`, exit 0**, task
+  16 (`[dependency] (env) [Preview: GenerateEnvTemplate]` - the exact task that crashed before)
+  completed via `running Webpack bundler` instead of throwing `Cannot find module '@teambit/mdx.
+modules.mdx-v3-options'`. The debug log for this run confirms the mechanism directly:
+  `preBundleHash: e23f10da...` (now reading from the planted artifact,
+  `preBundlePath: /private/tmp/bit-bundle/...`, no bvm fallback needed) exactly equals
+  `currentCoreBundleHash`. Cleaned up the planted artifact afterward
+  (`rm -rf .../@teambit/preview/artifacts`). **This closes the open question from the two bullets
+  above**: the fix's logic is not just correct by inspection, it demonstrably prevents the crash
+  once a real artifact with the right hash exists - the only remaining gap is _producing_ that
+  artifact as part of the normal bundle-build flow (still open, see the "artifact-source question"
+  note above and §9e).
 
 ---
 
