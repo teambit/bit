@@ -45,7 +45,32 @@ const RUNTIME_PATH = [
 
 /** C. toolchains resolved by string from user envs */
 const TOOLCHAINS = [
-  '@babel/core',
+  // NOT `@babel/core` either (2026-08-16) - but this is a different kind of removal from the three
+  // below, worth being precise about. §19b (2026-08-12) traced two always-loaded reachability paths
+  // and concluded `@babel/core` "stays in externals.ts... removing it now would break aspect-loader
+  // and scope's version-tagging path". One of those two paths is gone on its own - `react-docgen`
+  // (the `version.ts` -> `react-parser.ts` consumer §19b cited) no longer exists anywhere in the
+  // source tree. The other is still real and unchanged: `aspect-loader.main.runtime.ts` still
+  // statically imports `replaceFileExtToJs` from `@teambit/compilation.modules.babel-compiler`,
+  // which does `import * as babel from '@babel/core'` at its own top, and aspect-loader is still
+  // loaded on every invocation. Marking `@babel/core` external was never *required* for that path,
+  // though, the way it was for `process/browser`/`buffer/` below - those are `require.resolve()`
+  // calls, which esbuild can never fold (the returned path is environment-dependent), so an
+  // unmarked one is always left as a live runtime lookup. `@babel/core` is an ordinary `require()`,
+  // which esbuild inlines like any other reachable module. Checked what actually got inlined rather
+  // than assuming a trivial unused stub: the full transform engine (`transform.js`,
+  // `transformation/index.js`, `config/full.js`, plugin/config loading, ~230 KB across ~50 files) -
+  // a real, working subset, not dead code. Rebuilt with the entry removed and pruned from
+  // `node_modules`, then re-ran `custom-env-operations.e2e.ts` "should be able to re-tag with no
+  // errors" end to end: passes, including its own `[Compiler: BabelCompiler] compile components for
+  // artifact dist` task - a *different*, separately-published component-compiler package
+  // (`@teambit/compilation.babel-compiler`, distinct from `@teambit/compilation.modules.babel-
+  // compiler` above), resolved from the env's own capsule `node_modules` with its own `@babel/core`,
+  // independent of bit's bundle either way. Net effect: not a dead-code removal like `webpack` below
+  // - `@babel/core` is still genuinely used by bit's own aspect-loader - just no longer needs to be
+  // a *separately installed* ~17 MB package when esbuild already inlines the ~230 KB that's actually
+  // reachable. See bundle-plan.md §14/§19b (2026-08-16).
+  //
   // NOT `webpack`, `process/browser`, or `buffer/` (2026-08-16, all three removed together): the
   // react/node/aspect envs decoupled from `@teambit/webpack` upstream (`refactor(react): use
   // webpack-bundler/webpack-dev-server instead of WebpackMain aspect`, teambit/bit#10610, merged via

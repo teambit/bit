@@ -9,10 +9,12 @@
 > · §18 mcp-config-writer inlined into the bundle instead of copied · §19 `BabelAspect` removed from
 > core, `@babel/core` verified still load-bearing via aspect-loader + scope's version.ts.
 > Last updated: 2026-08-16 (merged `remove-core-envs-from-manifest`, which brought in the upstream
-> webpack/react-env decoupling; removed `webpack`, `process/browser`, and `buffer/` from externals as
-> a result — down to 12. `bit install` needed two passes post-merge; found and documented a
-> pre-existing, unrelated `WorkspaceAspectsLoader` hang bug blocking local `bit build`/`bit status` on
-> this branch — §14)
+> webpack/react-env decoupling; removed `webpack`, `process/browser`, `buffer/`, and `@babel/core` from
+> externals as a result — down to 11 (was 16 at the start of the day). `bit install` needed two passes
+> post-merge; found and documented a pre-existing, unrelated `WorkspaceAspectsLoader` hang bug blocking
+> local `bit build`/`bit status` on this branch; found `@teambit/ui`'s always-loaded dev-server code
+> fully inlines the real `webpack` package (~7 MB) despite it having no other reason to be in the
+> bundle — §14)
 
 ---
 
@@ -377,7 +379,8 @@ install` to enable the UI") or resolving it from the user's workspace would cut 
    (9 UI-only aspects) is a hint that a lot of React UI code is being pulled into a CLI bundle
    through index barrels and never executed. Marking the UI-bundling packages external already cut
    the bundle from 66.5 MB → 61.4 MB, which suggests more is reachable the same way.
-6. **`--minify`** — not yet measured against the compile-cache startup win.
+6. **`--minify`** — measured 2026-08-16, see §14. Bundle 78.3 MB → 39.6 MB; warm `bit --help`
+   ~770ms → ~700ms locally (~9%). Real but not the dominant lever - see §14 for why.
 
 ### 8.3 The `--ui-bundling` group — measured, and deliberately off
 
@@ -1479,6 +1482,81 @@ workspace.loadAspects` / `... > extension-merge > workspace.loadAspects` ping-po
   proven correct via a planted-artifact test (§14 2026-08-13); this session re-confirms the _local_
   environment still can't validate it end-to-end, and CI (fresher bvm fallback via `bvm_upgrade`,
   §9d) remains the place this actually gets proven.
+- **2026-08-16** — **investigated why the bundle grew** (66.58 MB at the last recorded measurement,
+  §9d, → 78.3 MB now), prompted by a direct question. No prior metafile exists to diff against, so
+  this isn't a full "what changed" accounting - most of it is plausibly ordinary dependency drift
+  across the ~150k-line `pnpm-lock.yaml` regeneration this merge brought in. But walking the current
+  `metafile.json`'s `inputs[*].imports` turned up one concrete, actionable, pre-existing (not
+  introduced this session) contributor: **the real `webpack` npm package - 694 files, 6.95 MB - is
+  fully inlined**, despite `webpack` itself having zero legitimate reason to be in the bundle (see
+  the entry right above this one). Traced why: `@teambit/ui/dist/rspack/rspack.browser.config.js`
+  imports `workbox-webpack-plugin` (for `bit start`'s service-worker generation) and
+  `@teambit/ui/dist/ui-server.js` imports `@rspack/dev-server` - both tiny themselves (36 KB / 139 KB)
+  but both internally `require()` real `webpack` for their own compat/type needs. `@rspack/dev-server`
+  is nominally in `UI_BUNDLING_EXTERNALS` (§8.3's opt-in, off-by-default group) but that only controls
+  whether it's marked **external** for `--ui-bundling` builds - it does nothing to stop the **default**
+  build from inlining it, since `ui-server.ts`/`rspack.browser.config.ts` are unconditionally reachable
+  from `@teambit/ui`'s always-loaded main runtime. So today's default (non-`--ui-bundling`) bundle
+  already pays ~7 MB for dev-server/service-worker machinery that (per §17) `bit start` doesn't even
+  use anymore - it serves the pre-bundle instead. Not fixed here (out of scope for this session), but
+  it's a concrete instance of §8.2 item 5's "audit the bundle's own size" lever, and a stronger
+  candidate than that item previously had specifics for: making `ui-server.ts`'s dev-server import lazy
+  (or splitting the service-worker/dev-server code out of the always-loaded `UiMain` module graph)
+  would recover roughly this much for free, independent of the `@rspack/core`/`typescript`/`@babel/core`
+  externals-vs-inlined question below.
+- **2026-08-16** — **removed `@babel/core`** from `TOOLCHAINS` too, but this one needed to be
+  understood precisely rather than just tested-and-shipped like the three above, because §19b
+  (2026-08-12) had already done the rigorous version of this investigation and concluded `@babel/core`
+  "stays in externals.ts... removing it now would break aspect-loader". Re-checked both of §19b's two
+  reachability paths: the `version.ts` → `react-docgen` path is gone on its own (`react-docgen` no
+  longer exists anywhere in the source tree - presumably removed by an unrelated upstream change
+  between 08-12 and now). The `aspect-loader.main.runtime.ts` → `@teambit/compilation.modules.babel-
+compiler` → `@babel/core` path is exactly as `@19b` described it and **is still real** - confirmed,
+  not disproven. The distinction that makes removal safe anyway: unlike `process/browser`/`buffer/`
+  (which are `require.resolve()` calls esbuild can never fold, since the returned path is
+  environment-dependent - an unmarked one is always left as a live, currently-unsatisfiable runtime
+  lookup), `@babel/core` is an ordinary `require()`, which esbuild inlines like any other reachable
+  module when not marked external. Checked what actually got inlined rather than assuming a trivial
+  stub: the **full working transform engine** - `transform.js`, `transformation/index.js`,
+  `config/full.js`, plugin/config loading, ~230 KB across ~50 files, not dead code. Rebuilt with the
+  entry removed and pruned from `node_modules`, then re-ran `custom-env-operations.e2e.ts` "should be
+  able to re-tag with no errors" end to end: passes, including its own `[Compiler: BabelCompiler]
+compile components for artifact dist` task - a _different_, separately-published component-compiler
+  package (`@teambit/compilation.babel-compiler`, distinct from `@teambit/compilation.modules.babel-
+compiler` above), resolved from the env's own capsule `node_modules` with its own `@babel/core`
+  either way. **Net effect, precisely stated**: this is not a dead-code removal like `webpack` - bit's
+  own `aspect-loader` genuinely still uses `@babel/core` on every invocation - it's a "stop installing
+  it as a separate ~17 MB package when esbuild already inlines the ~230 KB that's actually reachable"
+  change. Externals count: 11 (was 12, was 14 before today, was 16 before `webpack`/`process`/`buffer`
+  earlier today).
+- **2026-08-16** — the fresh CI run for this session's merge+externals changes confirmed
+  `filesystem-read.e2e.ts`'s `bit --help` timing budget miss is still failing (1821ms vs the 1500ms
+  budget) - closes the open loop left at 2026-08-12 above ("if the second call still misses budget,
+  the regression is real"): **it is real**, and not a regression from anything in this session
+  (removing externals only reduces work, if anything). Investigated the two candidates that entry
+  named:
+  - **"compile cache not actually persisting"**: disproven. Locally, the on-disk cache directory
+    (Node's default, machine-global, shared across every process - found **65,791 files / 429 MB**
+    accumulated on this dev machine) genuinely works: cold `bit --help` ~1.4-1.5s, warm ~0.7-0.8s,
+    a real ~2x speedup, confirmed with `time` across repeated runs. Tested whether the giant shared
+    directory's lookup cost was itself the problem (a plausible alternate theory) by pointing
+    `NODE_COMPILE_CACHE` at a small, freshly-isolated directory instead - **identical warm timing**
+    either way. So caching itself is not broken, on this machine at least.
+  - **"CI container fs/CPU noise"**: the more likely explanation, by elimination. `bit --help` is not
+    like `bit --version` (§9.1: "`--version` short-circuits before the aspect graph is evaluated") -
+    generating the help text requires enumerating commands from all ~104 core aspects, so its warm
+    floor is dominated by **execution** cost (Harmony bootstrap + aspect registration), not parse
+    time - compile caching only ever addressed the parse-time half of the cost. Local warm is
+    ~750-790ms; CI's 1821ms implies roughly 2.3x the per-operation cost, consistent with ordinary CI
+    container overhead (shared vCPUs, cgroup throttling) rather than a bug specific to this bundle.
+  - Measured `--minify` (§8.2 item 6, previously unmeasured) as a possible mitigant: 78.3 MB → 39.6 MB,
+    warm `bit --help` ~770ms → ~700ms locally (~9%). Real, but not proportionally enough to obviously
+    close CI's gap on its own if it scales linearly.
+  - **Decision: documented, not fixed this session.** The real fix candidate - making `--help`
+    short-circuit before loading the full aspect graph, the way `--version` does - is a CLI-behavior
+    change outside bundling scope, bigger and riskier than anything else touched today. Shipping
+    `--minify` by default was considered and explicitly deferred (user call) rather than taken as a
+    partial fix now.
 
 ---
 
@@ -2365,10 +2443,19 @@ react-parser.ts` → `react-docgen`, which statically imports a full babel prese
   the core manifest" framing (§16d) turned out to be testing the wrong hypothesis: `BabelAspect` leaving
   changed nothing, because it was never the thing keeping `@babel/core` in.
 
-**Verdict**: `@babel/core` stays in `externals.ts`. Not touched — removing it now would break
-`aspect-loader` and `scope`'s version-tagging path, both load-bearing on every `bit` invocation. Two
-narrow, unstarted levers would each independently make it droppable, and doing _both_ would be needed
-since they're genuinely independent reachability paths:
+**Verdict, 2026-08-12**: `@babel/core` stays in `externals.ts`. Not touched — removing it now would
+break `aspect-loader` and `scope`'s version-tagging path, both load-bearing on every `bit` invocation.
+Two narrow, unstarted levers would each independently make it droppable, and doing _both_ would be
+needed since they're genuinely independent reachability paths:
+
+> **Superseded, 2026-08-16 — see §14.** The `react-docgen` path turned out to be gone on its own
+> (removed upstream, unrelated to this doc). The `aspect-loader` path below is still exactly as
+> described — but the reachability finding here was never actually an argument against **inlining** > `@babel/core`, only against it being **fully absent**. `@babel/core` uses ordinary `require()`, which
+> esbuild can and does bundle a working subset of (~230 KB, the real transform engine, confirmed by
+> inspection) when not marked external. Removed from `externals.ts`; not droppable as a _dependency_,
+> just no longer needs to be a _separately installed package_. The two levers below remain valid if the
+> goal is actually eliminating the reachability (e.g. to shrink the bundle further), just not required
+> for this narrower goal.
 
 1. Move `replaceFileExtToJs` out of `babel-compiler.ts` into its own babel-free module (or a small
    shared string-utils file), so `aspect-loader` importing it doesn't drag in `@babel/core`. Trivial —
