@@ -21,9 +21,9 @@ type SetCustomEnvOpts = {
  * the pinned versions in legacy-core-envs.ts (scopes/envs/envs).
  */
 const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
-  '@teambit/node': '@teambit/node@1.0.1102',
-  '@teambit/react': '@teambit/react@1.0.1102',
-  '@teambit/mdx': '@teambit/mdx@1.0.1103',
+  '@teambit/node': '@teambit/node@1.0.1105',
+  '@teambit/react': '@teambit/react@1.0.1105',
+  '@teambit/mdx': '@teambit/mdx@1.0.1106',
   // not env bases - the tiny runtime deps of the minimal fixture envs (node-env-1/node-env-2),
   // listed here so setCustomEnv installs them and the fixtures load without MissingPackages
   'lodash.get': 'lodash.get@4.4.2',
@@ -34,7 +34,7 @@ const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
  * the env configured on the old-format env fixtures (see setCustomEnv). it used to be a core
  * aspect, now its package must be installed for the fixture env to be compiled and loaded.
  */
-const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1102';
+const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1105';
 
 /**
  * every legacy-core-env package an old-format fixture env needs before it can load, as a
@@ -49,10 +49,10 @@ const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1102';
  * versions must match the pinned versions in legacy-core-envs.ts (scopes/envs/envs).
  */
 const LEGACY_CORE_ENV_POLICY: Record<string, string> = {
-  '@teambit/env': '1.0.1102',
-  '@teambit/node': '1.0.1102',
-  '@teambit/react': '1.0.1102',
-  '@teambit/aspect': '1.0.1102',
+  '@teambit/env': '1.0.1105',
+  '@teambit/node': '1.0.1105',
+  '@teambit/react': '1.0.1105',
+  '@teambit/aspect': '1.0.1105',
 };
 
 /**
@@ -78,7 +78,7 @@ export const BITDEV_NODE_ENV_ID = `${BITDEV_NODE_ENV}@${BITDEV_NODE_ENV_VERSION}
  * the node env is a runtime dependency of the aspect env and must be installed at the root as
  * well for the aspect env to load.
  */
-const ASPECT_ENV_PACKAGES = ['@teambit/aspect@1.0.1102', '@teambit/node@1.0.1102'];
+const ASPECT_ENV_PACKAGES = ['@teambit/aspect@1.0.1105', '@teambit/node@1.0.1105'];
 
 export const ENV_POLICY = {
   peers: [

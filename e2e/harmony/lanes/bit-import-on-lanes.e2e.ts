@@ -161,7 +161,7 @@ describe('bit lane command', function () {
         helper.fixtures.createAspect('my-aspect');
         // the aspect env used to be a core aspect. the workspace configures my-aspect below, so
         // the env has to load for the snap to get past the component's issues
-        helper.command.install('@teambit/aspect@1.0.1102 @teambit/node@1.0.1102');
+        helper.command.install('@teambit/aspect@1.0.1105 @teambit/node@1.0.1105');
         helper.fixtures.populateComponents();
         helper.fs.outputFile(
           `${helper.scopes.remote}/my-aspect/foo.ts`,
