@@ -47,10 +47,10 @@ function getWorkspaceCycle() {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    if (error.killed) {
-      console.error('❌ Error: bit insights circular timed out after 5 minutes');
+    if (error.killed || error.code === 'ETIMEDOUT') {
+      console.error(`❌ Error: ${bitBin} insights circular timed out after 5 minutes`);
       console.error(
-        'This usually means a workspace graph build is stuck importing component objects from the remote scope (network/registry stall) rather than a local computation issue.'
+        'Known cause: workspace graph building force-writes every dist file of every loaded aspect to every duplicate .pnpm-hash variant of that package - see debug.log for the write volume.'
       );
     } else {
       console.error('❌ Error getting workspace cycle:', error.message);
