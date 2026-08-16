@@ -35,7 +35,7 @@ async function run(cmd: string, args: string[], cwd: string) {
 export async function buildSea(
   paths: BundlePaths,
   seaEntryFilePath: string,
-  opts: { minify?: boolean; externals: string[] }
+  opts: { minify?: boolean; externals: string[]; uiBundling?: boolean }
 ) {
   const seaJsPath = join(paths.bundleDir, `${APP_FILE_BASE_NAME}.sea.js`);
   const blobPath = join(paths.bundleDir, `${APP_FILE_BASE_NAME}.blob`);
@@ -49,6 +49,7 @@ export async function buildSea(
     externals: opts.externals,
     seaWrapper: true,
     label: 'bit sea bundle',
+    uiBundling: opts.uiBundling,
   });
   if (result.errors.length) throw new Error(`[bundle:sea] esbuild reported ${result.errors.length} errors`);
 

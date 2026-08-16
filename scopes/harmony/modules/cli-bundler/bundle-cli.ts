@@ -120,6 +120,7 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
     externals,
     minify: options.minify,
     sourcemap: options.sourcemap,
+    uiBundling: options.uiBundling,
   });
 
   const workers = await buildWorkers(paths, externals);
@@ -132,7 +133,9 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
   const { dependencies, unresolved } = await generatePackageJson(paths, bitVersion, externals, {
     inPlace: options.inPlace,
   });
-  const sea = options.sea ? await buildSea(paths, seaEntryFilePath, { minify: options.minify, externals }) : undefined;
+  const sea = options.sea
+    ? await buildSea(paths, seaEntryFilePath, { minify: options.minify, externals, uiBundling: options.uiBundling })
+    : undefined;
 
   if (result.metafile) {
     await fs.writeJson(join(paths.bundleDir, 'metafile.json'), result.metafile, { spaces: 2 });

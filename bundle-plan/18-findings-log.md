@@ -652,3 +652,40 @@ compiler` above), resolved from the env's own capsule `node_modules` with its ow
     change outside bundling scope, bigger and riskier than anything else touched today. Shipping
     `--minify` by default was considered and explicitly deferred (user call) rather than taken as a
     partial fix now.
+- **2026-08-16** — **genuinely excluded `@rspack/dev-server` and `workbox-webpack-plugin`** from the
+  bundle - not moved to `externals.ts` (which would still cost install size, the user's explicit
+  ask), but stubbed via a new esbuild plugin (`plugins/stub-dev-only-plugin.ts`, same `onResolve`/
+  `onLoad` pattern as `ignore-assets-plugin.ts`), so neither their own code nor the real `webpack`
+  package they each independently `require()` internally (the ~7 MB found earlier this session) ever
+  gets bundled. Confirmed both are safe to eliminate entirely, not just move around, by tracing exact
+  reachability before touching anything:
+  - `@rspack/dev-server`'s only consumer, `RspackDevServer`, is constructed inside `UIServer.dev()`
+    (`ui-server.ts:330`), called only from `ui.main.runtime.ts:407`'s `if (dev) { ... }` branch -
+    i.e. only `bit start --dev`, already out of scope (OQ2).
+  - `workbox-webpack-plugin`'s only consumer, `WorkboxWebpackPlugin.GenerateSW`, is constructed
+    inside `createRspackBrowserConfig` (`rspack.browser.config.ts:125`) - the UI rebuild-fallback
+    path, already opt-in/off by default (`--ui-bundling`). Traced further: that same function calls
+    `resolveAlias()` (`rspack.common.ts`) _before_ reaching the workbox line, which does
+    `require.resolve('@teambit/code.ui.code-editor')` and five more `UI_BUNDLING_EXTERNALS` packages
+    - none installed in the default build - so this path was **already throwing earlier in the same
+      function**, before this change, every time. Stubbing workbox changes no currently-working
+      behavior.
+  - The stub itself throws a clear, intentional error (not a cryptic "is not a constructor") if
+    either path is ever actually reached in a bundled build, naming the excluded package and why.
+    Gated on `!uiBundling` (threaded through `EsbuildOptions`/`bundle-cli.ts`/`build-sea.ts`) so
+    `--ui-bundling` builds - which install the real UI dependency tree specifically to make this
+    path work - are unaffected.
+  - **Measured: 78.3 MB → 60.15 MB, an 18.7 MB drop** - more than the ~7 MB `webpack` estimate alone,
+    since other webpack-plugin-ecosystem transitive deps (terser-webpack-plugin, webpack-manifest-
+    plugin, etc.) went with it. Confirmed via `metafile.json`: `webpack`, `@rspack/dev-server`, and
+    `workbox-webpack-plugin` all show **0 bytes / 0 files** in the rebuilt bundle.
+  - Verified end to end: `bit --version`/`--help` fine; `npm run lint` 0 errors; re-ran
+    `custom-env-operations.e2e.ts` "should be able to re-tag with no errors" (the same real
+    build/tag flow used throughout today) - passes. Sanity-checked `bit start` (no `--dev`, no
+    shipped local pre-bundle) still fails the same way it already did - `Cannot find module
+'assert/'` from `webpack-fallbacks.ts` (one of the ~18 polyfills never marked external, unrelated
+    to this change) - not a new failure mode, matches the "residual risk" already flagged in
+    `externals.ts` and §17c's established "rebuild fallback is broken, ship pre-bundles instead"
+    finding.
+  - Externals count unaffected (still 11) - this was a pure inlined-code exclusion, no externals
+    added or removed.

@@ -1,6 +1,7 @@
 import type { BuildResult } from 'esbuild';
 import { build } from 'esbuild';
 import { ignoreAssetsPlugin } from './plugins/ignore-assets-plugin';
+import { stubDevOnlyPlugin } from './plugins/stub-dev-only-plugin';
 import { teambitDistResolverPlugin } from './plugins/teambit-dist-resolver-plugin';
 import { timePlugin } from './plugins/time-plugin';
 import { workerEntryPlugin } from './plugins/worker-entry-plugin';
@@ -20,6 +21,12 @@ export type EsbuildOptions = {
    */
   seaWrapper?: boolean;
   label?: string;
+  /**
+   * `--ui-bundling` opts into paying for the full UI dependency tree so the rebuild fallback (and
+   * `bit start --dev`) can actually work (§8.3/§17d) - `stubDevOnlyPlugin` must not run then, or it
+   * would stub out the very packages that flag is installing for.
+   */
+  uiBundling?: boolean;
 };
 
 const IMPORT_META_BANNER = [
@@ -63,6 +70,7 @@ export function runEsbuild({
   sourcemap,
   seaWrapper,
   label = 'bit bundle',
+  uiBundling,
 }: EsbuildOptions): Promise<BuildResult> {
   return build({
     entryPoints: [entryFilePath],
@@ -103,6 +111,12 @@ export function runEsbuild({
       // hasn't existed for a decade; node's own EventEmitter is API-compatible for its usage.
       emitter: 'events',
     },
-    plugins: [workerEntryPlugin(), teambitDistResolverPlugin(repoRoot), ignoreAssetsPlugin(), timePlugin(label)],
+    plugins: [
+      workerEntryPlugin(),
+      teambitDistResolverPlugin(repoRoot),
+      ignoreAssetsPlugin(),
+      ...(uiBundling ? [] : [stubDevOnlyPlugin()]),
+      timePlugin(label),
+    ],
   });
 }

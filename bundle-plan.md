@@ -6,9 +6,11 @@
 > webpack/react-env decoupling; removed `webpack`, `process/browser`, `buffer/`, and `@babel/core` from
 > externals as a result — down to 11 (was 16 at the start of the day). `bit install` needed two passes
 > post-merge; found and documented a pre-existing, unrelated `WorkspaceAspectsLoader` hang bug blocking
-> local `bit build`/`bit status` on this branch; found `@teambit/ui`'s always-loaded dev-server code
-> fully inlines the real `webpack` package (~7 MB) despite it having no other reason to be in the
-> bundle — [18-findings-log.md](bundle-plan/18-findings-log.md))
+> local `bit build`/`bit status` on this branch; genuinely excluded `@rspack/dev-server` and
+> `workbox-webpack-plugin` (not moved to externals — a new esbuild plugin stubs them out) since both
+> were only reachable from already-out-of-scope/already-broken paths, and the real `webpack` package
+> they pulled in transitively went with them — bundle **78.3 MB → 60.15 MB** —
+> [18-findings-log.md](bundle-plan/18-findings-log.md))
 
 This file is the table of contents. **The content used to live in one 2500-line file; it is now split
 into topic files under `bundle-plan/`, one per section, so a session only has to load what's relevant.**
