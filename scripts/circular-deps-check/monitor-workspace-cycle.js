@@ -6,17 +6,21 @@ const path = require('path');
 
 const BASELINE_FILE = path.join(__dirname, 'workspace-cycle-baseline.json');
 
+// override with BIT_BIN=<bin-name> (mirrors e2e's --bit_bin), e.g. to compare the repo's own
+// binary against a bvm-linked release when narrowing down a perf/behavior difference between them
+const bitBin = process.env.BIT_BIN || process.env.npm_config_bit_bin || 'bit';
+
 function getWorkspaceCycle() {
   try {
     const startedAt = Date.now();
-    console.log('Running bit insights circular --json...');
-    const output = execSync('bit insights circular --json', {
+    console.log(`Running ${bitBin} insights circular --json...`);
+    const output = execSync(`${bitBin} insights circular --json`, {
       encoding: 'utf-8',
       cwd: path.join(__dirname, '../..'),
       stdio: ['inherit', 'pipe', 'inherit'],
       timeout: 300000, // 5 minutes - fail with a clear error instead of hanging until CI's silent kill
     });
-    console.log(`bit insights circular --json completed in ${Math.round((Date.now() - startedAt) / 1000)}s`);
+    console.log(`${bitBin} insights circular --json completed in ${Math.round((Date.now() - startedAt) / 1000)}s`);
     const data = JSON.parse(output);
 
     if (!data || !data[0] || !data[0].data) {

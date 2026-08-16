@@ -30,10 +30,13 @@ console.log(\`  Created: \${baseline.timestamp}\`);
 "
 echo ""
 
-# Diagnostics: confirm which bit binary/version actually runs, and where it's pointed
-echo "bit binary: $(command -v bit)"
-bit --version
-echo "hub_domain: $(bit config get hub_domain)"
+# Diagnostics: confirm which bit binary/version actually runs the check below, and where it's
+# pointed. BIT_BIN overrides the binary the node scripts invoke (mirrors e2e's --bit_bin) - set it
+# to compare the repo's own binary against a bvm-linked release when narrowing a perf difference.
+RESOLVED_BIT_BIN="${BIT_BIN:-bit}"
+echo "bit binary: $(command -v "$RESOLVED_BIT_BIN")"
+"$RESOLVED_BIT_BIN" --version
+echo "hub_domain: $("$RESOLVED_BIT_BIN" config get hub_domain)"
 echo ""
 
 # Run the workspace cycle check
