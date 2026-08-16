@@ -45,24 +45,39 @@ const RUNTIME_PATH = [
 
 /** C. toolchains resolved by string from user envs */
 const TOOLCHAINS = [
-  'webpack',
   '@babel/core',
-  // webpack's own dependency, `require.resolve()`'d by `@teambit/webpack`'s fallback/alias config
-  // builders (webpack-fallbacks*.ts) to hand webpack a browser polyfill path for node's `process`
-  // global - same "resolved by string, must exist on disk" shape as webpack/babel-loader above, just
-  // one level deeper and far smaller. Confirmed via e2e: bundled `bit tag --build` on a workspace
-  // whose env still uses webpack failed with `Cannot find module 'process/browser'`.
-  'process/browser',
-  // right behind `process/browser` in the same crash: `webpack-fallbacks-aliases.ts` has exactly two
-  // eager `require.resolve()`s at module scope - `process/browser` and this one - and blows up on the
-  // first missing one. Confirmed via a live CI failure (2026-08-13,
-  // `custom-env-operations.e2e.ts` "should be able to re-tag with no errors", `bit tag --build`):
-  // `Cannot find module 'buffer/'` from that exact file. The open question this entry used to wait on
-  // - whether fixing it would just be the first of `webpack-fallbacks.ts`'s ~20-package polyfill list
-  // - is resolved: the CI stack trace only ever reaches `webpack-fallbacks-aliases.js` (this 2-entry
-  // file), not `webpack-fallbacks.ts` (used elsewhere, by the preview rspack config, not this
-  // codepath). See bundle-plan.md §14 (2026-08-13).
-  'buffer/',
+  // NOT `webpack`, `process/browser`, or `buffer/` (2026-08-16, all three removed together): the
+  // react/node/aspect envs decoupled from `@teambit/webpack` upstream (`refactor(react): use
+  // webpack-bundler/webpack-dev-server instead of WebpackMain aspect`, teambit/bit#10610, merged via
+  // `remove-core-envs-from-manifest`) - `WebpackMain.createBundler`/`createDevServer` are gone.
+  //
+  // `webpack` itself: every remaining reference to the package anywhere in this repo
+  // (`scopes/webpack/webpack/*.ts`, `config-mutator.ts`, the two event types) is `import type`,
+  // erased at compile time - 0 `require("webpack")` in the emitted `bit.app.js`, confirmed by
+  // grepping the built bundle.
+  //
+  // `process/browser` / `buffer/`: these were added for `webpack-fallbacks-aliases.ts`'s two eager
+  // `require.resolve()`s, hit via `WebpackMain.createBundler` -> `configFactory` when a workspace's
+  // *default* env bundler built a component preview (`custom-env-operations.e2e.ts` "should be able
+  // to re-tag with no errors", `bit tag --build`, §14 2026-08-13). That call site no longer exists -
+  // the same test now runs its preview bundling through the *external*, per-env
+  // `@teambit/webpack.webpack-bundler` package (resolved from the component's own capsule
+  // `node_modules`, installed by the env's own `bit install`), never touching bit's local
+  // `@teambit/webpack` aspect at all. Re-ran that exact e2e test against a bundle built with both
+  // entries removed: passes, `running Webpack bundler. Succeeded` with neither package installed
+  // anywhere near the bundle (verified `node_modules/{buffer,process}` absent). See bundle-plan.md
+  // §14 (2026-08-16).
+  //
+  // Residual risk, not yet exercised: `@teambit/preview`'s own `rspack.config.ts` and `@teambit/ui`'s
+  // `rspack.common.ts` still `import { fallbacks } from '@teambit/webpack'` (`webpack-fallbacks.ts`,
+  // the ~20-package polyfill list, unaffected by the #10610 refactor - it's consumed by bit's own
+  // preview/UI rebuild path, not the env's bundler). If that fallback path ever runs with a
+  // `process/browser` or `buffer/` requirement live, it would need these back. Every attempt to
+  // reach it locally (`custom-env-operations-2.e2e.ts`'s `react-no-compiler-env` scenario) currently
+  // crashes earlier on the unrelated, still-open `@teambit/mdx.modules.mdx-v3-options` gap (§10, §14),
+  // so this path could not be exercised end-to-end this session. If it starts failing with
+  // `Cannot find module 'process/browser'` or `'buffer/'` again after that gap closes, restore both
+  // entries here rather than re-diagnosing from scratch.
 ];
 
 /**

@@ -8,9 +8,11 @@
 > babel aspect usage & pre-bundle interaction) · §17 making `bit start` work from the pre-bundles
 > · §18 mcp-config-writer inlined into the bundle instead of copied · §19 `BabelAspect` removed from
 > core, `@babel/core` verified still load-bearing via aspect-loader + scope's version.ts.
-> Last updated: 2026-08-13 (hash-gate fix + `buffer/` external implemented and both proved working -
-> `buffer/` on a live e2e run, the hash-gate fix via a hacky planted-artifact test; still need a real
-> shipped artifact in the normal build flow for CI to benefit — §14)
+> Last updated: 2026-08-16 (merged `remove-core-envs-from-manifest`, which brought in the upstream
+> webpack/react-env decoupling; removed `webpack`, `process/browser`, and `buffer/` from externals as
+> a result — down to 12. `bit install` needed two passes post-merge; found and documented a
+> pre-existing, unrelated `WorkspaceAspectsLoader` hang bug blocking local `bit build`/`bit status` on
+> this branch — §14)
 
 ---
 
@@ -333,34 +335,38 @@ released `bit`** on the same workspace, so they are pre-existing behaviour, not 
 This is the section to optimise against. The bundle itself is 67 MB; **161 MB is installed
 dependencies**, so this is where the remaining weight lives.
 
-### 8.1 The externals (started at 11, now 10 — `mocha` removed 2026-08-10, see §15e)
+### 8.1 The externals (started at 11, now 12 net of two rounds of removal and one addition — see §15e, §14 2026-08-16)
 
 Every entry was verified against the emitted bundle — the "sites" column is the number of distinct
 files in `bit.app.js` that actually `require()` it.
 
-| package                         | installed  | sites  | why it cannot be inlined                                                                                          | who needs it                                                                                             | droppable?                                                                             |
-| ------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `@rspack/core`                  | **42 MB**  | 7      | native Rust binary                                                                                                | `@teambit/preview` (rspack.config, pre-bundle), `@teambit/ui` (dev/browser/ssr configs, ui-server)       | **only for `bit start` / preview + UI bundling.** Biggest single win if made optional. |
-| `@pnpm/napi`                    | **40 MB**  | 3      | Rust engine, per-platform optional dep                                                                            | `@teambit/pnpm` (read-config, lynx), `@teambit/pkg` (packer)                                             | no — `bit install` / `bit create` need it                                              |
-| `typescript`                    | **23 MB**  | 92     | `ts-server-client` spawns `typescript/lib/tsserver.js` by path; the compiler is handed `lib.*.d.ts` paths         | `@teambit/typescript`, `@teambit/envs` fallback compiler, `tsutils`                                      | partly — see §8.2                                                                      |
-| `@babel/core`                   | **17 MB**  | 73     | `aspect-loader` (always-loaded) pulls it via `babel-compiler`; `scope`'s `version.ts` pulls it via `react-docgen` | `aspect-loader.main.runtime.ts`, `scope/objects/models/version.ts`, dozens of bundled babel plugins      | not via `BabelAspect` removal (done) — see §19b for the two remaining levers           |
-| `webpack`                       | **14 MB**  | 8      | plugin/loader graph resolved by name                                                                              | `@teambit/webpack` dev config, `@rspack/dev-server`, `workbox-webpack-plugin`, `webpack-assets-manifest` | **only for user envs that use webpack**                                                |
-| ~~`mocha`~~                     | ~~2.2 MB~~ | ~~2~~  | —                                                                                                                 | —                                                                                                        | **done — removed 2026-08-10, see §15e**                                                |
-| `@parcel/watcher`               | 588 KB     | 1      | native `.node`                                                                                                    | `@teambit/watcher`                                                                                       | no                                                                                     |
-| `@lydell/node-pty`              | ~1 MB      | 1      | native `.node`                                                                                                    | `@teambit/bit` server-forever (the PTY daemon)                                                           | only if `bit server-forever` is dropped                                                |
-| `bufferutil` / `utf-8-validate` | small      | 2 each | native `.node`                                                                                                    | optional accelerators for `ws`                                                                           | product-level yes, bundler-level no — see §16b                                         |
-| `source-map-support`            | small      | 1      | installs a process-wide `Error.prepareStackTrace` hook                                                            | `@babel/register`                                                                                        | no                                                                                     |
-| `pnpapi` / `fsevents`           | —          | 0      | declared external, never installed                                                                                | guarded/optional requires                                                                                | n/a                                                                                    |
+| package                               | installed  | sites  | why it cannot be inlined                                                                                          | who needs it                                                                                        | droppable?                                                                                                                                                                           |
+| ------------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@rspack/core`                        | **42 MB**  | 7      | native Rust binary                                                                                                | `@teambit/preview` (rspack.config, pre-bundle), `@teambit/ui` (dev/browser/ssr configs, ui-server)  | **only for `bit start` / preview + UI bundling.** Biggest single win if made optional.                                                                                               |
+| `@pnpm/napi`                          | **40 MB**  | 3      | Rust engine, per-platform optional dep                                                                            | `@teambit/pnpm` (read-config, lynx), `@teambit/pkg` (packer)                                        | no — `bit install` / `bit create` need it                                                                                                                                            |
+| `typescript`                          | **23 MB**  | 92     | `ts-server-client` spawns `typescript/lib/tsserver.js` by path; the compiler is handed `lib.*.d.ts` paths         | `@teambit/typescript`, `@teambit/envs` fallback compiler, `tsutils`                                 | partly — see §8.2                                                                                                                                                                    |
+| `@babel/core`                         | **17 MB**  | 73     | `aspect-loader` (always-loaded) pulls it via `babel-compiler`; `scope`'s `version.ts` pulls it via `react-docgen` | `aspect-loader.main.runtime.ts`, `scope/objects/models/version.ts`, dozens of bundled babel plugins | not via `BabelAspect` removal (done) — see §19b for the two remaining levers                                                                                                         |
+| ~~`webpack`~~                         | ~~14 MB~~  | ~~8~~  | —                                                                                                                 | —                                                                                                   | **done — removed 2026-08-16, see §14**                                                                                                                                               |
+| ~~`mocha`~~                           | ~~2.2 MB~~ | ~~2~~  | —                                                                                                                 | —                                                                                                   | **done — removed 2026-08-10, see §15e**                                                                                                                                              |
+| `@parcel/watcher`                     | 588 KB     | 1      | native `.node`                                                                                                    | `@teambit/watcher`                                                                                  | no                                                                                                                                                                                   |
+| `@lydell/node-pty`                    | ~1 MB      | 1      | native `.node`                                                                                                    | `@teambit/bit` server-forever (the PTY daemon)                                                      | only if `bit server-forever` is dropped                                                                                                                                              |
+| `bufferutil` / `utf-8-validate`       | small      | 2 each | native `.node`                                                                                                    | optional accelerators for `ws`                                                                      | product-level yes, bundler-level no — see §16b                                                                                                                                       |
+| `source-map-support`                  | small      | 1      | installs a process-wide `Error.prepareStackTrace` hook                                                            | `@babel/register`                                                                                   | no                                                                                                                                                                                   |
+| ~~`process/browser`~~ / ~~`buffer/`~~ | ~~small~~  | ~~4~~  | —                                                                                                                 | —                                                                                                   | **done — removed 2026-08-16, see §14** (residual risk: `@teambit/preview`/`@teambit/ui`'s own rspack `fallbacks` import is unaffected and untested — see the note in `externals.ts`) |
+| `pnpapi` / `fsevents`                 | —          | 0      | declared external, never installed                                                                                | guarded/optional requires                                                                           | n/a                                                                                                                                                                                  |
 
 Plus ~4 MB of `caniuse-lite`, 3.3 MB `terser-webpack-plugin`, 2.3 MB `terser`, and the transitive
 tail — all pulled in by webpack/rspack, not requested directly.
 
 ### 8.2 Optimisation levers, roughly in order of value
 
-1. **Make `@rspack/core` + `webpack` optional (≈ 60 MB).** Nothing in the CLI's core path touches
-   them; they exist for `bit start`, the preview build and webpack-based user envs. A lazy install
-   ("run `bit ui install` to enable the UI") or resolving them from the user's workspace would cut a
-   quarter of the distribution.
+1. **Make `@rspack/core` optional (≈ 42 MB).** Nothing in the CLI's core path touches it directly;
+   it exists for `bit start` and the preview/UI rebuild fallback. A lazy install ("run `bit ui
+install` to enable the UI") or resolving it from the user's workspace would cut a big share of
+   the remaining distribution. (`webpack` itself is no longer in the externals at all — done, §14
+   2026-08-16: the react/node/aspect envs bundle through the external, per-env
+   `@teambit/webpack.webpack-bundler` package now, never through bit's local `@teambit/webpack`
+   aspect.)
 2. **Decide who owns `typescript` (23 MB).** A user's env already brings its own TypeScript; bit ships
    a second copy mostly so `ts-server` and the fallback compiler have one. Resolving from the
    workspace with a lazy fallback is the same trade-off as (1).
@@ -1394,6 +1400,85 @@ modules.mdx-v3-options'`. The debug log for this run confirms the mechanism dire
   once a real artifact with the right hash exists - the only remaining gap is _producing_ that
   artifact as part of the normal bundle-build flow (still open, see the "artifact-source question"
   note above and §9e).
+- **2026-08-16** — merged `origin/remove-core-envs-from-manifest` (the actual base branch - an
+  earlier attempt merged raw `origin/master` instead and was aborted once caught; that branch had
+  since diverged, e.g. it still has `@teambit/react` core-aspect source this branch deleted).
+  `remove-core-envs-from-manifest` had already merged `master` several times and resolved the
+  react/aspect-deletion conflicts upstream, so this merge was clean - **zero conflicts**. It brought
+  in the full upstream webpack decoupling: `refactor(react): use webpack-bundler/webpack-dev-server
+instead of WebpackMain aspect` (#10610) and `refactor(webpack): drop the duplicate bundler/dev-
+server runtime from the core aspect` deleted `webpack.bundler.ts` and `webpack.dev-server.ts`
+  outright and stripped `WebpackMain.createBundler`/`createDevServer` down to a deprecated,
+  type-only compatibility shim - the react/node/aspect envs now bundle component previews through
+  the external, per-env `@teambit/webpack.webpack-bundler`/`@teambit/webpack.webpack-dev-server`
+  packages (resolved from the component's own capsule `node_modules`), never through bit's local
+  `@teambit/webpack` aspect.
+- **2026-08-16** — `bit install` post-merge needed **two passes**: the first left `@teambit/bit`
+  uncompiled (`dist/` didn't exist yet - `bd`/`bit` both crashed with `Cannot find module
+'.../dist/app'`) and printed "Bit was not able to install all dependencies. Please run 'bit
+  install' again"; the second pass completed cleanly and compiled 326 components. Matches the
+  existing note in §15e about `bd` breaking transiently after a `manifests.ts`-adjacent merge -
+  recompiling needs the **released** `bit` (`/Users/giladshoham/bin/bit`, this machine's dev-link
+  alias for the bvm-linked 2.0.82), not `bd`, until `dist/` exists again.
+- **2026-08-16** — **found a pre-existing, unrelated hang/perf regression** blocking local
+  `bd status`/`bd build`/`bd insights circular` on this branch: a non-terminating recursion inside
+  `WorkspaceAspectsLoader.loadAspects`, already root-caused and documented by someone else in
+  `scripts/circular-deps-check/CI-HANG-INVESTIGATION.md` (brought in by this merge). `bd status`
+  timed out at 100s and 590s alike, spinning on the identical `... > consumer-fs-load >
+workspace.loadAspects` / `... > extension-merge > workspace.loadAspects` ping-pong the
+  investigation doc describes; `bd build teambit.preview/preview --reuse-capsules` hit the same wall
+  and never completed inside a 590s window. **Not fixed here** - out of scope for the externals/mdx
+  work, tracked separately with its own recommended fix (port `1213c36c6`'s `loadAspects`
+  serialization-queue from `origin/refactor/component-loading-v2-take-3-stage2`). Practical
+  consequence for this session: any `bd`-driven full-workspace command must budget for this or be
+  swapped for the bvm-linked `bit` binary, which is unaffected (it predates this branch's code).
+  This is also what blocked producing a real local pre-bundle artifact (§10 gap, §17) - `bd build`
+  on `teambit.preview/preview` or `teambit.ui-foundation/ui` cannot currently complete locally to
+  generate one.
+- **2026-08-16** — **removed `webpack` from `TOOLCHAINS`** in `cli-bundler/externals.ts`. Every
+  remaining reference to the `webpack` package anywhere in the repo (`scopes/webpack/webpack/*.ts`,
+  `@teambit/webpack.modules.config-mutator`, the two event types) is `import type`, erased at
+  compile time by `tsc` before esbuild ever sees it - grepped the entire repo, confirmed. Rebuilt
+  with the entry removed: 0 errors, 0 unresolved-externals warnings, and a direct grep of the emitted
+  `bit.app.js` for `require("webpack")` returns zero matches.
+- **2026-08-16** — **removed `process/browser` and `buffer/`** from `TOOLCHAINS` too, prompted by the
+  question of whether they were still needed now that `WebpackMain.createBundler` (their original
+  call site, `webpack-fallbacks-aliases.ts`) is gone. Verified empirically, not just by static
+  analysis (the bundle still contains literal `require.resolve("process/browser")` /
+  `require.resolve("buffer/")` calls from `webpack-fallbacks.ts`/`webpack-fallbacks-aliases.ts`,
+  reached via `@teambit/preview`'s own `pre-bundle.ts` → `rspack.config.ts` import chain and
+  `@teambit/webpack/index.ts`'s re-export - esbuild leaves both as unresolved runtime calls with an
+  explicit "should be marked as external for use with require.resolve" warning either way, so
+  static analysis alone couldn't settle whether they're actually _reached_). Rebuilt with both
+  removed, pruned them from `/tmp/bit-bundle/node_modules` (`npm install` alone doesn't remove
+  extraneous packages - needed an explicit `npm prune`), then re-ran the exact e2e test this entry
+  was originally added for: `custom-env-operations.e2e.ts` "should be able to re-tag with no
+  errors" (`bit tag --build`, §14 2026-08-13's original repro). **Passes** -
+  `running Webpack bundler. Succeeded in ~500-800ms` with neither package anywhere near the bundle,
+  confirmed by `ls node_modules/{buffer,process}` returning nothing. Root cause of why it's safe now:
+  the same upstream refactor above moved this test's preview-bundling off `WebpackMain.createBundler`
+  entirely, onto the external `@teambit/webpack.webpack-bundler` package - the crash site this
+  externals entry existed for is now unreachable from that test.
+  **Not fully proven dead**, though: `@teambit/preview`/`@teambit/ui`'s own rspack configs still
+  `import { fallbacks } from '@teambit/webpack'` (`webpack-fallbacks.ts`, unaffected by the #10610
+  refactor - it's bit's own preview/UI _rebuild_ fallback, not the env's bundler). Tried to reach
+  that path directly via `custom-env-operations-2.e2e.ts`'s `react-no-compiler-env` scenario (the
+  same test used to validate the hash-gate fix, below) - it crashes earlier, on the unrelated,
+  still-open `@teambit/mdx.modules.mdx-v3-options` gap, before ever reaching the `fallbacks.process`
+  line. So this residual path could not be exercised end-to-end this session; documented as an open
+  risk directly in `externals.ts` with the exact symptom to watch for if it turns out wrong.
+- **2026-08-16** — re-ran `custom-env-operations-2.e2e.ts`'s `react-no-compiler-env` scenario (the
+  mdx-v3-options / hash-gate test) against the fully merged + externals-trimmed bundle. **Still
+  fails** with `Cannot find module '@teambit/mdx.modules.mdx-v3-options'`, same as before the merge.
+  Expected, not a regression: local validation of the hash-gate fix (`currentCoreBundleHash`,
+  committed `e8cb82ef3`) has been blocked since 2026-08-13 by the same root cause - no real local
+  `@teambit/preview` artifact exists (`npm run bundle` reports `"shipped artifacts": none`, and
+  producing one via `bd build` is now additionally blocked by the hang bug above), so
+  `getAspectArtifactDir` falls back to a stale bvm-installed bit predating
+  `remove-core-envs-from-manifest`, and neither hash can ever match it. The fix's logic was already
+  proven correct via a planted-artifact test (§14 2026-08-13); this session re-confirms the _local_
+  environment still can't validate it end-to-end, and CI (fresher bvm fallback via `bvm_upgrade`,
+  §9d) remains the place this actually gets proven.
 
 ---
 
