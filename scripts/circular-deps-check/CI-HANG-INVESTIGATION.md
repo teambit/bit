@@ -1,10 +1,12 @@
 # check_circular_dependencies CI hang/perf regression
 
-Status: **root cause narrowed to a specific function, not yet fixed.** The `check circular
-dependencies (repo bit)` step in the `check_circular_dependencies` CircleCI job is currently
-**disabled** (commented out in `.circleci/config.yml`) because it reliably times out. Only the
-non-blocking `bvm bit` comparison step still runs. Re-enable the repo-bit step once the regression
-below is fixed.
+Status: **not yet fixed, but there's a strong, specific lead.** It's a single non-terminating
+recursive call chain inside `WorkspaceAspectsLoader.loadAspects` (see §5-6), and a near-identical
+bug was already diagnosed and fixed on another unmerged branch — porting that fix is the
+recommended next step (§6, "Next steps" below). The `check circular dependencies (repo bit)` step
+in the `check_circular_dependencies` CircleCI job is currently **disabled** (commented out in
+`.circleci/config.yml`) because it reliably times out. Only the non-blocking `bvm bit` comparison
+step still runs. Re-enable the repo-bit step once the regression is fixed.
 
 ## Symptom
 
@@ -88,7 +90,7 @@ The fresh-clone repro is the cleanest: identical `.bitmap`, identical `node_modu
 store, only the binary differs — **37 seconds vs. 5+ minute timeout** for the exact same command
 (`bit insights circular --json`) on the exact same workspace state.
 
-### 4. Root cause: narrowed to a specific function
+### 4. Root cause, take 1 (superseded below): `workspace.ts`'s self-as-aspect guard
 
 `debug.log`, isolated to just the repo-bit run's PID, shows **83,079 log lines**, of which
 **81,078 (98%)** fall into two recursive trace chains:
@@ -98,85 +100,145 @@ workspace.get > consumer-fs-load > workspace.loadAspects > workspace.get > consu
 workspace.get > consumer-fs-load > workspace.loadAspects > workspace.get > extension-merge  > workspace.loadAspects   (40,258 occurrences)
 ```
 
-i.e. `workspace.loadAspects` is recursively re-triggering itself via nested `workspace.get` calls,
-at a volume far beyond what a single graph build over 62 cyclically-connected components should
-need. By contrast, the bvm-bit run's `insights circular` invocation on the *identical* workspace
-produced only 49 log lines total.
+First hypothesis was `Workspace.get()`'s "try load self as aspect" branch
+(`scopes/workspace/workspace/workspace.ts:820-857`), gated by `!this.aspectLoader.isCoreAspect(...)`
+— which now returns `false` for the 7 envs this branch removed from the core manifest
+(`aspect, babel, env, mdx, mocha, node, react, readme`; see `b23b27368` and siblings), so this
+branch — previously skipped entirely for them — now runs for many more components.
 
-Traced to `Workspace.get()` in `scopes/workspace/workspace/workspace.ts:820-857`:
+**This was disproven directly**: the block was instrumented at runtime (temporary patch to the
+compiled `dist/workspace.js` in the disposable `/tmp` clone, all 4 `.pnpm`-hash-variant copies —
+see "Reproducing locally" below for why there are multiple copies) with a counter + distinct-id
+tracker. Across the full 5-minute timeout, **it was entered zero times**. So this specific call
+site is not the one driving the recursion — it's a real, but different, call site producing the
+same `workspace.loadAspects` trace label (the label comes from `loadSpan('workspace.loadAspects',
+...)` wrapping the *public* `Workspace.loadAspects` method, which has more than one caller).
 
-```ts
-async get(componentId, legacyComponent, useCache = true, storeInCache = true, loadOpts) {
-  const component = await this.componentLoader.get(...);
-  const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
-  if (
-    tryLoadAsAspect &&
-    this.envs.isUsingEnvEnv(component) &&
-    !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
-    !this.aspectLoader.isAspectLoaded(component.id.toString()) &&
-    this.hasId(component.id)
-  ) {
-    this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
-    await this.loadAspects([component.id.toString()], undefined, component.id.toString(), {
-      hideMissingModuleError: true,
-    });
-    ...
-  }
-  this.componentLoadedSelfAsAspects.set(component.id.toString(), false);
-  return component;
-}
+### 5. Root cause, take 2 (current best understanding): a single non-terminating recursion, not fan-out
+
+Re-reading the same captured `debug.log` for the actual `INFO`-level `"loadAspects, loading N
+aspects"` lines (as opposed to the much higher-volume `DEBUG`-level per-file-write lines, which
+inflated the "40,820 occurrences" count above and don't each represent a separate `loadAspects`
+call) tells a very different story: there are only **109** such lines in the whole run, and **104
+of them share one single trace-root id** (`34l369`). That one root started at `18:07:50` and was
+*still recursing* at `18:12:47` — essentially the entire 5-minute window — alternating between
+`... > consumer-fs-load > workspace.loadAspects` and `... > extension-merge > workspace.loadAspects`,
+each iteration loading only "1 aspects" or "2 aspects" before recursing again:
+
+```
+[trace:34l369 ... > consumer-fs-load > workspace.loadAspects] loadAspects, loading 1 aspects.
+[trace:34l369 ... > extension-merge  > workspace.loadAspects] loadAspects, loading 1 aspects.
+[trace:34l369 ... > consumer-fs-load > workspace.loadAspects] loadAspects, loading 2 aspects.
+[trace:34l369 ... > extension-merge  > workspace.loadAspects] loadAspects, loading 2 aspects.
+... (repeats for 5 minutes, never terminates)
 ```
 
-`isCoreAspect(id)` (`scopes/harmony/aspect-loader/aspect-loader.main.runtime.ts:311`) just checks
-membership in the core-aspect-id manifest. This branch's entire purpose is removing
-`aspect, babel, env, mdx, mocha, node, react, readme` from that manifest (see commit
-`b23b27368 feat(envs): remove aspect and env envs from the core manifest` and siblings). So for
-every component using one of these now-non-core envs, `isCoreAspect()` flips `true` → `false`,
-and this "try load self as aspect" branch — previously skipped entirely for them — now runs.
+This is **not** large-but-finite fan-out across many components — it's one call chain that never
+resolves, ping-ponging between resolving a component's own definition (`consumer-fs-load`) and
+merging its extension/env config (`extension-merge`), both of which call `workspace.loadAspects`.
+This is exactly the shape of a genuine mutual/re-entrant recursion between two components (or a
+small cluster) whose envs depend on each other — i.e. it's hitting the actual circular dependency
+this check exists to monitor, and nothing is breaking the cycle.
 
-**Working hypothesis** (not yet fully confirmed): in a workspace with genuine circular
-dependencies among ~62 components — exactly what this check exercises — this newly-unlocked path
-cascades: loading component A (using a former-core env) triggers `loadAspects(A)`, which needs
-component B (a related env/aspect dependency), which also now qualifies for the same branch and
-triggers `loadAspects(B)`, and so on through the cycle. The `componentLoadedSelfAsAspects` guard is
-keyed by exact `component.id.toString()` (**with version**) and sized at 500 entries (bigger than
-the 324-component workspace, so plain LRU eviction was ruled out as the mechanism) — worth
-double-checking whether the guard is ever bypassed by ID-string variance (e.g. versionless vs.
-versioned references to the same logical env — this branch also has substantial "versionless env
-slot matching" work, see `cfea063ae`, `446416efe`, `4caa63f1c` and siblings) rather than the count
-of distinct components alone explaining the ~40,000x call volume.
+### 6. Very likely the same bug, already fixed (unmerged) on another branch
+
+Bit's own commit history has three commits about exactly this class of problem
+(`git log --oneline --all | grep -i "in-flight\|re-entrant"`):
+
+- `0f796d993 fix(scope): break re-entrant aspect-load cycles with an in-flight guard` — already on
+  this branch (ancestor of HEAD).
+- `796f76ce4 fix(workspace): key in-flight aspect loads by full id, collapse versions only for
+  legacy core envs` — already on this branch (ancestor of HEAD).
+- `f9ae003aa perf(workspace-aspects-loader): in-flight dedup for concurrent loadAspects` — **NOT**
+  on this branch. Lives on `origin/refactor/component-loading-v2-take-3-stage2` (David First,
+  unrelated in-progress refactor branch). Diverged from us a long way back (merge-base
+  `e97daafd1`), so a direct cherry-pick is unlikely to apply cleanly, but the *mechanism it
+  describes and fixes* is a near-exact match for what we found:
+
+  > pass1's `consumer.loadComponents` ... fires the `onComponentConfigLoading` subscriber for
+  > every component in parallel. Each subscriber calls `workspace.componentExtensions` ->
+  > `loadComponentsExtensions` -> `loadAspects` for that component's env. Without dedup, N
+  > components sharing one env triggered N parallel `isolator.isolateComponents` calls for the
+  > same aspect ... `aspectLoader.isAspectLoaded` only flips true after the load completes, so the
+  > per-call filter inside `loadAspects` never caught this race.
+
+  That commit's fix (a per-aspect-id `inFlightAspects` map so concurrent callers await the
+  existing promise) measured **`bit status` 5:29 → 0:25 (~13x)** on their workspace.
+
+  It was then **superseded** by a follow-up on the same branch:
+  `1213c36c6 perf(workspace-aspects-loader): serialize loadAspects instead of per-id dedup`,
+  because the per-id dedup missed a further wrinkle that matches our trace shape *even more*
+  closely:
+
+  > The per-id in-flight dedup ... only catches concurrent callers asking for the SAME aspect id.
+  > It misses the case that's actually hot during pass1's bulk component load: N parallel
+  > `loadAspects` calls for DIFFERENT root aspects, each whose internal scope-aspects-loader
+  > recursion walks an env/dep graph that shares core envs (e.g. `core-aspect-env`) — each call
+  > independently re-isolates the shared env ... Per-id in-flight dedup (tried first) also misses
+  > this because the shared env id isn't in the outer caller's `ids` list — it only surfaces deep
+  > inside the recursion.
+  >
+  > Switch to a serialization queue: each `loadAspects` call awaits the previous one's completion
+  > before running. By the time call N+1 enters `loadAspectsInner`, call N has already registered
+  > its env aspects via `loadExtensionsByManifests`, so call N+1's per-id `isAspectLoaded` filter
+  > catches them and skips re-isolation.
+  >
+  > `bit status` went from 13:54 -> 10s on this 311-component workspace.
+
+  The fix itself (`scopes/workspace/workspace/workspace-aspects-loader.ts`): replace whatever
+  concurrency `WorkspaceAspectsLoader.loadAspects` currently has with a single promise-chain queue
+  (`private loadAspectsQueue: Promise<unknown> = Promise.resolve()`), where every call awaits the
+  tail of the queue (swallowing the previous call's rejection) before running its own
+  `loadAspectsInner`, and `opts.forceLoad` bypasses the queue entirely. See `git show 1213c36c6`
+  for the full diff.
+
+  Their numbers (311 components, 13:54 → 10s) and ours (324 components, ~5-6min hang/timeout, and
+  1m18s-1m57s on a build that presumably doesn't hit this path as hard) are in the same
+  ballpark, and the *reasoning* for why per-id dedup alone isn't enough lines up exactly with our
+  single-trace-root, alternating `consumer-fs-load`/`extension-merge` observation.
 
 ## What's confirmed vs. still open
 
 **Confirmed:**
 - The regression is 100% reproducible, in this branch's code specifically, independent of
   environment/network/caching.
-- The overwhelming majority of the extra work is inside the `workspace.get > ... >
-  workspace.loadAspects` recursion described above.
-- `isCoreAspect()` newly returns `false` for the 7 formerly-core envs this branch removed from the
-  manifest, which structurally unlocks the "try load self as aspect" branch for many more
-  components than before.
+- It's a single non-terminating recursive call chain (`workspace.loadAspects` calling itself via
+  nested `workspace.get`), not fan-out across many independent components.
+- `Workspace.get()`'s self-as-aspect branch (`workspace.ts:820-857`) is **not** the culprit —
+  disproven by runtime instrumentation (zero hits during the hang).
+- A near-identical, already-diagnosed-and-fixed bug exists in Bit's own history
+  (`f9ae003aa` / `1213c36c6` on `origin/refactor/component-loading-v2-take-3-stage2`), with a
+  concurrency/serialization fix in `WorkspaceAspectsLoader.loadAspects`.
 
 **Not yet confirmed:**
-- The exact mechanism by which the `componentLoadedSelfAsAspects` guard fails to bound the
-  recursion (ID-string variance vs. something else in `loadAspects` itself vs. legitimate-but-huge
-  fan-out that simply wasn't there before).
-- Whether the fix belongs in `workspace.ts`'s guard, in `loadAspects`/`WorkspaceAspectsLoader`
-  itself, or is a legitimate cost of the manifest change that needs a different mitigation
-  (e.g. actually caching/memoizing more aggressively, or not attempting self-as-aspect loading for
-  every cyclic dependent).
+- That `1213c36c6`'s serialization fix, ported to this branch's current
+  `workspace-aspects-loader.ts`, actually resolves *our* hang (not yet attempted — the branches
+  have diverged enough that this needs a manual port, not a cherry-pick).
+- The exact call sites in *our* recursion (which two components/envs are ping-ponging under trace
+  root `34l369`) — not yet identified by component id, only by span shape.
 
 ## Next steps for whoever picks this up
 
-1. Add a call counter / distinct-component-id set around the `workspace.get` self-as-aspect block
-   to see exactly how many *distinct* IDs (and whether id strings vary for the same logical
-   component) are driving the 40,000+ recursive calls, in the fresh `/tmp` repro (fast to
-   re-create: clone this branch, `bit init && bit install`, then `BIT_BIN="node
-   <clone>/bin/bit.js" node scripts/circular-deps-check/monitor-workspace-cycle.js --verbose`).
-2. Once the mechanism is confirmed, design a fix (likely: make the guard robust to id-string
-   variance, or bound recursion depth/fan-out explicitly) and verify against all four repro
-   environments above before re-enabling the repo-bit CI step.
-3. Re-enable the commented-out `check circular dependencies (repo bit)` step in
+1. **Try the fix first** — read `scopes/workspace/workspace/workspace-aspects-loader.ts` on this
+   branch, and port `1213c36c6`'s serialization-queue approach onto it (see `git show 1213c36c6`
+   for the reference diff on the other branch). This is the highest-confidence lead by far.
+2. Verify with the fresh `/tmp` repro (fast to re-create: clone this branch, `bit init && bit
+   install`, then `BIT_BIN="node <clone>/bin/bit.js" node
+   scripts/circular-deps-check/monitor-workspace-cycle.js --verbose`) that the hang is gone and
+   `bit insights circular --json` completes in roughly the same ballpark as the bvm-bit baseline
+   (~1-2min).
+3. If it doesn't fully resolve it, identify the two (or more) components/envs actually
+   ping-ponging under trace root `34l369` — instrument `WorkspaceAspectsLoader.loadAspects`
+   (not `Workspace.get`, which was already ruled out) with an id/counter dump, using the same
+   patch-the-compiled-dist-file approach described below (or, better, compile from source once and
+   reuse across runs rather than patching `dist/` — this session hit a stray crash
+   (`_legacy3(...).ComponentsList is not a constructor`) after patching
+   `workspace-component-loader.js` mid-investigation, likely unrelated corruption from a prior
+   SIGTERM-killed run leaving a file mid-write, not the patch itself, but a clean recompile avoids
+   the ambiguity).
+4. Verify against all four repro environments in the table above before re-enabling the repo-bit
+   CI step.
+5. Re-enable the commented-out `check circular dependencies (repo bit)` step in
    `.circleci/config.yml` once fixed, and consider whether the bvm-bit comparison step /
    `BIT_BIN` support / extra diagnostics added along the way should stay (useful precedent for
    future perf regressions in this same check) or be trimmed back out.
@@ -197,3 +259,13 @@ BIT_BIN="node $(pwd)/bin/bit.js" node scripts/circular-deps-check/monitor-worksp
 # fast path (comparison baseline, a released build unaffected by this branch):
 BIT_BIN=<path-to-a-bvm-linked-bit> node scripts/circular-deps-check/monitor-workspace-cycle.js --verbose
 ```
+
+**Note on patching compiled output for instrumentation**: `node_modules/@teambit/<pkg>/dist/*.js`
+is not a single file — pnpm installs multiple content-addressed copies of the same package version
+under `node_modules/.pnpm/...` when it's resolved against different peer-dependency contexts (e.g.
+`@teambit/workspace` built against `react-dom@18.3.1` in one place and `react-dom@19.2.7` in
+another - `find node_modules -path "*@teambit/<pkg>/dist/<file>.js"` shows all of them). If
+patching compiled JS directly (faster than a full recompile for a quick instrumentation check),
+patch *all* copies - Node's module resolution may load any of them depending on which component's
+dependency chain triggers the `require` first, and `glob.glob('**/*.js')` in Python silently skips
+`.pnpm` (a dot-directory) unless you use `find` instead.
