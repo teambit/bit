@@ -61,7 +61,7 @@ describe('custom aspects', function () {
       helper.command.compile();
       // the aspect and react envs used to be core aspects, now their packages must be installed
       // for the my-env fixture (which imports @teambit/react) to be compiled and loaded
-      helper.command.install('@teambit/aspect@1.0.1042 @teambit/node@1.0.1042 @teambit/react@1.0.1042');
+      helper.command.install('@teambit/aspect@1.0.1107 @teambit/node@1.0.1107 @teambit/react@1.0.1107');
     });
     after(() => {
       npmCiRegistry.destroy();

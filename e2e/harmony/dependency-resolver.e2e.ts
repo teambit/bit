@@ -79,7 +79,7 @@ describe('dependency-resolver extension', function () {
           helper.extensions.addExtensionToVariant('bar', 'teambit.react/react', {});
           // the react env used to be a core aspect, now its package (and its env chain) must be
           // installed for the env to load and provide its dependency policies
-          helper.command.install('@teambit/react@1.0.1042 @teambit/aspect@1.0.1042 @teambit/node@1.0.1042');
+          helper.command.install('@teambit/react@1.0.1107 @teambit/aspect@1.0.1107 @teambit/node@1.0.1107');
           barFooOutput = helper.command.showComponentParsed('bar/foo');
         });
         it('should have the updated dependencies for bar/foo from the env', function () {

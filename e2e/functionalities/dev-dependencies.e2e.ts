@@ -191,7 +191,7 @@ describe('dev-dependencies functionality', function () {
       // aspect env packages from the workspace root (they used to be core aspects). install them
       // so the env loads, then run another install so its dependency policies (is-positive as a
       // dev dep) are applied to the components.
-      helper.command.install('@teambit/react@1.0.1042 @teambit/aspect@1.0.1042');
+      helper.command.install('@teambit/react@1.0.1107 @teambit/aspect@1.0.1107');
       helper.command.install();
       helper.command.tagWithoutBuild();
     });
