@@ -915,7 +915,7 @@ importers:
         version: 1.0.3
       '@teambit/preview.react-preview':
         specifier: ^1.1.13
-        version: 1.1.13(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
+        version: 1.2.0(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
       '@teambit/react.content.react-overview':
         specifier: 1.96.6
         version: 1.96.6(@apollo/client@3.12.2)(@testing-library/react@14.3.1)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -942,7 +942,7 @@ importers:
         version: 0.0.45(react-dom@19.2.7)(react@19.2.7)
       '@teambit/react.webpack.react-webpack':
         specifier: ^1.0.56
-        version: 1.0.59(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)
+        version: 1.0.60(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)
       '@teambit/scope.content.scope-overview':
         specifier: 1.96.8
         version: 1.96.8(@apollo/client@3.12.2)(@testing-library/react@14.3.1)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -1726,6 +1726,9 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
@@ -2216,9 +2219,6 @@ importers:
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
 
   components/bit/get-bit-version:
     dependencies:
@@ -21037,6 +21037,9 @@ importers:
       '@teambit/base-ui.surfaces.split-pane.split-pane':
         specifier: 1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/compositions.ui.composition-live-controls':
         specifier: ^0.0.6
         version: 0.0.6(react@19.2.7)
@@ -21143,9 +21146,6 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
@@ -22368,6 +22368,9 @@ importers:
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.2
         version: 1.0.2(react@19.2.7)
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/design.ui.surfaces.status-message-card':
         specifier: 0.0.18
         version: 0.0.18(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
@@ -22411,9 +22414,6 @@ importers:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/docs.content.docs-overview':
         specifier: 1.96.8
         version: 1.96.8(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -23408,9 +23408,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.4
         version: 1.2.4
-      '@teambit/design.ui.brand.logo':
-        specifier: 1.96.19
-        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
@@ -23517,6 +23514,9 @@ importers:
       '@teambit/bit.content.what-is-bit':
         specifier: 1.96.13
         version: 1.96.13(@testing-library/react@14.3.1)(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/design.ui.brand.logo':
+        specifier: 1.96.19
+        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(type-fest@1.4.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
@@ -24424,6 +24424,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
+      '@teambit/ui-foundation.ui.is-browser':
+        specifier: ^0.0.500
+        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
@@ -24449,9 +24452,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-test-renderer@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
-      '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
-        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25545,6 +25545,9 @@ importers:
       chalk:
         specifier: 4.1.2
         version: 4.1.2
+      cross-fetch:
+        specifier: 3.1.5
+        version: 3.1.5
       filenamify:
         specifier: 4.2.0
         version: 4.2.0
@@ -25563,6 +25566,9 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
+      lru-cache:
+        specifier: 10.4.3
+        version: 10.4.3
       mime:
         specifier: 2.5.2
         version: 2.5.2
@@ -25627,12 +25633,6 @@ importers:
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
-      lru-cache:
-        specifier: 10.4.3
-        version: 10.4.3
 
   scopes/preview/ui/component-preview:
     dependencies:
@@ -26019,6 +26019,9 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
       mini-css-extract-plugin:
         specifier: 2.2.2
         version: 2.2.2(webpack@5.97.1)
@@ -26152,9 +26155,6 @@ importers:
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(esbuild@0.14.29)(uglify-js@3.19.3)
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
 
   scopes/react/ui/compositions-app:
     dependencies:
@@ -56297,7 +56297,7 @@ snapshots:
       html-entities: 2.6.0
       loader-utils: 2.0.4
       react-refresh: 0.14.0
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       source-map: 0.7.4
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     optionalDependencies:
@@ -56314,7 +56314,7 @@ snapshots:
       html-entities: 2.6.0
       loader-utils: 2.0.4
       react-refresh: 0.14.0
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       source-map: 0.7.4
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     optionalDependencies:
@@ -56331,7 +56331,7 @@ snapshots:
       html-entities: 2.6.0
       loader-utils: 2.0.4
       react-refresh: 0.14.0
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       source-map: 0.7.4
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     optionalDependencies:
@@ -56348,7 +56348,7 @@ snapshots:
       html-entities: 2.6.0
       loader-utils: 2.0.4
       react-refresh: 0.14.0
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       source-map: 0.7.4
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     optionalDependencies:
@@ -56365,7 +56365,7 @@ snapshots:
       html-entities: 2.6.0
       loader-utils: 2.0.4
       react-refresh: 0.14.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       source-map: 0.7.4
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     optionalDependencies:
@@ -56382,7 +56382,7 @@ snapshots:
       html-entities: 2.6.0
       loader-utils: 2.0.4
       react-refresh: 0.14.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       source-map: 0.7.4
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     optionalDependencies:
@@ -62212,7 +62212,6 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.14)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
-      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/legacy-bit-id': 1.1.3
@@ -62284,7 +62283,6 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.14)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
-      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy-bit-id': 1.1.3
@@ -62356,7 +62354,6 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.14)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
-      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/legacy-bit-id': 1.1.3
@@ -71448,6 +71445,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
@@ -71522,6 +71520,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -71596,6 +71595,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -71670,6 +71670,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
@@ -71744,6 +71745,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
@@ -71818,6 +71820,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -71892,6 +71895,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -77360,6 +77364,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@4.3.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@18.3.1)(react@18.3.1)
@@ -77393,6 +77398,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@4.3.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -77426,6 +77432,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.3)(@types/react@19.2.14)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.14)(chai@5.2.1)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -90193,57 +90200,6 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/preview.react-preview@1.1.13(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)':
-    dependencies:
-      '@bitdev/react.preview.react-docs-app': 0.0.11
-      '@teambit/react.mounter': 1.1.9(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/react.webpack.react-webpack': 1.0.59(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)
-      '@teambit/webpack.webpack-bundler': 1.0.19(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.28.2)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
-      html-webpack-inject-plugin: 5.3.1(html-webpack-plugin@5.3.2)(webpack@5.97.1)
-      object-hash: 3.0.0
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
-      webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.97.1)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@parcel/css'
-      - '@rspack/core'
-      - '@swc/core'
-      - '@swc/css'
-      - '@types/node'
-      - '@types/react'
-      - '@types/webpack'
-      - babel-plugin-macros
-      - browserslist
-      - bufferutil
-      - clean-css
-      - csso
-      - debug
-      - esbuild
-      - eslint
-      - fibers
-      - html-webpack-plugin
-      - less
-      - lightningcss
-      - node-notifier
-      - node-sass
-      - rollup
-      - sass
-      - sass-embedded
-      - sockjs-client
-      - supports-color
-      - ts-node
-      - type-fest
-      - typescript
-      - uglify-js
-      - utf-8-validate
-      - vue-template-compiler
-      - webpack-cli
-      - webpack-hot-middleware
-      - webpack-plugin-serve
-
   '@teambit/preview.react-preview@1.2.0(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(supports-color@9.4.0)(type-fest@1.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)':
     dependencies:
       '@bitdev/react.preview.react-docs-app': 0.0.11
@@ -90313,6 +90269,62 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(supports-color@9.4.0)(utf-8-validate@5.0.5)(webpack@5.97.1)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@minify-html/node'
+      - '@parcel/css'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - '@types/node'
+      - '@types/react'
+      - '@types/webpack'
+      - babel-plugin-macros
+      - browserslist
+      - bufferutil
+      - clean-css
+      - cssnano
+      - csso
+      - debug
+      - esbuild
+      - eslint
+      - fibers
+      - html-minifier-terser
+      - html-webpack-plugin
+      - less
+      - lightningcss
+      - node-notifier
+      - node-sass
+      - postcss
+      - rollup
+      - sass
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - ts-node
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+
+  '@teambit/preview.react-preview@1.2.0(@babel/core@7.28.3)(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.14)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-webpack-plugin@5.3.2)(less@4.2.1)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)':
+    dependencies:
+      '@bitdev/react.preview.react-docs-app': 0.0.11
+      '@teambit/react.mounter': 1.1.9(@types/node@22.10.5)(@types/react@19.2.14)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/react.webpack.react-webpack': 1.0.60(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.28.2)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      html-webpack-inject-plugin: 5.3.1(html-webpack-plugin@5.3.2)(webpack@5.97.1)
+      object-hash: 3.0.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
+      webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.97.1)
     transitivePeerDependencies:
       - '@babel/core'
       - '@minify-html/node'
@@ -90578,12 +90590,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -90646,12 +90660,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -90714,12 +90730,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -90782,12 +90800,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -90850,12 +90870,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -90918,12 +90940,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 5.2.1
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -90960,6 +90984,7 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/harmony': 0.4.12
+      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@18.3.1)(react@18.3.1)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -90974,6 +90999,7 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/harmony': 0.4.12
+      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.14)(react-dom@19.2.7)(react@19.2.7)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -91770,6 +91796,17 @@ snapshots:
     dependencies:
       '@teambit/component-id': 1.2.4
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@18.3.1)(react@18.3.1)
+      find-root: 1.1.0
+      fs-extra: 10.0.0
+      lodash: 4.17.21
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@teambit/react.babel.bit-react-transformer@1.0.61(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@teambit/component-id': 1.2.4
+      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@19.2.7)
       find-root: 1.1.0
       fs-extra: 10.0.0
       lodash: 4.17.21
@@ -96008,148 +96045,6 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/react.webpack.react-webpack@1.0.59(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)':
-    dependencies:
-      '@babel/preset-env': 7.29.2(@babel/core@7.28.3)(supports-color@9.4.0)
-      '@babel/preset-react': 7.22.15(@babel/core@7.28.3)(supports-color@9.4.0)
-      '@babel/preset-typescript': 7.28.5(@babel/core@7.28.3)(supports-color@9.4.0)
-      '@bitdev/react.webpack.refresh-overlay': 1.0.0
-      '@mdx-js/loader': 3.1.1(supports-color@9.4.0)(webpack@5.97.1)
-      '@parcel/css': 1.14.0
-      '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@1.4.0)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)(webpack@5.97.1)
-      '@svgr/webpack': 8.1.0(typescript@5.9.2)
-      '@swc/css': 0.0.20
-      '@teambit/component-id': 1.2.4
-      '@teambit/mdx.modules.mdx-pre-loader': 0.0.1
-      '@teambit/mdx.modules.mdx-v3-options': 0.0.3(rollup@4.53.3)(supports-color@9.4.0)
-      '@teambit/react.babel.bit-react-transformer': 1.0.59(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/webpack.modules.generate-style-loaders': 1.0.21
-      '@teambit/webpack.modules.style-regexps': 1.0.10
-      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.33.0)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
-      babel-loader: 9.1.0(@babel/core@7.28.3)(webpack@5.97.1)
-      css-loader: 6.7.2(webpack@5.97.1)
-      css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.33.0)(webpack@5.97.1)
-      esbuild: 0.14.29
-      less-loader: 11.1.0(less@4.2.1)(webpack@5.97.1)
-      lightningcss: 1.33.0
-      lodash: 4.17.21
-      mini-css-extract-plugin: 2.9.2(webpack@5.97.1)
-      new-url-loader: 0.1.1(webpack@5.97.1)
-      postcss: 8.4.19
-      postcss-flexbugs-fixes: 5.0.2(postcss@8.4.19)
-      postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.97.1)
-      postcss-normalize: 10.0.1(browserslist@4.23.3)(postcss@8.4.19)
-      postcss-preset-env: 7.8.3(postcss@8.4.19)
-      react-dev-utils: 12.0.1(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)(webpack@5.97.1)
-      react-dom: 19.2.7(react@19.2.7)
-      react-refresh: 0.14.0
-      resolve-url-loader: 5.0.0
-      sass-loader: 13.3.2(sass-embedded@1.100.0)(sass@1.63.6)(webpack@5.97.1)
-      source-map-loader: 4.0.1(webpack@5.97.1)
-      style-loader: 3.3.1(webpack@5.97.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(uglify-js@3.19.3)(webpack@5.97.1)
-      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@rspack/core'
-      - '@swc/core'
-      - '@types/webpack'
-      - browserslist
-      - bufferutil
-      - clean-css
-      - csso
-      - debug
-      - eslint
-      - fibers
-      - less
-      - node-sass
-      - react
-      - rollup
-      - sass
-      - sass-embedded
-      - sockjs-client
-      - supports-color
-      - type-fest
-      - typescript
-      - uglify-js
-      - utf-8-validate
-      - vue-template-compiler
-      - webpack-cli
-      - webpack-dev-server
-      - webpack-hot-middleware
-      - webpack-plugin-serve
-
-  '@teambit/react.webpack.react-webpack@1.0.59(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)':
-    dependencies:
-      '@babel/preset-env': 7.29.2(@babel/core@7.28.3)(supports-color@9.4.0)
-      '@babel/preset-react': 7.22.15(@babel/core@7.28.3)(supports-color@9.4.0)
-      '@babel/preset-typescript': 7.28.5(@babel/core@7.28.3)(supports-color@9.4.0)
-      '@bitdev/react.webpack.refresh-overlay': 1.0.0
-      '@mdx-js/loader': 3.1.1(supports-color@9.4.0)(webpack@5.97.1)
-      '@parcel/css': 1.14.0
-      '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@1.4.0)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.97.1)
-      '@svgr/webpack': 8.1.0(typescript@5.9.2)
-      '@swc/css': 0.0.20
-      '@teambit/component-id': 1.2.4
-      '@teambit/mdx.modules.mdx-pre-loader': 0.0.1
-      '@teambit/mdx.modules.mdx-v3-options': 0.0.3(rollup@4.53.3)(supports-color@9.4.0)
-      '@teambit/react.babel.bit-react-transformer': 1.0.59(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/webpack.modules.generate-style-loaders': 1.0.21
-      '@teambit/webpack.modules.style-regexps': 1.0.10
-      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.33.0)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
-      babel-loader: 9.1.0(@babel/core@7.28.3)(webpack@5.97.1)
-      css-loader: 6.7.2(webpack@5.97.1)
-      css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.33.0)(webpack@5.97.1)
-      esbuild: 0.14.29
-      less-loader: 11.1.0(less@4.2.1)(webpack@5.97.1)
-      lightningcss: 1.33.0
-      lodash: 4.17.21
-      mini-css-extract-plugin: 2.9.2(webpack@5.97.1)
-      new-url-loader: 0.1.1(webpack@5.97.1)
-      postcss: 8.4.19
-      postcss-flexbugs-fixes: 5.0.2(postcss@8.4.19)
-      postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.97.1)
-      postcss-normalize: 10.0.1(browserslist@4.23.3)(postcss@8.4.19)
-      postcss-preset-env: 7.8.3(postcss@8.4.19)
-      react-dev-utils: 12.0.1(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)(webpack@5.97.1)
-      react-dom: 19.2.7(react@19.2.7)
-      react-refresh: 0.14.0
-      resolve-url-loader: 5.0.0
-      sass-loader: 13.3.2(sass-embedded@1.100.0)(sass@1.63.6)(webpack@5.97.1)
-      source-map-loader: 4.0.1(webpack@5.97.1)
-      style-loader: 3.3.1(webpack@5.97.1)
-      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(uglify-js@3.19.3)(webpack@5.97.1)
-      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@rspack/core'
-      - '@swc/core'
-      - '@types/webpack'
-      - browserslist
-      - bufferutil
-      - clean-css
-      - csso
-      - debug
-      - eslint
-      - fibers
-      - less
-      - node-sass
-      - react
-      - rollup
-      - sass
-      - sass-embedded
-      - sockjs-client
-      - supports-color
-      - type-fest
-      - typescript
-      - uglify-js
-      - utf-8-validate
-      - vue-template-compiler
-      - webpack-cli
-      - webpack-dev-server
-      - webpack-hot-middleware
-      - webpack-plugin-serve
-
   '@teambit/react.webpack.react-webpack@1.0.60(@babel/core@7.28.3)(@rspack/core@1.7.12)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(csso@5.0.5)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@18.3.1)(react@18.3.1)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(supports-color@9.4.0)(type-fest@1.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)':
     dependencies:
       '@babel/preset-env': 7.29.2(@babel/core@7.28.3)(supports-color@9.4.0)
@@ -96292,6 +96187,148 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
+  '@teambit/react.webpack.react-webpack@1.0.60(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)':
+    dependencies:
+      '@babel/preset-env': 7.29.2(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@babel/preset-react': 7.22.15(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@babel/preset-typescript': 7.28.5(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@bitdev/react.webpack.refresh-overlay': 1.0.0
+      '@mdx-js/loader': 3.1.1(supports-color@9.4.0)(webpack@5.97.1)
+      '@parcel/css': 1.14.0
+      '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@1.4.0)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)(webpack@5.97.1)
+      '@svgr/webpack': 8.1.0(typescript@5.9.2)
+      '@swc/css': 0.0.20
+      '@teambit/component-id': 1.2.4
+      '@teambit/mdx.modules.mdx-pre-loader': 0.0.1
+      '@teambit/mdx.modules.mdx-v3-options': 0.0.3(rollup@4.53.3)(supports-color@9.4.0)
+      '@teambit/react.babel.bit-react-transformer': 1.0.61(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.generate-style-loaders': 1.0.21
+      '@teambit/webpack.modules.style-regexps': 1.0.10
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.33.0)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      babel-loader: 9.1.0(@babel/core@7.28.3)(webpack@5.97.1)
+      css-loader: 6.7.2(webpack@5.97.1)
+      css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.33.0)(webpack@5.97.1)
+      esbuild: 0.14.29
+      less-loader: 11.1.0(less@4.2.1)(webpack@5.97.1)
+      lightningcss: 1.33.0
+      lodash: 4.17.21
+      mini-css-extract-plugin: 2.9.2(webpack@5.97.1)
+      new-url-loader: 0.1.1(webpack@5.97.1)
+      postcss: 8.4.19
+      postcss-flexbugs-fixes: 5.0.2(postcss@8.4.19)
+      postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.97.1)
+      postcss-normalize: 10.0.1(browserslist@4.23.3)(postcss@8.4.19)
+      postcss-preset-env: 7.8.3(postcss@8.4.19)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)(webpack@5.97.1)
+      react-dom: 19.2.7(react@19.2.7)
+      react-refresh: 0.14.0
+      resolve-url-loader: 5.0.0
+      sass-loader: 13.3.2(sass-embedded@1.100.0)(sass@1.63.6)(webpack@5.97.1)
+      source-map-loader: 4.0.1(webpack@5.97.1)
+      style-loader: 3.3.1(webpack@5.97.1)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(uglify-js@3.19.3)(webpack@5.97.1)
+      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@types/webpack'
+      - browserslist
+      - bufferutil
+      - clean-css
+      - csso
+      - debug
+      - eslint
+      - fibers
+      - less
+      - node-sass
+      - react
+      - rollup
+      - sass
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+
+  '@teambit/react.webpack.react-webpack@1.0.60(@babel/core@7.28.3)(@rspack/core@1.7.8)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(debug@4.3.4)(eslint@8.56.0)(less@4.2.1)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(sass@1.63.6)(type-fest@1.4.0)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)':
+    dependencies:
+      '@babel/preset-env': 7.29.2(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@babel/preset-react': 7.22.15(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@babel/preset-typescript': 7.28.5(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@bitdev/react.webpack.refresh-overlay': 1.0.0
+      '@mdx-js/loader': 3.1.1(supports-color@9.4.0)(webpack@5.97.1)
+      '@parcel/css': 1.14.0
+      '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@1.4.0)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.97.1)
+      '@svgr/webpack': 8.1.0(typescript@5.9.2)
+      '@swc/css': 0.0.20
+      '@teambit/component-id': 1.2.4
+      '@teambit/mdx.modules.mdx-pre-loader': 0.0.1
+      '@teambit/mdx.modules.mdx-v3-options': 0.0.3(rollup@4.53.3)(supports-color@9.4.0)
+      '@teambit/react.babel.bit-react-transformer': 1.0.61(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.generate-style-loaders': 1.0.21
+      '@teambit/webpack.modules.style-regexps': 1.0.10
+      '@teambit/webpack.webpack-dev-server': 1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.33.0)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)
+      babel-loader: 9.1.0(@babel/core@7.28.3)(webpack@5.97.1)
+      css-loader: 6.7.2(webpack@5.97.1)
+      css-minimizer-webpack-plugin: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.33.0)(webpack@5.97.1)
+      esbuild: 0.14.29
+      less-loader: 11.1.0(less@4.2.1)(webpack@5.97.1)
+      lightningcss: 1.33.0
+      lodash: 4.17.21
+      mini-css-extract-plugin: 2.9.2(webpack@5.97.1)
+      new-url-loader: 0.1.1(webpack@5.97.1)
+      postcss: 8.4.19
+      postcss-flexbugs-fixes: 5.0.2(postcss@8.4.19)
+      postcss-loader: 7.0.1(postcss@8.4.19)(webpack@5.97.1)
+      postcss-normalize: 10.0.1(browserslist@4.23.3)(postcss@8.4.19)
+      postcss-preset-env: 7.8.3(postcss@8.4.19)
+      react-dev-utils: 12.0.1(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)(webpack@5.97.1)
+      react-dom: 19.2.7(react@19.2.7)
+      react-refresh: 0.14.0
+      resolve-url-loader: 5.0.0
+      sass-loader: 13.3.2(sass-embedded@1.100.0)(sass@1.63.6)(webpack@5.97.1)
+      source-map-loader: 4.0.1(webpack@5.97.1)
+      style-loader: 3.3.1(webpack@5.97.1)
+      terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(uglify-js@3.19.3)(webpack@5.97.1)
+      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@types/webpack'
+      - browserslist
+      - bufferutil
+      - clean-css
+      - csso
+      - debug
+      - eslint
+      - fibers
+      - less
+      - node-sass
+      - react
+      - rollup
+      - sass
+      - sass-embedded
+      - sockjs-client
+      - supports-color
+      - type-fest
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+      - webpack-dev-server
+      - webpack-hot-middleware
+      - webpack-plugin-serve
+
   '@teambit/react@file:scopes/react/react(@babel/core@7.26.9)(@babel/traverse@7.29.7)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react-hooks@8.0.1)(@types/node@22.10.5)(@types/react-dom@19.2.3)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.14)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(graphql@15.8.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(rollup@4.53.3)(sass-embedded@1.100.0)(type-fest@1.4.0)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)':
     dependencies:
       '@babel/helper-plugin-test-runner': 7.16.7(supports-color@9.4.0)
@@ -96367,6 +96404,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -96517,6 +96555,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -96667,6 +96706,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -96817,6 +96857,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -96967,6 +97008,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -97117,6 +97159,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -97267,6 +97310,7 @@ snapshots:
       less-loader: 10.0.0(less@4.2.1)(webpack@5.97.1)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.97.1)
       new-url-loader: 0.1.1(webpack@5.97.1)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -107661,37 +107705,6 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack.webpack-dev-server@1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)':
-    dependencies:
-      '@teambit/toolbox.path.path': 0.0.8
-      '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-bundler': 1.0.19(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.28.2)(react@19.2.7)(uglify-js@3.19.3)
-      find-root: 1.1.0
-      html-webpack-plugin: 5.6.3(@rspack/core@1.7.8)(webpack@5.97.1)
-      object-hash: 3.0.0
-      react-dev-utils: 12.0.1(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)(webpack@5.97.1)
-      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
-      webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.97.1)
-    transitivePeerDependencies:
-      - '@parcel/css'
-      - '@rspack/core'
-      - '@swc/core'
-      - '@swc/css'
-      - bufferutil
-      - clean-css
-      - csso
-      - debug
-      - esbuild
-      - eslint
-      - lightningcss
-      - react
-      - supports-color
-      - typescript
-      - uglify-js
-      - utf-8-validate
-      - vue-template-compiler
-      - webpack-cli
-
   '@teambit/webpack.webpack-dev-server@1.0.26(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(react@19.2.7)(typescript@7.0.2)(utf-8-validate@5.0.5)(webpack@5.97.1)':
     dependencies:
       '@teambit/toolbox.path.path': 0.0.8
@@ -108132,6 +108145,44 @@ snapshots:
       react-dev-utils: 12.0.1(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)(webpack@5.97.1)
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
       webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(supports-color@9.4.0)(utf-8-validate@5.0.5)(webpack@5.97.1)
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@parcel/css'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - bufferutil
+      - clean-css
+      - cssnano
+      - csso
+      - debug
+      - esbuild
+      - eslint
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - react
+      - react-dom
+      - supports-color
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - vue-template-compiler
+      - webpack-cli
+
+  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(bufferutil@4.0.3)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(lightningcss@1.28.2)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)(utf-8-validate@5.0.5)(webpack@5.97.1)':
+    dependencies:
+      '@teambit/toolbox.path.path': 0.0.8
+      '@teambit/webpack.modules.config-mutator': 0.0.177(esbuild@0.14.29)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(esbuild@0.14.29)(lightningcss@1.28.2)(postcss@8.4.45)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.8)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.28.2)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      find-root: 1.1.0
+      html-webpack-plugin: 5.6.3(@rspack/core@1.7.8)(webpack@5.97.1)
+      object-hash: 3.0.0
+      react-dev-utils: 12.0.1(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)(webpack@5.97.1)
+      webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
+      webpack-dev-server: 4.15.0(bufferutil@4.0.3)(debug@4.3.4)(utf-8-validate@5.0.5)(webpack@5.97.1)
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@parcel/css'
@@ -114148,14 +114199,14 @@ snapshots:
     dependencies:
       '@babel/core': 7.26.9
       find-cache-dir: 3.3.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
 
   babel-loader@9.1.0(@babel/core@7.28.3)(webpack@5.97.1):
     dependencies:
       '@babel/core': 7.28.3(supports-color@9.4.0)
       find-cache-dir: 3.3.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
 
   babel-loader@9.1.2(@babel/core@7.28.3)(webpack@5.97.1):
@@ -120912,7 +120963,7 @@ snapshots:
 
   mini-css-extract-plugin@2.9.2(webpack@5.97.1):
     dependencies:
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       tapable: 2.3.3
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
 
@@ -126909,13 +126960,13 @@ snapshots:
       open: 8.4.2
       p-retry: 4.6.2
       rimraf: 3.0.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       selfsigned: 2.4.1
       serve-index: 1.9.1(supports-color@9.4.0)
       sockjs: 0.3.24
       spdy: 4.0.2(supports-color@9.4.0)
       webpack-dev-middleware: 5.3.4(webpack@5.97.1)
-      ws: 8.18.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+      ws: 8.21.1(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     optionalDependencies:
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     transitivePeerDependencies:
@@ -126949,13 +127000,13 @@ snapshots:
       open: 8.4.2
       p-retry: 4.6.2
       rimraf: 3.0.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       selfsigned: 2.4.1
       serve-index: 1.9.1(supports-color@9.4.0)
       sockjs: 0.3.24
       spdy: 4.0.2(supports-color@9.4.0)
       webpack-dev-middleware: 5.3.4(webpack@5.97.1)
-      ws: 8.18.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+      ws: 8.21.1(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     optionalDependencies:
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     transitivePeerDependencies:
@@ -126989,13 +127040,13 @@ snapshots:
       open: 8.4.2
       p-retry: 4.6.2
       rimraf: 3.0.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       selfsigned: 2.4.1
       serve-index: 1.9.1(supports-color@9.4.0)
       sockjs: 0.3.24
       spdy: 4.0.2(supports-color@9.4.0)
       webpack-dev-middleware: 5.3.4(webpack@5.97.1)
-      ws: 8.18.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+      ws: 8.21.1(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     optionalDependencies:
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     transitivePeerDependencies:
@@ -127029,13 +127080,13 @@ snapshots:
       open: 8.4.2
       p-retry: 4.6.2
       rimraf: 3.0.2
-      schema-utils: 4.2.0
+      schema-utils: 4.3.3
       selfsigned: 2.4.1
       serve-index: 1.9.1(supports-color@9.4.0)
       sockjs: 0.3.24
       spdy: 4.0.2(supports-color@9.4.0)
       webpack-dev-middleware: 5.3.4(webpack@5.97.1)
-      ws: 8.18.0(bufferutil@4.0.3)(utf-8-validate@5.0.5)
+      ws: 8.21.1(bufferutil@4.0.3)(utf-8-validate@5.0.5)
     optionalDependencies:
       webpack: 5.97.1(esbuild@0.14.29)(uglify-js@3.19.3)
     transitivePeerDependencies:
