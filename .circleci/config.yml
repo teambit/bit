@@ -744,21 +744,24 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
+      # TEMPORARY diagnostic - remove once the perf regression below is root-caused. Sets up the
+      # bvm-linked nightly release build (not this branch's code, already fetched by setup_harmony)
+      # BEFORE the repo-bit check runs, so it's ready regardless of whether that check fails/times
+      # out - a step after a failed step is skipped unless it's the one directly marked when:always,
+      # and CircleCI doesn't propagate that through a whole command's inner steps.
+      - install_bvm
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      - bvm_upgrade
       - run:
           name: 'check circular dependencies (repo bit)'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
           # the script normally finishes in seconds; bound it well under the platform's default
           # 10m no-output kill so a stall fails with a clear message instead of a silent timeout.
           no_output_timeout: 6m
-      # TEMPORARY diagnostic - remove once the perf regression above is root-caused. Runs the same
-      # check against the bvm-linked nightly release build (not this branch's code) already fetched
-      # by setup_harmony, to see whether the slowdown is specific to the repo's own binary/workspace
-      # state or present in a normal release too. Informational only: never fails the job.
-      - install_bvm
-      - run: npm view @teambit/bit version > ./version.txt
-      - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      - bvm_upgrade
+      # comparison run against the bvm-linked build set up above. informational only: never fails
+      # the job, and when:always so it still runs even if the repo-bit check above failed/timed out.
       - run:
           name: 'check circular dependencies (bvm bit, diagnostic only)'
           command: 'cd bit && (BIT_BIN=bbit ./scripts/circular-deps-check/ci-check.sh || true)'
