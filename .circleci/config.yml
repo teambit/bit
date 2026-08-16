@@ -734,7 +734,13 @@ jobs:
       - attach_workspace:
           at: ./
       - bit_global_for_npm
-      - bit_config
+      # was defaulting to the 'hub-stg' (staging) hub_domain via a bare bit_config call - every
+      # other bit-executing job (bit_pr, bit_merge) goes through setup_bit_environment, which
+      # defaults to production 'hub'. building the workspace graph here can trigger a live import
+      # of any component objects not yet in the local scope (e.g. a just-bumped env version), and
+      # staging is less reliable than prod for that - suspected cause of the CI hangs on this job.
+      - bit_config:
+          env: 'hub'
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
@@ -742,6 +748,14 @@ jobs:
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
+          # the script normally finishes in seconds; bound it well under the platform's default
+          # 10m no-output kill so a stall fails with a clear message instead of a silent timeout.
+          no_output_timeout: 6m
+      # bit writes debug-level logs to debug.log by default (independent of BIT_LOG, which would
+      # print to stdout and corrupt the JSON this check parses) - persist it so a future hang or
+      # failure has the network/scope-import trail to look at, same as the other bit-running jobs.
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   check_version_sync:
     <<: *defaults

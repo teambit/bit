@@ -30,6 +30,12 @@ console.log(\`  Created: \${baseline.timestamp}\`);
 "
 echo ""
 
+# Diagnostics: confirm which bit binary/version actually runs, and where it's pointed
+echo "bit binary: $(command -v bit)"
+bit --version
+echo "hub_domain: $(bit config get hub_domain)"
+echo ""
+
 # Run the workspace cycle check
 echo "Running workspace cycle monitoring..."
 node monitor-workspace-cycle.js
