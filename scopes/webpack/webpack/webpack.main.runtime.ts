@@ -12,12 +12,24 @@ import { WorkspaceAspect } from '@teambit/workspace';
 
 import { WebpackAspect } from './webpack.aspect';
 
+/**
+ * @deprecated the bundler/dev-server that build component previews/apps no longer go through this
+ * aspect - the react/node/aspect envs bundle with `@teambit/webpack.webpack-bundler` directly (see
+ * https://bit.cloud/teambit/webpack/~change-requests/decouple-webpack-bundler-from-webpack-aspect).
+ * Source this type from `@teambit/webpack.webpack-bundler` instead.
+ */
 export type WebpackConfigTransformContext = GlobalWebpackConfigTransformContext & {
   target: Target;
 };
 
+/**
+ * @deprecated source from `@teambit/webpack.webpack-bundler` instead; see `WebpackConfigTransformContext`.
+ */
 export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransformContext & DevServerContext;
 
+/**
+ * @deprecated source from `@teambit/webpack.webpack-bundler` instead; see `WebpackConfigTransformContext`.
+ */
 export type GlobalWebpackConfigTransformContext = {
   mode: BundlerMode;
   /**
@@ -33,11 +45,20 @@ export type GlobalWebpackConfigTransformContext = {
   hostRootDir?: string;
 };
 
+/**
+ * @deprecated source from `@teambit/webpack.webpack-bundler` instead; see `WebpackConfigTransformContext`.
+ * Constructing this against `@teambit/webpack`'s own `WebpackConfigMutator` re-export and applying
+ * it to a config built by `@teambit/webpack.webpack-bundler` mixes two independently-resolved
+ * webpack instances.
+ */
 export type WebpackConfigTransformer = (
   config: WebpackConfigMutator,
   context: WebpackConfigTransformContext
 ) => WebpackConfigMutator;
 
+/**
+ * @deprecated source from `@teambit/webpack.webpack-dev-server` instead; see `WebpackConfigTransformContext`.
+ */
 export type WebpackConfigDevServerTransformer = (
   config: WebpackConfigMutator,
   context: WebpackConfigDevServerTransformContext
@@ -51,6 +72,14 @@ export interface WebpackConfigWithDevServer extends Configuration {
   favicon?: string;
 }
 
+/**
+ * @deprecated component previews/apps no longer build through this aspect - the react/node/aspect
+ * envs bundle with `@teambit/webpack.webpack-bundler` and `@teambit/webpack.webpack-dev-server`
+ * directly (see
+ * https://bit.cloud/teambit/webpack/~change-requests/decouple-webpack-bundler-from-webpack-aspect).
+ * `createBundler`/`createDevServer` have been removed; use those packages instead. Kept only so the
+ * aspect still loads for backward compatibility.
+ */
 export class WebpackMain {
   constructor(
     /**
