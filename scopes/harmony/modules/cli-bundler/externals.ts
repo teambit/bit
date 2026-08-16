@@ -52,14 +52,17 @@ const TOOLCHAINS = [
   // global - same "resolved by string, must exist on disk" shape as webpack/babel-loader above, just
   // one level deeper and far smaller. Confirmed via e2e: bundled `bit tag --build` on a workspace
   // whose env still uses webpack failed with `Cannot find module 'process/browser'`.
-  //
-  // NOT extended to the rest of `webpack-fallbacks.ts`'s ~20-package polyfill list (2026-08-12): that
-  // module blows up on the *first* missing one, so a repro surfaced `buffer/` right behind this one,
-  // and reading the file shows ~19 more behind that. Adding them all was tried and reverted - open
-  // question first, not "keep adding packages": why does building the preview/bundle for a trivial
-  // env-aspect component reach a full node-core-module browser-polyfill path at all. See
-  // bundle-plan.md §14 (2026-08-12) for the still-open investigation.
   'process/browser',
+  // right behind `process/browser` in the same crash: `webpack-fallbacks-aliases.ts` has exactly two
+  // eager `require.resolve()`s at module scope - `process/browser` and this one - and blows up on the
+  // first missing one. Confirmed via a live CI failure (2026-08-13,
+  // `custom-env-operations.e2e.ts` "should be able to re-tag with no errors", `bit tag --build`):
+  // `Cannot find module 'buffer/'` from that exact file. The open question this entry used to wait on
+  // - whether fixing it would just be the first of `webpack-fallbacks.ts`'s ~20-package polyfill list
+  // - is resolved: the CI stack trace only ever reaches `webpack-fallbacks-aliases.js` (this 2-entry
+  // file), not `webpack-fallbacks.ts` (used elsewhere, by the preview rspack config, not this
+  // codepath). See bundle-plan.md §14 (2026-08-13).
+  'buffer/',
 ];
 
 /**
