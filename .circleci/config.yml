@@ -896,13 +896,13 @@ jobs:
 
   # ========== Bit CI Jobs ==========
   bit_pr:
-    # xlarge validated on a worst-case 98-component cascade (no OOM at 12GB heap, same wall time
-    # as 2xlarge). If this job dies with "Killed", revert to 2xlarge + max-old-space-size=30000.
-    resource_class: xlarge
+    # back on 2xlarge: on this branch the lane build got OOM-killed at 16GB during the react env's
+    # Preview webpack bundling (cgroup pinned at 13-16GB), as the xlarge comment predicted.
+    resource_class: 2xlarge
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=12288
+      NODE_OPTIONS: --max-old-space-size=30000
     steps:
       - attach_workspace:
           at: ./
