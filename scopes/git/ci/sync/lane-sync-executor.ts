@@ -101,6 +101,12 @@ export function racedAdoptionPushSummary(laneName: string): string {
   return racedSummary(laneName, 'lane untouched; adoption ledger commit lost the push race — next run re-plans');
 }
 
+/**
+ * An HTML comment embedded in the run-summary comment's body, so `upsertComment` finds and replaces
+ * THIS comment on a later run rather than posting a duplicate summary on every push.
+ */
+export const RUN_SUMMARY_MARKER = '<!-- bit-ci-sync:run-summary -->';
+
 export type LaneSyncDeps = {
   lanes: LanesMain;
   /** for snapPrCommit + getDefaultBranchName + switchToLaneForSync */
@@ -513,7 +519,14 @@ export class LaneSyncExecutor {
         if (tipIsSyncCommit) {
           return `${laneName} -> noop (converged; branch tip is already this reconciler's own sync commit)`;
         }
-        return this.executeExportBranch({ target, laneIdStr, branch, defaultBranch, probeOnly: action.probeOnly });
+        return this.executeExportBranch({
+          target,
+          laneIdStr,
+          branch,
+          defaultBranch,
+          probeOnly: action.probeOnly,
+          preExportLane: remoteLane,
+        });
       case 'merge-diverged':
         return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch });
       case 'adopt-branch':
@@ -679,12 +692,15 @@ export class LaneSyncExecutor {
     branch,
     defaultBranch,
     probeOnly,
+    preExportLane,
   }: {
     target: LaneTarget;
     laneIdStr: string;
     branch: string;
     defaultBranch: string;
     probeOnly?: boolean;
+    /** The lane's content BEFORE this export — the baseline the run-summary comment diffs against. */
+    preExportLane: LaneData | undefined;
   }): Promise<string> {
     const { logger } = this.deps;
     const laneName = target.name;
@@ -733,6 +749,16 @@ export class LaneSyncExecutor {
           `snapped — recorded the sync ledger so the next run stops probing)`
         );
       }
+
+      // Best-effort: a comment failure must never undo a git/lane pair that already converged.
+      await this.postRunSummaryComment({
+        target,
+        laneIdStr,
+        branch,
+        laneHead: recorded.laneHead,
+        preComponents: preExportLane?.components,
+        postComponents: recorded.remoteLane.components,
+      });
       return (
         `${laneName} -> export-branch (lane ${laneIdStr} @ ${recorded.laneHead.slice(0, 9)}, ` +
         `branch ${branch} updated)`
@@ -977,20 +1003,23 @@ export class LaneSyncExecutor {
    * so any earlier fingerprint is stale), commit — crucially the `.bitmap` the snap rewrote — and push.
    * `unreadable` means the lane could no longer be read back, in which case the caller halts;
    * `raced` means a concurrent run's push already got there first, in which case the caller reports
-   * a benign noop instead. `adopted` adds the audit-only `ADOPTION_TRAILER`.
+   * a benign noop instead. `adopted` adds the audit-only `ADOPTION_TRAILER`. The re-queried lane is
+   * also the caller's only cheap source of POST-export component versions.
    */
   private async recordLaneHeadOnBranch(
     target: LaneTarget,
     laneIdStr: string,
     branch: string,
     opts: { adopted?: boolean } = {}
-  ): Promise<{ status: 'unreadable' } | { status: 'raced' } | { status: 'ok'; laneHead: string }> {
+  ): Promise<
+    { status: 'unreadable' } | { status: 'raced' } | { status: 'ok'; laneHead: string; remoteLane: LaneData }
+  > {
     const remoteLane = await this.getRemoteLane(target);
     if (!remoteLane) return { status: 'unreadable' };
     const laneHead = laneHeadFingerprint(remoteLane.components);
     const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead, opts));
     if (pushResult.raced) return { status: 'raced' };
-    return { status: 'ok', laneHead };
+    return { status: 'ok', laneHead, remoteLane };
   }
 
   /**
@@ -1471,6 +1500,51 @@ export class LaneSyncExecutor {
   }
 
   /**
+   * Post (or update) ONE maintained comment on the branch's PR: what this export did to the scope —
+   * the components it snapped and the synced branch/lane anchors — information the branch's git diff
+   * cannot show, since the snap step alone can move dependency ranges the PR's files never touched.
+   * Best-effort throughout: no configured git host, no open PR yet, or a provider that doesn't
+   * implement `upsertComment` are all normal states, not failures — the git/lane pair already
+   * converged without this comment. A comment API error warns and never fails the run.
+   */
+  private async postRunSummaryComment({
+    target,
+    laneIdStr,
+    branch,
+    laneHead,
+    preComponents,
+    postComponents,
+  }: {
+    target: LaneTarget;
+    laneIdStr: string;
+    branch: string;
+    laneHead: string;
+    preComponents: LaneData['components'] | undefined;
+    postComponents: LaneData['components'];
+  }): Promise<void> {
+    const { gitHost, logger } = this.deps;
+    if (!gitHost?.upsertComment) return;
+    const pr = await this.findPr(branch);
+    if (!pr) return;
+    // Same URL shape as the lane-sync PR body (line ~1249): the scope that HOSTS the lane, not
+    // necessarily `defaultScope`.
+    const laneUrl = `https://${getCloudDomain()}/${target.hostScope.replace('.', '/')}/~lane/${target.name}`;
+    const body = runSummaryCommentBody({
+      laneIdStr,
+      laneUrl,
+      branch,
+      branchTipSha: await this.currentBranchTip(branch),
+      laneHead,
+      changed: changedLaneComponents(preComponents, postComponents),
+    });
+    try {
+      await gitHost.upsertComment(pr.number, RUN_SUMMARY_MARKER, body);
+    } catch (e: any) {
+      logger.consoleWarning(`Could not post the run-summary comment on ${branch}'s PR: ${e?.message || e}`);
+    }
+  }
+
+  /**
    * The subject of the newest commit on the branch that isn't one of our own sync commits — it's
    * the developer's own description of the change, and becomes the snap message on the lane.
    */
@@ -1653,6 +1727,55 @@ export function laneSyncPrBody({
     listed || '_none_',
     '',
     'This PR is maintained by `bit ci sync` — push to the branch to send changes back to the lane.',
+  ].join('\n');
+}
+
+/**
+ * The lane components this export actually changed: new on the lane, or moved to a new head. Diffed
+ * by id against the lane's content BEFORE the export — `LaneData.head` is the snap hash bit assigns a
+ * lane component, so comparing it (not looking at git) is the only way to name what the snap did.
+ */
+export function changedLaneComponents(
+  before: LaneData['components'] | undefined,
+  after: LaneData['components']
+): LaneData['components'] {
+  const beforeHeads = new Map((before ?? []).map((comp) => [comp.id.toStringWithoutVersion(), comp.head]));
+  return after.filter((comp) => beforeHeads.get(comp.id.toStringWithoutVersion()) !== comp.head);
+}
+
+/**
+ * What a sync run did to the scope — information the branch's own git diff cannot show, since the
+ * snap step can move a component's recorded version with no file in the PR ever changing. Kept to one
+ * maintained comment (`RUN_SUMMARY_MARKER` + `upsertComment`) rather than one post per push.
+ */
+export function runSummaryCommentBody({
+  laneIdStr,
+  laneUrl,
+  branch,
+  branchTipSha,
+  laneHead,
+  changed,
+}: {
+  laneIdStr: string;
+  laneUrl: string;
+  branch: string;
+  branchTipSha: string | undefined;
+  laneHead: string;
+  changed: LaneData['components'];
+}): string {
+  const listed = capEntries(
+    changed.map((comp) => `- \`${comp.id.toStringWithoutVersion()}\` @ \`${comp.head.slice(0, 9)}\``),
+    '- '
+  ).join('\n');
+  return [
+    RUN_SUMMARY_MARKER,
+    `**bit ci sync** synced this branch with lane [\`${laneIdStr}\`](${laneUrl}).`,
+    '',
+    `Components snapped (${changed.length}):`,
+    listed || '_none — nothing on the lane changed this run_',
+    '',
+    `- branch: \`${branch}\`${branchTipSha ? ` @ \`${branchTipSha.slice(0, 9)}\`` : ''}`,
+    `- lane: \`${laneIdStr}\` @ \`${laneHead.slice(0, 9)}\``,
   ].join('\n');
 }
 
