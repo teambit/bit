@@ -287,13 +287,18 @@ export class MergingMain {
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
 
     if (!skipDependencyInstallation && !leftUnresolvedConflicts && !componentsHasConfigMergeConflicts) {
-      // the components were loaded (and cached) before the merge wrote the merged files and the
-      // merged config (unmerged-components store). without clearing the cache, the install below
-      // reloads them with pre-merge dependencies, so a package newly introduced on the other side
-      // never enters the install manifest and the package manager skips it ("lockfile is up to date").
-      // clear only the component caches — the scope objects were written by this very process, so
-      // the scope cache is current and clearing it would add avoidable overhead to every merge.
-      if (this.workspace) this.workspace.clearAllComponentsCache();
+      // the merged components were loaded (and cached) before the merge wrote their merged files
+      // and merged config (unmerged-components store). without clearing their cache, the install
+      // below reloads them with pre-merge dependencies, so a package newly introduced on the other
+      // side never enters the install manifest and the package manager skips it ("lockfile is up to
+      // date"). clear only the merged components (the caches are version-keyed, so pass the current
+      // workspace version — the one the pre-merge loads were cached under, and the one the install
+      // reloads since .bitmap still points to it until the snap); the rest of the workspace and the
+      // scope cache are untouched to keep the merge fast.
+      if (this.workspace) {
+        const idsToClearCache = succeededComponents.flatMap((c) => compact([c.currentComponent?.id, c.id]));
+        this.workspace.clearComponentsCache(idsToClearCache);
+      }
       // this is a workaround.
       // keep this here. although it gets called before snapping.
       // the reason is that when the installation is running, for some reason, some apps are unable to load in the same process.
