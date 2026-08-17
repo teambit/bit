@@ -24,6 +24,13 @@ export type LaneSyncInput = {
   /** whether the branch carries commits on top of the commit that last wrote its `.bitmap` */
   hasDevCommits: boolean;
   /**
+   * Whether the state commit itself (not written by this reconciler) also touched non-`.bitmap` files
+   * — SUSPECTED work git cannot confirm (the files may already be inside the recorded snap). Plans the
+   * probing `export-branch` when everything else reads converged; treated like dev commits everywhere
+   * a wrong "no work" answer could lose something (deletion, divergence, first contact).
+   */
+  stateCommitBundlesSources?: boolean;
+  /**
    * Whether the reconciler itself wrote the tip commit. The one exception to "markers are annotations":
    * consulted only on the branch-deletion path, and only ever to WITHHOLD a deletion. Must be computed
    * with `isSyncAuthoredMessage`, not the loop guard's substring match.
@@ -54,7 +61,10 @@ export type BranchKeepReason =
 export type LaneSyncAction =
   | { type: 'noop'; reason: string }
   | { type: 'import-lane' }
-  | { type: 'export-branch' }
+  // `probeOnly`: the only evidence of work is sources bundled into the state commit — the snap decides.
+  // Nothing pending → the executor settles as converged WITHOUT the ledger commit a plain export ends
+  // with (there is nothing to record, and writing one would put a commit on a converged dev branch).
+  | { type: 'export-branch'; probeOnly?: boolean }
   | { type: 'merge-diverged' }
   | { type: 'adopt-branch' }
   // Two variants rather than an optional `keepReason` so the type enforces that a keep always says why.
@@ -64,7 +74,10 @@ export type LaneSyncAction =
 
 export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   const { laneHead, branchExists, lastSyncedHead, hasDevCommits, conflictLabelPresent, ownership } = input;
-  const { tipIsSyncCommit, hasIndependentHistory, branchNamesDifferentLane } = input;
+  const { tipIsSyncCommit, hasIndependentHistory, branchNamesDifferentLane, stateCommitBundlesSources } = input;
+  // Suspected-or-real work: everywhere a wrong "no work" answer could lose something, bundled sources
+  // count like dev commits — only the converged/export split below distinguishes them (the probe).
+  const mayCarryWork = hasDevCommits || Boolean(stateCommitBundlesSources);
   if (conflictLabelPresent) {
     return { type: 'noop', reason: 'PR is labeled bit-sync-conflict; resolve and remove the label to resume' };
   }
@@ -72,11 +85,11 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
     if (!branchExists) return { type: 'noop', reason: 'lane and branch both absent' };
     switch (ownership) {
       case 'own-live':
-        // Each check is a separate reason to withhold a delete: dev commits are work that exists
-        // nowhere else; a non-sync tip may be a developer's own `.bitmap` write; an adopted branch's
+        // Each check is a separate reason to withhold a delete: real or suspected work exists nowhere
+        // else; a non-sync tip may be a developer's own `.bitmap` write; an adopted branch's
         // pre-existing history was never proven disposable. A false keep is harmless, a false delete
         // destroys the only copy.
-        if (hasDevCommits) {
+        if (mayCarryWork) {
           return { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' };
         }
         if (!tipIsSyncCommit) {
@@ -99,21 +112,23 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   }
   if (!branchExists) return { type: 'import-lane' };
   if (!lastSyncedHead) {
-    if (hasDevCommits) {
+    if (mayCarryWork) {
       if (branchNamesDifferentLane) {
         return {
           type: 'halt',
           reason: 'branch has commits but its .bitmap names a different lane; cannot tell which side is newer',
         };
       }
-      // The lane exists but the pair has no sync history: first contact, not a conflict.
+      // The lane exists but the pair has no sync history: first contact, not a conflict — and
+      // adoption already probes via `bit status`, so bundled sources are safe to route here too.
       return { type: 'adopt-branch' };
     }
     return { type: 'import-lane' };
   }
   const laneMoved = laneHead !== lastSyncedHead;
-  if (laneMoved && hasDevCommits) return { type: 'merge-diverged' };
+  if (laneMoved && mayCarryWork) return { type: 'merge-diverged' };
   if (laneMoved) return { type: 'import-lane' };
   if (hasDevCommits) return { type: 'export-branch' };
+  if (stateCommitBundlesSources) return { type: 'export-branch', probeOnly: true };
   return { type: 'noop', reason: 'converged' };
 }

@@ -116,6 +116,31 @@ const table: Array<{
   { name: 'dev commits, lane unchanged -> export-branch', input: { hasDevCommits: true }, type: 'export-branch' },
   { name: 'both moved -> merge-diverged', input: { laneHead: 'L2', hasDevCommits: true }, type: 'merge-diverged' },
   {
+    // Suspected work only — git cannot tell whether the bundled sources are inside the recorded snap,
+    // so the executor probes with the snap and settles without writing when nothing was pending.
+    name: 'sources bundled into the state commit, otherwise converged -> export-branch, probe only',
+    input: { stateCommitBundlesSources: true, tipIsSyncCommit: false },
+    type: 'export-branch',
+    action: { type: 'export-branch', probeOnly: true },
+  },
+  {
+    name: 'bundled sources count as work when the lane also moved -> merge-diverged',
+    input: { laneHead: 'L2', stateCommitBundlesSources: true, tipIsSyncCommit: false },
+    type: 'merge-diverged',
+  },
+  {
+    name: 'own-live with bundled sources -> KEEP the branch, naming the commits',
+    input: { ...laneGone('own-live'), stateCommitBundlesSources: true, tipIsSyncCommit: false },
+    type: 'close-pr',
+    action: { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' },
+  },
+  {
+    // Adoption probes via `bit status`, so suspected bundled work routes there like dev commits do.
+    name: 'existing branch, never synced, bundled sources -> adopt-branch (first contact)',
+    input: { lastSyncedHead: undefined, ownership: 'inherited-or-none', stateCommitBundlesSources: true },
+    type: 'adopt-branch',
+  },
+  {
     name: 'existing branch, never synced, no dev commits, lane EXISTS -> import-lane (adopt branch)',
     input: { lastSyncedHead: undefined, ownership: 'inherited-or-none' },
     type: 'import-lane',

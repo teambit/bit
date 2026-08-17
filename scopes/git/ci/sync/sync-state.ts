@@ -160,6 +160,14 @@ export type BranchSyncState = {
   bitmap?: BranchBitmapState;
   /** Whether the branch carries commits on top of its bit state — work bit has not seen. */
   hasDevCommits: boolean;
+  /**
+   * Whether the state commit itself — a commit this reconciler did not write — also touched files
+   * besides `.bitmap`. SUSPECTED work only: those files may already be inside the snap the `.bitmap`
+   * records, which git cannot tell, so the executor probes with a snap. Note this is true for ANY
+   * other path, `docs/` and CI config included — the probe is the only thing that distinguishes real
+   * work, and it records the sync ledger either way so a clean answer is not re-probed forever.
+   */
+  stateCommitBundlesSources: boolean;
   /** The branch tip's full commit message (subject + body), for the sync-marker loop-guard probe. */
   tipMessage: string;
   /**
@@ -200,7 +208,65 @@ export async function readBranchSyncState(
   const range = stateCommit ? `${stateCommit}..${revision}` : `origin/${defaultBranch}..${revision}`;
   const count = await git.raw(['rev-list', range, '--count']);
 
-  return { stateCommit, bitmap, hasDevCommits: parseDevCommitCount(count), tipMessage, tipSha };
+  // Source edits can RIDE IN the state commit itself — one commit changing `.bitmap` AND sources (the
+  // exact shape the conflict-halt comment's resolve-by-hand recipe produces) — and the range count
+  // starts after that commit, so they were invisible. Git file names alone cannot tell whether those
+  // sources are already inside the snap the `.bitmap` records (a dev who snapped, exported, and
+  // committed everything at once) or were never snapped at all — so this is SUSPECTED work, reported
+  // separately for the planner to probe rather than folded into `hasDevCommits`. Only a commit this
+  // reconciler did not write can be that shape: its own ledger commits legitimately bundle merged
+  // sources (merge-diverged) and are already-exported state.
+  const stateCommitBundlesSources =
+    !parseDevCommitCount(count) &&
+    stateCommit !== undefined &&
+    stateCommit === tipSha &&
+    !isSyncAuthoredMessage(tipMessage) &&
+    (await commitTouchesBeyondBitmap(stateCommit));
+
+  return {
+    stateCommit,
+    bitmap,
+    hasDevCommits: parseDevCommitCount(count),
+    stateCommitBundlesSources,
+    tipMessage,
+    tipSha,
+  };
+}
+
+/**
+ * Whether `commit` changed any file besides `.bitmap`, against its first parent (`--root` covers an
+ * initial commit; `-m --first-parent` makes a merge commit report the files it brought in, instead of
+ * the silent empty diff plain `diff-tree` gives merges). Unreadable answers `true`: this feeds
+ * `stateCommitBundlesSources`, where not knowing must plan the probe, never declare convergence.
+ */
+async function commitTouchesBeyondBitmap(commit: string): Promise<boolean> {
+  try {
+    const names = await git.raw([
+      'diff-tree',
+      '--no-commit-id',
+      '--name-only',
+      '-r',
+      '--root',
+      '-m',
+      '--first-parent',
+      commit,
+    ]);
+    // A state commit changed `.bitmap` by definition, so its first-parent diff is never empty — empty
+    // output is simple-git resolving on a non-zero exit (see `parseDevCommitCount`), i.e. unreadable.
+    if (!names.trim()) return true;
+    return touchesBeyondBitmap(names);
+  } catch {
+    return true;
+  }
+}
+
+/** The pure half of `commitTouchesBeyondBitmap`, split out so it is testable without a real git log. */
+export function touchesBeyondBitmap(rawNames: string): boolean {
+  return rawNames
+    .split('\n')
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .some((name) => name !== BIT_MAP);
 }
 
 /**

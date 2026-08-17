@@ -362,7 +362,13 @@ export class LaneSyncExecutor {
     const branchExists = await branchExistsOnRemote(branch);
     const branchState: BranchSyncState = branchExists
       ? await readBranchSyncState(branch, defaultBranch, defaultScope)
-      : { stateCommit: undefined, bitmap: undefined, hasDevCommits: false, tipMessage: '' };
+      : {
+          stateCommit: undefined,
+          bitmap: undefined,
+          hasDevCommits: false,
+          stateCommitBundlesSources: false,
+          tipMessage: '',
+        };
     if (hasSyncMarker(branchState.tipMessage)) {
       logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
     }
@@ -444,7 +450,7 @@ export class LaneSyncExecutor {
 
     const branchNamesDifferentLane = await this.computeBranchNamesDifferentLane(
       lastSyncedHead,
-      branchState.hasDevCommits,
+      branchState.hasDevCommits || branchState.stateCommitBundlesSources,
       mirroredLane,
       laneIdStr,
       branch,
@@ -456,6 +462,7 @@ export class LaneSyncExecutor {
       branchExists,
       lastSyncedHead,
       hasDevCommits: branchState.hasDevCommits,
+      stateCommitBundlesSources: branchState.stateCommitBundlesSources,
       tipIsSyncCommit,
       hasIndependentHistory,
       conflictLabelPresent,
@@ -467,7 +474,9 @@ export class LaneSyncExecutor {
       chalk.blue(
         `${laneName} -> ${action.type} (branch: ${branch}, lane head: ${laneHead?.slice(0, 9) ?? 'none'}, ` +
           `branch state: ${lastSyncedHead?.slice(0, 9) ?? 'none'}, ` +
-          `dev commits: ${branchState.hasDevCommits}${laneIsGone ? `, branch claim: ${ownership}` : ''})`
+          `dev commits: ${branchState.hasDevCommits}` +
+          `${branchState.stateCommitBundlesSources ? ' (+sources bundled into the state commit)' : ''}` +
+          `${laneIsGone ? `, branch claim: ${ownership}` : ''})`
       )
     );
 
@@ -475,25 +484,6 @@ export class LaneSyncExecutor {
       const line = dryRunSummaryLine(laneName, action);
       logger.console(formatWarningSummary(`Dry-run: ${line}`));
       return line;
-    }
-
-    // A pair can be converged at the bit level while the tip still holds unsnapped source edits (a
-    // single commit that rewrites `.bitmap` AND carries an edit is its own state commit) — say so.
-    // `laneHead` must be checked explicitly: with no lane and no attribution both fingerprints are
-    // undefined, and `undefined === undefined` would fire on every ordinary developer branch.
-    if (
-      action.type === 'noop' &&
-      action.reason === 'converged' &&
-      !tipIsSyncCommit &&
-      laneHead &&
-      lastSyncedHead === laneHead
-    ) {
-      logger.console(
-        formatWarningSummary(
-          `converged on bit state, but ${branch}'s tip is not a bit ci sync commit — any source edits it ` +
-            `carries that were never snapped stay invisible until the next commit on the branch`
-        )
-      );
     }
 
     switch (action.type) {
@@ -523,7 +513,7 @@ export class LaneSyncExecutor {
         if (tipIsSyncCommit) {
           return `${laneName} -> noop (converged; branch tip is already this reconciler's own sync commit)`;
         }
-        return this.executeExportBranch({ target, laneIdStr, branch, defaultBranch });
+        return this.executeExportBranch({ target, laneIdStr, branch, defaultBranch, probeOnly: action.probeOnly });
       case 'merge-diverged':
         return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch });
       case 'adopt-branch':
@@ -680,17 +670,21 @@ export class LaneSyncExecutor {
   /**
    * Push the branch's dev commits back onto the lane: snap+export the branch's tree, then commit the
    * resulting `.bitmap` back onto the branch so the next run sees the two sides as converged.
+   * `probeOnly` (sources bundled into the state commit, nothing else) lets the snap decide whether
+   * there was anything to export. Either answer records the ledger — see `probedClean` below.
    */
   private async executeExportBranch({
     target,
     laneIdStr,
     branch,
     defaultBranch,
+    probeOnly,
   }: {
     target: LaneTarget;
     laneIdStr: string;
     branch: string;
     defaultBranch: string;
+    probeOnly?: boolean;
   }): Promise<string> {
     const { logger } = this.deps;
     const laneName = target.name;
@@ -711,6 +705,14 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
+      // The probe found nothing pending: nothing reached the lane, but the ledger is still recorded.
+      // Skipping it is what makes the probe repeat — `stateCommit` (sync-state.ts) is derived from
+      // `.bitmap`'s content, so as long as the developer's bundled commit stays the tip,
+      // `stateCommitBundlesSources` stays true and every later run re-pays the checkout + snap on the
+      // identical sha. The ledger commit is `--allow-empty`, so it lands either way, and moving the tip
+      // is what lets the `tipIsSyncCommit` check in `syncLane` settle the next run before any
+      // workspace work — the same way a commit that touches no bit-tracked file settles.
+      const probedClean = Boolean(probeOnly) && exported.status === 'noop';
 
       const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
       if (recorded.status === 'raced') return racedLedgerPushSummary(laneName);
@@ -719,9 +721,17 @@ export class LaneSyncExecutor {
           laneName,
           laneIdStr,
           branch,
-          reason: `lane ${laneIdStr} could not be read back from the remote after export`,
+          reason: probedClean
+            ? `lane ${laneIdStr} could not be read back from the remote while recording the probe's sync ledger`
+            : `lane ${laneIdStr} could not be read back from the remote after export`,
           pr: await this.findPr(branch),
         });
+      }
+      if (probedClean) {
+        return (
+          `${laneName} -> noop (converged; the sources bundled into the state commit were already ` +
+          `snapped — recorded the sync ledger so the next run stops probing)`
+        );
       }
       return (
         `${laneName} -> export-branch (lane ${laneIdStr} @ ${recorded.laneHead.slice(0, 9)}, ` +
@@ -1137,13 +1147,13 @@ export class LaneSyncExecutor {
   /** Gates `differentLaneStillClaims` to the planner's first-contact path, the only one that reads it. */
   private async computeBranchNamesDifferentLane(
     lastSyncedHead: string | undefined,
-    hasDevCommits: boolean,
+    mayCarryWork: boolean,
     mirroredLane: string | undefined,
     laneIdStr: string,
     branch: string,
     defaultBranch: string
   ): Promise<boolean> {
-    if (lastSyncedHead || !hasDevCommits) return false;
+    if (lastSyncedHead || !mayCarryWork) return false;
     return this.differentLaneStillClaims(mirroredLane, laneIdStr, branch, defaultBranch);
   }
 

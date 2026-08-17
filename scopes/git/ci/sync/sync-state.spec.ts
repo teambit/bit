@@ -11,6 +11,7 @@ import {
   isSyncAuthoredMessage,
   parseBranchBitmap,
   parseDevCommitCount,
+  touchesBeyondBitmap,
 } from './sync-state';
 
 const DEFAULT_SCOPE = 'acme.shop';
@@ -205,6 +206,19 @@ describe('parseDevCommitCount', () => {
     it(`${hasDevCommits ? 'keeps the branch' : 'permits retirement'} for ${name}`, () => {
       expect(parseDevCommitCount(raw), JSON.stringify(raw)).to.equal(hasDevCommits);
     });
+  });
+});
+
+describe('touchesBeyondBitmap', () => {
+  it('is false for an empty diff and for a .bitmap-only commit', () => {
+    expect(touchesBeyondBitmap('')).to.equal(false);
+    expect(touchesBeyondBitmap('\n')).to.equal(false);
+    expect(touchesBeyondBitmap('.bitmap\n')).to.equal(false);
+  });
+
+  it('is true when any source file rides in the same commit as the .bitmap write', () => {
+    expect(touchesBeyondBitmap('.bitmap\ncomp1/index.js\n')).to.equal(true);
+    expect(touchesBeyondBitmap('comp1/index.js\n')).to.equal(true);
   });
 });
 

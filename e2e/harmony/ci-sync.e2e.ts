@@ -924,6 +924,96 @@ describe('bit ci sync', function () {
     });
   });
 
+  // A single commit that bundles a source edit WITH a `.bitmap` write is the state commit itself, so
+  // "commits after the state commit" counts zero — the edit used to be invisible and the pair read as
+  // converged while the lane never received it. The conflict-halt comment's resolve-by-hand recipe
+  // (bit lane import + fix + one commit) produces exactly this shape.
+  describe('a commit bundling a source edit with a .bitmap write is dev work, not convergence', () => {
+    const LANE = 'bundled-commit';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('bundled-v1') }, 'bundled v1');
+      // First sync materializes the branch and converges the pair.
+      const seed = syncRun(LANE);
+      expect(seed.exitCode, `bit ci sync output:\n${seed.output}`).to.equal(0);
+      expect(seed.output).to.include(`${LANE} -> import-lane`);
+
+      // The human's bundled commit: a real source edit riding in the same commit as a `.bitmap` write
+      // that leaves the parsed state identical (so the fingerprints still read converged).
+      gitFetch();
+      helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('bundled-by-hand'));
+      const bitmapPath = path.join(helper.scopes.localPath, '.bitmap');
+      fs.appendFileSync(bitmapPath, '\n');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "fix: hand-resolved content riding with a .bitmap write"');
+      helper.command.runCmd(`git push origin ${LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+    });
+
+    it('exports the bundled edit onto the lane instead of declaring convergence', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> export-branch`);
+      expect(output).to.not.include('noop (converged)');
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('bundled-by-hand');
+    });
+
+    it('a second run reads the truly converged pair as converged', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop (converged)`);
+    });
+  });
+
+  // `commitTouchesBeyondBitmap` asks "any path other than `.bitmap`", so a file no component tracks
+  // plans the probe too. That probe finds nothing pending and exports nothing — but it must still
+  // record the sync ledger. Without it the tip stays the developer's bundled commit, so
+  // `stateCommitBundlesSources` stays true and every later run re-pays the checkout + snap on the
+  // identical tip. One `--allow-empty` ledger commit moves the tip and ends that.
+  describe('a probe that finds nothing pending settles instead of re-probing the same tip forever', () => {
+    const LANE = 'clean-probe';
+    let defaultBranch: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('clean-probe-v1') }, 'clean probe v1');
+      const seed = syncRun(LANE);
+      expect(seed.exitCode, `bit ci sync output:\n${seed.output}`).to.equal(0);
+
+      // A file no component tracks, riding in the same commit as a `.bitmap` write — the shape that
+      // reads exactly like the bundled-source case above and is indistinguishable from it by name.
+      gitFetch();
+      helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+      helper.fs.outputFile('docs/notes.md', 'a note no component tracks\n');
+      fs.appendFileSync(path.join(helper.scopes.localPath, '.bitmap'), '\n');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "docs: a note riding with a .bitmap write"');
+      helper.command.runCmd(`git push origin ${LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+    });
+
+    it('exports nothing, and says so, but records the ledger anyway', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop`);
+      expect(output).to.include('already snapped');
+      // The ledger commit IS the settle mechanism: proving it landed proves the next run cannot
+      // read the developer's bundled commit as the tip again.
+      expect(laneHeadTrailer(LANE), `branch tip:\n${branchTipMessage(LANE)}`).to.be.a('string');
+    });
+
+    it('the next run does not probe again', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop`);
+      expect(output).to.not.include('sources bundled into the state commit');
+    });
+  });
+
   // The cross-scope split: foreign CONTENT is refused outright; a foreign HOST is fine as long as the
   // content is this repo's, addressed by its scope-qualified id.
   describe('a lane whose components span two scopes is refused, never half-mirrored', () => {
