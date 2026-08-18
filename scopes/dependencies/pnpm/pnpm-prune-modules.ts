@@ -3,6 +3,7 @@ import path from 'path';
 import { difference } from 'lodash';
 import type * as LockfileFs from '@pnpm/lockfile.fs';
 import { depPathToDirName } from '@teambit/dependencies.pnpm.dep-path';
+import { loadedVirtualStoreDirNames } from './preserve-loaded-virtual-store-dirs';
 
 type LockfileFsModule = typeof LockfileFs;
 let lockfileFsPromise: Promise<LockfileFsModule> | undefined;
@@ -29,10 +30,36 @@ export async function pnpmPruneModules(rootDir: string): Promise<void> {
   const { readCurrentLockfile } = await loadLockfileFs();
   const lockfile = await readCurrentLockfile(virtualStoreDir, { ignoreIncompatible: false });
   const dirsShouldBePresent = Object.keys(lockfile?.packages ?? {}).map((depPath) => depPathToDirName(depPath));
-  await Promise.all(difference(pkgDirs, dirsShouldBePresent).map((dir) => fs.remove(path.join(virtualStoreDir, dir))));
+  const extraneous = difference(pkgDirs, dirsShouldBePresent);
+  // the usual case, and the one worth keeping cheap: scanning the loaded modules below is
+  // proportional to how much this process has loaded, and with nothing to remove it decides nothing
+  if (extraneous.length === 0) return;
+  // never remove a directory the running process has loaded modules from. an install that re-keys
+  // a loaded package to a new peer hash restores the old directory so deferred requires keep
+  // working (see preserve-loaded-virtual-store-dirs.ts); that directory is intentionally absent
+  // from the lockfile, and deleting it here would re-break exactly what the restore fixed. a later
+  // command's prune, whose process has nothing loaded from it, cleans it up.
+  const loadedByThisProcess = loadedVirtualStoreDirNames(virtualStoreDir);
+  await Promise.all(
+    extraneous
+      .filter((dir) => !loadedByThisProcess.has(dir))
+      .map((dir) => fs.remove(path.join(virtualStoreDir, dir)))
+  );
 }
 
+/**
+ * The project-local virtual store may hold no package directories at all: with the global virtual
+ * store enabled the packages live under `<storeDir>/links` (pruned by the engine itself) and only
+ * `lock.yaml` and the hoisted `node_modules` remain here. A `lockfileOnly` install leaves the
+ * directory missing entirely. Both cases mean "nothing for us to prune".
+ */
 async function readPackageDirsFromVirtualStore(virtualStoreDir: string): Promise<string[]> {
-  const allDirs = await fs.readdir(virtualStoreDir);
+  let allDirs: string[];
+  try {
+    allDirs = await fs.readdir(virtualStoreDir);
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return [];
+    throw err;
+  }
   return allDirs.filter((dir) => dir !== 'lock.yaml' && dir !== 'node_modules');
 }

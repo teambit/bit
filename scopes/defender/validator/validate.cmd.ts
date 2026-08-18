@@ -14,12 +14,13 @@ export class ValidateCmd implements Command {
   extendedDescription = `validates components by running check-types, lint, and test commands in sequence.
 by default runs all checks even when errors are found.
 use --fail-fast to stop at the first failure.
-by default validates only new and modified components. use --all to validate all components.`;
+by default validates only new and modified components. use --unmodified to validate all components.`;
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   alias = '';
   group = 'testing';
   options = [
-    ['a', 'all', 'validate all components, not only modified and new'],
+    ['a', 'all', 'DEPRECATED. (use --unmodified)'],
+    ['u', 'unmodified', 'validate all components, not only modified and new'],
     ['', 'fail-fast', 'stop at the first failure instead of running all checks'],
     ['c', 'continue-on-error', 'DEPRECATED: this is now the default behavior'],
     [
@@ -39,12 +40,18 @@ by default validates only new and modified components. use --all to validate all
     [pattern]: [string],
     {
       all = false,
+      unmodified = false,
       failFast = false,
       continueOnError = false,
       skipTasks,
-    }: { all: boolean; failFast: boolean; continueOnError: boolean; skipTasks?: string }
+    }: { all: boolean; unmodified: boolean; failFast: boolean; continueOnError: boolean; skipTasks?: string }
   ) {
     if (!this.workspace) throw new OutsideWorkspaceError();
+
+    if (all) {
+      unmodified = all;
+      this.logger.consoleWarning(`--all is deprecated, use --unmodified instead`);
+    }
 
     if (continueOnError) {
       this.logger.consoleWarning(
@@ -55,7 +62,7 @@ by default validates only new and modified components. use --all to validate all
     this.logger.console(`\n${formatTitle('Running validation checks...')}\n`);
 
     const startTime = Date.now();
-    const components = await this.workspace.getComponentsByUserInput(pattern ? false : all, pattern, true);
+    const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern, true);
 
     if (components.length === 0) {
       this.logger.console(formatHint('No components found to validate'));

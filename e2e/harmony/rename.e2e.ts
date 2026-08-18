@@ -197,7 +197,7 @@ describe('bit rename command', function () {
   describe('rename a new aspect without --preserve flag', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('bit-aspect', 'my-aspect');
+      helper.fixtures.createAspect('my-aspect');
       helper.command.rename('my-aspect', 'foo');
     });
     it('should rename the root-dir', () => {
@@ -219,7 +219,7 @@ describe('bit rename command', function () {
   describe('rename a new aspect with --preserve flag', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('bit-aspect', 'my-aspect');
+      helper.fixtures.createAspect('my-aspect');
       helper.command.rename('my-aspect', 'foo', '--preserve');
     });
     it('should not rename the root-dir', () => {
@@ -243,7 +243,7 @@ describe('bit rename command', function () {
   describe('rename an exported aspect', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('bit-aspect', 'my-aspect');
+      helper.fixtures.createAspect('my-aspect');
       helper.command.install();
       helper.command.tagAllWithoutBuild();
       helper.command.export();

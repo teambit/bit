@@ -146,7 +146,7 @@ describe('update command', function () {
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.fixtures.populateComponents(1);
-      helper.command.create('bit-aspect', 'my-aspect', '--path=my-aspect');
+      helper.fixtures.createAspect('my-aspect', { path: 'my-aspect' });
       helper.fs.outputFile(
         `comp1/index.js`,
         `const isNegative = require("is-negative");

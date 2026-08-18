@@ -42,7 +42,7 @@ describe('aspect', function () {
   describe('aspect loading failures', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
-      helper.command.create('bit-aspect', 'my-aspect');
+      helper.fixtures.createAspect('my-aspect');
       helper.workspaceJsonc.addKeyVal('my-scope/my-aspect', {});
     });
     it('commands with loaders should show a descriptive error', () => {
@@ -64,7 +64,7 @@ describe('aspect', function () {
     let output: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('bit-aspect', 'my-aspect');
+      helper.fixtures.createAspect('my-aspect');
       helper.command.compile();
       helper.command.install();
       helper.command.tagAllWithoutBuild();
@@ -114,7 +114,7 @@ describe('aspect', function () {
   describe('bit aspect unset command', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('bit-aspect', 'my-aspect');
+      helper.fixtures.createAspect('my-aspect');
       helper.command.compile();
       helper.command.install();
       helper.command.tagAllWithoutBuild();
