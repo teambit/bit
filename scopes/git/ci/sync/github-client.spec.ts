@@ -284,5 +284,51 @@ describe('GitHubClient', () => {
       const gets = calls.filter((c) => (c.init?.method ?? 'GET') === 'GET');
       expect(gets, 'the off-host link is the last page, not a loop').to.have.lengthOf(1);
     });
+
+    it('stops paginating as soon as the marked comment is seen', async () => {
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        const method = init?.method ?? 'GET';
+        if (method === 'GET') {
+          return new Response(JSON.stringify([{ id: 99, body: '<!-- marker -->\nold report' }]), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              link: '<https://api.github.com/repos/acme/shop/issues/7/comments?per_page=100&page=2>; rel="next"',
+            },
+          });
+        }
+        return new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } });
+      }) as typeof fetch;
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nnew report');
+
+      const gets = calls.filter((c) => (c.init?.method ?? 'GET') === 'GET');
+      expect(gets, 'the match on page 1 makes page 2 pointless').to.have.lengthOf(1);
+      expect(calls.filter((c) => c.init?.method === 'PATCH')).to.have.lengthOf(1);
+    });
+
+    it('exhausting the page budget throws instead of posting a duplicate', async () => {
+      // "Ran out of budget" must not read as "absent": a POST here would add a duplicate report on
+      // every later push. The throw surfaces through the caller's existing warn-and-skip path.
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        return new Response(JSON.stringify([{ id: 1, body: 'unrelated' }]), {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            link: '<https://api.github.com/repos/acme/shop/issues/7/comments?per_page=100&page=2>; rel="next"',
+          },
+        });
+      }) as typeof fetch;
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      let thrown: Error | undefined;
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nbody').catch((e) => (thrown = e));
+
+      expect(thrown, 'the budget exhaustion is an error, not an absence').to.be.an('error');
+      expect(calls.some((c) => c.init?.method === 'POST')).to.equal(false);
+    });
   });
 });

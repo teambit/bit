@@ -161,23 +161,25 @@ export class GitHubClient implements GitHostProvider {
   }
 
   /**
-   * Every comment on the PR, across all pages. GitHub defaults `per_page` to 30; a marked comment
-   * living past page 1 would otherwise read as absent, and `upsertComment` would post a duplicate on
-   * every push instead of updating the existing one. Follows the `Link: rel="next"` header — a page
-   * with no such link is the last one.
+   * The marker-bearing comment on the PR, `'absent'` when every page was searched, or `'unknown'`
+   * when the defensive page cap cut the search short. GitHub defaults `per_page` to 30 and orders
+   * ascending, and the maintained comment is posted once, early in a PR's life — so it lives in the
+   * first pages and the search returns as soon as it is seen. `'unknown'` is distinct from `'absent'`
+   * because running out of budget must not read as "not there": the caller would post a duplicate
+   * report on every later push.
    */
-  private async listIssueComments(prNumber: number): Promise<{ id: number; body: string }[]> {
-    const comments: { id: number; body: string }[] = [];
+  private async findMarkedComment(prNumber: number, marker: string): Promise<{ id: number } | 'absent' | 'unknown'> {
     let next: string | undefined = `/issues/${prNumber}/comments?per_page=100`;
     // Defensive cap: 20 pages (2,000 comments) is far past any real PR; without it a malformed or
     // adversarial `Link` header could loop this call forever.
     for (let page = 0; next && page < 20; page += 1) {
       const res: Response = await this.requestRaw('GET', next);
       const body = (await res.json()) as any[];
-      comments.push(...body.map((c: any) => ({ id: c.id, body: c.body ?? '' })));
+      const match = body.find((c: any) => (c.body ?? '').includes(marker));
+      if (match) return { id: match.id };
       next = nextPageUrl(res.headers.get('link'));
     }
-    return comments;
+    return next ? 'unknown' : 'absent';
   }
 
   /**
@@ -197,8 +199,14 @@ export class GitHubClient implements GitHostProvider {
     body: string,
     options: { createIfAbsent?: boolean } = {}
   ): Promise<void> {
-    const existing = (await this.listIssueComments(prNumber)).find((c) => c.body.includes(marker));
-    if (existing) {
+    const existing = await this.findMarkedComment(prNumber, marker);
+    if (existing === 'unknown') {
+      // Surfaces through the caller's warn-and-skip path; posting blind would duplicate the report.
+      throw new Error(
+        `PR #${prNumber} has too many comments to establish whether the "${marker}" comment already exists`
+      );
+    }
+    if (existing !== 'absent') {
       await this.request('PATCH', `/issues/comments/${existing.id}`, { body });
       return;
     }
