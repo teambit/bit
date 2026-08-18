@@ -179,6 +179,35 @@ export type BranchSyncState = {
 };
 
 /**
+ * The pure half of `hasUnsyncedWorkChanges` (ci.main.runtime.ts): whether a `bit status` result holds
+ * anything a snap/export would push. `invalidComponents` counts as work: an unloadable component is
+ * UNKNOWN — its sources may hold the branch's edits — and this answer gates a "converged, write
+ * nothing" exit, so not knowing must route to the snap (which fails loudly) rather than converge.
+ */
+export function statusReportsUnsyncedWork(status: {
+  newComponents: unknown[];
+  modifiedComponents: unknown[];
+  stagedComponents: unknown[];
+  locallySoftRemoved: unknown[];
+  pendingUpdateDependents: unknown[];
+  mergePendingComponents: unknown[];
+  componentsDuringMergeState: unknown[];
+  invalidComponents: unknown[];
+}): boolean {
+  const divergence = [
+    status.newComponents,
+    status.modifiedComponents,
+    status.stagedComponents,
+    status.locallySoftRemoved,
+    status.pendingUpdateDependents,
+    status.mergePendingComponents,
+    status.componentsDuringMergeState,
+    status.invalidComponents,
+  ];
+  return divergence.some((components) => components.length > 0);
+}
+
+/**
  * Whether a `rev-list --count` output reports commits. An unreadable count answers `true`: `false` is an
  * input to branch retirement, so not knowing must withhold a deletion rather than license one. Empty
  * output is reachable — simple-git's `raw` resolves with it on some non-zero exits.

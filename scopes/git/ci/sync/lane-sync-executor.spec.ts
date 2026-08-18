@@ -551,6 +551,58 @@ describe('executeExportBranch reports the ledger-race wording when only the ledg
   });
 });
 
+// The probe's "clean" answer means converged only against the lane the PLAN read. A lane that moved
+// in between must re-plan — comparing the branch's files with the newer lane would misread the
+// lane's own advance as branch work and export a revert over a concurrent developer's export.
+describe('executeExportBranch bails when the lane moved since planning', () => {
+  function stubExport(currentLaneComponents: LaneComponents, plannedLaneComponents: LaneComponents) {
+    const { executor } = stubExecutor();
+    const touched: string[] = [];
+    (executor as any).checkoutFromRemote = async () => {};
+    (executor as any).restoreWorkspace = async () => {};
+    (executor as any).materializeLane = async () => undefined;
+    (executor as any).lastNonSyncCommitMessage = async () => 'feat: some change';
+    (executor as any).getRemoteLane = async () => ({ components: currentLaneComponents });
+    (executor as any).deps.ci = {
+      hasUnsyncedWorkChanges: async () => {
+        touched.push('status');
+        return false;
+      },
+    };
+    (executor as any).snapAndExportOntoLane = async () => {
+      touched.push('snap');
+      return { status: 'exported' };
+    };
+    const run = () =>
+      (executor as any).executeExportBranch({
+        target: { hostScope: 'acme.shop', name: 'my-lane' },
+        laneIdStr: 'acme.shop/my-lane',
+        branch: 'my-lane',
+        defaultBranch: 'main',
+        preExportLane: { components: plannedLaneComponents },
+      }) as Promise<string>;
+    return { run, touched };
+  }
+
+  const L1 = [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')];
+  const L2 = [comp('acme.shop/comp1', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2')];
+
+  it('a moved lane returns a re-plan noop before the status read or any snap', async () => {
+    const { run, touched } = stubExport(L2, L1);
+    const summary = await run();
+    expect(summary).to.include('my-lane -> noop');
+    expect(summary).to.include('moved');
+    expect(touched).to.deep.equal([]);
+  });
+
+  it('an unmoved lane proceeds to the probe', async () => {
+    const { run, touched } = stubExport(L1, L1);
+    const summary = await run();
+    expect(summary).to.include('my-lane -> noop (converged)');
+    expect(touched).to.deep.equal(['status']);
+  });
+});
+
 // The merge path snaps whatever the merge produced — which can be nothing new, now routinely: a
 // source-bundling tip plus a moved lane plans merge-diverged, and a branch with nothing of its own
 // merges clean and leaves the snap a noop. The summary must say so, and the run-summary comment

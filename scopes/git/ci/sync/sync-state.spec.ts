@@ -11,6 +11,7 @@ import {
   isSyncAuthoredMessage,
   parseBranchBitmap,
   parseDevCommitCount,
+  statusReportsUnsyncedWork,
   touchesBeyondBitmap,
 } from './sync-state';
 
@@ -200,6 +201,33 @@ const DEV_COMMIT_COUNTS: Array<[string, string, boolean]> = [
   ['whitespace-only output', '  \n ', true],
   ['git writing an error where the count was expected', 'fatal: bad revision', true],
 ];
+
+describe('statusReportsUnsyncedWork', () => {
+  const empty = {
+    newComponents: [],
+    modifiedComponents: [],
+    stagedComponents: [],
+    locallySoftRemoved: [],
+    pendingUpdateDependents: [],
+    mergePendingComponents: [],
+    componentsDuringMergeState: [],
+    invalidComponents: [],
+  };
+
+  it('an all-empty status is converged', () => {
+    expect(statusReportsUnsyncedWork(empty)).to.equal(false);
+  });
+
+  it('a modified component is work', () => {
+    expect(statusReportsUnsyncedWork({ ...empty, modifiedComponents: ['comp1'] })).to.equal(true);
+  });
+
+  // An unloadable component is UNKNOWN, not converged: its sources may hold the branch's work, and
+  // "not knowing" must route to the snap (which fails loudly), never to a silent converged answer.
+  it('an invalid (unloadable) component is work, not convergence', () => {
+    expect(statusReportsUnsyncedWork({ ...empty, invalidComponents: [{ id: 'comp1' }] })).to.equal(true);
+  });
+});
 
 describe('parseDevCommitCount', () => {
   DEV_COMMIT_COUNTS.forEach(([name, raw, hasDevCommits]) => {

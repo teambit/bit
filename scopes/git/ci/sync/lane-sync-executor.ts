@@ -703,6 +703,18 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
+      // The probe's "clean" answer means converged only against the lane the PLAN read. A lane that
+      // moved in between must re-plan (merge-diverged owns that shape): comparing the branch's files
+      // with the newer lane would misread the lane's own advance as branch work, and the export would
+      // put the older content on top of a concurrent developer's push. The materialize above just
+      // fetched, so this read and the status below see the same lane.
+      if (preExportLane) {
+        const laneNow = await this.getRemoteLane(target);
+        const movedTo = laneNow ? laneHeadFingerprint(laneNow.components) : undefined;
+        if (movedTo !== laneHeadFingerprint(preExportLane.components)) {
+          return `${laneName} -> noop (lane ${laneIdStr} moved while this run was planning; the next run re-plans)`;
+        }
+      }
       if (!(await this.deps.ci.hasUnsyncedWorkChanges())) {
         logger.console(chalk.green(`Branch ${branch}'s tree holds nothing lane ${laneIdStr} is missing`));
         return `${laneName} -> noop (converged)`;
