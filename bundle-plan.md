@@ -3,9 +3,13 @@
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
 > Last updated: 2026-08-18 (produced a real local UI/preview pre-bundle for the first time — the
-> `WorkspaceAspectsLoader` hang blocking `bd build` is fixed upstream — and added a gitignored
-> `.bundle-cache/` so it survives `node_modules` wipes; see
-> [21-bit-start-prebundles.md §17i](bundle-plan/21-bit-start-prebundles.md#17i-producing-a-real-local-pre-bundle-and-caching-it-2026-08-18))
+> `WorkspaceAspectsLoader` hang blocking `bd build` is fixed upstream — added a gitignored
+> `.bundle-cache/` so it survives `node_modules` wipes, and stopped shipping esbuild's 8.9 MB
+> `metafile.json` inside the published package (still written for local/CI builds). Total shipped
+> distribution now measured at **250 MB / 2,576 files** (was 322 MB in the original 2026-08-16
+> estimate). See
+> [21-bit-start-prebundles.md §17i](bundle-plan/21-bit-start-prebundles.md#17i-producing-a-real-local-pre-bundle-and-caching-it-2026-08-18)
+> and [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-08-18 entries)
 > Previously, 2026-08-16 (merged `remove-core-envs-from-manifest`, which brought in the upstream
 > webpack/react-env decoupling; removed `webpack`, `process/browser`, `buffer/`, and `@babel/core` from
 > externals as a result — down to 11 (was 16 at the start of the day). `bit install` needed two passes
@@ -23,14 +27,14 @@ doc updated as you work.
 
 ## At a glance
 
-|                     | released bit (bvm 2.0.72) | bundled bit (this branch)                                                                  |
-| ------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
-| install size        | **1.2 GB**                | **322 MB** (61 MB bundle + 133 MB externals + shims + 91 MB pre-bundled UI/preview — §17g) |
-| files on disk       | **141,008**               | **~7,300**                                                                                 |
-| `bit --help` (warm) | 0.662 s                   | **0.642 s** (SEA: 1.324 s — §9)                                                            |
-| `bit list` (warm)   | 0.914 s                   | **0.848 s** (SEA: 1.574 s)                                                                 |
-| single executable   | —                         | **179 MB `bit-app`** (+ the `bundle/` support dir)                                         |
-| build time          | n/a                       | ~11 s esbuild + ~5 s codegen (+ ~40 s for the SEA variant)                                 |
+|                     | released bit (bvm 2.0.72) | bundled bit (this branch)                                                                                 |
+| ------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------- |
+| install size        | **1.2 GB**                | **250 MB** (60 MB bundle + 97 MB externals + ~93 MB shims, incl. the 83 MB pre-bundled UI/preview — §17i) |
+| files on disk       | **141,008**               | **~2,600**                                                                                                |
+| `bit --help` (warm) | 0.662 s                   | **0.642 s** (SEA: 1.324 s — §9)                                                                           |
+| `bit list` (warm)   | 0.914 s                   | **0.848 s** (SEA: 1.574 s)                                                                                |
+| single executable   | —                         | **179 MB `bit-app`** (+ the `bundle/` support dir)                                                        |
+| build time          | n/a                       | ~11 s esbuild + ~5 s codegen (+ ~40 s for the SEA variant)                                                |
 
 Full detail in [01-goal-and-results.md](bundle-plan/01-goal-and-results.md).
 

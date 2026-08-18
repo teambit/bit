@@ -137,7 +137,12 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
     ? await buildSea(paths, seaEntryFilePath, { minify: options.minify, externals, uiBundling: options.uiBundling })
     : undefined;
 
-  if (result.metafile) {
+  // esbuild's own build-analysis JSON (module graph, sizes, imports) - a diagnostic artefact for CI
+  // (`store_artifacts`) and local debugging, not something anything reads back at runtime. `inPlace`
+  // means the out dir *is* the capsule that becomes the published `@teambit/bit` package (§9b), so
+  // writing it there would ship ~9 MB of dead weight to every user for no benefit - only write it for
+  // the local/CI prototype build.
+  if (result.metafile && !options.inPlace) {
     await fs.writeJson(join(paths.bundleDir, 'metafile.json'), result.metafile, { spaces: 2 });
   }
 

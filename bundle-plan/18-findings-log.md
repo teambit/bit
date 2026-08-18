@@ -754,3 +754,74 @@ teambit.preview/preview" --reuse-capsules --tasks "BundleUI,PreBundlePreview"` c
     `:restore`. Deliberately just a file cache, not a freshness gate against source changes - "most
     of the time we don't really need to re-create them" per the ask, and the `meta.json` commit/date
     is there for a human to judge staleness, not for the script to enforce it.
+  - **Verified `bit start` end to end against a real (not just faked-artifact) pre-bundle**, from a
+    fresh `bit init` + `bit create react ui/button --aspect teambit.react/react-env` workspace,
+    entirely through `/tmp/bit-bundle/bin/bit`: both `shouldServeBundleUi` (workspace _and_ scope
+    roots) and `writePreviewEntry` matched hashes and served from the shipped `artifacts/`, HTTP 200,
+    no `public/` written. The only rspack run observed was the _component's own env_
+    (`teambit.react/react-env`) compiling `comp1`'s composition - a separate dependency tree
+    (`@teambit/webpack.webpack-bundler`, resolved from the env's own capsule per the #10610
+    decoupling), unrelated to bit's own bundle. Confirmed `@rspack/dev-server` is absent from
+    `package.json`/`node_modules` and its stub was never invoked (`grep`'d `debug.log` for its throw
+    message - zero hits).
+  - **Measured current sizes** (`/tmp/bit-bundle`, this build): `bit.app.js` 60.15 MB; `dist/`
+    (bundle + 106 shims + locators + the pre-bundle artifacts) 160 MB, of which the UI/preview
+    artifacts are 82.7 MB (`ui-bundle/workspace` 18 MB, `ui-bundle/scope` 65 MB, `preview` 0.7 MB) -
+    the other 105 shims together are ~3 MB; externals installed 97 MB. Total `/tmp/bit-bundle` 257 MB.
+    Per-external breakdown (`du -sh node_modules/*`), largest first: **`@rspack` 42 MB** (bigger than
+    `typescript` at 23 MB or `@pnpm` at 22 MB - by far the single biggest external), `node-gyp` 2.3 MB,
+    `bufferutil`+`utf-8-validate` ~1 MB combined, everything else under 1 MB each including
+    `postcss-flexbugs-fixes`+`postcss-normalize` (~96 KB combined, matching §17h's "~50 KB" estimate).
+  - **Is `@rspack/core` still earning its 42 MB now that `bit start` serves the pre-bundle?** Traced
+    every call site (`rspack(...)`, not just the import): `ui.main.runtime.ts:260,278` (`UiMain.build`
+    - `BundleUiTask`), `ui-server.ts:328` (`UIServer.dev()` - `bit start --dev`),
+      `preview/pre-bundle.ts:118` (`buildPreBundlePreview` - `PreBundlePreviewTask` and the
+      hash-mismatch rebuild fallback). All four are inside functions, never called at module scope - so
+      the _call_ only happens during an actual `bit build --tasks BundleUI,PreBundlePreview` (exactly
+      what this session used to produce the cached pre-bundle) or the rebuild fallback (already broken
+      in the default build without the rest of `UI_BUNDLING_EXTERNALS` - `postcss-loader`, `sass`, etc.,
+      per §17c). The _import_, though, is eager (`import { rspack } from '@rspack/core'` at the top of
+      `ui.main.runtime.ts`/`ui-server.ts`/`pre-bundle.ts`, all always-loaded since ui/preview are core
+      aspects) - that is why it is external today rather than merely unresolved-and-ignored: esbuild
+      can't inline a native `.node` addon, and nothing currently stubs it. Contrast with
+      `@rspack/dev-server` (`stub-dev-only-plugin.ts`): that one _is_ stubbed, safely, because requiring
+      the stub module never throws - only _constructing_ the exported class does (`new Proxy(...)`,
+      throws on `new`), and its one real call site (`UIServer.dev()`) is never reached outside
+      `--dev`. The same pattern would work for `@rspack/core` (`rspack(...)` is a plain call, not
+      `new` - calling a stub class without `new` throws its own clear `TypeError` either way) **if** the
+      product is willing to accept the same trade `@rspack/dev-server`/`workbox-webpack-plugin` already
+      made: `bit build --tasks BundleUI,PreBundlePreview` and the hash-mismatch rebuild fallback would
+      fail loudly from _the bundled distribution itself_ instead of working. Not done here - this is a
+      real, unexplored ~42 MB lever (the single biggest since `webpack` was dropped, §14 2026-08-16),
+      but a genuine behavior-changing decision, not a clean-up.
+  - **`postcss-flexbugs-fixes`/`postcss-normalize`** (~96 KB): unrelated to whether `bit start` serves
+    the pre-bundle - they're `require.resolve()`'d unconditionally at module scope in `postcss.config.ts`,
+    imported by `rspack.browser.config.ts`, imported by `ui.main.runtime.ts` - i.e. paid on _every_ bit
+    command that loads the UI aspect, bundling or not. Already a known, deferred lever, not new: §17h
+    names the exact fix ("making `postCssConfig` a function would drop two more externals"). Tiny
+    (~96 KB), so low priority next to `@rspack/core`.
+  - **`bufferutil`/`utf-8-validate`** (~1 MB combined): **nothing to do with UI/preview bundling at
+    all** - confirmed they are `ws`'s own optional peer deps (`node_modules/ws/package.json`
+    `peerDependenciesMeta.{bufferutil,utf-8-validate}.optional: true`), native accelerators for
+    WebSocket frame masking/UTF-8 validation that `ws` falls back to a pure-JS implementation without.
+    Bit's own `ws` consumer is `create-remote-schemas.ts` (GraphQL remote-schema stitching), not
+    anything UI/preview-related. Since `ws` already treats them as optional, they may be droppable
+    entirely (joining `pnpapi`/`fsevents` in `externalsNotInstalled` rather than being real installed
+    packages) - not verified this session, small (~1 MB), not investigated further.
+  - **Fixed the one item above with no behavior tradeoff**: `bundle-cli.ts` wrote esbuild's
+    `metafile.json` (build-analysis JSON - module graph, sizes, imports) unconditionally into
+    `paths.bundleDir`. For `inPlace: true` builds - the real `BundleCliAppTask` path, where the out
+    dir _is_ the capsule that becomes the published `@teambit/bit` package (§9b) - that shipped **8.9
+    MB of pure diagnostic output to every user for zero runtime benefit**: confirmed nothing reads
+    `metafile.json` back at runtime (`result.metafile` is used in-memory for `generateEsmBridges`
+    during the build itself; only `bundle-cli.ts`'s write and CI's `store_artifacts` step touch the
+    file). Gated the write on `!options.inPlace`, so it's still produced for local `npm run bundle`
+    iteration and CI's `setup_esbuild_bundle` diagnostic capture (both non-`inPlace`), just not for
+    the shape that actually ships. Verified both branches directly: a scratch `bundleCli({..., inPlace:
+true})` run produced no `metafile.json` (`dist` 153 MB vs 160 MB with it); a plain `npm run bundle`
+    still writes it.
+  - **Corrected size totals** (`/tmp/bit-bundle`, after the metafile fix): shipped `dist/` 153 MB /
+    1,084 files (was 160 MB / including `metafile.json`), externals unchanged at 97 MB / 1,492 files.
+    **Total shipped distribution: 250 MB / 2,576 files** (was 257 MB measured earlier this session,
+    322 MB in the original 2026-08-16 estimate before this branch's later externals cuts). Updated
+    `bundle-plan.md`'s "at a glance" table and PR #10590's description to match.

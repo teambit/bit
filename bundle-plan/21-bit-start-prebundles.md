@@ -181,6 +181,17 @@ The 322 MB is 231 MB of prior distribution + ~91 MB of shipped artifacts (72 MB 
 - `postcss-flexbugs-fixes` / `postcss-normalize` are externals only because `postCssConfig` is a
   module-scope const (§E in `externals.ts`). Making it a function would drop two more externals and
   stop `postcss-preset-env` being evaluated on every bit command.
+- **`@rspack/core` (42 MB, the single biggest external) is only reachable, post-§17, from
+  `BundleUI`/`PreBundlePreview`'s own rebuild calls and the `bit start --dev`/hash-mismatch-rebuild
+  paths** - `bit start`'s normal (pre-bundle-serving) path never calls it. It stays external today
+  because the _import_ (not just the call) is eager in always-loaded core-aspect files, and nothing
+  stubs it the way `@rspack/dev-server` is stubbed. Same stubbing pattern would likely work, but
+  trades away "regenerate the pre-bundle / rebuild-fallback from the bundled distribution itself" -
+  a real behavior change, not investigated further. See §14 2026-08-18 for the full trace.
+- `bufferutil` / `utf-8-validate` (~1 MB) are unrelated to UI/preview bundling - they're `ws`'s own
+  optional peer deps (native WebSocket accelerators), pulled in via `create-remote-schemas.ts`'s
+  GraphQL remote-schema stitching. `ws` already falls back to pure JS without them, so they may be
+  droppable into `externalsNotInstalled` alongside `pnpapi`/`fsevents` - not verified.
 
 ### 17i. Producing a real local pre-bundle, and caching it (2026-08-18)
 

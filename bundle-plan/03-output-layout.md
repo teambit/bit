@@ -18,7 +18,9 @@
     ├── package.json + .npmrc          ← the externals; `npm install` runs HERE
     ├── node_modules/                  ← installed externals (161 MB)
     ├── workers/jest.worker.js         ← self-contained child-process entry
-    ├── metafile.json, sea-config.json
+    ├── sea-config.json
+    ├── metafile.json                  ← local/CI builds only (2026-08-18) - NOT written for `inPlace`
+    │                                     builds, i.e. not shipped in the published package (§14)
     ├── workspace-template.jsonc, agents-template*.md, bit-*-template.md
     └── lib.*.d.ts                     ← typescript lib files (102 of them)
 ```
