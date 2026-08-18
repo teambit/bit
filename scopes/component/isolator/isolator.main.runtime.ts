@@ -12,7 +12,7 @@ import { ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
-import type { GraphMain } from '@teambit/graph';
+import type { ComponentIdGraph, GraphMain } from '@teambit/graph';
 import { GraphAspect } from '@teambit/graph';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
@@ -68,6 +68,7 @@ import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { CapsuleCache } from './capsule-cache';
+import { enforceDependencyClosedPackageSet } from './dependency-closed-package-set';
 import type { CapsuleKind, PruneCapsulesOptions, PruneCapsulesReport } from './capsule-cache';
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
@@ -483,6 +484,7 @@ export class IsolatorMain {
         filteredComps,
         seeders,
         host,
+        successorsSubgraph,
         opts.originalSeeders
       );
       this.logger.debug(
@@ -1706,6 +1708,7 @@ export class IsolatorMain {
     components: Component[],
     seederIds: ComponentID[],
     host: ComponentFactory,
+    graph: ComponentIdGraph,
     originalSeeders?: ComponentID[]
   ): Promise<Component[]> {
     this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${components.length} components`);
@@ -1714,7 +1717,8 @@ export class IsolatorMain {
     // @ts-ignore it's there, but we can't have the type of ScopeMain here to not create a circular dependency
     const remotes = await scope.getRemoteScopes();
 
-    const filtered: Component[] = [];
+    const capsuleIds = new Set<string>();
+    const packageCandidateIds = new Set<string>();
 
     // Precompute version-normalized ID sets so membership is O(1) per component instead of a linear scan.
     // `toStringWithoutVersion()` is the string equivalent of `isEqual(id, { ignoreVersion: true })`.
@@ -1729,7 +1733,7 @@ export class IsolatorMain {
 
       if (seederIdsNoVersion.has(componentIdNoVersion)) {
         // Always include seeders (modified components and their dependents)
-        filtered.push(component);
+        capsuleIds.add(componentIdStr);
         continue;
       }
 
@@ -1739,7 +1743,7 @@ export class IsolatorMain {
       // then have to resolve it as an installed package instead of referencing the freshly-built capsule.
       // Keep it so the graph stays consistent across `bit build` and `bit tag` (both include it as a capsule).
       if (originalSeederIdsNoVersion?.has(componentIdNoVersion)) {
-        filtered.push(component);
+        capsuleIds.add(componentIdStr);
         continue;
       }
       // For dependencies, check if they are exported and unmodified
@@ -1751,7 +1755,7 @@ export class IsolatorMain {
       const isModified = await component.isModified();
       if (isModified) {
         // Always include modified components
-        filtered.push(component);
+        capsuleIds.add(componentIdStr);
         continue;
       }
 
@@ -1773,11 +1777,35 @@ export class IsolatorMain {
         wasPublished;
 
       if (canBeInstalled) {
-        this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
+        packageCandidateIds.add(componentIdStr);
       } else {
-        filtered.push(component);
+        capsuleIds.add(componentIdStr);
       }
     }
+
+    /**
+     * The package side of the optimized graph must be dependency-closed. If an installed package
+     * points back to a component kept as a capsule, Node can load both the package's recorded
+     * dependency version and the locally linked capsule version in one process. For stateful Bit
+     * modules this breaks class identity (`instanceof`), Harmony singletons, remotes, and caches.
+     *
+     * Start with components that must be capsules, then propagate backwards through every graph
+     * edge until no package candidate depends on a capsule. This handles runtime, dev, peer, and
+     * transitive crossings without disabling optimization for a dependency subtree that is wholly
+     * installable from the registry.
+     */
+    const promotions = enforceDependencyClosedPackageSet(graph, capsuleIds, packageCandidateIds);
+    promotions.forEach(({ dependentId, dependencyId }) =>
+      this.logger.debug(
+        `[OPTIMIZATION] Keeping ${dependentId} in capsule graph because it depends on capsule ${dependencyId}`
+      )
+    );
+
+    const filtered = components.filter((component) => {
+      if (capsuleIds.has(component.id.toString())) return true;
+      this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${component.id.toString()}`);
+      return false;
+    });
 
     this.logger.debug(
       `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${components.length} components`
