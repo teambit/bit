@@ -24,16 +24,19 @@ export type LaneSyncInput = {
   /** whether the branch carries commits on top of the commit that last wrote its `.bitmap` */
   hasDevCommits: boolean;
   /**
-   * Whether the state commit itself (not written by this reconciler) also touched non-`.bitmap` files
-   * — SUSPECTED work git cannot confirm (the files may already be inside the recorded snap). Plans the
-   * probing `export-branch` when everything else reads converged; treated like dev commits everywhere
-   * a wrong "no work" answer could lose something (deletion, divergence, first contact).
+   * Whether the state commit also touched non-`.bitmap` files — SUSPECTED work git cannot confirm (the
+   * files may already be inside the recorded snap). Content-only, so this reconciler's own
+   * source-bundling ledger commits read `true` too. Plans the probing `export-branch` when everything
+   * else reads converged; treated like dev commits everywhere a wrong "no work" answer could lose
+   * something (deletion, divergence, first contact).
    */
   stateCommitBundlesSources?: boolean;
   /**
    * Whether the reconciler itself wrote the tip commit. The one exception to "markers are annotations":
-   * consulted only on the branch-deletion path, and only ever to WITHHOLD a deletion. Must be computed
-   * with `isSyncAuthoredMessage`, not the loop guard's substring match.
+   * consulted only on the branch-deletion path — to withhold a deletion, and to discount bundled
+   * sources our own ledger commit carries (no probe can run against a deleted lane). It must never
+   * decide convergence: a squash body quoting the marker forges it. Must be computed with
+   * `isSyncAuthoredMessage`, not the loop guard's substring match.
    */
   tipIsSyncCommit: boolean;
   /**
@@ -61,10 +64,10 @@ export type BranchKeepReason =
 export type LaneSyncAction =
   | { type: 'noop'; reason: string }
   | { type: 'import-lane' }
-  // `probeOnly`: the only evidence of work is sources bundled into the state commit — the snap decides.
-  // Nothing pending → the executor settles as converged WITHOUT the ledger commit a plain export ends
-  // with (there is nothing to record, and writing one would put a commit on a converged dev branch).
-  | { type: 'export-branch'; probeOnly?: boolean }
+  // May be a probe: the executor asks `bit status` (a read) whether the branch's tree holds anything
+  // the lane is missing, and a clean answer settles as converged without writing or pushing a thing —
+  // which is why planning it on mere suspicion, run after run, is harmless.
+  | { type: 'export-branch' }
   | { type: 'merge-diverged' }
   | { type: 'adopt-branch' }
   // Two variants rather than an optional `keepReason` so the type enforces that a keep always says why.
@@ -76,8 +79,12 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   const { laneHead, branchExists, lastSyncedHead, hasDevCommits, conflictLabelPresent, ownership } = input;
   const { tipIsSyncCommit, hasIndependentHistory, branchNamesDifferentLane, stateCommitBundlesSources } = input;
   // Suspected-or-real work: everywhere a wrong "no work" answer could lose something, bundled sources
-  // count like dev commits — only the converged/export split below distinguishes them (the probe).
+  // count like dev commits — the executor's read-only probe is what tells them apart.
   const mayCarryWork = hasDevCommits || Boolean(stateCommitBundlesSources);
+  // The deletion path cannot probe (the lane is gone), so there — and only there — the tip marker
+  // discounts the sources our own ledger commits bundle (import-lane writes the lane's files,
+  // merge-diverged the merged tree). Same message dependence, same direction, as it always had.
+  const mayCarryWorkForDeletion = hasDevCommits || (Boolean(stateCommitBundlesSources) && !tipIsSyncCommit);
   if (conflictLabelPresent) {
     return { type: 'noop', reason: 'PR is labeled bit-sync-conflict; resolve and remove the label to resume' };
   }
@@ -89,7 +96,7 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
         // else; a non-sync tip may be a developer's own `.bitmap` write; an adopted branch's
         // pre-existing history was never proven disposable. A false keep is harmless, a false delete
         // destroys the only copy.
-        if (mayCarryWork) {
+        if (mayCarryWorkForDeletion) {
           return { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' };
         }
         if (!tipIsSyncCommit) {
@@ -128,7 +135,6 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   const laneMoved = laneHead !== lastSyncedHead;
   if (laneMoved && mayCarryWork) return { type: 'merge-diverged' };
   if (laneMoved) return { type: 'import-lane' };
-  if (hasDevCommits) return { type: 'export-branch' };
-  if (stateCommitBundlesSources) return { type: 'export-branch', probeOnly: true };
+  if (mayCarryWork) return { type: 'export-branch' };
   return { type: 'noop', reason: 'converged' };
 }

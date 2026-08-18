@@ -375,10 +375,6 @@ export class LaneSyncExecutor {
           stateCommitBundlesSources: false,
           tipMessage: '',
         };
-    if (hasSyncMarker(branchState.tipMessage)) {
-      logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
-    }
-
     // Read before any refusal below: every halt must be suppressible by the conflict label, or a
     // standing problem re-comments on the same PR on every scheduled run.
     const pr = await this.findPr(branch);
@@ -508,23 +504,11 @@ export class LaneSyncExecutor {
           pr,
         });
       case 'export-branch':
-        // The tip is already this reconciler's own commit — it already confirmed everything up to
-        // it (that is what writing it means), and `hasDevCommits`/`stateCommit` cannot tell a real
-        // dev commit from one that touches no bit-tracked file (docs, CI config): `stateCommit` is
-        // derived from `.bitmap`'s content, never from commit messages (sync-state.ts), so a commit
-        // that leaves `.bitmap` byte-identical never advances it, however many runs re-confirm
-        // "nothing to snap" on top. Recognizing our own tip here — not by loosening `hasDevCommits`
-        // itself, which the ownership/retirement path also reads and must stay strict — is what
-        // makes that settle instead of re-planning `export-branch` forever.
-        if (tipIsSyncCommit) {
-          return `${laneName} -> noop (converged; branch tip is already this reconciler's own sync commit)`;
-        }
         return this.executeExportBranch({
           target,
           laneIdStr,
           branch,
           defaultBranch,
-          probeOnly: action.probeOnly,
           preExportLane: remoteLane,
         });
       case 'merge-diverged':
@@ -681,24 +665,24 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * Push the branch's dev commits back onto the lane: snap+export the branch's tree, then commit the
-   * resulting `.bitmap` back onto the branch so the next run sees the two sides as converged.
-   * `probeOnly` (sources bundled into the state commit, nothing else) lets the snap decide whether
-   * there was anything to export. Either answer records the ledger — see `probedClean` below.
+   * Push the branch's dev commits back onto the lane. Probe first, mutate second: like adoption, land
+   * the lane in the workspace keeping the BRANCH's files, then ask `bit status` whether the branch's
+   * tree holds anything the lane is missing. Nothing → converged, and nothing is written or pushed —
+   * which is why a suspected-work plan can repeat run after run without a memo, and why no commit
+   * message is ever consulted to suppress it. Something → snap + export, then commit the resulting
+   * `.bitmap` back onto the branch so the next run reads the two sides as converged.
    */
   private async executeExportBranch({
     target,
     laneIdStr,
     branch,
     defaultBranch,
-    probeOnly,
     preExportLane,
   }: {
     target: LaneTarget;
     laneIdStr: string;
     branch: string;
     defaultBranch: string;
-    probeOnly?: boolean;
     /** The lane's content BEFORE this export — the baseline the run-summary comment diffs against. */
     preExportLane: LaneData | undefined;
   }): Promise<string> {
@@ -710,6 +694,21 @@ export class LaneSyncExecutor {
     await this.checkoutFromRemote(branch, `origin/${branch}`);
 
     try {
+      const switchErr = await this.materializeLane(laneIdStr, false);
+      if (switchErr) {
+        return await this.executeHalt({
+          laneName,
+          laneIdStr,
+          branch,
+          reason: `failed to check branch ${branch} against lane ${laneIdStr} before exporting: ${switchErr.message}`,
+          pr: await this.findPr(branch),
+        });
+      }
+      if (!(await this.deps.ci.hasUnsyncedWorkChanges())) {
+        logger.console(chalk.green(`Branch ${branch}'s tree holds nothing lane ${laneIdStr} is missing`));
+        return `${laneName} -> noop (converged)`;
+      }
+
       const exported = await this.snapAndExportOntoLane(laneIdStr, message);
       if (exported.status === 'error') {
         // Halt rather than propagate: one lane's failed snap/export must not abort the lanes after it.
@@ -721,14 +720,12 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
-      // The probe found nothing pending: nothing reached the lane, but the ledger is still recorded.
-      // Skipping it is what makes the probe repeat — `stateCommit` (sync-state.ts) is derived from
-      // `.bitmap`'s content, so as long as the developer's bundled commit stays the tip,
-      // `stateCommitBundlesSources` stays true and every later run re-pays the checkout + snap on the
-      // identical sha. The ledger commit is `--allow-empty`, so it lands either way, and moving the tip
-      // is what lets the `tipIsSyncCommit` check in `syncLane` settle the next run before any
-      // workspace work — the same way a commit that touches no bit-tracked file settles.
-      const probedClean = Boolean(probeOnly) && exported.status === 'noop';
+      if (exported.status === 'noop') {
+        // `bit status` saw a difference the snap did not record. Nothing reached the lane and nothing
+        // is pushed, so the next run re-reads the identical state — visible-but-repeating beats a
+        // ledger commit asserting a convergence the status read just denied.
+        return `${laneName} -> noop (bit status reported unsynced changes but the snap found nothing to record)`;
+      }
 
       const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
       if (recorded.status === 'raced') return racedLedgerPushSummary(laneName);
@@ -737,17 +734,9 @@ export class LaneSyncExecutor {
           laneName,
           laneIdStr,
           branch,
-          reason: probedClean
-            ? `lane ${laneIdStr} could not be read back from the remote while recording the probe's sync ledger`
-            : `lane ${laneIdStr} could not be read back from the remote after export`,
+          reason: `lane ${laneIdStr} could not be read back from the remote after export`,
           pr: await this.findPr(branch),
         });
-      }
-      if (probedClean) {
-        return (
-          `${laneName} -> noop (converged; the sources bundled into the state commit were already ` +
-          `snapped — recorded the sync ledger so the next run stops probing)`
-        );
       }
 
       // Best-effort: a comment failure must never undo a git/lane pair that already converged.

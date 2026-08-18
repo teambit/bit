@@ -92,9 +92,10 @@ export function hasSyncMarker(message: string): boolean {
 
 /**
  * Strict probe for "we wrote this commit": the marker alone on its own line. This is an input to branch
- * deletion and to the export-branch withhold (a branch whose tip is already our own commit settles
- * instead of re-exporting), so a developer merely quoting the marker must never count as authorship.
- * `\r?` tolerates CRLF; a recognition failure errs toward keeping the branch / re-attempting the export.
+ * DELETION only — the one decision no content probe can stand in for, because the lane it would compare
+ * against is gone. It must never decide convergence: a squash-merge's body quotes the squashed ledger
+ * messages verbatim, marker included, so a message can claim authorship the reconciler never had.
+ * `\r?` tolerates CRLF; a recognition failure errs toward keeping the branch.
  */
 export function isSyncAuthoredMessage(message: string): boolean {
   return new RegExp(`^${SYNC_COMMIT_MARKER.replace(/[[\]]/g, '\\$&')}\\r?$`, 'm').test(message);
@@ -161,11 +162,11 @@ export type BranchSyncState = {
   /** Whether the branch carries commits on top of its bit state — work bit has not seen. */
   hasDevCommits: boolean;
   /**
-   * Whether the state commit itself — a commit this reconciler did not write — also touched files
-   * besides `.bitmap`. SUSPECTED work only: those files may already be inside the snap the `.bitmap`
-   * records, which git cannot tell, so the executor probes with a snap. Note this is true for ANY
-   * other path, `docs/` and CI config included — the probe is the only thing that distinguishes real
-   * work, and it records the sync ledger either way so a clean answer is not re-probed forever.
+   * Whether the state commit also touched files besides `.bitmap`. SUSPECTED work only: those files
+   * may already be inside the snap the `.bitmap` records, which git cannot tell — the executor's
+   * read-only status probe is what distinguishes real work. True for ANY other path (`docs/`, CI
+   * config, this reconciler's own source-bundling ledger commits): a spurious `true` re-probes, which
+   * writes nothing, so it can repeat without consequence.
    */
   stateCommitBundlesSources: boolean;
   /** The branch tip's full commit message (subject + body), for the sync-marker loop-guard probe. */
@@ -213,14 +214,15 @@ export async function readBranchSyncState(
   // starts after that commit, so they were invisible. Git file names alone cannot tell whether those
   // sources are already inside the snap the `.bitmap` records (a dev who snapped, exported, and
   // committed everything at once) or were never snapped at all — so this is SUSPECTED work, reported
-  // separately for the planner to probe rather than folded into `hasDevCommits`. Only a commit this
-  // reconciler did not write can be that shape: its own ledger commits legitimately bundle merged
-  // sources (merge-diverged) and are already-exported state.
+  // separately for the planner to probe rather than folded into `hasDevCommits`. Deliberately content-only,
+  // per this module's header: this reconciler's own ledger commits have the same shape (import-lane and
+  // merge-diverged bundle already-exported sources) and its probe is a read, so a spurious `true` costs
+  // one status check — while consulting the tip's MESSAGE here read a squash-merge (whose body quotes the
+  // squashed ledger messages, marker included) as machine-authored and silently dropped the bundled work.
   const stateCommitBundlesSources =
     !parseDevCommitCount(count) &&
     stateCommit !== undefined &&
     stateCommit === tipSha &&
-    !isSyncAuthoredMessage(tipMessage) &&
     (await commitTouchesBeyondBitmap(stateCommit));
 
   return {

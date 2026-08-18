@@ -531,6 +531,8 @@ describe('executeExportBranch reports the ledger-race wording when only the ledg
     (executor as any).lastNonSyncCommitMessage = async () => 'feat: some change';
     (executor as any).checkoutFromRemote = async () => {};
     (executor as any).restoreWorkspace = async () => {};
+    (executor as any).materializeLane = async () => undefined;
+    (executor as any).deps.ci = { hasUnsyncedWorkChanges: async () => true };
     // The export half already succeeded; only the ledger commit that follows raced.
     (executor as any).snapAndExportOntoLane = async () => ({ status: 'exported' });
     (executor as any).recordLaneHeadOnBranch = async () => ({ status: 'raced' });
