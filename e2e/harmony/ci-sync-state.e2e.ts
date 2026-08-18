@@ -287,13 +287,16 @@ describe('bit ci sync — state model v2', function () {
       expect(branchTipSha(LANE)).to.equal(tip);
     });
 
-    it('should import the lane onto the existing branch, also cold, instead of halting', () => {
-      // Only the lane moves, so the plan is import-lane onto the branch that already exists.
+    it('should bring the lane onto the existing branch, also cold, instead of halting', () => {
+      // Only the lane moves — but the branch tip is the previous merge's ledger commit, which bundles
+      // sources, so the plan is merge-diverged: the merge brings the lane's edit in, and the snap
+      // finds nothing of the branch's own to export.
       laneSideEdit(devPath, 'comp1/index.js', comp1Src('cold-lane-snap-3'), 'cold lane snap 3');
       makeLocalScopeCold();
       const { output, exitCode } = syncRun(LANE);
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
-      expect(output).to.include(`${LANE} -> import-lane`);
+      expect(output).to.include(`${LANE} -> merge-diverged`);
+      expect(output).to.include('nothing new to export');
       expect(output).to.not.include('HALTED');
       expect(output).to.not.include('reported success but the workspace is on');
       expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('cold-lane-snap-3');
