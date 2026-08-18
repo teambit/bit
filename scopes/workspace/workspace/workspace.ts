@@ -869,14 +869,18 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   clearComponentCache(id: ComponentID) {
-    this.componentLoader.clearComponentCache(id);
-    this.componentStatusLoader.clearOneComponentCache(id);
-    this.consumer.clearOneComponentCache(id);
-    this._componentList = new ComponentsList(this);
+    this.clearComponentsCache([id]);
   }
 
   clearComponentsCache(ids: ComponentID[]) {
-    ids.forEach((id) => this.clearComponentCache(id));
+    if (!ids.length) return; // nothing to clear, avoid scanning the caches for nothing
+    const uniqueIds = uniqBy(ids, (id) => id.toString());
+    this.componentLoader.clearComponentsCache(uniqueIds);
+    uniqueIds.forEach((id) => {
+      this.componentStatusLoader.clearOneComponentCache(id);
+      this.consumer.clearOneComponentCache(id);
+    });
+    this._componentList = new ComponentsList(this);
   }
 
   async warmCache() {
