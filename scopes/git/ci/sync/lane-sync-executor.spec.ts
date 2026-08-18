@@ -780,6 +780,24 @@ describe('postRunSummaryComment', () => {
       postComponents: AFTER,
     }) as Promise<void>;
 
+  // Best-effort means EVERY fallible step, including the git refetch that reads the branch tip for
+  // the body — an export that already succeeded must never be failed by its own progress report.
+  it('warns and returns when reading the branch tip for the body throws', async () => {
+    const warnings: string[] = [];
+    const upserts: any[] = [];
+    const gitHost = {
+      findPrByBranch: async () => ({ number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] }),
+      upsertComment: async (...args: any[]) => upserts.push(args),
+    };
+    const executor = executorWith(gitHost, warnings);
+    (executor as any).currentBranchTip = async () => {
+      throw new Error('git refetch failed');
+    };
+    await call(executor);
+    expect(warnings.join('\n')).to.include('run-summary');
+    expect(upserts).to.have.lengthOf(0);
+  });
+
   it('upserts the marked comment on the open PR when the host supports it', async () => {
     const calls: any[] = [];
     const gitHost = {

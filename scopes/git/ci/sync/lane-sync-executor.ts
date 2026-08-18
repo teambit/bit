@@ -1547,15 +1547,17 @@ export class LaneSyncExecutor {
     // Same URL shape as the lane-sync PR body (line ~1249): the scope that HOSTS the lane, not
     // necessarily `defaultScope`.
     const laneUrl = `https://${getCloudDomain()}/${target.hostScope.replace('.', '/')}/~lane/${target.name}`;
-    const body = runSummaryCommentBody({
-      laneIdStr,
-      laneUrl,
-      branch,
-      branchTipSha: await this.currentBranchTip(branch),
-      laneHead,
-      changed: changedLaneComponents(preComponents, postComponents),
-    });
+    // Body construction sits INSIDE the guard: `currentBranchTip` is a git refetch and can reject,
+    // and an export that already succeeded must never be failed by its own progress report.
     try {
+      const body = runSummaryCommentBody({
+        laneIdStr,
+        laneUrl,
+        branch,
+        branchTipSha: await this.currentBranchTip(branch),
+        laneHead,
+        changed: changedLaneComponents(preComponents, postComponents),
+      });
       await gitHost.upsertComment(pr.number, RUN_SUMMARY_MARKER, body);
     } catch (e: any) {
       logger.consoleWarning(`Could not post the run-summary comment on ${branch}'s PR: ${e?.message || e}`);
