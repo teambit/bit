@@ -35,6 +35,7 @@ import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import createRspackBrowserConfig from './rspack/rspack.browser.config';
 import createRspackSsrConfig from './rspack/rspack.ssr.config';
+import { writeBundleStats } from './rspack/bundle-stats';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
 
@@ -270,6 +271,7 @@ export class UiMain {
         this.clearConsole();
         throw new Error(results?.toString());
       }
+      this.writeStats(results, `${uiRoot.name}-browser`);
 
       if (ssr) {
         const ssrConfig = createRspackSsrConfig(outputPath, [mainEntry], publicDir);
@@ -286,6 +288,7 @@ export class UiMain {
           this.clearConsole();
           throw new Error(ssrResults?.toString());
         }
+        this.writeStats(ssrResults, `${uiRoot.name}-ssr`);
       }
 
       return results;
@@ -296,6 +299,19 @@ export class UiMain {
       // one module graph per build alive for the life of a long-running process.
       if (options?.deferClose) this.openBuildCompilers.push(...compilers);
       else await this.closeCompilers(compilers);
+    }
+  }
+
+  /**
+   * Opt-in, via `BIT_UI_BUNDLE_STATS` - see `rspack/bundle-stats.ts`. Never fails a build: this is
+   * diagnostics, and a bundle that compiled is still a bundle worth keeping.
+   */
+  private writeStats(stats: any, name: string) {
+    try {
+      const filePath = writeBundleStats(stats, name);
+      if (filePath) this.logger.console(`${chalk.magenta('[Rspack]')} wrote bundle stats to ${chalk.cyan(filePath)}`);
+    } catch (err: any) {
+      this.logger.debug(`failed writing bundle stats for ${name}: ${err?.message || err}`);
     }
   }
 
