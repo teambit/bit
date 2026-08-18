@@ -180,9 +180,12 @@ export type BranchSyncState = {
 
 /**
  * The pure half of `hasUnsyncedWorkChanges` (ci.main.runtime.ts): whether a `bit status` result holds
- * anything a snap/export would push. `invalidComponents` counts as work: an unloadable component is
- * UNKNOWN — its sources may hold the branch's edits — and this answer gates a "converged, write
- * nothing" exit, so not knowing must route to the snap (which fails loudly) rather than converge.
+ * anything a snap/export would push. The unloadable categories count as work: `invalidComponents` AND
+ * `importPendingComponents` (`StatusMain` splits pending-import errors out of the invalid list) are
+ * both UNKNOWN — their sources may hold the branch's edits — and this answer gates a "converged,
+ * write nothing" exit, so not knowing must route to the snap (which fails loudly) rather than
+ * converge. Incoming-change categories (outdated, pending updates from main) deliberately do NOT
+ * count: they are the lane's or main's movement, which the planner routes, not branch work.
  */
 export function statusReportsUnsyncedWork(status: {
   newComponents: unknown[];
@@ -193,6 +196,7 @@ export function statusReportsUnsyncedWork(status: {
   mergePendingComponents: unknown[];
   componentsDuringMergeState: unknown[];
   invalidComponents: unknown[];
+  importPendingComponents: unknown[];
 }): boolean {
   const divergence = [
     status.newComponents,
@@ -203,6 +207,7 @@ export function statusReportsUnsyncedWork(status: {
     status.mergePendingComponents,
     status.componentsDuringMergeState,
     status.invalidComponents,
+    status.importPendingComponents,
   ];
   return divergence.some((components) => components.length > 0);
 }

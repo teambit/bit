@@ -212,6 +212,7 @@ describe('statusReportsUnsyncedWork', () => {
     mergePendingComponents: [],
     componentsDuringMergeState: [],
     invalidComponents: [],
+    importPendingComponents: [],
   };
 
   it('an all-empty status is converged', () => {
@@ -226,6 +227,11 @@ describe('statusReportsUnsyncedWork', () => {
   // "not knowing" must route to the snap (which fails loudly), never to a silent converged answer.
   it('an invalid (unloadable) component is work, not convergence', () => {
     expect(statusReportsUnsyncedWork({ ...empty, invalidComponents: [{ id: 'comp1' }] })).to.equal(true);
+  });
+
+  // StatusMain SPLITS pending-import errors out of invalidComponents — same unknown, different array.
+  it('a pending-import component is the same unknown, not convergence', () => {
+    expect(statusReportsUnsyncedWork({ ...empty, importPendingComponents: ['comp1'] })).to.equal(true);
   });
 });
 

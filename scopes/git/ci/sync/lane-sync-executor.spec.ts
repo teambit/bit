@@ -608,11 +608,12 @@ describe('executeExportBranch bails when the lane moved since planning', () => {
 // merges clean and leaves the snap a noop. The summary must say so, and the run-summary comment
 // belongs only to runs that actually exported.
 describe('executeMergeDiverged distinguishes an exporting merge from a nothing-new merge', () => {
-  function stubMerge(snapStatus: 'noop' | 'exported') {
+  function stubMerge(snapStatus: 'noop' | 'exported', currentLaneComponents: LaneComponents = []) {
     const { executor } = stubExecutor();
     const summaryCalls: any[] = [];
     (executor as any).checkoutFromRemote = async () => {};
     (executor as any).restoreWorkspace = async () => {};
+    (executor as any).getRemoteLane = async () => ({ components: currentLaneComponents });
     (executor as any).mergeLaneIntoBranchWorkingTree = async () => ({ conflicts: [], conflictedFileCount: 0 });
     (executor as any).snapAndExportOntoLane = async () => ({ status: snapStatus });
     (executor as any).recordLaneHeadOnBranch = async () => ({
@@ -647,6 +648,16 @@ describe('executeMergeDiverged distinguishes an exporting merge from a nothing-n
     expect(summary).to.include('then exported');
     expect(summaryCalls).to.have.lengthOf(1);
     expect(summaryCalls[0].laneHead).to.equal('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
+  });
+
+  // Same freshness rule as the export probe: the plan's inputs must still describe the world.
+  it('a lane that moved since planning bails to a re-plan before merging anything', async () => {
+    const moved = [comp('acme.shop/comp1', 'ccccccccccccccccccccccccccccccccccccccc3')];
+    const { run, summaryCalls } = stubMerge('exported', moved);
+    const summary = await run();
+    expect(summary).to.include('my-lane -> noop');
+    expect(summary).to.include('moved');
+    expect(summaryCalls).to.have.lengthOf(0);
   });
 });
 

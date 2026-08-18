@@ -887,6 +887,17 @@ export class LaneSyncExecutor {
       // lane pointer and the merge base, and a stale local branch must never leak into the result.
       await this.checkoutFromRemote(branch, `origin/${branch}`);
 
+      // Same freshness rule as the export probe: the plan's inputs must still describe the world.
+      // A lane that moved since planning re-plans — the next run merges the newer head — rather
+      // than proceeding on a divergence assessment the planner never made.
+      if (preExportLane) {
+        const laneNow = await this.getRemoteLane(target);
+        const movedTo = laneNow ? laneHeadFingerprint(laneNow.components) : undefined;
+        if (movedTo !== laneHeadFingerprint(preExportLane.components)) {
+          return `${laneName} -> noop (lane ${laneIdStr} moved while this run was planning; the next run re-plans)`;
+        }
+      }
+
       // ---- step 1: merge the lane's snaps into the branch's working tree -----------------------
       const merge = await this.mergeLaneIntoBranchWorkingTree(laneIdStr);
       if (merge.error) {
