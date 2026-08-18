@@ -400,6 +400,20 @@ export class WorkspaceCompiler {
         const id = component.id;
         const idStr = id.toString();
 
+        // compiling can only fix a workspace component whose dists are missing or stale. when the
+        // failed aspect is not in the workspace (e.g. an env that used to be a core aspect,
+        // resolved to its pinned version but not installed yet), the cascade below imports the
+        // env's full dependency closure from the remote and recompiles a large part of the
+        // workspace into every injected node_modules copy - minutes of work that cannot
+        // materialize the missing package. skip it and let the regular missing-aspect handling
+        // report it (a NonLoadedEnv issue with a "bit install" remediation).
+        if (!this.workspace.hasId(id, { ignoreVersion: true })) {
+          this.logger.debug(
+            `onAspectLoadFail: skipping compilation of ${idStr} - not a workspace component, compiling cannot fix its missing module`
+          );
+          return false;
+        }
+
         // Prevent infinite loop when there's a circular dependency between an env and a component.
         // If we're already processing this component, don't re-enter.
         if (this.componentsBeingProcessedInOnAspectLoadFail.has(idStr)) {

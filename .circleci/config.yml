@@ -744,34 +744,23 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
-      # TEMPORARY diagnostic - remove once the perf regression below is root-caused. Sets up the
-      # bvm-linked nightly release build (not this branch's code, already fetched by setup_harmony)
-      # BEFORE the repo-bit check runs, so it's ready regardless of whether that check fails/times
-      # out - a step after a failed step is skipped unless it's the one directly marked when:always,
-      # and CircleCI doesn't propagate that through a whole command's inner steps.
-      - install_bvm
-      - run: npm view @teambit/bit version > ./version.txt
-      - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      - bvm_upgrade
-      # run the bvm-linked build first: it's the known-good baseline (not this branch's code), and
-      # it's non-blocking (|| true) so it can never skip the repo-bit gate that follows regardless
-      # of its own outcome.
+      # the workspace attached from setup_harmony was installed by the released (bvm) binary,
+      # which filters the legacy core-env packages (@teambit/node etc.) out of the install
+      # manifest. the repo binary loads those envs as regular packages, and a missing one used
+      # to send every aspect-load failure into the compiler's recompile cascade (importing the
+      # env's full closure from the remote and rewriting all dists) - the root cause of this
+      # job's 5-minute hangs, see scripts/circular-deps-check/CI-HANG-INVESTIGATION.md. the dev
+      # binary's install pins those envs into the policy, so the check runs with its envs loaded.
       - run:
-          name: 'check circular dependencies (bvm bit, diagnostic only)'
-          command: 'cd bit && (BIT_BIN=bbit ./scripts/circular-deps-check/ci-check.sh || true)'
+          name: 'bit install (dev binary)'
+          command: 'cd bit && bit install'
+          no_output_timeout: 30m
+      - run:
+          name: 'check circular dependencies (repo bit)'
+          command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
+          # the script normally finishes in seconds; bound it well under the platform's default
+          # 10m no-output kill so a stall fails with a clear message instead of a silent timeout.
           no_output_timeout: 6m
-      # DISABLED - the repo's own binary regressed on this check (confirmed: ~5min timeout vs
-      # ~1-2min on a bvm-linked release, reproduced locally and in CI, see
-      # scripts/circular-deps-check/CI-HANG-INVESTIGATION.md for the full root-cause writeup).
-      # Re-enable this step once that regression is fixed - until then this job only runs the
-      # non-blocking bvm-bit comparison above, so it can't gate merges on the broken check.
-      # - run:
-      #     name: 'check circular dependencies (repo bit)'
-      #     command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
-      #     # the script normally finishes in seconds; bound it well under the platform's default
-      #     # 10m no-output kill so a stall fails with a clear message instead of a silent timeout.
-      #     no_output_timeout: 6m
       # bit writes debug-level logs to debug.log by default (independent of BIT_LOG, which would
       # print to stdout and corrupt the JSON this check parses) - persist it so a future hang or
       # failure has the network/scope-import trail to look at, same as the other bit-running jobs.
@@ -896,13 +885,13 @@ jobs:
 
   # ========== Bit CI Jobs ==========
   bit_pr:
-    # xlarge validated on a worst-case 98-component cascade (no OOM at 12GB heap, same wall time
-    # as 2xlarge). If this job dies with "Killed", revert to 2xlarge + max-old-space-size=30000.
-    resource_class: xlarge
+    # back on 2xlarge: on this branch the lane build got OOM-killed at 16GB during the react env's
+    # Preview webpack bundling (cgroup pinned at 13-16GB), as the xlarge comment predicted.
+    resource_class: 2xlarge
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=12288
+      NODE_OPTIONS: --max-old-space-size=30000
     steps:
       - attach_workspace:
           at: ./

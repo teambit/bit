@@ -1,12 +1,39 @@
 # check_circular_dependencies CI hang/perf regression
 
-Status: **not yet fixed, but there's a strong, specific lead.** It's a single non-terminating
-recursive call chain inside `WorkspaceAspectsLoader.loadAspects` (see §5-6), and a near-identical
-bug was already diagnosed and fixed on another unmerged branch — porting that fix is the
-recommended next step (§6, "Next steps" below). The `check circular dependencies (repo bit)` step
-in the `check_circular_dependencies` CircleCI job is currently **disabled** (commented out in
-`.circleci/config.yml`) because it reliably times out. Only the non-blocking `bvm bit` comparison
-step still runs. Re-enable the repo-bit step once the regression is fixed.
+Status: **RESOLVED (2026-08-17).** The root cause turned out to be different from the §5-6 lead
+(the recursion shape observed there was a symptom, not the driver):
+
+1. The workspace attached from `setup_harmony` is installed by the **released (bvm) binary**,
+   which filters the legacy core-env packages (`@teambit/node` etc.) out of the install manifest
+   (`filterOutCoreAspects` — same mechanism that broke `bit_pr`). So `node_modules/@teambit/node`
+   simply does not exist.
+2. The repo binary (this branch) loads those envs as regular packages. The require fails with
+   `MODULE_NOT_FOUND`, which triggers the compiler's `onAspectLoadFail` recovery cascade
+   (`scopes/compilation/compiler/workspace-compiler.ts`): it builds the env's **full dependency
+   graph** (importing the env's whole closure from the remote — 1000+ objects) and **recompiles a
+   large part of the workspace**, force-writing every dist file into every duplicate `.pnpm`-hash
+   variant of each package (~25k file writes per cascade). That work can never succeed — the
+   missing module is a registry package that compiling workspace components cannot materialize —
+   and it is what consumed the 5+ minutes. The deep `consumer-fs-load`/`extension-merge`
+   `loadAspects` chains in §4-5 are this cascade's component loading, not an unbounded recursion.
+3. The bvm binary is unaffected because these envs are core aspects in its build — nothing is
+   required from node_modules.
+
+Fixes shipped:
+
+- **CI**: the `check_circular_dependencies` job now runs `bit install` with the repo (dev) binary
+  before the check — the dev manifest pins the legacy envs, so the check runs with envs loadable
+  (same reconcile step `bit_pr` uses). The repo-bit gate is re-enabled; the temporary bvm-bit
+  diagnostic steps were removed.
+- **Product**: `onAspectLoadFail` now skips the recompile cascade when the failed aspect is not a
+  workspace component (compiling cannot fix it); the failure surfaces through the regular
+  missing-env reporting (NonLoadedEnv + `bit install` remediation) instead of minutes of futile
+  remote imports and dist rewrites.
+
+Verified in a fresh `/tmp` clone (the §"Reproducing locally" recipe): before = 5m0s script
+timeout; after the dev-binary install = **2m14s, check passes** (bvm baseline ballpark); with the
+env package deliberately removed but the `onAspectLoadFail` guard in place = completes instead of
+hanging. The investigation below is kept for the record.
 
 ## Symptom
 
@@ -55,7 +82,7 @@ future recurrence is debuggable instead of a silent kill:
   handled.
 - `.circleci/config.yml`: `no_output_timeout: 6m` on the check step (well under the platform's
   10m default) and `store_artifacts: ~/Library/Caches/Bit/logs` to persist `debug.log`. Bit writes
-  debug-level logs to `debug.log` by default *regardless of `BIT_LOG`* (`DEFAULT_LEVEL = 'debug'`
+  debug-level logs to `debug.log` by default _regardless of `BIT_LOG`_ (`DEFAULT_LEVEL = 'debug'`
   in `components/legacy/logger/logger.ts`), so this needed no extra flag. **Do not set
   `BIT_LOG=*`** for this script — it switches Bit's console logger onto **stdout**
   (`destination: 1` in `components/legacy/logger/pino-logger.ts`), the same stream
@@ -68,9 +95,9 @@ future recurrence is debuggable instead of a silent kill:
   (`bbit`, via the existing `install_bvm`/`bvm_upgrade` commands and the same `.bvm` cache key
   `setup_harmony` already populates that pipeline run) as a non-blocking comparison, and the repo's
   own binary as the real gate. **Ordering matters here**: CircleCI skips steps after a failed step
-  unless *that exact step* is marked `when: always` — it does not propagate through a whole
+  unless _that exact step_ is marked `when: always` — it does not propagate through a whole
   reusable command's inner steps. The bvm setup (`install_bvm`, `bvm_upgrade`, etc.) must run
-  *before* the repo-bit check step, not after, or it silently never executes when the repo-bit
+  _before_ the repo-bit check step, not after, or it silently never executes when the repo-bit
   step fails (this was caught: first attempt produced a false-"successful" 59ms bvm-bit step whose
   actual output was `bbit: command not found`, swallowed by `|| true`).
 
@@ -79,12 +106,12 @@ future recurrence is debuggable instead of a silent kill:
 Reproduced identically across **four independent environments** — ruling out CI infra, network, and
 staging-vs-prod entirely:
 
-| Environment | repo's own `bit` binary | bvm-linked release `bit` (v2.0.77, *not* this branch's code) |
-|---|---|---|
-| Local existing dev workspace (`bd2` vs global `bit`) | 5m50s | 1m57s |
-| CircleCI, repo-bit alone (before comparison job) | 5m3s (script timeout) | — |
-| Fresh clone in `/tmp`, bootstrapped like CI (`bit init && bit install`) | 5m1s (script timeout) | 37s |
-| CircleCI, both binaries in the same job | 5m2s (script timeout, failed) | 1m18s (succeeded) |
+| Environment                                                             | repo's own `bit` binary       | bvm-linked release `bit` (v2.0.77, _not_ this branch's code) |
+| ----------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------ |
+| Local existing dev workspace (`bd2` vs global `bit`)                    | 5m50s                         | 1m57s                                                        |
+| CircleCI, repo-bit alone (before comparison job)                        | 5m3s (script timeout)         | —                                                            |
+| Fresh clone in `/tmp`, bootstrapped like CI (`bit init && bit install`) | 5m1s (script timeout)         | 37s                                                          |
+| CircleCI, both binaries in the same job                                 | 5m2s (script timeout, failed) | 1m18s (succeeded)                                            |
 
 The fresh-clone repro is the cleanest: identical `.bitmap`, identical `node_modules`/`.pnpm`
 store, only the binary differs — **37 seconds vs. 5+ minute timeout** for the exact same command
@@ -112,7 +139,7 @@ see "Reproducing locally" below for why there are multiple copies) with a counte
 tracker. Across the full 5-minute timeout, **it was entered zero times**. So this specific call
 site is not the one driving the recursion — it's a real, but different, call site producing the
 same `workspace.loadAspects` trace label (the label comes from `loadSpan('workspace.loadAspects',
-...)` wrapping the *public* `Workspace.loadAspects` method, which has more than one caller).
+...)` wrapping the _public_ `Workspace.loadAspects` method, which has more than one caller).
 
 ### 5. Root cause, take 2 (current best understanding): a single non-terminating recursion, not fan-out
 
@@ -121,7 +148,7 @@ aspects"` lines (as opposed to the much higher-volume `DEBUG`-level per-file-wri
 inflated the "40,820 occurrences" count above and don't each represent a separate `loadAspects`
 call) tells a very different story: there are only **109** such lines in the whole run, and **104
 of them share one single trace-root id** (`34l369`). That one root started at `18:07:50` and was
-*still recursing* at `18:12:47` — essentially the entire 5-minute window — alternating between
+_still recursing_ at `18:12:47` — essentially the entire 5-minute window — alternating between
 `... > consumer-fs-load > workspace.loadAspects` and `... > extension-merge > workspace.loadAspects`,
 each iteration loading only "1 aspects" or "2 aspects" before recursing again:
 
@@ -148,12 +175,12 @@ Bit's own commit history has three commits about exactly this class of problem
 - `0f796d993 fix(scope): break re-entrant aspect-load cycles with an in-flight guard` — already on
   this branch (ancestor of HEAD).
 - `796f76ce4 fix(workspace): key in-flight aspect loads by full id, collapse versions only for
-  legacy core envs` — already on this branch (ancestor of HEAD).
+legacy core envs` — already on this branch (ancestor of HEAD).
 - `f9ae003aa perf(workspace-aspects-loader): in-flight dedup for concurrent loadAspects` — **NOT**
   on this branch. Lives on `origin/refactor/component-loading-v2-take-3-stage2` (David First,
   unrelated in-progress refactor branch). Diverged from us a long way back (merge-base
-  `e97daafd1`), so a direct cherry-pick is unlikely to apply cleanly, but the *mechanism it
-  describes and fixes* is a near-exact match for what we found:
+  `e97daafd1`), so a direct cherry-pick is unlikely to apply cleanly, but the _mechanism it
+  describes and fixes_ is a near-exact match for what we found:
 
   > pass1's `consumer.loadComponents` ... fires the `onComponentConfigLoading` subscriber for
   > every component in parallel. Each subscriber calls `workspace.componentExtensions` ->
@@ -167,7 +194,7 @@ Bit's own commit history has three commits about exactly this class of problem
 
   It was then **superseded** by a follow-up on the same branch:
   `1213c36c6 perf(workspace-aspects-loader): serialize loadAspects instead of per-id dedup`,
-  because the per-id dedup missed a further wrinkle that matches our trace shape *even more*
+  because the per-id dedup missed a further wrinkle that matches our trace shape _even more_
   closely:
 
   > The per-id in-flight dedup ... only catches concurrent callers asking for the SAME aspect id.
@@ -194,12 +221,13 @@ Bit's own commit history has three commits about exactly this class of problem
 
   Their numbers (311 components, 13:54 → 10s) and ours (324 components, ~5-6min hang/timeout, and
   1m18s-1m57s on a build that presumably doesn't hit this path as hard) are in the same
-  ballpark, and the *reasoning* for why per-id dedup alone isn't enough lines up exactly with our
+  ballpark, and the _reasoning_ for why per-id dedup alone isn't enough lines up exactly with our
   single-trace-root, alternating `consumer-fs-load`/`extension-merge` observation.
 
 ## What's confirmed vs. still open
 
 **Confirmed:**
+
 - The regression is 100% reproducible, in this branch's code specifically, independent of
   environment/network/caching.
 - It's a single non-terminating recursive call chain (`workspace.loadAspects` calling itself via
@@ -211,10 +239,11 @@ Bit's own commit history has three commits about exactly this class of problem
   concurrency/serialization fix in `WorkspaceAspectsLoader.loadAspects`.
 
 **Not yet confirmed:**
+
 - That `1213c36c6`'s serialization fix, ported to this branch's current
-  `workspace-aspects-loader.ts`, actually resolves *our* hang (not yet attempted — the branches
+  `workspace-aspects-loader.ts`, actually resolves _our_ hang (not yet attempted — the branches
   have diverged enough that this needs a manual port, not a cherry-pick).
-- The exact call sites in *our* recursion (which two components/envs are ping-ponging under trace
+- The exact call sites in _our_ recursion (which two components/envs are ping-ponging under trace
   root `34l369`) — not yet identified by component id, only by span shape.
 
 ## Next steps for whoever picks this up
@@ -223,8 +252,8 @@ Bit's own commit history has three commits about exactly this class of problem
    branch, and port `1213c36c6`'s serialization-queue approach onto it (see `git show 1213c36c6`
    for the reference diff on the other branch). This is the highest-confidence lead by far.
 2. Verify with the fresh `/tmp` repro (fast to re-create: clone this branch, `bit init && bit
-   install`, then `BIT_BIN="node <clone>/bin/bit.js" node
-   scripts/circular-deps-check/monitor-workspace-cycle.js --verbose`) that the hang is gone and
+install`, then `BIT_BIN="node <clone>/bin/bit.js" node
+scripts/circular-deps-check/monitor-workspace-cycle.js --verbose`) that the hang is gone and
    `bit insights circular --json` completes in roughly the same ballpark as the bvm-bit baseline
    (~1-2min).
 3. If it doesn't fully resolve it, identify the two (or more) components/envs actually
@@ -266,6 +295,6 @@ under `node_modules/.pnpm/...` when it's resolved against different peer-depende
 `@teambit/workspace` built against `react-dom@18.3.1` in one place and `react-dom@19.2.7` in
 another - `find node_modules -path "*@teambit/<pkg>/dist/<file>.js"` shows all of them). If
 patching compiled JS directly (faster than a full recompile for a quick instrumentation check),
-patch *all* copies - Node's module resolution may load any of them depending on which component's
+patch _all_ copies - Node's module resolution may load any of them depending on which component's
 dependency chain triggers the `require` first, and `glob.glob('**/*.js')` in Python silently skips
 `.pnpm` (a dot-directory) unless you use `find` instead.
