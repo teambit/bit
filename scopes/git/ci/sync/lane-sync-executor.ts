@@ -1781,7 +1781,7 @@ export function runSummaryCommentBody({
     listed || '_none — nothing on the lane changed this run_',
     '',
     `- branch: \`${branch}\`${branchTipSha ? ` @ \`${branchTipSha.slice(0, 9)}\`` : ''}`,
-    `- lane: \`${laneIdStr}\` @ \`${laneHead.slice(0, 9)}\``,
+    `- lane: [\`${laneIdStr}\`](${laneUrl}) @ \`${laneHead.slice(0, 9)}\``,
   ].join('\n');
 }
 

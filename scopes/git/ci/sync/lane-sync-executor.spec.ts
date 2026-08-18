@@ -681,7 +681,8 @@ describe('runSummaryCommentBody', () => {
     expect(body).to.include(RUN_SUMMARY_MARKER);
     expect(body).to.include('acme.shop/comp1` @ `ccccccccc');
     expect(body).to.include('branch: `my-lane` @ `aaaaaaaaa`');
-    expect(body).to.include('lane: `acme.shop/my-lane` @ `bbbbbbbbb`');
+    // the lane anchor is a LINK — the reader lands on the lane, not on a name to copy-paste
+    expect(body).to.include('lane: [`acme.shop/my-lane`](https://bit.cloud/acme/shop/~lane/my-lane) @ `bbbbbbbbb`');
   });
 
   it('says plainly that nothing changed, rather than an empty list', () => {
