@@ -42,6 +42,7 @@ describe('bit ci sync', function () {
     laneTipFile,
     laneSideEdit,
     branchSideCommit,
+    scopeObjectCount,
   } = syncE2eHelpers(() => helper);
 
   before(() => {
@@ -53,6 +54,32 @@ describe('bit ci sync', function () {
     envGuard.restore();
     helper.scopeHelper.destroy();
   });
+
+  /**
+   * Arm a `pre-push` hook in the suite's local clone — the only way to interleave a remote update into
+   * the command's own push. Pins `core.hooksPath` as insurance against a global override on the machine
+   * running the suite. Returns the disarm callback for the test's `finally`; it removes the hook AND
+   * restores the prior `core.hooksPath`, so no config change leaks into later tests.
+   */
+  function armPrePushHook(script: string): () => void {
+    const hookPath = path.join(helper.scopes.localPath, '.git', 'hooks', 'pre-push');
+    let priorHooksPath: string | undefined;
+    try {
+      priorHooksPath = helper.command.runCmd('git config --local --get core.hooksPath').trim() || undefined;
+    } catch {
+      priorHooksPath = undefined; // unset — `git config --get` exits non-zero
+    }
+    helper.command.runCmd('git config core.hooksPath .git/hooks');
+    fs.outputFileSync(hookPath, `#!/bin/sh\n${script}\nexit 0\n`);
+    fs.chmodSync(hookPath, 0o755);
+    return () => {
+      fs.removeSync(hookPath);
+      // quoted: a machine-level prior value can hold whitespace, and runCmd goes through a shell
+      helper.command.runCmd(
+        priorHooksPath ? `git config core.hooksPath "${priorHooksPath}"` : 'git config --unset core.hooksPath'
+      );
+    };
+  }
 
   // Successive states of the same lane/branch pair: one workspace, run in order — the only way to
   // prove the reconciler is stateless is to drive one pair through a whole lifecycle.
@@ -256,10 +283,10 @@ describe('bit ci sync', function () {
       expect(remoteBranchExists(SYNC_BRANCH)).to.be.false;
     });
 
-    // A planned halt must exit non-zero exactly as the real run would — `summarizeSync` recognizes the
-    // HALTED prefix and nothing else. The shape: the lane's branch carries dev commits but records no bit
-    // state for it, so the planner cannot tell which side is newer.
-    it('F2: a --dry-run whose PLAN is a halt exits non-zero, with the prefix the real run uses', () => {
+    // The shape that used to PLAN a halt here ("cannot tell which side is newer") now plans
+    // adopt-branch: first contact, not a conflict. The dry run reports the plan, exits 0, and writes
+    // nothing. Dry-run HALT coverage (non-zero exit, HALTED prefix) lives in the cross-scope suite.
+    it('F2: a --dry-run that plans a first-contact adoption reports it and exits 0', () => {
       const refsBefore = remoteRefs();
       helper.command.runCmd(`git checkout -f -b ${LANE} origin/${defaultBranch}`);
       helper.fs.outputFile('docs/plan.md', 'dev work this repository never gave bit any state for\n');
@@ -269,10 +296,9 @@ describe('bit ci sync', function () {
       helper.command.runCmd(`git checkout -f ${defaultBranch}`);
       try {
         const { output, exitCode } = syncRun(`${LANE} --dry-run`);
-        expect(exitCode, `bit ci sync --dry-run output:\n${output}`).to.not.equal(0);
-        expect(output).to.include(`HALTED ${LANE} -> branch has commits but its .bitmap records no state`);
-        expect(output).to.include('bit ci sync could not reconcile 1 target(s)');
-        expect(output).to.include('Dry-run:');
+        expect(exitCode, `bit ci sync --dry-run output:\n${output}`).to.equal(0);
+        expect(output).to.include(`Dry-run: ${LANE} -> adopt-branch`);
+        expect(output).to.not.include('HALTED');
       } finally {
         // leave the block's refs as F found them — the local branch too, or the next run refuses to reset it
         helper.command.runCmd(`git push origin :refs/heads/${LANE}`);
@@ -658,7 +684,6 @@ describe('bit ci sync', function () {
     const LANE = 'race-lane';
     let defaultBranch: string;
     let bareRepoPath: string;
-    let hookPath: string;
 
     before(() => {
       ({ defaultBranch, bareRepoPath } = setupSyncWorkspace({ lanes: ['*'] }));
@@ -671,19 +696,12 @@ describe('bit ci sync', function () {
       helper.command.runCmd(`git push origin ${defaultBranch}`);
       gitFetch();
       helper.command.removeRemoteLane(LANE, '--force');
-      hookPath = path.join(helper.scopes.localPath, '.git', 'hooks', 'pre-push');
-      // insurance against a global core.hooksPath on the machine running the suite
-      helper.command.runCmd('git config core.hooksPath .git/hooks');
     });
 
     it('should keep the branch, name the race, and leave the racing commit as the tip', () => {
       const racedTo = branchTipSha(defaultBranch);
       // Runs while the delete push is in flight — after the command re-read the tip, before it lands.
-      fs.outputFileSync(
-        hookPath,
-        `#!/bin/sh\ngit --git-dir='${bareRepoPath}' update-ref refs/heads/${LANE} ${racedTo}\nexit 0\n`
-      );
-      fs.chmodSync(hookPath, 0o755);
+      const disarm = armPrePushHook(`git --git-dir='${bareRepoPath}' update-ref refs/heads/${LANE} ${racedTo}`);
       try {
         const { output, exitCode } = syncRun('--all');
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
@@ -694,8 +712,215 @@ describe('bit ci sync', function () {
         expect(remoteBranchExists(LANE), `origin/${LANE} must survive a racing update`).to.be.true;
         expect(branchTipSha(LANE)).to.equal(racedTo);
       } finally {
-        fs.removeSync(hookPath);
+        disarm();
       }
+    });
+  });
+
+  // The defect this closes: `bit ci pr --keep-lane` creates the lane but never commits the pointer to
+  // the branch's `.bitmap`, and the next `bit ci sync` used to halt on the pair.
+  describe('a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync)', () => {
+    const FEATURE_BRANCH = 'adopt-feature';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      // A plain git-native branch — no bit lane involved yet.
+      helper.command.runCmd(`git checkout -b ${FEATURE_BRANCH}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('adopt-feature-v1'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: adopt-feature work"');
+      helper.command.runCmd(`git push -u origin ${FEATURE_BRANCH}`);
+
+      // Creates the cloud lane from this branch's content without committing the pointer back to it.
+      helper.command.runCmd('bit ci pr --keep-lane --message "adopt via keep-lane"');
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+      // An independent clone on the lane, to read the LANE's own content rather than the branch's mirror.
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit switch ${helper.scopes.remote}/${FEATURE_BRANCH} --get-all`, devPath);
+    });
+
+    it('starts with no lane pointer at all on the branch — the exact pre-adoption shape', () => {
+      expect(fileOnBranch(FEATURE_BRANCH, '.bitmap')).to.not.include('"_bit_lane"');
+    });
+
+    it('adopts the branch instead of halting, and writes the lane pointer to it', () => {
+      const { output, exitCode } = syncRun(FEATURE_BRANCH);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${FEATURE_BRANCH} -> adopt-branch`);
+      expect(output).to.not.include('HALTED');
+      const bitmapAtTip = fileOnBranch(FEATURE_BRANCH, '.bitmap');
+      expect(bitmapAtTip).to.include('"_bit_lane"');
+      // Not just the branch's pointer — the LANE itself carries the adopted content.
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('adopt-feature-v1');
+    });
+
+    it('a second run sees the pair as converged and does nothing further', () => {
+      const { output, exitCode } = syncRun(FEATURE_BRANCH);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${FEATURE_BRANCH} -> noop (converged)`);
+    });
+  });
+
+  // Adoption must never be a bare export: real divergence halts and the lane is left untouched.
+  describe('a branch whose content would change the lane at first contact halts instead of adopting', () => {
+    const FEATURE_BRANCH = 'adopt-conflict';
+    let defaultBranch: string;
+    let devPath: string;
+    let laneFingerprintBeforeRun: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      helper.command.runCmd(`git checkout -b ${FEATURE_BRANCH}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('adopt-conflict-v1'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: adopt-conflict work"');
+      helper.command.runCmd(`git push -u origin ${FEATURE_BRANCH}`);
+
+      // Creates the cloud lane from the branch's v1 content, same as the adoption test above.
+      helper.command.runCmd('bit ci pr --keep-lane --message "adopt via keep-lane"');
+
+      // A second commit lands without another `ci pr` run: the lane holds v1, the branch v2.
+      helper.fs.outputFile('comp1/index.js', comp1Src('adopt-conflict-v2'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: adopt-conflict v2, never re-synced"');
+      helper.command.runCmd(`git push origin ${FEATURE_BRANCH}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit switch ${helper.scopes.remote}/${FEATURE_BRANCH} --get-all`, devPath);
+      laneFingerprintBeforeRun = remoteLaneFingerprint(FEATURE_BRANCH);
+    });
+
+    it('halts instead of adopting, and leaves the lane content untouched', () => {
+      const { output, exitCode } = syncRun(FEATURE_BRANCH);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+      expect(output).to.include('HALTED');
+      expect(output).to.include('cannot tell which side is newer');
+      expect(output).to.include('adopting would change');
+      // Nothing was exported: the lane's content is exactly what it was before this run.
+      expect(remoteLaneFingerprint(FEATURE_BRANCH)).to.equal(laneFingerprintBeforeRun);
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('adopt-conflict-v1');
+    });
+
+    // A snap-based probe would grow the local scope on every attempt; the status-based decision never snaps.
+    it('leaves the local scope byte-clean — a repeat halt attempt creates no additional objects', () => {
+      const afterFirstHalt = scopeObjectCount();
+      const { output, exitCode } = syncRun(FEATURE_BRANCH);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+      expect(output).to.include('HALTED');
+      expect(scopeObjectCount(), 'a residue-free halt must not grow the local scope on a repeat attempt').to.equal(
+        afterFirstHalt
+      );
+    });
+  });
+
+  // Lane names chosen so the halting lane sorts first: any adoption residue would poison the lane after it.
+  describe('one lane halting during adoption does not affect a healthy lane in the same --all run', () => {
+    const HALTING_LANE = 'adopt-conflict-blast';
+    const HEALTHY_LANE = 'healthy-blast';
+    let defaultBranch: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+
+      helper.command.runCmd(`git checkout -b ${HALTING_LANE}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('blast-v1'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: blast work"');
+      helper.command.runCmd(`git push -u origin ${HALTING_LANE}`);
+      helper.command.runCmd('bit ci pr --keep-lane --message "adopt via keep-lane"');
+      helper.fs.outputFile('comp1/index.js', comp1Src('blast-v2'));
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: blast v2, never re-synced"');
+      helper.command.runCmd(`git push origin ${HALTING_LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+
+      // The healthy lane: created and moved independently — an ordinary import-lane target.
+      createLaneWithSnap(HEALTHY_LANE, { 'comp2/index.js': comp2Src('healthy-v1') }, 'healthy v1');
+    });
+
+    it('the healthy lane converges and the halting one is left untouched, in the same run', () => {
+      const { output, exitCode } = syncRun('--all');
+      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+      expect(output).to.include(`HALTED ${HALTING_LANE}`);
+      expect(output).to.include('adopting would change');
+      expect(output).to.include(`${HEALTHY_LANE} -> import-lane`);
+      expect(fileOnBranch(HEALTHY_LANE, 'comp2/index.js')).to.include('healthy-v1');
+    });
+
+    it('a follow-up targeted run confirms the healthy lane converged cleanly — no residue tripped it', () => {
+      const rerun = syncRun(HEALTHY_LANE);
+      expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+      expect(rerun.output).to.include(`${HEALTHY_LANE} -> noop (converged)`);
+    });
+  });
+
+  // `commitAllAndPush`'s own comment says a rejected push means "someone pushed concurrently; re-plan
+  // rather than clobber" — this proves the caller actually does that instead of halting and labeling
+  // the PR `bit-sync-conflict` over a race that isn't a real content conflict, AND that the pair is
+  // left in a state the very next run converges cleanly — the race leaves no unresolved trail.
+  describe('a rejected sync-commit push reports a benign race, not a conflict', () => {
+    const LANE = 'import-race-lane';
+    let devPath: string;
+    let winnerPath: string;
+
+    before(() => {
+      setupSyncWorkspace({ lanes: ['*'] });
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('import-race-v1') }, 'v1');
+      // First run: plain import-lane, no race — creates the branch and its lane pointer.
+      seedSync(LANE);
+      // Move the lane again so the next run's plan is import-lane once more.
+      laneSideEdit(devPath, 'comp1/index.js', comp1Src('import-race-v2'), 'v2');
+      // A second clone of this same workspace, at this same pre-race state — the run that will win.
+      winnerPath = helper.scopeHelper.cloneWorkspace();
+    });
+
+    it('reports a plain race instead of halting, and a follow-up run converges cleanly', () => {
+      // Fires while our own sync-commit push is in flight — after we committed locally, before the
+      // push lands. Rather than a raw ref move, this runs a SECOND, real `bit ci sync` against an
+      // independent clone of this same workspace: it completes the identical import and lands its own
+      // valid ledger commit on the branch first. That is the actual shape of this race (two real
+      // reconciler runs), not just a rejection that happens to look like one.
+      const disarm = armPrePushHook(`cd '${winnerPath}' && ${helper.command.bitBin} ci sync ${LANE}`);
+      let winnerTip: string;
+      try {
+        const { output, exitCode } = syncRun(LANE);
+        expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        expect(output).to.include(
+          `${LANE} -> raced (branch push lost the race to a concurrent run; next run re-plans)`
+        );
+        expect(output).to.not.include('HALTED');
+        expect(output).to.not.include('bit-sync-conflict');
+        // Anti-clobber: the surviving remote tip is the WINNER's own pushed sha, not some third value —
+        // read independently from the winner's own clone. `origin/<LANE>` (not HEAD: the winner's sync
+        // run restores its local checkout to the default branch once done) reflects what IT pushed,
+        // since `git push` updates the local remote-tracking ref immediately, no fetch needed.
+        const winnerOwnPushedSha = helper.command.runCmd(`git rev-parse origin/${LANE}`, winnerPath).trim();
+        winnerTip = branchTipSha(LANE);
+        expect(winnerTip, "the surviving remote tip must be the winner's own pushed commit").to.equal(
+          winnerOwnPushedSha
+        );
+      } finally {
+        disarm();
+      }
+
+      // Idempotence: with no hook armed, the next run sees the winner's already-converged state and
+      // does nothing further.
+      const rerun = syncRun(LANE);
+      expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
+      expect(rerun.output).to.include(`${LANE} -> noop (converged)`);
+      expect(branchTipSha(LANE), 'the follow-up run must not have pushed anything new').to.equal(winnerTip);
+
+      // The loser's clone stays usable: the raced run dropped its unpushed sync commit, so a later
+      // BRANCH-TOUCHING run in this same clone (the lane moves again -> import-lane) checks the branch
+      // out cleanly instead of tripping the pristine-checkout orphan guard and halting.
+      laneSideEdit(devPath, 'comp1/index.js', comp1Src('import-race-v3'), 'v3');
+      const reuse = syncRun(LANE);
+      expect(reuse.exitCode, `bit ci sync output:\n${reuse.output}`).to.equal(0);
+      expect(reuse.output).to.include(`${LANE} -> import-lane`);
+      expect(reuse.output).to.not.include('HALTED');
     });
   });
 

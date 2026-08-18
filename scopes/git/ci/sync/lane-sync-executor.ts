@@ -12,11 +12,14 @@ import { laneNameToBranch } from './sync-config';
 import type { BranchSyncState } from './sync-state';
 import {
   CONFLICT_LABEL,
+  NO_CHANGES_TO_SNAP,
   SYNC_COMMIT_MARKER,
+  branchBitmapUnchangedSinceFork,
   branchStateFingerprint,
   buildSyncCommitMessage,
   fingerprintIdVersions,
   readBranchSyncState,
+  oldestCommitIsNonSync,
   hasSyncMarker,
   isSyncAuthoredMessage,
 } from './sync-state';
@@ -30,10 +33,13 @@ import {
   checkoutPristine,
   checkoutPristineRestore,
   commitWithIdentity,
+  confirmPushRace,
   deleteBranchArgs,
+  dropLocalBranchToRemoteTip,
   fetchRemoteHeads,
   isAncestor,
   isStaleLeaseRejection,
+  redactUrlCredentials,
   refetchBranchTip,
 } from './git-ops';
 
@@ -50,6 +56,50 @@ export const HALT_SUMMARY_PREFIX = 'HALTED';
  * sync conflict.
  */
 export const REFUSED_SUMMARY_PREFIX = 'REFUSED';
+
+/**
+ * A raced verdict: the run lost a push race to a concurrent run and exits green — never a halt, never
+ * the `bit-sync-conflict` label; a raced push is not a content conflict. Nothing retries in-run, so
+ * convergence waits on the NEXT trigger (webhook or scheduled run): a deployment without the cron can
+ * mirror stale content until the next event. One builder so the `-> raced (` stem a consumer routes on
+ * lives at one site, like `HALT_SUMMARY_PREFIX`.
+ */
+function racedSummary(laneName: string, detail: string): string {
+  return `${laneName} -> raced (${detail})`;
+}
+
+/**
+ * `executeImportLane`'s own push (materializing the lane onto the branch) lost the race. Nothing on
+ * the LANE changed here — only the branch-side commit failed to land — so the next run's plan is
+ * unaffected: it simply retries the same import against the winner's tip.
+ */
+function racedBranchPushSummary(laneName: string): string {
+  return racedSummary(laneName, 'branch push lost the race to a concurrent run; next run re-plans');
+}
+
+/**
+ * `recordLaneHeadOnBranch`'s ledger-commit push lost the race, AFTER the snap/export that precedes it
+ * already succeeded — the lane genuinely moved. Only the branch's own acknowledgment of that (the
+ * `.bitmap` pointer commit) failed to land, so the next run reads the branch as behind the lane it
+ * itself just updated and plans `import-lane` to catch it up. `policyClause` carries a destructive
+ * auto-resolution (onConflict git-wins/lane-wins) that already exported — it must not vanish from the
+ * summary just because the ledger push raced.
+ */
+export function racedLedgerPushSummary(laneName: string, policyClause = ''): string {
+  return racedSummary(
+    laneName,
+    `${policyClause}lane updated; branch ledger commit lost the push race — next run re-plans`
+  );
+}
+
+/**
+ * `executeAdoptBranch`'s ledger-commit push lost the race. Unlike the export paths, adoption never
+ * snaps or exports — the LANE is untouched; only the branch's pointer commit failed to land. The next
+ * run re-plans first contact against the winner's tip.
+ */
+export function racedAdoptionPushSummary(laneName: string): string {
+  return racedSummary(laneName, 'lane untouched; adoption ledger commit lost the push race — next run re-plans');
+}
 
 export type LaneSyncDeps = {
   lanes: LanesMain;
@@ -207,6 +257,7 @@ export const KEPT_BECAUSE: Record<BranchKeepReason, string> = {
   'unmerged-commits': `it carries commits that are not in the default branch`,
   'tip-not-a-sync-commit': `its tip is not one of this reconciler's own commits, so the work in it may exist nowhere else`,
   'tip-advanced-during-run': `its tip advanced after the ownership evidence was read, so it may carry work this run never saw`,
+  'adopted-branch': `it was adopted from a pre-existing branch, and only merging (not deleting) proves its history is safe to retire`,
 };
 
 export class LaneSyncExecutor {
@@ -385,6 +436,20 @@ export class LaneSyncExecutor {
     // `isSyncAuthoredMessage`, NOT `hasSyncMarker`: this feeds a branch deletion, and a message that
     // merely quotes the marker must not read as one we wrote.
     const tipIsSyncCommit = isSyncAuthoredMessage(branchState.tipMessage);
+    const hasIndependentHistory = await this.computeHasIndependentHistory(
+      ownership,
+      branchState.stateCommit,
+      defaultBranch
+    );
+
+    const branchNamesDifferentLane = await this.computeBranchNamesDifferentLane(
+      lastSyncedHead,
+      branchState.hasDevCommits,
+      mirroredLane,
+      laneIdStr,
+      branch,
+      defaultBranch
+    );
 
     const action = planLaneSync({
       laneHead,
@@ -392,7 +457,9 @@ export class LaneSyncExecutor {
       lastSyncedHead,
       hasDevCommits: branchState.hasDevCommits,
       tipIsSyncCommit,
+      hasIndependentHistory,
       conflictLabelPresent,
+      branchNamesDifferentLane,
       ownership,
     });
 
@@ -459,6 +526,8 @@ export class LaneSyncExecutor {
         return this.executeExportBranch({ target, laneIdStr, branch, defaultBranch });
       case 'merge-diverged':
         return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch });
+      case 'adopt-branch':
+        return this.executeAdoptBranch({ target, laneIdStr, branch, defaultBranch, pr });
       case 'close-pr':
         return this.executeClosePr({
           laneName,
@@ -470,8 +539,12 @@ export class LaneSyncExecutor {
           keepReason: action.deleteBranch ? undefined : action.keepReason,
           expectedTipSha: branchState.tipSha,
         });
-      case 'halt':
-        return this.executeHalt({ laneName, laneIdStr, branch, reason: action.reason, pr });
+      case 'halt': {
+        // The planner only has the boolean; the different-lane id and its PR advice live here.
+        const commentNote =
+          branchNamesDifferentLane && mirroredLane ? branchMirrorsOtherLaneNote(mirroredLane, laneIdStr) : undefined;
+        return this.executeHalt({ laneName, laneIdStr, branch, reason: action.reason, pr, commentNote });
+      }
       default: {
         // exhaustiveness guard
         const unhandled: never = action;
@@ -583,7 +656,13 @@ export class LaneSyncExecutor {
         });
       }
 
-      await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+      const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
+      if (pushResult.raced) {
+        // Still ensure the PR: this early return skips the file's only PR-creation site, and the
+        // converged state every later run reads plans a bare noop, which never repairs a missing PR.
+        if (!pr) await this.openPrForLane({ target, laneIdStr, branch, defaultBranch, laneHead, remoteLane });
+        return racedBranchPushSummary(laneName);
+      }
 
       let prUrl = pr?.htmlUrl;
       if (!pr) {
@@ -621,20 +700,21 @@ export class LaneSyncExecutor {
     await this.checkoutFromRemote(branch, `origin/${branch}`);
 
     try {
-      const exportErr = await this.snapAndExportOntoLane(laneIdStr, message);
-      if (exportErr) {
+      const exported = await this.snapAndExportOntoLane(laneIdStr, message);
+      if (exported.status === 'error') {
         // Halt rather than propagate: one lane's failed snap/export must not abort the lanes after it.
         return await this.executeHalt({
           laneName,
           laneIdStr,
           branch,
-          reason: `failed to snap and export branch ${branch} onto lane ${laneIdStr}: ${exportErr.message}`,
+          reason: `failed to snap and export branch ${branch} onto lane ${laneIdStr}: ${exported.error.message}`,
           pr: await this.findPr(branch),
         });
       }
 
-      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (!laneHead) {
+      const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      if (recorded.status === 'raced') return racedLedgerPushSummary(laneName);
+      if (recorded.status === 'unreadable') {
         return await this.executeHalt({
           laneName,
           laneIdStr,
@@ -643,7 +723,89 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
-      return `${laneName} -> export-branch (lane ${laneIdStr} @ ${laneHead.slice(0, 9)}, branch ${branch} updated)`;
+      return (
+        `${laneName} -> export-branch (lane ${laneIdStr} @ ${recorded.laneHead.slice(0, 9)}, ` +
+        `branch ${branch} updated)`
+      );
+    } finally {
+      await this.restoreWorkspace(defaultBranch);
+    }
+  }
+
+  /**
+   * First contact: the lane exists, the branch maps to it by name, but the branch's committed
+   * `.bitmap` has no state for it (typically `bit ci pr --keep-lane` created the lane from this very
+   * branch without recording the pointer in git). Adoption only ever RECORDS a pointer, never resolves
+   * content: switch onto the lane keeping the branch's files, then ask `bit status` whether anything
+   * differs. Nothing → ledger commit; something → halt, lane untouched. Deliberately a status READ,
+   * never a snap: `snapping.snap()` writes an unexported Version object even under `dryRun`, and that
+   * residue can trip a later lane in the same `--all` run.
+   */
+  private async executeAdoptBranch({
+    target,
+    laneIdStr,
+    branch,
+    defaultBranch,
+    pr,
+  }: {
+    target: LaneTarget;
+    laneIdStr: string;
+    branch: string;
+    defaultBranch: string;
+    pr?: PrInfo;
+  }): Promise<string> {
+    const { logger } = this.deps;
+    const laneName = target.name;
+    logger.console(
+      formatWarningSummary(
+        `Adopting branch ${branch}: lane ${laneIdStr} exists, but the branch's committed .bitmap has no state for it (first contact)`
+      )
+    );
+
+    await this.checkoutFromRemote(branch, `origin/${branch}`);
+
+    try {
+      const switchErr = await this.materializeLane(laneIdStr, false);
+      if (switchErr) {
+        return await this.executeHalt({
+          laneName,
+          laneIdStr,
+          branch,
+          reason: `failed to check branch ${branch} against lane ${laneIdStr} for adoption: ${switchErr.message}`,
+          pr: pr ?? (await this.findPr(branch)),
+        });
+      }
+
+      const wouldChangeLane = await this.deps.ci.hasUnsyncedWorkChanges();
+      if (wouldChangeLane) {
+        // Nothing was snapped or exported — the lane is untouched.
+        return await this.executeHalt({
+          laneName,
+          laneIdStr,
+          branch,
+          reason:
+            'branch has commits but its .bitmap records no state for this lane; cannot tell which side is ' +
+            `newer (adopting would change lane ${laneIdStr}'s content, not just record a pointer)`,
+          pr: pr ?? (await this.findPr(branch)),
+        });
+      }
+
+      // Branch content already matches the lane — the ledger commit is all that is missing.
+      const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch, { adopted: true });
+      if (recorded.status === 'raced') return racedAdoptionPushSummary(laneName);
+      if (recorded.status === 'unreadable') {
+        return await this.executeHalt({
+          laneName,
+          laneIdStr,
+          branch,
+          reason: `lane ${laneIdStr} could not be read back from the remote after adopting branch ${branch}`,
+          pr: pr ?? (await this.findPr(branch)),
+        });
+      }
+      return (
+        `${laneName} -> adopt-branch (branch ${branch} had no lane state; adopted onto lane ${laneIdStr} @ ` +
+        `${recorded.laneHead.slice(0, 9)})`
+      );
     } finally {
       await this.restoreWorkspace(defaultBranch);
     }
@@ -739,25 +901,26 @@ export class LaneSyncExecutor {
       }
 
       // ---- step 2: snap + export the merged tree onto the lane ---------------------------------
-      const exportErr = await this.snapAndExportOntoLane(
+      const exported = await this.snapAndExportOntoLane(
         laneIdStr,
         `merge remote lane ${laneIdStr} into ${branch} ${SYNC_COMMIT_MARKER}`
       );
-      if (exportErr) {
+      if (exported.status === 'error') {
         return await halt(
           `merged lane ${laneIdStr} into branch ${branch} cleanly, but snapping/exporting the merged ` +
-            `result failed: ${exportErr.message}`
+            `result failed: ${exported.error.message}`
         );
       }
 
       // ---- step 3: record the new lane head on the branch --------------------------------------
-      const laneHead = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
-      if (!laneHead) {
+      const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
+      if (recorded.status === 'raced') return racedLedgerPushSummary(laneName, policyClause);
+      if (recorded.status === 'unreadable') {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
       }
       return (
         `${laneName} -> merge-diverged (${policyClause}merged lane into branch, then exported; lane ${laneIdStr} @ ` +
-        `${laneHead.slice(0, 9)}, branch ${branch} updated)`
+        `${recorded.laneHead.slice(0, 9)}, branch ${branch} updated)`
       );
     } catch (e: any) {
       // Something unforeseen — halt anyway: no single lane may abort the rest of the run.
@@ -770,18 +933,20 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * Snap the workspace's current tree onto the lane and export it; returns the error so the caller can
-   * halt. Snaps WHATEVER is in the workspace (the switch uses `forceOurs` and never merges files), so
-   * a diverged tree must already hold the merged content. `keepLane` preserves the lane's history,
-   * `skipCleanup` keeps the snap's `.bitmap` for the caller to commit, `noDestructiveRecovery` turns
-   * stale-lane recovery (delete + re-fork the remote lane) into a throw. The lane object must be
-   * imported BEFORE delegating: a switch onto the lane the workspace is already on no-ops before any
-   * fetch, so it never warms a cold scope.
+   * Snap the workspace's current tree onto the lane and export it. Snaps WHATEVER is in the workspace
+   * (the switch uses `forceOurs` and never merges files), so a diverged tree must already hold the
+   * merged content. `keepLane` preserves the lane's history, `skipCleanup` keeps the snap's `.bitmap`
+   * for the caller to commit, `noDestructiveRecovery` turns stale-lane recovery (delete + re-fork the
+   * remote lane) into a throw. The lane object must be imported BEFORE delegating: a switch onto the
+   * lane the workspace is already on no-ops before any fetch, so it never warms a cold scope.
    */
-  private async snapAndExportOntoLane(laneIdStr: string, message: string): Promise<Error | undefined> {
+  private async snapAndExportOntoLane(
+    laneIdStr: string,
+    message: string
+  ): Promise<{ status: 'noop' | 'exported' } | { status: 'error'; error: Error }> {
     try {
       await ensureCurrentLaneObject(this.deps.lanes);
-      await this.deps.ci.snapPrCommit({
+      const result = await this.deps.ci.snapPrCommit({
         laneIdStr,
         message,
         build: undefined,
@@ -790,27 +955,32 @@ export class LaneSyncExecutor {
         skipCleanup: true,
         noDestructiveRecovery: true,
       });
-      return undefined;
+      if (result === NO_CHANGES_TO_SNAP) return { status: 'noop' };
+      return { status: 'exported' };
     } catch (e: any) {
-      return e instanceof Error ? e : new Error(String(e?.message ?? e));
+      return { status: 'error', error: e instanceof Error ? e : new Error(String(e?.message ?? e)) };
     }
   }
 
   /**
    * Record on the branch which lane state it now mirrors: re-query the lane (the export just moved it,
    * so any earlier fingerprint is stale), commit — crucially the `.bitmap` the snap rewrote — and push.
-   * Returns undefined when the lane can no longer be read, in which case the caller halts.
+   * `unreadable` means the lane could no longer be read back, in which case the caller halts;
+   * `raced` means a concurrent run's push already got there first, in which case the caller reports
+   * a benign noop instead. `adopted` adds the audit-only `ADOPTION_TRAILER`.
    */
   private async recordLaneHeadOnBranch(
     target: LaneTarget,
     laneIdStr: string,
-    branch: string
-  ): Promise<string | undefined> {
+    branch: string,
+    opts: { adopted?: boolean } = {}
+  ): Promise<{ status: 'unreadable' } | { status: 'raced' } | { status: 'ok'; laneHead: string }> {
     const remoteLane = await this.getRemoteLane(target);
-    if (!remoteLane) return undefined;
+    if (!remoteLane) return { status: 'unreadable' };
     const laneHead = laneHeadFingerprint(remoteLane.components);
-    await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead));
-    return laneHead;
+    const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead, opts));
+    if (pushResult.raced) return { status: 'raced' };
+    return { status: 'ok', laneHead };
   }
 
   /**
@@ -923,6 +1093,80 @@ export class LaneSyncExecutor {
       );
       return 'inherited-or-none';
     }
+  }
+
+  /**
+   * Gates `hasIndependentHistoryBelowStateCommit`'s git call to the one case it can change the outcome
+   * for: an `own-live` claim (the only ownership that would otherwise license an immediate delete) with
+   * a reachable state commit to inspect. Extracted out of `reconcileLane` to keep the branching there.
+   */
+  private async computeHasIndependentHistory(
+    ownership: LaneOwnershipEvidence,
+    stateCommit: string | undefined,
+    defaultBranch: string
+  ): Promise<boolean> {
+    if (ownership !== 'own-live' || !stateCommit) return false;
+    return this.hasIndependentHistoryBelowStateCommit(stateCommit, defaultBranch);
+  }
+
+  /**
+   * Whether the OLDEST commit unique to the branch is NOT bit-authored — durable, ancestry-based proof
+   * a human created the branch before this reconciler touched it (a trailer would not survive later
+   * ledger commits; see `oldestCommitIsNonSync` for the oldest-only rationale). Unreadable answers
+   * `true`: a deletion guard errs toward keeping.
+   */
+  private async hasIndependentHistoryBelowStateCommit(stateCommit: string, defaultBranch: string): Promise<boolean> {
+    try {
+      const log = await git.raw([
+        'log',
+        `origin/${defaultBranch}..${stateCommit}`,
+        '--first-parent',
+        '--reverse',
+        '--format=%B%x1e',
+      ]);
+      return oldestCommitIsNonSync(log);
+    } catch (e: any) {
+      this.deps.logger.consoleWarning(
+        `Could not read ${stateCommit}'s history against ${defaultBranch} to check for independent, ` +
+          `pre-existing branch history; treating it as present (the branch is kept, not deleted): ${e?.message || e}`
+      );
+      return true;
+    }
+  }
+
+  /** Gates `differentLaneStillClaims` to the planner's first-contact path, the only one that reads it. */
+  private async computeBranchNamesDifferentLane(
+    lastSyncedHead: string | undefined,
+    hasDevCommits: boolean,
+    mirroredLane: string | undefined,
+    laneIdStr: string,
+    branch: string,
+    defaultBranch: string
+  ): Promise<boolean> {
+    if (lastSyncedHead || !hasDevCommits) return false;
+    return this.differentLaneStillClaims(mirroredLane, laneIdStr, branch, defaultBranch);
+  }
+
+  /**
+   * Whether adoption must refuse `branch` because its `.bitmap` names a DIFFERENT lane's still-live
+   * claim. Blob equality with the fork-point `.bitmap`, not commit reachability: an `own-superseded`
+   * branch is reachable yet still carries live work; only a `.bitmap` the branch never changed proves
+   * the pointer is inherited. Unreadable stays conservative and blocks adoption.
+   */
+  private async differentLaneStillClaims(
+    mirroredLane: string | undefined,
+    laneIdStr: string,
+    branch: string,
+    defaultBranch: string
+  ): Promise<boolean> {
+    if (!mirroredLane || mirroredLane === laneIdStr) return false;
+    const inherited = await this.branchInheritsBitmapFromDefault(branch, defaultBranch);
+    return !inherited;
+  }
+
+  /** Seam over `branchBitmapUnchangedSinceFork`, so `differentLaneStillClaims` is unit-testable without a real remote. */
+  private branchInheritsBitmapFromDefault(branch: string, defaultBranch: string): Promise<boolean> {
+    return branchBitmapUnchangedSinceFork(branch, defaultBranch);
   }
 
   /**
@@ -1126,14 +1370,17 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * Drive the workspace's filesystem to the remote lane's content; returns the error so the caller can
-   * halt. Two traps make a plain `switchToLane` insufficient: (1) it defaults to `forceOurs`, which
-   * never touches the filesystem — the commit would claim the branch mirrors the lane over the default
-   * branch's files — so `forceOurs` is cleared and `forceTheirs` set; (2) switching onto the lane the
-   * workspace already sits on throws "already checked out", which `switchToLane` swallows as success
-   * and nothing materializes — so step off to main first.
+   * Drive the workspace's filesystem onto the remote lane; returns the error so the caller can halt.
+   * Two traps make a plain `switchToLane` insufficient: (1) its default `forceOurs` never touches the
+   * filesystem, so the caller's commit would misrepresent whichever side it claims mirrors the other;
+   * (2) switching onto the lane the workspace already sits on throws "already checked out", which
+   * `switchToLane` swallows as success and nothing materializes — so step off to main first.
+   *
+   * `theirsWins` picks the direction: `true` (import-lane) checks the lane's files out over the disk;
+   * `false` (adopt-branch) keeps the workspace's files — the branch's content is what the lane is
+   * being asked to reflect.
    */
-  private async materializeLane(laneIdStr: string): Promise<Error | undefined> {
+  private async materializeLane(laneIdStr: string, theirsWins = true): Promise<Error | undefined> {
     const { logger } = this.deps;
     const target = await this.deps.lanes.parseLaneId(laneIdStr);
     // Compares name AND scope, and reads from `.bitmap`, not the scope's lane object — the object read
@@ -1154,9 +1401,16 @@ export class LaneSyncExecutor {
     }
 
     const switchErr = await this.deps.ci.switchToLaneForSync(laneIdStr, {
-      forceOurs: false,
-      forceTheirs: true,
-      writeAdoptedFiles: true,
+      forceOurs: !theirsWins,
+      forceTheirs: theirsWins,
+      // The whole lane has to land in the workspace here, including components it has that this
+      // workspace doesn't track yet - materializing the lane is the point of this step. That is the
+      // opposite of `bit ci pr`, where the git checkout is the source of truth and `switchToLane`'s
+      // `workspaceOnly` default keeps the switch from writing lane-only components.
+      workspaceOnly: false,
+      // Follows the direction: in adopt mode the missing-component retry must not write the lane's
+      // files over the branch's — the ledger commit would then push the lane's content onto the branch.
+      writeAdoptedFiles: theirsWins,
     });
     if (switchErr) return switchErr;
 
@@ -1222,15 +1476,68 @@ export class LaneSyncExecutor {
   /**
    * Stage everything, commit with the annotated sync message, and push. NEVER force-pushes: a rejected
    * push means someone pushed concurrently and the next run should re-plan rather than clobber.
-   * `--allow-empty` is only insurance against `git commit` failing the lane outright.
+   * `--allow-empty` is only insurance against `git commit` failing the lane outright. Returns whether
+   * the push was rejected by a CONFIRMED race (`classifyPushRejection`) — the caller's cue to report a
+   * benign noop instead of halting; any other push failure still throws.
    */
-  private async commitAllAndPush(branch: string, message: string) {
+  private async commitAllAndPush(branch: string, message: string): Promise<{ raced: boolean }> {
+    // The local knowledge of `origin/<branch>` right now — no fetch, `fetchOnce` already ran for this
+    // whole executor run — is exactly what our about-to-be-made commit is based on. After a rejection,
+    // this is the baseline `classifyPushRejection` checks the remote against to confirm a real race.
+    const baseSha = await this.localRemoteTip(branch);
     await addAllExceptScopeAndModules();
     await commitWithIdentity(message, { extraArgs: ['--allow-empty'] });
-    // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or reinterpreted —
-    // the configured branch name is user input (see `sync-config.ts`).
-    await git.push(['origin', `HEAD:refs/heads/${branch}`]);
+    try {
+      // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or
+      // reinterpreted — the configured branch name is user input (see `sync-config.ts`).
+      await git.push(['origin', `HEAD:refs/heads/${branch}`]);
+    } catch (e: any) {
+      if ((await this.classifyPushRejection(branch, baseSha, e)) !== 'confirmed-race') throw e;
+      // Drop the losing commit: left on refs/heads/<branch>, its orphan sibling would trip
+      // `checkoutPristine`'s guard on this clone's next branch-touching run. The confirmation just
+      // refetched the winner's tip, so `origin/<branch>` resolves.
+      const dropErr = await dropLocalBranchToRemoteTip(branch);
+      if (dropErr) {
+        this.deps.logger.consoleWarning(`Could not drop the unpushed sync commit on ${branch}: ${dropErr}`);
+      }
+      // Keep the original rejection text (redacted: git prints the remote URL, which may embed
+      // credentials): the raced verdict exits green, and without the text a persistent wording-matched
+      // failure on a busy branch would leave no diagnosable trace anywhere.
+      this.deps.logger.console(
+        formatWarningSummary(
+          `Push to ${branch} was rejected and the branch has since moved — a concurrent run got there first; ` +
+            `re-planning on the next sync. The rejection: ${redactUrlCredentials(String(e?.message || e))}`
+        )
+      );
+      return { raced: true };
+    }
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
+    return { raced: false };
+  }
+
+  /** `origin/<branch>`'s tip as this local clone currently knows it — no fetch. Undefined if unknown. */
+  private async localRemoteTip(branch: string): Promise<string | undefined> {
+    try {
+      return String(await git.raw(['rev-parse', `origin/${branch}`])).trim() || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * `confirmPushRace` (git-ops) with this executor's seam: `currentBranchTip` (shared with the close-pr
+   * retirement path) keeps the confirmation unit-testable without a real remote. Residual risk,
+   * accepted: "the branch moved" is not "a sync run won" — on a branch that moves during every run
+   * window, a persistent wording-matched failure still classifies as raced each time. The caller logs
+   * the original rejection text so that shape stays diagnosable. Only answers; the caller decides to
+   * swallow or rethrow.
+   */
+  private async classifyPushRejection(
+    branch: string,
+    baseSha: string | undefined,
+    e: any
+  ): Promise<'confirmed-race' | 'not-a-race'> {
+    return confirmPushRace(branch, baseSha, String(e?.message || e), (b) => this.currentBranchTip(b));
   }
 
   private async openPrForLane({

@@ -1,4 +1,4 @@
-import type { WebpackConfigMutator } from '@teambit/webpack';
+import type { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
 

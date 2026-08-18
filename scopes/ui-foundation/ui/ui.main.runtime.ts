@@ -144,6 +144,8 @@ export type RuntimeOptions = {
 export class UiMain {
   private _isBundleUiServed = false;
   private currentUIServer: UIServer | undefined;
+  /** compilers `build()` created, freed by `closeBuildCompilers()` once the caller is done */
+  private openBuildCompilers: any[] = [];
 
   constructor(
     /**
@@ -235,7 +237,11 @@ export class UiMain {
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<any> {
+  async build(
+    uiRootAspectIdOrName?: string,
+    customOutputPath?: string,
+    options?: { deferClose?: boolean }
+  ): Promise<any> {
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}"`);
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
 
@@ -250,41 +256,89 @@ export class UiMain {
 
     const browserConfig = createRspackBrowserConfig(outputPath, [mainEntry], uiRoot.name, publicDir);
     const compiler = rspack(browserConfig as any);
-    this.logger.debug(`rspack (build): running for browser`);
-    const [results, errors] = await this.runRspackPromise(compiler);
-    this.logger.debug(`rspack (build): completed browser`);
-    if (!results) throw new UnknownBuildError();
-    if (errors) {
-      this.clearConsole();
-      throw new Error(errors);
-    }
-    if (results?.hasErrors()) {
-      this.clearConsole();
-      throw new Error(results?.toString());
-    }
-
-    if (ssr) {
-      const ssrConfig = createRspackSsrConfig(outputPath, [mainEntry], publicDir);
-      const ssrCompiler = rspack(ssrConfig as any);
-      this.logger.debug(`rspack (build): running for SSR`);
-      const [ssrResults, ssrErrors] = await this.runRspackPromise(ssrCompiler);
-      this.logger.debug(`rspack (build): completed SSR build`);
-      if (ssrErrors) {
+    const compilers: any[] = [compiler];
+    try {
+      this.logger.debug(`rspack (build): running for browser`);
+      const [results, errors] = await this.runRspackPromise(compiler);
+      this.logger.debug(`rspack (build): completed browser`);
+      if (!results) throw new UnknownBuildError();
+      if (errors) {
         this.clearConsole();
-        throw new Error(ssrErrors);
+        throw new Error(errors);
       }
-      if (ssrResults?.hasErrors()) {
+      if (results?.hasErrors()) {
         this.clearConsole();
-        throw new Error(ssrResults?.toString());
+        throw new Error(results?.toString());
       }
-    }
 
-    return results;
+      if (ssr) {
+        const ssrConfig = createRspackSsrConfig(outputPath, [mainEntry], publicDir);
+        const ssrCompiler = rspack(ssrConfig as any);
+        compilers.push(ssrCompiler);
+        this.logger.debug(`rspack (build): running for SSR`);
+        const [ssrResults, ssrErrors] = await this.runRspackPromise(ssrCompiler);
+        this.logger.debug(`rspack (build): completed SSR build`);
+        if (ssrErrors) {
+          this.clearConsole();
+          throw new Error(ssrErrors);
+        }
+        if (ssrResults?.hasErrors()) {
+          this.clearConsole();
+          throw new Error(ssrResults?.toString());
+        }
+      }
+
+      return results;
+    } finally {
+      // `deferClose` hands the compilers to the caller, which must call `closeBuildCompilers()` -
+      // BundleUiTask does, once both of its UI roots are done. Every other caller (bit start's
+      // pre-bundle, a watch rebuild) gets them closed right here: leaving them tracked would keep
+      // one module graph per build alive for the life of a long-running process.
+      if (options?.deferClose) this.openBuildCompilers.push(...compilers);
+      else await this.closeCompilers(compilers);
+    }
   }
 
   registerStartPlugin(startPlugin: StartPlugin) {
     this.startPluginSlot.register(startPlugin);
     return this;
+  }
+
+  /**
+   * Release the compilers `build()` created. A compiler keeps its whole module graph (and rspack's
+   * native side of it) alive, and `bit build` runs every bundling task in one process - the UI
+   * bundle first, then a preview bundle per env - so compilers left open stay resident for all of
+   * them and the process gets OOM-killed partway through. The webpack bundler closes its compiler
+   * the same way after each run.
+   *
+   * Deliberately NOT called from inside `build()`: closing one compiler while another UI root is
+   * still bundling in the same process is untested and a run that did so failed to resolve modules
+   * in the second root. Callers close once every root is done - see BundleUiTask.
+   */
+  async closeBuildCompilers(): Promise<void> {
+    const compilers = this.openBuildCompilers;
+    this.openBuildCompilers = [];
+    await this.closeCompilers(compilers);
+  }
+
+  /**
+   * Never throws: this runs from a `finally`, and a cleanup failure must not replace the build
+   * error that sent us there (nor turn a successful bundle into a failed task). Same contract as
+   * the webpack bundler's cleanup.
+   */
+  private async closeCompilers(compilers: any[]): Promise<void> {
+    await Promise.all(
+      compilers.map(async (compiler) => {
+        try {
+          if (typeof compiler?.close !== 'function') return;
+          await new Promise<void>((resolve) => {
+            compiler.close(() => resolve());
+          });
+        } catch (err: any) {
+          this.logger.debug(`failed closing an rspack compiler: ${err?.message || err}`);
+        }
+      })
+    );
   }
 
   private async runRspackPromise(compiler: any): Promise<[any | undefined, string | undefined]> {

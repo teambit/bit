@@ -975,11 +975,21 @@ if needed, use "bit env set" command to align the env id`;
         isFoundWithoutVersion = true;
         return true;
       }
-      const envComponent = await this.getEnvComponentByEnvId(id);
-      const hasManifest = this.hasEnvManifest(envComponent);
-      if (hasManifest) return true;
-      const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
-      return !!isUsingEnvEnv;
+      // pLocate runs predicates concurrently; once it settles, a predicate that rejects later has
+      // no handler and crashes the process as an unhandled rejection (observed with a remote
+      // scope-fetch 500 inside getEnvComponentByEnvId during `bit ci pr`). this is a discovery
+      // heuristic — an id whose component cannot be loaded simply cannot be identified as an env
+      // here, so log and move on rather than racing an uncatchable rejection.
+      try {
+        const envComponent = await this.getEnvComponentByEnvId(id);
+        const hasManifest = this.hasEnvManifest(envComponent);
+        if (hasManifest) return true;
+        const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
+        return !!isUsingEnvEnv;
+      } catch (err: any) {
+        this.logger.warn(`findFirstEnv: failed loading env-component "${id}", skipping it. error: ${err.message}`);
+        return false;
+      }
     });
     let finalEnvId;
     if (envId) {

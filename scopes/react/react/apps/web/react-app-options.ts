@@ -1,5 +1,5 @@
 import type { Bundler, DevServer } from '@teambit/bundler';
-import type { WebpackConfigTransformer } from '@teambit/webpack';
+import type { WebpackConfigTransformer } from '@teambit/webpack.webpack-bundler';
 
 import type { ReactDeployContext } from './deploy-context';
 

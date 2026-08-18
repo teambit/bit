@@ -14,6 +14,12 @@ export interface WebpackConfigWithDevServer extends Configuration {
   devServer: WDS.Configuration;
   favicon?: string;
 }
+
+/**
+ * @deprecated duplicated by `@teambit/webpack.webpack-dev-server`'s own `WebpackDevServer`, which is
+ * what the react/node/aspect envs actually build with now. Use that package instead - depending on
+ * both pulls in two independently-resolved webpack instances.
+ */
 export class WebpackDevServer implements DevServer {
   private readonly WsDevServer: typeof WDS;
   constructor(

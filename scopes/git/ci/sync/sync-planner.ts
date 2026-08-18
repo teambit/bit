@@ -29,7 +29,14 @@ export type LaneSyncInput = {
    * with `isSyncAuthoredMessage`, not the loop guard's substring match.
    */
   tipIsSyncCommit: boolean;
+  /**
+   * The branch had real (non-bit) commits before this reconciler touched it — it was adopted, not
+   * manufactured. Can only withhold a delete, never authorize one.
+   */
+  hasIndependentHistory?: boolean;
   conflictLabelPresent: boolean;
+  /** The branch's committed `.bitmap` names a DIFFERENT lane — another lane's claim, never adopted. */
+  branchNamesDifferentLane?: boolean;
   /** @see LaneOwnershipEvidence — consulted only on the "lane is gone" path. */
   ownership: LaneOwnershipEvidence;
 };
@@ -38,13 +45,18 @@ export type LaneSyncInput = {
  * Why a `close-pr` is keeping the branch rather than deleting it. `tip-advanced-during-run` is the one
  * the planner never emits: it is discovered when the executor re-reads the branch just before deleting.
  */
-export type BranchKeepReason = 'unmerged-commits' | 'tip-not-a-sync-commit' | 'tip-advanced-during-run';
+export type BranchKeepReason =
+  | 'unmerged-commits'
+  | 'tip-not-a-sync-commit'
+  | 'tip-advanced-during-run'
+  | 'adopted-branch';
 
 export type LaneSyncAction =
   | { type: 'noop'; reason: string }
   | { type: 'import-lane' }
   | { type: 'export-branch' }
   | { type: 'merge-diverged' }
+  | { type: 'adopt-branch' }
   // Two variants rather than an optional `keepReason` so the type enforces that a keep always says why.
   | { type: 'close-pr'; deleteBranch: true }
   | { type: 'close-pr'; deleteBranch: false; keepReason: BranchKeepReason }
@@ -52,7 +64,7 @@ export type LaneSyncAction =
 
 export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   const { laneHead, branchExists, lastSyncedHead, hasDevCommits, conflictLabelPresent, ownership } = input;
-  const { tipIsSyncCommit } = input;
+  const { tipIsSyncCommit, hasIndependentHistory, branchNamesDifferentLane } = input;
   if (conflictLabelPresent) {
     return { type: 'noop', reason: 'PR is labeled bit-sync-conflict; resolve and remove the label to resume' };
   }
@@ -60,16 +72,20 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
     if (!branchExists) return { type: 'noop', reason: 'lane and branch both absent' };
     switch (ownership) {
       case 'own-live':
-        // DELETION NEEDS BOTH HALVES: `.bitmap` attribution alone is not enough — a developer who commits
-        // their own `.bitmap` write (bit create / unexported snap / deps set) looks exactly like
-        // "own-live, nothing above the state commit". The marker can only withhold a deletion, never
-        // authorize one; a false keep is harmless, a false delete destroys the only copy of the work.
-        if (!hasDevCommits && tipIsSyncCommit) return { type: 'close-pr', deleteBranch: true };
-        return {
-          type: 'close-pr',
-          deleteBranch: false,
-          keepReason: hasDevCommits ? 'unmerged-commits' : 'tip-not-a-sync-commit',
-        };
+        // Each check is a separate reason to withhold a delete: dev commits are work that exists
+        // nowhere else; a non-sync tip may be a developer's own `.bitmap` write; an adopted branch's
+        // pre-existing history was never proven disposable. A false keep is harmless, a false delete
+        // destroys the only copy.
+        if (hasDevCommits) {
+          return { type: 'close-pr', deleteBranch: false, keepReason: 'unmerged-commits' };
+        }
+        if (!tipIsSyncCommit) {
+          return { type: 'close-pr', deleteBranch: false, keepReason: 'tip-not-a-sync-commit' };
+        }
+        if (hasIndependentHistory) {
+          return { type: 'close-pr', deleteBranch: false, keepReason: 'adopted-branch' };
+        }
+        return { type: 'close-pr', deleteBranch: true };
       case 'own-merged':
         // No marker conjunction needed: the tip being an ancestor of the default branch is unforgeable
         // proof that deleting loses nothing.
@@ -84,10 +100,14 @@ export function planLaneSync(input: LaneSyncInput): LaneSyncAction {
   if (!branchExists) return { type: 'import-lane' };
   if (!lastSyncedHead) {
     if (hasDevCommits) {
-      return {
-        type: 'halt',
-        reason: 'branch has commits but its .bitmap records no state for this lane; cannot tell which side is newer',
-      };
+      if (branchNamesDifferentLane) {
+        return {
+          type: 'halt',
+          reason: 'branch has commits but its .bitmap names a different lane; cannot tell which side is newer',
+        };
+      }
+      // The lane exists but the pair has no sync history: first contact, not a conflict.
+      return { type: 'adopt-branch' };
     }
     return { type: 'import-lane' };
   }
