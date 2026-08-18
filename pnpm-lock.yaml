@@ -7259,7 +7259,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
@@ -8327,7 +8327,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -9383,7 +9383,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -10394,7 +10394,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
@@ -11459,7 +11459,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
@@ -12521,7 +12521,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -13562,7 +13562,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -14603,7 +14603,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -15659,7 +15659,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -16706,7 +16706,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -17723,7 +17723,7 @@ importers:
         version: file:scopes/harmony/ipc-events(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/isolator':
         specifier: workspace:*
-        version: file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/issues':
         specifier: workspace:*
         version: file:scopes/component/issues(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -20061,6 +20061,9 @@ importers:
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -36739,6 +36742,7 @@ packages:
   '@teambit/isolator@file:scopes/component/isolator':
     resolution: {directory: scopes/component/isolator, type: directory}
     peerDependencies:
+      chai: 5.2.1
       react: 19.2.7
 
   '@teambit/issues@file:scopes/component/issues':
@@ -78112,7 +78116,7 @@ snapshots:
       - react
       - react-dom
 
-  '@teambit/isolator@file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)':
+  '@teambit/isolator@file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/any-fs': 0.0.5
       '@teambit/capsule': 0.0.12
@@ -78132,6 +78136,7 @@ snapshots:
       '@teambit/pkg.modules.component-package-name': file:components/modules/component-package-name(react-dom@18.3.1)(react@18.3.1)
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      chai: 4.3.0
       chalk: 4.1.2
       debug: 4.3.4(supports-color@9.4.0)
       execa: 2.1.0
@@ -78156,7 +78161,7 @@ snapshots:
       - react-dom
       - supports-color
 
-  '@teambit/isolator@file:scopes/component/isolator(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
+  '@teambit/isolator@file:scopes/component/isolator(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/any-fs': 0.0.5
       '@teambit/capsule': 0.0.12
@@ -78176,6 +78181,52 @@ snapshots:
       '@teambit/pkg.modules.component-package-name': file:components/modules/component-package-name(react-dom@19.2.7)(react@19.2.7)
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      chai: 4.3.0
+      chalk: 4.1.2
+      debug: 4.3.4(supports-color@9.4.0)
+      execa: 2.1.0
+      filenamify: 4.2.0
+      fs-extra: 10.0.0
+      glob: 13.0.0
+      lodash: 4.17.21
+      object-hash: 2.1.1
+      oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
+      oxlint-tsgolint: 0.17.0
+      p-map: 4.0.0
+      react: 19.2.7
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+      rimraf: 3.0.2
+      semver: 7.7.1
+      uuid: 8.3.2
+    transitivePeerDependencies:
+      - '@types/react'
+      - domexception
+      - encoding
+      - graphql
+      - react-dom
+      - supports-color
+
+  '@teambit/isolator@file:scopes/component/isolator(@types/react@19.2.18)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/any-fs': 0.0.5
+      '@teambit/capsule': 0.0.12
+      '@teambit/component-id': 1.2.4
+      '@teambit/component-package-version': file:scopes/component/component-package-version(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-version': 1.0.4
+      '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/dependencies.fs.linked-dependencies': file:scopes/dependencies/fs/linked-dependencies(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/graph.cleargraph': 0.0.11
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/legacy.constants': file:components/legacy/constants(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/legacy.utils': file:components/legacy/utils(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/pkg.modules.component-package-name': file:components/modules/component-package-name(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      chai: 5.2.1
       chalk: 4.1.2
       debug: 4.3.4(supports-color@9.4.0)
       execa: 2.1.0
