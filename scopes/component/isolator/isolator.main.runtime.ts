@@ -4,7 +4,7 @@ import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
-import { compact, flatten, isEqual, pick } from 'lodash';
+import { compact, flatten, isEqual, pick, uniqBy } from 'lodash';
 import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
@@ -423,13 +423,21 @@ export class IsolatorMain {
         }
       }
     }
+    // two seeders may resolve to the same component - e.g. an env living in the workspace is
+    // registered by the aspect-loader both by its versionless workspace id and, once snapped in
+    // the same process, by its snap id. a duplicate here becomes two capsules on one path and
+    // fails createCapsules with "found duplicate capsules".
+    componentsToIsolate = uniqBy(componentsToIsolate, (component) => component.id.toString());
     this.logger.debug(`isolateComponents, total componentsToIsolate: ${componentsToIsolate.length}`);
-    const seedersWithVersions = seeders.map((seeder) => {
-      if (seeder._legacy.hasVersion()) return seeder;
-      const comp = componentsToIsolate.find((component) => component.id.isEqual(seeder, { ignoreVersion: true }));
-      if (!comp) throw new Error(`unable to find seeder ${seeder.toString()} in componentsToIsolate`);
-      return comp.id;
-    });
+    const seedersWithVersions = uniqBy(
+      seeders.map((seeder) => {
+        if (seeder._legacy.hasVersion()) return seeder;
+        const comp = componentsToIsolate.find((component) => component.id.isEqual(seeder, { ignoreVersion: true }));
+        if (!comp) throw new Error(`unable to find seeder ${seeder.toString()} in componentsToIsolate`);
+        return comp.id;
+      }),
+      (id) => id.toString()
+    );
     opts.baseDir = opts.baseDir || host.path;
     const shouldUseDatedDirs = this.shouldUseDatedDirs(componentsToIsolate, opts);
     const capsuleDir = this.getCapsulesRootDir({
