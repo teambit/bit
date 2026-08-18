@@ -32,11 +32,21 @@ export function isGitHubRemote(remoteUrl: string): boolean {
 
 const API = 'https://api.github.com';
 
-/** The `rel="next"` URL out of a GitHub `Link` response header, or undefined on the last page. */
+/**
+ * The `rel="next"` URL out of a GitHub `Link` response header, or undefined on the last page. The
+ * header is response data, and `requestRaw` attaches the bearer token to whatever URL it is handed —
+ * so a next link whose origin is not the API's reads as "last page", never as a request target.
+ */
 function nextPageUrl(linkHeader: string | null): string | undefined {
   if (!linkHeader) return undefined;
   const next = linkHeader.split(',').find((part) => part.includes('rel="next"'));
-  return next?.match(/<([^>]+)>/)?.[1];
+  const url = next?.match(/<([^>]+)>/)?.[1];
+  if (!url) return undefined;
+  try {
+    return new URL(url).origin === API ? url : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Warning sink; a plain callback rather than a `Logger` so this module needs no logger aspect. */

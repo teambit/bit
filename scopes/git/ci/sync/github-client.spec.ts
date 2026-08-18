@@ -258,5 +258,31 @@ describe('GitHubClient', () => {
       // the found-on-page-2 comment was updated, not duplicated
       expect(calls.some((c) => c.init?.method === 'POST')).to.equal(false);
     });
+
+    it('refuses to follow a Link header that leaves api.github.com — the token stays home', async () => {
+      // The next-page URL is response data, and requestRaw attaches the bearer token to whatever URL
+      // it is handed — an off-host "next" link must read as "last page", never as a request target.
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        const method = init?.method ?? 'GET';
+        if (method === 'GET') {
+          return new Response(JSON.stringify([{ id: 1, body: 'unrelated' }]), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              link: '<https://evil.test/repos/acme/shop/issues/7/comments?page=2>; rel="next"',
+            },
+          });
+        }
+        return new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } });
+      }) as typeof fetch;
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nbody');
+
+      expect(calls.some((c) => c.url.includes('evil.test'))).to.equal(false);
+      const gets = calls.filter((c) => (c.init?.method ?? 'GET') === 'GET');
+      expect(gets, 'the off-host link is the last page, not a loop').to.have.lengthOf(1);
+    });
   });
 });
