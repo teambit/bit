@@ -551,6 +551,53 @@ describe('executeExportBranch reports the ledger-race wording when only the ledg
   });
 });
 
+// The merge path snaps whatever the merge produced — which can be nothing new, now routinely: a
+// source-bundling tip plus a moved lane plans merge-diverged, and a branch with nothing of its own
+// merges clean and leaves the snap a noop. The summary must say so, and the run-summary comment
+// belongs only to runs that actually exported.
+describe('executeMergeDiverged distinguishes an exporting merge from a nothing-new merge', () => {
+  function stubMerge(snapStatus: 'noop' | 'exported') {
+    const { executor } = stubExecutor();
+    const summaryCalls: any[] = [];
+    (executor as any).checkoutFromRemote = async () => {};
+    (executor as any).restoreWorkspace = async () => {};
+    (executor as any).mergeLaneIntoBranchWorkingTree = async () => ({ conflicts: [], conflictedFileCount: 0 });
+    (executor as any).snapAndExportOntoLane = async () => ({ status: snapStatus });
+    (executor as any).recordLaneHeadOnBranch = async () => ({
+      status: 'ok',
+      laneHead: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1',
+      remoteLane: { components: [] },
+    });
+    (executor as any).postRunSummaryComment = async (args: any) => summaryCalls.push(args);
+    const run = () =>
+      (executor as any).executeMergeDiverged({
+        target: { hostScope: 'acme.shop', name: 'my-lane' },
+        laneIdStr: 'acme.shop/my-lane',
+        branch: 'my-lane',
+        defaultBranch: 'main',
+        preExportLane: { components: [] },
+      }) as Promise<string>;
+    return { run, summaryCalls };
+  }
+
+  it('a nothing-new merge says so, and posts no run summary', async () => {
+    const { run, summaryCalls } = stubMerge('noop');
+    const summary = await run();
+    expect(summary).to.include('my-lane -> merge-diverged');
+    expect(summary).to.include('nothing new to export');
+    expect(summary).to.not.include('then exported');
+    expect(summaryCalls).to.have.lengthOf(0);
+  });
+
+  it('an exporting merge keeps the exported wording and posts the run summary', async () => {
+    const { run, summaryCalls } = stubMerge('exported');
+    const summary = await run();
+    expect(summary).to.include('then exported');
+    expect(summaryCalls).to.have.lengthOf(1);
+    expect(summaryCalls[0].laneHead).to.equal('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
+  });
+});
+
 // Adoption never snaps or exports, so its raced line must NOT claim the lane was updated — the lane
 // is untouched and only the branch's pointer commit lost the race.
 describe('executeAdoptBranch reports a lane-untouched race when its ledger push races', () => {

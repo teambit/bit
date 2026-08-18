@@ -512,7 +512,7 @@ export class LaneSyncExecutor {
           preExportLane: remoteLane,
         });
       case 'merge-diverged':
-        return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch });
+        return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch, preExportLane: remoteLane });
       case 'adopt-branch':
         return this.executeAdoptBranch({ target, laneIdStr, branch, defaultBranch, pr });
       case 'close-pr':
@@ -850,11 +850,14 @@ export class LaneSyncExecutor {
     laneIdStr,
     branch,
     defaultBranch,
+    preExportLane,
   }: {
     target: LaneTarget;
     laneIdStr: string;
     branch: string;
     defaultBranch: string;
+    /** The lane's content BEFORE this merge export — the baseline the run-summary comment diffs against. */
+    preExportLane: LaneData | undefined;
   }): Promise<string> {
     const { logger } = this.deps;
     const laneName = target.name;
@@ -944,8 +947,21 @@ export class LaneSyncExecutor {
       if (recorded.status === 'unreadable') {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
       }
+      // The summary comment belongs only to runs that exported — same as the export path, and a
+      // nothing-new merge (the branch had nothing of its own) must not claim it exported.
+      if (exported.status === 'exported') {
+        await this.postRunSummaryComment({
+          target,
+          laneIdStr,
+          branch,
+          laneHead: recorded.laneHead,
+          preComponents: preExportLane?.components,
+          postComponents: recorded.remoteLane.components,
+        });
+      }
+      const exportClause = exported.status === 'exported' ? 'then exported' : 'the merge left nothing new to export';
       return (
-        `${laneName} -> merge-diverged (${policyClause}merged lane into branch, then exported; lane ${laneIdStr} @ ` +
+        `${laneName} -> merge-diverged (${policyClause}merged lane into branch, ${exportClause}; lane ${laneIdStr} @ ` +
         `${recorded.laneHead.slice(0, 9)}, branch ${branch} updated)`
       );
     } catch (e: any) {
