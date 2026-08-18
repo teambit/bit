@@ -125,7 +125,7 @@ refractor`) because both are transitive, so they would have to be declared depen
 3. `NormalModuleReplacementPlugin` on the root entry, same trade-off as 2 without the dependency
    declaration.
 
-Worth doing, but it needs a decision on 1 vs 2 first. Note `@shikijs/langs` (1.45 MB) is a _third_
+Tracked as [#10633](https://github.com/teambit/bit/issues/10633). It needs a decision on 1 vs 2 first. Note `@shikijs/langs` (1.45 MB) is a _third_
 highlighting stack — already lazy, so not a size problem, but three highlighters in one app is worth
 questioning on its own.
 
