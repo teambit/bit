@@ -902,13 +902,13 @@ true})` run produced no `metafile.json` (`dist` 153 MB vs 160 MB with it); a pla
   got `bit_pr` past step 119 for the first time on this branch - the dev-binary install completed,
   `bit ci pr` ran a real build and cleared 44/87 tasks. It then failed at task 45
   (`core-aspect-env` → `BundleUI` for `teambit.scope/scope`) with `updateWithCurrentPackageJsonData
-  found duplicate capsules: teambit.harmony/envs/bit-cli-app-env@9904eb…`. The job's debug.log
+found duplicate capsules: teambit.harmony/envs/bit-cli-app-env@9904eb…`. The job's debug.log
   shows the cause: the seeder list `ScopeAspectsLoader.resolveUserAspects` hands to
   `isolateComponents` contains `teambit.harmony/envs/bit-cli-app-env` **twice** - once versionless
   (the aspect-loader registered it from the workspace, where the env lives as a workspace
   component) and once with the snap hash minted by this very `bit ci pr` run (re-registered after
   the lane snap). `host.getMany` resolves both to the same snap, producing two capsules with equal
-  ids. Only this branch hits it because `bit-cli-app-env` is the only *workspace-component* env
+  ids. Only this branch hits it because `bit-cli-app-env` is the only _workspace-component_ env
   configured on anything - every other env in the build is an external published package. **Fix**:
   `isolateComponents` now dedupes `componentsToIsolate` by full component id right after resolution
   (and `seedersWithVersions` after the versionless→resolved mapping, so `seedersCapsules` doesn't
