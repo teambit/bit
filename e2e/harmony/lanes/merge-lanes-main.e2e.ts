@@ -336,6 +336,10 @@ describe('merge lanes - main lane operations', function () {
       helper.command.export();
       // create a lockfile that does not include is-positive
       helper.command.install();
+      // precondition: the lane workspace must know nothing about is-positive, otherwise the
+      // merge below won't exercise the install-new-deps path this test is about
+      expect(helper.fs.readFile('pnpm-lock.yaml')).to.not.have.string('is-positive');
+      expect(path.join(helper.scopes.localPath, 'node_modules/is-positive')).to.not.be.a.path();
       const laneWs = helper.scopeHelper.cloneWorkspace();
       helper.command.switchLocalLane('main', '-x');
       helper.command.install('is-positive@3.1.0');
