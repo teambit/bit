@@ -181,3 +181,51 @@ The 322 MB is 231 MB of prior distribution + ~91 MB of shipped artifacts (72 MB 
 - `postcss-flexbugs-fixes` / `postcss-normalize` are externals only because `postCssConfig` is a
   module-scope const (§E in `externals.ts`). Making it a function would drop two more externals and
   stop `postcss-preset-env` being evaluated on every bit command.
+
+### 17i. Producing a real local pre-bundle, and caching it (2026-08-18)
+
+Until now every local artifact behind §17e-§17g was either produced during that original session or
+faked for a specific test (§14 2026-08-13's planted artifact) - every attempt since then to
+reproduce a real one locally was blocked by the `WorkspaceAspectsLoader` hang (§14 2026-08-16). That
+hang is now fixed on this branch (`14399df10`/`53c59529e`, see
+`scripts/circular-deps-check/CI-HANG-INVESTIGATION.md`), which unblocks it:
+
+```bash
+bd build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules \
+  --tasks "BundleUI,PreBundlePreview"
+```
+
+**Use `bd` (this branch's own compiled code), not a bvm-linked released `bit`.** `teambit.preview/preview`
+and `teambit.ui-foundation/ui` are core aspects - under a bvm-linked binary they resolve to _that
+binary's own_ published packages, not this branch's modified source, so the task runs the pre-§17e
+logic and produces nothing usable (and, separately, errored on an unrelated `@teambit/react`
+resolution problem in the bvm install). See §14 2026-08-18 for the full trace.
+
+The command above writes `artifacts/` into the `teambit.ui-foundation/ui` and `teambit.preview/preview`
+**capsules** - `bit build` never writes anywhere under this repo's own `node_modules`.
+
+Because producing this is slow and was, until this session, unreliable, a repo-local cache now
+survives across `node_modules` wipes: `scopes/harmony/modules/cli-bundler/prebundle-cache.ts` has two
+directions that read from different places, not simple mirrors of each other:
+
+- `savePrebundleCache` (`npm run bundle:prebundle-cache:save`, run right after a successful
+  `bd build ... --tasks BundleUI,PreBundlePreview`) locates the two capsules itself via
+  `bit capsule list --json` and copies their `artifacts/` trees into
+  `.bundle-cache/ui-preview-prebundle/` (gitignored), plus a `meta.json` recording the commit hash
+  and timestamp they were captured at. **Pass the same binary the build ran with** via `BIT_BIN`
+  (defaults to `bit` on `PATH`) - a bvm-linked released `bit` would look up capsules for _its own_
+  published `teambit.ui-foundation/ui`/`teambit.preview/preview`, not this workspace's, since both are
+  core aspects (§14 2026-08-18): `BIT_BIN=bd npm run bundle:prebundle-cache:save`.
+- `restorePrebundleCache` (`npm run bundle:prebundle-cache:restore`) copies the other way, from the
+  cache into `node_modules/@teambit/{ui,preview}/artifacts` - where a local (non-capsule)
+  `npm run bundle` reads them from, since `packagesRoot` is the repo root there (`bundle-cli.ts`).
+  `npm run bundle` calls this automatically before bundling, and only fills in an aspect's
+  `artifacts/` dir if one is not already there — a real local build always wins over the cache.
+
+This is a plain file cache, not a freshness gate against source changes: `meta.json` records the
+commit/date so a person can judge whether it is worth refreshing, the script does not enforce it.
+
+Verified end to end: `npm run bundle` reports `shipped artifacts: 161 files`, and `bit start` against
+`/tmp/bundle-tests/start-ws` serves the UI shell from
+`.../core-aspects/node_modules/@teambit/ui/artifacts/...` with no `public/` written — same signature
+as §17g.

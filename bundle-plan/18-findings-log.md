@@ -689,3 +689,68 @@ compiler` above), resolved from the env's own capsule `node_modules` with its ow
     finding.
   - Externals count unaffected (still 11) - this was a pure inlined-code exclusion, no externals
     added or removed.
+- **2026-08-18** — **produced a real local UI/preview pre-bundle for the first time** (every prior
+  attempt was blocked or faked - the 2026-08-13 entry above used a planted fake artifact, and
+  2026-08-16 above documented `bd build` as blocked entirely by the `WorkspaceAspectsLoader` hang).
+  Two things changed since 2026-08-16 that made this possible:
+  - The hang bug itself turned out to already be **fixed and merged onto this branch**
+    (`14399df10`/`53c59529e`, 2026-08-17, from an unrelated upstream branch) - see
+    `scripts/circular-deps-check/CI-HANG-INVESTIGATION.md`, marked **RESOLVED**. Its real cause was
+    never an infinite recursion: this branch's dev-binary install pins the legacy core envs
+    (`@teambit/node`, etc.) that `remove-core-envs-from-manifest` dropped from the core manifest, so
+    a **bvm-installed** workspace was missing them, and requiring them as plain packages triggered
+    `onAspectLoadFail`'s recompile-cascade (thousands of dist rewrites) instead of a clean error.
+    Confirmed live: `node_modules/@teambit/node` in this workspace already resolves to a real pnpm
+    package (the dev-binary install had already pinned it), and `bd build "teambit.ui-foundation/ui,
+teambit.preview/preview" --reuse-capsules --tasks "BundleUI,PreBundlePreview"` completed cleanly in
+    **~5 minutes**, no hang, using `bd` (this branch's own compiled code) throughout.
+  - Tried the bvm-linked released `bit` (2.0.82) binary as a workaround **first**, before finding the
+    above - it does not hang, but it is the **wrong tool for this**: `teambit.preview/preview` is a
+    core aspect, so under a bvm-linked binary it resolves to the **bvm's own published package**
+    (`~/.bvm/versions/2.0.82/bit-2.0.82/node_modules/@teambit/preview`), not this branch's modified
+    source - confirmed directly from the stack trace (`buildPreBundlePreview
+(...bvm/versions/2.0.82.../pre-bundle.js:176)`). Concretely: it ran the **pre-§17e** task logic (no
+    `filterCoreAspectDefs`/`forPreBundle`), and separately failed outright with `Module not found:
+    '@teambit/react.ui.highlighter-provider'` from the bvm's own `@teambit/react` - an instance of
+    the exact "mixed `@teambit/*` resolution" problem (§6) the whole bundling effort exists to avoid,
+    not a real signal about this branch's code. **`bd`, not the bvm binary, is the only way to
+    produce a pre-bundle whose content actually reflects this branch.**
+  - The produced artifacts: `@teambit/preview` hash `e23f10dabd03a3d79a2f01794266b6e878104101` -
+    **exact match** for §17b's predicted "5 core, no react" value, confirming `filterCoreAspectDefs`
+    is doing the right thing on a real build, not just in the 2026-08-13 planted-artifact test. UI
+    artifact 79 MB (workspace + scope), preview 704 KB - in the ballpark of §17g/§17h's prior
+    measurements.
+  - First pass copied both into `node_modules/@teambit/{ui,preview}/artifacts` **by hand** (`cp -R`
+    from the capsule paths) before running `npm run bundle` - that worked
+    (`shipped artifacts: 161 files (pre-built UI/preview bundles)`, first time that line has ever
+    said anything but "none" locally) and verified `bit start` end to end against
+    `/tmp/bundle-tests/start-ws` with the resulting `/tmp/bit-bundle`: `shouldServeBundleUi` logged
+    `currentBundleUiHash == cachedBundleUiHash`, served from
+    `.../core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/scope/public/bit`, HTTP 200, no
+    `public/` written - the same signature as §17g's original (faked-then-real) success. **But the
+    manual `cp -R` step was never encoded anywhere** - caught in review (correctly) as a gap: the
+    first cut of `savePrebundleCache` read from `node_modules/@teambit/{ui,preview}/artifacts`, which
+    `bit build` never writes to, so `save` silently depended on that hand-run copy having already
+    happened.
+  - **Fixed**: `savePrebundleCache` now locates the capsules itself via `bit capsule list --json`
+    (`workspaceCapsulesRootDir` + the `capsules` path list, matched by capsule-dir basename prefix -
+    `teambit.ui-foundation_ui@…` / `teambit.preview_preview@…`) and reads `artifacts/` straight out of
+    them - no manual step, no intermediate `node_modules` copy. Takes a `bitBin` option / `BIT_BIN` env
+    var (same convention as `scripts/circular-deps-check`) for **which** `bit` to run `capsule list`
+    with, defaulting to `bit` on `PATH` - it must be the same binary the build itself ran with, since
+    a bvm-linked released `bit` would list capsules for _its own_ `teambit.ui-foundation/ui`/
+    `teambit.preview/preview`, not this workspace's (same core-aspect-resolution trap as above).
+    Re-verified end to end with the fix: `rm -rf .bundle-cache node_modules/@teambit/{ui,preview}/artifacts`,
+    `BIT_BIN=bd npm run bundle:prebundle-cache:save` (no manual copy), `npm run bundle` → restores
+    from cache and reports the same `shipped artifacts: 161 files`.
+  - **Added a repo-local cache so this does not have to be re-derived every time `node_modules` gets
+    wiped**: `scopes/harmony/modules/cli-bundler/prebundle-cache.ts` (`savePrebundleCache` /
+    `restorePrebundleCache`), storing a copy under `.bundle-cache/ui-preview-prebundle/` (gitignored)
+    plus a `meta.json` recording the commit and timestamp the artifacts were captured at - so a later
+    session can tell at a glance whether the cache is worth trusting without rebuilding to find out.
+    `npm run bundle` (`scopes/harmony/bit/bundle/bundle.ts`) calls `restorePrebundleCache` first; it
+    only fills in `node_modules/@teambit/{ui,preview}/artifacts` when they are **not already there** -
+    a real local build always wins over the cache. New scripts: `bundle:prebundle-cache:save` /
+    `:restore`. Deliberately just a file cache, not a freshness gate against source changes - "most
+    of the time we don't really need to re-create them" per the ask, and the `meta.json` commit/date
+    is there for a human to judge staleness, not for the script to enforce it.

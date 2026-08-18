@@ -7,3 +7,10 @@ export type { BundlePaths } from './config';
 export { getExternals, UI_BUNDLING_EXTERNALS } from './externals';
 export { getCoreAspectsInfo, getExtraPackages, toExportName } from './core-aspects-info';
 export type { CoreAspectInfo } from './core-aspects-info';
+export {
+  restorePrebundleCache,
+  savePrebundleCache,
+  readPrebundleCacheMeta,
+  PREBUNDLE_CACHE_DIR_REL,
+} from './prebundle-cache';
+export type { PrebundleCacheMeta, RestoreResult } from './prebundle-cache';

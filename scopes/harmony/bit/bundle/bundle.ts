@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { bundleCli, DEFAULT_OUT_DIR } from '@teambit/harmony.modules.cli-bundler';
+import { bundleCli, DEFAULT_OUT_DIR, restorePrebundleCache } from '@teambit/harmony.modules.cli-bundler';
 import { getAllCoreAspectsIds } from '../manifests';
 
 /**
@@ -27,6 +27,18 @@ function parseArgv(argv: string[]) {
 
 async function main() {
   const argv = parseArgv(process.argv.slice(2));
+  // fills node_modules/@teambit/{ui,preview}/artifacts from the repo-local cache when a real local
+  // build hasn't produced them - see `prebundle-cache.ts`. No-op, and never overwrites, when a real
+  // build already put artifacts there.
+  const restored = await restorePrebundleCache(process.cwd());
+  console.log(
+    restored.restored
+      ? `[bundle] prebundle cache: restored ${restored.aspectsRestored.join(', ')} (built ${
+          restored.meta.capturedAt
+        } from ${restored.meta.commit.slice(0, 12)})`
+      : `[bundle] prebundle cache: ${restored.reason}`
+  );
+
   const result = await bundleCli({
     packagesRoot: process.cwd(),
     coreAspectIds: getAllCoreAspectsIds(),

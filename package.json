@@ -42,6 +42,8 @@
     "bundle": "node node_modules/@teambit/bit/dist/bundle/bundle.js",
     "bundle:sea": "node node_modules/@teambit/bit/dist/bundle/bundle.js --sea",
     "bundle:ensure": "node node_modules/@teambit/harmony.modules.cli-bundler/dist/ensure-bundle.js",
+    "bundle:prebundle-cache:save": "node node_modules/@teambit/harmony.modules.cli-bundler/dist/prebundle-cache.js save",
+    "bundle:prebundle-cache:restore": "node node_modules/@teambit/harmony.modules.cli-bundler/dist/prebundle-cache.js restore",
     "e2e-test:bundle": "node ./scripts/e2e-with-bundle.js",
     "e2e-test:sea": "node ./scripts/e2e-with-bundle.js --sea",
     "e2e-test:bundle-circle": "node ./scripts/e2e-with-bundle.js --circle",

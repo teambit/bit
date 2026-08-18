@@ -2,7 +2,11 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-08-16 (merged `remove-core-envs-from-manifest`, which brought in the upstream
+> Last updated: 2026-08-18 (produced a real local UI/preview pre-bundle for the first time — the
+> `WorkspaceAspectsLoader` hang blocking `bd build` is fixed upstream — and added a gitignored
+> `.bundle-cache/` so it survives `node_modules` wipes; see
+> [21-bit-start-prebundles.md §17i](bundle-plan/21-bit-start-prebundles.md#17i-producing-a-real-local-pre-bundle-and-caching-it-2026-08-18))
+> Previously, 2026-08-16 (merged `remove-core-envs-from-manifest`, which brought in the upstream
 > webpack/react-env decoupling; removed `webpack`, `process/browser`, `buffer/`, and `@babel/core` from
 > externals as a result — down to 11 (was 16 at the start of the day). `bit install` needed two passes
 > post-merge; found and documented a pre-existing, unrelated `WorkspaceAspectsLoader` hang bug blocking
