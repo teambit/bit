@@ -24,7 +24,11 @@ const NATIVE = [
   '@parcel/watcher',
   '@lydell/node-pty',
   'fsevents',
-  '@rspack/core',
+  // NOT `@rspack/core` (2026-08-19) - moved to `UI_BUNDLING_EXTERNALS` below. It's a native addon
+  // like the rest of this group, but unlike them its only real call sites (`UiMain.build`,
+  // `UIServer.dev()`, `buildPreBundlePreview`) are all part of the UI/preview *rebuild* surface that
+  // group already covers - see the comment there. At 42 MB it was the single biggest external in the
+  // default build, bigger than `typescript` or `@pnpm` - see bundle-plan.md §14 2026-08-19.
   'bufferutil',
   'utf-8-validate',
 ];
@@ -127,6 +131,19 @@ const TOOLCHAINS = [
  *
  * So it stays off by default: a bundled bit serves the pre-bundle or reports that it cannot, rather
  * than shipping a gigabyte to cover a case the artifact should have covered.
+ *
+ * `@rspack/core` (2026-08-19) is the one entry here reached a different way: not `require.resolve()`
+ * deep in a config factory, but a top-level `import { rspack } from '@rspack/core'` in the
+ * always-loaded `ui.main.runtime.ts`/`ui-server.ts`/`preview/pre-bundle.ts` - so it also needs
+ * `stub-dev-only-plugin.ts` (gated the same `!uiBundling` way as `@rspack/dev-server`) to keep that
+ * eager import from crashing the default build; being listed here only controls whether it's
+ * *installed*, not whether the import site is safe. The actual `rspack(...)` calls
+ * (`UiMain.build`/`BundleUiTask`, `UIServer.dev()`, `buildPreBundlePreview`/`PreBundlePreviewTask`)
+ * are exactly the UI/preview rebuild surface this group already exists for - see bundle-plan.md §14
+ * 2026-08-19. Producing a *new* pre-bundle for a release always happens from source
+ * (`bd build --tasks BundleUI,PreBundlePreview`), which resolves `@rspack/core` from the repo's own
+ * `node_modules` via `workspace.jsonc`'s policy, entirely independent of this list - so excluding it
+ * from the shipped package costs that workflow nothing.
  */
 export const UI_BUNDLING_EXTERNALS = [
   // aliased into the browser bundle so every component shares one copy
@@ -150,6 +167,7 @@ export const UI_BUNDLING_EXTERNALS = [
   'sass-loader',
   'sass',
   '@rspack/dev-server',
+  '@rspack/core',
 ];
 
 /**

@@ -181,13 +181,14 @@ The 322 MB is 231 MB of prior distribution + ~91 MB of shipped artifacts (72 MB 
 - `postcss-flexbugs-fixes` / `postcss-normalize` are externals only because `postCssConfig` is a
   module-scope const (§E in `externals.ts`). Making it a function would drop two more externals and
   stop `postcss-preset-env` being evaluated on every bit command.
-- **`@rspack/core` (42 MB, the single biggest external) is only reachable, post-§17, from
-  `BundleUI`/`PreBundlePreview`'s own rebuild calls and the `bit start --dev`/hash-mismatch-rebuild
-  paths** - `bit start`'s normal (pre-bundle-serving) path never calls it. It stays external today
-  because the _import_ (not just the call) is eager in always-loaded core-aspect files, and nothing
-  stubs it the way `@rspack/dev-server` is stubbed. Same stubbing pattern would likely work, but
-  trades away "regenerate the pre-bundle / rebuild-fallback from the bundled distribution itself" -
-  a real behavior change, not investigated further. See §14 2026-08-18 for the full trace.
+- ~~**`@rspack/core` (42 MB, the single biggest external)...**~~ **Done, 2026-08-19** - moved to
+  `UI_BUNDLING_EXTERNALS` and stubbed for the default build (`stub-dev-only-plugin.ts`, extended to
+  also throw correctly for a called-not-`new`'d export like `rspack(...)`). Externals 97 MB → 63 MB,
+  shipped total 250 MB → 216 MB. Measured (hacky `require()` timing) that lazily-loading the _real_
+  package on top of this would recover nothing further for the default build - the stub is ~0.2 ms to
+  require either way - and would only matter for `--ui-bundling` builds, where it costs ~20 ms/command;
+  deferred as low priority. See §14 2026-08-19 for the full trace and numbers, and §8.2/§8.3 of
+  `08-externals-inventory.md`.
 - `bufferutil` / `utf-8-validate` (~1 MB) are unrelated to UI/preview bundling - they're `ws`'s own
   optional peer deps (native WebSocket accelerators), pulled in via `create-remote-schemas.ts`'s
   GraphQL remote-schema stitching. `ws` already falls back to pure JS without them, so they may be

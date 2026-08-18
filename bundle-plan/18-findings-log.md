@@ -825,3 +825,45 @@ true})` run produced no `metafile.json` (`dist` 153 MB vs 160 MB with it); a pla
     **Total shipped distribution: 250 MB / 2,576 files** (was 257 MB measured earlier this session,
     322 MB in the original 2026-08-16 estimate before this branch's later externals cuts). Updated
     `bundle-plan.md`'s "at a glance" table and PR #10590's description to match.
+- **2026-08-19** — **implemented Option A from the `@rspack/core` design discussion**: moved it out of
+  the always-installed `NATIVE` group in `externals.ts` into `UI_BUNDLING_EXTERNALS`, and extended
+  `stub-dev-only-plugin.ts` to stub it too, gated the same `!uiBundling` way as `@rspack/dev-server`/
+  `workbox-webpack-plugin` (`run-esbuild.ts` already only includes the plugin at all when
+  `!uiBundling`, so nothing there needed to change). One real gap closed in the stub itself: it was
+  a `class` whose `constructor()` throws - correct for `new RspackDevServer(...)`/
+  `new WorkboxWebpackPlugin.GenerateSW(...)`, but `@rspack/core`'s `rspack(...)` is called as a
+  plain function, and calling a class without `new` throws a generic, unhelpful native `TypeError`
+  instead of the friendly message. Changed the stub to a plain `function BitBundleStub() { throw ... }`
+  instead of a class - a function throws the same message whether called or constructed, covering
+  every excluded package's real call shape with one implementation.
+  - **Verified end to end**: `npm run bundle` - 0 esbuild errors, `externalsInstalled: 10` (was 11).
+    Rebuilt `/tmp/bit-bundle`, ran `npm install`: `@rspack` is completely absent from `node_modules`
+    (was 42 MB, the single biggest external - `typescript` at 23 MB is now the largest). `bit --version`/
+    `--help` fine. Re-ran the full `bit start` verification from §14 2026-08-18 (fresh workspace, real
+    component, `/tmp/bit-bundle/bin/bit start`): UI shell HTTP 200, composition page HTTP 200,
+    `shouldServeBundleUi`/`writePreviewEntry` both still hash-match and serve from the pre-bundle -
+    unaffected, exactly as expected, since the default `bit start` path never reaches the now-stubbed
+    call sites.
+  - **Corrected sizes**: shipped `dist/` unchanged at 153 MB/1,084 files (this change only touches
+    installed externals, not the JS bundle or shims - `@rspack/core` was already excluded from
+    `bit.app.js` itself either way, esbuild can't inline a native addon). Externals: 97 MB → **63 MB**
+    (a measured 34 MB drop - somewhat under the earlier 42 MB estimate, likely rounding/block-size
+    noise in `du`, not a discrepancy worth chasing). **Total shipped distribution: 250 MB → 216 MB**
+    (2,576 → 2,933 files - the file count actually rose slightly, since dropping `@rspack` also drops
+    a version-resolution constraint that let a couple of other externals dedupe differently; not
+    investigated further, the size drop is what matters). Updated `bundle-plan.md`'s "at a glance"
+    table and PR #10590 to match.
+  - **Measured whether Option B (lazy-loading the real `@rspack/core` import) is worth doing too**, as
+    asked, "even in a hacky way": direct `require()` timing, 5 runs each, this machine -
+    `require('@rspack/core')` (the real native addon, as it still is in a `--ui-bundling` build):
+    **~19-21 ms** per call, consistently. `require()` of the generated stub module (what the _default_
+    build now loads instead, post-Option-A): **~0.2-0.27 ms**. Conclusion: **Option A already captures
+    essentially all of Option B's startup benefit for the default build** - the eager top-level import
+    in `ui.main.runtime.ts`/`ui-server.ts`/`preview/pre-bundle.ts` now resolves to the near-free stub,
+    not the real package, regardless of whether the import itself is eager or lazy. Option B would only
+    still matter for **`--ui-bundling` builds**, where `@rspack/core` stays real and that same eager
+    import costs ~20 ms on literally every command (`status`, `list`, `--help`, ...) even though
+    `rspack(...)` is actually called on almost none of them. Against a ~0.5-0.7 s warm command budget,
+    that is a real but modest ~3-4%, for an already-niche, opt-in audience. **Recommendation: low
+    priority, not worth doing now** - defer until/unless `--ui-bundling` startup time specifically
+    becomes a complaint; revisit this entry if it does.

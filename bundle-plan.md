@@ -5,9 +5,11 @@
 > Last updated: 2026-08-18 (produced a real local UI/preview pre-bundle for the first time — the
 > `WorkspaceAspectsLoader` hang blocking `bd build` is fixed upstream — added a gitignored
 > `.bundle-cache/` so it survives `node_modules` wipes, and stopped shipping esbuild's 8.9 MB
-> `metafile.json` inside the published package (still written for local/CI builds). Total shipped
-> distribution now measured at **250 MB / 2,576 files** (was 322 MB in the original 2026-08-16
-> estimate). See
+> `metafile.json` inside the published package (still written for local/CI builds), and moved
+> `@rspack/core` (42 MB, the single biggest external) out of the default install into
+> `UI_BUNDLING_EXTERNALS` + `stub-dev-only-plugin.ts`, since `bit start` never needs it once it's
+> serving the pre-bundle. Total shipped distribution now measured at **216 MB / 2,933 files** (was
+> 322 MB in the original 2026-08-16 estimate). See
 > [21-bit-start-prebundles.md §17i](bundle-plan/21-bit-start-prebundles.md#17i-producing-a-real-local-pre-bundle-and-caching-it-2026-08-18)
 > and [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-08-18 entries)
 > Previously, 2026-08-16 (merged `remove-core-envs-from-manifest`, which brought in the upstream
@@ -29,8 +31,8 @@ doc updated as you work.
 
 |                     | released bit (bvm 2.0.72) | bundled bit (this branch)                                                                                 |
 | ------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------- |
-| install size        | **1.2 GB**                | **250 MB** (60 MB bundle + 97 MB externals + ~93 MB shims, incl. the 83 MB pre-bundled UI/preview — §17i) |
-| files on disk       | **141,008**               | **~2,600**                                                                                                |
+| install size        | **1.2 GB**                | **216 MB** (60 MB bundle + 63 MB externals + ~93 MB shims, incl. the 83 MB pre-bundled UI/preview — §17i) |
+| files on disk       | **141,008**               | **~2,900**                                                                                                |
 | `bit --help` (warm) | 0.662 s                   | **0.642 s** (SEA: 1.324 s — §9)                                                                           |
 | `bit list` (warm)   | 0.914 s                   | **0.848 s** (SEA: 1.574 s)                                                                                |
 | single executable   | —                         | **179 MB `bit-app`** (+ the `bundle/` support dir)                                                        |

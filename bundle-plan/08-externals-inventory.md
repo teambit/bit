@@ -5,14 +5,16 @@
 This is the section to optimise against. The bundle itself is 67 MB; **161 MB is installed
 dependencies**, so this is where the remaining weight lives.
 
-### 8.1 The externals (started at 11, now 12 net of two rounds of removal and one addition — see §15e, §14 2026-08-16)
+### 8.1 The externals (started at 11, now 10 — two rounds of removal, one addition, and one move to
+
+§8.3 — see §15e, §14 2026-08-16, §14 2026-08-19)
 
 Every entry was verified against the emitted bundle — the "sites" column is the number of distinct
 files in `bit.app.js` that actually `require()` it.
 
 | package                               | installed  | sites  | why it cannot be inlined                                                                                          | who needs it                                                                                        | droppable?                                                                                                                                                                           |
 | ------------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@rspack/core`                        | **42 MB**  | 7      | native Rust binary                                                                                                | `@teambit/preview` (rspack.config, pre-bundle), `@teambit/ui` (dev/browser/ssr configs, ui-server)  | **only for `bit start` / preview + UI bundling.** Biggest single win if made optional.                                                                                               |
+| ~~`@rspack/core`~~                    | ~~42 MB~~  | ~~7~~  | —                                                                                                                 | —                                                                                                   | **done — moved to `UI_BUNDLING_EXTERNALS` + stubbed for the default build, 2026-08-19, see §14 and §8.3.** Was the single biggest external.                                          |
 | `@pnpm/napi`                          | **40 MB**  | 3      | Rust engine, per-platform optional dep                                                                            | `@teambit/pnpm` (read-config, lynx), `@teambit/pkg` (packer)                                        | no — `bit install` / `bit create` need it                                                                                                                                            |
 | `typescript`                          | **23 MB**  | 92     | `ts-server-client` spawns `typescript/lib/tsserver.js` by path; the compiler is handed `lib.*.d.ts` paths         | `@teambit/typescript`, `@teambit/envs` fallback compiler, `tsutils`                                 | partly — see §8.2                                                                                                                                                                    |
 | `@babel/core`                         | **17 MB**  | 73     | `aspect-loader` (always-loaded) pulls it via `babel-compiler`; `scope`'s `version.ts` pulls it via `react-docgen` | `aspect-loader.main.runtime.ts`, `scope/objects/models/version.ts`, dozens of bundled babel plugins | not via `BabelAspect` removal (done) — see §19b for the two remaining levers                                                                                                         |
@@ -30,13 +32,16 @@ tail — all pulled in by webpack/rspack, not requested directly.
 
 ### 8.2 Optimisation levers, roughly in order of value
 
-1. **Make `@rspack/core` optional (≈ 42 MB).** Nothing in the CLI's core path touches it directly;
-   it exists for `bit start` and the preview/UI rebuild fallback. A lazy install ("run `bit ui
-install` to enable the UI") or resolving it from the user's workspace would cut a big share of
-   the remaining distribution. (`webpack` itself is no longer in the externals at all — done, §14
-   2026-08-16: the react/node/aspect envs bundle through the external, per-env
-   `@teambit/webpack.webpack-bundler` package now, never through bit's local `@teambit/webpack`
-   aspect.)
+1. ~~**Make `@rspack/core` optional (≈ 42 MB).**~~ **Done, 2026-08-19** — moved to
+   `UI_BUNDLING_EXTERNALS` (§8.3) and stubbed for the default build (`stub-dev-only-plugin.ts`, same
+   mechanism as `@rspack/dev-server`). §17's pre-bundle work made this safe: `bit start` resolves the
+   UI graph from the shipped `artifacts/` now, never re-resolving each package, so the only remaining
+   real call sites (`BundleUiTask`, `UIServer.dev()`, `PreBundlePreviewTask`/the rebuild fallback) are
+   all already inside the UI-bundling surface this group exists for. Measured: externals 97 MB → 63 MB,
+   total shipped distribution 250 MB → 216 MB - see §14 2026-08-19. (`webpack` itself is no longer in
+   the externals at all either — done, §14 2026-08-16: the react/node/aspect envs bundle through the
+   external, per-env `@teambit/webpack.webpack-bundler` package now, never through bit's local
+   `@teambit/webpack` aspect.)
 2. **Decide who owns `typescript` (23 MB).** A user's env already brings its own TypeScript; bit ships
    a second copy mostly so `ts-server` and the fallback compiler have one. Resolving from the
    workspace with a lazy fallback is the same trade-off as (1).
@@ -61,7 +66,7 @@ install` to enable the UI") or resolving it from the user's workspace would cut 
 `@teambit/component.ui.component-compare.context`, `@teambit/semantics.entities.semantic-schema`,
 `@teambit/code.ui.code-editor`, `@teambit/api-reference.hooks.*`, `@teambit/lanes.*`,
 `postcss-loader`, `postcss-flexbugs-fixes`, `postcss-normalize`, `resolve-url-loader`, `sass-loader`,
-`sass`, `@rspack/dev-server`.
+`sass`, `@rspack/dev-server`, `@rspack/core` (moved here 2026-08-19, see §8.2 item 1 and §14).
 
 **Measured: 231 MB → 1.3 GB.** `@teambit/*` UI packages alone are 365 MB, `monaco-editor` 77 MB (via
 `@teambit/code.ui.code-editor`), `date-fns` 36 MB, `@bitdev/*` 29 MB, `relative-time-format` 20 MB.
