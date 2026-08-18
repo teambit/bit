@@ -690,7 +690,6 @@ export class LaneSyncExecutor {
     const laneName = target.name;
     logger.console(chalk.blue(`Exporting branch ${branch} onto lane ${laneIdStr}`));
 
-    const message = await this.lastNonSyncCommitMessage(branch, defaultBranch);
     await this.checkoutFromRemote(branch, `origin/${branch}`);
 
     try {
@@ -709,6 +708,8 @@ export class LaneSyncExecutor {
         return `${laneName} -> noop (converged)`;
       }
 
+      // Read only once the probe found work: it walks up to 200 commits, wasted on a converged probe.
+      const message = await this.lastNonSyncCommitMessage(branch, defaultBranch);
       const exported = await this.snapAndExportOntoLane(laneIdStr, message);
       if (exported.status === 'error') {
         // Halt rather than propagate: one lane's failed snap/export must not abort the lanes after it.
