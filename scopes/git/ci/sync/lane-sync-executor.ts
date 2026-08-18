@@ -758,8 +758,8 @@ export class LaneSyncExecutor {
         laneIdStr,
         branch,
         laneHead: recorded.laneHead,
-        preComponents: preExportLane?.components,
-        postComponents: recorded.remoteLane.components,
+        preComponents: laneSummaryComponents(preExportLane),
+        postComponents: laneSummaryComponents(recorded.remoteLane),
       });
       return (
         `${laneName} -> export-branch (lane ${laneIdStr} @ ${recorded.laneHead.slice(0, 9)}, ` +
@@ -978,8 +978,8 @@ export class LaneSyncExecutor {
           laneIdStr,
           branch,
           laneHead: recorded.laneHead,
-          preComponents: preExportLane?.components,
-          postComponents: recorded.remoteLane.components,
+          preComponents: laneSummaryComponents(preExportLane),
+          postComponents: laneSummaryComponents(recorded.remoteLane),
         });
       }
       const exportClause = exported.status === 'exported' ? 'then exported' : 'the merge left nothing new to export';
@@ -1766,6 +1766,15 @@ export function laneSyncPrBody({
  * by id against the lane's content BEFORE the export — `LaneData.head` is the snap hash bit assigns a
  * lane component, so comparing it (not looking at git) is the only way to name what the snap did.
  */
+/**
+ * The lane entries the run SUMMARY diffs: the visible components plus the hidden `updateDependents`
+ * (a cascade export moves those heads too, and a summary reading "nothing changed" over one would be
+ * false). Summary-only — the fingerprint and the foreign-scope check keep reading `components` alone.
+ */
+export function laneSummaryComponents(lane: LaneData | undefined): LaneData['components'] {
+  return lane ? [...lane.components, ...(lane.updateDependents ?? [])] : [];
+}
+
 export function changedLaneComponents(
   before: LaneData['components'] | undefined,
   after: LaneData['components']

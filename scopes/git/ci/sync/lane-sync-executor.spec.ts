@@ -3,6 +3,7 @@ import {
   branchMirrorsOtherLaneNote,
   branchMirrorsOtherLaneReason,
   changedLaneComponents,
+  laneSummaryComponents,
   crossScopeDescription,
   crossScopeMidFlightHaltReason,
   crossScopeRefusal,
@@ -706,6 +707,23 @@ describe('isProtectedBranch', () => {
 
   it('permits an ordinary lane branch', () => {
     expect(isProtectedBranch('my-lane', 'develop', 'bit-sync/main')).to.equal(false);
+  });
+});
+
+describe('laneSummaryComponents', () => {
+  it('includes hidden updateDependents — a cascade export must not read as "nothing changed"', () => {
+    const lane = {
+      components: [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')],
+      updateDependents: [comp('acme.shop/dep1', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2')],
+    } as any;
+    expect(laneSummaryComponents(lane).map((c) => c.id.toStringWithoutVersion())).to.deep.equal([
+      'acme.shop/comp1',
+      'acme.shop/dep1',
+    ]);
+  });
+
+  it('an absent lane lists nothing', () => {
+    expect(laneSummaryComponents(undefined)).to.deep.equal([]);
   });
 });
 
