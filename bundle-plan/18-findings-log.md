@@ -867,3 +867,33 @@ true})` run produced no `metafile.json` (`dist` 153 MB vs 160 MB with it); a pla
     that is a real but modest ~3-4%, for an already-niche, opt-in audience. **Recommendation: low
     priority, not worth doing now** - defer until/unless `--ui-bundling` startup time specifically
     becomes a complaint; revisit this entry if it does.
+- **2026-08-18** — **root-caused and fixed the `bit_pr` step-119 crash** (pipeline `49772`, the
+  Aug-16 run): the third §11D-class trigger, but a distinct _mechanism_ the two `CompilationInitiator`
+  fixes could not cover. The job's `debug.log` artifact shows the fixed fallback firing
+  (`getInstallCompilationInitiator: falling back to no initiator`) followed by dozens of "unable to
+  resolve the core aspect X … unable to find X in node*modules/@teambit/X/dist" - the dev-binary
+  install re-imports every injected workspace package (its manifest still differs from the released
+  binary's, which filters the legacy core envs), and the re-import recreates each package dir from
+  the component \_source* dir, which holds no `dist/` - so the compiled output of every
+  workspace-authored core aspect, `@teambit/bit` included, is wiped in place. The existing
+  preservers (`preserve-loaded-virtual-store-dirs.ts`, `preserve-loaded-nested-pkg-dirs.ts`) only
+  cover _removed_ directories; here the package dir survives, so they see nothing missing, and no
+  donor copy of the dist exists anywhere (the node_modules copy was the only one). The crash then
+  lands on the first deferred require in bit's own already-loaded code - this run:
+  `legacy.consumer-component` deferring `require('./exceptions/main-file-removed')` while loading
+  `teambit.harmony/envs/bit-cli-app-env` for the trailing compile, escaping as a fresh
+  `@teambit/legacy.constants` resolution, then buried under the known `handle-errors.ts`
+  double-failure (`@teambit/legacy.loader` gone too, stack cut at node's 10-frame default).
+  **Fix**: new `preserve-loaded-component-dist-dirs.ts` in the pnpm aspect - before the engine
+  runs, hard-link-clone the `dist/` of every loaded `_bit_local` package under the workspace's
+  node_modules (links pin the inodes, no data copies; skipped for lockfile-only/dry-run installs);
+  after it, move back any dist the install dropped, then remove the clone root. Restored files are
+  exactly what the in-memory modules were loaded from, and the trailing `compileOnWorkspace`
+  rewrites them fresh anyway. This also explains and fixes the "bit install post-merge needed two
+  passes" symptom (§ 2026-08-16 above) - the first pass was dying in this window. Verified by a
+  standalone driver exercising snapshot/wipe/restore, symlink-guard, virtual-store/non-local
+  exclusion, and stale-clone-root reclaim (all pass; spec file added mirroring
+  `preserve-loaded-nested-pkg-dirs.spec.ts`); `tsc --noEmit` error set unchanged vs. the branch
+  baseline and oxlint clean on the touched files. The e2e-bundle failures on the same pipeline are
+  both previously-triaged items (mdx-v3-options pre-bundle gap ×2, `bit --help` timing budget), not
+  new regressions.
