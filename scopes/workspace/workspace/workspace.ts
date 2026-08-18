@@ -873,6 +873,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   clearComponentsCache(ids: ComponentID[]) {
+    if (!ids.length) return; // nothing to clear, avoid scanning the caches for nothing
     const uniqueIds = uniqBy(ids, (id) => id.toString());
     this.componentLoader.clearComponentsCache(uniqueIds);
     uniqueIds.forEach((id) => {

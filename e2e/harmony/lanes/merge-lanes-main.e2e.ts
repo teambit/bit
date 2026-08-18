@@ -322,7 +322,7 @@ describe('merge lanes - main lane operations', function () {
     let mergeOutput: string;
     // enough distance between the top of the file (changed on main) and the bottom
     // (changed on the lane) for the merge to auto-resolve without conflicts
-    const filler = Array.from({ length: 10 }, (unused, index) => `// filler line ${index}`).join('\n');
+    const filler = Array.from({ length: 10 }, (_, index) => `// filler line ${index}`).join('\n');
     const baseFile = `${filler}\nmodule.exports = () => 'comp1';\n`;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
