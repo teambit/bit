@@ -5,9 +5,7 @@
 This is the section to optimise against. The bundle itself is 67 MB; **161 MB is installed
 dependencies**, so this is where the remaining weight lives.
 
-### 8.1 The externals (started at 11, now 10 — two rounds of removal, one addition, and one move to
-
-§8.3 — see §15e, §14 2026-08-16, §14 2026-08-19)
+### 8.1 The externals (started at 11, now 10 — two rounds of removal, one addition, and one move to §8.3 — see §15e, §14 2026-08-16, §14 2026-08-19)
 
 Every entry was verified against the emitted bundle — the "sites" column is the number of distinct
 files in `bit.app.js` that actually `require()` it.
