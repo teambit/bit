@@ -9,6 +9,9 @@ import type { Helper } from '@teambit/legacy.e2e-helper';
 const HTTP_TIMEOUT_FOR_MSG = 120000; // 2 min
 const DEFAULT_HTTP_PORT = 3000;
 const PORT_FREE_TIMEOUT = 30000; // 30 sec
+// generous on purpose: with `--rebuild` this covers a full rspack build of the UI, which is minutes
+// on a cold cache. it exists to bound a hang, not to police how long a legitimate build takes.
+const START_TIMEOUT = 900000; // 15 min
 
 const readyMessageFor = (uiRootAspectId: string) => `UI server of ${uiRootAspectId} is listening to port`;
 const SCOPE_UI_ROOT = 'teambit.scope/scope';
@@ -20,6 +23,8 @@ export type HttpHelperOptions = {
    * test measures whatever bit version happens to be installed rather than the code under test.
    */
   extraArgs?: string[];
+  /** bound on how long to wait for the server to report itself ready. see `START_TIMEOUT`. */
+  startTimeoutMs?: number;
   /**
    * which UI root to start. the scope root serves a bare scope (the default, and what the http
    * protocol tests use); the workspace root serves the local workspace.
@@ -54,6 +59,7 @@ export class HttpHelper {
     // server over the freshly-reinitialized scope, and not a lingering one serving stale/wiped state
     // (which surfaced as OutdatedIndexJson / MergeConflictOnRemote in the bbit nightly).
     await this.waitForPortToBeFree();
+    const timeoutMs = this.options.startTimeoutMs ?? START_TIMEOUT;
     return new Promise((resolve, reject) => {
       const args = ['start', '--verbose', '--log', '--port', String(this.port), ...(this.options.extraArgs || [])];
       const cmd = `${this.helper.command.bitBin} ${args.join(' ')}`;
@@ -61,15 +67,39 @@ export class HttpHelper {
       if (this.helper.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
       if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
       this.httpProcess = childProcess.spawn(this.helper.command.bitBin, args, { cwd });
+      let stdoutData = '';
+      let stderrData = '';
+      let settled = false;
+      // the suites that use this run with mocha's timeout disabled, because a legitimate `--rebuild`
+      // start can take minutes. that makes this the only deadline: a server that stays alive but
+      // never reports readiness would otherwise hang the job forever instead of failing it.
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        const tail = (out: string) => out.split('\n').slice(-20).join('\n');
+        void this.killHttp().catch(() => {});
+        reject(
+          new Error(
+            `bit start did not report "${readyMessageFor(this.uiRootAspectId)}" within ${timeoutMs}ms.\n` +
+              `last stdout:\n${tail(stdoutData)}\nlast stderr:\n${tail(stderrData)}`
+          )
+        );
+      }, timeoutMs);
+      const settle = (fn: () => void) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        fn();
+      };
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
+        stdoutData += data.toString();
         if (data.includes(readyMessageFor(this.uiRootAspectId))) {
           if (this.helper.debugMode) console.log('Bit server is up and running');
-          resolve();
+          settle(resolve);
         }
       });
-      let stderrData = '';
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stderr.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
@@ -78,7 +108,7 @@ export class HttpHelper {
       });
       this.httpProcess.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
-        reject(new Error(`http exited with code ${code}\n${stderrData}`));
+        settle(() => reject(new Error(`http exited with code ${code}\n${stderrData}`)));
       });
     });
   }
