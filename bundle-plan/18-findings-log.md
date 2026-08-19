@@ -930,3 +930,17 @@ found duplicate capsules: teambit.harmony/envs/bit-cli-app-env@9904eb…`. The j
   are excluded even when snap-versioned (the capsules root links them). Only seeders that reach a
   snap dep group; external published envs keep their isolated nested installs. tsc baseline
   unchanged, oxlint/prettier clean.
+
+- **2026-08-19** — **`bit_pr` is green** (pipeline `50144`, job `444108`) - the first passing
+  "bit ci pr" on this branch, ever. The three fixes verified in sequence across pipelines
+  `50133`/`50138`/`50144`: (1) `preserve-loaded-component-dist-dirs` got the dev-binary install
+  through the reinjection dist-wipe; (2) the isolator seeder dedup removed the duplicate
+  `bit-cli-app-env` capsule; (3) `getSnapDependenciesOfSeeders` let the aspect-capsule install
+  resolve the env's unpublished snap deps (`cli-bundler` et al.) as grouped sibling capsules
+  instead of registry fetches. Remaining red on the workflow, both pre-existing and unrelated to
+  these fixes: `check_circular_dependencies` (failing since the Aug-18 pushes, before these
+  changes - its own `bit install` step dies with a "killed" signal, i.e. OOM on its smaller
+  container, after missing-dist warnings under `.pnpm/<file+…>` slots - note that layout is a
+  _fourth_ dist-wipe variant, inside virtual-store slots of injected components, which
+  `preserve-loaded-component-dist-dirs` deliberately does not cover; worth a follow-up if that job
+  stays red after the OOM is addressed), and the known `e2e_test_esbuild_bundle` triaged set.
