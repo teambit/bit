@@ -1102,7 +1102,7 @@
     "modules/config-mutator": {
         "name": "modules/config-mutator",
         "scope": "teambit.webpack",
-        "version": "0.0.182",
+        "version": "0.0.183",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/config-mutator"
     },
@@ -1385,7 +1385,7 @@
     "overview/renderers/grouped-schema-nodes-overview-summary": {
         "name": "overview/renderers/grouped-schema-nodes-overview-summary",
         "scope": "teambit.api-reference",
-        "version": "0.0.71",
+        "version": "0.0.73",
         "mainFile": "index.ts",
         "rootDir": "components/overview/renderers/grouped-schema-nodes-overview-summary"
     },
