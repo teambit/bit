@@ -1279,12 +1279,20 @@ jobs:
   # Requires both upstream jobs but runs independently of e2e_test_esbuild_bundle, so a slow or
   # failing pre-bundle build never delays or fails the main e2e signal - only this job's own,
   # narrower one.
+  # Runs `restore_common_caches`/`bit_global_for_npm`/`bit_config` before touching the bundle -
+  # the same global-config setup `e2e_test_esbuild_bundle` gets via `e2e_test_cmd` (registry,
+  # hub_domain, package-manager.cache, etc., all set through the repo's own `bit.js`, not the
+  # bundle under test). Without it this job's `bit install`/`bit build` calls run against
+  # whatever config CircleCI's stock image happens to have, unlike every other e2e job.
   e2e_test_ui_prebundle:
     <<: *defaults
     resource_class: medium
     steps:
       - attach_workspace:
           at: ./
+      - restore_common_caches
+      - bit_global_for_npm
+      - bit_config
       - run:
           name: inject the pre-bundle into the built esbuild bundle
           command: |

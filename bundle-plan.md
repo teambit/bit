@@ -2,7 +2,11 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-08-19 (rebuilt the UI/preview pre-bundle and `.bundle-cache/` from current
+> Last updated: 2026-08-19 (gave `e2e_test_ui_prebundle` the same `bit_global_for_npm`/`bit_config`
+> setup `e2e_test_esbuild_bundle` gets via `e2e_test_cmd`, and bumped the `bit --help` timing
+> budget in `filesystem-read.e2e.ts` from 1500ms to 2500ms based on 10 real CI measurements
+> (1720-2270ms) — see [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-08-19 entries.)
+> Previously, same day (rebuilt the UI/preview pre-bundle and `.bundle-cache/` from current
 > source after the merge below — UI artifact **80 MB → 16 MB** (#10629's single-compilation dedupe,
 > now reflected on this branch); found and fixed a real bug in the e2e `HttpHelper` where a
 > multi-word server binary crashed `spawn()` with an unhandled `'error'` event, silently hanging

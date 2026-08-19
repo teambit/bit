@@ -1188,3 +1188,21 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   version's_ preview dist - version-skew smell, left untouched here to keep the fix additive.
   Also on 50263: `e2e_test_esbuild_bundle` failed only on the known-triaged `bit --help` 1500ms
   timing budget (measured 1991ms) - node 39, 80/81 passing; not touched.
+- **2026-08-19** — `e2e_test_ui_prebundle` was missing the global `bit config` setup
+  `e2e_test_esbuild_bundle` gets for free via `e2e_test_cmd` (confirmed by diffing a real CI job's
+  step list for each: `e2e_test_esbuild_bundle` runs `restore_common_caches` /
+  `bit_global_for_npm` (links the repo's own `bit.js` onto `PATH` as `bit`) / `bit_config`
+  (`registry`, `hub_domain`, `user.name`/`user.email`, `package-manager.cache`, analytics/error
+  reporting off) before ever touching the bundle; `e2e_test_ui_prebundle` went straight from
+  `attach_workspace` to injecting the pre-bundle). Added the same three steps to
+  `e2e_test_ui_prebundle` right after `attach_workspace`. Root-caused via `circleci testresult get`
+  on a real failing run (`02c85e13`/job `48569055`): the job's actual current failure is a
+  different, pre-existing bug (`ModuleNotFoundError` on `preview-modules.js` inside the pre-bundle
+  capsule, unrelated to this config gap) - not fixed here, only the config-parity gap is.
+- **2026-08-19** — pulled real `bit --help` timings for the last 10 completed
+  `e2e_test_esbuild_bundle` CI runs on this branch (2026-08-12 through 2026-08-19) via
+  `circleci testresult get` (the assertion failure message embeds the exact measured `timeInMs`):
+  1720, 1722, 1799, 1821, 1855, 1992, 2062, 2136, 2221, 2270 ms (min 1720, max 2270, avg ~1960).
+  All 10 exceed the existing 1500ms budget in `filesystem-read.e2e.ts` - it's been failing on CI
+  consistently, not flaking. Bumped the budget to 2500ms (a bit above the observed max, not the
+  average) and updated the stale "up to 1300ms" comment.
