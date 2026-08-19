@@ -1,7 +1,7 @@
 # UI and preview bundle size — analysis and remaining levers
 
-Working notes for shrinking the pre-built bundles bit ships. Written 2026-08-18, after the two
-size PRs landed on the stack (see _Where this started_). Pick this up from **Remaining levers**.
+Working notes for shrinking the pre-built bundles bit ships. Written 2026-08-18, updated 2026-08-19
+once the whole stack had merged (see _Where this started_). Pick this up from **Remaining levers**.
 
 Out of scope here, by decision: the per-env preview pre-bundle duplication (~31 MB of byte-identical
 `env-template` output across the six core envs). The core envs are being removed, which takes that
@@ -16,6 +16,7 @@ with them.
 | —                                                   | released 2.0.82                                                        | 58 MB     |
 | [#10628](https://github.com/teambit/bit/pull/10628) | drop the `eval-*` devtool from the ssr build, minify it, fix scope ssr | 24 MB     |
 | [#10629](https://github.com/teambit/bit/pull/10629) | both UI roots as two entries of one compilation                        | **16 MB** |
+| [#10631](https://github.com/teambit/bit/pull/10631) | `bit start` sanity e2e for both roots, plus review follow-ups          | 16 MB     |
 
 Current shipped artifact, measured from the `BundleUI` capsule output:
 
@@ -167,6 +168,11 @@ This does not change total bytes, but it decides what a user waits for. Splittin
 (`splitChunks.maxSize`, or explicit cache groups for react / apollo / editor stacks) would let the
 browser parallelise the download and — more valuably — stop invalidating 6.23 MB of cache every time
 any dependency changes.
+
+Note the service worker no longer claims navigations at all: with an entry per root there is no
+single app shell, so #10631 removed the `navigateFallback` that still pointed at an `index.html`
+this build stopped emitting. Any future work here has to decide what an offline shell means for two
+roots before re-adding one.
 
 Related measurement from #10628: with a warm cache, ssr renders first paint in 72 ms vs 384 ms
 client-only; with a cold cache it is 584 ms vs 376 ms, because 6.4 MB of JS dominates. Shrinking or

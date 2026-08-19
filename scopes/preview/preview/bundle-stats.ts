@@ -55,7 +55,9 @@ export function writeBundleStats(stats: any, name: string): string | undefined {
     groupModulesByLayer: false,
   });
   mkdirpSync(dir);
-  const filePath = join(dir, `${name}.stats.json`);
+  // sanitized for the same reason as the ui twin: a name carrying a path separator would point the
+  // write at a directory that does not exist and fail with ENOENT.
+  const filePath = join(dir, `${name.replace(/[^a-zA-Z0-9._-]+/g, '-')}.stats.json`);
   writeFileSync(filePath, JSON.stringify(json));
   return filePath;
 }
