@@ -51,7 +51,18 @@ export default function createRspackBrowserConfig(
       css: true,
     },
 
-    entry: Object.fromEntries(entries.map((entry) => [entry.name, entry.files])),
+    entry: Object.fromEntries(
+      (() => {
+        // `Object.fromEntries` would silently keep only the last of two entries sharing a name, and
+        // the lost root would then have no chunks and no document while still looking built.
+        const seen = new Set<string>();
+        return entries.map((entry) => {
+          if (seen.has(entry.name)) throw new Error(`duplicate ui bundle entry name: "${entry.name}"`);
+          seen.add(entry.name);
+          return [entry.name, entry.files] as const;
+        });
+      })()
+    ),
 
     output: {
       path: path.resolve(outputDir, publicDir),
@@ -138,8 +149,11 @@ export default function createRspackBrowserConfig(
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 5000000,
         exclude: [/\.map$/, /asset-manifest\.json$/],
-        navigateFallback: 'public/index.html',
-        navigateFallbackDenylist: [new RegExp('^/_'), new RegExp('/[^/.?]+\\.[^/]+$')],
+        // no `navigateFallback`: with an entry per UI root there is no single app shell to fall back
+        // to, and the previous value (`public/index.html`) now names a document this build does not
+        // emit - the service worker would answer navigations with a missing file. the express
+        // history-api fallback already serves the right `<root>.html`, so navigations go to the
+        // network instead of through a shell the service worker cannot supply.
       }),
     ],
 
