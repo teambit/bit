@@ -25,7 +25,7 @@ const PORT = 3025;
     // `--rebuild` so the ssr bundle is compiled from this repo's rspack config. without it the
     // server serves the pre-built bundle shipped by the installed bit version, and the assertions
     // below would describe that release rather than the code under test.
-    httpHelper = new HttpHelper(helper, PORT, ['--rebuild']);
+    httpHelper = new HttpHelper(helper, PORT, { extraArgs: ['--rebuild'] });
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.populateComponents(1, false);
     helper.command.tagAllWithoutBuild();

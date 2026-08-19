@@ -37,7 +37,7 @@ import createRspackBrowserConfig from './rspack/rspack.browser.config';
 import createRspackSsrConfig from './rspack/rspack.ssr.config';
 import { writeBundleStats } from './rspack/bundle-stats';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
-import { BundleUiTask, BUNDLE_UI_HASH_FILENAME, getUiRootEntryName } from './bundle-ui.task';
+import { BundleUiTask, BUNDLE_UI_HASH_FILENAME, getUiRootEntryName, getUiRootHtmlFilename } from './bundle-ui.task';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain];
 
@@ -251,7 +251,7 @@ export class UiMain {
     const outputPath = customOutputPath || uiRoot.path;
     const publicDir = await this.publicDir(uiRoot);
 
-    const entries = await pMapSeries(this.uiRootSlot.toArray(), async ([rootAspectId, root]) => ({
+    const entries = await pMapSeries(this.getUiRoots(), async ([rootAspectId, root]) => ({
       name: getUiRootEntryName(rootAspectId),
       // sequentially: `resolveAspects` imports and isolates, which is not safe to run in parallel.
       files: [await this.generateRoot(await root.resolveAspects(UIRuntime.name), rootAspectId)],
@@ -523,6 +523,14 @@ export class UiMain {
   /**
    * get a UI runtime instance.
    */
+  /**
+   * every registered UI root, as `[aspectId, root]`. this is the set `build()` turns into entries,
+   * so anything deriving per-root output (hashes, documents) must walk the same list.
+   */
+  getUiRoots(): [string, UIRoot][] {
+    return this.uiRootSlot.toArray();
+  }
+
   getUi(uiRootAspectIdOrName?: string): [string, UIRoot] | undefined {
     if (uiRootAspectIdOrName) {
       const root = this.uiRootSlot.get(uiRootAspectIdOrName) || this.getUiByName(uiRootAspectIdOrName);
@@ -718,7 +726,11 @@ export class UiMain {
     // the same path `createRspackBrowserConfig` derives for `output.path`. computed directly rather
     // than by building a config, which would resolve every root's aspects just to read a path.
     const outputPath = pathResolve(uiRoot.path, await this.publicDir(uiRoot));
-    if (fs.pathExistsSync(outputPath)) return false;
+    // check for this root's document rather than merely for the directory. a build made before the
+    // roots shared one compilation left an `index.html` here and no `<root>.html`, and the server
+    // now falls back to the latter - so "the directory exists" would skip the rebuild and every
+    // client-side route would 404 against an output this bit can no longer serve.
+    if (fs.pathExistsSync(join(outputPath, getUiRootHtmlFilename(uiRootAspectId)))) return false;
     const hash = await this.createBuildUiHash(uiRoot);
     await this.build(uiRootAspectId);
     await this.cache.set(uiRoot.path, hash);
