@@ -1403,6 +1403,11 @@ export class LaneSyncExecutor {
     const switchErr = await this.deps.ci.switchToLaneForSync(laneIdStr, {
       forceOurs: !theirsWins,
       forceTheirs: theirsWins,
+      // The whole lane has to land in the workspace here, including components it has that this
+      // workspace doesn't track yet - materializing the lane is the point of this step. That is the
+      // opposite of `bit ci pr`, where the git checkout is the source of truth and `switchToLane`'s
+      // `workspaceOnly` default keeps the switch from writing lane-only components.
+      workspaceOnly: false,
       // Follows the direction: in adopt mode the missing-component retry must not write the lane's
       // files over the branch's — the ledger commit would then push the lane's content onto the branch.
       writeAdoptedFiles: theirsWins,

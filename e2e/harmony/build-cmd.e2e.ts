@@ -213,6 +213,65 @@ describe('build command', function () {
       });
     }
   );
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'optimized capsule creation with a package dependency that points back into the capsule graph',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+
+        // Build this graph, where comp3 is deliberately NOT a direct dev-dependency of the seeder:
+        //
+        // comp1 -(dev)-> comp2 -(prod)-> comp3 -(prod)-> comp4
+        //   |                                              ^
+        //   `--------------------(dev)---------------------'
+        //
+        // comp4 is modified, so it must be a local capsule. Installing comp3 from the registry
+        // would make that package load its older comp4 dependency while comp1 loads the local
+        // comp4 capsule. The two SharedClass constructors then have different identities.
+        helper.fixtures.populateComponents(4);
+        helper.fs.outputFile('comp1/index.js', `module.exports = () => 'comp1';`);
+        const comp2PackageName = helper.general.getPackageNameByCompName('comp2', true);
+        const comp3PackageName = helper.general.getPackageNameByCompName('comp3', true);
+        const comp4PackageName = helper.general.getPackageNameByCompName('comp4', true);
+        helper.fs.outputFile('comp4/index.js', 'module.exports = class SharedClass {};');
+        helper.fs.outputFile(
+          'comp3/index.js',
+          `const SharedClass = require('${comp4PackageName}'); module.exports = /** @type {any} */ (new SharedClass());`
+        );
+        helper.fs.outputFile('comp2/index.js', `module.exports = /** @type {any} */ (require('${comp3PackageName}'));`);
+        helper.fs.outputFile(
+          'comp1/comp1.spec.js',
+          `const valueFromPackageClosure = require('${comp2PackageName}');
+const SharedClass = require('${comp4PackageName}');
+
+describe('package and capsule generation identity', () => {
+  it('uses the capsule generation throughout the dependency closure', () => {
+    expect(valueFromPackageClosure).toBeInstanceOf(SharedClass);
+  });
+});
+`
+        );
+
+        helper.command.tagAllComponents();
+        helper.command.export();
+        helper.fs.appendFile('comp1/index.js', '\n// modification to comp1');
+        helper.fs.appendFile('comp4/index.js', '\n// modification to comp4');
+        helper.command.build('comp1');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      it('keeps the transitive package dependency on the capsule side of the graph boundary', () => {
+        const comp3Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp3@0.0.1`);
+        expect(comp3Capsule).to.be.a.directory();
+      });
+    }
+  );
   describe('optimized capsule creation for exported dependencies for self hosting', () => {
     before(async () => {
       helper = new Helper();
