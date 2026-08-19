@@ -82,3 +82,6 @@ package-lock.json
 # Release notes temp files (for review only)
 releases-docs/temp-files/
 
+
+# bundle stats written by BIT_UI_BUNDLE_STATS (see scripts/analyze-bundle.mjs)
+bundle-stats/
