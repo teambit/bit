@@ -86,7 +86,7 @@ importers:
         specifier: ^2.0.0
         version: 2.0.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^6.0.3
+        specifier: ^6.0.9
         version: 6.0.9
       '@bitdev/symphony.generators.symphony-starters':
         specifier: ^1.0.0
@@ -25873,7 +25873,7 @@ importers:
         specifier: ^2.0.0
         version: 2.0.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^6.0.3
+        specifier: ^6.0.9
         version: 6.0.9
       '@mdx-js/loader':
         specifier: ^3.1.1

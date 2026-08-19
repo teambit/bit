@@ -25,10 +25,16 @@ import {
  * i.e. `bit build`, `bit start` (non-dev mode)
  */
 
+export type BrowserEntry = {
+  /** entry name; also names the emitted html (`<name>.html`) */
+  name: string;
+  files: string[];
+  title: string;
+};
+
 export default function createRspackBrowserConfig(
   outputDir: string,
-  entryFiles: string[],
-  title: string,
+  entries: BrowserEntry[],
   publicDir: string
 ): Configuration {
   const isEnvProductionProfile = process.argv.includes('--profile');
@@ -45,9 +51,18 @@ export default function createRspackBrowserConfig(
       css: true,
     },
 
-    entry: {
-      main: entryFiles,
-    },
+    entry: Object.fromEntries(
+      (() => {
+        // `Object.fromEntries` would silently keep only the last of two entries sharing a name, and
+        // the lost root would then have no chunks and no document while still looking built.
+        const seen = new Set<string>();
+        return entries.map((entry) => {
+          if (seen.has(entry.name)) throw new Error(`duplicate ui bundle entry name: "${entry.name}"`);
+          seen.add(entry.name);
+          return [entry.name, entry.files] as const;
+        });
+      })()
+    ),
 
     output: {
       path: path.resolve(outputDir, publicDir),
@@ -107,11 +122,19 @@ export default function createRspackBrowserConfig(
     },
 
     plugins: [
-      new rspack.HtmlRspackPlugin({
-        inject: true,
-        templateContent: html(title)(),
-        minify: true,
-      }),
+      // one html per entry, each injecting only its own entry's chunks. `index.html` is no longer
+      // emitted: with two roots in one compilation there is no single default document, so the ui
+      // server falls back to `<entry>.html` for the root it is serving.
+      ...entries.map(
+        (entry) =>
+          new rspack.HtmlRspackPlugin({
+            filename: `${entry.name}.html`,
+            chunks: [entry.name],
+            inject: true,
+            templateContent: html(entry.title)(),
+            minify: true,
+          })
+      ),
 
       new rspack.ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
 
@@ -126,8 +149,11 @@ export default function createRspackBrowserConfig(
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 5000000,
         exclude: [/\.map$/, /asset-manifest\.json$/],
-        navigateFallback: 'public/index.html',
-        navigateFallbackDenylist: [new RegExp('^/_'), new RegExp('/[^/.?]+\\.[^/]+$')],
+        // no `navigateFallback`: with an entry per UI root there is no single app shell to fall back
+        // to, and the previous value (`public/index.html`) now names a document this build does not
+        // emit - the service worker would answer navigations with a missing file. the express
+        // history-api fallback already serves the right `<root>.html`, so navigations go to the
+        // network instead of through a shell the service worker cannot supply.
       }),
     ],
 
