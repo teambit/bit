@@ -57,7 +57,9 @@ function analyze(file) {
 
   console.log(`\n=== ${basename(file)} ===\n`);
 
-  const assets = (stats.assets ?? []).filter((a) => !a.name.endsWith('.map')).sort((a, b) => b.size - a.size);
+  const assets = (stats.assets ?? [])
+    .filter((a) => a?.name && !a.name.endsWith('.map'))
+    .sort((a, b) => (b.size ?? 0) - (a.size ?? 0));
   const assetTotal = assets.reduce((sum, a) => sum + a.size, 0);
   console.log(`assets: ${assets.length}, total ${mb(assetTotal)}\n`);
   for (const asset of assets.slice(0, TOP)) {
