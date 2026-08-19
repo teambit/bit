@@ -25,10 +25,16 @@ import {
  * i.e. `bit build`, `bit start` (non-dev mode)
  */
 
+export type BrowserEntry = {
+  /** entry name; also names the emitted html (`<name>.html`) */
+  name: string;
+  files: string[];
+  title: string;
+};
+
 export default function createRspackBrowserConfig(
   outputDir: string,
-  entryFiles: string[],
-  title: string,
+  entries: BrowserEntry[],
   publicDir: string
 ): Configuration {
   const isEnvProductionProfile = process.argv.includes('--profile');
@@ -45,9 +51,7 @@ export default function createRspackBrowserConfig(
       css: true,
     },
 
-    entry: {
-      main: entryFiles,
-    },
+    entry: Object.fromEntries(entries.map((entry) => [entry.name, entry.files])),
 
     output: {
       path: path.resolve(outputDir, publicDir),
@@ -107,11 +111,19 @@ export default function createRspackBrowserConfig(
     },
 
     plugins: [
-      new rspack.HtmlRspackPlugin({
-        inject: true,
-        templateContent: html(title)(),
-        minify: true,
-      }),
+      // one html per entry, each injecting only its own entry's chunks. `index.html` is no longer
+      // emitted: with two roots in one compilation there is no single default document, so the ui
+      // server falls back to `<entry>.html` for the root it is serving.
+      ...entries.map(
+        (entry) =>
+          new rspack.HtmlRspackPlugin({
+            filename: `${entry.name}.html`,
+            chunks: [entry.name],
+            inject: true,
+            templateContent: html(entry.title)(),
+            minify: true,
+          })
+      ),
 
       new rspack.ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
 

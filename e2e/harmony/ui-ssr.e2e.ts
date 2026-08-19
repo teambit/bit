@@ -17,6 +17,8 @@ const PORT = 3025;
   let helper: Helper;
   let httpHelper: HttpHelper;
   let html: string;
+  let clientRenderedResponse: Response;
+  let clientRenderedHtml: string;
 
   before(async () => {
     helper = new Helper();
@@ -31,6 +33,10 @@ const PORT = 3025;
     await httpHelper.start();
     const response = await fetch(`http://localhost:${PORT}/`);
     html = await response.text();
+    // `rendering=client` makes the ssr middleware call `next()`, which is the only way to reach the
+    // history-api fallback - the document every client-side route is served from.
+    clientRenderedResponse = await fetch(`http://localhost:${PORT}/some/client/route?rendering=client`);
+    clientRenderedHtml = await clientRenderedResponse.text();
   });
 
   after(async () => {
@@ -51,6 +57,16 @@ const PORT = 3025;
   it('should not emit a module as an asset url where a component is expected', () => {
     // the "Invalid tag" symptom: an emitted asset path reaching react as a tag name.
     expect(html).to.not.match(/<\/?"?\/public\/ssr\//);
+  });
+
+  it("should serve this root's html for a client-side route", () => {
+    // both UI roots are entries of one bundle, so there is no shared `index.html` and the server
+    // falls back to `<root>.html`. get that name wrong and every client-side route 404s while the
+    // ssr-rendered ones keep working, so this asserts the fallback specifically.
+    expect(clientRenderedResponse.status).to.equal(200);
+    expect(clientRenderedHtml).to.have.string('<div id="root">');
+    // and it is this root's document: it must load the scope entry, not another root's
+    expect(clientRenderedHtml).to.match(/src="[^"]*\/scope\.[a-f0-9]+\.js"/);
   });
 
   it('should render the scope name into the markup, not just the document title', () => {

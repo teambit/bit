@@ -37,7 +37,7 @@ import createRspackBrowserConfig from './rspack/rspack.browser.config';
 import createRspackSsrConfig from './rspack/rspack.ssr.config';
 import { writeBundleStats } from './rspack/bundle-stats';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
-import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
+import { BundleUiTask, BUNDLE_UI_HASH_FILENAME, getUiRootEntryName } from './bundle-ui.task';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain];
 
@@ -145,9 +145,6 @@ export type RuntimeOptions = {
 export class UiMain {
   private _isBundleUiServed = false;
   private currentUIServer: UIServer | undefined;
-  /** compilers `build()` created, freed by `closeBuildCompilers()` once the caller is done */
-  private openBuildCompilers: any[] = [];
-
   constructor(
     /**
      * Pubsub extension.
@@ -236,30 +233,37 @@ export class UiMain {
   }
 
   /**
-   * create a build of the given UI root.
+   * Build the UI. Every registered UI root becomes one entry of a *single* rspack compilation, so
+   * the chunks they share - which is nearly all of them, the roots differ only by the generated
+   * root module naming the root aspect - are emitted once instead of once per root.
+   *
+   * `uiRootAspectIdOrName` therefore only selects the default output location; it does not narrow
+   * what gets built. Each entry emits its own `<entry>.html`, and the ssr build (scope only) is a
+   * second compilation over that root's entry.
    */
-  async build(
-    uiRootAspectIdOrName?: string,
-    customOutputPath?: string,
-    options?: { deferClose?: boolean }
-  ): Promise<any> {
+  async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<any> {
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}"`);
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
 
     if (!maybeUiRoot) throw new UnknownUI(uiRootAspectIdOrName, this.possibleUis());
-    const [uiRootAspectId, uiRoot] = maybeUiRoot;
+    const [, uiRoot] = maybeUiRoot;
 
-    // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const ssr = uiRoot.buildOptions?.ssr || false;
-    const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId);
     const outputPath = customOutputPath || uiRoot.path;
     const publicDir = await this.publicDir(uiRoot);
 
-    const browserConfig = createRspackBrowserConfig(outputPath, [mainEntry], uiRoot.name, publicDir);
+    const entries = await pMapSeries(this.uiRootSlot.toArray(), async ([rootAspectId, root]) => ({
+      name: getUiRootEntryName(rootAspectId),
+      // sequentially: `resolveAspects` imports and isolates, which is not safe to run in parallel.
+      files: [await this.generateRoot(await root.resolveAspects(UIRuntime.name), rootAspectId)],
+      title: root.name,
+      root,
+    }));
+
+    const browserConfig = createRspackBrowserConfig(outputPath, entries, publicDir);
     const compiler = rspack(browserConfig as any);
     const compilers: any[] = [compiler];
     try {
-      this.logger.debug(`rspack (build): running for browser`);
+      this.logger.debug(`rspack (build): running for browser, entries: ${entries.map((e) => e.name).join(', ')}`);
       const [results, errors] = await this.runRspackPromise(compiler);
       this.logger.debug(`rspack (build): completed browser`);
       if (!results) throw new UnknownBuildError();
@@ -271,13 +275,20 @@ export class UiMain {
         this.clearConsole();
         throw new Error(results?.toString());
       }
-      this.writeStats(results, `${uiRoot.name}-browser`);
+      this.writeStats(results, 'browser');
 
-      if (ssr) {
-        const ssrConfig = createRspackSsrConfig(outputPath, [mainEntry], publicDir);
+      // TODO: @uri refactor all dev server related code to use the bundler extension instead.
+      const ssrEntries = entries.filter((entry) => entry.root.buildOptions?.ssr);
+      if (ssrEntries.length > 1) {
+        // they would all write to the same `ssr/` directory. only the scope root sets `ssr: true`.
+        throw new Error(`only one UI root can enable ssr, got: ${ssrEntries.map((entry) => entry.name).join(', ')}`);
+      }
+      for (const ssrEntry of ssrEntries) {
+        const ssrConfig = createRspackSsrConfig(outputPath, ssrEntry.files, publicDir);
         const ssrCompiler = rspack(ssrConfig as any);
         compilers.push(ssrCompiler);
-        this.logger.debug(`rspack (build): running for SSR`);
+        this.logger.debug(`rspack (build): running for SSR (${ssrEntry.name})`);
+        // eslint-disable-next-line no-await-in-loop
         const [ssrResults, ssrErrors] = await this.runRspackPromise(ssrCompiler);
         this.logger.debug(`rspack (build): completed SSR build`);
         if (ssrErrors) {
@@ -288,17 +299,16 @@ export class UiMain {
           this.clearConsole();
           throw new Error(ssrResults?.toString());
         }
-        this.writeStats(ssrResults, `${uiRoot.name}-ssr`);
+        this.writeStats(ssrResults, `${ssrEntry.name}-ssr`);
       }
 
       return results;
     } finally {
-      // `deferClose` hands the compilers to the caller, which must call `closeBuildCompilers()` -
-      // BundleUiTask does, once both of its UI roots are done. Every other caller (bit start's
-      // pre-bundle, a watch rebuild) gets them closed right here: leaving them tracked would keep
-      // one module graph per build alive for the life of a long-running process.
-      if (options?.deferClose) this.openBuildCompilers.push(...compilers);
-      else await this.closeCompilers(compilers);
+      // a compiler holds its whole module graph (and rspack's native side of it) alive, and
+      // `bit build` runs every bundling task in one process - a preview bundle per env follows this
+      // one - so a compiler left open stays resident for all of them. now that both roots share a
+      // single compilation there is no concurrent sibling to wait for, and it closes right here.
+      await this.closeCompilers(compilers);
     }
   }
 
@@ -318,23 +328,6 @@ export class UiMain {
   registerStartPlugin(startPlugin: StartPlugin) {
     this.startPluginSlot.register(startPlugin);
     return this;
-  }
-
-  /**
-   * Release the compilers `build()` created. A compiler keeps its whole module graph (and rspack's
-   * native side of it) alive, and `bit build` runs every bundling task in one process - the UI
-   * bundle first, then a preview bundle per env - so compilers left open stay resident for all of
-   * them and the process gets OOM-killed partway through. The webpack bundler closes its compiler
-   * the same way after each run.
-   *
-   * Deliberately NOT called from inside `build()`: closing one compiler while another UI root is
-   * still bundling in the same process is untested and a run that did so failed to resolve modules
-   * in the second root. Callers close once every root is done - see BundleUiTask.
-   */
-  async closeBuildCompilers(): Promise<void> {
-    const compilers = this.openBuildCompilers;
-    this.openBuildCompilers = [];
-    await this.closeCompilers(compilers);
   }
 
   /**
@@ -421,7 +414,7 @@ export class UiMain {
       await uiServer.dev({ portRange: port || this.config.portRange });
     } else {
       if (!skipUiBuild) await this.buildUI(uiRootAspectId, uiRoot, rebuild);
-      const bundleUiPath = this.getBundleUiPath(uiRootAspectId);
+      const bundleUiPath = this.getBundleUiPath();
       const bundleUiPublicPath = bundleUiPath ? join(bundleUiPath, publicDir) : undefined;
       const bundleUiRoot =
         this._isBundleUiServed && bundleUiPublicPath && existsSync(bundleUiPublicPath || '')
@@ -687,22 +680,32 @@ export class UiMain {
     return sha1(aspectIds.join(''));
   }
 
+  /**
+   * The bundle is one compilation covering every root, so its `.hash` holds one hash per root
+   * keyed by root aspect id, rather than a bare hash per directory.
+   */
   private readBundleUiHash(uiRootAspectId: string) {
-    const bundleUiPathFromBvm = this.getBundleUiPath(uiRootAspectId);
+    const bundleUiPathFromBvm = this.getBundleUiPath();
     if (!bundleUiPathFromBvm) {
       return '';
     }
     const hashFilePath = join(bundleUiPathFromBvm, BUNDLE_UI_HASH_FILENAME);
-    if (existsSync(hashFilePath)) {
-      return readFileSync(hashFilePath).toString();
+    if (!existsSync(hashFilePath)) return '';
+    try {
+      const hashes = JSON.parse(readFileSync(hashFilePath).toString());
+      return hashes[uiRootAspectId] || '';
+    } catch (err) {
+      // an unreadable hash file only means "no usable pre-bundle" - fall through to a local build
+      // rather than failing the command.
+      this.logger.debug(`readBundleUiHash, failed reading ${hashFilePath}: ${err}`);
+      return '';
     }
-    return '';
   }
 
-  private getBundleUiPath(uiRootAspectId: string): string | undefined {
+  private getBundleUiPath(): string | undefined {
     try {
       const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
-      return join(uiPathFromBvm, BundleUiTask.getArtifactDirectory(uiRootAspectId));
+      return join(uiPathFromBvm, BundleUiTask.getArtifactDirectory());
     } catch (err) {
       this.logger.error(`getBundleUiPath, getAspectDirFromBvm failed with err: ${err}`);
       return undefined;
@@ -712,13 +715,10 @@ export class UiMain {
   private async buildIfNoBundle(uiRootAspectId: string, uiRoot: UIRoot): Promise<boolean> {
     if (this._isBundleUiServed) return false;
 
-    const config = createRspackBrowserConfig(
-      uiRoot.path,
-      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), uiRootAspectId)],
-      uiRoot.name,
-      await this.publicDir(uiRoot)
-    );
-    if (config.output?.path && fs.pathExistsSync(config.output.path as string)) return false;
+    // the same path `createRspackBrowserConfig` derives for `output.path`. computed directly rather
+    // than by building a config, which would resolve every root's aspects just to read a path.
+    const outputPath = pathResolve(uiRoot.path, await this.publicDir(uiRoot));
+    if (fs.pathExistsSync(outputPath)) return false;
     const hash = await this.createBuildUiHash(uiRoot);
     await this.build(uiRootAspectId);
     await this.cache.set(uiRoot.path, hash);
