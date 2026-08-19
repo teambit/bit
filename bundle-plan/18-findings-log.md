@@ -1142,3 +1142,16 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   lockfile) and grafting master's `--skip-tasks PublishComponents` into the branch's `bit ci pr`
   command - note that flag makes the snap-deps isolator fix (`getSnapDependenciesOfSeeders`) fully
   load-bearing, since PR builds no longer publish any snap to npm.
+- **2026-08-19** — applied the same mechanism as the UI-bundling sanity suites (§14 above) to gap
+  11's known-broken test: `custom-env-operations-2.e2e.ts`'s "an env with a preview/bundler but
+  without a compiler" now checks, in a `before()` hook (`this.skip()`), whether it's running
+  against a bundled binary (`helper.command.bitBin !== nonBundledBitBin`) without
+  `uiE2eMode() === 'prebuilt'`, and skips only in that case - a plain binary, or a bundled one with
+  the pre-bundle confirmed present, runs it normally. Added the file to `e2e_test_ui_prebundle`'s
+  mocha invocation alongside the two UI suites. Verified all three states end to end against a real
+  `npm run bundle` build: no mode set → the two problem `it`s show `pending`, the file's other 9
+  pass unaffected; `BIT_E2E_UI_MODE=prebuilt` set → all 11 pass, including both previously-failing
+  assertions (`build succeeded`, `GeneratePreview` ran). Closes gap 11's "stays red in the main
+  sweep" concern for this specific test without touching `e2e_test_esbuild_bundle` at all - it now
+  simply skips there (no mode set) instead of failing, and gets real coverage in
+  `e2e_test_ui_prebundle` instead.

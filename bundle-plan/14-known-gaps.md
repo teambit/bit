@@ -59,24 +59,19 @@
     [18-findings-log.md](18-findings-log.md), 2026-08-19 entries, for the full trace — but the
     practical severity is much lower than first found: it affects local `--rebuild` iteration, not
     what a released bundle actually serves.
-11. **`e2e_test_esbuild_bundle` (the main, un-split e2e sweep) has at least one real, currently
-    unfixed failure caused by the missing preview pre-bundle** —
-    `custom-env-operations-2.e2e.ts`'s "an env with a preview/bundler but without a compiler" ▸
-    "bit build should not fail generating the preview": `Cannot find module
-'@teambit/mdx.modules.mdx-v3-options'` from inside `bit.app.js`, thrown by
-    `EnvPreviewTemplateTask`/`writePreviewEntry`'s `buildPreBundlePreview` helper. Verified
-    2026-08-19 with two real `npm run bundle` builds of the same source, one with the core
-    preview pre-bundle present and one without: **fails without it, passes with it** (both
-    directions reproduced locally, not just reasoned about). This is gap 1's "remaining
-    limitation" in practice, not a separate bug - `EnvPreviewTemplateTask` needs the _core_
-    preview pre-bundle (from `PreBundlePreviewTask`/`build_ui_prebundle`, gap 9) as a foundation
-    even for a workspace-local, non-core env's own preview; without it, it falls into the
-    from-scratch build path that hits gap 2's unresolved `require.resolve` calls. `build_ui_prebundle`
-    (gap 9) produces this pre-bundle, but `e2e_test_esbuild_bundle` doesn't consume it - only
-    `e2e_test_ui_prebundle` does, and only for its own two UI spec files - so this and likely
-    other tests shaped like it are still red in the main sweep. Not fixed this session (surfacing
-    it was the ask); the two options are the same tradeoff already made once for the UI suites:
-    accept that `e2e_test_esbuild_bundle` needs the pre-bundle too (which reopens the "don't delay
-    the main sweep" tension `build_ui_prebundle` was split out to avoid), or single out and skip
-    this specific known-broken class of test in that job until pre-bundle availability is
-    resolved for it as well.
+11. ~~**`e2e_test_esbuild_bundle` has a real, currently-unfixed failure caused by the missing
+    preview pre-bundle.**~~ **Closed 2026-08-19** — `custom-env-operations-2.e2e.ts`'s "an env with
+    a preview/bundler but without a compiler" (`Cannot find module
+'@teambit/mdx.modules.mdx-v3-options'`, thrown by `EnvPreviewTemplateTask`/`writePreviewEntry`'s
+    `buildPreBundlePreview` helper) is gap 1's "remaining limitation" in practice, not a separate
+    bug - `EnvPreviewTemplateTask` needs the _core_ preview pre-bundle (from
+    `PreBundlePreviewTask`/`build_ui_prebundle`, gap 9) as a foundation even for a workspace-local,
+    non-core env's own preview; without it, it falls into the from-scratch build path that hits gap
+    2's unresolved `require.resolve` calls. Verified with two real `npm run bundle` builds of the
+    same source: fails without the pre-bundle, passes with it. Same mechanism as gap 9: the test now
+    skips itself (`this.skip()` in a `before()` hook) when running against a bundled binary without
+    `BIT_E2E_UI_MODE=prebuilt`, and `e2e_test_ui_prebundle` runs it alongside the UI suites - so it
+    no longer fails in `e2e_test_esbuild_bundle` (skips there instead) and gets real coverage where
+    the pre-bundle is actually available. Verified end to end: all three states (no mode, `pending`;
+    `prebuilt` mode, all 11 tests in the file pass). Not a general fix for every test shaped like
+    this - each one needs the same opt-in check added individually.

@@ -1262,11 +1262,15 @@ jobs:
 
   # Injects build_ui_prebundle's fresh pre-bundle into setup_esbuild_bundle's already-built bundle
   # - a plain file copy, since the pre-bundle is static artifacts alongside bit.app.js rather than
-  # compiled into it, so no rebuild is needed - then runs the UI-bundling sanity suites
-  # (ui-start.e2e.ts/ui-ssr.e2e.ts, gated behind BIT_E2E_UI_MODE, see bundle-plan/11-e2e-suite.md)
-  # against the result in `prebuilt` mode. Requires both upstream jobs but runs independently of
-  # e2e_test_esbuild_bundle, so a slow or failing pre-bundle build never delays or fails the main
-  # e2e signal - only this job's own, narrower one.
+  # compiled into it, so no rebuild is needed - then runs, against the result in `prebuilt` mode:
+  # the UI-bundling sanity suites (ui-start.e2e.ts/ui-ssr.e2e.ts, gated behind BIT_E2E_UI_MODE, see
+  # bundle-plan/11-e2e-suite.md) and any other spec file whose own gate checks for the same thing
+  # (custom-env-operations-2.e2e.ts's "preview/bundler but no compiler" describe block, added
+  # 2026-08-19 - bundle-plan §10 gap 11 - needs the *core* preview pre-bundle to build a
+  # workspace-local env's preview under the bundle at all; add further files here the same way).
+  # Requires both upstream jobs but runs independently of e2e_test_esbuild_bundle, so a slow or
+  # failing pre-bundle build never delays or fails the main e2e signal - only this job's own,
+  # narrower one.
   e2e_test_ui_prebundle:
     <<: *defaults
     resource_class: medium
@@ -1296,13 +1300,14 @@ jobs:
           name: verify the bundled binary works
           command: source $BASH_ENV && bit-bundled --version
       - run:
-          name: run the UI-bundling sanity suites against the real bundle
+          name: run the prebuilt-mode e2e suites against the real bundle
           command: |
             cd bit
             npx registry-mock prepare
             BIT_E2E_UI_MODE=prebuilt npm_config_bit_bin=bit-bundled NODE_OPTIONS=--no-warnings \
               npx mocha --require ./babel-register \
-              e2e/harmony/ui-start.e2e.ts e2e/harmony/ui-ssr.e2e.ts
+              e2e/harmony/ui-start.e2e.ts e2e/harmony/ui-ssr.e2e.ts \
+              e2e/harmony/custom-env-operations-2.e2e.ts
           no_output_timeout: '10m'
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs

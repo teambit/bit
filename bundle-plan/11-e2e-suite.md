@@ -115,8 +115,13 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save` from step 1 above, an
   copies `build_ui_prebundle`'s fresh pre-bundle directly into `setup_esbuild_bundle`'s
   already-built bundle output (a plain file copy: the pre-bundle is static artifacts alongside
   `bit.app.js`, not compiled into it, so nothing needs rebuilding) and runs
-  `BIT_E2E_UI_MODE=prebuilt` against just `ui-start.e2e.ts`/`ui-ssr.e2e.ts` — the same explicit
-  two-file invocation as step 2 above, not the full-suite sweep.
+  `BIT_E2E_UI_MODE=prebuilt` against an explicit file list — `ui-start.e2e.ts`, `ui-ssr.e2e.ts`,
+  and `custom-env-operations-2.e2e.ts` (its "preview/bundler but no compiler" describe block needs
+  the same core pre-bundle for a different reason — `EnvPreviewTemplateTask`, not `bit start` —
+  see bundle-plan §10 gap 11) — not the full-suite sweep. Add further spec files here the same way:
+  gate the specific `describe`/`it` with a `uiE2eMode()` check (`this.skip()` in a `before()` hook
+  works for an existing file without touching its other tests), then list the file in this job's
+  mocha invocation.
 
 `e2e_test_esbuild_bundle` itself is untouched — no added step, no `BIT_E2E_UI_MODE`, so it starts
 and finishes exactly as fast as before this work. `e2e_test_ui_prebundle` runs alongside it; a slow

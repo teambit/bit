@@ -4,6 +4,7 @@ import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 import chaiString from 'chai-string';
+import { uiE2eMode } from '../http-helper';
 chai.use(chaiFs);
 chai.use(chaiString);
 describe('custom env (config and versioning scenarios) (part 2)', function () {
@@ -74,7 +75,18 @@ describe('custom env (config and versioning scenarios) (part 2)', function () {
   });
   describe('an env with a preview/bundler but without a compiler', () => {
     let buildOutput: string;
-    before(() => {
+    before(function () {
+      // EnvPreviewTemplateTask needs the *core* preview pre-bundle as a foundation even for this
+      // workspace-local env's own preview - without it (running the esbuild CLI bundle with no
+      // pre-bundle baked in) it falls into a from-scratch build path that hits an unresolved
+      // `require.resolve('@teambit/mdx.modules.mdx-v3-options')` inside the bundle itself
+      // (bundle-plan §10 gap 11, verified 2026-08-19). Runs normally against a plain binary; against
+      // a bundled one, only once BIT_E2E_UI_MODE=prebuilt confirms a real pre-bundle is available
+      // (see uiE2eMode() in ../http-helper.ts and e2e_test_ui_prebundle in .circleci/config.yml,
+      // which runs this file specifically for that reason).
+      if (helper.command.bitBin !== helper.command.nonBundledBitBin && uiE2eMode() !== 'prebuilt') {
+        this.skip();
+      }
       // preview is disabled by default in e2e to speed up tagging. enable it so the GeneratePreview
       // task actually runs - this is the path that used to fail for a compiler-less env.
       helper.scopeHelper.setWorkspaceWithRemoteScope({ disablePreview: false });
