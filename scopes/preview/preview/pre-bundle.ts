@@ -15,6 +15,7 @@ import normalizePath from 'normalize-path';
 import { PreviewAspect } from './preview.aspect';
 import { clearConsole } from './pre-bundle-utils';
 import { getPreviewDistDir } from './mk-temp-dir';
+import { writeBundleStats } from './bundle-stats';
 import { createRspackConfig } from './rspack/rspack.config';
 
 const previewDistDir = getPreviewDistDir();
@@ -118,6 +119,12 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
     if (results?.hasErrors()) {
       clearConsole();
       throw new Error(results?.toString({}));
+    }
+    // opt-in, same switch the ui bundle uses - see `BUNDLE_STATS_ENV_VAR`. never fails the build.
+    try {
+      writeBundleStats(results, 'preview');
+    } catch (err: any) {
+      logger.debug(`failed writing preview bundle stats: ${err?.message || err}`);
     }
     return results;
   } finally {
