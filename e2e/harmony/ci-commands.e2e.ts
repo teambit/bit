@@ -278,22 +278,35 @@ describe('ci commands', function () {
   describe('bit ci pr reuses the existing remote lane across subsequent PR commits', () => {
     let firstPrOutput: string;
     let secondPrOutput: string;
+    let comp3HeadAfterFirstRun: string;
+    let comp3HeadAfterSecondRun: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       setupGitRemote();
-      setupComponentsAndInitialCommit();
+      setupComponentsAndInitialCommit(3);
+
+      const getComp3RemoteLaneHead = () => {
+        const lane = JSON.parse(
+          helper.command.runCmd(`bit lane show ${helper.scopes.remote}/feature-reuse-lane-test --remote --json`)
+        );
+        const comp3 = lane.components.find((component: any) => component.id.endsWith('/comp3'));
+        if (!comp3) throw new Error(`comp3 was not found on the reused lane: ${JSON.stringify(lane.components)}`);
+        return comp3.head;
+      };
 
       helper.command.runCmd('git checkout -b feature/reuse-lane-test');
 
-      helper.fs.outputFile('comp1/comp1.js', 'console.log("first commit");');
-      helper.command.runCmd('git add comp1/comp1.js');
+      helper.fs.outputFile('comp3/comp3.js', 'console.log("first commit");');
+      helper.command.runCmd('git add comp3/comp3.js');
       helper.command.runCmd('git commit -m "feat: first commit"');
       firstPrOutput = helper.command.runCmd('bit ci pr --keep-lane --message "first"');
+      comp3HeadAfterFirstRun = getComp3RemoteLaneHead();
 
       helper.fs.outputFile('comp2/comp2.js', 'console.log("second commit");');
       helper.command.runCmd('git add comp2/comp2.js');
       helper.command.runCmd('git commit -m "feat: second commit"');
       secondPrOutput = helper.command.runCmd('bit ci pr --keep-lane --message "second"');
+      comp3HeadAfterSecondRun = getComp3RemoteLaneHead();
     });
     it('should report that the lane was reused on the second run', () => {
       const cleanOutput = removeChalkCharacters(secondPrOutput) as string;
@@ -309,6 +322,9 @@ describe('ci commands', function () {
       const remoteLanes = helper.command.listRemoteLanesParsed();
       const matching = remoteLanes.lanes.filter((l: any) => l.name === 'feature-reuse-lane-test');
       expect(matching).to.have.lengthOf(1);
+    });
+    it('should preserve the head of a component that was unchanged in the second run', () => {
+      expect(comp3HeadAfterSecondRun).to.equal(comp3HeadAfterFirstRun);
     });
   });
 

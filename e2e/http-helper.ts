@@ -27,6 +27,12 @@ export class HttpHelper {
   constructor(
     private helper: Helper,
     private port = DEFAULT_HTTP_PORT,
+    /**
+     * extra flags for `bit start`. `--rebuild` is the one that matters for anything asserting on the
+     * UI itself: without it the server resolves the pre-built bundle from the bvm install, so the
+     * test measures whatever bit version happens to be installed rather than the code under test.
+     */
+    private extraArgs: string[] = [],
     serverBin?: string
   ) {
     this.serverBin = serverBin || helper.command.nonBundledBitBin;
@@ -40,7 +46,7 @@ export class HttpHelper {
     // (which surfaced as OutdatedIndexJson / MergeConflictOnRemote in the bbit nightly).
     await this.waitForPortToBeFree();
     return new Promise((resolve, reject) => {
-      const args = ['start', '--verbose', '--log', '--port', String(this.port)];
+      const args = ['start', '--verbose', '--log', '--port', String(this.port), ...this.extraArgs];
       const cmd = `${this.serverBin} ${args.join(' ')}`;
       const cwd = this.helper.scopes.remotePath;
       if (this.helper.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console

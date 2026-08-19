@@ -29,6 +29,7 @@
     "lint-circle": "mkdir -p junit && oxlint --deny-warnings --format junit scopes e2e components > junit/oxlint-results.xml",
     "lint:fix": "oxlint --fix scopes e2e components",
     "lint-full": "./scripts/validate-import-named-aspects.sh && ./scripts/validate-no-ramda.sh && node scripts/validate-pkg-exist-in-pkg-json.js && npm run lint",
+    "analyze-bundle": "node scripts/analyze-bundle.mjs",
     "format": "prettier \"{e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\" --write",
     "prettier:check": "prettier --list-different \"{e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\"",
     "mocha-circleci": "cross-env NODE_OPTIONS='--no-warnings --max-old-space-size=5000' registry-mock prepare && mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors --exit",
