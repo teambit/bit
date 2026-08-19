@@ -2,7 +2,13 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-08-18 (produced a real local UI/preview pre-bundle for the first time — the
+> Last updated: 2026-08-19 (merged `origin/remove-core-envs-from-manifest` again — upstream
+> replaced `BundleUiTask`/`UiMain.build`'s per-root two-compilation UI bundling with a single
+> rspack compilation covering both roots; reconciled by hand, keeping upstream's architecture and
+> single-hash-file layout while porting this branch's `forPreBundle` core-aspect filtering and
+> `getAspectArtifactDir`-based `getBundleUiPath` fix onto it. See
+> [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-08-19 entry)
+> Previously, 2026-08-18 (produced a real local UI/preview pre-bundle for the first time — the
 > `WorkspaceAspectsLoader` hang blocking `bd build` is fixed upstream — added a gitignored
 > `.bundle-cache/` so it survives `node_modules` wipes, and stopped shipping esbuild's 8.9 MB
 > `metafile.json` inside the published package (still written for local/CI builds), and moved

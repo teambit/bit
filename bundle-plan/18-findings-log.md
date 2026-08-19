@@ -944,3 +944,21 @@ found duplicate capsules: teambit.harmony/envs/bit-cli-app-env@9904eb…`. The j
   _fourth_ dist-wipe variant, inside virtual-store slots of injected components, which
   `preserve-loaded-component-dist-dirs` deliberately does not cover; worth a follow-up if that job
   stays red after the OOM is addressed), and the known `e2e_test_esbuild_bundle` triaged set.
+
+- **2026-08-19** — merged `origin/remove-core-envs-from-manifest` into `bit-bundle3`
+  (`381bdf0f0`). Upstream landed `9f3e39ee9` ("bundle both ui roots in one compilation, 24MB to
+  16MB") and `3f8ee8d58` between this branch's previous merge of that base and now, replacing
+  `BundleUiTask`/`UiMain.build`'s per-root two-compilation approach (the one added here across
+  `959e8ee89`/`6f682431d`/`460464ce4` to fix an OOM from two live rspack module graphs) with a
+  single rspack compilation carrying one entry per UI root, so shared chunks are emitted once
+  instead of duplicated - a stronger fix for the same OOM, and it obsoleted `deferClose`/
+  `openBuildCompilers`/`closeBuildCompilers`, which are gone. Reconciled by hand: kept upstream's
+  single-compilation architecture and its `.hash` layout (one JSON file at
+  `artifacts/ui-bundle/`, keyed by root aspect id, instead of a `.hash` per root directory), but
+  ported this branch's `forPreBundle` flag onto it (`UiMain.build`'s `options.forPreBundle` now
+  filters every entry's aspects through `filterCoreAspectDefs` via `resolveUiAspects`, and
+  `BundleUiTask` passes `{ forPreBundle: true }` and hashes with `createBundleUiHash(uiRoot, 'ui',
+true)` so the artifact and its hash agree - see §17d/17e). Also kept this branch's
+  `getBundleUiPath` fix (`getAspectArtifactDir`, tries the running bit's own artifacts before
+  bvm) rather than upstream's reverted-to `getAspectDirFromBvm`, adapted to the new single
+  no-arg artifact directory. `npm run lint` (tsc + oxlint) clean after reconciliation.
