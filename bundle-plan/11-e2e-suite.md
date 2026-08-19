@@ -100,14 +100,28 @@ Step 2's `ensureBundle` restores whatever is in `.bundle-cache/` into the bundle
 does not itself produce a pre-bundle — that is step 1); a stale cache silently tests stale UI code,
 same caveat as §17i's "plain file cache, not a freshness gate" note.
 
-**Wired into CI as of 2026-08-19.** `setup_esbuild_bundle` now runs step 1 itself (`./bin/bit.js
-build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules --tasks
-"BundleUI,PreBundlePreview"` + `bundle:prebundle-cache:save`) before building the esbuild bundle, so
-the bundle `e2e_test_esbuild_bundle` runs against always has a fresh pre-bundle baked in — and that
-job sets `BIT_E2E_UI_MODE: prebuilt`, so `ui-start.e2e.ts`/`ui-ssr.e2e.ts` run for real as part of
-its normal 40-way parallel sweep (unlike step 2 above, there's no need to target the two files
-explicitly — they're just two more spec files in that job's split, gated by the env var like
-everywhere else). `e2e_test` (the plain, non-bundle suite — currently disabled entirely, see its
-comment in `.circleci/config.yml`) still sets no mode, so `rebuild` mode has no CI coverage; that
-one is still local-only, per its own tradeoff (a cold `--rebuild` is minutes, not worth paying on
-every commit when `prebuilt` mode already covers the shipped artifact).
+**Wired into CI as of 2026-08-19 — as two jobs parallel to the main e2e signal, not chained in
+front of it.** An earlier version of this wiring put the pre-bundle build inside
+`setup_esbuild_bundle` itself, ahead of the esbuild build — which meant every one of
+`e2e_test_esbuild_bundle`'s 40 parallel nodes had to wait for a real `bit build` to finish first,
+just to serve two spec files. Reworked into:
+
+- **`build_ui_prebundle`** (parallel to `setup_esbuild_bundle`, both requiring only
+  `setup_harmony`) — runs the dev-binary install + `bit build ... --tasks
+BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save` from step 1 above, and persists
+  `.bundle-cache/` to the workspace. This is the slow part (a real `bit build`, plus the dev-binary
+  install it needs first — see the job's own comment for why); it no longer blocks anything.
+- **`e2e_test_ui_prebundle`** (requires both `setup_esbuild_bundle` _and_ `build_ui_prebundle`) —
+  copies `build_ui_prebundle`'s fresh pre-bundle directly into `setup_esbuild_bundle`'s
+  already-built bundle output (a plain file copy: the pre-bundle is static artifacts alongside
+  `bit.app.js`, not compiled into it, so nothing needs rebuilding) and runs
+  `BIT_E2E_UI_MODE=prebuilt` against just `ui-start.e2e.ts`/`ui-ssr.e2e.ts` — the same explicit
+  two-file invocation as step 2 above, not the full-suite sweep.
+
+`e2e_test_esbuild_bundle` itself is untouched — no added step, no `BIT_E2E_UI_MODE`, so it starts
+and finishes exactly as fast as before this work. `e2e_test_ui_prebundle` runs alongside it; a slow
+or failing pre-bundle build delays or fails only that job, never the main e2e signal. `e2e_test`
+(the plain, non-bundle suite — currently disabled entirely, see its comment in
+`.circleci/config.yml`) still sets no mode, so `rebuild` mode has no CI coverage; that one is still
+local-only, per its own tradeoff (a cold `--rebuild` is minutes, not worth paying on every commit
+when `prebuilt` mode already covers the shipped artifact).

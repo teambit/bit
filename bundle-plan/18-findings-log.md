@@ -1060,3 +1060,22 @@ install`), down from the previously recorded 216 MB / 2,933 files - the ~60 MB U
   render-plugin context, not through `ClientContext`'s children. Not investigated further this
   session - updated [14-known-gaps.md](14-known-gaps.md) gap 10 accordingly rather than chase it,
   per the session's priority (PR description sizes, #10634, CI wiring).
+- **2026-08-19** — reworked the CI wiring: the first version put the pre-bundle build inside
+  `setup_esbuild_bundle` itself, ahead of the esbuild build, which would have delayed all 40
+  parallel nodes of `e2e_test_esbuild_bundle` behind a real `bit build` just to serve two spec
+  files. Split into two new jobs instead - `build_ui_prebundle` (parallel to `setup_esbuild_bundle`,
+  both requiring only `setup_harmony`: dev-binary install + `bit build ... --tasks
+BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-cache/`) and
+  `e2e_test_ui_prebundle` (requires both `setup_esbuild_bundle` and `build_ui_prebundle`: copies
+  the fresh pre-bundle directly into the already-built bundle's output - a plain file copy, no
+  rebuild needed - then runs `BIT_E2E_UI_MODE=prebuilt` against just the two UI spec files). Neither
+  new job is in `e2e_test_esbuild_bundle`'s dependency chain, so a slow or failing pre-bundle build
+  delays or fails only its own narrower job.
+- **2026-08-19** — also removed the `only: /^bit-bundle.*/` branch filter from all four
+  esbuild-bundle jobs (`setup_esbuild_bundle`, `e2e_test_esbuild_bundle`, and the two new ones). It
+  predated this session - `setup_esbuild_bundle`'s own comment called it "gated to the bundling
+  branches until it is proven green" - but left as-is it would have stopped this entire CI signal
+  from running anywhere the moment this branch merged to `master`, since `master` never matches
+  that pattern. Now runs on every branch; the tradeoff is real added CI cost (an esbuild bundle
+  build + its 40-way e2e sweep + the two new jobs) on every PR going forward, not just
+  `bit-bundle*` ones - accepted deliberately, not a default worth revisiting without reason.

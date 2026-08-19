@@ -1154,43 +1154,15 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      # produces a real local ui/preview pre-bundle (bundle-plan §17i) and caches it under
-      # .bundle-cache/, which the next step's `bundle:ensure` -> `bundle.ts` restores automatically
-      # before bundling. Without this, the esbuild bundle ships with no pre-bundle at all (there is
-      # no committed .bundle-cache/ - it's gitignored - and this is the first build task run of any
-      # kind in this job), so `bit start` in e2e_test_esbuild_bundle would always fall back to a
-      # rebuild the bundle's default distribution has no rspack to perform. `./bin/bit.js`, not
-      # `bit`/`bd`: this job sets up neither a bvm link nor a dev-binary global (see the comment
-      # below) - the compiled dev binary is only reachable as a script path, and it must be a
-      # single argv-friendly path (no spaces) since prebundle-cache.ts spawns it without a shell.
-      # If this OOMs, bump resource_class - it's a narrow build (2 components + their envs), much
-      # lighter than bit_pr's full pipeline on 2xlarge, but untested at CI scale.
-      - run:
-          name: build the ui/preview pre-bundle and cache it
-          command: |
-            cd bit
-            ./bin/bit.js build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules \
-              --tasks "BundleUI,PreBundlePreview"
-            BIT_BIN="./bin/bit.js" npm run bundle:prebundle-cache:save
-          no_output_timeout: '15m'
       # no bvm and no compile step: `bit install` compiles by default (which is why setup_harmony
       # has `bbit compile` commented out), so the attached workspace already has every component's
       # dist/ - the only input the bundler needs. Building the bundle itself is plain node + npm.
       - run:
           name: build the esbuild bundle
           # bundle:ensure builds only when its stamp differs and then installs the externals; on a
-          # fresh CI machine that is always a full build, which is what we want here. It restores
-          # the pre-bundle cache from the previous step automatically (bundle.ts).
+          # fresh CI machine that is always a full build, which is what we want here.
           command: cd bit && npm run bundle:ensure -- --out-dir /home/circleci/bit/esbuild-bundle
           no_output_timeout: '30m'
-      - run:
-          name: verify the pre-bundle shipped
-          # a missing pre-bundle here means bit start will always fall back to a rebuild the bundle
-          # cannot perform - fail loud rather than let e2e_test_esbuild_bundle's prebuilt-mode UI
-          # suite (ui-start.e2e.ts/ui-ssr.e2e.ts) silently exercise a rebuild path instead.
-          command: |
-            test -f /home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/.hash
-            test -f /home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/preview/artifacts/ui-bundle/.hash
       - run:
           name: smoke test the bundle
           command: |
@@ -1213,13 +1185,6 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-      # opts ui-start.e2e.ts/ui-ssr.e2e.ts into `prebuilt` mode (see bundle-plan/11-e2e-suite.md) -
-      # they otherwise skip entirely to avoid a --rebuild the bundle has no rspack to perform.
-      # setup_esbuild_bundle's "build the ui/preview pre-bundle" step is what makes this a real
-      # test rather than a no-op: without a fresh pre-bundle baked into the bundle, `bit start`
-      # here would just find a matching-or-missing .hash and either serve a stale artifact or
-      # (correctly) fail to serve one at all - neither of which is what this env var is for.
-      BIT_E2E_UI_MODE: prebuilt
     parallelism: 40
     steps:
       - attach_workspace:
@@ -1239,6 +1204,104 @@ jobs:
           command: source $BASH_ENV && bit-bundled --version
       - e2e_test_cmd:
           bit_bin: "--bit_bin=bit-bundled"
+
+  # Builds a real ui/preview pre-bundle from the dev binary (bundle-plan §17i) and caches it under
+  # .bundle-cache/. Deliberately its own job, parallel to (not chained in front of)
+  # setup_esbuild_bundle: producing this is a real `bit build`, minutes on top of the esbuild
+  # bundle's own build, and it would otherwise delay every node of e2e_test_esbuild_bundle's
+  # 40-way sweep just to serve two spec files. e2e_test_ui_prebundle combines this job's output
+  # with setup_esbuild_bundle's once both are ready, so neither job blocks the other.
+  build_ui_prebundle:
+    <<: *defaults
+    resource_class: large
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+    steps:
+      - attach_workspace:
+          at: ./
+      - setup_bit_environment
+      - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run:
+          name: bit install (dev binary)
+          # same reconciliation as bit_pr's own "bit install (dev binary)" step, and for the same
+          # reason (see its comment there): setup_harmony's release-bit install filters the legacy
+          # core envs' packages out of node_modules, but the dev binary - needed here since
+          # teambit.ui-foundation/ui and teambit.preview/preview are core aspects that a bvm-linked
+          # release binary would resolve to its own published packages for, not this branch's
+          # modified source (bundle-plan §17i) - treats them as regular envs and needs them present.
+          command: |
+            cd bit
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
+            node bin/bit.js install
+          no_output_timeout: '20m'
+          environment:
+            RAYON_NUM_THREADS: '4'
+      - run:
+          name: build the ui/preview pre-bundle and cache it
+          # a narrow build - these 2 components and their envs, not bit_pr's full temp-lane
+          # pipeline - so lighter than bit_pr's 2xlarge, but untested at CI scale: bump
+          # resource_class above if this OOMs.
+          command: |
+            cd bit
+            node bin/bit.js build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules \
+              --tasks "BundleUI,PreBundlePreview"
+            BIT_BIN=bit npm run bundle:prebundle-cache:save
+          no_output_timeout: '15m'
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit/.bundle-cache
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
+  # Injects build_ui_prebundle's fresh pre-bundle into setup_esbuild_bundle's already-built bundle
+  # - a plain file copy, since the pre-bundle is static artifacts alongside bit.app.js rather than
+  # compiled into it, so no rebuild is needed - then runs the UI-bundling sanity suites
+  # (ui-start.e2e.ts/ui-ssr.e2e.ts, gated behind BIT_E2E_UI_MODE, see bundle-plan/11-e2e-suite.md)
+  # against the result in `prebuilt` mode. Requires both upstream jobs but runs independently of
+  # e2e_test_esbuild_bundle, so a slow or failing pre-bundle build never delays or fails the main
+  # e2e signal - only this job's own, narrower one.
+  e2e_test_ui_prebundle:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: inject the pre-bundle into the built esbuild bundle
+          command: |
+            UI_OUT=/home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/ui/artifacts
+            PREVIEW_OUT=/home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/preview/artifacts
+            mkdir -p "$UI_OUT" "$PREVIEW_OUT"
+            cp -r bit/.bundle-cache/ui-preview-prebundle/ui/artifacts/. "$UI_OUT"/
+            cp -r bit/.bundle-cache/ui-preview-prebundle/preview/artifacts/. "$PREVIEW_OUT"/
+            test -f "$UI_OUT/ui-bundle/.hash"
+            test -f "$PREVIEW_OUT/ui-bundle/.hash"
+      - run:
+          name: put the bundled bit on PATH as "bit-bundled"
+          # the launcher resolves the bundle relative to its own realpath, so a symlink is enough.
+          command: |
+            mkdir -p /home/circleci/.npm-global/bin
+            BIT_BUNDLED=/home/circleci/bit/esbuild-bundle/bin/bit
+            chmod +x "$BIT_BUNDLED"
+            ln -sf "$BIT_BUNDLED" /home/circleci/.npm-global/bin/bit-bundled
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: verify the bundled binary works
+          command: source $BASH_ENV && bit-bundled --version
+      - run:
+          name: run the UI-bundling sanity suites against the real bundle
+          command: |
+            cd bit
+            npx registry-mock prepare
+            BIT_E2E_UI_MODE=prebuilt npm_config_bit_bin=bit-bundled NODE_OPTIONS=--no-warnings \
+              npx mocha --require ./babel-register \
+              e2e/harmony/ui-start.e2e.ts e2e/harmony/ui-ssr.e2e.ts
+          no_output_timeout: '10m'
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
   # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
@@ -1740,19 +1803,24 @@ workflows:
               only: /^optimize-node-modules.*|^cleanup-script.*|.*cleanup.*script.*/
           requires:
             - setup_bundle_simulation
-      # the esbuild CLI bundle - gated to the bundling branches until it is proven green
+      # the esbuild CLI bundle - runs on every branch (ungated 2026-08-19; was gated to bit-bundle*
+      # branches only while unproven, which would have stopped running entirely once that work
+      # merged to master instead of continuing there).
       - setup_esbuild_bundle:
-          filters:
-            branches:
-              only: /^bit-bundle.*/
           requires:
             - setup_harmony
       - e2e_test_esbuild_bundle:
-          filters:
-            branches:
-              only: /^bit-bundle.*/
           requires:
             - setup_esbuild_bundle
+      # parallel to setup_esbuild_bundle/e2e_test_esbuild_bundle, not chained in front of them -
+      # see build_ui_prebundle's own comment for why.
+      - build_ui_prebundle:
+          requires:
+            - setup_harmony
+      - e2e_test_ui_prebundle:
+          requires:
+            - setup_esbuild_bundle
+            - build_ui_prebundle
       - bit_pr:
           requires:
             - setup_harmony

@@ -27,12 +27,13 @@
 8. **The bundle is built from `dist/`**, so `bit compile` must be current. A stale dist silently
    produces a stale bundle.
 9. ~~**The UI-bundling sanity suites (`ui-ssr.e2e.ts`, `ui-start.e2e.ts`) run in neither CI
-   job.**~~ **Closed 2026-08-19** — `setup_esbuild_bundle` now builds a real ui/preview pre-bundle
-   and saves it to `.bundle-cache/` before bundling, and `e2e_test_esbuild_bundle` sets
-   `BIT_E2E_UI_MODE: prebuilt`, so both suites run for real as part of that job's normal 40-way
-   parallel sweep. See [11-e2e-suite.md](11-e2e-suite.md#the-ui-bundling-sanity-suites-ui-ssre2ets-ui-starte2ets--two-modes-both-opt-in-2026-08-19).
-   Remaining gap: `rebuild` mode (a local-only, fast-iteration path) still has no CI coverage — not
-   pursued, since `prebuilt` mode already covers the shipped artifact and a cold `--rebuild` is
+   job.**~~ **Closed 2026-08-19** — two new jobs, `build_ui_prebundle` and `e2e_test_ui_prebundle`,
+   run in parallel with (not chained in front of) `setup_esbuild_bundle`/`e2e_test_esbuild_bundle`,
+   so producing the pre-bundle never delays the main e2e signal. See
+   [11-e2e-suite.md](11-e2e-suite.md#the-ui-bundling-sanity-suites-ui-ssre2ets-ui-starte2ets--two-modes-both-opt-in-2026-08-19)
+   for the job split. Remaining gap: `rebuild` mode (a local-only, fast-iteration path) still has no
+   CI coverage — not pursued, since `prebuilt` mode already covers the shipped artifact and a cold
+   `--rebuild` is
    minutes.
 10. **Scope UI SSR crashes in `--rebuild` (local dev) mode only — the shipped pre-bundle is fine.**
     `[ssr] failed at '/'`: `window is not defined` inside `useUserAgent`/`useIsMobile`/`Tooltip`,
