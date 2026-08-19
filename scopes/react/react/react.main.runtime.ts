@@ -20,8 +20,10 @@ import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
 import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig, TsConfigTransformer } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
-import type { WebpackMain, Configuration, WebpackConfigTransformer } from '@teambit/webpack';
-import { WebpackAspect } from '@teambit/webpack';
+import type { Configuration } from 'webpack';
+import type { WebpackConfigTransformer } from '@teambit/webpack.webpack-bundler';
+import type { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
 import type { GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
 import type { Workspace } from '@teambit/workspace';
@@ -55,7 +57,7 @@ type ReactDeps = [
   EnvsMain,
   TypescriptMain,
   CompilerMain,
-  WebpackMain,
+  PubsubMain,
   Workspace,
   GraphqlMain,
   PkgMain,
@@ -415,7 +417,7 @@ export class ReactMain {
     EnvsAspect,
     TypescriptAspect,
     CompilerAspect,
-    WebpackAspect,
+    PubsubAspect,
     WorkspaceAspect,
     GraphqlAspect,
     PkgAspect,
@@ -434,7 +436,7 @@ export class ReactMain {
       envs,
       tsAspect,
       compiler,
-      webpack,
+      pubsub,
       workspace,
       graphql,
       pkg,
@@ -455,7 +457,7 @@ export class ReactMain {
     const reactEnv = new ReactEnv(
       tsAspect,
       compiler,
-      webpack,
+      pubsub,
       workspace,
       workerMain,
       pkg,
