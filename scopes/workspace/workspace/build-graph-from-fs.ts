@@ -158,10 +158,11 @@ export class GraphFromFsBuilder {
     }
     // import in bounded chunks: one big importMany holds all the fetched objects and their
     // VersionDependencies in memory at once, which OOMs constrained machines on big graphs.
-    // chunking keeps the round-trips low while letting each batch be GC'ed.
-    const chunks = chunk(uniqDeps, 50);
-    await mapSeries(chunks, (depsChunk) =>
-      scopeComponentsImporter.importMany({
+    // chunking keeps the round-trips low while letting each batch be GC'ed. a plain loop (not
+    // mapSeries) so the returned VersionDependencies of each chunk are discarded right away
+    // instead of being accumulated into a results array.
+    for (const depsChunk of chunk(uniqDeps, 50)) {
+      await scopeComponentsImporter.importMany({
         ids: ComponentIdList.fromArray(depsChunk),
         preferDependencyGraph: useLazyImport,
         // in lazy mode this is a best-effort batch prefetch of an unfiltered dep list - deps that
@@ -173,8 +174,8 @@ export class GraphFromFsBuilder {
         reason: useLazyImport
           ? 'for building a filtered graph from the workspace (lazy)'
           : 'for building a graph from the workspace',
-      })
-    );
+      });
+    }
     allDepsNotImported.forEach((id) => this.importedIds.add(id.toString()));
   }
 
