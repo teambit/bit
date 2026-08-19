@@ -102,11 +102,19 @@ describe('snapshot and restore of component dists the install wiped in place', (
     expect(fs.readdirSync(target)).to.have.lengthOf(0);
   });
 
-  it('should not recreate a package directory the install removed altogether', async () => {
+  it('should pre-create the root dist when the install removed the whole package dir, for the linker to fill around', async () => {
     const snapshot = await snapshotComponentDistDirs(workspace, [pkgName]);
     fs.removeSync(pkgDir);
     await restoreWipedComponentDistDirs(snapshot);
-    expect(fs.existsSync(pkgDir)).to.equal(false);
+    expect(fs.existsSync(path.join(distDir, 'constants.js'))).to.equal(true);
+  });
+
+  it('should not recreate a slot directory the install removed altogether', async () => {
+    writeDist(slotPkgDir());
+    const snapshot = await snapshotComponentDistDirs(workspace, [pkgName]);
+    fs.removeSync(path.dirname(path.dirname(slotPkgDir()))); // the whole .pnpm slot
+    await restoreWipedComponentDistDirs(snapshot);
+    expect(fs.existsSync(slotPkgDir())).to.equal(false);
   });
 
   it('should clone with hard links, not data copies, when the filesystem allows it', async () => {
