@@ -938,9 +938,13 @@ jobs:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
           # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
-          # NOTE: PR builds run the FULL pipeline by default. To trade specific tasks for speed on a
-          # given PR (no YAML change needed), add a `[skip-tasks: <names>]` token to the commit
-          # message, e.g. `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents]`.
+          # --skip-tasks PublishComponents: a PR build validates the pipeline, it doesn't need the
+          # snap-tagged versions on registry.npmjs.org. Publishing every changed component on every
+          # push shares one npm token across all open PRs and rate-limits it (429 on PUT); the
+          # packages are published for real on the export to main. Every other task still runs.
+          # To trade more tasks for speed on a given PR (no YAML change needed), add a
+          # `[skip-tasks: <names>]` token to the commit message, e.g.
+          # `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate]` - it merges with the flag below.
           # No --keep-lane: the reusing flow serves components unchanged since an earlier export
           # from the lane, with artifacts built from older commits of the branch. Capsules then mix
           # generations of @teambit packages and cross-copy `instanceof` breaks in capsule spec
@@ -959,7 +963,7 @@ jobs:
               sleep 15
             done) &
             SAMPLER=$!
-            bit ci pr --build --skip-cleanup
+            bit ci pr --build --skip-cleanup --skip-tasks PublishComponents
             STATUS=$?
             kill $SAMPLER 2>/dev/null || true
             exit $STATUS
@@ -1040,8 +1044,8 @@ jobs:
       - run: cd bit && npm run generate-core-aspects-ids
       - run:
           name: 'bit ci merge'
-          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
-          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 3 ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 4 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000

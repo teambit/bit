@@ -292,8 +292,8 @@ export class UIServer {
     server.listen(port);
     this._port = port;
 
-    // important: we use the string of the following message for the http.e2e.ts. if you change the message,
-    // please make sure you change the `HTTP_SERVER_READY_MSG` const.
+    // important: the e2e HttpHelper waits on this exact string to know the server is up (it builds
+    // it per UI root, in `readyMessageFor`). if you change the message, change that too.
     const readyMessage = `UI server of ${this.uiRootExtension} is listening to port ${port}`;
     this.logger.info(readyMessage);
     this.setReady();

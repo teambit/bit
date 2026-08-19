@@ -68,12 +68,20 @@ export class UiUI {
 
     const reactSsr = new ServerRenderer(lifecyclePlugins);
     const fullHtml = await reactSsr.render(
-      <ClientContext>
-        <SSRBrowserProvider value={ssrContent.browser}>
+      // `SSRBrowserProvider` wraps `ClientContext`, not the other way round. `useUserAgent` reads
+      // this context and, finding nothing, falls back to `window.navigator` - which on the server
+      // throws `ReferenceError: window is not defined` and takes the whole render down (the ssr
+      // middleware then silently serves the empty client shell). Anything rendered outside this
+      // provider is therefore a latent server crash, and `ClientContext` renders real UI of its
+      // own - icons, the theme switcher, the loader ribbon, the tooltip mount point - so it has to
+      // be inside. Nesting it the other way only appeared to work while nothing in that subtree
+      // happened to call `useIsMobile`.
+      <SSRBrowserProvider value={ssrContent.browser}>
+        <ClientContext>
           {hudItems}
           {routes}
-        </SSRBrowserProvider>
-      </ClientContext>,
+        </ClientContext>
+      </SSRBrowserProvider>,
       ssrContent
     );
 

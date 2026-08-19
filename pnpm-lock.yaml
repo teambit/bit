@@ -84,7 +84,7 @@ importers:
         specifier: ^2.0.0
         version: 2.0.2
       '@bitdev/react.generators.react-templates':
-        specifier: ^6.0.3
+        specifier: ^6.0.9
         version: 6.0.9
       '@bitdev/symphony.generators.symphony-starters':
         specifier: ^1.0.0
@@ -23351,6 +23351,313 @@ importers:
       '@teambit/node.envs.node-babel-mocha':
         specifier: 2.0.4
         version: 2.0.4(@babel/core@7.28.3)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
+
+  scopes/react/react:
+    dependencies:
+      '@babel/helper-plugin-test-runner':
+        specifier: 7.16.7
+        version: 7.16.7(supports-color@9.4.0)
+      '@babel/preset-env':
+        specifier: 7.28.3
+        version: 7.28.3(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@babel/preset-react':
+        specifier: 7.27.1
+        version: 7.27.1(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@babel/preset-typescript':
+        specifier: 7.27.1
+        version: 7.27.1(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@babel/runtime':
+        specifier: 7.23.2
+        version: 7.23.2
+      '@bitdev/react.generators.react-starters':
+        specifier: ^2.0.0
+        version: 2.0.2
+      '@bitdev/react.generators.react-templates':
+        specifier: ^6.0.9
+        version: 6.0.9
+      '@mdx-js/loader':
+        specifier: ^3.1.1
+        version: 3.1.1(supports-color@9.4.0)(webpack@5.109.2)
+      '@mdx-js/react':
+        specifier: 1.6.22
+        version: 1.6.22(react@19.1.0)
+      '@pmmmwh/react-refresh-webpack-plugin':
+        specifier: 0.5.4
+        version: 0.5.4(@types/webpack@5.28.5)(react-refresh@0.10.0)(type-fest@0.21.3)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+      '@svgr/webpack':
+        specifier: 8.1.0
+        version: 8.1.0(supports-color@9.4.0)(typescript@5.9.2)
+      '@teambit/api-reference.renderers.react':
+        specifier: ^0.0.69
+        version: 0.0.69(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.1.0)(react-router-dom@6.30.4)(react@19.1.0)
+      '@teambit/bit-error':
+        specifier: ~0.0.404
+        version: 0.0.404
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
+      '@teambit/compositions.ui.hooks.use-composition':
+        specifier: ^0.0.177
+        version: 0.0.177(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/defender.eslint-linter':
+        specifier: ^1.0.56
+        version: 1.0.60(eslint@8.56.0)(react@19.1.0)
+      '@teambit/defender.jest-tester':
+        specifier: ^2.1.3
+        version: 2.1.3(@babel/traverse@7.29.8)(jest@29.3.1)(supports-color@9.4.0)
+      '@teambit/defender.prettier-formatter':
+        specifier: ^1.0.24
+        version: 1.0.24
+      '@teambit/dependencies.modules.packages-excluder':
+        specifier: ^1.0.8
+        version: 1.0.8(react@19.1.0)
+      '@teambit/design.ui.input.option-button':
+        specifier: 1.0.13
+        version: 1.0.13(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/harmony':
+        specifier: 0.4.12
+        version: 0.4.12
+      '@teambit/mdx.modules.mdx-v3-options':
+        specifier: ^0.0.3
+        version: 0.0.3(rollup@2.80.0)(supports-color@9.4.0)
+      '@teambit/react.instructions.react.adding-compositions':
+        specifier: 0.0.8
+        version: 0.0.8(@types/react@19.2.18)(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/react.instructions.react.adding-tests':
+        specifier: 0.0.7
+        version: 0.0.7(@types/react@19.2.18)(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/react.jest.react-jest':
+        specifier: ^1.0.38
+        version: 1.0.38(@babel/core@7.28.3)(@babel/traverse@7.29.8)(bufferutil@4.0.3)(jest@29.3.1)(supports-color@9.4.0)(utf-8-validate@5.0.5)
+      '@teambit/react.rendering.ssr':
+        specifier: ^1.0.4
+        version: 1.0.5(react-dom@19.1.0)(react@19.1.0)(supports-color@9.4.0)
+      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta':
+        specifier: 0.0.45
+        version: 0.0.45(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/typescript.typescript-compiler':
+        specifier: ^5.0.1
+        version: 5.0.2(react@19.1.0)
+      '@teambit/webpack.webpack-bundler':
+        specifier: 1.1.0
+        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server':
+        specifier: 1.1.0
+        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+      '@testing-library/react':
+        specifier: ^14.3.1
+        version: 14.3.1(@types/react@19.2.18)(react-dom@19.1.0)(react@19.1.0)
+      '@typescript-eslint/eslint-plugin':
+        specifier: 7.1.0
+        version: 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
+      '@typescript-eslint/parser':
+        specifier: 7.1.0
+        version: 7.1.0(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
+      babel-loader:
+        specifier: 9.2.1
+        version: 9.2.1(@babel/core@7.28.3)(webpack@5.109.2)
+      chalk:
+        specifier: 4.1.2
+        version: 4.1.2
+      css-loader:
+        specifier: 6.2.0
+        version: 6.2.0(webpack@5.109.2)
+      css-minimizer-webpack-plugin:
+        specifier: ^6.0.0
+        version: 6.0.0(@parcel/css@1.14.0)(@swc/css@0.0.20)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.14.29)(lightningcss@1.33.0)(webpack@5.109.2)
+      esbuild:
+        specifier: 0.14.29
+        version: 0.14.29
+      eslint:
+        specifier: 8.56.0
+        version: 8.56.0(supports-color@9.4.0)
+      eslint-mdx:
+        specifier: 1.17.1
+        version: 1.17.1(eslint@8.56.0)(supports-color@9.4.0)
+      eslint-plugin-import:
+        specifier: 2.29.1
+        version: 2.29.1(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(supports-color@9.4.0)
+      eslint-plugin-jest:
+        specifier: 27.6.3
+        version: 27.6.3(@typescript-eslint/eslint-plugin@7.1.0)(eslint@8.56.0)(jest@29.3.1)(supports-color@9.4.0)(typescript@5.9.2)
+      eslint-plugin-jsx-a11y:
+        specifier: 6.8.0
+        version: 6.8.0(eslint@8.56.0)
+      eslint-plugin-mdx:
+        specifier: 1.17.1
+        version: 1.17.1(eslint@8.56.0)(supports-color@9.4.0)
+      eslint-plugin-react:
+        specifier: 7.33.2
+        version: 7.33.2(eslint@8.56.0)
+      eslint-plugin-react-hooks:
+        specifier: 4.6.0
+        version: 4.6.0(eslint@8.56.0)
+      express:
+        specifier: ^4.21.2
+        version: 4.22.2(supports-color@9.4.0)
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
+      graphql-tag:
+        specifier: 2.12.1
+        version: 2.12.1(graphql@15.8.0)
+      html-webpack-plugin:
+        specifier: 5.3.2
+        version: 5.3.2(webpack@5.109.2)
+      jest:
+        specifier: 29.3.1
+        version: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
+      jest-environment-jsdom:
+        specifier: 27.5.1
+        version: 27.5.1(bufferutil@4.0.3)(supports-color@9.4.0)(utf-8-validate@5.0.5)
+      less:
+        specifier: ^4.1.1
+        version: 4.9.0(supports-color@9.4.0)
+      less-loader:
+        specifier: 10.0.0
+        version: 10.0.0(less@4.9.0)(webpack@5.109.2)
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
+      lodash.compact:
+        specifier: 3.0.1
+        version: 3.0.1
+      mini-css-extract-plugin:
+        specifier: 2.2.2
+        version: 2.2.2(webpack@5.109.2)
+      new-url-loader:
+        specifier: 0.1.1
+        version: 0.1.1(webpack@5.109.2)
+      oxlint:
+        specifier: 1.55.0
+        version: 1.55.0(oxlint-tsgolint@0.17.0)
+      oxlint-tsgolint:
+        specifier: 0.17.0
+        version: 0.17.0
+      postcss-flexbugs-fixes:
+        specifier: 5.0.2
+        version: 5.0.2(postcss@8.4.45)
+      postcss-loader:
+        specifier: 7.0.1
+        version: 7.0.1(postcss@8.4.45)(webpack@5.109.2)
+      postcss-normalize:
+        specifier: 10.0.0
+        version: 10.0.0(browserslist@4.23.3)(postcss@8.4.45)
+      postcss-preset-env:
+        specifier: 7.8.2
+        version: 7.8.2(postcss@8.4.45)
+      react:
+        specifier: 19.1.0
+        version: 19.1.0
+      react-dev-utils:
+        specifier: 12.0.1
+        version: 12.0.1(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)(webpack@5.109.2)
+      react-dom:
+        specifier: 19.1.0
+        version: 19.1.0(react@19.1.0)
+      react-error-overlay:
+        specifier: 6.0.9
+        version: 6.0.9
+      react-refresh:
+        specifier: 0.10.0
+        version: 0.10.0
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.4(react-dom@19.1.0)(react@19.1.0)
+      resolve-url-loader:
+        specifier: 5.0.0
+        version: 5.0.0
+      sanitize.css:
+        specifier: 12.0.1
+        version: 12.0.1
+      sass:
+        specifier: 1.63.6
+        version: 1.63.6
+      sass-loader:
+        specifier: 13.3.2
+        version: 13.3.2(sass-embedded@1.102.0)(sass@1.63.6)(webpack@5.109.2)
+      source-map-loader:
+        specifier: 3.0.0
+        version: 3.0.0(webpack@5.109.2)
+      strip-ansi:
+        specifier: 6.0.0
+        version: 6.0.0
+      style-loader:
+        specifier: ^2.0.0
+        version: 2.0.0(webpack@5.109.2)
+      terser-webpack-plugin:
+        specifier: 5.2.0
+        version: 5.2.0(esbuild@0.14.29)(uglify-js@3.19.3)(webpack@5.109.2)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+      url-join:
+        specifier: 4.0.1
+        version: 4.0.1
+      webpack:
+        specifier: ^5.88.2
+        version: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
+      webpack-assets-manifest:
+        specifier: 5.1.0
+        version: 5.1.0(webpack@5.109.2)
+    devDependencies:
+      '@teambit/harmony.envs.core-aspect-env':
+        specifier: 2.0.1
+        version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(html-webpack-plugin@5.3.2)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
+      '@teambit/react.content.react-overview':
+        specifier: 1.96.6
+        version: 1.96.6(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(graphql@15.8.0)(react-dom@19.1.0)(react@19.1.0)
+      '@types/eslint':
+        specifier: 8.56.6
+        version: 8.56.6
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
+      '@types/jest':
+        specifier: ^26.0.0
+        version: 26.0.20
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
+      '@types/lodash.compact':
+        specifier: 3.0.6
+        version: 3.0.6
+      '@types/lodash.flatten':
+        specifier: 4.4.6
+        version: 4.4.6
+      '@types/mini-css-extract-plugin':
+        specifier: 2.2.0
+        version: 2.2.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/postcss-normalize':
+        specifier: 9.0.1
+        version: 9.0.1
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      '@types/react-dev-utils':
+        specifier: 9.0.15
+        version: 9.0.15(debug@4.3.4)
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.4(@types/react@19.2.18)
+      '@types/url-join':
+        specifier: 4.0.0
+        version: 4.0.0
+      '@types/webpack':
+        specifier: 5.28.5
+        version: 5.28.5(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   scopes/react/ui/compositions-app:
     dependencies:

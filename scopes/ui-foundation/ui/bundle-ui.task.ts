@@ -19,6 +19,9 @@ export const BUNDLE_UIROOT_DIR = {
 };
 export const BUNDLE_UI_HASH_FILENAME = '.hash';
 
+/** the roots bit itself ships; anything else registered is not part of the shipped artifact. */
+export const KNOWN_UIROOT_ASPECT_IDS = new Set<string>(Object.values(UIROOT_ASPECT_IDS));
+
 /**
  * Both UI roots are bundled by a single rspack compilation, one entry each, so the roots share
  * every chunk they have in common instead of each shipping a full copy of the app. The entry name
@@ -72,10 +75,12 @@ export class BundleUiTask implements BuildTask {
    */
   private async generateHash(outputPath: string): Promise<void> {
     const hashes: Record<string, string> = {};
-    await pMapSeries(Object.values(UIROOT_ASPECT_IDS), async (uiRootAspectId) => {
-      const maybeUiRoot = this.ui.getUi(uiRootAspectId);
-      if (!maybeUiRoot) throw new Error(`no uiRoot found for ${uiRootAspectId}`);
-      const [, uiRoot] = maybeUiRoot;
+    // hash exactly the roots that were built. `build()` emits an entry per *registered* root, so
+    // walking a hardcoded list instead would both fail where a root is legitimately absent (a
+    // scope-only runtime registers just the one) and, worse, record a hash for a root whose
+    // document was never emitted - which reads at startup as "a pre-bundle exists" and then 404s.
+    const roots = this.ui.getUiRoots().filter(([uiRootAspectId]) => KNOWN_UIROOT_ASPECT_IDS.has(uiRootAspectId));
+    await pMapSeries(roots, async ([uiRootAspectId, uiRoot]) => {
       hashes[uiRootAspectId] = await this.ui.createBundleUiHash(uiRoot);
     });
 

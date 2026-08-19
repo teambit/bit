@@ -2,13 +2,17 @@ import { join } from 'path';
 import { mkdirpSync, writeFileSync } from 'fs-extra';
 
 /**
- * Set to a directory to write a stats file per compilation, or to `1`/`true` to write them under
- * `<cwd>/bundle-stats`. Off by default: collecting the module graph is not free, and the stats file
- * is far larger than the bundle it describes.
+ * Same switch and output format as the UI bundle's `rspack/bundle-stats.ts`, so one build with
+ * `BIT_UI_BUNDLE_STATS=1` produces stats for the ui and preview bundles together and
+ * `scripts/analyze-bundle.mjs` reads them the same way.
+ *
+ * Deliberately a small copy rather than an import from `@teambit/ui`: that package's index is
+ * imported by browser code, and pulling a node-only module through it drags `fs` polyfills into
+ * the UI bundle.
  */
 export const BUNDLE_STATS_ENV_VAR = 'BIT_UI_BUNDLE_STATS';
 
-export function bundleStatsDir(): string | undefined {
+function bundleStatsDir(): string | undefined {
   const value = process.env[BUNDLE_STATS_ENV_VAR];
   if (!value) return undefined;
   if (value === '1' || value === 'true') return join(process.cwd(), 'bundle-stats');
@@ -16,10 +20,8 @@ export function bundleStatsDir(): string | undefined {
 }
 
 /**
- * Write an rspack stats file for a finished compilation, for `scripts/analyze-bundle.mjs` to read.
- *
- * Deliberately written outside the output directory: everything under an output dir is matched by
- * the build task's artifact glob, so a stats file placed there would ship inside the package.
+ * Write an rspack stats file for a finished compilation. Written outside the output directory: the
+ * build task's artifact glob matches everything under it, so a stats file placed there would ship.
  */
 export function writeBundleStats(stats: any, name: string): string | undefined {
   const dir = bundleStatsDir();
@@ -53,8 +55,8 @@ export function writeBundleStats(stats: any, name: string): string | undefined {
     groupModulesByLayer: false,
   });
   mkdirpSync(dir);
-  // `name` comes from a ui root's name, which can contain a path separator; left as-is it would
-  // point the write at a directory that does not exist and fail with ENOENT.
+  // sanitized for the same reason as the ui twin: a name carrying a path separator would point the
+  // write at a directory that does not exist and fail with ENOENT.
   const filePath = join(dir, `${name.replace(/[^a-zA-Z0-9._-]+/g, '-')}.stats.json`);
   writeFileSync(filePath, JSON.stringify(json));
   return filePath;
