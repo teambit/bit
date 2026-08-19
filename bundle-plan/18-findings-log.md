@@ -1100,3 +1100,26 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   driver passes; tsc error set unchanged vs. the post-merge baseline; oxlint/prettier clean.
   Residual risk: if the job still dies after envs load cleanly, the remaining lever is job config
   (RAYON cap / package cache / resource class, all of which `bit_pr` has and this job lacks).
+- **2026-08-19** — verified whether the core preview pre-bundle fixes
+  `custom-env-operations-2.e2e.ts`'s "an env with a preview/bundler but without a compiler" ▸ "bit
+  build should not fail generating the preview" (a real `e2e_test_esbuild_bundle` failure reported
+  from CI: `Cannot find module '@teambit/mdx.modules.mdx-v3-options'`, thrown building a
+  workspace-local custom env's preview) - by building two real, current-source esbuild bundles side
+  by side, one with `node_modules/@teambit/{ui,preview}/artifacts` populated (from `.bundle-cache/`)
+  before bundling and one with both that cache and those directories moved aside first (`bundleCli`
+  reported `artifactFiles: 0`, confirming a genuinely pre-bundle-free build), then running the exact
+  failing `describe` block (temporarily `.only`-ed) against each via `--bit_bin`. **Without the
+  pre-bundle: reproduced exactly** (same `Cannot find module` error, same stack). **With it: both
+  assertions pass** (`build succeeded`, `GeneratePreview` ran - 37s, no failures). This is gap 1's
+  documented "remaining limitation" ("a workspace whose env contributes its own preview-runtime
+  aspects misses the `.hash` and falls into the rebuild path") showing up as a concrete, reproducible
+  test failure rather than a theoretical one - and confirms `EnvPreviewTemplateTask` needs the _core_
+  preview pre-bundle as a foundation even when the failing env itself is workspace-local, not core.
+  Practical implication: `build_ui_prebundle` (this session, §14 above) produces exactly the artifact
+  that fixes this, but `e2e_test_esbuild_bundle` - the main, un-split sweep this test actually runs
+  in - doesn't consume it (only the new, narrower `e2e_test_ui_prebundle` does). So this test, and
+  plausibly others shaped like it (any custom/non-core env exercising `GeneratePreview` under the
+  bundle), stay red in the main CI sweep until that's addressed - tracked as gap 11 in
+  [14-known-gaps.md](14-known-gaps.md) rather than fixed here, since doing so reopens the exact
+  "don't delay the 40-way sweep" tension `build_ui_prebundle` was split out to avoid, and resolving
+  that tradeoff needs a decision, not just code.
