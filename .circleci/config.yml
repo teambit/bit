@@ -860,16 +860,20 @@ jobs:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
           # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
-          # NOTE: PR builds run the FULL pipeline by default. To trade specific tasks for speed on a
-          # given PR (no YAML change needed), add a `[skip-tasks: <names>]` token to the commit
-          # message, e.g. `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents]`.
+          # --skip-tasks PublishComponents: a PR build validates the pipeline, it doesn't need the
+          # snap-tagged versions on registry.npmjs.org. Publishing every changed component on every
+          # push shares one npm token across all open PRs and rate-limits it (429 on PUT); the
+          # packages are published for real on the export to main. Every other task still runs.
+          # To trade more tasks for speed on a given PR (no YAML change needed), add a
+          # `[skip-tasks: <names>]` token to the commit message, e.g.
+          # `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate]` - it merges with the flag below.
           # No --keep-lane: the reusing flow serves components unchanged since an earlier export
           # from the lane, with artifacts built from older commits of the branch. Capsules then mix
           # generations of @teambit packages and cross-copy `instanceof` breaks in capsule spec
           # runs - on a PR that snaps core components (so their specs actually run), bit_pr fails
           # deterministically from the second push onward. The temp-lane flow rebuilds every run
           # from one commit, trading the lane's persistent history on Bit Cloud for correctness.
-          command: 'cd bit && bit ci pr --build --skip-cleanup'
+          command: 'cd bit && bit ci pr --build --skip-cleanup --skip-tasks PublishComponents'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
