@@ -92,9 +92,10 @@ export function hasSyncMarker(message: string): boolean {
 
 /**
  * Strict probe for "we wrote this commit": the marker alone on its own line. This is an input to branch
- * deletion and to the export-branch withhold (a branch whose tip is already our own commit settles
- * instead of re-exporting), so a developer merely quoting the marker must never count as authorship.
- * `\r?` tolerates CRLF; a recognition failure errs toward keeping the branch / re-attempting the export.
+ * DELETION only — the one decision no content probe can stand in for, because the lane it would compare
+ * against is gone. It must never decide convergence: a squash-merge's body quotes the squashed ledger
+ * messages verbatim, marker included, so a message can claim authorship the reconciler never had.
+ * `\r?` tolerates CRLF; a recognition failure errs toward keeping the branch.
  */
 export function isSyncAuthoredMessage(message: string): boolean {
   return new RegExp(`^${SYNC_COMMIT_MARKER.replace(/[[\]]/g, '\\$&')}\\r?$`, 'm').test(message);
@@ -160,6 +161,14 @@ export type BranchSyncState = {
   bitmap?: BranchBitmapState;
   /** Whether the branch carries commits on top of its bit state — work bit has not seen. */
   hasDevCommits: boolean;
+  /**
+   * Whether the state commit also touched files besides `.bitmap`. SUSPECTED work only: those files
+   * may already be inside the snap the `.bitmap` records, which git cannot tell — the executor's
+   * read-only status probe is what distinguishes real work. True for ANY other path (`docs/`, CI
+   * config, this reconciler's own source-bundling ledger commits): a spurious `true` re-probes, which
+   * writes nothing, so it can repeat without consequence.
+   */
+  stateCommitBundlesSources: boolean;
   /** The branch tip's full commit message (subject + body), for the sync-marker loop-guard probe. */
   tipMessage: string;
   /**
@@ -168,6 +177,40 @@ export type BranchSyncState = {
    */
   tipSha?: string;
 };
+
+/**
+ * The pure half of `hasUnsyncedWorkChanges` (ci.main.runtime.ts): whether a `bit status` result holds
+ * anything a snap/export would push. The unloadable categories count as work: `invalidComponents` AND
+ * `importPendingComponents` (`StatusMain` splits pending-import errors out of the invalid list) are
+ * both UNKNOWN — their sources may hold the branch's edits — and this answer gates a "converged,
+ * write nothing" exit, so not knowing must route to the snap (which fails loudly) rather than
+ * converge. Incoming-change categories (outdated, pending updates from main) deliberately do NOT
+ * count: they are the lane's or main's movement, which the planner routes, not branch work.
+ */
+export function statusReportsUnsyncedWork(status: {
+  newComponents: unknown[];
+  modifiedComponents: unknown[];
+  stagedComponents: unknown[];
+  locallySoftRemoved: unknown[];
+  pendingUpdateDependents: unknown[];
+  mergePendingComponents: unknown[];
+  componentsDuringMergeState: unknown[];
+  invalidComponents: unknown[];
+  importPendingComponents: unknown[];
+}): boolean {
+  const divergence = [
+    status.newComponents,
+    status.modifiedComponents,
+    status.stagedComponents,
+    status.locallySoftRemoved,
+    status.pendingUpdateDependents,
+    status.mergePendingComponents,
+    status.componentsDuringMergeState,
+    status.invalidComponents,
+    status.importPendingComponents,
+  ];
+  return divergence.some((components) => components.length > 0);
+}
 
 /**
  * Whether a `rev-list --count` output reports commits. An unreadable count answers `true`: `false` is an
@@ -200,7 +243,64 @@ export async function readBranchSyncState(
   const range = stateCommit ? `${stateCommit}..${revision}` : `origin/${defaultBranch}..${revision}`;
   const count = await git.raw(['rev-list', range, '--count']);
 
-  return { stateCommit, bitmap, hasDevCommits: parseDevCommitCount(count), tipMessage, tipSha };
+  // Source edits can HIDE AT OR BELOW the state commit — bundled into it (the conflict-halt comment's
+  // resolve-by-hand recipe), or in an earlier commit that a later `.bitmap`-only commit covers — and
+  // `hasDevCommits` starts counting only after it, so they were invisible. Git file names alone cannot
+  // tell whether those sources are already inside the snap the `.bitmap` records (a dev who snapped,
+  // exported, and committed everything at once) or were never snapped at all — so this is SUSPECTED
+  // work, computed over the whole range since the PREVIOUS state commit (the last point a `.bitmap`
+  // write could have accounted for sources) and reported separately for the planner to probe.
+  // Deliberately content-only, per this module's header: this reconciler's own ledger commits have the
+  // same shape (import-lane and merge-diverged bundle already-exported sources) and its probe is a
+  // read, so a spurious `true` costs one status check — while consulting the tip's MESSAGE here read a
+  // squash-merge (whose body quotes the squashed ledger messages, marker included) as machine-authored
+  // and silently dropped the bundled work.
+  const stateCommitBundlesSources =
+    !parseDevCommitCount(count) &&
+    stateCommit !== undefined &&
+    stateCommit === tipSha &&
+    (await sourcesTouchedSincePreviousState(revision, defaultBranch));
+
+  return {
+    stateCommit,
+    bitmap,
+    hasDevCommits: parseDevCommitCount(count),
+    stateCommitBundlesSources,
+    tipMessage,
+    tipSha,
+  };
+}
+
+/**
+ * Whether any file besides `.bitmap` changed between the PREVIOUS `.bitmap`-writing commit (or, on a
+ * branch with only one, its fork point off the default branch) and the tip. A tree diff over the
+ * whole range, not a per-commit walk: a source edit in one commit followed by a `.bitmap`-only commit
+ * would be invisible to a single-commit check, and a later revert legitimately cancels out.
+ * Unreadable answers `true`: this feeds `stateCommitBundlesSources`, where not knowing must plan the
+ * probe, never declare convergence.
+ */
+async function sourcesTouchedSincePreviousState(revision: string, defaultBranch: string): Promise<boolean> {
+  try {
+    const previousStateCommit = (
+      await git.raw(['log', revision, '--first-parent', '-n', '1', '--skip', '1', '--format=%H', '--', BIT_MAP])
+    ).trim();
+    const base = previousStateCommit || (await git.raw(['merge-base', `origin/${defaultBranch}`, revision])).trim();
+    if (!base) return true;
+    const names = await git.raw(['diff', '--name-only', `${base}..${revision}`]);
+    // Empty is legitimate here (a range whose edits cancel out), unlike a single state commit's diff.
+    return touchesBeyondBitmap(names);
+  } catch {
+    return true;
+  }
+}
+
+/** The pure half of `commitTouchesBeyondBitmap`, split out so it is testable without a real git log. */
+export function touchesBeyondBitmap(rawNames: string): boolean {
+  return rawNames
+    .split('\n')
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .some((name) => name !== BIT_MAP);
 }
 
 /**
