@@ -28,6 +28,12 @@ const ASSETS: Array<{ pkg: string; from: string; to: string; flatten?: boolean }
   { pkg: '@teambit/host-initializer', from: 'dist/agents-template*.md', to: '.', flatten: true },
   // McpConfigWriter's rules templates are no longer copied - `getDefaultRulesContent` inlines them
   // via esbuild's `.md` text loader instead (see `run-esbuild.ts`, gated on `BIT_IS_BUNDLE`).
+  // the preview aspect's `generateLink` writes webpack entries that import
+  // `<previewDistDir>/preview-modules.js` by absolute path, and `getPreviewDistDir` falls back to
+  // `__dirname` (the bundle dir) when no bvm installation is around to resolve `@teambit/preview`
+  // from. this dist file is self-contained (zero imports), so shipping it is all the env-template
+  // webpack build (`GenerateEnvTemplate`) needs.
+  { pkg: '@teambit/preview.modules.preview-modules', from: 'dist/preview-modules.js', to: '.', flatten: true },
 ];
 
 async function copyOne(paths: BundlePaths, asset: (typeof ASSETS)[number], seen: Map<string, string>) {

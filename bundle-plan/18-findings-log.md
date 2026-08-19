@@ -1167,3 +1167,24 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   sized from the host's cpus inside docker - same rationale as setup_harmony/bit_pr). `bit_pr` on
   50250 was auto-canceled by the next push, not failed - it needs a clean run on the new pipeline
   to confirm.
+- **2026-08-19** — pipeline 50263: `check_circular_dependencies` green on the large container (the
+  resource-class fix from the previous entry), `bit_pr` green, `build_ui_prebundle` green - but
+  `e2e_test_ui_prebundle` failed on the newly-added `custom-env-operations-2.e2e.ts` block:
+  `GenerateEnvTemplate` (webpack) can't resolve `<bundle>/dist/core-aspects/bundle/preview-modules.js`.
+  Root cause: `generateLink` (preview aspect) bakes `join(previewDistDir, 'preview-modules.js')` as
+  an absolute import into every generated webpack entry, and `getPreviewDistDir()` tries
+  `getAspectDirFromBvm('@teambit/preview')` then falls back to `__dirname` - the bundle dir. Gap
+  11's local verification passed because bvm is installed on dev machines, so previewDistDir
+  resolved to the bvm-installed bit's real `@teambit/preview/dist`; the CI job (and any user
+  machine without bvm) hits the `__dirname` fallback, and the bundle shipped no such file. Fix in
+  `cli-bundler/copy-assets.ts`: ship `@teambit/preview.modules.preview-modules/dist/preview-modules.js`
+  (the module the aspect's own `preview-modules.tsx` re-exports; its dist is fully self-contained,
+  zero imports, and exports the `linkModules` the entries need) flattened into the bundle dir -
+  the exact `__dirname` the fallback lands on. Verified with a standalone driver against the
+  compiled `copyAssets` (file lands, `linkModules`/`PREVIEW_MODULES` exports live, no requires).
+  A full local `npm run bundle` isn't possible on this machine (repo esbuild is 0.14; the branch
+  bundler needs the newer one that CI installs), so end-to-end confirmation is CI's. Note the
+  bvm-first order of `getPreviewDistDir` also means a bvm machine silently uses _another bit
+  version's_ preview dist - version-skew smell, left untouched here to keep the fix additive.
+  Also on 50263: `e2e_test_esbuild_bundle` failed only on the known-triaged `bit --help` 1500ms
+  timing budget (measured 1991ms) - node 39, 80/81 passing; not touched.
