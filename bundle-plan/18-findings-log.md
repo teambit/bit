@@ -1100,3 +1100,22 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   driver passes; tsc error set unchanged vs. the post-merge baseline; oxlint/prettier clean.
   Residual risk: if the job still dies after envs load cleanly, the remaining lever is job config
   (RAYON cap / package cache / resource class, all of which `bit_pr` has and this job lacks).
+
+- **2026-08-19** — **preserver v2 regression found and fixed via pipeline `50241`'s debug.log**
+  (three jobs failed at their "bit install (dev binary)" step - `bit_pr` regressed from green). The
+  log proves v2 ran and worked for rewritten copies ("cloned the dist of 326 component package(s) in
+  201ms", "restored 945 component dist cop(ies) in 902ms") - but this install (post lockfile-regen
+  `69833b80c`) **removes the root component dirs outright** instead of rewriting them
+  (`preserve-loaded-nested-pkg-dirs` logged dozens of "removed by the install and no donor"), and
+  bit's own node-modules-linker recreates them dist-less right after ("linking component to
+  node_modules" at +20ms). v2's restore deliberately skipped missing dirs - v1 had, accidentally,
+  created the dist into the missing root dir (fs.move creates parents), which is why `bit_pr` was
+  green on v1 and red on v2. **Fix**: the root copy is now explicitly `createIfMissing` - its dist
+  is pre-created from the clone for the linker to fill around (safe: the package is in this very
+  install's manifests, so the linker is guaranteed to run; the linker only deletes an existing
+  root when it's a symlink). Slot/.bit_roots copies keep the existing-dir rule. Also merged
+  `origin/master` (per request): conflicts resolved keeping the branch's newer sides (the shared
+  #10631 content plus its branch-only follow-ups, `forPreBundle`, CI sampler scripts, dev-binary
+  lockfile) and grafting master's `--skip-tasks PublishComponents` into the branch's `bit ci pr`
+  command - note that flag makes the snap-deps isolator fix (`getSnapDependenciesOfSeeders`) fully
+  load-bearing, since PR builds no longer publish any snap to npm.

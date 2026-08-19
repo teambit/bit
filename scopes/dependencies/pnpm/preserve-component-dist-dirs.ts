@@ -133,18 +133,27 @@ export async function restoreWipedComponentDistDirs(
   const bitRootsNodeModules = await bitRootsNodeModulesDirs(nodeModulesDir);
   let restored = 0;
   for (const { pkgName, clonePath } of packages) {
-    const copyDirs = [
-      path.join(nodeModulesDir, pkgName),
-      ...(slotDirsByPkg.get(pkgName) ?? []).map((slotDir) => path.join(slotDir, 'node_modules', pkgName)),
-      ...bitRootsNodeModules.map((dir) => path.join(dir, pkgName)),
+    // the root copy is special: the engine may remove the whole directory rather than rewrite it,
+    // and the linking step that follows this install recreates it from the component sources -
+    // which hold no dist. It is pre-created here (dist alone) for the linker to fill around;
+    // the component is in this very install's manifests, so the linker is guaranteed to come.
+    const copyDirs: { dirPath: string; createIfMissing: boolean }[] = [
+      { dirPath: path.join(nodeModulesDir, pkgName), createIfMissing: true },
+      ...(slotDirsByPkg.get(pkgName) ?? []).map((slotDir) => ({
+        dirPath: path.join(slotDir, 'node_modules', pkgName),
+        createIfMissing: false,
+      })),
+      ...bitRootsNodeModules.map((dir) => ({ dirPath: path.join(dir, pkgName), createIfMissing: false })),
     ];
-    for (const copyDir of copyDirs) {
-      // only fill in a dist inside an existing real package directory: a missing dir means the
-      // install dropped the copy altogether, and a symlink means the content lives elsewhere -
-      // writing "into" it would write through to the target, which is not ours to touch
+    for (const { dirPath: copyDir, createIfMissing } of copyDirs) {
+      // fill in a dist inside an existing real package directory. a missing dir means the install
+      // dropped the copy altogether - recreated only where the root-copy linking is known to
+      // follow - and a symlink means the content lives elsewhere: writing "into" it would write
+      // through to the target, which is not ours to touch
       // eslint-disable-next-line no-await-in-loop
       const copyDirStat = await fs.lstat(copyDir).catch(() => undefined);
-      if (!copyDirStat?.isDirectory()) continue;
+      if (copyDirStat && !copyDirStat.isDirectory()) continue;
+      if (!copyDirStat && !createIfMissing) continue;
       const distPath = path.join(copyDir, DIST_DIRNAME);
       // eslint-disable-next-line no-await-in-loop
       if (!(await isGone(distPath))) continue;
