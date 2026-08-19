@@ -12,13 +12,30 @@ import type { APINodeRenderProps } from '@teambit/api-reference.models.api-node-
 import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { VariableNodeSummary, EnumMemberSummary } from '@teambit/api-reference.renderers.schema-node-member-summary';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+// deep import on purpose: the package root re-exports `default-highlight` (highlight.js with every
+// language) and `prism` (refractor with every language) alongside the light builds, so importing
+// anything from the root pulls ~2.3 MB into every consumer's bundle.
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
+import tsSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
+import tsxSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
+import jsSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
+import jsxSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/jsx';
+import cssSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/css';
+import mdSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
 import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 import pluralize from 'pluralize';
 import classnames from 'classnames';
 
 import styles from './grouped-schema-nodes-overview-summary.module.scss';
+
+// `lang` below is the source file's ending: ts/tsx/js/jsx, with scss/sass mapped to css and mdx to md.
+SyntaxHighlighter.registerLanguage('ts', tsSyntax);
+SyntaxHighlighter.registerLanguage('tsx', tsxSyntax);
+SyntaxHighlighter.registerLanguage('js', jsSyntax);
+SyntaxHighlighter.registerLanguage('jsx', jsxSyntax);
+SyntaxHighlighter.registerLanguage('css', cssSyntax);
+SyntaxHighlighter.registerLanguage('md', mdSyntax);
 
 // @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
 const Link = BaseLink as any;
