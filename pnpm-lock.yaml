@@ -269,14 +269,14 @@ importers:
         specifier: ^0.0.84
         version: 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.parameter':
-        specifier: ^0.0.69
-        version: 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+        specifier: ^0.0.71
+        version: 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.react':
         specifier: ^0.0.69
         version: 0.0.69(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.schema-node-member-summary':
-        specifier: ^0.0.82
-        version: 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+        specifier: 0.0.84
+        version: 0.0.84(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.schema-nodes-index':
         specifier: ^0.0.72
         version: 0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(react-dom@19.2.7)(react@19.2.7)
@@ -1726,9 +1726,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
@@ -2219,6 +2216,9 @@ importers:
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   components/bit/get-bit-version:
     dependencies:
@@ -3607,11 +3607,11 @@ importers:
         specifier: ^0.0.53
         version: 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.parameter':
-        specifier: ^0.0.69
-        version: 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+        specifier: ^0.0.71
+        version: 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.schema-node-member-summary':
-        specifier: ^0.0.82
-        version: 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+        specifier: 0.0.84
+        version: 0.0.84(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         specifier: ^0.0.16
         version: 0.0.16
@@ -3723,8 +3723,8 @@ importers:
         specifier: ^0.0.84
         version: 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.parameter':
-        specifier: ^0.0.69
-        version: 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+        specifier: ^0.0.71
+        version: 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.this':
         specifier: ^0.0.71
         version: 0.0.71(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
@@ -24430,9 +24430,6 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
-      '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
-        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -24458,6 +24455,9 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(html-webpack-plugin@5.3.2)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
+      '@teambit/ui-foundation.ui.is-browser':
+        specifier: ^0.0.500
+        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -25551,9 +25551,6 @@ importers:
       chalk:
         specifier: 4.1.2
         version: 4.1.2
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
       filenamify:
         specifier: 4.2.0
         version: 4.2.0
@@ -25572,9 +25569,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lru-cache:
-        specifier: 10.4.3
-        version: 10.4.3
       mime:
         specifier: 2.5.2
         version: 2.5.2
@@ -25639,6 +25633,12 @@ importers:
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
+      cross-fetch:
+        specifier: 3.1.5
+        version: 3.1.5
+      lru-cache:
+        specifier: 10.4.3
+        version: 10.4.3
 
   scopes/preview/ui/component-preview:
     dependencies:
@@ -26025,9 +26025,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       mini-css-extract-plugin:
         specifier: 2.2.2
         version: 2.2.2(webpack@5.109.2)
@@ -26161,6 +26158,9 @@ importers:
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   scopes/react/ui/compositions-app:
     dependencies:
@@ -33007,6 +33007,14 @@ packages:
       react: 19.2.7
       react-dom: 19.2.7
 
+  '@teambit/api-reference.renderers.api-node-details@0.0.0-0cd448f1abff48eeb53f43d2171a52ba3dd21029':
+    resolution: {integrity: sha512-W7tFNWM/q6F/ez4A7Tb9qD3EY2UYhwAZNWDmgNu+JQSd8yL59NoWJCMrn3Hibiqa4SJ3HAHnxzM6VHEhV8hEZA==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: 19.2.7
+      react-dom: 19.2.7
+      react-router-dom: ^6.30.1
+
   '@teambit/api-reference.renderers.api-node-details@0.0.82':
     resolution: {integrity: sha512-KKV7Q2XxTRToj998xF33zKzB8OhyFbKO4D4eqGHFYkK3cjlRtObJByAemGl9IowY9GU/OWHbIEAUyyYOahEeug==}
     engines: {node: '>=12.22.0'}
@@ -33100,6 +33108,20 @@ packages:
       react: 19.2.7
       react-dom: 19.2.7
 
+  '@teambit/api-reference.renderers.parameter@0.0.70':
+    resolution: {integrity: sha512-dLpNYbRKNJ4pjO4HMjMllusucrdlp6sKeGsIB/7J+389O+LqS0iIMrH17x7YkSUzb9f5T1CU7tWBAdnDmrt5CQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: 19.2.7
+      react-dom: 19.2.7
+
+  '@teambit/api-reference.renderers.parameter@0.0.71':
+    resolution: {integrity: sha512-j5dJ+LS6Fx4XuHHodDnk9CiBvUr7mmIEcO5+aAfhZnKcgb71wQmnf8RKREi+Ntz0Q93F00j800YXa0ryJFxaeQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: 19.2.7
+      react-dom: 19.2.7
+
   '@teambit/api-reference.renderers.react@0.0.69':
     resolution: {integrity: sha512-j+DxhLbIcErt4X0Q9YWirHmCfi6Gv+OoOqvcIana/0fmgz3LVvaFdrE2hsziqZhaPNEOOod73rZrc3vmGp0OiA==}
     engines: {node: '>=12.22.0'}
@@ -33107,6 +33129,13 @@ packages:
       '@teambit/base-react.navigation.link': 2.0.33
       react: 19.1.0
       react-dom: 19.1.0
+
+  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.0-aaaa7642e4c8de7b4dbe3d038a81ebafa454be09':
+    resolution: {integrity: sha512-Lc/0uNYqx7S7hab5+8K4SVWBWnSKtkgKfoGqKWSgIbBZH6v5ztQ3Kivh5X6A+HqVzgORVuLnZbdaG7G51RpIyQ==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: 19.2.7
+      react-dom: 19.2.7
 
   '@teambit/api-reference.renderers.schema-node-member-summary@0.0.78':
     resolution: {integrity: sha512-3BDZhE3lT5RqFXM3dnA880tdrZ+j/KRBgET6nl3LAHlLs52KD9k57mturDJrB+4qeZiyzZdsP5VpGzFtw5t8xg==}
@@ -33122,8 +33151,15 @@ packages:
       react: 19.2.7
       react-dom: 19.2.7
 
-  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.82':
-    resolution: {integrity: sha512-ZZfxLD8LAds3tRDINFd/2Uxhy3lOS+7qQhNGel3lAUMXpkLuzn89D7hGnfB3mcOnC7psByra1fJLLFTz+0nU9A==}
+  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.84':
+    resolution: {integrity: sha512-9Nhh4H1h335NPf0SY9k3/WEuAkGlSgCCOFWE7W0wwAN2o4NMBJ8c/ia9S2Fy8W+PpO6jZvK+JdMe0Z6v+vKQ9g==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: 19.2.7
+      react-dom: 19.2.7
+
+  '@teambit/api-reference.renderers.schema-nodes-index@0.0.0-84065b848688c0283ad004cebb93144c0630f1c0':
+    resolution: {integrity: sha512-BUyXz7s7reAaN8qTfLByQ4Cm8bnkdEwKUCL+RLCMQl5Y9C7nDr9LzvPxUIPjqh5bSvAqWbWPLCElcY3CrEbrwQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: 19.2.7
@@ -36253,6 +36289,15 @@ packages:
 
   '@teambit/documenter.ui.table-row@4.1.16':
     resolution: {integrity: sha512-YzmwaUlQrndDUkRwynvA4Ro9d3jIhRd/omVYoODzVJBKT79lUhUqpCLymhaYEGyptQyaH/t5mwZv2ceaWT68Dg==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      '@types/react': ^19.0.0
+      '@types/react-dom': ^19.0.0
+      react: 19.2.7
+      react-dom: 19.2.7
+
+  '@teambit/documenter.ui.table-row@4.1.17':
+    resolution: {integrity: sha512-b5eopHwUeYNSs+9msJ8taMYwNTQAp6QwJEH7dmauDqjE7HXCg9WPu0NOaJPq2P+XKGWdWYVaUda3behPQSeQVw==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       '@types/react': ^19.0.0
@@ -57501,8 +57546,8 @@ snapshots:
   '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary@file:components/overview/renderers/grouped-schema-nodes-overview-summary(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
+      '@teambit/api-reference.renderers.parameter': 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.84(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
       '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.45
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
@@ -57525,8 +57570,8 @@ snapshots:
   '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary@file:components/overview/renderers/grouped-schema-nodes-overview-summary(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/api-reference.renderers.parameter': 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.84(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
       '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.45
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
@@ -57549,8 +57594,8 @@ snapshots:
   '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary@file:components/overview/renderers/grouped-schema-nodes-overview-summary(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/api-reference.renderers.parameter': 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.84(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
       '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.45
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
@@ -57569,6 +57614,69 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
       - react-router-dom
+
+  '@teambit/api-reference.renderers.api-node-details@0.0.0-0cd448f1abff48eeb53f43d2171a52ba3dd21029(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/api-reference.models.api-reference-model': 0.0.53
+      '@teambit/api-reference.renderers.schema-nodes-index': 0.0.0-84065b848688c0283ad004cebb93144c0630f1c0(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/api-reference.utils.code-editor-options': 0.0.16
+      '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/code.ui.code-editor': file:components/ui/code-editor(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/documenter.ui.heading': 4.1.8(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/ui-foundation.ui.react-router.use-query': 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      classnames: 2.5.1
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-router-dom: 6.30.4(react-dom@18.3.1)(react@18.3.1)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+
+  '@teambit/api-reference.renderers.api-node-details@0.0.0-0cd448f1abff48eeb53f43d2171a52ba3dd21029(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)':
+    dependencies:
+      '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.models.api-reference-model': 0.0.53
+      '@teambit/api-reference.renderers.schema-nodes-index': 0.0.0-84065b848688c0283ad004cebb93144c0630f1c0(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.utils.code-editor-options': 0.0.16
+      '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/code.ui.code-editor': file:components/ui/code-editor(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/documenter.ui.heading': 4.1.8(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/ui-foundation.ui.react-router.use-query': 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      classnames: 2.5.1
+      core-js: 3.13.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+
+  '@teambit/api-reference.renderers.api-node-details@0.0.0-0cd448f1abff48eeb53f43d2171a52ba3dd21029(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)':
+    dependencies:
+      '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.models.api-reference-model': 0.0.53
+      '@teambit/api-reference.renderers.schema-nodes-index': 0.0.0-84065b848688c0283ad004cebb93144c0630f1c0(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.utils.code-editor-options': 0.0.16
+      '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/code.ui.code-editor': file:components/ui/code-editor(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/documenter.ui.heading': 4.1.8(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/ui-foundation.ui.react-router.use-query': 0.0.505(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      classnames: 2.5.1
+      core-js: 3.13.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
 
   '@teambit/api-reference.renderers.api-node-details@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)':
     dependencies:
@@ -57806,7 +57914,7 @@ snapshots:
       '@teambit/api-reference.renderers.function': 0.0.88(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.inference-type': 0.0.66(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/api-reference.renderers.interface': 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.parameter': 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.renderers.this': 0.0.71(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.tuple-type': file:components/renderers/tuple-type(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.renderers.type': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
@@ -57838,7 +57946,7 @@ snapshots:
       '@teambit/api-reference.renderers.function': 0.0.88(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.inference-type': 0.0.66(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-reference.renderers.interface': 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.renderers.parameter': 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.this': 0.0.71(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.tuple-type': file:components/renderers/tuple-type(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
@@ -57870,7 +57978,7 @@ snapshots:
       '@teambit/api-reference.renderers.function': 0.0.88(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.inference-type': 0.0.66(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-reference.renderers.interface': 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.renderers.parameter': 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.this': 0.0.71(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.tuple-type': file:components/renderers/tuple-type(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type': 0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
@@ -58240,6 +58348,45 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
+  '@teambit/api-reference.renderers.parameter@0.0.70(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      core-js: 3.13.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+
+  '@teambit/api-reference.renderers.parameter@0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+
+  '@teambit/api-reference.renderers.parameter@0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      core-js: 3.13.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+
   '@teambit/api-reference.renderers.react@0.0.69(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
@@ -58293,6 +58440,26 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
       - react-router-dom
+
+  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.0-aaaa7642e4c8de7b4dbe3d038a81ebafa454be09(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.models.api-reference-model': 0.0.53
+      '@teambit/api-reference.renderers.api-node-details': 0.0.0-0cd448f1abff48eeb53f43d2171a52ba3dd21029(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/api-reference.renderers.parameter': 0.0.70(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
+      '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
+      '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      classnames: 2.5.1
+      core-js: 3.13.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-syntax-highlighter: 15.6.6(react@19.2.7)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
 
   '@teambit/api-reference.renderers.schema-node-member-summary@0.0.78(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
@@ -58406,77 +58573,122 @@ snapshots:
       - '@types/react-dom'
       - react-router-dom
 
-  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)':
+  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.84(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.models.api-reference-model': 0.0.53
-      '@teambit/api-reference.renderers.api-node-details': 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.0-0cd448f1abff48eeb53f43d2171a52ba3dd21029(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
+      '@teambit/api-reference.renderers.parameter': 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/documenter.ui.table-row': 4.1.16(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': 0.0.103
+      '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
       classnames: 2.5.1
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-syntax-highlighter: 15.6.6(react@18.3.1)
     transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
       - '@testing-library/react-hooks'
       - '@types/react'
       - '@types/react-dom'
       - react-router-dom
 
-  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)':
+  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.84(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-reference-model': 0.0.53
-      '@teambit/api-reference.renderers.api-node-details': 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.0-0cd448f1abff48eeb53f43d2171a52ba3dd21029(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/api-reference.renderers.parameter': 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/documenter.ui.table-row': 4.1.16(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': 0.0.103
+      '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-syntax-highlighter: 15.6.6(react@19.2.7)
     transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
       - '@testing-library/react-hooks'
       - '@types/react'
       - '@types/react-dom'
       - react-router-dom
 
-  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.82(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)':
+  '@teambit/api-reference.renderers.schema-node-member-summary@0.0.84(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-reference-model': 0.0.53
-      '@teambit/api-reference.renderers.api-node-details': 0.0.84(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/api-reference.renderers.parameter': 0.0.69(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.renderers.api-node-details': 0.0.0-0cd448f1abff48eeb53f43d2171a52ba3dd21029(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/api-reference.renderers.parameter': 0.0.71(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme': 0.0.16
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/documenter.ui.table-row': 4.1.16(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': 0.0.103
+      '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-syntax-highlighter: 15.6.6(react@19.2.7)
     transitivePeerDependencies:
-      - '@teambit/base-react.navigation.link'
       - '@testing-library/react'
       - '@testing-library/react-hooks'
       - '@types/react'
       - '@types/react-dom'
       - react-router-dom
+
+  '@teambit/api-reference.renderers.schema-nodes-index@0.0.0-84065b848688c0283ad004cebb93144c0630f1c0(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.0-aaaa7642e4c8de7b4dbe3d038a81ebafa454be09(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/design.ui.surfaces.menu.item': 0.0.354(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5(@testing-library/react-hooks@8.0.1)(react@18.3.1)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      lodash.flatten: 4.4.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+
+  '@teambit/api-reference.renderers.schema-nodes-index@0.0.0-84065b848688c0283ad004cebb93144c0630f1c0(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.0-aaaa7642e4c8de7b4dbe3d038a81ebafa454be09(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/design.ui.surfaces.menu.item': 0.0.354(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5(@testing-library/react-hooks@8.0.1)(react@19.2.7)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      lodash.flatten: 4.4.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
+
+  '@teambit/api-reference.renderers.schema-nodes-index@0.0.0-84065b848688c0283ad004cebb93144c0630f1c0(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.0-aaaa7642e4c8de7b4dbe3d038a81ebafa454be09(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/design.ui.surfaces.menu.item': 0.0.354(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/docs.ui.hooks.use-element-on-fold': 1.96.5(@testing-library/react-hooks@8.0.1)(react@19.2.7)
+      classnames: 2.2.6
+      core-js: 3.13.0
+      lodash.flatten: 4.4.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+    transitivePeerDependencies:
+      - '@testing-library/react'
+      - '@testing-library/react-hooks'
+      - '@types/react'
 
   '@teambit/api-reference.renderers.schema-nodes-index@0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
@@ -75223,6 +75435,30 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
       react-syntax-highlighter: 15.6.6(react@19.2.7)
 
+  '@teambit/documenter.ui.table-row@4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)':
+    dependencies:
+      '@teambit/base-ui.layout.grid-component': 1.0.2(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/documenter.ui.table-column': 4.0.4(react@18.3.1)
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      classnames: 2.5.1
+      core-js: 3.13.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-syntax-highlighter: 15.6.6(react@18.3.1)
+
+  '@teambit/documenter.ui.table-row@4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@teambit/base-ui.layout.grid-component': 1.0.2(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/documenter.ui.table-column': 4.0.4(react@19.2.7)
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      classnames: 2.5.1
+      core-js: 3.13.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-syntax-highlighter: 15.6.6(react@19.2.7)
+
   '@teambit/documenter.ui.table.base-table@4.1.7(react@18.3.1)':
     dependencies:
       '@teambit/documenter.ui.table.td': 4.1.7(react@18.3.1)
@@ -84812,14 +85048,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -84882,14 +85116,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -84952,14 +85184,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -85022,14 +85252,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 5.2.1
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -85066,7 +85294,6 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/harmony': 0.4.12
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -85081,7 +85308,6 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/harmony': 0.4.12
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -88573,7 +88799,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -88724,7 +88949,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -88875,7 +89099,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -89026,7 +89249,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -89177,7 +89399,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
