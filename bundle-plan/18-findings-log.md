@@ -913,3 +913,20 @@ found duplicate capsules: teambit.harmony/envs/bit-cli-app-env@9904eb…`. The j
   `isolateComponents` now dedupes `componentsToIsolate` by full component id right after resolution
   (and `seedersWithVersions` after the versionless→resolved mapping, so `seedersCapsules` doesn't
   double up either). `tsc --noEmit` unchanged vs. baseline, oxlint/prettier clean.
+
+- **2026-08-19** — **the dedup fix worked** (pipeline `50138`: "ensuring 14 capsule(s)", was 15, no
+  duplicate-capsules error); `bit_pr` then failed one step further in the same `BundleUI` task:
+  `ERR_PNPM_FETCH_404` for `@teambit/harmony.modules.cli-bundler` - the aspect-capsule install for
+  `bit-cli-app-env@<snap>` lists its dependency `cli-bundler` at the version snapped by this very
+  run, and the registry has neither the name (first-ever snap of a new component) nor lane-only
+  versions in general (`mcp-config-writer`'s branch snap would 404 next). The isolator already
+  handles exactly this for _cyclic_ snap deps ("an unpublished snap genuinely can't be fetched" -
+  pulled in as capsules and grouped so the members install together at the shared root with
+  sibling links); a plain dependency edge to an unpublished snap had no such handling because no
+  prior branch ever had a workspace-component env with workspace-component deps. **Fix**: new
+  `IsolatorMain.getSnapDependenciesOfSeeders` - for aspect isolation, every snap-versioned,
+  non-core dependency reachable from a seeder (graph `successors`, transitive) is pulled into the
+  isolation and grouped with that seeder via the existing install-together mechanism. Core aspects
+  are excluded even when snap-versioned (the capsules root links them). Only seeders that reach a
+  snap dep group; external published envs keep their isolated nested installs. tsc baseline
+  unchanged, oxlint/prettier clean.

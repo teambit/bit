@@ -421,6 +421,20 @@ export class IsolatorMain {
           componentsToIsolate = [...componentsToIsolate, ...cyclicDeps];
           cyclicMemberIds = memberIds;
         }
+        if (onlySnaps) {
+          const { components: snapDeps, installTogetherIds } = await this.getSnapDependenciesOfSeeders(
+            seeders,
+            componentsToIsolate,
+            createGraphOpts
+          );
+          if (snapDeps.length) {
+            this.logger.debug(
+              `isolateComponents, adding ${snapDeps.length} unpublished snap dependencies of the seeders`
+            );
+            componentsToIsolate = [...componentsToIsolate, ...snapDeps];
+            cyclicMemberIds = new Set([...(cyclicMemberIds ?? []), ...installTogetherIds]);
+          }
+        }
       }
     }
     // two seeders may resolve to the same component - e.g. an env living in the workspace is
@@ -594,6 +608,64 @@ export class IsolatorMain {
     // the host — getMany loads them without hitting the network.
     const components = await host.getMany(idsToAdd);
     return { components, cyclicMemberIds };
+  }
+
+  /**
+   * dependencies of aspect seeders that exist only as unpublished snaps. A snap-versioned
+   * dependency of an aspect capsule can't be installed from the registry: a component snapped on a
+   * lane during this very build has neither its name there (a first-ever snap of a new component)
+   * nor its lane-only version (a re-snap of a published one). Every such dependency reachable from
+   * a seeder is pulled into the isolation as a capsule and grouped with that seeder, so the group
+   * installs together at the shared root and the package manager links them as siblings — the same
+   * treatment `getCyclicDependenciesOfSeeders` gives cyclic snap members, generalized to plain
+   * dependency edges. Core aspects are excluded even when snap-versioned: the capsules root links
+   * them, so the registry is never asked for them.
+   */
+  private async getSnapDependenciesOfSeeders(
+    seeders: ComponentID[],
+    alreadyIsolated: Component[],
+    opts: CreateGraphOptions = {}
+  ): Promise<{ components: Component[]; installTogetherIds: Set<string> }> {
+    const empty = { components: [], installTogetherIds: new Set<string>() };
+    const host = opts.host || this.componentAspect.getHost();
+    const getGraphOpts = pick(opts, ['host']);
+    const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
+    const coreAspectIds = new Set(this.aspectLoader.getCoreAspectIds());
+    const alreadyIsolatedIds = new Set(alreadyIsolated.map((comp) => comp.id.toString()));
+    const seederIdsNoVer = new Set(seeders.map((id) => id.toStringWithoutVersion()));
+    // the graph's node ids are versioned while a seeder id may be versionless, so seeders are
+    // located in the graph by their versionless form (same reason getCyclicDependenciesOfSeeders
+    // compares without version)
+    const seederNodeIds = graph.nodes
+      .filter((node) => seederIdsNoVer.has(node.attr.toStringWithoutVersion()))
+      .map((node) => node.id);
+    const isPullableSnapDep = (id: ComponentID | undefined): id is ComponentID =>
+      id != null &&
+      id.version != null &&
+      isSnap(id.version) &&
+      !alreadyIsolatedIds.has(id.toString()) &&
+      !seederIdsNoVer.has(id.toStringWithoutVersion()) &&
+      !coreAspectIds.has(id.toStringWithoutVersion());
+    const idsToAdd = new Map<string, ComponentID>();
+    const installTogetherIds = new Set<string>();
+    for (const seederNodeId of seederNodeIds) {
+      const snapDeps = graph
+        .successors(seederNodeId)
+        .map((node) => node.attr)
+        .filter(isPullableSnapDep);
+      if (!snapDeps.length) continue;
+      const seederId = graph.node(seederNodeId)?.attr;
+      if (seederId) installTogetherIds.add(seederId.toString());
+      snapDeps.forEach((id) => {
+        idsToAdd.set(id.toString(), id);
+        installTogetherIds.add(id.toString());
+      });
+    }
+    if (idsToAdd.size === 0) return empty;
+    // the ids come straight from the graph we just built, so their objects are already present in
+    // the host — getMany loads them without hitting the network.
+    const components = await host.getMany([...idsToAdd.values()]);
+    return { components, installTogetherIds };
   }
 
   private registerMoveCapsuleOnProcessExit(
