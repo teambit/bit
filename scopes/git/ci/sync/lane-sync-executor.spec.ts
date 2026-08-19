@@ -805,26 +805,26 @@ describe('postRunSummaryComment', () => {
       laneIdStr: 'acme.shop/my-lane',
       branch: 'my-lane',
       laneHead: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2',
+      branchTipSha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1',
       preComponents: BEFORE,
       postComponents: AFTER,
     }) as Promise<void>;
 
-  // Best-effort means EVERY fallible step, including the git refetch that reads the branch tip for
-  // the body — an export that already succeeded must never be failed by its own progress report.
-  it('warns and returns when reading the branch tip for the body throws', async () => {
-    const warnings: string[] = [];
-    const upserts: any[] = [];
+  // The anchor is the ledger sha THIS run pushed — passed in, never refetched: a concurrent developer
+  // push must not be presented as the synced tip, and no remote read exists to fail the path.
+  it('anchors the body on the given pushed sha without any branch refetch', async () => {
+    const upserts: string[] = [];
     const gitHost = {
       findPrByBranch: async () => ({ number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] }),
-      upsertComment: async (...args: any[]) => upserts.push(args),
+      upsertComment: async (_n: number, _m: string, body: string) => upserts.push(body),
     };
-    const executor = executorWith(gitHost, warnings);
+    const executor = executorWith(gitHost);
     (executor as any).currentBranchTip = async () => {
-      throw new Error('git refetch failed');
+      throw new Error('must not be called');
     };
     await call(executor);
-    expect(warnings.join('\n')).to.include('run-summary');
-    expect(upserts).to.have.lengthOf(0);
+    expect(upserts).to.have.lengthOf(1);
+    expect(upserts[0]).to.include('branch: `my-lane` @ `aaaaaaaaa`');
   });
 
   it('upserts the marked comment on the open PR when the host supports it', async () => {

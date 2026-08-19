@@ -757,6 +757,7 @@ export class LaneSyncExecutor {
         target,
         laneIdStr,
         branch,
+        branchTipSha: recorded.branchTipSha,
         laneHead: recorded.laneHead,
         preComponents: laneSummaryComponents(preExportLane),
         postComponents: laneSummaryComponents(recorded.remoteLane),
@@ -977,6 +978,7 @@ export class LaneSyncExecutor {
           target,
           laneIdStr,
           branch,
+          branchTipSha: recorded.branchTipSha,
           laneHead: recorded.laneHead,
           preComponents: laneSummaryComponents(preExportLane),
           postComponents: laneSummaryComponents(recorded.remoteLane),
@@ -1041,14 +1043,16 @@ export class LaneSyncExecutor {
     branch: string,
     opts: { adopted?: boolean } = {}
   ): Promise<
-    { status: 'unreadable' } | { status: 'raced' } | { status: 'ok'; laneHead: string; remoteLane: LaneData }
+    | { status: 'unreadable' }
+    | { status: 'raced' }
+    | { status: 'ok'; laneHead: string; remoteLane: LaneData; branchTipSha?: string }
   > {
     const remoteLane = await this.getRemoteLane(target);
     if (!remoteLane) return { status: 'unreadable' };
     const laneHead = laneHeadFingerprint(remoteLane.components);
     const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead, opts));
     if (pushResult.raced) return { status: 'raced' };
-    return { status: 'ok', laneHead, remoteLane };
+    return { status: 'ok', laneHead, remoteLane, branchTipSha: pushResult.pushedSha };
   }
 
   /**
@@ -1540,6 +1544,7 @@ export class LaneSyncExecutor {
     target,
     laneIdStr,
     branch,
+    branchTipSha,
     laneHead,
     preComponents,
     postComponents,
@@ -1547,6 +1552,8 @@ export class LaneSyncExecutor {
     target: LaneTarget;
     laneIdStr: string;
     branch: string;
+    /** The ledger sha THIS run pushed — the anchor is never refetched from the mutable remote tip. */
+    branchTipSha: string | undefined;
     laneHead: string;
     preComponents: LaneData['components'] | undefined;
     postComponents: LaneData['components'];
@@ -1565,7 +1572,7 @@ export class LaneSyncExecutor {
         laneIdStr,
         laneUrl,
         branch,
-        branchTipSha: await this.currentBranchTip(branch),
+        branchTipSha,
         laneHead,
         changed: changedLaneComponents(preComponents, postComponents),
       });
@@ -1595,13 +1602,16 @@ export class LaneSyncExecutor {
    * the push was rejected by a CONFIRMED race (`classifyPushRejection`) — the caller's cue to report a
    * benign noop instead of halting; any other push failure still throws.
    */
-  private async commitAllAndPush(branch: string, message: string): Promise<{ raced: boolean }> {
+  private async commitAllAndPush(branch: string, message: string): Promise<{ raced: boolean; pushedSha?: string }> {
     // The local knowledge of `origin/<branch>` right now — no fetch, `fetchOnce` already ran for this
     // whole executor run — is exactly what our about-to-be-made commit is based on. After a rejection,
     // this is the baseline `classifyPushRejection` checks the remote against to confirm a real race.
     const baseSha = await this.localRemoteTip(branch);
     await addAllExceptScopeAndModules();
     await commitWithIdentity(message, { extraArgs: ['--allow-empty'] });
+    // The sha of the commit this run is about to push — the summary anchors on it, never on a
+    // refetch of the mutable remote tip (a concurrent dev push must not read as the synced state).
+    const pushedSha = (await git.revparse(['HEAD'])).trim() || undefined;
     try {
       // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or
       // reinterpreted — the configured branch name is user input (see `sync-config.ts`).
@@ -1627,7 +1637,7 @@ export class LaneSyncExecutor {
       return { raced: true };
     }
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
-    return { raced: false };
+    return { raced: false, pushedSha };
   }
 
   /** `origin/<branch>`'s tip as this local clone currently knows it — no fetch. Undefined if unknown. */
