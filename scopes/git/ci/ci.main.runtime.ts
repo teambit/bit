@@ -51,7 +51,7 @@ import type { GitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider } from './sync/github-client';
 import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
 import { isValidGitBranchName } from './sync/sync-config';
-import { NO_CHANGES_TO_SNAP } from './sync/sync-state';
+import { NO_CHANGES_TO_SNAP, statusReportsUnsyncedWork } from './sync/sync-state';
 
 /**
  * Registered git hosts (GitHub ships built-in; others register from their own aspect).
@@ -521,21 +521,12 @@ export class CiMain {
 
   /**
    * Whether the workspace has anything the current lane doesn't reflect, per `bit status`. Read-only:
-   * adoption uses this instead of a probe snap, which writes even under dryRun. Every signal a later
-   * snap/export would push counts — including soft removals, hidden pending exports, and merge state.
+   * the sync probes use this instead of a probe snap, which writes even under dryRun. Every signal a
+   * later snap/export would push counts — soft removals, hidden pending exports, merge state, and
+   * unloadable components (unknown must not read as converged; see `statusReportsUnsyncedWork`).
    */
   async hasUnsyncedWorkChanges(): Promise<boolean> {
-    const status = await this.status.status({ lanes: true });
-    const divergence = [
-      status.newComponents,
-      status.modifiedComponents,
-      status.stagedComponents,
-      status.locallySoftRemoved,
-      status.pendingUpdateDependents,
-      status.mergePendingComponents,
-      status.componentsDuringMergeState,
-    ];
-    return divergence.some((components) => components.length > 0);
+    return statusReportsUnsyncedWork(await this.status.status({ lanes: true }));
   }
 
   /** `bit ci sync` — reconcile Bit lanes and the main scope with git branches and PRs (see `SyncOrchestrator`). */
