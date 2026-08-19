@@ -155,6 +155,51 @@ describe('bit ci sync — state model v2', function () {
     });
   });
 
+  // The bundled-commit blindness, split across TWO commits: a source edit in one commit, then a
+  // `.bitmap`-touching commit that leaves the parsed state identical. The newest `.bitmap` commit
+  // becomes the state commit, nothing rides above it, and a single-commit suspicion check would read
+  // the pair as converged — the earlier edit would silently never reach the lane.
+  describe('a source edit hidden under a later .bitmap-only commit is dev work, not convergence', () => {
+    const LANE = 'split-bundle';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('split-v1') }, 'split v1');
+      seedSync(LANE);
+
+      gitFetch();
+      helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+      // commit A: a real source edit, no `.bitmap` change
+      helper.fs.outputFile('comp2/index.js', comp2Src('edit-under-the-bitmap-commit'));
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "feat: edit comp2"');
+      // commit B: `.bitmap` touched, parsed state identical — B becomes the state commit and hides A
+      fs.appendFileSync(path.join(helper.scopes.localPath, '.bitmap'), '\n');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "chore: touch .bitmap"');
+      helper.command.runCmd(`git push origin ${LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+    });
+
+    it('exports the hidden edit onto the lane instead of declaring convergence', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> export-branch`);
+      const onLane = laneTipFile(devPath, 'comp2/index.js');
+      expect(onLane, `comp2/index.js on the lane tip:\n${onLane}`).to.include('edit-under-the-bitmap-commit');
+    });
+
+    it('a second run converges without pushing anything', () => {
+      const shaBefore = branchTipSha(LANE);
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop (converged`);
+      expect(branchTipSha(LANE)).to.equal(shaBefore);
+    });
+  });
+
   // Two independent defences: deletion requires attribution AND the marker on the tip; an unexported
   // lane pointer is not attribution at all.
   describe("a developer's own .bitmap commit must not launder a branch into deletion", () => {

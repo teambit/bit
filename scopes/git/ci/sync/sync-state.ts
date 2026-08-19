@@ -243,21 +243,23 @@ export async function readBranchSyncState(
   const range = stateCommit ? `${stateCommit}..${revision}` : `origin/${defaultBranch}..${revision}`;
   const count = await git.raw(['rev-list', range, '--count']);
 
-  // Source edits can RIDE IN the state commit itself — one commit changing `.bitmap` AND sources (the
-  // exact shape the conflict-halt comment's resolve-by-hand recipe produces) — and the range count
-  // starts after that commit, so they were invisible. Git file names alone cannot tell whether those
-  // sources are already inside the snap the `.bitmap` records (a dev who snapped, exported, and
-  // committed everything at once) or were never snapped at all — so this is SUSPECTED work, reported
-  // separately for the planner to probe rather than folded into `hasDevCommits`. Deliberately content-only,
-  // per this module's header: this reconciler's own ledger commits have the same shape (import-lane and
-  // merge-diverged bundle already-exported sources) and its probe is a read, so a spurious `true` costs
-  // one status check — while consulting the tip's MESSAGE here read a squash-merge (whose body quotes the
-  // squashed ledger messages, marker included) as machine-authored and silently dropped the bundled work.
+  // Source edits can HIDE AT OR BELOW the state commit — bundled into it (the conflict-halt comment's
+  // resolve-by-hand recipe), or in an earlier commit that a later `.bitmap`-only commit covers — and
+  // `hasDevCommits` starts counting only after it, so they were invisible. Git file names alone cannot
+  // tell whether those sources are already inside the snap the `.bitmap` records (a dev who snapped,
+  // exported, and committed everything at once) or were never snapped at all — so this is SUSPECTED
+  // work, computed over the whole range since the PREVIOUS state commit (the last point a `.bitmap`
+  // write could have accounted for sources) and reported separately for the planner to probe.
+  // Deliberately content-only, per this module's header: this reconciler's own ledger commits have the
+  // same shape (import-lane and merge-diverged bundle already-exported sources) and its probe is a
+  // read, so a spurious `true` costs one status check — while consulting the tip's MESSAGE here read a
+  // squash-merge (whose body quotes the squashed ledger messages, marker included) as machine-authored
+  // and silently dropped the bundled work.
   const stateCommitBundlesSources =
     !parseDevCommitCount(count) &&
     stateCommit !== undefined &&
     stateCommit === tipSha &&
-    (await commitTouchesBeyondBitmap(stateCommit));
+    (await sourcesTouchedSincePreviousState(revision, defaultBranch));
 
   return {
     stateCommit,
@@ -270,26 +272,22 @@ export async function readBranchSyncState(
 }
 
 /**
- * Whether `commit` changed any file besides `.bitmap`, against its first parent (`--root` covers an
- * initial commit; `-m --first-parent` makes a merge commit report the files it brought in, instead of
- * the silent empty diff plain `diff-tree` gives merges). Unreadable answers `true`: this feeds
- * `stateCommitBundlesSources`, where not knowing must plan the probe, never declare convergence.
+ * Whether any file besides `.bitmap` changed between the PREVIOUS `.bitmap`-writing commit (or, on a
+ * branch with only one, its fork point off the default branch) and the tip. A tree diff over the
+ * whole range, not a per-commit walk: a source edit in one commit followed by a `.bitmap`-only commit
+ * would be invisible to a single-commit check, and a later revert legitimately cancels out.
+ * Unreadable answers `true`: this feeds `stateCommitBundlesSources`, where not knowing must plan the
+ * probe, never declare convergence.
  */
-async function commitTouchesBeyondBitmap(commit: string): Promise<boolean> {
+async function sourcesTouchedSincePreviousState(revision: string, defaultBranch: string): Promise<boolean> {
   try {
-    const names = await git.raw([
-      'diff-tree',
-      '--no-commit-id',
-      '--name-only',
-      '-r',
-      '--root',
-      '-m',
-      '--first-parent',
-      commit,
-    ]);
-    // A state commit changed `.bitmap` by definition, so its first-parent diff is never empty — empty
-    // output is simple-git resolving on a non-zero exit (see `parseDevCommitCount`), i.e. unreadable.
-    if (!names.trim()) return true;
+    const previousStateCommit = (
+      await git.raw(['log', revision, '--first-parent', '-n', '1', '--skip', '1', '--format=%H', '--', BIT_MAP])
+    ).trim();
+    const base = previousStateCommit || (await git.raw(['merge-base', `origin/${defaultBranch}`, revision])).trim();
+    if (!base) return true;
+    const names = await git.raw(['diff', '--name-only', `${base}..${revision}`]);
+    // Empty is legitimate here (a range whose edits cancel out), unlike a single state commit's diff.
     return touchesBeyondBitmap(names);
   } catch {
     return true;
