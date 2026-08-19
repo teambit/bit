@@ -730,6 +730,10 @@ jobs:
 
   check_circular_dependencies:
     <<: *defaults
+    # the dev binary's install + workspace load (babel-register over source) exceeds the
+    # default medium class's 4GB - the container gets OOM-killed right after the package
+    # installation, while the trailing workspace compile builds the component graph.
+    resource_class: large
     steps:
       - attach_workspace:
           at: ./
@@ -755,6 +759,10 @@ jobs:
           name: 'bit install (dev binary)'
           command: 'cd bit && bit install'
           no_output_timeout: 30m
+          environment:
+            # the pnpm engine's rayon pools are sized from the HOST's cpu count inside docker;
+            # cap them to this class's actual cpus (see the same step in bit_pr).
+            RAYON_NUM_THREADS: '4'
       - run:
           name: 'check circular dependencies (repo bit)'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'

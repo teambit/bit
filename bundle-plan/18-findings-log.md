@@ -1155,3 +1155,15 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   sweep" concern for this specific test without touching `e2e_test_esbuild_bundle` at all - it now
   simply skips there (no mode set) instead of failing, and gets real coverage in
   `e2e_test_ui_prebundle` instead.
+- **2026-08-19** — pipeline 50250 (on `f57f2ae78`) confirmed the dist-preserver v2 fix end to end:
+  `build_ui_prebundle` and `e2e_test_ui_prebundle` went green, and `check_circular_dependencies`'s
+  `bit install (dev binary)` step completed the package installation cleanly with ZERO missing-dist
+  warnings (previously hundreds, followed by the recompile cascade). The job still died - but the
+  failure moved: the container was OOM-killed _after_ the install, during the trailing workspace
+  load (last log line: babel deoptimising the 500KB+ `cli-reference.mdx.js`), i.e. the dev binary's
+  babel-register workspace compile simply doesn't fit the default `medium` class's 4GB on this
+  branch. Applied the job-config lever flagged in the previous entry: `resource_class: large` for
+  `check_circular_dependencies` plus `RAYON_NUM_THREADS: '4'` on its install step (rayon pools are
+  sized from the host's cpus inside docker - same rationale as setup_harmony/bit_pr). `bit_pr` on
+  50250 was auto-canceled by the next push, not failed - it needs a clean run on the new pipeline
+  to confirm.
