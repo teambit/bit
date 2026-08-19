@@ -1224,3 +1224,11 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   "verify the binary" step now times two `--help` runs + lists the cache dir - a per-run cold/warm
   diagnostic in the job output. If the warm run lands ~1.2s on CI as predicted, the `--help` budget
   (bumped to 2500ms earlier today) can come back down.
+- **2026-08-19** — pipeline 50302 (`704c5f1e9`) fully green AND confirms the compile-cache fix on
+  CI: both bundle e2e jobs' new diagnostic step shows the cache dir populated (7.5-13MB) and warm
+  `bit --help` at 0.82-0.92s, and the in-suite timing test measured **931ms** (was 1720-2270ms) -
+  `bit status` 1040ms. The `--version` in the verify step is the true cold run (the launcher
+  requires the full bundle regardless of command), so both timed runs there are warm. Restored the
+  `bit --help` budget from 2500ms (this morning's stopgap bump) to the original 1500ms - now passes
+  with ~40% margin. Note for the future: mocha's per-test `run_time` for this test (1.84s) covers
+  BOTH spawns (warm-up + timed); the real measurement is the console.log line in the node's output.

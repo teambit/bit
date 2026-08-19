@@ -70,11 +70,13 @@ describe('Filesystem read count', function () {
         const [timeInSeconds, nanoseconds] = process.hrtime(start);
         const timeInMs = timeInSeconds * 1000 + nanoseconds / 1_000_000;
         // On my Mac M1, as of 2025/03/03, it takes 312ms.
-        // On Circle, with the esbuild CLI bundle, it ranged 1720-2270ms across the last 10
-        // e2e_test_esbuild_bundle runs on 2026-08-12/19 (checked via `circleci testresult get`) -
-        // budget set a bit above that observed max, not the old pre-bundle 1500ms.
+        // On Circle, with the esbuild CLI bundle, it ranged 1720-2270ms until 2026-08-19: node
+        // persists its compile cache only on graceful teardown, and bit exits via process.exit(),
+        // so every spawn re-parsed the whole bundle. The launcher now flushes the cache right
+        // after the big require (see bundle-plan/18-findings-log.md, 2026-08-19), which brought
+        // the same measurement down to 931ms - back under the original pre-bundle budget.
         console.log('bit --help load time in milliseconds: ', Math.floor(timeInMs));
-        expect(timeInMs).to.be.lessThan(2500);
+        expect(timeInMs).to.be.lessThan(1500);
       });
     });
     describe('bit status', () => {
