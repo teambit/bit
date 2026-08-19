@@ -14,7 +14,7 @@
 #   nothing else can be: bump commits carry "[skip ci]", which suppresses Actions push runs too,
 #   and the cron is throttled to 5-15m. With the ping, the next PR gets its turn within seconds.
 # - push to master: PR merges landing (bump commits fire nothing, per the above).
-# - check_suite: a queued PR's CI finishing fires no push/PR event, so without this the
+# - check_suite: a queued PR's Actions CI finishing fires no push/PR event, so without this the
 #   green->turn transition waited for the throttled cron (10-20m in practice). Fires on every
 #   suite completion in the repo; the reconcile is idempotent and cheap, and the concurrency
 #   group collapses bursts. Master suites are filtered out in the job condition — push and
@@ -24,6 +24,15 @@
 #   head_branch is null, so the master filter keeps them). No self-recursion: this workflow's own
 #   runs complete their suites via GITHUB_TOKEN, whose events never trigger workflows. Runs the
 #   default branch's workflow copy, so PR code never runs here.
+# - status: check_suite only covers GitHub Actions suites — the CircleCI gating checks are
+#   commit statuses, which fire this event instead. Without it, the last CircleCI job going
+#   green fires nothing and a ready PR parks until the cron/heartbeat (2026-08-18: a scheduled
+#   run evaluated 15s before bit_pr turned green, stranding an otherwise-mergeable PR). The job
+#   condition drops pending states (no queue decision changes on pending), master-branch
+#   statuses (push + repository_dispatch cover master; branches is empty for fork PR heads, so
+#   they pass), and our own merge-queue/* context (heartbeat runs post it with a PAT whose
+#   events do trigger workflows — one echo reconcile is harmless, but there's no point).
+#   Like check_suite, always runs the default branch's workflow copy.
 # - workflow_run (merge-queue-review-ping): a review landing on a queued PR — approvals un-stick
 #   winners demoted for a missing review. Reviews can't trigger this workflow directly:
 #   pull_request_review runs the PR merge commit's workflow copy, which must never see
@@ -56,6 +65,7 @@ on:
     types: [merge-queue-reconcile]
   check_suite:
     types: [completed]
+  status: {}
   workflow_run:
     workflows: [merge-queue-review-ping]
     types: [completed]
@@ -84,6 +94,10 @@ jobs:
       github.repository == 'teambit/bit' &&
       (github.event_name != 'check_suite' ||
        github.event.check_suite.head_branch != 'master') &&
+      (github.event_name != 'status' ||
+       (github.event.state != 'pending' &&
+        !contains(github.event.branches.*.name, 'master') &&
+        !startsWith(github.event.context, 'merge-queue/'))) &&
       (github.event_name != 'workflow_run' ||
        github.event.workflow_run.conclusion == 'success') &&
       (github.event_name != 'pull_request_target' ||

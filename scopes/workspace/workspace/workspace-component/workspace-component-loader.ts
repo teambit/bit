@@ -905,7 +905,15 @@ export class WorkspaceComponentLoader {
   }
 
   clearComponentCache(id: ComponentID) {
-    const idStr = id.toString();
+    this.clearComponentsCache([id]);
+  }
+
+  /**
+   * bulk version of clearComponentCache. scans each cache once for all the given ids, rather
+   * than once per id, so clearing many components stays cheap.
+   */
+  clearComponentsCache(ids: ComponentID[]) {
+    const idsStr = new Set(ids.map((id) => id.toString()));
     const cachesToClear = [
       this.componentsCache,
       this.scopeComponentsCache,
@@ -914,7 +922,9 @@ export class WorkspaceComponentLoader {
     ];
     cachesToClear.forEach((cache) => {
       for (const cacheKey of cache.keys()) {
-        if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
+        // the cache key is either the id-str alone or `${idStr}:${loadOptsStr}`
+        const cacheKeyIdStr = cacheKey.split(':')[0];
+        if (idsStr.has(cacheKeyIdStr)) {
           cache.delete(cacheKey);
         }
       }
