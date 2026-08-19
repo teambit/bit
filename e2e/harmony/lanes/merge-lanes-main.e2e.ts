@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
@@ -314,6 +315,49 @@ describe('merge lanes - main lane operations', function () {
       const hashes = log.map((logEntry) => logEntry.hash);
       expect(hashes).to.include(gapSnap);
       expect(hashes).to.include(remoteHead);
+    });
+  });
+
+  describe('merging main into a lane when main added a new package dependency', () => {
+    let mergeOutput: string;
+    // enough distance between the top of the file (changed on main) and the bottom
+    // (changed on the lane) for the merge to auto-resolve without conflicts
+    const filler = Array.from({ length: 10 }, (_, index) => `// filler line ${index}`).join('\n');
+    const baseFile = `${filler}\nmodule.exports = () => 'comp1';\n`;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', baseFile);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.fs.outputFile('comp1/index.js', `${baseFile}// lane-only change\n`);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      // create a lockfile that does not include is-positive
+      helper.command.install();
+      // precondition: the lane workspace must know nothing about is-positive, otherwise the
+      // merge below won't exercise the install-new-deps path this test is about
+      expect(helper.fs.readFile('pnpm-lock.yaml')).to.not.have.string('is-positive');
+      expect(path.join(helper.scopes.localPath, 'node_modules/is-positive')).to.not.be.a.path();
+      const laneWs = helper.scopeHelper.cloneWorkspace();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.install('is-positive@3.1.0');
+      helper.fs.outputFile('comp1/index.js', `const isPositive = require('is-positive');\n${baseFile}`);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      // back to the lane workspace, whose lockfile knows nothing about is-positive
+      helper.scopeHelper.getClonedWorkspace(laneWs);
+      mergeOutput = helper.command.mergeLaneWithoutBuild('main');
+    });
+    it('should install the dependency added on main and complete the auto-snap', () => {
+      expect(mergeOutput).to.not.have.string('snap error');
+      expect(mergeOutput).to.not.have.string('missing packages');
+      // "Total Snapped: 1" is interrupted by ANSI styling, match the section title instead
+      expect(mergeOutput).to.have.string('merge-snapped components (1)');
+    });
+    it('should have the new dependency in node_modules', () => {
+      expect(path.join(helper.scopes.localPath, 'node_modules/is-positive')).to.be.a.directory();
     });
   });
 });
