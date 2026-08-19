@@ -2,7 +2,15 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-08-19 (merged `origin/remove-core-envs-from-manifest` again — upstream
+> Last updated: 2026-08-19 (rebuilt the UI/preview pre-bundle and `.bundle-cache/` from current
+> source after the merge below — UI artifact **80 MB → 16 MB** (#10629's single-compilation dedupe,
+> now reflected on this branch); found and fixed a real bug in the e2e `HttpHelper` where a
+> multi-word server binary crashed `spawn()` with an unhandled `'error'` event, silently hanging
+> instead of failing; verified end to end against a real `npm run bundle` build — 16/16 UI-bundling
+> sanity tests passing, including SSR. Total shipped distribution now **160 MB / 2,839 files** (was
+> 216 MB / 2,933). See [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-08-19 entries, and
+> PRs #10628/#10629/#10631 for the upstream work behind the size drop.)
+> Previously, same day (merged `origin/remove-core-envs-from-manifest` again — upstream
 > replaced `BundleUiTask`/`UiMain.build`'s per-root two-compilation UI bundling with a single
 > rspack compilation covering both roots; reconciled by hand, keeping upstream's architecture and
 > single-hash-file layout while porting this branch's `forPreBundle` core-aspect filtering and
@@ -35,14 +43,14 @@ doc updated as you work.
 
 ## At a glance
 
-|                     | released bit (bvm 2.0.72) | bundled bit (this branch)                                                                                 |
-| ------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------- |
-| install size        | **1.2 GB**                | **216 MB** (60 MB bundle + 63 MB externals + ~93 MB shims, incl. the 83 MB pre-bundled UI/preview — §17i) |
-| files on disk       | **141,008**               | **~2,900**                                                                                                |
-| `bit --help` (warm) | 0.662 s                   | **0.642 s** (SEA: 1.324 s — §9)                                                                           |
-| `bit list` (warm)   | 0.914 s                   | **0.848 s** (SEA: 1.574 s)                                                                                |
-| single executable   | —                         | **179 MB `bit-app`** (+ the `bundle/` support dir)                                                        |
-| build time          | n/a                       | ~11 s esbuild + ~5 s codegen (+ ~40 s for the SEA variant)                                                |
+|                     | released bit (bvm 2.0.72) | bundled bit (this branch)                                                                                   |
+| ------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| install size        | **1.2 GB**                | **160 MB** (60 MB bundle + 64 MB externals + ~33 MB shims, incl. the 16.7 MB pre-bundled UI/preview — §17i) |
+| files on disk       | **141,008**               | **~2,839**                                                                                                  |
+| `bit --help` (warm) | 0.662 s                   | **0.642 s** (SEA: 1.324 s — §9)                                                                             |
+| `bit list` (warm)   | 0.914 s                   | **0.848 s** (SEA: 1.574 s)                                                                                  |
+| single executable   | —                         | **179 MB `bit-app`** (+ the `bundle/` support dir)                                                          |
+| build time          | n/a                       | ~11 s esbuild + ~5 s codegen (+ ~40 s for the SEA variant)                                                  |
 
 Full detail in [01-goal-and-results.md](bundle-plan/01-goal-and-results.md).
 

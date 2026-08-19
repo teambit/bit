@@ -962,3 +962,80 @@ true)` so the artifact and its hash agree - see §17d/17e). Also kept this branc
   `getBundleUiPath` fix (`getAspectArtifactDir`, tries the running bit's own artifacts before
   bvm) rather than upstream's reverted-to `getAspectDirFromBvm`, adapted to the new single
   no-arg artifact directory. `npm run lint` (tsc + oxlint) clean after reconciliation.
+
+- **2026-08-19** — cherry-picked `59bd5c2ce` (#10631, "bit start sanity e2e, plus fixes for the
+  qodo findings on #10628/#10629") onto `bit-bundle3` (`664cbb1ea`) — landed on `master` after this
+  branch's merge above, so it wasn't pulled in with it. Reconciled the same `bundle-ui.task.ts`
+  conflict as above (kept `getUiRoots()`-based hashing from #10631 - hash exactly the _registered_
+  roots instead of a hardcoded list - combined with this branch's `forPreBundle: true`), and merged
+  `http-helper.ts`'s new `HttpHelperOptions`/`stderr`/timeout machinery with this branch's
+  `serverBin` (folded `serverBin` into the options object). Added `e2e/harmony/ui-start.e2e.ts`.
+  `npm run lint` clean.
+- **2026-08-19** — the two new suites (`ui-ssr.e2e.ts`, `ui-start.e2e.ts`) default to `--rebuild`
+  against `nonBundledBitBin`/no explicit binary, which breaks under `e2e_test_esbuild_bundle` (its
+  default bundle ships no rspack to rebuild with) and doesn't exercise the real shipped pre-bundle
+  either way. Gated both behind `BIT_E2E_UI_MODE` (`rebuild` | `prebuilt`, see `uiE2eMode()` in
+  `e2e/http-helper.ts`) so they skip unless explicitly requested, and documented the two run modes
+  plus exact commands in [11-e2e-suite.md](11-e2e-suite.md). Neither mode is wired into CI yet -
+  tracked as gap 9 in [14-known-gaps.md](14-known-gaps.md).
+- **2026-08-19** — smoke-testing `ui-ssr.e2e.ts` in `rebuild` mode (`BIT_E2E_UI_MODE=rebuild npx
+mocha --require ./babel-register e2e/harmony/ui-ssr.e2e.ts`, against this branch's own `bd`)
+  surfaced a real, deterministic (reproduced twice) SSR crash - **not** something introduced by the
+  merge/cherry-pick above, since it's the first test to ever exercise `bit start`'s SSR path on this
+  branch. `[ssr] failed at '/'`: `ReferenceError: window is not defined` inside `useUserAgent` (via
+  `useIsMobile` → `Tooltip`) - the exact symptom #10628's `resolveAlias` fix
+  (`rspack.common.ts`) targeted (a duplicated `use-user-agent` copy gives the SSR-context provider
+  and consumer different module instances, so the consumer sees `undefined` and takes the
+  browser-only fallback). The alias is present and applied on both the browser and SSR configs
+  (verified), so it isn't simply missing. Likely cause: `node_modules/.pnpm` on this branch carries
+  **three** React majors/minors side by side (19.2.7, 19.1.0, 18.3.1) - `workspace.jsonc`'s
+  `overrides` comment confirms this is deliberate ("unify all React-19 contexts on a single exact
+  version... v17(react 17) contexts are unaffected"), i.e. legacy, no-longer-core envs are
+  intentionally left on an older React. `resolveAlias` pins one `react`/`react-dom`/`use-user-agent`
+  copy globally, which doesn't obviously reconcile with a workspace that deliberately keeps two
+  React majors live. Not root-caused further or fixed this session (a genuine fix needs to either
+  extend the alias strategy or address why multiple React majors reach the SSR bundle at all -
+  itself plausibly fallout from `remove-core-envs-from-manifest`, the same category of issue as
+  §17b's hash mismatch). Tracked as gap 10 in [14-known-gaps.md](14-known-gaps.md) rather than fixed
+  here, per explicit direction to prioritize the cache rebuild + size-doc update this session.
+- **2026-08-19** — rebuilt the UI/preview pre-bundle from current source and refreshed
+  `.bundle-cache/`: `bd build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules
+--tasks "BundleUI,PreBundlePreview"` (§17i), then `BIT_BIN=bd npm run bundle:prebundle-cache:save`.
+  UI artifact **16 MB / 57 files** (was 158 files / part of an 80 MB cache before #10629's
+  single-compilation dedupe landed on this branch), preview unchanged at 704 KB / 3 files -
+  `.bundle-cache/` itself: **80 MB → 19 MB**. Matches #10629's claimed 24→16 MB exactly.
+- **2026-08-19** — while validating `prebuilt` mode end to end (`npm run bundle` with the fresh
+  cache, then the two suites against the built binary), found and fixed a **real, independent bug**
+  in `HttpHelper.start()` (`e2e/http-helper.ts`) - this is what the `prebuilt`-mode hang reported
+  earlier in this entry's own investigation turned out to be, once isolated with a minimal repro
+  script outside mocha: `childProcess.spawn(this.serverBin, args, { cwd })` does not go through a
+  shell, so when `serverBin` is a full command string rather than a bare bin name - exactly what
+  `CommandHelper.bitBin` legitimately is for a bundle under test, e.g. `"node
+/tmp/bit-bundle/bin/bit"` - `spawn` looks for a single executable literally named that whole
+  string (embedded space and all) and fails with `ENOENT`. Worse, that failure surfaces as an
+  _unhandled_ `'error'` event (no listener was attached), which node throws from deep inside its own
+  internals rather than rejecting the `start()` promise - so neither `resolve` nor `reject` ever
+  fires, and a `before()` hook with `this.timeout(0)` (both new suites use it, since a `--rebuild`
+  run legitimately takes minutes) just hangs forever with no error printed anywhere. Fixed by
+  splitting `serverBin` into `[program, ...programArgs]` before spawning, and by adding an `'error'`
+  listener that rejects cleanly. This bug is unrelated to anything else in this session - `rebuild`
+  mode never hit it because `nonBundledBitBin`/a plain bin name never contains a space - and would
+  have affected _any_ future caller passing a multi-word `serverBin`, not just `prebuilt` mode.
+- **2026-08-19** — with that fix, `prebuilt` mode is fully verified against a real `npm run bundle`
+  build (fresh externals install, `bit --version`/`--help` both fine, 16 MB UI + 704 KB preview
+  correctly present under `dist/core-aspects/node_modules/@teambit/{ui,preview}/artifacts/`):
+  `BIT_E2E_UI_MODE=prebuilt` + `ui-start.e2e.ts`/`ui-ssr.e2e.ts` together - **16/16 passing**,
+  including all 4 SSR assertions. That is the important correction to the SSR-crash entry above:
+  the crash is confined to `rebuild` mode (a live rebuild resolving the _full_ test workspace's
+  aspect graph, which can pull in a non-core env like `teambit.react/react` and, with it, a second
+  React major) - the shipped, `forPreBundle`-filtered (core-aspects-only) artifact that
+  `BundleUiTask` actually produces and ships does **not** hit it, confirmed by all 4 SSR checks
+  passing against the real bundle. So the SSR bug affects local `--rebuild` dev workflows only, not
+  what real users get from a released bundle - downgraded in known-gaps accordingly, though it's
+  still worth fixing since `--rebuild` is the documented fast local-iteration path (§17i).
+- **2026-08-19** — total esbuild CLI bundle size with the fresh pre-bundle: **160 MB / 2,839 files**
+  (`bundleSizeMb` 60.18 from `npm run bundle`'s own report + 100 MB of externals after `npm
+install`), down from the previously recorded 216 MB / 2,933 files - the ~60 MB UI-bundle shrink
+  from #10629 flows straight through. See PRs #10628 (58→24 MB, SSR fix), #10629 (24→16 MB, single
+  compilation), #10631 (bit-start sanity e2e + qodo-finding fixes, cherry-picked above) for the
+  upstream work behind these numbers.

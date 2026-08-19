@@ -49,3 +49,61 @@ Consequences, all verified:
 
 The externals `npm install` runs as part of the ensure step and is a no-op on a warm machine, because
 a clean rebuild deliberately preserves `bundle/node_modules`.
+
+### The UI-bundling sanity suites (`ui-ssr.e2e.ts`, `ui-start.e2e.ts`) — two modes, both opt-in (2026-08-19)
+
+These two files (cherry-picked from upstream #10628/#10629/#10631, see §14 2026-08-19) start a real
+`bit start` server and assert over http, so they need a run mode that a generic e2e invocation
+cannot infer on its own: which binary to start, and whether `--rebuild` is even possible for it.
+Left ungated they would break under `e2e_test_esbuild_bundle` — that job sweeps every e2e spec file
+and runs it with `--rebuild`-by-default logic, but the default bundle distribution does not ship the
+UI toolchain (rspack et al., §8.3), so a live rebuild on the bundled binary fails. Both suites
+therefore skip entirely unless `BIT_E2E_UI_MODE` is set to one of:
+
+| mode       | binary                                                          | `--rebuild`? | when                                                                                                                                         |
+| ---------- | --------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rebuild`  | plain non-bundled `bd`/`bit` (`CommandHelper.nonBundledBitBin`) | yes          | local iteration — no pre-bundle needed, but a cold rebuild is minutes                                                                        |
+| `prebuilt` | whatever `--bit_bin` selects (`CommandHelper.bitBin`)           | no           | validating the real, shipped artifact — proves `bit start` serves the baked-in pre-bundle rather than falling back to a rebuild it cannot do |
+
+`uiE2eMode()`/`uiE2eHttpHelperOptions()` in `e2e/http-helper.ts` implement this; each test file's
+header comment points back here.
+
+**Run `rebuild` mode** (fast, local, describes whatever this repo's source currently is):
+
+```bash
+# NOT `npm run e2e-test -- <file>` — that script's spec glob ('./e2e/**/*.e2e*.ts') is baked into
+# the command string, so an appended arg adds to it rather than replacing it, and you get the whole
+# suite. Invoke mocha directly instead, exactly like e2e-with-bundle.js does for `prebuilt` mode:
+BIT_E2E_UI_MODE=rebuild npx mocha --require ./babel-register \
+  e2e/harmony/ui-start.e2e.ts e2e/harmony/ui-ssr.e2e.ts
+# or add .only per this repo's usual e2e-testing convention and run npm run e2e-test as normal —
+# slower (loads every spec file) but fine if you're already running other e2e tests too
+```
+
+**Run `prebuilt` mode** (slower to set up, but validates the actual shipped esbuild CLI bundle end
+to end — the two, chained together, are the closest thing this branch has to "does `bit start` work
+out of the box for someone who installed the bundle"):
+
+```bash
+# 1. produce a real local ui/preview pre-bundle from current source (§17i) — this is the slow step
+bd build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules \
+  --tasks "BundleUI,PreBundlePreview"
+BIT_BIN=bd npm run bundle:prebundle-cache:save
+
+# 2. build (or reuse, if the stamp already matches) the esbuild CLI bundle, and run only these two
+#    files against it — e2e-with-bundle.js forwards explicit spec paths instead of the full glob,
+#    which is what keeps this out of the ordinary e2e sweep even when invoked directly
+BIT_E2E_UI_MODE=prebuilt npm run e2e-test:bundle -- e2e/harmony/ui-start.e2e.ts e2e/harmony/ui-ssr.e2e.ts
+```
+
+Step 2's `ensureBundle` restores whatever is in `.bundle-cache/` into the bundle automatically (it
+does not itself produce a pre-bundle — that is step 1); a stale cache silently tests stale UI code,
+same caveat as §17i's "plain file cache, not a freshness gate" note.
+
+**Not yet wired into CI.** As of this writing no CircleCI job sets `BIT_E2E_UI_MODE`, so neither
+suite runs in CI at all — `e2e_test` and `e2e_test_esbuild_bundle` both skip them (no mode set), and
+there is no dedicated job that does steps 1–2 above. That's a real coverage gap, tracked in
+[14-known-gaps.md](14-known-gaps.md): a future CI job would need to run `bd build` + save the
+prebundle cache + `setup_esbuild_bundle` (in that order, since the bundle step restores from the
+cache) before invoking the `prebuilt`-mode command above — none of which the current
+`setup_esbuild_bundle`/`e2e_test_esbuild_bundle` jobs do today.
