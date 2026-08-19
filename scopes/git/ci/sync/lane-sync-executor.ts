@@ -101,6 +101,12 @@ export function racedAdoptionPushSummary(laneName: string): string {
   return racedSummary(laneName, 'lane untouched; adoption ledger commit lost the push race — next run re-plans');
 }
 
+/**
+ * An HTML comment embedded in the run-summary comment's body, so `upsertComment` finds and replaces
+ * THIS comment on a later run rather than posting a duplicate summary on every push.
+ */
+export const RUN_SUMMARY_MARKER = '<!-- bit-ci-sync:run-summary -->';
+
 export type LaneSyncDeps = {
   lanes: LanesMain;
   /** for snapPrCommit + getDefaultBranchName + switchToLaneForSync */
@@ -362,11 +368,13 @@ export class LaneSyncExecutor {
     const branchExists = await branchExistsOnRemote(branch);
     const branchState: BranchSyncState = branchExists
       ? await readBranchSyncState(branch, defaultBranch, defaultScope)
-      : { stateCommit: undefined, bitmap: undefined, hasDevCommits: false, tipMessage: '' };
-    if (hasSyncMarker(branchState.tipMessage)) {
-      logger.console('branch tip is a bit-sync commit; reconciler will no-op unless the lane moved');
-    }
-
+      : {
+          stateCommit: undefined,
+          bitmap: undefined,
+          hasDevCommits: false,
+          stateCommitBundlesSources: false,
+          tipMessage: '',
+        };
     // Read before any refusal below: every halt must be suppressible by the conflict label, or a
     // standing problem re-comments on the same PR on every scheduled run.
     const pr = await this.findPr(branch);
@@ -444,7 +452,7 @@ export class LaneSyncExecutor {
 
     const branchNamesDifferentLane = await this.computeBranchNamesDifferentLane(
       lastSyncedHead,
-      branchState.hasDevCommits,
+      branchState.hasDevCommits || branchState.stateCommitBundlesSources,
       mirroredLane,
       laneIdStr,
       branch,
@@ -456,6 +464,7 @@ export class LaneSyncExecutor {
       branchExists,
       lastSyncedHead,
       hasDevCommits: branchState.hasDevCommits,
+      stateCommitBundlesSources: branchState.stateCommitBundlesSources,
       tipIsSyncCommit,
       hasIndependentHistory,
       conflictLabelPresent,
@@ -467,7 +476,9 @@ export class LaneSyncExecutor {
       chalk.blue(
         `${laneName} -> ${action.type} (branch: ${branch}, lane head: ${laneHead?.slice(0, 9) ?? 'none'}, ` +
           `branch state: ${lastSyncedHead?.slice(0, 9) ?? 'none'}, ` +
-          `dev commits: ${branchState.hasDevCommits}${laneIsGone ? `, branch claim: ${ownership}` : ''})`
+          `dev commits: ${branchState.hasDevCommits}` +
+          `${branchState.stateCommitBundlesSources ? ' (+sources bundled into the state commit)' : ''}` +
+          `${laneIsGone ? `, branch claim: ${ownership}` : ''})`
       )
     );
 
@@ -475,25 +486,6 @@ export class LaneSyncExecutor {
       const line = dryRunSummaryLine(laneName, action);
       logger.console(formatWarningSummary(`Dry-run: ${line}`));
       return line;
-    }
-
-    // A pair can be converged at the bit level while the tip still holds unsnapped source edits (a
-    // single commit that rewrites `.bitmap` AND carries an edit is its own state commit) — say so.
-    // `laneHead` must be checked explicitly: with no lane and no attribution both fingerprints are
-    // undefined, and `undefined === undefined` would fire on every ordinary developer branch.
-    if (
-      action.type === 'noop' &&
-      action.reason === 'converged' &&
-      !tipIsSyncCommit &&
-      laneHead &&
-      lastSyncedHead === laneHead
-    ) {
-      logger.console(
-        formatWarningSummary(
-          `converged on bit state, but ${branch}'s tip is not a bit ci sync commit — any source edits it ` +
-            `carries that were never snapped stay invisible until the next commit on the branch`
-        )
-      );
     }
 
     switch (action.type) {
@@ -512,20 +504,15 @@ export class LaneSyncExecutor {
           pr,
         });
       case 'export-branch':
-        // The tip is already this reconciler's own commit — it already confirmed everything up to
-        // it (that is what writing it means), and `hasDevCommits`/`stateCommit` cannot tell a real
-        // dev commit from one that touches no bit-tracked file (docs, CI config): `stateCommit` is
-        // derived from `.bitmap`'s content, never from commit messages (sync-state.ts), so a commit
-        // that leaves `.bitmap` byte-identical never advances it, however many runs re-confirm
-        // "nothing to snap" on top. Recognizing our own tip here — not by loosening `hasDevCommits`
-        // itself, which the ownership/retirement path also reads and must stay strict — is what
-        // makes that settle instead of re-planning `export-branch` forever.
-        if (tipIsSyncCommit) {
-          return `${laneName} -> noop (converged; branch tip is already this reconciler's own sync commit)`;
-        }
-        return this.executeExportBranch({ target, laneIdStr, branch, defaultBranch });
+        return this.executeExportBranch({
+          target,
+          laneIdStr,
+          branch,
+          defaultBranch,
+          preExportLane: remoteLane,
+        });
       case 'merge-diverged':
-        return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch });
+        return this.executeMergeDiverged({ target, laneIdStr, branch, defaultBranch, preExportLane: remoteLane });
       case 'adopt-branch':
         return this.executeAdoptBranch({ target, laneIdStr, branch, defaultBranch, pr });
       case 'close-pr':
@@ -678,28 +665,63 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * Push the branch's dev commits back onto the lane: snap+export the branch's tree, then commit the
-   * resulting `.bitmap` back onto the branch so the next run sees the two sides as converged.
+   * Push the branch's dev commits back onto the lane. Probe first, mutate second: like adoption, land
+   * the lane in the workspace keeping the BRANCH's files, then ask `bit status` whether the branch's
+   * tree holds anything the lane is missing. Nothing → converged, and nothing is written or pushed —
+   * which is why a suspected-work plan can repeat run after run without a memo, and why no commit
+   * message is ever consulted to suppress it. Something → snap + export, then commit the resulting
+   * `.bitmap` back onto the branch so the next run reads the two sides as converged.
    */
   private async executeExportBranch({
     target,
     laneIdStr,
     branch,
     defaultBranch,
+    preExportLane,
   }: {
     target: LaneTarget;
     laneIdStr: string;
     branch: string;
     defaultBranch: string;
+    /** The lane's content BEFORE this export — the baseline the run-summary comment diffs against. */
+    preExportLane: LaneData | undefined;
   }): Promise<string> {
     const { logger } = this.deps;
     const laneName = target.name;
     logger.console(chalk.blue(`Exporting branch ${branch} onto lane ${laneIdStr}`));
 
-    const message = await this.lastNonSyncCommitMessage(branch, defaultBranch);
     await this.checkoutFromRemote(branch, `origin/${branch}`);
 
     try {
+      const switchErr = await this.materializeLane(laneIdStr, false);
+      if (switchErr) {
+        return await this.executeHalt({
+          laneName,
+          laneIdStr,
+          branch,
+          reason: `failed to check branch ${branch} against lane ${laneIdStr} before exporting: ${switchErr.message}`,
+          pr: await this.findPr(branch),
+        });
+      }
+      // The probe's "clean" answer means converged only against the lane the PLAN read. A lane that
+      // moved in between must re-plan (merge-diverged owns that shape): comparing the branch's files
+      // with the newer lane would misread the lane's own advance as branch work, and the export would
+      // put the older content on top of a concurrent developer's push. The materialize above just
+      // fetched, so this read and the status below see the same lane.
+      if (preExportLane) {
+        const laneNow = await this.getRemoteLane(target);
+        const movedTo = laneNow ? laneHeadFingerprint(laneNow.components) : undefined;
+        if (movedTo !== laneHeadFingerprint(preExportLane.components)) {
+          return `${laneName} -> noop (lane ${laneIdStr} moved while this run was planning; the next run re-plans)`;
+        }
+      }
+      if (!(await this.deps.ci.hasUnsyncedWorkChanges())) {
+        logger.console(chalk.green(`Branch ${branch}'s tree holds nothing lane ${laneIdStr} is missing`));
+        return `${laneName} -> noop (converged)`;
+      }
+
+      // Read only once the probe found work: it walks up to 200 commits, wasted on a converged probe.
+      const message = await this.lastNonSyncCommitMessage(branch, defaultBranch);
       const exported = await this.snapAndExportOntoLane(laneIdStr, message);
       if (exported.status === 'error') {
         // Halt rather than propagate: one lane's failed snap/export must not abort the lanes after it.
@@ -710,6 +732,12 @@ export class LaneSyncExecutor {
           reason: `failed to snap and export branch ${branch} onto lane ${laneIdStr}: ${exported.error.message}`,
           pr: await this.findPr(branch),
         });
+      }
+      if (exported.status === 'noop') {
+        // `bit status` saw a difference the snap did not record. Nothing reached the lane and nothing
+        // is pushed, so the next run re-reads the identical state — visible-but-repeating beats a
+        // ledger commit asserting a convergence the status read just denied.
+        return `${laneName} -> noop (bit status reported unsynced changes but the snap found nothing to record)`;
       }
 
       const recorded = await this.recordLaneHeadOnBranch(target, laneIdStr, branch);
@@ -723,6 +751,17 @@ export class LaneSyncExecutor {
           pr: await this.findPr(branch),
         });
       }
+
+      // Best-effort: a comment failure must never undo a git/lane pair that already converged.
+      await this.postRunSummaryComment({
+        target,
+        laneIdStr,
+        branch,
+        branchTipSha: recorded.branchTipSha,
+        laneHead: recorded.laneHead,
+        preComponents: laneSummaryComponents(preExportLane),
+        postComponents: laneSummaryComponents(recorded.remoteLane),
+      });
       return (
         `${laneName} -> export-branch (lane ${laneIdStr} @ ${recorded.laneHead.slice(0, 9)}, ` +
         `branch ${branch} updated)`
@@ -824,11 +863,14 @@ export class LaneSyncExecutor {
     laneIdStr,
     branch,
     defaultBranch,
+    preExportLane,
   }: {
     target: LaneTarget;
     laneIdStr: string;
     branch: string;
     defaultBranch: string;
+    /** The lane's content BEFORE this merge export — the baseline the run-summary comment diffs against. */
+    preExportLane: LaneData | undefined;
   }): Promise<string> {
     const { logger } = this.deps;
     const laneName = target.name;
@@ -845,6 +887,17 @@ export class LaneSyncExecutor {
       // Force-checkout `origin/<branch>` and reload `.bitmap`: the merge depends on that file for the
       // lane pointer and the merge base, and a stale local branch must never leak into the result.
       await this.checkoutFromRemote(branch, `origin/${branch}`);
+
+      // Same freshness rule as the export probe: the plan's inputs must still describe the world.
+      // A lane that moved since planning re-plans — the next run merges the newer head — rather
+      // than proceeding on a divergence assessment the planner never made.
+      if (preExportLane) {
+        const laneNow = await this.getRemoteLane(target);
+        const movedTo = laneNow ? laneHeadFingerprint(laneNow.components) : undefined;
+        if (movedTo !== laneHeadFingerprint(preExportLane.components)) {
+          return `${laneName} -> noop (lane ${laneIdStr} moved while this run was planning; the next run re-plans)`;
+        }
+      }
 
       // ---- step 1: merge the lane's snaps into the branch's working tree -----------------------
       const merge = await this.mergeLaneIntoBranchWorkingTree(laneIdStr);
@@ -918,8 +971,22 @@ export class LaneSyncExecutor {
       if (recorded.status === 'unreadable') {
         return await halt(`lane ${laneIdStr} could not be read back from the remote after the merge export`);
       }
+      // The summary comment belongs only to runs that exported — same as the export path, and a
+      // nothing-new merge (the branch had nothing of its own) must not claim it exported.
+      if (exported.status === 'exported') {
+        await this.postRunSummaryComment({
+          target,
+          laneIdStr,
+          branch,
+          branchTipSha: recorded.branchTipSha,
+          laneHead: recorded.laneHead,
+          preComponents: laneSummaryComponents(preExportLane),
+          postComponents: laneSummaryComponents(recorded.remoteLane),
+        });
+      }
+      const exportClause = exported.status === 'exported' ? 'then exported' : 'the merge left nothing new to export';
       return (
-        `${laneName} -> merge-diverged (${policyClause}merged lane into branch, then exported; lane ${laneIdStr} @ ` +
+        `${laneName} -> merge-diverged (${policyClause}merged lane into branch, ${exportClause}; lane ${laneIdStr} @ ` +
         `${recorded.laneHead.slice(0, 9)}, branch ${branch} updated)`
       );
     } catch (e: any) {
@@ -967,20 +1034,25 @@ export class LaneSyncExecutor {
    * so any earlier fingerprint is stale), commit — crucially the `.bitmap` the snap rewrote — and push.
    * `unreadable` means the lane could no longer be read back, in which case the caller halts;
    * `raced` means a concurrent run's push already got there first, in which case the caller reports
-   * a benign noop instead. `adopted` adds the audit-only `ADOPTION_TRAILER`.
+   * a benign noop instead. `adopted` adds the audit-only `ADOPTION_TRAILER`. The re-queried lane is
+   * also the caller's only cheap source of POST-export component versions.
    */
   private async recordLaneHeadOnBranch(
     target: LaneTarget,
     laneIdStr: string,
     branch: string,
     opts: { adopted?: boolean } = {}
-  ): Promise<{ status: 'unreadable' } | { status: 'raced' } | { status: 'ok'; laneHead: string }> {
+  ): Promise<
+    | { status: 'unreadable' }
+    | { status: 'raced' }
+    | { status: 'ok'; laneHead: string; remoteLane: LaneData; branchTipSha?: string }
+  > {
     const remoteLane = await this.getRemoteLane(target);
     if (!remoteLane) return { status: 'unreadable' };
     const laneHead = laneHeadFingerprint(remoteLane.components);
     const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead, opts));
     if (pushResult.raced) return { status: 'raced' };
-    return { status: 'ok', laneHead };
+    return { status: 'ok', laneHead, remoteLane, branchTipSha: pushResult.pushedSha };
   }
 
   /**
@@ -1137,13 +1209,13 @@ export class LaneSyncExecutor {
   /** Gates `differentLaneStillClaims` to the planner's first-contact path, the only one that reads it. */
   private async computeBranchNamesDifferentLane(
     lastSyncedHead: string | undefined,
-    hasDevCommits: boolean,
+    mayCarryWork: boolean,
     mirroredLane: string | undefined,
     laneIdStr: string,
     branch: string,
     defaultBranch: string
   ): Promise<boolean> {
-    if (lastSyncedHead || !hasDevCommits) return false;
+    if (lastSyncedHead || !mayCarryWork) return false;
     return this.differentLaneStillClaims(mirroredLane, laneIdStr, branch, defaultBranch);
   }
 
@@ -1461,6 +1533,56 @@ export class LaneSyncExecutor {
   }
 
   /**
+   * Post (or update) ONE maintained comment on the branch's PR: what this export did to the scope —
+   * the components it snapped and the synced branch/lane anchors — information the branch's git diff
+   * cannot show, since the snap step alone can move dependency ranges the PR's files never touched.
+   * Best-effort throughout: no configured git host, no open PR yet, or a provider that doesn't
+   * implement `upsertComment` are all normal states, not failures — the git/lane pair already
+   * converged without this comment. A comment API error warns and never fails the run.
+   */
+  private async postRunSummaryComment({
+    target,
+    laneIdStr,
+    branch,
+    branchTipSha,
+    laneHead,
+    preComponents,
+    postComponents,
+  }: {
+    target: LaneTarget;
+    laneIdStr: string;
+    branch: string;
+    /** The ledger sha THIS run pushed — the anchor is never refetched from the mutable remote tip. */
+    branchTipSha: string | undefined;
+    laneHead: string;
+    preComponents: LaneData['components'] | undefined;
+    postComponents: LaneData['components'];
+  }): Promise<void> {
+    const { gitHost, logger } = this.deps;
+    if (!gitHost?.upsertComment) return;
+    const pr = await this.findPr(branch);
+    if (!pr) return;
+    // Same URL shape as the lane-sync PR body (line ~1249): the scope that HOSTS the lane, not
+    // necessarily `defaultScope`.
+    const laneUrl = `https://${getCloudDomain()}/${target.hostScope.replace('.', '/')}/~lane/${target.name}`;
+    // Body construction sits INSIDE the guard: `currentBranchTip` is a git refetch and can reject,
+    // and an export that already succeeded must never be failed by its own progress report.
+    try {
+      const body = runSummaryCommentBody({
+        laneIdStr,
+        laneUrl,
+        branch,
+        branchTipSha,
+        laneHead,
+        changed: changedLaneComponents(preComponents, postComponents),
+      });
+      await gitHost.upsertComment(pr.number, RUN_SUMMARY_MARKER, body);
+    } catch (e: any) {
+      logger.consoleWarning(`Could not post the run-summary comment on ${branch}'s PR: ${e?.message || e}`);
+    }
+  }
+
+  /**
    * The subject of the newest commit on the branch that isn't one of our own sync commits — it's
    * the developer's own description of the change, and becomes the snap message on the lane.
    */
@@ -1480,13 +1602,16 @@ export class LaneSyncExecutor {
    * the push was rejected by a CONFIRMED race (`classifyPushRejection`) — the caller's cue to report a
    * benign noop instead of halting; any other push failure still throws.
    */
-  private async commitAllAndPush(branch: string, message: string): Promise<{ raced: boolean }> {
+  private async commitAllAndPush(branch: string, message: string): Promise<{ raced: boolean; pushedSha?: string }> {
     // The local knowledge of `origin/<branch>` right now — no fetch, `fetchOnce` already ran for this
     // whole executor run — is exactly what our about-to-be-made commit is based on. After a rejection,
     // this is the baseline `classifyPushRejection` checks the remote against to confirm a real race.
     const baseSha = await this.localRemoteTip(branch);
     await addAllExceptScopeAndModules();
     await commitWithIdentity(message, { extraArgs: ['--allow-empty'] });
+    // The sha of the commit this run is about to push — the summary anchors on it, never on a
+    // refetch of the mutable remote tip (a concurrent dev push must not read as the synced state).
+    const pushedSha = (await git.revparse(['HEAD'])).trim() || undefined;
     try {
       // `HEAD:refs/heads/<branch>`: a full-ref destination cannot be resolved as a tag or
       // reinterpreted — the configured branch name is user input (see `sync-config.ts`).
@@ -1512,7 +1637,7 @@ export class LaneSyncExecutor {
       return { raced: true };
     }
     this.deps.logger.console(chalk.green(`Pushed ${branch}`));
-    return { raced: false };
+    return { raced: false, pushedSha };
   }
 
   /** `origin/<branch>`'s tip as this local clone currently knows it — no fetch. Undefined if unknown. */
@@ -1643,6 +1768,64 @@ export function laneSyncPrBody({
     listed || '_none_',
     '',
     'This PR is maintained by `bit ci sync` — push to the branch to send changes back to the lane.',
+  ].join('\n');
+}
+
+/**
+ * The lane components this export actually changed: new on the lane, or moved to a new head. Diffed
+ * by id against the lane's content BEFORE the export — `LaneData.head` is the snap hash bit assigns a
+ * lane component, so comparing it (not looking at git) is the only way to name what the snap did.
+ */
+/**
+ * The lane entries the run SUMMARY diffs: the visible components plus the hidden `updateDependents`
+ * (a cascade export moves those heads too, and a summary reading "nothing changed" over one would be
+ * false). Summary-only — the fingerprint and the foreign-scope check keep reading `components` alone.
+ */
+export function laneSummaryComponents(lane: LaneData | undefined): LaneData['components'] {
+  return lane ? [...lane.components, ...(lane.updateDependents ?? [])] : [];
+}
+
+export function changedLaneComponents(
+  before: LaneData['components'] | undefined,
+  after: LaneData['components']
+): LaneData['components'] {
+  const beforeHeads = new Map((before ?? []).map((comp) => [comp.id.toStringWithoutVersion(), comp.head]));
+  return after.filter((comp) => beforeHeads.get(comp.id.toStringWithoutVersion()) !== comp.head);
+}
+
+/**
+ * What a sync run did to the scope — information the branch's own git diff cannot show, since the
+ * snap step can move a component's recorded version with no file in the PR ever changing. Kept to one
+ * maintained comment (`RUN_SUMMARY_MARKER` + `upsertComment`) rather than one post per push.
+ */
+export function runSummaryCommentBody({
+  laneIdStr,
+  laneUrl,
+  branch,
+  branchTipSha,
+  laneHead,
+  changed,
+}: {
+  laneIdStr: string;
+  laneUrl: string;
+  branch: string;
+  branchTipSha: string | undefined;
+  laneHead: string;
+  changed: LaneData['components'];
+}): string {
+  const listed = capEntries(
+    changed.map((comp) => `- \`${comp.id.toStringWithoutVersion()}\` @ \`${comp.head.slice(0, 9)}\``),
+    '- '
+  ).join('\n');
+  return [
+    RUN_SUMMARY_MARKER,
+    `**bit ci sync** synced this branch with lane [\`${laneIdStr}\`](${laneUrl}).`,
+    '',
+    `Components snapped (${changed.length}):`,
+    listed || '_none — nothing on the lane changed this run_',
+    '',
+    `- branch: \`${branch}\`${branchTipSha ? ` @ \`${branchTipSha.slice(0, 9)}\`` : ''}`,
+    `- lane: [\`${laneIdStr}\`](${laneUrl}) @ \`${laneHead.slice(0, 9)}\``,
   ].join('\n');
 }
 

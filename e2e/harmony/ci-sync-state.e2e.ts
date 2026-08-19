@@ -81,10 +81,11 @@ describe('bit ci sync — state model v2', function () {
       expect(branchTipAfterDevWork).to.equal(devCommitSha);
 
       const { output, exitCode } = syncRun(LANE);
+      // The bundled sources plan a PROBING export (the plan line names export-branch), but the snap
+      // finds nothing pending and the run settles as converged with zero writes — the contract here.
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
-      expect(output).to.include(`${LANE} -> noop (converged)`);
+      expect(output).to.include(`${LANE} -> noop (converged`);
       expect(output).to.not.include(`${LANE} -> merge-diverged`);
-      expect(output).to.not.include(`${LANE} -> export-branch`);
       expect(output).to.not.include(`${LANE} -> import-lane`);
       expect(branchTipSha(LANE)).to.equal(branchTipAfterDevWork);
       expect(remoteLaneFingerprint(LANE)).to.equal(laneAfterDevWork);
@@ -116,8 +117,9 @@ describe('bit ci sync — state model v2', function () {
       expect(branchTipSha(LANE)).to.equal(tip);
     });
 
-    // The known Stage-1 delta, locked deliberately: the invisible round here, the self-heal below.
-    it('should read an unsnapped edit riding along with a .bitmap commit as converged, and say why', () => {
+    // The Stage-1 delta this suite once locked ("invisible round, then self-heal") is closed: the
+    // probing export snaps the unsnapped edit immediately instead of declaring a blind convergence.
+    it('should export an unsnapped edit riding along with a .bitmap commit, immediately', () => {
       gitFetch();
       helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
       // comp1 is snapped AND exported, so `.bitmap` moves and the branch's state matches the lane's ...
@@ -132,29 +134,69 @@ describe('bit ci sync — state model v2', function () {
       helper.command.runCmd(`git checkout -f ${defaultBranch}`);
       gitFetch();
       const laneAfterDevWork = remoteLaneFingerprint(LANE);
-      const branchTipAfterDevWork = branchTipSha(LANE);
 
       const { output, exitCode } = syncRun(LANE);
-      // converged is true of the BIT state, and that IS the delta
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
-      expect(output).to.include(`${LANE} -> noop (converged)`);
-      expect(branchTipSha(LANE)).to.equal(branchTipAfterDevWork);
-      expect(remoteLaneFingerprint(LANE)).to.equal(laneAfterDevWork);
-      // said out loud, rather than claiming a bare convergence
-      expect(output).to.include(`${LANE}'s tip is not a bit ci sync commit`);
-      expect(output).to.include('never snapped stay invisible until the next commit');
-      // non-vacuous: the unsnapped edit really is on the branch and really is NOT on the lane
-      expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('never-snapped-edit');
-      expect(laneTipFile(devPath, 'comp2/index.js')).to.not.include('never-snapped-edit');
+      expect(output).to.include(`${LANE} -> export-branch (lane`);
+      // the probe found real pending work, so the lane moved and now carries BOTH halves of the commit
+      expect(remoteLaneFingerprint(LANE)).to.not.equal(laneAfterDevWork);
+      expect(laneTipFile(devPath, 'comp2/index.js')).to.include('never-snapped-edit');
       expect(laneTipFile(devPath, 'comp1/index.js')).to.include('snapped-and-exported');
     });
 
-    it('should self-heal on the next ordinary commit: the export carries the invisible edit onto the lane', () => {
+    it('should settle a plain non-component commit with a ledger commit, moving nothing on the lane', () => {
+      const laneBefore = remoteLaneFingerprint(LANE);
       branchSideCommit(LANE, defaultBranch, 'docs/note.md', 'a plain commit\n', 'docs: an ordinary commit');
       const { output, exitCode } = syncRun(LANE);
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
       expect(output).to.include(`${LANE} -> export-branch`);
+      expect(remoteLaneFingerprint(LANE)).to.equal(laneBefore);
       expect(laneTipFile(devPath, 'comp2/index.js')).to.include('never-snapped-edit');
+    });
+  });
+
+  // The bundled-commit blindness, split across TWO commits: a source edit in one commit, then a
+  // `.bitmap`-touching commit that leaves the parsed state identical. The newest `.bitmap` commit
+  // becomes the state commit, nothing rides above it, and a single-commit suspicion check would read
+  // the pair as converged — the earlier edit would silently never reach the lane.
+  describe('a source edit hidden under a later .bitmap-only commit is dev work, not convergence', () => {
+    const LANE = 'split-bundle';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('split-v1') }, 'split v1');
+      seedSync(LANE);
+
+      gitFetch();
+      helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+      // commit A: a real source edit, no `.bitmap` change
+      helper.fs.outputFile('comp2/index.js', comp2Src('edit-under-the-bitmap-commit'));
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "feat: edit comp2"');
+      // commit B: `.bitmap` touched, parsed state identical — B becomes the state commit and hides A
+      fs.appendFileSync(path.join(helper.scopes.localPath, '.bitmap'), '\n');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "chore: touch .bitmap"');
+      helper.command.runCmd(`git push origin ${LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+    });
+
+    it('exports the hidden edit onto the lane instead of declaring convergence', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> export-branch`);
+      const onLane = laneTipFile(devPath, 'comp2/index.js');
+      expect(onLane, `comp2/index.js on the lane tip:\n${onLane}`).to.include('edit-under-the-bitmap-commit');
+    });
+
+    it('a second run converges without pushing anything', () => {
+      const shaBefore = branchTipSha(LANE);
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop (converged`);
+      expect(branchTipSha(LANE)).to.equal(shaBefore);
     });
   });
 
@@ -173,14 +215,15 @@ describe('bit ci sync — state model v2', function () {
     });
 
     it('should KEEP a branch whose tip is a developer’s .bitmap commit when the lane is removed, twice', () => {
-      // An unexported snap: this commit becomes the state commit AND the tip, and the work exists only
-      // here.
+      // An unexported snap whose commit carries ONLY `.bitmap` — the marker defence in isolation. A
+      // commit that bundles the source edit too reads as dev work outright (`unmerged-commits`) and is
+      // covered by the bundled-commit suite in ci-sync.e2e.ts.
       gitFetch();
       helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
       helper.fs.outputFile('comp2/index.js', comp2Src('unexported-local-snap'));
       helper.command.runCmd('bit snap --message "dev snaps comp2 but never exports it"');
-      helper.command.runCmd('git add -A');
-      helper.command.runCmd('git commit -m "feat: local snap that was never exported"');
+      helper.command.runCmd('git add .bitmap');
+      helper.command.runCmd('git commit -m "chore: record a local snap that was never exported"');
       helper.command.runCmd(`git push origin ${LANE}`);
       helper.command.runCmd(`git checkout -f ${defaultBranch}`);
       gitFetch();
@@ -200,7 +243,8 @@ describe('bit ci sync — state model v2', function () {
       expect(output).to.not.include('branch carries unmerged commits');
       expect(remoteBranchExists(LANE), `origin/${LANE} must survive — its snap exists nowhere else`).to.be.true;
       expect(branchTipSha(LANE)).to.equal(tipBefore);
-      expect(fileOnBranch(LANE, 'comp2/index.js')).to.include('unexported-local-snap');
+      // the .bitmap-only commit is the tip: the unexported pointer is what the guard protected
+      expect(fileOnBranch(LANE, '.bitmap')).to.include('_bit_lane');
 
       const rerun = syncRun('--all');
       expect(rerun.exitCode, `bit ci sync output:\n${rerun.output}`).to.equal(0);
@@ -288,13 +332,16 @@ describe('bit ci sync — state model v2', function () {
       expect(branchTipSha(LANE)).to.equal(tip);
     });
 
-    it('should import the lane onto the existing branch, also cold, instead of halting', () => {
-      // Only the lane moves, so the plan is import-lane onto the branch that already exists.
+    it('should bring the lane onto the existing branch, also cold, instead of halting', () => {
+      // Only the lane moves — but the branch tip is the previous merge's ledger commit, which bundles
+      // sources, so the plan is merge-diverged: the merge brings the lane's edit in, and the snap
+      // finds nothing of the branch's own to export.
       laneSideEdit(devPath, 'comp1/index.js', comp1Src('cold-lane-snap-3'), 'cold lane snap 3');
       makeLocalScopeCold();
       const { output, exitCode } = syncRun(LANE);
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
-      expect(output).to.include(`${LANE} -> import-lane`);
+      expect(output).to.include(`${LANE} -> merge-diverged`);
+      expect(output).to.include('nothing new to export');
       expect(output).to.not.include('HALTED');
       expect(output).to.not.include('reported success but the workspace is on');
       expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('cold-lane-snap-3');
