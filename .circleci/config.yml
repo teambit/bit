@@ -1503,6 +1503,14 @@ workflows:
       - e2e_test:
           requires:
             - setup_harmony
+          # Not on master pushes: nothing gates on it there — bit_merge requires only
+          # generate_and_check_types, and the merge queue's "settled" check watches bit_merge
+          # alone (.github/scripts/merge-queue.js). Every PR already ran the full suite to get
+          # merged, so the per-merge master run was informational only. A daily master canary
+          # still runs in the nightly workflow.
+          filters:
+            branches:
+              ignore: master
       - setup_bundle_simulation:
           filters:
             branches:
@@ -1559,6 +1567,11 @@ workflows:
       - setup_harmony:
           requires:
             - checkout_code
+      # daily master canary — replaces the former per-master-push e2e_test run in
+      # build_and_test (see the filter comment there)
+      - e2e_test:
+          requires:
+            - setup_harmony
       - bundle_version_linux:
           <<: *master_only_filter
           requires:
