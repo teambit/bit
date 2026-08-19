@@ -58,8 +58,9 @@ export class BundleUiTask implements BuildTask {
     this.logger.info(`Generating UI bundle at ${outputPath}...`);
     // one call, one compilation: `build()` turns every registered UI root into an entry of the same
     // rspack build, so the chunks the roots share are emitted once. there is no second compilation
-    // to keep alive, so nothing here has to defer closing it.
-    await this.ui.build(undefined, outputPath);
+    // to keep alive, so nothing here has to defer closing it. `forPreBundle`: the artifact describes
+    // bit, not the workspace it was built in.
+    await this.ui.build(undefined, outputPath, { forPreBundle: true });
     await this.generateHash(outputPath);
 
     return {
@@ -79,9 +80,10 @@ export class BundleUiTask implements BuildTask {
     // walking a hardcoded list instead would both fail where a root is legitimately absent (a
     // scope-only runtime registers just the one) and, worse, record a hash for a root whose
     // document was never emitted - which reads at startup as "a pre-bundle exists" and then 404s.
+    // `forPreBundle: true` to match what `build` above bundled, or the artifact can never be served.
     const roots = this.ui.getUiRoots().filter(([uiRootAspectId]) => KNOWN_UIROOT_ASPECT_IDS.has(uiRootAspectId));
     await pMapSeries(roots, async ([uiRootAspectId, uiRoot]) => {
-      hashes[uiRootAspectId] = await this.ui.createBundleUiHash(uiRoot);
+      hashes[uiRootAspectId] = await this.ui.createBundleUiHash(uiRoot, 'ui', true);
     });
 
     if (!existsSync(outputPath)) mkdirSync(outputPath, { recursive: true });

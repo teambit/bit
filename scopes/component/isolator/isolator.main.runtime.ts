@@ -4,7 +4,7 @@ import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
-import { compact, flatten, isEqual, pick } from 'lodash';
+import { compact, flatten, isEqual, pick, uniqBy } from 'lodash';
 import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
@@ -422,15 +422,37 @@ export class IsolatorMain {
           componentsToIsolate = [...componentsToIsolate, ...cyclicDeps];
           cyclicMemberIds = memberIds;
         }
+        if (onlySnaps) {
+          const { components: snapDeps, installTogetherIds } = await this.getSnapDependenciesOfSeeders(
+            seeders,
+            componentsToIsolate,
+            createGraphOpts
+          );
+          if (snapDeps.length) {
+            this.logger.debug(
+              `isolateComponents, adding ${snapDeps.length} unpublished snap dependencies of the seeders`
+            );
+            componentsToIsolate = [...componentsToIsolate, ...snapDeps];
+            cyclicMemberIds = new Set([...(cyclicMemberIds ?? []), ...installTogetherIds]);
+          }
+        }
       }
     }
+    // two seeders may resolve to the same component - e.g. an env living in the workspace is
+    // registered by the aspect-loader both by its versionless workspace id and, once snapped in
+    // the same process, by its snap id. a duplicate here becomes two capsules on one path and
+    // fails createCapsules with "found duplicate capsules".
+    componentsToIsolate = uniqBy(componentsToIsolate, (component) => component.id.toString());
     this.logger.debug(`isolateComponents, total componentsToIsolate: ${componentsToIsolate.length}`);
-    const seedersWithVersions = seeders.map((seeder) => {
-      if (seeder._legacy.hasVersion()) return seeder;
-      const comp = componentsToIsolate.find((component) => component.id.isEqual(seeder, { ignoreVersion: true }));
-      if (!comp) throw new Error(`unable to find seeder ${seeder.toString()} in componentsToIsolate`);
-      return comp.id;
-    });
+    const seedersWithVersions = uniqBy(
+      seeders.map((seeder) => {
+        if (seeder._legacy.hasVersion()) return seeder;
+        const comp = componentsToIsolate.find((component) => component.id.isEqual(seeder, { ignoreVersion: true }));
+        if (!comp) throw new Error(`unable to find seeder ${seeder.toString()} in componentsToIsolate`);
+        return comp.id;
+      }),
+      (id) => id.toString()
+    );
     opts.baseDir = opts.baseDir || host.path;
     const shouldUseDatedDirs = this.shouldUseDatedDirs(componentsToIsolate, opts);
     const capsuleDir = this.getCapsulesRootDir({
@@ -588,6 +610,64 @@ export class IsolatorMain {
     // the host — getMany loads them without hitting the network.
     const components = await host.getMany(idsToAdd);
     return { components, cyclicMemberIds };
+  }
+
+  /**
+   * dependencies of aspect seeders that exist only as unpublished snaps. A snap-versioned
+   * dependency of an aspect capsule can't be installed from the registry: a component snapped on a
+   * lane during this very build has neither its name there (a first-ever snap of a new component)
+   * nor its lane-only version (a re-snap of a published one). Every such dependency reachable from
+   * a seeder is pulled into the isolation as a capsule and grouped with that seeder, so the group
+   * installs together at the shared root and the package manager links them as siblings — the same
+   * treatment `getCyclicDependenciesOfSeeders` gives cyclic snap members, generalized to plain
+   * dependency edges. Core aspects are excluded even when snap-versioned: the capsules root links
+   * them, so the registry is never asked for them.
+   */
+  private async getSnapDependenciesOfSeeders(
+    seeders: ComponentID[],
+    alreadyIsolated: Component[],
+    opts: CreateGraphOptions = {}
+  ): Promise<{ components: Component[]; installTogetherIds: Set<string> }> {
+    const empty = { components: [], installTogetherIds: new Set<string>() };
+    const host = opts.host || this.componentAspect.getHost();
+    const getGraphOpts = pick(opts, ['host']);
+    const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
+    const coreAspectIds = new Set(this.aspectLoader.getCoreAspectIds());
+    const alreadyIsolatedIds = new Set(alreadyIsolated.map((comp) => comp.id.toString()));
+    const seederIdsNoVer = new Set(seeders.map((id) => id.toStringWithoutVersion()));
+    // the graph's node ids are versioned while a seeder id may be versionless, so seeders are
+    // located in the graph by their versionless form (same reason getCyclicDependenciesOfSeeders
+    // compares without version)
+    const seederNodeIds = graph.nodes
+      .filter((node) => seederIdsNoVer.has(node.attr.toStringWithoutVersion()))
+      .map((node) => node.id);
+    const isPullableSnapDep = (id: ComponentID | undefined): id is ComponentID =>
+      id != null &&
+      id.version != null &&
+      isSnap(id.version) &&
+      !alreadyIsolatedIds.has(id.toString()) &&
+      !seederIdsNoVer.has(id.toStringWithoutVersion()) &&
+      !coreAspectIds.has(id.toStringWithoutVersion());
+    const idsToAdd = new Map<string, ComponentID>();
+    const installTogetherIds = new Set<string>();
+    for (const seederNodeId of seederNodeIds) {
+      const snapDeps = graph
+        .successors(seederNodeId)
+        .map((node) => node.attr)
+        .filter(isPullableSnapDep);
+      if (!snapDeps.length) continue;
+      const seederId = graph.node(seederNodeId)?.attr;
+      if (seederId) installTogetherIds.add(seederId.toString());
+      snapDeps.forEach((id) => {
+        idsToAdd.set(id.toString(), id);
+        installTogetherIds.add(id.toString());
+      });
+    }
+    if (idsToAdd.size === 0) return empty;
+    // the ids come straight from the graph we just built, so their objects are already present in
+    // the host — getMany loads them without hitting the network.
+    const components = await host.getMany([...idsToAdd.values()]);
+    return { components, installTogetherIds };
   }
 
   private registerMoveCapsuleOnProcessExit(
@@ -913,8 +993,23 @@ export class IsolatorMain {
               nodeLinker: opts.nodeLinker,
             });
           });
+        } else if (nestedCapsules.length) {
+          // the root links describe the capsules root, so they belong to an install rooted there.
+          // A nested capsule's install is rooted at the capsule, one level below, and handing them
+          // to that install would describe an importer *above* its root: the package manager then
+          // has to give the root project itself a directory dep path relative to itself, which is
+          // empty - `<name>@file:` - and its own parser rejects that ("Empty path after `file:`
+          // scheme"), failing the whole install. Give them the install they describe instead. It
+          // runs before the capsules so they can resolve the core aspects it links while they
+          // install, and so nothing races it over the root's node_modules.
+          await this.installInCapsules(capsulesDir, CapsuleList.fromArray([]), installOptions, {
+            cachePackagesOnCapsulesRoot,
+            linkedDependencies: { [capsulesDir]: rootLinks },
+            packageManager: opts.packageManager,
+            nodeLinker: opts.nodeLinker,
+          });
         }
-        nestedCapsules.forEach((capsule, index) => {
+        nestedCapsules.forEach((capsule) => {
           installThunks.push(async () => {
             const newCapsuleList = CapsuleList.fromArray([capsule]);
             if (opts.cacheCapsulesDir && capsulesDir !== opts.cacheCapsulesDir && opts.cacheLockFileOnly) {
@@ -936,11 +1031,6 @@ export class IsolatorMain {
               }
             }
             const linkedDependencies = await this.linkInCapsules(newCapsuleList, capsulesWithPackagesData);
-            // attach the root links to a single install. When a cyclic group install exists it owns
-            // them (its root is capsulesDir); otherwise the first nested capsule does, as before.
-            if (index === 0 && !cyclicCapsules.length) {
-              linkedDependencies[capsulesDir] = rootLinks;
-            }
             await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,

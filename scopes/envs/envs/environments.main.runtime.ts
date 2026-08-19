@@ -1,5 +1,6 @@
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import pLocate from 'p-locate';
+import semver from 'semver';
 import { parse } from 'comment-json';
 import type { SourceFile } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
@@ -38,6 +39,13 @@ import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 import { EnvPlugin, BIT_ENV_PATTERN } from './env.plugin';
 import { EnvJsoncDetector } from './env-jsonc.detector';
+import type { LegacyCoreEnvPolicy } from './legacy-core-envs';
+import {
+  getLegacyCoreEnvPolicy,
+  isLegacyCoreEnv as isLegacyCoreEnvId,
+  resolveLegacyCoreEnvId,
+} from './legacy-core-envs';
+import { getFallbackTypescriptCompiler } from './fallback-typescript-compiler';
 
 export type EnvJsonc = {
   extends?: string;
@@ -103,7 +111,7 @@ export type EnvCompDescriptor = EnvCompDescriptorProps & {
 
 export type Descriptor = RegularCompDescriptor | EnvCompDescriptor;
 
-export const DEFAULT_ENV = 'teambit.harmony/node';
+export const DEFAULT_ENV = 'teambit.harmony/empty-env';
 
 export class EnvsMain {
   /**
@@ -220,30 +228,106 @@ export class EnvsMain {
   }
 
   /**
-   * get the configured default env.
+   * get the configured default env - the empty-env, a core aspect that is always loaded.
    */
   getDefaultEnv(): EnvDefinition {
     const defaultEnv = this.envSlot.get(DEFAULT_ENV);
-    if (!defaultEnv) throw new Error('default env must be set.');
-
-    return new EnvDefinition(DEFAULT_ENV, defaultEnv);
+    if (defaultEnv) return new EnvDefinition(DEFAULT_ENV, defaultEnv);
+    // should not happen (the default env is a core aspect), a safety net for early-bootstrap calls.
+    return new EnvDefinition(DEFAULT_ENV, this.getFallbackDefaultEnv());
   }
 
+  private fallbackDefaultEnv: Environment | undefined;
+
+  private warnedMultiVersionEnvs = new Set<string>();
+  /**
+   * a bare-minimum env used for components whose env failed to load (e.g. an env that used to be
+   * a core aspect and was not installed yet, or a custom env that failed loading). it provides a
+   * basic typescript transpiler (needed e.g. for compiling aspects/envs in capsules when their
+   * env is not loaded), and allows bit to keep functioning until "bit install" installs the env.
+   */
+  private getFallbackDefaultEnv(): Environment {
+    if (!this.fallbackDefaultEnv) {
+      this.fallbackDefaultEnv = {
+        name: 'node',
+        getCompiler: () => getFallbackTypescriptCompiler(),
+        __getDescriptor: async () => ({ type: 'node' }),
+      };
+    }
+    return this.fallbackDefaultEnv;
+  }
+
+  /**
+   * ids of the envs that are core aspects (bundled with the bit binary and saved in components
+   * models without a version). most envs that used to be core were removed to keep bit slim, see
+   * legacy-core-envs.ts for those.
+   */
   getCoreEnvsIds(): string[] {
-    return [
-      'teambit.harmony/aspect',
-      'teambit.react/react',
-      'teambit.harmony/node',
-      'teambit.react/react-native',
-      'teambit.html/html',
-      'teambit.mdx/mdx',
-      'teambit.envs/env',
-      'teambit.mdx/readme',
-      'teambit.harmony/bit-custom-aspect',
-      // note: empty-env is deliberately not listed here although it is a core aspect. components
-      // listed here are excluded from the env load-groups (their own env is assumed to be core as
-      // well), while empty-env's own env is an external env that must be loaded like any other.
-    ];
+    return [DEFAULT_ENV];
+  }
+
+  /**
+   * whether this env used to be a core aspect (in which case old components may use it without
+   * a version). the id may carry a version - it is ignored.
+   */
+  isLegacyCoreEnv(envId: string): boolean {
+    return isLegacyCoreEnvId(envId);
+  }
+
+  /**
+   * whether this env-id is a legacy core env configured the old way - without a version.
+   */
+  isLegacyCoreEnvWithoutVersion(envId: string): boolean {
+    return !envId.includes('@') && isLegacyCoreEnvId(envId);
+  }
+
+  /**
+   * the embedded dependency policy of a legacy core env at its pinned (immutable) version.
+   * used when the env cannot be loaded, e.g. its package is not installed.
+   */
+  getLegacyCoreEnvPolicy(envId: string): LegacyCoreEnvPolicy | undefined {
+    return getLegacyCoreEnvPolicy(envId);
+  }
+
+  /**
+   * for an env that used to be a core aspect and appears without a version (in old components),
+   * get its EnvDefinition from the slot by matching the id ignoring the version.
+   * old components reference these envs without a version by design, but once loaded (as regular
+   * envs) they are registered to the slot with a version, so exact lookups fail.
+   * gated to legacy core env ids only - for any other env the version matters: two components in
+   * the same workspace may use the same env with different versions, so a versionless reference
+   * must be resolved through the component's own aspect entry, never by scanning the slot (which
+   * could return another component's version).
+   * multiple versions of the same env may be registered - pick the highest one deterministically
+   * (rather than relying on registration order) and warn, so ambiguity is visible.
+   */
+  private getLegacyCoreEnvFromSlot(envIdMaybeVersioned: string): EnvDefinition | undefined {
+    if (!isLegacyCoreEnvId(envIdMaybeVersioned)) return undefined;
+    const envIdWithoutVersion = envIdMaybeVersioned.split('@')[0];
+    const matches = this.envSlot.toArray().filter(([envId]) => envId.split('@')[0] === envIdWithoutVersion);
+    if (!matches.length) return undefined;
+    if (matches.length > 1) {
+      // sort descending by the version part so the pick is deterministic. use semver precedence
+      // when possible (string collation misorders prereleases, e.g. rc.10 vs rc.2), fall back to
+      // string comparison for non-semver versions (snap hashes)
+      matches.sort(([a], [b]) => {
+        const aVersion = a.split('@')[1] || '';
+        const bVersion = b.split('@')[1] || '';
+        if (semver.valid(aVersion) && semver.valid(bVersion)) return semver.rcompare(aVersion, bVersion);
+        return bVersion.localeCompare(aVersion, undefined, { numeric: true });
+      });
+      // this helper runs multiple times per component load - warn only once per env
+      if (!this.warnedMultiVersionEnvs.has(envIdWithoutVersion)) {
+        this.warnedMultiVersionEnvs.add(envIdWithoutVersion);
+        this.logger.warn(
+          `multiple versions of env "${envIdWithoutVersion}" are registered (${matches
+            .map(([id]) => id)
+            .join(', ')}), a versionless reference resolves to "${matches[0][0]}"`
+        );
+      }
+    }
+    const [envId, env] = matches[0];
+    return new EnvDefinition(envId, env);
   }
 
   /**
@@ -412,13 +496,18 @@ export class EnvsMain {
   }
 
   getEnvData(component: Component): Descriptor {
+    const envsData = this.getEnvDataIfExist(component);
+    if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
+    return envsData;
+  }
+
+  getEnvDataIfExist(component: Component): Descriptor | undefined {
     let envsData = component.state.aspects.get(EnvsAspect.id);
     if (!envsData) {
       // TODO: remove this once we re-export old components used to store the data here
       envsData = component.state.aspects.get('teambit.workspace/workspace');
     }
-    if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
-    return envsData.data as Descriptor;
+    return envsData?.data as Descriptor | undefined;
   }
 
   /**
@@ -429,7 +518,7 @@ export class EnvsMain {
    * @param ignoreVersion
    */
   private getEnvIdFromEnvsData(component: Component, ignoreVersion = true): string | undefined {
-    const envsData = this.getEnvData(component);
+    const envsData = this.getEnvDataIfExist(component);
     if (!envsData) return undefined;
     const rawEnvId = envsData.id;
     if (!rawEnvId) return undefined;
@@ -442,7 +531,24 @@ export class EnvsMain {
    * get the env id of the given component.
    */
   getEnvId(component: Component): string {
-    const envIdFromEnvData = this.getEnvIdFromEnvsData(component);
+    let envIdFromEnvData = this.getEnvIdFromEnvsData(component);
+    if (!envIdFromEnvData) {
+      // the envs data may not exist when the component was loaded without executing the load
+      // slot (e.g. when it's loaded from the scope during aspects resolution). fall back to the
+      // env from the config.
+      const envIdFromConfig = this.getEnvIdFromEnvsConfig(component);
+      if (envIdFromConfig) {
+        const configEnvId = ComponentID.fromString(envIdFromConfig);
+        const configEnvIdWithoutVersion = configEnvId.toStringWithoutVersion();
+        // prefer the version from the component's own aspect entry (resolveEnv below anchors to
+        // it, and it stays up to date during tagging). when no such entry exists, keep an
+        // explicitly configured version rather than dropping it and matching an arbitrary loaded
+        // version of the env.
+        envIdFromEnvData = this.resolveEnv(component, configEnvIdWithoutVersion)
+          ? configEnvIdWithoutVersion
+          : configEnvId.toString();
+      }
+    }
     if (!envIdFromEnvData) {
       // This should never happen
       throw new Error(`no env found for ${component.id.toString()}`);
@@ -462,6 +568,17 @@ export class EnvsMain {
     const exactMatchId = exactMatch?.[0];
     if (exactMatchId) return exactMatchId;
 
+    // legacy core envs are saved in old components without a version by design, while once
+    // loaded they are registered to the slot with a version - match ignoring the version.
+    // gated to these ids only: for regular envs the version matters (two components may use the
+    // same env with different versions), so their resolution must go through the component's own
+    // aspect entry (resolveEnv above) and never through a versionless slot scan.
+    const legacyCoreEnvSlotMatch = this.getLegacyCoreEnvFromSlot(envIdFromEnvData);
+    if (legacyCoreEnvSlotMatch) return legacyCoreEnvSlotMatch.id;
+    // a legacy core env that was not loaded (probably not installed yet). return the id as-is,
+    // the same way it was returned when these envs were core aspects.
+    if (isLegacyCoreEnvId(envIdFromEnvData)) return envIdFromEnvData;
+
     if (!withVersion) throw new EnvNotConfiguredForComponent(envIdFromEnvData, component.id.toString());
     return withVersion.toString();
   }
@@ -472,7 +589,9 @@ export class EnvsMain {
   }
 
   isCoreEnv(envId: string): boolean {
-    return this.getCoreEnvsIds().includes(envId);
+    // the id may carry a version (e.g. recorded on a component tagged when the env was a regular
+    // exported env before becoming a core aspect) - core envs are registered without a version.
+    return this.getCoreEnvsIds().includes(envId.split('@')[0]);
   }
 
   /**
@@ -485,6 +604,14 @@ export class EnvsMain {
     if (envDef) {
       return envDef;
     }
+    if (this.isLegacyCoreEnvWithoutVersion(id)) {
+      // envs that used to be core aspects are used by old components without a version. if such an
+      // env was not loaded (e.g. "bit install" was not running yet), return a minimal env
+      // definition so basic commands can still function (a warning/issue is shown separately).
+      // (a loaded one would have been found above - getEnvDefinitionByStringId matches versionless
+      // ids ignoring the version.)
+      return new EnvDefinition(id, this.getFallbackDefaultEnv());
+    }
     // Do not allow a non existing env
     throw new EnvNotFound(id, component.id.toString());
   }
@@ -494,15 +621,49 @@ export class EnvsMain {
    */
   async getEnvComponent(component: Component): Promise<Component> {
     const envId = this.getEnvId(component);
-    return this.getEnvComponentByEnvId(envId, component.id.toString());
+    // the env of the component might be the component itself. e.g. an env whose own env was not
+    // loaded falls back to itself. getting it from the host here would cause an infinite loop of
+    // loading it.
+    if (envId.split('@')[0] === component.id.toStringWithoutVersion()) {
+      return component;
+    }
+    const envComponent = await this.getEnvComponentByEnvId(envId, component.id.toString());
+    if (!envComponent) {
+      throw new BitError(
+        `unable to get the env component of ${component.id.toString()}, its env ${envId} was not found`
+      );
+    }
+    return envComponent;
   }
 
   /**
    * get the env component by the env id.
    */
-  async getEnvComponentByEnvId(envId: string, requesting?: string): Promise<Component> {
+  async getEnvComponentByEnvId(envId: string, requesting?: string): Promise<Component | undefined> {
     const host = this.componentMain.getHost();
-    const newId = await host.resolveComponentId(envId);
+    if (this.isCoreEnv(envId.split('@')[0])) {
+      // core envs are loaded from the binary. their env-component is needed only for extra
+      // metadata and may not exist anywhere (e.g. when it was not exported yet). best effort.
+      try {
+        const newId = await host.resolveComponentId(envId);
+        return await host.get(newId);
+      } catch {
+        return undefined;
+      }
+    }
+    // envs that used to be core aspects are configured without a version. fetching them without a
+    // version resolves to the latest, which may not exist locally - use the pinned version instead.
+    // when the env is a component of the host (e.g. in the bit repo itself), use the host version.
+    let envIdWithPotentialPinnedVersion = envId;
+    if (!envId.includes('@') && this.isLegacyCoreEnv(envId)) {
+      // prefer the host (workspace) component when it exists. getIdIfExist is a cheap in-memory
+      // lookup implemented by the workspace host; scope hosts don't implement it and always get
+      // the pinned version (listing all ids of a scope here would be too expensive).
+      const hostWithGetIdIfExist = host as { getIdIfExist?: (id: ComponentID) => ComponentID | undefined };
+      const fromHost = hostWithGetIdIfExist.getIdIfExist?.(ComponentID.fromString(envId));
+      envIdWithPotentialPinnedVersion = fromHost ? fromHost.toString() : resolveLegacyCoreEnvId(envId);
+    }
+    const newId = await host.resolveComponentId(envIdWithPotentialPinnedVersion);
     const envComponent = await host.get(newId);
     if (!envComponent) {
       throw new BitError(`can't load env. env id is ${envId} used by component ${requesting || 'unknown'}`);
@@ -632,7 +793,10 @@ export class EnvsMain {
       ? ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion()
       : undefined;
 
-    if (envIdFromEnvsConfig && this.isCoreEnv(envIdFromEnvsConfig)) {
+    // envs that used to be core aspects are configured on old components without a version.
+    // return the id as-is (the same behavior as when they were core). the version resolution
+    // (loading/installing the env) is handled by the relevant hosts (workspace/scope/install).
+    if (envIdFromEnvsConfig && this.isLegacyCoreEnvWithoutVersion(envIdFromEnvsConfig)) {
       return ComponentID.fromString(envIdFromEnvsConfig);
     }
 
@@ -839,7 +1003,9 @@ export class EnvsMain {
       ? ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion()
       : undefined;
 
-    if (envIdFromEnvsConfig && this.isCoreEnv(envIdFromEnvsConfig)) {
+    // envs that used to be core aspects are configured on old components without a version.
+    // return the id as-is (the same behavior as when they were core).
+    if (envIdFromEnvsConfig && this.isLegacyCoreEnvWithoutVersion(envIdFromEnvsConfig)) {
       return envIdFromEnvsConfig;
     }
 
@@ -947,7 +1113,13 @@ if needed, use "bit env set" command to align the env id`;
       }
     });
     const envId = await this.findFirstEnv(ids);
-    const envDef = envId ? this.getEnvDefinitionByStringId(envId) : undefined;
+    let envDef = envId ? this.getEnvDefinitionByStringId(envId) : undefined;
+    if (!envDef && envId) {
+      // envs that used to be core may appear here versioned (e.g. from an aspect entry) while
+      // registered to the slot with a different version. they are single-instance, so match
+      // ignoring the version.
+      envDef = this.getLegacyCoreEnvFromSlot(envId);
+    }
 
     return envDef || this.getDefaultEnv();
   }
@@ -966,6 +1138,9 @@ if needed, use "bit env set" command to align the env id`;
     let isFoundWithoutVersion = false;
     const envId = await pLocate(ids, async (id) => {
       const idWithoutVersion = id.split('@')[0];
+      if (isLegacyCoreEnvId(idWithoutVersion)) return true;
+      // core envs (e.g. the default empty-env) are core aspects too - recognize them as envs
+      // before the core-aspect skip below.
       if (this.isCoreEnv(idWithoutVersion)) return true;
       if (this.isCoreAspect(idWithoutVersion)) return false;
       const envDef = this.getEnvDefinitionByStringId(id);
@@ -982,10 +1157,19 @@ if needed, use "bit env set" command to align the env id`;
       // here, so log and move on rather than racing an uncatchable rejection.
       try {
         const envComponent = await this.getEnvComponentByEnvId(id);
+        if (!envComponent) return false;
         const hasManifest = this.hasEnvManifest(envComponent);
         if (hasManifest) return true;
         const isUsingEnvEnv = this.isUsingEnvEnv(envComponent);
-        return !!isUsingEnvEnv;
+        if (isUsingEnvEnv) return true;
+        // when teambit.envs/env is not loaded (it is no longer a core aspect), the env component's
+        // env data falls back to the default env and its type is not 'env'. recognize the env by
+        // its configuration identity instead - old-style envs are configured with teambit.envs/env.
+        const envOfEnvFromConfig = this.getEnvIdFromEnvsConfig(envComponent);
+        if (envOfEnvFromConfig?.split('@')[0] === 'teambit.envs/env') return true;
+        return envComponent.state.aspects.entries.some(
+          (entry) => entry.id.toStringWithoutVersion() === 'teambit.envs/env'
+        );
       } catch (err: any) {
         this.logger.warn(`findFirstEnv: failed loading env-component "${id}", skipping it. error: ${err.message}`);
         return false;
@@ -1021,16 +1205,26 @@ if needed, use "bit env set" command to align the env id`;
   }
 
   getEnvDefinitionById(id: ComponentID): EnvDefinition | undefined {
-    const envDef =
+    return (
       this.getEnvDefinitionByStringId(id.toString()) ||
-      this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }));
-    return envDef;
+      this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }))
+    );
   }
 
   public getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {
     const env = this.envSlot.get(envId);
     if (env) {
       return new EnvDefinition(envId, env as Environment);
+    }
+    if (!envId.includes('@')) {
+      // versionless references hit the slot only for legacy core envs, which old components store
+      // without a version by design while the loaded env registers versioned. any other env must
+      // be looked up with its exact version: two components in the same workspace may use the
+      // same env with different versions, and an ignore-version match could return the wrong one.
+      const found = this.getLegacyCoreEnvFromSlot(envId);
+      if (found) {
+        return found;
+      }
     }
     return undefined;
   }
@@ -1041,11 +1235,12 @@ if needed, use "bit env set" command to align the env id`;
   }
 
   /**
-   * Return the env definition of teambit.envs/env
+   * Return the env definition of teambit.envs/env.
+   * this env is no longer a core aspect, so it's available only when loaded (as a regular env, in
+   * which case it's registered to the slot with a version).
    */
-  getEnvsEnvDefinition(): EnvDefinition {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.getEnvDefinitionByStringId('teambit.envs/env')!;
+  getEnvsEnvDefinition(): EnvDefinition | undefined {
+    return this.getEnvDefinitionByStringId('teambit.envs/env');
   }
 
   private printWarningIfFirstTime(envId: string, message: string) {
@@ -1060,17 +1255,25 @@ if needed, use "bit env set" command to align the env id`;
    * determines whether an env is registered.
    */
   public isEnvRegistered(id: string) {
-    return Boolean(this.envSlot.get(id));
+    if (this.envSlot.get(id)) return true;
+    const idWithoutVersion = id.split('@')[0];
+    // core envs (and new workspace envs) register to the slot without a version. a versioned id
+    // of such an env (e.g. recorded in the model once tagged) should match the versionless entry.
+    if (id !== idWithoutVersion && this.envSlot.get(idWithoutVersion)) return true;
+    // old components use envs that used to be core without a version, while these envs are
+    // registered to the slot with a version once loaded as regular envs. these envs are
+    // single-instance, so match ignoring the version (the given id may be versioned as well).
+    return Boolean(this.getLegacyCoreEnvFromSlot(id));
   }
 
   isUsingAspectEnv(component: Component): boolean {
-    const data = this.getEnvData(component);
+    const data = this.getEnvDataIfExist(component);
     if (!data) return false;
     return data.type === 'aspect';
   }
 
   isUsingEnvEnv(component: Component): boolean {
-    const data = this.getEnvData(component);
+    const data = this.getEnvDataIfExist(component);
     if (!data) return false;
     return data.type === 'env';
   }
@@ -1160,7 +1363,9 @@ if needed, use "bit env set" command to align the env id`;
         this.addFailedToLoadEnvs(envIdStr);
         // If there is no version and the env is not in the workspace this is not valid
         // you can't set external env without version
-        if (!envIdStr.includes('@')) {
+        // (except for envs that used to be core aspects - old components use them without a
+        // version, and bit knows how to install and load them)
+        if (!envIdStr.includes('@') && !isLegacyCoreEnvId(envIdStr)) {
           const foundComp = components.find((c) => c.id.toStringWithoutVersion() === envIdStr);
           if (!foundComp) {
             component.state.issues.getOrCreate(IssuesClasses.ExternalEnvWithoutVersion).data = {

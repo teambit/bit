@@ -162,9 +162,6 @@ export class DependencyLinker {
     if (linkResults.harmonyLink) {
       localLinks.push(this.linkDetailToLocalDepEntry(linkResults.harmonyLink));
     }
-    if (linkResults.teambitLegacyLink) {
-      localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
-    }
     if (linkResults.slotOriginatedLinks) {
       localLinks.push(...linkResults.slotOriginatedLinks.map((l) => this.linkDetailToLocalDepEntry(l)));
     }
@@ -385,9 +382,6 @@ export class DependencyLinker {
     }
 
     if (mainAspectPath) {
-      // the following line links @teambit/legacy to the workspace node_modules. at this point, we removed all
-      // @teambit/legacy occurrences from the repo but others/external repos still have it.
-      result.teambitLegacyLink = this.linkNonAspectCorePackages(rootDir, 'legacy', mainAspectPath);
       result.harmonyLink = this.linkNonAspectCorePackages(rootDir, 'harmony', mainAspectPath);
     }
     return result;
@@ -668,6 +662,22 @@ export class DependencyLinker {
    * Only reached from a workspace with `linkCoreAspects` off, i.e. one that authors them.
    */
   async syncCoreAspectLinksForEnvs(rootDir: string, componentIds: ComponentID[]): Promise<void> {
+    // The whole reconciler is best-effort, not just the `createLinks` call at the end of it. It runs
+    // right after the package manager has rewritten node_modules, which in a workspace that injects
+    // its own components (`injectWorkspacePackages`) means every core aspect's `dist` has just been
+    // deleted and not yet rebuilt by the compile step that follows. Anything this method reaches
+    // through a lazily-required module - `getCoreAspectName` and friends come from
+    // `@teambit/aspect-loader` - can therefore throw MODULE_NOT_FOUND on a dist that existed when
+    // the process started. Letting that escape aborts the install *before* the compile that would
+    // have restored those dists, leaving the workspace unable to run bit at all.
+    try {
+      await this.syncCoreAspectLinksForEnvsUnsafe(rootDir, componentIds);
+    } catch (err: any) {
+      this.logger.warn(`syncCoreAspectLinksForEnvs: skipped, ${err.message}`);
+    }
+  }
+
+  private async syncCoreAspectLinksForEnvsUnsafe(rootDir: string, componentIds: ComponentID[]): Promise<void> {
     const idsInWorkspace = componentIds.map((id) => id.toString({ ignoreVersion: true }));
     const authoredCoreAspects = this.aspectLoader.getCoreAspectIds().filter((aspectId) => {
       if (aspectId === this.aspectLoader.mainAspect?.id) return false;
@@ -905,7 +915,7 @@ function getDistDirForDevEnv(packageName: string): string {
   if (moduleDirectory.includes(packageName)) {
     dirPath = path.join(moduleDirectory, '../..'); // to remove the "index.js" at the end
   } else {
-    // This is usually required for the @teambit/legacy, as we re inside the nm so we can't find it in the other way
+    // as we are inside the nm we can't find it in the other way
     const nmDir = __dirname.substring(0, __dirname.indexOf('@teambit'));
     dirPath = path.join(nmDir, packageName);
     moduleDirectory = require.resolve(packageName, { paths: [nmDir] });
