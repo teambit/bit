@@ -119,13 +119,14 @@ describe('bit ci sync', function () {
     });
 
     // The suite's standalone idempotency scenario: a run whose only input is the previous run's output.
-    it('B: re-running with nothing moved is a converged no-op that recognizes its own sync commit', () => {
+    // The import ledger commit bundles the lane's files, so this run PROBES (plans export-branch) and
+    // the status read settles it — the tip-sha assertion is what proves the probe wrote nothing.
+    it('B: re-running with nothing moved is a converged no-op that pushes nothing', () => {
       const shaBefore = branchTipSha(LANE);
       const laneBefore = remoteLaneFingerprint(LANE);
       const { output, exitCode } = syncRun(LANE);
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
       expect(output).to.include(`${LANE} -> noop (converged)`);
-      expect(output).to.include('branch tip is a bit-sync commit');
       expect(branchTipSha(LANE)).to.equal(shaBefore);
       expect(remoteLaneFingerprint(LANE)).to.equal(laneBefore);
     });
@@ -493,8 +494,11 @@ describe('bit ci sync', function () {
       expect(output).to.include('bit ci sync could not reconcile 1 target(s)');
       expect(branchTipSha(LANE_A)).to.equal(devCommitShaA);
       expect(branchTipMessage(LANE_A)).to.not.include('[bit-sync]');
-      // the halt is per-lane, not per-run — and it must not leak files onto the surviving branch
-      expect(output).to.include(`${LANE_B} -> import-lane`);
+      // the halt is per-lane, not per-run — and it must not leak files onto the surviving branch.
+      // merge-diverged, not import-lane: lane B's tip is its import ledger commit, which bundles the
+      // lane's files, and a source-bundling tip plus a moved lane takes the merge path (an import
+      // would force the lane's files over whatever the bundle holds).
+      expect(output).to.include(`${LANE_B} -> merge-diverged`);
       expect(fileOnBranch(LANE_B, 'comp2/index.js')).to.include('lane-b-snap-2');
       expect(laneHeadTrailer(LANE_B)).to.be.a('string').with.lengthOf(40);
       expect(branchPathsMatching(LANE_B, 'comp3')).to.have.lengthOf(0);
@@ -871,7 +875,8 @@ describe('bit ci sync', function () {
       devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('import-race-v1') }, 'v1');
       // First run: plain import-lane, no race — creates the branch and its lane pointer.
       seedSync(LANE);
-      // Move the lane again so the next run's plan is import-lane once more.
+      // Move the lane again so the next run touches the branch once more (merge-diverged: the branch
+      // tip is the import ledger commit, which bundles the lane's files).
       laneSideEdit(devPath, 'comp1/index.js', comp1Src('import-race-v2'), 'v2');
       // A second clone of this same workspace, at this same pre-race state — the run that will win.
       winnerPath = helper.scopeHelper.cloneWorkspace();
@@ -888,8 +893,9 @@ describe('bit ci sync', function () {
       try {
         const { output, exitCode } = syncRun(LANE);
         expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+        // The rejected push is the merge path's LEDGER commit (see the `before` note on the plan).
         expect(output).to.include(
-          `${LANE} -> raced (branch push lost the race to a concurrent run; next run re-plans)`
+          `${LANE} -> raced (lane updated; branch ledger commit lost the push race — next run re-plans)`
         );
         expect(output).to.not.include('HALTED');
         expect(output).to.not.include('bit-sync-conflict');
@@ -914,13 +920,163 @@ describe('bit ci sync', function () {
       expect(branchTipSha(LANE), 'the follow-up run must not have pushed anything new').to.equal(winnerTip);
 
       // The loser's clone stays usable: the raced run dropped its unpushed sync commit, so a later
-      // BRANCH-TOUCHING run in this same clone (the lane moves again -> import-lane) checks the branch
-      // out cleanly instead of tripping the pristine-checkout orphan guard and halting.
+      // BRANCH-TOUCHING run in this same clone (the lane moves again -> merge-diverged) checks the
+      // branch out cleanly instead of tripping the pristine-checkout orphan guard and halting.
       laneSideEdit(devPath, 'comp1/index.js', comp1Src('import-race-v3'), 'v3');
       const reuse = syncRun(LANE);
       expect(reuse.exitCode, `bit ci sync output:\n${reuse.output}`).to.equal(0);
-      expect(reuse.output).to.include(`${LANE} -> import-lane`);
+      expect(reuse.output).to.include(`${LANE} -> merge-diverged`);
       expect(reuse.output).to.not.include('HALTED');
+    });
+  });
+
+  // A single commit that bundles a source edit WITH a `.bitmap` write is the state commit itself, so
+  // "commits after the state commit" counts zero — the edit used to be invisible and the pair read as
+  // converged while the lane never received it. The conflict-halt comment's resolve-by-hand recipe
+  // (bit lane import + fix + one commit) produces exactly this shape.
+  describe('a commit bundling a source edit with a .bitmap write is dev work, not convergence', () => {
+    const LANE = 'bundled-commit';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('bundled-v1') }, 'bundled v1');
+      // First sync materializes the branch and converges the pair.
+      const seed = syncRun(LANE);
+      expect(seed.exitCode, `bit ci sync output:\n${seed.output}`).to.equal(0);
+      expect(seed.output).to.include(`${LANE} -> import-lane`);
+
+      // The human's bundled commit: a real source edit riding in the same commit as a `.bitmap` write
+      // that leaves the parsed state identical (so the fingerprints still read converged).
+      gitFetch();
+      helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('bundled-by-hand'));
+      const bitmapPath = path.join(helper.scopes.localPath, '.bitmap');
+      fs.appendFileSync(bitmapPath, '\n');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "fix: hand-resolved content riding with a .bitmap write"');
+      helper.command.runCmd(`git push origin ${LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+    });
+
+    it('exports the bundled edit onto the lane instead of declaring convergence', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> export-branch`);
+      expect(output).to.not.include('noop (converged)');
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('bundled-by-hand');
+    });
+
+    it('a second run reads the truly converged pair as converged', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop (converged)`);
+    });
+  });
+
+  // `commitTouchesBeyondBitmap` asks "any path other than `.bitmap`", so a file no component tracks
+  // plans the probe too. The probe is a status READ: finding nothing pending it settles as converged
+  // and writes NOTHING — no ledger commit, no push, no CI re-trigger. The suspicion re-plans the probe
+  // on every later run, and every one of them is equally free of writes; the tip-sha assertions are
+  // what prove that.
+  describe('a probe that finds nothing pending settles without writing anything', () => {
+    const LANE = 'clean-probe';
+    let defaultBranch: string;
+    let devTipSha: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('clean-probe-v1') }, 'clean probe v1');
+      const seed = syncRun(LANE);
+      expect(seed.exitCode, `bit ci sync output:\n${seed.output}`).to.equal(0);
+
+      // A file no component tracks, riding in the same commit as a `.bitmap` write — the shape that
+      // reads exactly like the bundled-source case above and is indistinguishable from it by name.
+      gitFetch();
+      helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+      helper.fs.outputFile('docs/notes.md', 'a note no component tracks\n');
+      fs.appendFileSync(path.join(helper.scopes.localPath, '.bitmap'), '\n');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "docs: a note riding with a .bitmap write"');
+      helper.command.runCmd(`git push origin ${LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+      devTipSha = branchTipSha(LANE);
+    });
+
+    it('exports nothing and pushes nothing — the developer commit stays the tip', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop (converged)`);
+      expect(branchTipSha(LANE)).to.equal(devTipSha);
+    });
+
+    it('the repeat probe is just as write-free', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop (converged)`);
+      expect(branchTipSha(LANE)).to.equal(devTipSha);
+    });
+  });
+
+  // A squash rewrite builds the squashed commit's body by concatenating the squashed commits' messages
+  // (GitHub's squash-merge does exactly this) — and a synced branch's history is full of ledger messages
+  // ending in `[bit-sync]` on its own line. The result is a developer's commit wearing the reconciler's
+  // signature; reading it as ours would declare convergence over content the lane never received.
+  describe('a squash commit whose body quotes the sync marker is dev work, not convergence', () => {
+    const LANE = 'squash-marker';
+    let defaultBranch: string;
+    let devPath: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
+      devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('squash-v1') }, 'squash v1');
+      const seed = syncRun(LANE);
+      expect(seed.exitCode, `bit ci sync output:\n${seed.output}`).to.equal(0);
+      expect(seed.output).to.include(`${LANE} -> import-lane`);
+
+      // Squash the whole branch into ONE commit that also carries a NEW source edit, with the body
+      // shaped the way a squash-merge shapes it: the concatenated messages include a full ledger
+      // message, trailer and marker included.
+      gitFetch();
+      helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
+      helper.fs.outputFile('comp1/index.js', comp1Src('squash-era-work'));
+      helper.command.runCmd(`git reset --soft $(git merge-base origin/${defaultBranch} HEAD)`);
+      const messagePath = path.join(helper.scopes.localPath, '..', `${LANE}-squash-msg.txt`);
+      fs.outputFileSync(
+        messagePath,
+        [
+          'feat: the squash-era work (#42)',
+          '',
+          '* fix: work on comp1',
+          '',
+          `* chore(bit-sync): sync lane org.scope/${LANE} @ 123abc456`,
+          '',
+          'Bit-Lane-Head: 4e1243bd22c66e76c2ba9eddc1f91394e57f9f83',
+          '[bit-sync]',
+          '',
+        ].join('\n')
+      );
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd(`git commit -F "${messagePath}"`);
+      helper.command.runCmd(`git push -f origin ${LANE}`);
+      helper.command.runCmd(`git checkout -f ${defaultBranch}`);
+    });
+
+    it('exports the squashed work onto the lane instead of declaring convergence', () => {
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> export-branch`);
+      const onLane = laneTipFile(devPath, 'comp1/index.js');
+      expect(onLane, `comp1/index.js on the lane tip:\n${onLane}`).to.include('squash-era-work');
+    });
+
+    it('a second run converges without pushing anything to the branch', () => {
+      const shaBefore = branchTipSha(LANE);
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop (converged`);
+      expect(branchTipSha(LANE)).to.equal(shaBefore);
     });
   });
 
@@ -1345,41 +1501,40 @@ describe('bit ci sync', function () {
     });
   });
 
-  // A branch commit that touches no bit-tracked file (docs, CI config) gives export-branch nothing
-  // to snap. The sync-ledger commit executeExportBranch still writes is `--allow-empty` and never
-  // touches `.bitmap`, so `stateCommit` (sync-state.ts, derived from `.bitmap`'s content, never
-  // commit messages) never advances past the docs commit — `hasDevCommits` stays true forever, and
-  // every later run re-plans export-branch on top of the ledger commit it just wrote.
-  describe('a commit that touches no bit-tracked file settles instead of looping', () => {
+  // A branch commit that touches no bit-tracked file (docs, CI config) keeps `hasDevCommits` true
+  // forever — `stateCommit` (sync-state.ts, derived from `.bitmap`'s content, never commit messages)
+  // cannot advance past it. So export-branch is re-planned on every run, and what keeps that from
+  // looping is that the probe is a READ: finding nothing to push it writes nothing, so no ledger
+  // commit lands on the branch and no CI run is re-triggered.
+  describe('a commit that touches no bit-tracked file probes without writing, run after run', () => {
     const LANE = 'docs-only-lane';
     let defaultBranch: string;
     let devPath: string;
+    let docsTipSha: string;
 
     before(() => {
       ({ defaultBranch } = setupSyncWorkspace({ lanes: ['*'] }));
       devPath = createLaneWithSnap(LANE, { 'comp1/index.js': comp1Src('lane-snap-1') }, 'lane snap 1');
       seedSync(LANE);
       branchSideCommit(LANE, defaultBranch, 'NOTES.md', '# notes\n', 'docs: add notes');
+      docsTipSha = branchTipSha(LANE);
     });
 
-    it('exports nothing to snap once, then settles — the second run does not redo export-branch work', () => {
+    it('finds nothing to export and pushes nothing — twice, the docs commit staying the tip', () => {
       const first = syncRun(LANE);
       expect(first.exitCode, `bit ci sync output:\n${first.output}`).to.equal(0);
       expect(first.output).to.include(`${LANE} -> export-branch`);
+      expect(first.output).to.include(`${LANE} -> noop (converged)`);
+      expect(branchTipSha(LANE)).to.equal(docsTipSha);
 
       const second = syncRun(LANE);
       expect(second.exitCode, `bit ci sync output:\n${second.output}`).to.equal(0);
-      // pins the settled summary's exact wording
-      expect(second.output).to.include(
-        `${LANE} -> noop (converged; branch tip is already this reconciler's own sync commit)`
-      );
-      // executeExportBranch's own work (the checkout, the snap attempt) never ran a second time
-      expect(second.output).to.not.include('Exporting branch');
+      expect(second.output).to.include(`${LANE} -> noop (converged)`);
+      expect(branchTipSha(LANE)).to.equal(docsTipSha);
     });
 
-    // The withhold settles; it does not trap. A real dev commit on top of the recognized ledger tip
-    // must still clear it and export normally — the tip is no longer the reconciler's own commit.
-    it('a real dev commit on top of the settled tip clears the withhold and exports again', () => {
+    // The probe settles; it does not trap. A real dev commit on top must still export normally.
+    it('a real dev commit on top of the settled tip exports again', () => {
       branchSideCommit(
         LANE,
         defaultBranch,
@@ -1391,7 +1546,6 @@ describe('bit ci sync', function () {
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
       expect(output).to.include('Exporting branch');
       expect(output).to.include(`${LANE} -> export-branch`);
-      expect(output).to.not.include('branch tip is already this reconciler');
       expect(laneTipFile(devPath, 'comp1/index.js')).to.include('dev-commit-after-settle');
     });
   });

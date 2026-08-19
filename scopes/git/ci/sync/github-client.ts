@@ -32,6 +32,23 @@ export function isGitHubRemote(remoteUrl: string): boolean {
 
 const API = 'https://api.github.com';
 
+/**
+ * The `rel="next"` URL out of a GitHub `Link` response header, or undefined on the last page. The
+ * header is response data, and `requestRaw` attaches the bearer token to whatever URL it is handed —
+ * so a next link whose origin is not the API's reads as "last page", never as a request target.
+ */
+function nextPageUrl(linkHeader: string | null): string | undefined {
+  if (!linkHeader) return undefined;
+  const next = linkHeader.split(',').find((part) => part.includes('rel="next"'));
+  const url = next?.match(/<([^>]+)>/)?.[1];
+  if (!url) return undefined;
+  try {
+    return new URL(url).origin === API ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Warning sink; a plain callback rather than a `Logger` so this module needs no logger aspect. */
 export type WarnFn = (message: string) => void;
 
@@ -85,8 +102,10 @@ export class GitHubClient implements GitHostProvider {
     return Boolean(this.token && this.repo);
   }
 
-  private async request(method: string, path: string, body?: unknown): Promise<any> {
-    const res = await this.fetchImpl(`${API}/repos/${this.repo}${path}`, {
+  /** `pathOrUrl` may be a path relative to this repo, or an absolute URL (a `Link` header's next page). */
+  private async requestRaw(method: string, pathOrUrl: string, body?: unknown): Promise<Response> {
+    const url = /^https?:\/\//i.test(pathOrUrl) ? pathOrUrl : `${API}/repos/${this.repo}${pathOrUrl}`;
+    const res = await this.fetchImpl(url, {
       method,
       headers: {
         authorization: `Bearer ${this.token}`,
@@ -98,8 +117,13 @@ export class GitHubClient implements GitHostProvider {
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw new Error(`GitHub API ${method} ${path} failed: ${res.status} ${text}`);
+      throw new Error(`GitHub API ${method} ${pathOrUrl} failed: ${res.status} ${text}`);
     }
+    return res;
+  }
+
+  private async request(method: string, path: string, body?: unknown): Promise<any> {
+    const res = await this.requestRaw(method, path, body);
     return res.status === 204 ? undefined : res.json();
   }
 
@@ -134,6 +158,60 @@ export class GitHubClient implements GitHostProvider {
 
   async addLabel(prNumber: number, label: string): Promise<void> {
     await this.request('POST', `/issues/${prNumber}/labels`, { labels: [label] });
+  }
+
+  /**
+   * The marker-bearing comment on the PR, `'absent'` when every page was searched, or `'unknown'`
+   * when the defensive page cap cut the search short. GitHub defaults `per_page` to 30 and orders
+   * ascending, and the maintained comment is posted once, early in a PR's life — so it lives in the
+   * first pages and the search returns as soon as it is seen. `'unknown'` is distinct from `'absent'`
+   * because running out of budget must not read as "not there": the caller would post a duplicate
+   * report on every later push.
+   */
+  private async findMarkedComment(prNumber: number, marker: string): Promise<{ id: number } | 'absent' | 'unknown'> {
+    let next: string | undefined = `/issues/${prNumber}/comments?per_page=100`;
+    // Defensive cap: 20 pages (2,000 comments) is far past any real PR; without it a malformed or
+    // adversarial `Link` header could loop this call forever.
+    for (let page = 0; next && page < 20; page += 1) {
+      const res: Response = await this.requestRaw('GET', next);
+      const body = (await res.json()) as any[];
+      const match = body.find((c: any) => (c.body ?? '').includes(marker));
+      if (match) return { id: match.id };
+      next = nextPageUrl(res.headers.get('link'));
+    }
+    return next ? 'unknown' : 'absent';
+  }
+
+  /**
+   * Find the comment carrying `marker` (an HTML comment embedded in the body) and replace its body,
+   * or post `body` as a new comment when none exists and `options.createIfAbsent` is not false.
+   * GitHub's comment PATCH endpoint is `/issues/comments/{id}`, not `/issues/{pr}/comments/{id}` —
+   * a comment id is unique per repository, not scoped under the issue/PR that carries it.
+   *
+   * Named to match `GitHostProvider.upsertComment` exactly (not e.g. `upsertIssueComment`): a
+   * `GitHubClient` registered directly as a provider must satisfy the interface's optional method
+   * under its real name, or callers that feature-test via `gitHost.upsertComment` would silently
+   * treat a fully-capable client as unsupported.
+   */
+  async upsertComment(
+    prNumber: number,
+    marker: string,
+    body: string,
+    options: { createIfAbsent?: boolean } = {}
+  ): Promise<void> {
+    const existing = await this.findMarkedComment(prNumber, marker);
+    if (existing === 'unknown') {
+      // Surfaces through the caller's warn-and-skip path; posting blind would duplicate the report.
+      throw new Error(
+        `PR #${prNumber} has too many comments to establish whether the "${marker}" comment already exists`
+      );
+    }
+    if (existing !== 'absent') {
+      await this.request('PATCH', `/issues/comments/${existing.id}`, { body });
+      return;
+    }
+    if (options.createIfAbsent === false) return;
+    await this.comment(prNumber, body);
   }
 }
 
@@ -189,6 +267,15 @@ export class GitHubHostProvider implements GitHostProvider {
 
   async addLabel(prNumber: number, label: string): Promise<void> {
     return this.requireClient().addLabel(prNumber, label);
+  }
+
+  async upsertComment(
+    prNumber: number,
+    marker: string,
+    body: string,
+    options?: { createIfAbsent?: boolean }
+  ): Promise<void> {
+    return this.requireClient().upsertComment(prNumber, marker, body, options);
   }
 
   private resolveClient(remoteUrl?: string): GitHubClient | undefined {
