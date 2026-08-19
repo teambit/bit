@@ -7617,7 +7617,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@18.3.1)(react@18.3.1)(webpack@5.109.2)
@@ -8679,7 +8679,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@7.0.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.109.2)
@@ -9726,7 +9726,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.109.2)
@@ -10740,7 +10740,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@18.3.1)(react@18.3.1)(webpack@5.109.2)
@@ -11799,7 +11799,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@18.3.1)(react@18.3.1)(webpack@5.109.2)
@@ -12852,7 +12852,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.109.2)
@@ -13887,7 +13887,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.109.2)
@@ -14922,7 +14922,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.109.2)
@@ -15969,7 +15969,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.5.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.109.2)
@@ -17007,7 +17007,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.109.2)
@@ -18024,7 +18024,7 @@ importers:
         version: file:scopes/webpack/webpack(@swc/css@0.0.20)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)
       '@teambit/webpack.modules.config-mutator':
         specifier: workspace:*
-        version: file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
+        version: file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack.modules.generate-expose-loaders':
         specifier: workspace:*
         version: file:scopes/webpack/modules/generate-expose-loaders(react-dom@19.2.7)(react@19.2.7)(webpack@5.109.2)
@@ -96184,6 +96184,96 @@ snapshots:
       - uglify-js
       - webpack-cli
 
+  '@teambit/webpack.modules.config-mutator@file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(esbuild@0.14.29)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/html.modules.inject-html-element': 0.0.6(react@18.3.1)
+      '@types/jest': 29.5.14
+      html-webpack-plugin: 5.3.2(webpack@5.109.2)
+      jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
+      lodash: 4.17.21
+      webpack: 5.109.2(esbuild@0.14.29)(postcss@8.4.45)
+      webpack-merge: 5.8.0
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - '@types/node'
+      - babel-plugin-macros
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - node-notifier
+      - postcss
+      - react
+      - supports-color
+      - ts-node
+      - uglify-js
+      - webpack-cli
+
+  '@teambit/webpack.modules.config-mutator@file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/html.modules.inject-html-element': 0.0.6(react@18.3.1)
+      '@types/jest': 29.5.14
+      html-webpack-plugin: 5.3.2(webpack@5.109.2)
+      jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
+      lodash: 4.17.21
+      webpack: 5.109.2(postcss@8.4.45)
+      webpack-merge: 5.8.0
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - '@types/node'
+      - babel-plugin-macros
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - node-notifier
+      - postcss
+      - react
+      - supports-color
+      - ts-node
+      - uglify-js
+      - webpack-cli
+
+  '@teambit/webpack.modules.config-mutator@file:scopes/webpack/config-mutator(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/html.modules.inject-html-element': 0.0.6(react@19.2.7)
+      '@types/jest': 29.5.14
+      html-webpack-plugin: 5.3.2(webpack@5.109.2)
+      jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
+      lodash: 4.17.21
+      webpack: 5.109.2(postcss@8.4.45)
+      webpack-merge: 5.8.0
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - '@types/node'
+      - babel-plugin-macros
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - node-notifier
+      - postcss
+      - react
+      - supports-color
+      - ts-node
+      - uglify-js
+      - webpack-cli
+
   '@teambit/webpack.modules.exclude-node-modules-js@0.0.1': {}
 
   '@teambit/webpack.modules.generate-expose-loaders@file:scopes/webpack/modules/generate-expose-loaders(react-dom@18.3.1)(react@18.3.1)(webpack@5.109.2)':
@@ -109329,6 +109419,27 @@ snapshots:
       postcss: 8.4.45
       uglify-js: 3.19.3
 
+  minimizer-webpack-plugin@5.6.1(esbuild@0.14.29)(postcss@8.4.45)(webpack@5.109.2):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      jest-worker: 27.5.1
+      schema-utils: 4.3.3
+      terser: 5.50.0
+      webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
+    optionalDependencies:
+      esbuild: 0.14.29
+      postcss: 8.4.45
+
+  minimizer-webpack-plugin@5.6.1(postcss@8.4.45)(webpack@5.109.2):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      jest-worker: 27.5.1
+      schema-utils: 4.3.3
+      terser: 5.50.0
+      webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
+    optionalDependencies:
+      postcss: 8.4.45
+
   minio@7.1.3:
     dependencies:
       async: 3.2.6
@@ -115584,6 +115695,78 @@ snapshots:
       graceful-fs: 4.2.11
       mime-db: 1.54.0
       minimizer-webpack-plugin: 5.6.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)(webpack@5.109.2)
+      neo-async: 2.6.2
+      schema-utils: 4.3.3
+      tapable: 2.3.3
+      watchpack: 2.5.2
+      webpack-sources: 3.5.1
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
+
+  webpack@5.109.2(esbuild@0.14.29)(postcss@8.4.45):
+    dependencies:
+      '@types/estree': 1.0.9
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.18.0
+      browserslist: 4.28.8
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.24.5
+      es-module-lexer: 2.3.2
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      graceful-fs: 4.2.11
+      mime-db: 1.54.0
+      minimizer-webpack-plugin: 5.6.1(esbuild@0.14.29)(postcss@8.4.45)(webpack@5.109.2)
+      neo-async: 2.6.2
+      schema-utils: 4.3.3
+      tapable: 2.3.3
+      watchpack: 2.5.2
+      webpack-sources: 3.5.1
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
+
+  webpack@5.109.2(postcss@8.4.45):
+    dependencies:
+      '@types/estree': 1.0.9
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.18.0
+      browserslist: 4.28.8
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.24.5
+      es-module-lexer: 2.3.2
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      graceful-fs: 4.2.11
+      mime-db: 1.54.0
+      minimizer-webpack-plugin: 5.6.1(postcss@8.4.45)(webpack@5.109.2)
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.3
