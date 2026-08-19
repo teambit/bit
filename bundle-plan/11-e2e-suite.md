@@ -100,10 +100,14 @@ Step 2's `ensureBundle` restores whatever is in `.bundle-cache/` into the bundle
 does not itself produce a pre-bundle — that is step 1); a stale cache silently tests stale UI code,
 same caveat as §17i's "plain file cache, not a freshness gate" note.
 
-**Not yet wired into CI.** As of this writing no CircleCI job sets `BIT_E2E_UI_MODE`, so neither
-suite runs in CI at all — `e2e_test` and `e2e_test_esbuild_bundle` both skip them (no mode set), and
-there is no dedicated job that does steps 1–2 above. That's a real coverage gap, tracked in
-[14-known-gaps.md](14-known-gaps.md): a future CI job would need to run `bd build` + save the
-prebundle cache + `setup_esbuild_bundle` (in that order, since the bundle step restores from the
-cache) before invoking the `prebuilt`-mode command above — none of which the current
-`setup_esbuild_bundle`/`e2e_test_esbuild_bundle` jobs do today.
+**Wired into CI as of 2026-08-19.** `setup_esbuild_bundle` now runs step 1 itself (`./bin/bit.js
+build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules --tasks
+"BundleUI,PreBundlePreview"` + `bundle:prebundle-cache:save`) before building the esbuild bundle, so
+the bundle `e2e_test_esbuild_bundle` runs against always has a fresh pre-bundle baked in — and that
+job sets `BIT_E2E_UI_MODE: prebuilt`, so `ui-start.e2e.ts`/`ui-ssr.e2e.ts` run for real as part of
+its normal 40-way parallel sweep (unlike step 2 above, there's no need to target the two files
+explicitly — they're just two more spec files in that job's split, gated by the env var like
+everywhere else). `e2e_test` (the plain, non-bundle suite — currently disabled entirely, see its
+comment in `.circleci/config.yml`) still sets no mode, so `rebuild` mode has no CI coverage; that
+one is still local-only, per its own tradeoff (a cold `--rebuild` is minutes, not worth paying on
+every commit when `prebuilt` mode already covers the shipped artifact).

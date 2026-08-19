@@ -1039,3 +1039,24 @@ install`), down from the previously recorded 216 MB / 2,933 files - the ~60 MB U
   from #10629 flows straight through. See PRs #10628 (58→24 MB, SSR fix), #10629 (24→16 MB, single
   compilation), #10631 (bit-start sanity e2e + qodo-finding fixes, cherry-picked above) for the
   upstream work behind these numbers.
+- **2026-08-19** — cherry-picked `5a2cf77e4` (#10634, "provide the ssr browser context above
+  ClientContext") onto `bit-bundle3` - opened directly off the SSR-crash finding logged above.
+  `SSRBrowserProvider` now wraps `ClientContext` instead of being nested inside it, so anything
+  `ClientContext` itself renders (icons, theme switcher, loader ribbon, tooltip mount point) sees
+  the ssr-browser context; before this, only `{hudItems}`/`{routes}` did. Clean cherry-pick, no
+  conflicts, `npm run lint` clean.
+- **2026-08-19** — re-ran `ui-ssr.e2e.ts` in `rebuild` mode after the #10634 cherry-pick and
+  recompiling: **identical failure**, byte-for-byte the same stack trace
+  (`useUserAgent → useIsMobile → Tooltip`, `ReferenceError: window is not defined`). #10634 does
+  not close this branch's gap - per its own PR description's "residual gap" section, it only
+  covers components rendered inside the JSX `ClientContext` passes down; render-plugin
+  `reactContext`s (pubsub, lanes, notifications, **user-agent** itself) are applied by
+  `ServerRenderer` outside that tree and remain unprovided either way. This also invalidates the
+  earlier "three React majors" hypothesis in this log as the actual cause - #10634's fix is a pure
+  JSX-nesting change with nothing to do with React version duplication, and it measurably fixed a
+  real, verified case (its own "Proof" table, 2 failing → 4 passing) without touching this branch's
+  failure at all. The real cause is almost certainly the same tree-position gap #10634 names as
+  residual: whatever renders `Tooltip` in this branch's scope-UI SSR path does so through a
+  render-plugin context, not through `ClientContext`'s children. Not investigated further this
+  session - updated [14-known-gaps.md](14-known-gaps.md) gap 10 accordingly rather than chase it,
+  per the session's priority (PR description sizes, #10634, CI wiring).
