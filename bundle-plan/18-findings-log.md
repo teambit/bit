@@ -1060,3 +1060,24 @@ install`), down from the previously recorded 216 MB / 2,933 files - the ~60 MB U
   render-plugin context, not through `ClientContext`'s children. Not investigated further this
   session - updated [14-known-gaps.md](14-known-gaps.md) gap 10 accordingly rather than chase it,
   per the session's priority (PR description sizes, #10634, CI wiring).
+
+- **2026-08-19** — **`check_circular_dependencies` root-caused** (pipeline `50233`, its own step-115
+  `bit install`, failing since the Aug-18 pushes): the same reinjection dist-wipe, in the two copy
+  locations the first preserver deliberately didn't cover - packages the process never loaded
+  (`toolbox.modules.module-resolver` at the root, so aspect resolution of the legacy envs fails)
+  and the injected `.pnpm/<pkg>@file+…` virtual-store slots plus `.bit_roots` copies (so dependency
+  symlinks of _other_ slots resolve into dist-less copies, e.g. `config-store` through
+  `legacy.constants`' slot). Those load errors are caught, but they mark the envs failed-to-load,
+  which sends the install into the recompile cascade the job's own config comment documents as its
+  historical hang cause - and on this job's `medium` container that path ends in "Received killed
+  signal" (OOM). **Fix**: rewrote the preserver as `preserve-component-dist-dirs.ts` - the "loaded"
+  heuristic is gone; the package set now comes from the install's own project manifests (a fresh
+  load breaks on a wiped dist just as hard as a deferred require), one dist clone per package
+  serves every copy, and the restore re-discovers all current copy locations (root, `file+` slots
+  including ones the install re-keyed, `.bit_roots`) and re-links dist into any that lost it.
+  Skipped for capsule installs (dists are written after the install there) and lockfile-only/
+  dry-run. Measured on bit's own workspace: ~1.8s snapshot + ~2.5s no-op-restore/cleanup on a mac
+  (332 dist-bearing packages, 921 slots) - noise against a minutes-long install. 10-scenario
+  driver passes; tsc error set unchanged vs. the post-merge baseline; oxlint/prettier clean.
+  Residual risk: if the job still dies after envs load cleanly, the remaining lever is job config
+  (RAYON cap / package cache / resource class, all of which `bit_pr` has and this job lacks).

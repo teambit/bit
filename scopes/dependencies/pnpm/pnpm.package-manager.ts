@@ -41,10 +41,7 @@ import {
   restoreRemovedLoadedVirtualStoreDirs,
 } from './preserve-loaded-virtual-store-dirs';
 import { snapshotLoadedNestedPkgDirs, restoreRemovedLoadedNestedPkgDirs } from './preserve-loaded-nested-pkg-dirs';
-import {
-  snapshotLoadedComponentDistDirs,
-  restoreWipedLoadedComponentDistDirs,
-} from './preserve-loaded-component-dist-dirs';
+import { snapshotComponentDistDirs, restoreWipedComponentDistDirs } from './preserve-component-dist-dirs';
 import type { RebuildFn } from './lynx';
 import type * as LynxModule from './lynx';
 import { type DependenciesGraph } from '@teambit/objects';
@@ -204,16 +201,27 @@ export class PnpmPackageManager implements PackageManager {
     const hoistPattern = resolveHoistPattern(installOptions.hoistPatterns, config.hoistPattern);
     // packages this process already loaded modules from must stay requireable even if this install
     // re-keys them to a new peer hash - see preserve-loaded-virtual-store-dirs.ts - or drops a
-    // nested copy in favour of a hoisted one - see preserve-loaded-nested-pkg-dirs.ts - or rewrites
-    // a workspace component's package in place, dropping its compiled dist - see
-    // preserve-loaded-component-dist-dirs.ts
+    // nested copy in favour of a hoisted one - see preserve-loaded-nested-pkg-dirs.ts. workspace
+    // components' compiled dists must survive the install rewriting their packages in place - see
+    // preserve-component-dist-dirs.ts
     const dryRun = installOptions.dependenciesGraph == null && installOptions.dryRun;
     const loadedVirtualStoreDirs = snapshotLoadedVirtualStoreDirs(rootDir);
     const loadedNestedPkgDirs = snapshotLoadedNestedPkgDirs(rootDir);
-    const loadedComponentDistDirs =
-      dryRun || installOptions.lockfileOnly || installOptions.enableModulesDir === false
-        ? undefined // node_modules is not written, so nothing gets wiped and the clone would be waste
-        : await snapshotLoadedComponentDistDirs(rootDir, this.logger);
+    // skipped when node_modules is not written (nothing gets wiped) and for capsule installs
+    // (capsule dists are written by the build after the install, so there is nothing to preserve)
+    const skipDistPreserve =
+      dryRun ||
+      installOptions.lockfileOnly ||
+      installOptions.enableModulesDir === false ||
+      installOptions.useNesting ||
+      installOptions.rootComponentsForCapsules;
+    const componentDistDirs = skipDistPreserve
+      ? undefined
+      : await snapshotComponentDistDirs(
+          rootDir,
+          Object.values(manifests).flatMap((manifest) => (manifest.name ? [manifest.name] : [])),
+          this.logger
+        );
     const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
       rootDir,
       manifests,
@@ -283,7 +291,7 @@ export class PnpmPackageManager implements PackageManager {
     await restoreRemovedLoadedNestedPkgDirs(rootDir, loadedNestedPkgDirs, this.logger);
     // after the removal-oriented restores: a package dir they restored from a donor may still lack
     // the dist only this snapshot holds
-    await restoreWipedLoadedComponentDistDirs(loadedComponentDistDirs, this.logger);
+    await restoreWipedComponentDistDirs(componentDistDirs, this.logger);
     return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
   }
 
