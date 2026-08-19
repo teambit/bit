@@ -104,7 +104,10 @@ commands:
             || echo "merge-queue notify failed (non-fatal)"
           when: always
 
-  # Bundle installation with hoisting and overrides (Linux/macOS)
+  # Bundle installation with hoisting and overrides.
+  # pnpm no longer reads its settings from .npmrc or from package.json's "pnpm" field, so every
+  # setting below is written with `pnpm config set`, which routes each one to its own home:
+  # pnpm settings to pnpm-workspace.yaml, npm-compatible ones (registry) to .npmrc.
   install_bit_bundle:
     parameters:
       os:
@@ -113,63 +116,42 @@ commands:
       cpu:
         type: string
         default: "x64"
+      # The bundle is always built on Linux, so bin entries are symlinks unless this is turned off.
+      # Windows bundles need real executables.
+      prefer_symlinked_executables:
+        type: string
+        default: "true"
       directory:
         type: string
         default: "bit-${BIT_VERSION}"
     steps:
       - run:
           name: install bit bundle for <<parameters.os>> <<parameters.cpu>>
-          command: >
-            cd <<parameters.directory>> &&
-            pnpm init &&
-            echo "node-linker=hoisted" >> .npmrc &&
-            echo "package-import-method=copy" >> .npmrc &&
-            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            echo "user-agent=bvm-bundle-circleci" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.12" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/util.lex-comparator']='3.0.2'" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/config.nerf-dart']='1.0.1'" &&
+          command: |
+            cd <<parameters.directory>>
+            pnpm init
+            pnpm config set --location=project registry https://node-registry.bit.cloud
+            pnpm config set --location=project nodeLinker hoisted
+            pnpm config set --location=project packageImportMethod copy
+            pnpm config set --location=project userAgent bvm-bundle-circleci
+            pnpm config set --location=project preferSymlinkedExecutables <<parameters.prefer_symlinked_executables>>
+            # dependency build scripts have never run for the bundle; pnpm fails an install that
+            # skips one unless the skip is spelled out, and the set of packages that ask to build
+            # changes with every dependency bump.
+            pnpm config set --location=project strictDepBuilds false
+            pnpm config set --location=project --json overrides '{
+              "uri-js": "npm:uri-js-replace",
+              "cross-spawn@7": "^7.0.5",
+              "lodash@4": "4.17.21",
+              "trim@0": "0.0.3",
+              "@teambit/harmony": "0.4.12",
+              "postcss@8": "^8.4.19",
+              "ajv@6": "^6.12.6",
+              "@teambit/semantics.entities.semantic-schema": "^0.0.99",
+              "@pnpm/util.lex-comparator": "3.0.2",
+              "@pnpm/config.nerf-dart": "1.0.1"
+            }'
             pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
-
-  # Bundle installation for Windows (with Windows-specific configs)
-  install_bit_bundle_windows:
-    parameters:
-      cpu:
-        type: string
-        default: "x64"
-      directory:
-        type: string
-        default: "bit-${BIT_VERSION}"
-    steps:
-      - run:
-          name: install bit bundle for Windows <<parameters.cpu>>
-          command: >
-            cd <<parameters.directory>> &&
-            pnpm init &&
-            echo "node-linker=hoisted" >> .npmrc &&
-            echo "package-import-method=copy" >> .npmrc &&
-            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            echo "user-agent=bvm-bundle-circleci" >> .npmrc &&
-            echo "prefer-symlinked-executables=false" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.12" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/util.lex-comparator']='3.0.2'" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/config.nerf-dart']='1.0.1'" &&
-            pnpm add @teambit/bit --os=win32 --cpu=<<parameters.cpu>>
 
   verify_pnpm_napi_bundle:
     parameters:
@@ -277,14 +259,22 @@ commands:
           name: set bit cloud registry in npm config
           command: npm config set @bitdev:registry=https://node-registry.bit.cloud
 
+  # pnpm 12 is a native binary, so it is not installed from npm: `get-pnpm` is pnpm's own
+  # installer, which downloads the executable, verifies npm's signature over it, and hands off
+  # to `pnpm setup`. That installs into $PNPM_HOME/bin and puts it on the PATH through ~/.bashrc,
+  # which CircleCI steps never read, so the same entry goes on $BASH_ENV here. SHELL is what
+  # `pnpm setup` infers the profile to edit from; without it the installer errors after placing
+  # the binary. The version call is the check that the binary is where the PATH entry says.
   setup_pnpm:
     steps:
       - run:
           name: Install pnpm
-          command: >
-            npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@10.14.0 &&
-            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+          command: |
+            export PNPM_HOME="$HOME/.local/share/pnpm"
+            SHELL=/bin/bash npx --yes get-pnpm@0.0.3 12.0.0-rc.7
+            "$PNPM_HOME/bin/pnpm" --version
+            echo "export PNPM_HOME=\"$PNPM_HOME\"" >> $BASH_ENV
+            echo 'export PATH="$PNPM_HOME/bin:$PATH"' >> $BASH_ENV
 
   # BVM setup
   install_bvm:
@@ -1171,7 +1161,9 @@ jobs:
       - set_bit_cloud_registry
       - setup_bit_version
       - setup_pnpm
-      - install_bit_bundle_windows
+      - install_bit_bundle:
+          os: "win32"
+          prefer_symlinked_executables: "false"
       - verify_pnpm_napi_bundle:
           package: "napi.win32-x64"
       - optimize_node_modules
