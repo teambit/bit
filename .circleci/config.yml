@@ -1197,6 +1197,10 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # an explicit compile-cache dir, out of /tmp which the suite itself churns. the e2e helper
+      # spreads process.env into every spawned bit, so all of them share this cache - without it
+      # each invocation re-parses the 67MB bundle (the ~2s `bit --help` this job used to measure).
+      NODE_COMPILE_CACHE: /home/circleci/node-compile-cache
     parallelism: 40
     steps:
       - attach_workspace:
@@ -1212,8 +1216,15 @@ jobs:
             ln -sf "$BIT_BUNDLED" /home/circleci/.npm-global/bin/bit-bundled
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
       - run:
-          name: verify the bundled binary works
-          command: source $BASH_ENV && bit-bundled --version
+          name: verify the bundled binary works and warm the compile cache
+          # the two timed runs double as the cache diagnostic: the second must be visibly faster,
+          # and the listing proves the cache dir is actually populated on this machine.
+          command: |
+            source $BASH_ENV
+            bit-bundled --version
+            time bit-bundled --help > /dev/null
+            time bit-bundled --help > /dev/null
+            du -sh "$NODE_COMPILE_CACHE" 2>/dev/null || echo "compile cache dir was NOT populated"
       - e2e_test_cmd:
           bit_bin: "--bit_bin=bit-bundled"
 
@@ -1287,6 +1298,9 @@ jobs:
   e2e_test_ui_prebundle:
     <<: *defaults
     resource_class: medium
+    environment:
+      # see e2e_test_esbuild_bundle - same cache, same reason.
+      NODE_COMPILE_CACHE: /home/circleci/node-compile-cache
     steps:
       - attach_workspace:
           at: ./
@@ -1313,8 +1327,13 @@ jobs:
             ln -sf "$BIT_BUNDLED" /home/circleci/.npm-global/bin/bit-bundled
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
       - run:
-          name: verify the bundled binary works
-          command: source $BASH_ENV && bit-bundled --version
+          name: verify the bundled binary works and warm the compile cache
+          command: |
+            source $BASH_ENV
+            bit-bundled --version
+            time bit-bundled --help > /dev/null
+            time bit-bundled --help > /dev/null
+            du -sh "$NODE_COMPILE_CACHE" 2>/dev/null || echo "compile cache dir was NOT populated"
       - run:
           name: run the prebuilt-mode e2e suites against the real bundle
           command: |

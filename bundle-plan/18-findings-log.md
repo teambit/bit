@@ -1206,3 +1206,21 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   All 10 exceed the existing 1500ms budget in `filesystem-read.e2e.ts` - it's been failing on CI
   consistently, not flaking. Bumped the budget to 2500ms (a bit above the observed max, not the
   average) and updated the stale "up to 1300ms" comment.
+- **2026-08-19** — benchmarked the bundle on a second machine (Apple Silicon, node 22.20, warm
+  caches, small real workspace, mean of 5): bundle `--version` 0.384s / `--help` 0.528s / `list`
+  0.553s / `status` 0.588s, vs bvm 2.0.82 unbundled 0.201/0.566/0.607/0.912 and the dev repo binary
+  0.209/0.589/-/0.688 - reproduces §9.1's table (bundle ahead on every real command, behind only on
+  `--version`). The CI ~2s `bit --help` does NOT reproduce locally; the explaining experiment:
+  `NODE_DISABLE_COMPILE_CACHE=1` takes `--help` from 0.528s to 0.899s, and 0.899s x the ~2-2.5x
+  CI-hardware factor (calibrated from the dev binary: 0.589s local vs <1500ms budget passing on CI)
+  lands exactly on the 1720-2270ms measured there - while the _cached_ 0.53s would predict ~1.2s.
+  Conclusion: on the CI machines the compile cache never engages; suspected cause is that node
+  persists the accumulated cache only on graceful teardown, and bit commands end via
+  `process.exit()` (plus e2e children get killed on timeouts). Fixes: (a) the launcher now calls
+  `module.flushCompileCache()` right after the big `require` - verified locally against a fresh
+  cache dir: first run 1.30s and the dir gets 5.3MB written, warm runs 0.52s; (b) both bundle e2e
+  jobs set an explicit `NODE_COMPILE_CACHE=/home/circleci/node-compile-cache` (out of /tmp, which
+  the suite churns; the e2e helper spreads process.env so every spawned bit shares it) and their
+  "verify the binary" step now times two `--help` runs + lists the cache dir - a per-run cold/warm
+  diagnostic in the job output. If the warm run lands ~1.2s on CI as predicted, the `--help` budget
+  (bumped to 2500ms earlier today) can come back down.
