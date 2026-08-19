@@ -2,6 +2,8 @@ import { expect } from 'chai';
 import {
   branchMirrorsOtherLaneNote,
   branchMirrorsOtherLaneReason,
+  changedLaneComponents,
+  laneSummaryComponents,
   crossScopeDescription,
   crossScopeMidFlightHaltReason,
   crossScopeRefusal,
@@ -14,6 +16,8 @@ import {
   LaneSyncExecutor,
   laneSyncPrBody,
   racedLedgerPushSummary,
+  RUN_SUMMARY_MARKER,
+  runSummaryCommentBody,
 } from './lane-sync-executor';
 import type { LaneOwnershipEvidence } from './sync-planner';
 import { resolveSyncConfig } from './sync-config';
@@ -528,6 +532,8 @@ describe('executeExportBranch reports the ledger-race wording when only the ledg
     (executor as any).lastNonSyncCommitMessage = async () => 'feat: some change';
     (executor as any).checkoutFromRemote = async () => {};
     (executor as any).restoreWorkspace = async () => {};
+    (executor as any).materializeLane = async () => undefined;
+    (executor as any).deps.ci = { hasUnsyncedWorkChanges: async () => true };
     // The export half already succeeded; only the ledger commit that follows raced.
     (executor as any).snapAndExportOntoLane = async () => ({ status: 'exported' });
     (executor as any).recordLaneHeadOnBranch = async () => ({ status: 'raced' });
@@ -543,6 +549,116 @@ describe('executeExportBranch reports the ledger-race wording when only the ledg
       'my-lane -> raced (lane updated; branch ledger commit lost the push race — next run re-plans)'
     );
     expect(summary).to.not.include('HALTED');
+  });
+});
+
+// The probe's "clean" answer means converged only against the lane the PLAN read. A lane that moved
+// in between must re-plan — comparing the branch's files with the newer lane would misread the
+// lane's own advance as branch work and export a revert over a concurrent developer's export.
+describe('executeExportBranch bails when the lane moved since planning', () => {
+  function stubExport(currentLaneComponents: LaneComponents, plannedLaneComponents: LaneComponents) {
+    const { executor } = stubExecutor();
+    const touched: string[] = [];
+    (executor as any).checkoutFromRemote = async () => {};
+    (executor as any).restoreWorkspace = async () => {};
+    (executor as any).materializeLane = async () => undefined;
+    (executor as any).lastNonSyncCommitMessage = async () => 'feat: some change';
+    (executor as any).getRemoteLane = async () => ({ components: currentLaneComponents });
+    (executor as any).deps.ci = {
+      hasUnsyncedWorkChanges: async () => {
+        touched.push('status');
+        return false;
+      },
+    };
+    (executor as any).snapAndExportOntoLane = async () => {
+      touched.push('snap');
+      return { status: 'exported' };
+    };
+    const run = () =>
+      (executor as any).executeExportBranch({
+        target: { hostScope: 'acme.shop', name: 'my-lane' },
+        laneIdStr: 'acme.shop/my-lane',
+        branch: 'my-lane',
+        defaultBranch: 'main',
+        preExportLane: { components: plannedLaneComponents },
+      }) as Promise<string>;
+    return { run, touched };
+  }
+
+  const L1 = [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')];
+  const L2 = [comp('acme.shop/comp1', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2')];
+
+  it('a moved lane returns a re-plan noop before the status read or any snap', async () => {
+    const { run, touched } = stubExport(L2, L1);
+    const summary = await run();
+    expect(summary).to.include('my-lane -> noop');
+    expect(summary).to.include('moved');
+    expect(touched).to.deep.equal([]);
+  });
+
+  it('an unmoved lane proceeds to the probe', async () => {
+    const { run, touched } = stubExport(L1, L1);
+    const summary = await run();
+    expect(summary).to.include('my-lane -> noop (converged)');
+    expect(touched).to.deep.equal(['status']);
+  });
+});
+
+// The merge path snaps whatever the merge produced — which can be nothing new, now routinely: a
+// source-bundling tip plus a moved lane plans merge-diverged, and a branch with nothing of its own
+// merges clean and leaves the snap a noop. The summary must say so, and the run-summary comment
+// belongs only to runs that actually exported.
+describe('executeMergeDiverged distinguishes an exporting merge from a nothing-new merge', () => {
+  function stubMerge(snapStatus: 'noop' | 'exported', currentLaneComponents: LaneComponents = []) {
+    const { executor } = stubExecutor();
+    const summaryCalls: any[] = [];
+    (executor as any).checkoutFromRemote = async () => {};
+    (executor as any).restoreWorkspace = async () => {};
+    (executor as any).getRemoteLane = async () => ({ components: currentLaneComponents });
+    (executor as any).mergeLaneIntoBranchWorkingTree = async () => ({ conflicts: [], conflictedFileCount: 0 });
+    (executor as any).snapAndExportOntoLane = async () => ({ status: snapStatus });
+    (executor as any).recordLaneHeadOnBranch = async () => ({
+      status: 'ok',
+      laneHead: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1',
+      remoteLane: { components: [] },
+    });
+    (executor as any).postRunSummaryComment = async (args: any) => summaryCalls.push(args);
+    const run = () =>
+      (executor as any).executeMergeDiverged({
+        target: { hostScope: 'acme.shop', name: 'my-lane' },
+        laneIdStr: 'acme.shop/my-lane',
+        branch: 'my-lane',
+        defaultBranch: 'main',
+        preExportLane: { components: [] },
+      }) as Promise<string>;
+    return { run, summaryCalls };
+  }
+
+  it('a nothing-new merge says so, and posts no run summary', async () => {
+    const { run, summaryCalls } = stubMerge('noop');
+    const summary = await run();
+    expect(summary).to.include('my-lane -> merge-diverged');
+    expect(summary).to.include('nothing new to export');
+    expect(summary).to.not.include('then exported');
+    expect(summaryCalls).to.have.lengthOf(0);
+  });
+
+  it('an exporting merge keeps the exported wording and posts the run summary', async () => {
+    const { run, summaryCalls } = stubMerge('exported');
+    const summary = await run();
+    expect(summary).to.include('then exported');
+    expect(summaryCalls).to.have.lengthOf(1);
+    expect(summaryCalls[0].laneHead).to.equal('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
+  });
+
+  // Same freshness rule as the export probe: the plan's inputs must still describe the world.
+  it('a lane that moved since planning bails to a re-plan before merging anything', async () => {
+    const moved = [comp('acme.shop/comp1', 'ccccccccccccccccccccccccccccccccccccccc3')];
+    const { run, summaryCalls } = stubMerge('exported', moved);
+    const summary = await run();
+    expect(summary).to.include('my-lane -> noop');
+    expect(summary).to.include('moved');
+    expect(summaryCalls).to.have.lengthOf(0);
   });
 });
 
@@ -591,5 +707,180 @@ describe('isProtectedBranch', () => {
 
   it('permits an ordinary lane branch', () => {
     expect(isProtectedBranch('my-lane', 'develop', 'bit-sync/main')).to.equal(false);
+  });
+});
+
+describe('laneSummaryComponents', () => {
+  it('includes hidden updateDependents — a cascade export must not read as "nothing changed"', () => {
+    const lane = {
+      components: [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')],
+      updateDependents: [comp('acme.shop/dep1', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2')],
+    } as any;
+    expect(laneSummaryComponents(lane).map((c) => c.id.toStringWithoutVersion())).to.deep.equal([
+      'acme.shop/comp1',
+      'acme.shop/dep1',
+    ]);
+  });
+
+  it('an absent lane lists nothing', () => {
+    expect(laneSummaryComponents(undefined)).to.deep.equal([]);
+  });
+});
+
+describe('changedLaneComponents', () => {
+  it('includes a component new to the lane, and one whose head moved', () => {
+    const before = [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')];
+    const after = [
+      comp('acme.shop/comp1', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2'),
+      comp('acme.shop/comp2', 'ccccccccccccccccccccccccccccccccccccccc3'),
+    ];
+    const changed = changedLaneComponents(before, after);
+    expect(changed.map((c) => c.id.toStringWithoutVersion())).to.deep.equal(['acme.shop/comp1', 'acme.shop/comp2']);
+  });
+
+  it('excludes a component whose head did not move', () => {
+    const stable = comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
+    expect(changedLaneComponents([stable], [stable])).to.deep.equal([]);
+  });
+
+  it('treats an undefined "before" (never seen this lane) as everything being new', () => {
+    const after = [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')];
+    expect(changedLaneComponents(undefined, after)).to.deep.equal(after);
+  });
+});
+
+describe('runSummaryCommentBody', () => {
+  it('carries the marker, the changed components, and the branch/lane anchors', () => {
+    const body = runSummaryCommentBody({
+      laneIdStr: 'acme.shop/my-lane',
+      laneUrl: 'https://bit.cloud/acme/shop/~lane/my-lane',
+      branch: 'my-lane',
+      branchTipSha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1',
+      laneHead: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2',
+      changed: [comp('acme.shop/comp1', 'ccccccccccccccccccccccccccccccccccccccc3')],
+    });
+    expect(body).to.include(RUN_SUMMARY_MARKER);
+    expect(body).to.include('acme.shop/comp1` @ `ccccccccc');
+    expect(body).to.include('branch: `my-lane` @ `aaaaaaaaa`');
+    // the lane anchor is a LINK — the reader lands on the lane, not on a name to copy-paste
+    expect(body).to.include('lane: [`acme.shop/my-lane`](https://bit.cloud/acme/shop/~lane/my-lane) @ `bbbbbbbbb`');
+  });
+
+  it('says plainly that nothing changed, rather than an empty list', () => {
+    const body = runSummaryCommentBody({
+      laneIdStr: 'acme.shop/my-lane',
+      laneUrl: 'https://bit.cloud/acme/shop/~lane/my-lane',
+      branch: 'my-lane',
+      branchTipSha: undefined,
+      laneHead: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2',
+      changed: [],
+    });
+    expect(body).to.include('none — nothing on the lane changed this run');
+    expect(body).to.not.include('@ `undefined');
+  });
+});
+
+// The comment is a pure surface effect: it must never gate the run's own outcome, and must degrade
+// silently through every "nothing to comment on" state a real host, PR or branch can be in.
+describe('postRunSummaryComment', () => {
+  const BEFORE = [comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')];
+  const AFTER = [comp('acme.shop/comp1', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2')];
+
+  function executorWith(gitHost: any, warnings: string[] = []) {
+    const executor = new LaneSyncExecutor({
+      lanes: {} as any,
+      ci: {} as any,
+      logger: { console: () => {}, consoleWarning: (msg: string) => warnings.push(msg), error: () => {} } as any,
+      gitHost,
+      cfg: resolveSyncConfig({}),
+      defaultScope: 'acme.shop',
+    });
+    (executor as any).currentBranchTip = async () => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
+    return executor;
+  }
+
+  const call = (executor: LaneSyncExecutor) =>
+    (executor as any).postRunSummaryComment({
+      target: { hostScope: 'acme.shop', name: 'my-lane' },
+      laneIdStr: 'acme.shop/my-lane',
+      branch: 'my-lane',
+      laneHead: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2',
+      branchTipSha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1',
+      preComponents: BEFORE,
+      postComponents: AFTER,
+    }) as Promise<void>;
+
+  // The anchor is the ledger sha THIS run pushed — passed in, never refetched: a concurrent developer
+  // push must not be presented as the synced tip, and no remote read exists to fail the path.
+  it('anchors the body on the given pushed sha without any branch refetch', async () => {
+    const upserts: string[] = [];
+    const gitHost = {
+      findPrByBranch: async () => ({ number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] }),
+      upsertComment: async (_n: number, _m: string, body: string) => upserts.push(body),
+    };
+    const executor = executorWith(gitHost);
+    (executor as any).currentBranchTip = async () => {
+      throw new Error('must not be called');
+    };
+    await call(executor);
+    expect(upserts).to.have.lengthOf(1);
+    expect(upserts[0]).to.include('branch: `my-lane` @ `aaaaaaaaa`');
+  });
+
+  it('upserts the marked comment on the open PR when the host supports it', async () => {
+    const calls: any[] = [];
+    const gitHost = {
+      findPrByBranch: async () => ({ number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] }),
+      upsertComment: async (prNumber: number, marker: string, body: string) => {
+        calls.push({ prNumber, marker, body });
+      },
+    };
+    await call(executorWith(gitHost));
+    expect(calls).to.have.lengthOf(1);
+    expect(calls[0].prNumber).to.equal(7);
+    expect(calls[0].marker).to.equal(RUN_SUMMARY_MARKER);
+    expect(calls[0].body).to.include('acme.shop/comp1` @ `bbbbbbbbb');
+  });
+
+  it('is a no-op with no configured git host', async () => {
+    await call(executorWith(undefined)); // would throw on any host call; nothing to assert but "did not throw"
+  });
+
+  it('is a no-op when the host does not implement upsertComment', async () => {
+    const calls: any[] = [];
+    const gitHost = {
+      findPrByBranch: async () => {
+        calls.push('findPrByBranch');
+        return { number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] };
+      },
+    };
+    await call(executorWith(gitHost));
+    // upsertComment is feature-tested BEFORE the PR lookup — an unsupported host must not even look up the PR.
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('is a no-op when the branch has no open PR yet', async () => {
+    const calls: any[] = [];
+    const gitHost = {
+      findPrByBranch: async () => undefined,
+      upsertComment: async () => {
+        calls.push('upsertComment');
+      },
+    };
+    await call(executorWith(gitHost));
+    expect(calls).to.deep.equal([]);
+  });
+
+  it('warns and does not throw when the comment API call fails', async () => {
+    const warnings: string[] = [];
+    const gitHost = {
+      findPrByBranch: async () => ({ number: 7, htmlUrl: 'https://example.test/pr/7', labels: [] }),
+      upsertComment: async () => {
+        throw new Error('rate limited');
+      },
+    };
+    await call(executorWith(gitHost, warnings));
+    expect(warnings.join('\n')).to.contain('Could not post the run-summary comment');
+    expect(warnings.join('\n')).to.contain('rate limited');
   });
 });
