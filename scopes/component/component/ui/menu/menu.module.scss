@@ -9,12 +9,81 @@
   min-width: 0;
 }
 
+.topBarMinimal {
+  @media screen and (max-width: $br-md) {
+    // The breadcrumb owns the remaining mobile space, while this menu keeps the intrinsic width
+    // of its pinned actions and right-side controls.
+    flex: 0 0 auto;
+    width: auto;
+
+    // Pinned actions already include their own touch-target spacing, so the desktop gutter before
+    // version controls is unnecessary here and can be returned to the component breadcrumb.
+    .rightSide {
+      padding-left: 0;
+
+      // Keep the established nested right-side structure for non-minimal consumers, including
+      // custom RightNode integrations, but remove its extra layout box where mobile space is scarce.
+      > .rightSide {
+        display: contents;
+      }
+    }
+  }
+}
+
 .leftSide {
   display: flex;
   align-items: center;
   height: 100%;
   flex-grow: 1;
   min-width: 0;
+}
+
+.leftSideMinimal {
+  @media screen and (max-width: $br-md) {
+    // The compact More menu owns its intrinsic width; pinned actions follow as siblings.
+    flex: 0 0 auto;
+  }
+}
+
+.minimalMoreNav {
+  display: none;
+
+  @media screen and (max-width: $br-md) {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+}
+
+.minimalMoreButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--bit-bg-heavy);
+  }
+
+  > img {
+    width: 16px;
+  }
+}
+
+.minimalMenuItem {
+  padding: 0;
+
+  > * {
+    width: 100%;
+  }
+}
+
+.hideMinimalMobileNav {
+  @media screen and (max-width: $br-md) {
+    display: none;
+  }
 }
 
 .navigation {
