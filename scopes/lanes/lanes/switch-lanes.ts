@@ -19,16 +19,38 @@ export type SwitchProps = {
   skipFetch?: boolean;
   existingOnWorkspaceOnly?: boolean;
   /**
-   * switch only the lane components from these scopes; the lane's other components are neither
-   * written to the filesystem nor tracked in .bitmap. the lane object itself is still fetched and
-   * saved whole, so a later snap/export preserves the filtered-out entries. (`bit ci sync` mirrors
-   * only a lane's own-scope slice into a git repository.)
+   * switch only the lane components from these scopes. the lane's other components are left
+   * untouched: not written to the filesystem, not added to .bitmap, and not reverted to their main
+   * version either if this workspace happens to track them. the lane object itself is still fetched
+   * and saved whole, so a later snap/export preserves them. (`bit ci sync` mirrors only a lane's
+   * own-scope slice into a git repository.)
    */
   restrictToScopes?: string[];
   remoteLane?: Lane;
   localTrackedLane?: string;
   alias?: string;
 };
+
+/**
+ * Which component ids a switch operates on: the lane's own components, plus the workspace components
+ * the lane does not carry (they stay at their main version, as they always have).
+ *
+ * `restrictToScopes` narrows the lane side to those scopes. Its components are then excluded from
+ * BOTH sides - a lane component outside the restriction must not reappear as "main-only", which
+ * would check it out at its main version and write it after all. Excluded means untouched.
+ */
+export function partitionSwitchIds(
+  laneIds: ComponentID[],
+  mainIds: ComponentID[],
+  restrictToScopes?: string[]
+): { ids: ComponentID[]; laneBitIds: ComponentID[] } {
+  const restricted = restrictToScopes?.length ? laneIds.filter((id) => restrictToScopes.includes(id.scope)) : laneIds;
+  const isOnLane = (id: ComponentID) => Boolean(laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)));
+  const idsOnLaneOnly = restricted.filter((id) => !mainIds.find((i) => i.isEqualWithoutVersion(id)));
+  // Compared against the UNRESTRICTED lane ids on purpose - see the doc comment.
+  const idsOnMainOnly = mainIds.filter((id) => !isOnLane(id));
+  return { ids: [...idsOnMainOnly, ...restricted], laneBitIds: idsOnLaneOnly };
+}
 
 export class LaneSwitcher {
   private consumer: Consumer;
@@ -123,14 +145,9 @@ export class LaneSwitcher {
           laneIds = this.populatePropsAccordingToLocalLane(localLane);
         }
       }
-      const { restrictToScopes } = this.switchProps;
-      if (restrictToScopes?.length) {
-        laneIds = laneIds.filter((id) => restrictToScopes.includes(id.scope));
-      }
-      const idsOnLaneOnly = laneIds.filter((id) => !mainIds.find((i) => i.isEqualWithoutVersion(id)));
-      const idsOnMainOnly = mainIds.filter((id) => !laneIds.find((i) => i.isEqualWithoutVersion(id)));
-      this.switchProps.ids = [...idsOnMainOnly, ...laneIds];
-      this.switchProps.laneBitIds = idsOnLaneOnly;
+      const { ids, laneBitIds } = partitionSwitchIds(laneIds, mainIds, this.switchProps.restrictToScopes);
+      this.switchProps.ids = ids;
+      this.switchProps.laneBitIds = laneBitIds;
     }
     await this.populateIdsAccordingToPattern();
     this.filterIdsNotInWorkspaceIfNeeded();

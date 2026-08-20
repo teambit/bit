@@ -1,8 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
-import chalk from 'chalk';
+import { formatWarningSummary } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
+import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { capEntries } from './lane-sync-executor';
 
@@ -18,9 +19,15 @@ import { capEntries } from './lane-sync-executor';
  * Two heals, cheapest first:
  *   1. RETARGET — the scope's current version names a main file that IS in this repository, so only
  *      the `.bitmap` pointer is stale. Rewrite it and the component loads; nothing moves on disk.
- *   2. UNTRACK — no usable main file here (the whole component is gone from the tree). Drop the
- *      entry; main sync's `includeNewFromScope` re-imports the component from the scope's main. This
- *      one writes the component to a fresh directory, so it shows up as a move in the sync PR.
+ *   2. UNTRACK — the scope's current version was read, and the main file it names is not here
+ *      either. Drop the entry; main sync's `includeNewFromScope` re-imports the component from the
+ *      scope's main. This one writes the component to a fresh directory, so it shows up as a move in
+ *      the sync PR.
+ *
+ * An entry is only ever untracked on a POSITIVE read of the scope's head. A component the scope does
+ * not have, or whose objects could not be read (a failed import, a corrupt object), is left exactly
+ * as it is and reported: a transient remote failure must not delete a `.bitmap` entry, and the run
+ * failing loudly on it is the honest outcome.
  *
  * Deliberately ci-local: making the checkout itself tolerate an unloadable component would change
  * `bit checkout` for every caller passing a "theirs" resolution.
@@ -30,32 +37,43 @@ export type MainFileHeal = { id: string; retargetedTo?: string };
 /**
  * Fetch the remote head of the stale components. Without it the local scope still holds the version
  * this repository already had — whose main file is the missing one — and every entry would look
- * unrepairable. Mirrors the lane switcher's pre-read import; failures are not fatal (the caller
- * falls back to untracking).
+ * unrepairable. Returns whether the fetch succeeded: a failure is not fatal on its own (local
+ * objects may still answer), but it must never be mistaken for "the scope says this is gone".
  */
-async function importHeadsOf(workspace: Workspace, ids: any[]): Promise<void> {
+async function importHeadsOf(workspace: Workspace, ids: ComponentID[]): Promise<boolean> {
   try {
     await workspace.scope.legacyScope.scopeImporter.importWithoutDeps(
       ComponentIdList.fromArray(ids).toVersionLatest(),
       { cache: false, ignoreMissingHead: true }
     );
+    return true;
   } catch {
-    // best effort
+    return false;
   }
 }
 
-/** The main file the scope's current (head) version of the component records, if it can be read. */
-async function mainFileOnScopeHead(workspace: Workspace, componentMap: { id: any }): Promise<string | undefined> {
+/**
+ * What the scope's current (head) version says the component's main file is. The three outcomes are
+ * deliberately distinct: only `read` licenses a destructive heal.
+ */
+type ScopeMainFile =
+  | { status: 'read'; mainFile: string }
+  /** the scope has no such component, or no head for it — nothing to compare against */
+  | { status: 'absent' }
+  /** objects could not be read (failed import, corrupt object) — the answer is unknown */
+  | { status: 'unreadable'; reason: string };
+
+async function mainFileOnScopeHead(workspace: Workspace, id: ComponentID): Promise<ScopeMainFile> {
+  const legacyScope = workspace.scope.legacyScope;
   try {
-    const legacyScope = workspace.scope.legacyScope;
-    const modelComponent = await legacyScope.getModelComponentIfExist(componentMap.id);
-    const head = modelComponent?.getHeadRegardlessOfLaneAsTagOrHash?.() ?? modelComponent?.head?.toString();
-    if (!modelComponent || !head) return undefined;
+    const modelComponent = await legacyScope.getModelComponentIfExist(id);
+    const head = modelComponent?.getHeadRegardlessOfLaneAsTagOrHash();
+    if (!modelComponent || !head) return { status: 'absent' };
     const version = await modelComponent.loadVersion(head, legacyScope.objects);
-    return version?.mainFile;
-  } catch {
-    // Unreadable objects are not a reason to fail the run; fall through to untracking.
-    return undefined;
+    if (!version?.mainFile) return { status: 'absent' };
+    return { status: 'read', mainFile: version.mainFile };
+  } catch (e: any) {
+    return { status: 'unreadable', reason: e?.message || String(e) };
   }
 }
 
@@ -74,32 +92,46 @@ export async function healMissingMainFiles(workspace: Workspace, logger: Logger)
   });
   if (!stale.length) return [];
 
-  await importHeadsOf(
+  const imported = await importHeadsOf(
     workspace,
     stale.map((componentMap) => componentMap.id)
   );
 
   const healed: MainFileHeal[] = [];
+  const skipped: string[] = [];
   for (const componentMap of stale) {
     const id = componentMap.id.toStringWithoutVersion();
     // eslint-disable-next-line no-await-in-loop
-    const scopeMainFile = await mainFileOnScopeHead(workspace, componentMap);
-    if (scopeMainFile && onDisk(componentMap.rootDir as string, scopeMainFile)) {
-      componentMap.mainFile = scopeMainFile;
+    const onScope = await mainFileOnScopeHead(workspace, componentMap.id);
+    if (onScope.status === 'read' && onDisk(componentMap.rootDir as string, onScope.mainFile)) {
+      componentMap.mainFile = onScope.mainFile;
       bitMap.markAsChanged();
-      healed.push({ id, retargetedTo: scopeMainFile });
-    } else {
+      healed.push({ id, retargetedTo: onScope.mainFile });
+    } else if (onScope.status === 'read') {
+      // Positively read, and the file it names is not here either: the whole component is gone from
+      // this tree, so the entry cannot be repaired in place.
       bitMap.removeComponent(componentMap.id);
       healed.push({ id });
+    } else {
+      // Unknown, never assumed: leave the entry and let the checkout fail with its own message.
+      skipped.push(`${id} (${onScope.status === 'absent' ? 'not on the scope' : `unreadable: ${onScope.reason}`})`);
     }
   }
-  await bitMap.write();
+  if (healed.length) await bitMap.write();
+
+  if (skipped.length) {
+    logger.consoleWarning(
+      `Left ${skipped.length} .bitmap entr(ies) with a missing main file untouched — the scope could not ` +
+        `confirm what to repair them to${imported ? '' : ', and fetching their heads failed'}: ` +
+        `${capEntries(skipped).join(', ')}`
+    );
+  }
 
   const retargeted = healed.filter((heal) => heal.retargetedTo);
   const untracked = healed.filter((heal) => !heal.retargetedTo);
   if (retargeted.length) {
     logger.console(
-      chalk.blue(
+      formatWarningSummary(
         `Repointed ${retargeted.length} .bitmap entr(ies) at the main file the scope's current version ` +
           `records: ${capEntries(retargeted.map((heal) => `${heal.id} -> ${heal.retargetedTo}`)).join(', ')}`
       )
@@ -107,7 +139,7 @@ export async function healMissingMainFiles(workspace: Workspace, logger: Logger)
   }
   if (untracked.length) {
     logger.console(
-      chalk.blue(
+      formatWarningSummary(
         `Untracked ${untracked.length} component(s) whose recorded main file is gone from this repository, ` +
           `so the scope's current version can be written in their place: ` +
           `${capEntries(untracked.map((heal) => heal.id)).join(', ')}`
