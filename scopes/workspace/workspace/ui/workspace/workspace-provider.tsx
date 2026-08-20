@@ -14,6 +14,10 @@ export type WorkspaceProviderProps = {
    */
   loading?: boolean;
   /**
+   * whether the light workspace query has resolved at least once.
+   */
+  resolved?: boolean;
+  /**
    * whether deferred status query is currently in-flight.
    */
   statusLoading?: boolean;
@@ -34,6 +38,7 @@ export type WorkspaceProviderProps = {
 export function WorkspaceProvider({
   workspace,
   loading = false,
+  resolved = false,
   statusLoading = false,
   statusReady = false,
   children,
@@ -43,6 +48,7 @@ export function WorkspaceProvider({
       value={{
         workspace,
         loading,
+        resolved,
         statusLoading,
         statusReady,
       }}

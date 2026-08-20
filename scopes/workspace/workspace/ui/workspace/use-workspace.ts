@@ -889,9 +889,17 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
   const statusReady = !enableStatusQuery || (shouldFetchStatus && !!statusResult?.workspace);
   const isStatusLoading = shouldFetchStatus && !statusReady && statusLoading;
 
+  // `loading` alone can't tell "workspace has no components" from "we don't know yet": with
+  // `errorPolicy: 'all'` a failed/aborted light query settles to loading=false with no data, and a
+  // cache-and-network read can hand back an empty shell before the network answers. Callers that
+  // render an empty state (the overview's "create your first component") need to know the light
+  // query actually resolved once, so a transient no-data frame doesn't get shown as "empty".
+  const workspaceResolved = !!data?.workspace;
+
   return {
     workspace,
     loading,
+    workspaceResolved,
     statusLoading: isStatusLoading,
     statusReady,
     subscribeToMore,

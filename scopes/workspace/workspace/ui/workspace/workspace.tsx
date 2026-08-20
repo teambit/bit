@@ -62,6 +62,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   const {
     workspace: rawWorkspace,
     loading: workspaceLoading,
+    workspaceResolved,
     statusLoading,
     statusReady,
   } = useWorkspace({
@@ -112,6 +113,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     <WorkspaceProvider
       workspace={workspace}
       loading={workspaceLoading && !rawWorkspace}
+      resolved={workspaceResolved}
       statusLoading={statusLoading}
       statusReady={statusReady}
     >

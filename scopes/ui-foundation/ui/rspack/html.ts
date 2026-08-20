@@ -156,6 +156,219 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
       </script>
       `;
 
+
+  // Static "boot shell" painted by the browser before the UI bundle is parsed.
+  //
+  // The workspace bundle is several MB of JS in dev; until it downloads, parses, evaluates and React
+  // commits its first render, `<div id="root">` is empty and the user stares at a blank page
+  // (measured: first contentful paint ~516ms, first grid cards ~776ms on a 208-component workspace).
+  // No React-level skeleton can cover that window because React itself isn't running yet.
+  //
+  // So the shell below is plain HTML + inline CSS: it paints on the first frame after the HTML
+  // arrives (~50ms), mirroring the real layout (64px top bar, 246px sidebar, sticky filter bar and
+  // the 280px-min card grid) so the swap to live content is a cross-fade, not a jump. It removes
+  // itself as soon as React commits into #root.
+  const bootShellStyle = `
+      <style>
+      :root {
+        --bit-boot-bg: #fdfdff;
+        --bit-boot-surface: #ffffff;
+        --bit-boot-border: #ededed;
+        --bit-boot-fill: #f1f1f4;
+        --bit-boot-fill-strong: #e7e7ec;
+        --bit-boot-sheen: rgba(0, 0, 0, 0.04);
+      }
+      html[data-theme='dark'] {
+        --bit-boot-bg: #060414;
+        --bit-boot-surface: #100f14;
+        --bit-boot-border: #3d3d3c;
+        --bit-boot-fill: #1c1b1f;
+        --bit-boot-fill-strong: #262438;
+        --bit-boot-sheen: rgba(255, 255, 255, 0.05);
+      }
+      #bit-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        background: var(--bit-boot-bg);
+        opacity: 1;
+        transition: opacity 140ms ease-out;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      #bit-boot[data-hiding='true'] { opacity: 0; }
+      #bit-boot .bit-boot-fill,
+      #bit-boot .bit-boot-pill,
+      #bit-boot .bit-boot-row,
+      #bit-boot .bit-boot-preview,
+      #bit-boot .bit-boot-badge,
+      #bit-boot .bit-boot-name,
+      #bit-boot .bit-boot-hash {
+        background: var(--bit-boot-fill);
+        border-radius: 6px;
+      }
+      #bit-boot .bit-boot-topbar {
+        flex: none;
+        height: 64px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        border-bottom: 1px solid var(--bit-boot-border);
+      }
+      #bit-boot .bit-boot-corner { width: 150px; height: 26px; border-radius: 8px; }
+      #bit-boot .bit-boot-tab { width: 74px; height: 14px; }
+      #bit-boot .bit-boot-avatar { margin-left: auto; width: 32px; height: 32px; border-radius: 999px; }
+      #bit-boot .bit-boot-body { flex: 1; display: flex; min-height: 0; }
+      #bit-boot .bit-boot-sidebar {
+        flex: none;
+        width: 246px;
+        box-sizing: border-box;
+        padding: 16px 14px;
+        border-right: 1px solid var(--bit-boot-border);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      #bit-boot .bit-boot-search { height: 30px; border-radius: 8px; background: var(--bit-boot-fill); }
+      #bit-boot .bit-boot-row { height: 12px; }
+      #bit-boot .bit-boot-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      #bit-boot .bit-boot-filterbar {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 40px;
+        border-bottom: 1px solid var(--bit-boot-border);
+      }
+      #bit-boot .bit-boot-pill { width: 120px; height: 32px; border-radius: 8px; }
+      #bit-boot .bit-boot-toggle { margin-left: auto; width: 96px; height: 32px; border-radius: 8px; background: var(--bit-boot-fill); }
+      #bit-boot .bit-boot-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+        align-content: start;
+        padding: 20px 40px 80px;
+        overflow: hidden;
+      }
+      #bit-boot .bit-boot-card {
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--bit-boot-surface);
+        border: 1px solid var(--bit-boot-border);
+      }
+      #bit-boot .bit-boot-preview { position: relative; height: 180px; border-bottom: 1px solid var(--bit-boot-border); border-radius: 0; }
+      #bit-boot .bit-boot-footer { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
+      #bit-boot .bit-boot-badge { width: 20px; height: 20px; border-radius: 5px; flex: none; background: var(--bit-boot-fill-strong); }
+      #bit-boot .bit-boot-name { flex: 1; max-width: 62%; height: 11px; border-radius: 4px; background: var(--bit-boot-fill-strong); }
+      #bit-boot .bit-boot-hash { width: 42px; height: 11px; border-radius: 4px; flex: none; }
+      #bit-boot .bit-boot-sheen {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent 0%, var(--bit-boot-sheen) 50%, transparent 100%);
+        background-size: 200% 100%;
+        animation: bit-boot-shimmer 1.4s ease-in-out infinite;
+      }
+      #bit-boot[data-minimal='true'] .bit-boot-topbar,
+      #bit-boot[data-minimal='true'] .bit-boot-sidebar { display: none; }
+      @keyframes bit-boot-shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #bit-boot .bit-boot-sheen { animation: none; }
+      }
+      @media screen and (max-width: 1024px) {
+        #bit-boot .bit-boot-sidebar { display: none; }
+        #bit-boot .bit-boot-grid, #bit-boot .bit-boot-filterbar { padding-left: 16px; padding-right: 16px; }
+      }
+      </style>`;
+
+  const bootShellCard = `
+          <div class="bit-boot-card">
+            <div class="bit-boot-preview"><div class="bit-boot-sheen"></div></div>
+            <div class="bit-boot-footer">
+              <span class="bit-boot-badge"></span>
+              <span class="bit-boot-name"></span>
+              <span class="bit-boot-hash"></span>
+            </div>
+          </div>`;
+
+  const bootShellSidebarRows = [78, 92, 64, 86, 70, 96, 58, 82, 74, 90, 66, 88]
+    .map((width) => `<div class="bit-boot-row" style="width:${width}%"></div>`)
+    .join('');
+
+  const bootShell = `
+      <div id="bit-boot" aria-hidden="true">
+        <div class="bit-boot-topbar">
+          <div class="bit-boot-corner bit-boot-fill"></div>
+          <div class="bit-boot-tab bit-boot-fill"></div>
+          <div class="bit-boot-tab bit-boot-fill"></div>
+          <div class="bit-boot-avatar bit-boot-fill"></div>
+        </div>
+        <div class="bit-boot-body">
+          <aside class="bit-boot-sidebar">
+            <div class="bit-boot-search"></div>
+            ${bootShellSidebarRows}
+          </aside>
+          <main class="bit-boot-main">
+            <div class="bit-boot-filterbar">
+              <span class="bit-boot-pill"></span>
+              <span class="bit-boot-pill"></span>
+              <span class="bit-boot-toggle"></span>
+            </div>
+            <div class="bit-boot-grid">${bootShellCard.repeat(12)}</div>
+          </main>
+        </div>
+      </div>
+      <script>
+      // Remove the boot shell as soon as React commits its first render into #root. Waiting two
+      // animation frames past that commit lets the real tree paint underneath, so the cross-fade
+      // never exposes a blank frame. The timeout is a safety net: a UI that never mounts (bundle
+      // error) must not leave the user staring at a permanent fake skeleton.
+      (function () {
+        var shell = document.getElementById('bit-boot');
+        if (!shell) return;
+        try {
+          if (new URL(window.location.href).searchParams.get('minimal-mode') === 'true') {
+            shell.setAttribute('data-minimal', 'true');
+          }
+        } catch (e) {}
+
+        var done = false;
+        function dismiss() {
+          if (done) return;
+          done = true;
+          shell.setAttribute('data-hiding', 'true');
+          setTimeout(function () {
+            if (shell.parentNode) shell.parentNode.removeChild(shell);
+          }, 200);
+        }
+
+        var root = document.getElementById('root');
+        if (!root) return dismiss();
+        if (root.childElementCount > 0) return dismiss();
+
+        var observer = new MutationObserver(function () {
+          if (!root.childElementCount) return;
+          observer.disconnect();
+          requestAnimationFrame(function () {
+            requestAnimationFrame(dismiss);
+          });
+        });
+        observer.observe(root, { childList: true });
+
+        setTimeout(function () {
+          observer.disconnect();
+          dismiss();
+        }, 15000);
+      })();
+      </script>`;
+
   return () => `
   <!DOCTYPE html>
   <html lang="en">
@@ -205,9 +418,11 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
       window.__BIT_DISABLE_DEV_AUTO_RELOAD__ = true;
       </script>
       ${serviceWorkerScript}
+      ${bootShellStyle}
     </head>
     <body>
       <div id="root"></div>
+      ${bootShell}
     </body>
   </html>
   `;
