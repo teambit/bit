@@ -256,7 +256,14 @@ export class PreviewStartPlugin implements StartPlugin {
         });
       this.previewServers = this.previewServers.concat(previewServers);
     } catch (err: any) {
-      this.failBootstrapSpinner(`Preview dev server bootstrap failed: ${err?.message || err}`);
+      // one env failing to bundle rejects the whole `devServer()` call, so every env loses its
+      // preview server. the UI stays up, which means the only signal the developer gets is this
+      // message - dumping raw bundler stats here buried the actual cause (a missing module) under
+      // hundreds of lines of module listings.
+      this.failBootstrapSpinner(
+        `Preview dev servers failed to start - component previews will be unavailable.\n${summarizeBundlerError(err)}`
+      );
+      this.logger.error('preview dev server bootstrap failed', err);
       throw err;
     }
   }
@@ -504,4 +511,44 @@ function stringifyIncludedEnvs(includedEnvs: string[] = [], verbose = false) {
   if (includedEnvs.length < 2) return '';
   if (includedEnvs.length > 2 && !verbose) return ` ${includedEnvs.length} other envs`;
   return includedEnvs.join(', ');
+}
+
+/**
+ * Turn a bundler failure into something a developer can act on. Rspack rejects with its full stats
+ * as the error message - hundreds of lines of module listings around a couple of real errors - so
+ * pull out the errors themselves and the env each one came from. The untouched original still goes
+ * to the debug log for when the summary is not enough.
+ */
+export function summarizeBundlerError(err: any, maxErrors = 5): string {
+  const message: string = err?.message || String(err);
+  const lines = message.split('\n');
+  const errorIndexes = lines.reduce<number[]>((acc, line, index) => {
+    if (line.startsWith('ERROR in ')) acc.push(index);
+    return acc;
+  }, []);
+
+  if (!errorIndexes.length) {
+    const firstLines = lines.slice(0, 4).join('\n  ');
+    return `  ${firstLines}`;
+  }
+
+  const summaries = errorIndexes.slice(0, maxErrors).map((start) => {
+    const block = lines.slice(start, start + 12);
+    const reason =
+      block.map((line) => line.match(/×\s*(.+)$/)?.[1]).find(Boolean) ||
+      block[0].replace(/^ERROR in /, '') ||
+      'unknown error';
+    // capsule dirs are named `<scope>_<namespace>_<name>@<version>`, which is the env id with the
+    // separators flattened - recover it so the message names a component, not a cache path.
+    const capsule = block.join('\n').match(/capsules[/\\][^/\\]+[/\\]([^/\\]+@[^/\\]+)/)?.[1];
+    const envId = capsule ? capsule.replace(/_/g, '/') : undefined;
+    // drop the trailing `in '<capsule path>'` - the env id above already says where this happened
+    const concise = reason.trim().replace(/ in '[^']*'$/, '');
+    return `  ${envId ? `${envId}: ` : ''}${concise}`;
+  });
+
+  const remaining = errorIndexes.length - summaries.length;
+  if (remaining > 0) summaries.push(`  ...and ${remaining} more error${remaining === 1 ? '' : 's'}`);
+  summaries.push(`  full bundler output was written to the debug log (bit globals)`);
+  return summaries.join('\n');
 }
