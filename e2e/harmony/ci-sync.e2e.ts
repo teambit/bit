@@ -1082,13 +1082,23 @@ describe('bit ci sync', function () {
 
   // The cross-scope split: foreign CONTENT is refused outright; a foreign HOST is fine as long as the
   // content is this repo's, addressed by its scope-qualified id.
-  describe('a lane whose components span two scopes is refused, never half-mirrored', () => {
+  describe('a lane whose components span two scopes is mirrored over its own-scope slice', () => {
     const LANE = 'cross-scope';
-    const MID_FLIGHT_LANE = 'mid-flight';
+    const FOREIGN_ONLY_LANE = 'foreign-only';
     let otherScope: string;
     let devPath: string;
     let defaultBranch: string;
-    let midFlightShaBefore: string;
+
+    /** the remote lane's `<id> -> head` map, for asserting what an export did and did not move */
+    function remoteLaneHeads(laneName: string): Record<string, string> {
+      const parsed = helper.command.listRemoteLanesParsed();
+      const lane = parsed.lanes.find((l: any) => (l.id?.name ?? l.name) === laneName);
+      const heads: Record<string, string> = {};
+      (lane?.components ?? []).forEach((c: any) => {
+        heads[typeof c.id === 'string' ? c.id : c.id.toString()] = c.head;
+      });
+      return heads;
+    }
 
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -1101,12 +1111,10 @@ describe('bit ci sync', function () {
       setupGitRemote();
       setSyncConfig({ lanes: ['*'] });
 
-      // comp1 belongs to this repository's scope; comp2 to the other one (variant set before `bit add`).
+      // The CI repository tracks ONLY comp1 — comp2 belongs to the other scope, and its source never
+      // lived in this repository (the real cross-scope shape: another repo's component on the lane).
       helper.fs.outputFile('comp1/index.js', comp1Src('initial'));
-      helper.fs.outputFile('comp2/index.js', comp2Src('initial'));
-      helper.workspaceJsonc.addToVariant('comp2', 'defaultScope', otherScope);
       helper.command.addComponent('comp1');
-      helper.command.addComponent('comp2');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
@@ -1116,83 +1124,104 @@ describe('bit ci sync', function () {
       defaultBranch = helper.command.runCmd('git branch --show-current').trim();
       helper.command.runCmd(`git push -u origin ${defaultBranch}`);
 
-      // The "developer on bit.cloud" moves BOTH components on one lane hosted by this scope.
-      devPath = createLaneWithSnap(
-        LANE,
-        { 'comp1/index.js': comp1Src('cross-scope-snap'), 'comp2/index.js': comp2Src('cross-scope-snap') },
-        'cross-scope lane snap'
-      );
+      // The "developer on bit.cloud" snaps BOTH components on one lane hosted by this scope: comp1
+      // (this repository's) and comp2, added under the OTHER scope.
+      devPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${LANE}`, devPath);
+      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('cross-scope-snap'));
+      fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), comp2Src('cross-scope-snap'));
+      helper.command.runCmd('bit add comp2', devPath);
+      helper.command.runCmd(`bit scope set ${otherScope} comp2`, devPath);
+      helper.command.runCmd('bit snap --message "cross-scope lane snap"', devPath);
+      helper.command.runCmd('bit export', devPath);
     });
 
-    it('targeted explicitly: should refuse before planning, naming the foreign scope, and write nothing', () => {
+    it('targeted explicitly: mirrors the own-scope slice onto a branch and leaves the foreign component out', () => {
       // setup sanity: the lane really does span two scopes
-      const parsed = helper.command.listRemoteLanesParsed();
-      const lane = parsed.lanes.find((l: any) => (l.id?.name ?? l.name) === LANE);
-      const ids = (lane?.components ?? []).map((c: any) => (typeof c.id === 'string' ? c.id : c.id.toString()));
+      const ids = Object.keys(remoteLaneHeads(LANE));
       expect(ids.join(' ')).to.include(`${otherScope}/comp2`);
       expect(ids.join(' ')).to.include(`${helper.scopes.remote}/comp1`);
 
-      const refsBefore = remoteRefs();
       const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> import-lane`);
+      expect(remoteBranchExists(LANE)).to.be.true;
+      // comp1's lane content landed on the branch…
+      expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('cross-scope-snap');
+      // …and comp2 never entered this repository: no file on the tree, no `.bitmap` entry.
+      expect(branchPathsMatching(LANE, 'comp2')).to.deep.equal([]);
+      expect(fileOnBranch(LANE, '.bitmap')).to.not.include(otherScope);
+      expect(laneHeadTrailer(LANE)).to.match(/^[0-9a-f]{40}$/);
+    });
+
+    it('a lane change that touches only the foreign component leaves the mirror untouched, converged and green', () => {
+      const shaBefore = branchTipSha(LANE);
+      laneSideEdit(devPath, 'comp2/index.js', comp2Src('foreign-only-move'), 'foreign-only snap');
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> noop (converged)`);
+      expect(branchTipSha(LANE)).to.equal(shaBefore);
+    });
+
+    it('a lane change to an own component moves the mirror, still leaving the foreign component out', () => {
+      laneSideEdit(devPath, 'comp1/index.js', comp1Src('own-move'), 'own snap');
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      // The action may be import-lane or (when the previous sync commit bundled sources, which reads
+      // as suspected work) merge-diverged — what matters is the outcome: the own edit landed and the
+      // foreign component still never entered the repository.
+      expect(output).to.not.include('skipped');
+      expect(output).to.not.include('HALTED');
+      expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('own-move');
+      expect(branchPathsMatching(LANE, 'comp2')).to.deep.equal([]);
+      expect(fileOnBranch(LANE, '.bitmap')).to.not.include(otherScope);
+    });
+
+    it('a dev commit on the branch exports only own components; the foreign lane entry keeps its head', () => {
+      const headsBefore = remoteLaneHeads(LANE);
+      branchSideCommit(LANE, defaultBranch, 'comp1/index.js', comp1Src('branch-edit'), 'feat: branch edit');
+      const { output, exitCode } = syncRun(LANE);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> export-branch`);
+      const headsAfter = remoteLaneHeads(LANE);
+      expect(headsAfter[`${helper.scopes.remote}/comp1`]).to.not.equal(headsBefore[`${helper.scopes.remote}/comp1`]);
+      expect(headsAfter[`${otherScope}/comp2`]).to.equal(headsBefore[`${otherScope}/comp2`]);
+      // the lane's comp1 content really is the branch's edit (not just a head that moved)
+      expect(laneTipFile(devPath, 'comp1/index.js')).to.include('branch-edit');
+    });
+
+    it('a lane with NO own-scope components, targeted explicitly: refused, nothing written', () => {
+      // A fresh dev clone: comp1 untouched (so it never joins the lane), comp3 under the other scope.
+      const foreignDevPath = helper.scopeHelper.cloneWorkspace();
+      helper.command.runCmd(`bit lane create ${FOREIGN_ONLY_LANE}`, foreignDevPath);
+      fs.outputFileSync(path.join(foreignDevPath, 'comp3', 'index.js'), `module.exports = () => 'comp3';\n`);
+      helper.command.runCmd('bit add comp3', foreignDevPath);
+      helper.command.runCmd(`bit scope set ${otherScope} comp3`, foreignDevPath);
+      helper.command.runCmd('bit snap --message "foreign-only lane snap"', foreignDevPath);
+      helper.command.runCmd('bit export', foreignDevPath);
+
+      const refsBefore = remoteRefs();
+      const { output, exitCode } = syncRun(FOREIGN_ONLY_LANE);
       expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
-      expect(output).to.include('cross-scope lane: components from scope(s)');
-      expect(output).to.include(otherScope);
+      expect(output).to.include('nothing to mirror');
       expect(output).to.include(`this repo maps scope ${helper.scopes.remote}`);
-      expect(output).to.include(`${otherScope}/comp2`);
-      expect(output).to.include("see the docs' Cross-scope lanes section");
+      expect(output).to.include(`${otherScope}/comp3`);
       expect(output).to.include('No branch was created and nothing was written');
       // not a halt: no bit-sync-conflict machinery is involved
       expect(output).to.not.include('HALTED');
       expect(output).to.not.include('bit-sync-conflict');
-      // refused BEFORE planning — this shape would otherwise plan `import-lane`
-      expect(output).to.not.include('import-lane');
-      expect(remoteBranchExists(LANE)).to.be.false;
+      expect(remoteBranchExists(FOREIGN_ONLY_LANE)).to.be.false;
       expect(remoteRefs()).to.equal(refsBefore);
     });
 
-    it('reached by an --all run: should SKIP it, keep the run green, and reconcile the rest of the run', () => {
+    it('an --all run: the mirrored lane converges, the foreign-only one is skipped, and the run stays green', () => {
       const { output, exitCode } = syncRun('--all');
       expect(exitCode, `bit ci sync --all output:\n${output}`).to.equal(0);
-      expect(output).to.include(`${LANE} -> skipped (cross-scope lane:`);
-      expect(output).to.include('no branch created');
+      expect(output).to.include(`${LANE} -> noop (converged)`);
+      expect(output).to.include(`${FOREIGN_ONLY_LANE} -> skipped (nothing to mirror:`);
       expect(output).to.not.include('HALTED');
-      expect(remoteBranchExists(LANE)).to.be.false;
+      expect(remoteBranchExists(FOREIGN_ONLY_LANE)).to.be.false;
       expect(output).to.include('main ->');
-    });
-
-    it('a lane that became cross-scope AFTER its branch existed: should HALT and leave the branch put', () => {
-      // Step off the cross-scope lane first — a lane forked from another lane inherits its
-      // components — and restore both files so only the edit below counts as modified.
-      helper.command.runCmd('bit switch main', devPath);
-      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('initial'));
-      fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), comp2Src('initial'));
-      helper.command.runCmd(`bit lane create ${MID_FLIGHT_LANE}`, devPath);
-      fs.outputFileSync(path.join(devPath, 'comp1', 'index.js'), comp1Src('mid-flight-single-scope'));
-      helper.command.runCmd(`bit snap --message "single-scope snap"`, devPath);
-      helper.command.runCmd('bit export', devPath);
-      seedSync(MID_FLIGHT_LANE);
-      midFlightShaBefore = branchTipSha(MID_FLIGHT_LANE);
-
-      // Phase 2: the lane grows a component from the OTHER scope.
-      fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), comp2Src('mid-flight-foreign'));
-      helper.command.runCmd(`bit snap --message "foreign-scope snap"`, devPath);
-      helper.command.runCmd('bit export', devPath);
-
-      const { output, exitCode } = syncRun(MID_FLIGHT_LANE);
-      expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
-      expect(output).to.include(`HALTED ${MID_FLIGHT_LANE} -> lane became cross-scope after it was mirrored onto`);
-      expect(output).to.include('can no longer be reconciled automatically');
-      expect(remoteBranchExists(MID_FLIGHT_LANE)).to.be.true;
-      expect(branchTipSha(MID_FLIGHT_LANE)).to.equal(midFlightShaBefore);
-    });
-
-    // A single --all must report both cross-scope outcomes without either swallowing the other.
-    it('should halt the mid-flight lane and skip the never-mirrored one, in the same --all run', () => {
-      const { output, exitCode } = syncRun('--all');
-      expect(exitCode, `bit ci sync --all output:\n${output}`).to.not.equal(0);
-      expect(output).to.include(`HALTED ${MID_FLIGHT_LANE} -> lane became cross-scope`);
-      expect(output).to.include(`${LANE} -> skipped (cross-scope lane:`);
-      expect(branchTipSha(MID_FLIGHT_LANE)).to.equal(midFlightShaBefore);
     });
 
     // `--all` reaches the per-lane reconciler without the command layer's name checks, so the
@@ -1205,10 +1234,10 @@ describe('bit ci sync', function () {
       expect(output).to.include(`${LANE} -> skipped`);
       expect(output).to.include(`maps to ${defaultBranch}`);
       expect(output).to.include('the main scope is reconciled by "bit ci sync --main"');
-      // refused before even reading the lane, so the cross-scope check never gets a say
-      expect(output).to.not.include(`${LANE} -> skipped (cross-scope lane:`);
+      // refused before even reading the lane, so the empty-slice check never gets a say
+      expect(output).to.not.include(`${LANE} -> skipped (nothing to mirror:`);
       expect(branchTipSha(defaultBranch)).to.equal(shaBefore);
-      expect(exitCode, `bit ci sync --all output:\n${output}`).to.not.equal(0); // the mid-flight lane still halts
+      expect(exitCode, `bit ci sync --all output:\n${output}`).to.equal(0);
       setSyncConfig({ lanes: ['*'] });
     });
   });

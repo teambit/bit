@@ -120,6 +120,8 @@ export type SwitchLaneOptions = {
   forceTheirs?: boolean;
   workspaceOnly?: boolean;
   pattern?: string;
+  /** switch only the lane components from these scopes (see `SwitchProps.restrictToScopes`) */
+  restrictToScopes?: string[];
   skipDependencyInstallation?: boolean;
   verbose?: boolean;
   override?: boolean;
@@ -792,6 +794,7 @@ please create a new lane instead, which will include all components of this lane
       forceTheirs,
       pattern,
       workspaceOnly,
+      restrictToScopes,
       skipDependencyInstallation = false,
       skipFetch = false,
       branch = false,
@@ -817,6 +820,7 @@ please create a new lane instead, which will include all components of this lane
       laneName,
       existingOnWorkspaceOnly: workspaceOnly,
       pattern,
+      restrictToScopes,
       alias,
       skipFetch,
     };

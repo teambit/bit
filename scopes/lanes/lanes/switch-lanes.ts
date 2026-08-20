@@ -18,6 +18,13 @@ export type SwitchProps = {
   pattern?: string;
   skipFetch?: boolean;
   existingOnWorkspaceOnly?: boolean;
+  /**
+   * switch only the lane components from these scopes; the lane's other components are neither
+   * written to the filesystem nor tracked in .bitmap. the lane object itself is still fetched and
+   * saved whole, so a later snap/export preserves the filtered-out entries. (`bit ci sync` mirrors
+   * only a lane's own-scope slice into a git repository.)
+   */
+  restrictToScopes?: string[];
   remoteLane?: Lane;
   localTrackedLane?: string;
   alias?: string;
@@ -115,6 +122,10 @@ export class LaneSwitcher {
           );
           laneIds = this.populatePropsAccordingToLocalLane(localLane);
         }
+      }
+      const { restrictToScopes } = this.switchProps;
+      if (restrictToScopes?.length) {
+        laneIds = laneIds.filter((id) => restrictToScopes.includes(id.scope));
       }
       const idsOnLaneOnly = laneIds.filter((id) => !mainIds.find((i) => i.isEqualWithoutVersion(id)));
       const idsOnMainOnly = mainIds.filter((id) => !laneIds.find((i) => i.isEqualWithoutVersion(id)));
