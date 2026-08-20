@@ -28,10 +28,49 @@
 
 .leftSideMinimal {
   @media screen and (max-width: $br-md) {
-    // Pinned actions are the compact navigation. Collapse and clip the secondary responsive nav
-    // so its overflow trigger cannot paint outside its flex region and overlap those actions.
-    flex: 0 0 0;
-    overflow: hidden;
+    // The compact More menu owns its intrinsic width; pinned actions follow as siblings.
+    flex: 0 0 auto;
+  }
+}
+
+.minimalMoreNav {
+  display: none;
+
+  @media screen and (max-width: $br-md) {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+}
+
+.minimalMoreButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--bit-bg-heavy);
+  }
+
+  > img {
+    width: 16px;
+  }
+}
+
+.minimalMenuItem {
+  padding: 0;
+
+  > * {
+    width: 100%;
+  }
+}
+
+.hideMinimalMobileNav {
+  @media screen and (max-width: $br-md) {
+    display: none;
   }
 }
 
