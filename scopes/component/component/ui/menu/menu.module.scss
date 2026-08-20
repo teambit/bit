@@ -15,6 +15,12 @@
     // of its pinned actions and right-side controls.
     flex: 0 0 auto;
     width: auto;
+
+    // Pinned actions already include their own touch-target spacing, so the desktop gutter before
+    // version controls is unnecessary here and can be returned to the component breadcrumb.
+    .rightSide {
+      padding-left: 0;
+    }
   }
 }
 
