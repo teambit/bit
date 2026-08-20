@@ -1717,12 +1717,7 @@
         "version": "0.0.4",
         "mainFile": "index.ts",
         "rootDir": "components/ui/api-diff-view",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
+        "config": {}
     },
     "ui/aspect-box": {
         "name": "ui/aspect-box",
@@ -1891,12 +1886,7 @@
         "version": "0.0.6",
         "mainFile": "index.ts",
         "rootDir": "components/ui/components-overview",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
+        "config": {}
     },
     "ui/composition-compare": {
         "name": "ui/composition-compare",
@@ -1932,12 +1922,7 @@
         "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "components/ui/deps-diff-table",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
+        "config": {}
     },
     "ui/diff-viewer": {
         "name": "ui/diff-viewer",
@@ -2046,12 +2031,7 @@
         "version": "0.0.8",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-config-compare",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
+        "config": {}
     },
     "ui/inline-deps-compare": {
         "name": "ui/inline-deps-compare",
@@ -2059,12 +2039,7 @@
         "version": "0.0.8",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-deps-compare",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
+        "config": {}
     },
     "ui/inline-diff-viewer": {
         "name": "ui/inline-diff-viewer",
@@ -2079,12 +2054,7 @@
         "version": "0.0.4",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-preview-compare",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
+        "config": {}
     },
     "ui/inline-tests-compare": {
         "name": "ui/inline-tests-compare",
@@ -2092,12 +2062,7 @@
         "version": "0.0.8",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-tests-compare",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
+        "config": {}
     },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
@@ -2161,12 +2126,7 @@
         "version": "0.0.2",
         "mainFile": "index.ts",
         "rootDir": "components/ui/preview-compare",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
+        "config": {}
     },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
