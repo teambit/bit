@@ -141,6 +141,7 @@ export class SyncOrchestrator {
     const mainSync = new MainSyncExecutor({
       checkout: this.deps.checkout,
       lanes: this.deps.lanes,
+      workspace: this.deps.workspace,
       ci: this.deps.ci,
       logger: this.deps.logger,
       gitHost,
