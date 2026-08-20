@@ -569,6 +569,13 @@ commands:
           no_output_timeout: '50m'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
+            # The native pnpm engine parallelises extraction over rayon, and rust sizes its pools
+            # from the HOST's cpu count inside docker (~36) rather than this container's 2. Cap
+            # them, so the suites that install an env package - thousands of packages - don't add
+            # a host-sized thread pool on top and get OOM-killed (a bare `Killed` out of
+            # `bit install`). Inherited by the bit processes the tests spawn.
+            # NOTE: PNPM_MAX_WORKERS, which used to live here, is not read by pnpm v12 at all.
+            RAYON_NUM_THREADS: '2'
           when: always
       - store_test_results:
           path: bit/junit
@@ -662,8 +669,19 @@ jobs:
           command: >
             cd bit &&
             echo "user-agent=bit-repo-circleci" >> .npmrc &&
+            bbit config set package-manager.cache /home/circleci/bit/.bit-cache &&
             git update-index --skip-worktree .npmrc &&
             bbit install
+          # package-manager.cache pins the package cache (pnpm store) INSIDE the persisted
+          # workspace - bit passes cacheRootDir programmatically so npmrc store-dir is ignored,
+          # and the default (~/Library/Caches/Bit) is outside persist_to_workspace's root. with
+          # it persisted, downstream jobs (bit_pr's dev install) reuse the packages instead of
+          # re-downloading the whole universe (which the native pnpm engine's fetch cannot
+          # survive memory-wise).
+          environment:
+            # see the "bit install (dev binary)" step of bit_pr - the pnpm engine's rayon pools are
+            # sized from the HOST's cpu count inside docker; cap them to this class's actual cpus.
+            RAYON_NUM_THREADS: '4'
       # `bbit install` compiles as part of the install, but that pass can fall back to the
       # default TypeScript compiler for components whose env is still being imported - notably
       # the node-babel-mocha ones (legacy.scope, legacy.consumer, scope.network, ...). tsc emits
@@ -681,6 +699,7 @@ jobs:
           paths:
             - bit
             - .pnpm-store
+            - .bit-cache
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
@@ -712,14 +731,38 @@ jobs:
       - attach_workspace:
           at: ./
       - bit_global_for_npm
-      - bit_config
+      # was defaulting to the 'hub-stg' (staging) hub_domain via a bare bit_config call - every
+      # other bit-executing job (bit_pr, bit_merge) goes through setup_bit_environment, which
+      # defaults to production 'hub'. kept on prod for consistency, but this turned out NOT to be
+      # the cause of the hangs below - confirmed by reproducing the same stall against prod too.
+      - bit_config:
+          env: 'hub'
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
+      # the workspace attached from setup_harmony was installed by the released (bvm) binary,
+      # which filters the legacy core-env packages (@teambit/node etc.) out of the install
+      # manifest. the repo binary loads those envs as regular packages, and a missing one used
+      # to send every aspect-load failure into the compiler's recompile cascade (importing the
+      # env's full closure from the remote and rewriting all dists) - the root cause of this
+      # job's 5-minute hangs, see scripts/circular-deps-check/CI-HANG-INVESTIGATION.md. the dev
+      # binary's install pins those envs into the policy, so the check runs with its envs loaded.
       - run:
-          name: 'check circular dependencies'
+          name: 'bit install (dev binary)'
+          command: 'cd bit && bit install'
+          no_output_timeout: 30m
+      - run:
+          name: 'check circular dependencies (repo bit)'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
+          # the script normally finishes in seconds; bound it well under the platform's default
+          # 10m no-output kill so a stall fails with a clear message instead of a silent timeout.
+          no_output_timeout: 6m
+      # bit writes debug-level logs to debug.log by default (independent of BIT_LOG, which would
+      # print to stdout and corrupt the JSON this check parses) - persist it so a future hang or
+      # failure has the network/scope-import trail to look at, same as the other bit-running jobs.
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   check_version_sync:
     <<: *defaults
@@ -818,13 +861,13 @@ jobs:
 
   # ========== Bit CI Jobs ==========
   bit_pr:
-    # xlarge validated on a worst-case 98-component cascade (no OOM at 12GB heap, same wall time
-    # as 2xlarge). If this job dies with "Killed", revert to 2xlarge + max-old-space-size=30000.
-    resource_class: xlarge
+    # back on 2xlarge: on this branch the lane build got OOM-killed at 16GB during the react env's
+    # Preview webpack bundling (cgroup pinned at 13-16GB), as the xlarge comment predicted.
+    resource_class: 2xlarge
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=12288
+      NODE_OPTIONS: --max-old-space-size=30000
     steps:
       - attach_workspace:
           at: ./
@@ -832,6 +875,41 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run:
+          name: bit install (dev binary)
+          # the released bbit (used by setup_harmony) still treats the legacy core envs
+          # (node/react/aspect/env/mdx/readme) as core aspects and filters their packages out of
+          # the install manifest. the dev binary treats them as regular envs and needs their
+          # packages in node_modules to load them - without them workspace-status verification
+          # fails. reconcile here (2xlarge) rather than in setup_harmony.
+          # RAYON_NUM_THREADS: the native pnpm engine extracts over rayon, and rust sizes its
+          # pools from the HOST's cpu count inside docker (~36), not the resource class's - a
+          # host-sized pool makes the fetch phase of this install (it downloads the legacy envs'
+          # full closure) run out of memory on any container size. best-effort: a pool the engine
+          # builds with an explicit thread count of its own won't read the variable.
+          # becomes a cheap no-op once a stable release without those core envs is out.
+          command: |
+            cd bit
+            # reuse the package cache populated by setup_harmony's bbit install (persisted at the
+            # workspace root). without it the dev install fetches everything from scratch and
+            # the native pnpm engine's fetch phase retains the downloads in memory until it gets
+            # OOM-killed - reuse keeps the fetch down to the closure packages only.
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
+            echo "=== persisted cache ==="; du -sh /home/circleci/bit/.bit-cache 2>/dev/null || echo "no persisted cache at /home/circleci/bit/.bit-cache"
+            (while true; do
+              CUR=$(cat /sys/fs/cgroup/memory.current 2>/dev/null || cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null || echo 0)
+              MAX=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo 0)
+              echo "CGROUP-MEM: $((CUR/1048576))MB / $((MAX/1048576))MB"
+              sleep 15
+            done) &
+            SAMPLER=$!
+            node bin/bit.js install
+            STATUS=$?
+            kill $SAMPLER 2>/dev/null || true
+            exit $STATUS
+          no_output_timeout: '30m'
+          environment:
+            RAYON_NUM_THREADS: '6'
       - run:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
@@ -849,10 +927,30 @@ jobs:
           # runs - on a PR that snaps core components (so their specs actually run), bit_pr fails
           # deterministically from the second push onward. The temp-lane flow rebuilds every run
           # from one commit, trading the lane's persistent history on Bit Cloud for correctness.
-          command: 'cd bit && bit ci pr --build --skip-cleanup --skip-tasks PublishComponents'
+          # the sampler prints the container's memory every 15s (same one the install step uses), so
+          # a "Received killed signal" comes with the usage curve that led to it instead of just the
+          # node heap numbers the build logs itself - the heap has been well under its cap each time.
+          command: |
+            cd bit
+            (while true; do
+              CUR=$(cat /sys/fs/cgroup/memory.current 2>/dev/null || cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null || echo 0)
+              MAX=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo 0)
+              echo "CGROUP-MEM: $((CUR/1048576))MB / $((MAX/1048576))MB"
+              sleep 15
+            done) &
+            SAMPLER=$!
+            bit ci pr --build --skip-cleanup --skip-tasks PublishComponents
+            STATUS=$?
+            kill $SAMPLER 2>/dev/null || true
+            exit $STATUS
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
+            # Caps the rayon pools inside the native toolchain (rspack's minifier, the pnpm engine).
+            # Rust sizes them from the HOST's cpu count inside docker - ~36 threads, each with its
+            # own working set, on an 8-cpu container. (PNPM_MAX_WORKERS, which this file used to
+            # set, is not read by pnpm v12 at all.)
+            RAYON_NUM_THREADS: '6'
             # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
             # this build is CPU-bound and dominated by one env, so concurrency only added contention.
             # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
@@ -902,6 +1000,18 @@ jobs:
                 circleci-agent step halt
               fi
             fi
+      - run:
+          name: bit install (dev binary)
+          # same reconcile as in bit_pr: the released bbit filters the legacy-core-env packages
+          # out of the manifest; the dev binary needs them installed to load those envs.
+          # RAYON_NUM_THREADS and package-manager.cache: see the bit_pr step of the same name.
+          command: |
+            cd bit
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
+            node bin/bit.js install
+          no_output_timeout: '30m'
+          environment:
+            RAYON_NUM_THREADS: '6'
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -923,8 +1033,6 @@ jobs:
   # ========== Testing Jobs ==========
   e2e_test:
     <<: *defaults
-    # changing from medium to large, doesn't affect the performance
-    # resource_class: large
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2

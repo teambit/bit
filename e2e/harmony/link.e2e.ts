@@ -28,7 +28,18 @@ describe('linking to a target including peers', function () {
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setWorkspaceWithRemoteScope();
-    helper.command.create('react', 'button', '--env teambit.react/react');
+    helper.fixtures.populateComponents(1);
+    // set the peers explicitly rather than relying on an env's peers policy - the envs that used
+    // to provide peers as core aspects now must be installed and built, which is not the concern
+    // of this test (it verifies the --peers linking mechanics).
+    helper.extensions.addExtensionToVariant('*', 'teambit.dependencies/dependency-resolver', {
+      policy: {
+        peerDependencies: {
+          react: '^18.0.0',
+          'react-dom': '^18.0.0',
+        },
+      },
+    });
     helper.command.install();
     targetDir = globalBitTempDir();
     helper.command.link(`--target=${targetDir} --peers`);

@@ -9,7 +9,7 @@ import type { ConfigOptions } from '@teambit/harmony/harmony-config';
 import { Config } from '@teambit/harmony/harmony-config';
 import { ComponentID } from '@teambit/component';
 import { CLIAspect } from '@teambit/cli';
-import { NodeAspect } from '@teambit/node';
+import { EmptyEnvAspect } from '@teambit/empty-env';
 import { ComponentLoader } from '@teambit/legacy.consumer-component';
 import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
@@ -67,10 +67,17 @@ export async function loadManyAspects(
     cwd,
   };
 
-  // CLIAspect is needed for register the main runtime. NodeAspect is needed to get the default env if nothing
-  // was configured. If it's not loaded here, it'll throw an error later that there is no node-env.
+  // CLIAspect is needed for register the main runtime.
   // DependenciesAspect is needed to make ComponentLoader.loadDeps hook works.
-  const harmony = await Harmony.load([CLIAspect, DependenciesAspect, NodeAspect, ...targetAspects], runtime, configMap);
+  // EmptyEnvAspect is needed to register the default env if no env was configured.
+  // (NodeAspect used to be loaded here for the same purpose when it was the default env. loading
+  // it now would pull the react env through its manifest dependencies, which is not resolvable
+  // inside test capsules now that these envs are not core aspects.)
+  const harmony = await Harmony.load(
+    [CLIAspect, DependenciesAspect, EmptyEnvAspect, ...targetAspects],
+    runtime,
+    configMap
+  );
 
   await harmony.run(async (aspect, runtimeDef) => {
     const id = ComponentID.fromString(aspect.id);

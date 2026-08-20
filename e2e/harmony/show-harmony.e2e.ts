@@ -26,7 +26,7 @@ describe('bit show command', function () {
     });
     it('should show Harmony data such as the env', () => {
       expect(showOutput).to.include('env');
-      expect(showOutput).to.include('teambit.harmony/node');
+      expect(showOutput).to.include('teambit.harmony/empty-env');
     });
     it('should not import any object to the local scope', () => {
       const objects = helper.command.catScope();

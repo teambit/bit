@@ -913,8 +913,23 @@ export class IsolatorMain {
               nodeLinker: opts.nodeLinker,
             });
           });
+        } else if (nestedCapsules.length) {
+          // the root links describe the capsules root, so they belong to an install rooted there.
+          // A nested capsule's install is rooted at the capsule, one level below, and handing them
+          // to that install would describe an importer *above* its root: the package manager then
+          // has to give the root project itself a directory dep path relative to itself, which is
+          // empty - `<name>@file:` - and its own parser rejects that ("Empty path after `file:`
+          // scheme"), failing the whole install. Give them the install they describe instead. It
+          // runs before the capsules so they can resolve the core aspects it links while they
+          // install, and so nothing races it over the root's node_modules.
+          await this.installInCapsules(capsulesDir, CapsuleList.fromArray([]), installOptions, {
+            cachePackagesOnCapsulesRoot,
+            linkedDependencies: { [capsulesDir]: rootLinks },
+            packageManager: opts.packageManager,
+            nodeLinker: opts.nodeLinker,
+          });
         }
-        nestedCapsules.forEach((capsule, index) => {
+        nestedCapsules.forEach((capsule) => {
           installThunks.push(async () => {
             const newCapsuleList = CapsuleList.fromArray([capsule]);
             if (opts.cacheCapsulesDir && capsulesDir !== opts.cacheCapsulesDir && opts.cacheLockFileOnly) {
@@ -936,11 +951,6 @@ export class IsolatorMain {
               }
             }
             const linkedDependencies = await this.linkInCapsules(newCapsuleList, capsulesWithPackagesData);
-            // attach the root links to a single install. When a cyclic group install exists it owns
-            // them (its root is capsulesDir); otherwise the first nested capsule does, as before.
-            if (index === 0 && !cyclicCapsules.length) {
-              linkedDependencies[capsulesDir] = rootLinks;
-            }
             await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
               cachePackagesOnCapsulesRoot,
               linkedDependencies,
