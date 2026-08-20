@@ -377,29 +377,42 @@ Set a `branchPrefix`, or an explicit `lanes` list, to leave developer branches o
 ### Cross-scope lanes
 
 The hosting scope of a lane holds the lane object. The scopes of the components of the lane show which
-repositories the change touches. The two are different. This version supports one shape only: the content of
-the lane must live in one scope, the `defaultScope` of this workspace. The hosting scope can be another
-scope, and a scope-qualified id addresses such a lane.
+repositories the change touches. The two are different. The hosting scope can be any scope — a
+scope-qualified id addresses a lane hosted elsewhere:
 
 ```bash
 bit ci sync my-lane                       # hosted on this workspace's defaultScope
-bit ci sync other-org.other-scope/my-lane # hosted elsewhere, content still in this repo's scope
+bit ci sync other-org.other-scope/my-lane # hosted elsewhere
 ```
 
 The branch mapping always uses the lane **name**, so a lane that another scope hosts maps to the same branch
 as before. Every request to Bit uses the full `hostScope/name` id.
 
-**The command never mirrors a lane that has components outside `defaultScope`.** Such a mirror writes the
-components of another repository into this repository, and exports them from here. A lane like this is still
-legitimate, so only the report depends on how the command reached the lane:
+**The command mirrors a lane's `defaultScope` slice.** A lane may carry components from several scopes; this
+repository sources only one of them. The mirror materializes, fingerprints, snaps and exports the components
+of `defaultScope` alone. The lane's other components are never written into this repository — the branch
+consumes them as package dependencies at their lane versions, and their sources live in their own scopes'
+repositories (each of which can mirror the same lane's own slice). The pull request lists the mirrored slice
+and, separately, the foreign components the lane also carries.
 
-| How the command reached the lane                                     | Outcome   | Exit | Pull request touched         |
-| -------------------------------------------------------------------- | --------- | ---- | ---------------------------- |
-| **Enumerated** — an `--all` run, or a push or webhook `--branch` run | `skipped` | 0    | no                           |
-| **Named** — `bit ci sync my-lane`                                    | refusal   | ≠ 0  | no                           |
-| **The lane became cross-scope during a live mirror**                 | `HALTED`  | ≠ 0  | yes — labelled and commented |
+Two consequences of slice-based reconciliation are worth knowing:
 
-The skip keeps the exit code at 0 on purpose: a permanent cross-scope lane must not fail every scheduled run.
+- A change that touches **only** foreign components does not move this repository's mirror: the branch keeps
+  building against the foreign versions recorded when its own components last changed, and catches up on the
+  next change to an own-scope component.
+- An exported change from this repository updates only the own-scope components on the lane; the foreign
+  entries keep their heads.
+
+A lane with **no** `defaultScope` components at all has nothing to mirror here. Only the report depends on
+how the command reached such a lane:
+
+| How the command reached the lane                                      | Outcome   | Exit | Pull request touched         |
+| --------------------------------------------------------------------- | --------- | ---- | ---------------------------- |
+| **Enumerated** — an `--all` run, or a push or webhook `--branch` run  | `skipped` | 0    | no                           |
+| **Named** — `bit ci sync my-lane`                                     | refusal   | ≠ 0  | no                           |
+| **Every `defaultScope` component left the lane during a live mirror** | `HALTED`  | ≠ 0  | yes — labelled and commented |
+
+The skip keeps the exit code at 0 on purpose: a standing foreign lane must not fail every scheduled run.
 A named lane exits non-zero, so the user learns why nothing happened. That exit is a plain refusal, because
 the command writes nothing and labels no pull request. The command refuses two lanes that map to one branch
 in the same way, and neither lane takes the branch. The command never lane-maps the default branch or
