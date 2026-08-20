@@ -17,6 +17,7 @@ chai.use(chaiFs);
  * expect inside that cell, and the cells of a block run in order against one shared workspace.
  */
 describe('bit ci sync', function () {
+  const SYNC_BRANCH_MAIN = 'bit-sync/main';
   this.timeout(0);
 
   let helper: Helper;
@@ -372,6 +373,71 @@ describe('bit ci sync', function () {
 
   // The load-bearing half is the negative: `bit-sync/main` is never created or touched, checked both
   // on the run that pushes and on the converged rerun.
+  // A component's main file can legitimately move (an env stops emitting `dist/`, so main goes back
+  // to source) and the old path is deleted in git. The repository's `.bitmap` still names the old
+  // path, so the component cannot be loaded at all - and one such entry used to fail the whole
+  // main-scope checkout, turning every scheduled run red. Healed inside the reconciler.
+  describe('main sync recovers from a .bitmap entry whose main file no longer exists', () => {
+    let defaultBranch: string;
+
+    before(() => {
+      ({ defaultBranch } = setupSyncWorkspace({ lanes: [] }));
+      const devMainPath = helper.scopeHelper.cloneWorkspace();
+
+      // comp1: the realistic shape - the new version's main file (main.js) IS in this repository,
+      // only the `.bitmap` pointer is stale. comp2: nothing usable is left here at all.
+      fs.outputFileSync(path.join(devMainPath, 'comp1', 'main.js'), comp1Src('main-file-moved'));
+      fs.removeSync(path.join(devMainPath, 'comp1', 'index.js'));
+      helper.command.runCmd('bit add comp1 --main main.js --id comp1', devMainPath);
+      fs.outputFileSync(path.join(devMainPath, 'comp2', 'renamed.js'), comp2Src('main-file-moved'));
+      fs.removeSync(path.join(devMainPath, 'comp2', 'index.js'));
+      helper.command.runCmd('bit add comp2 --main renamed.js --id comp2', devMainPath);
+      helper.command.runCmd('bit tag --message "move both main files"', devMainPath);
+      helper.command.runCmd('bit export', devMainPath);
+
+      // This repository: comp1 has the new main file on disk but `.bitmap` still says index.js;
+      // comp2 has neither file.
+      helper.fs.outputFile('comp1/main.js', comp1Src('main-file-moved'));
+      helper.fs.deletePath('comp1/index.js');
+      helper.fs.deletePath('comp2/index.js');
+      helper.command.runCmd('git add -A');
+      helper.command.runCmd('git commit -m "chore: main files moved; .bitmap still names the old ones"');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      gitFetch();
+    });
+
+    it('should repair both entries instead of failing, and open the sync PR', () => {
+      const { output, exitCode } = syncRun('--main');
+      expect(exitCode, `bit ci sync --main output:\n${output}`).to.equal(0);
+      // the old behaviour: "main file index.js was removed from ..." and a HALTED line
+      expect(output).to.not.include('was removed from');
+      expect(output).to.not.include('HALTED');
+      // comp1 keeps its directory - only the pointer moved
+      expect(output).to.include('Repointed 1 .bitmap entr');
+      expect(output).to.include('main.js');
+      // comp2 had nothing usable left, so it is re-imported from the scope
+      expect(output).to.include('Untracked 1 component(s)');
+      expect(remoteBranchExists(SYNC_BRANCH_MAIN)).to.be.true;
+    });
+
+    it('should leave a loadable workspace on the sync branch: comp1 in place, comp2 re-imported', () => {
+      const bitmap = fileOnBranch(SYNC_BRANCH_MAIN, '.bitmap');
+      // comp1: same rootDir, repaired mainFile
+      expect(bitmap).to.include('"mainFile": "main.js"');
+      expect(bitmap).to.include('"rootDir": "comp1"');
+      // comp2: re-imported from the scope with its current main file
+      expect(bitmap).to.include('"mainFile": "renamed.js"');
+      expect(branchPathsMatching(SYNC_BRANCH_MAIN, 'renamed.js')).to.not.deep.equal([]);
+    });
+
+    it('a second run is converged - the heal is not re-applied every run', () => {
+      const { output, exitCode } = syncRun('--main');
+      expect(exitCode, `bit ci sync --main output:\n${output}`).to.equal(0);
+      expect(output).to.not.include('Repointed');
+      expect(output).to.not.include('Untracked');
+    });
+  });
+
   describe('main-scope direct push (mainSync: direct-push)', () => {
     const SYNC_BRANCH = 'bit-sync/main';
     let defaultBranch: string;

@@ -22,7 +22,7 @@ import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { Version, Lane } from '@teambit/objects';
 import { ModelComponent } from '@teambit/objects';
 import { Tmp } from '@teambit/legacy.scope';
-import { ComponentNotFoundInPath, MainFileRemoved } from '@teambit/legacy.consumer-component';
+import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
 import type { ComponentStatus, ComponentStatusBase } from './checkout-version';
@@ -479,18 +479,6 @@ export class CheckoutMain {
         }
       } catch (err) {
         if (checkoutProps.allowAddingComponentsFromScope && !existingBitMapId) return undefined;
-        // The recorded main file is gone from the filesystem (e.g. a new version legitimately moved
-        // it and the old one was deleted before this checkout ran), so the on-disk component cannot
-        // be loaded or diffed. Under a "theirs" resolution the incoming version wins regardless —
-        // write it from the model instead of failing the whole checkout; the write also heals the
-        // stale mainFile in .bitmap.
-        if (err instanceof MainFileRemoved && (checkoutProps.forceTheirs || checkoutProps.mergeStrategy === 'theirs')) {
-          this.logger.consoleWarning(
-            `component ${id.toString()} could not be loaded from the filesystem (${err.message}); ` +
-              `writing the checked-out version from the scope`
-          );
-          return undefined;
-        }
         throw err;
       }
       return undefined;
@@ -574,12 +562,10 @@ export class CheckoutMain {
       }
     }
     let isModified = false;
-    // `component` may be undefined here despite an existing `.bitmap` entry: an unloadable-from-disk
-    // component tolerated under a "theirs" resolution (see `getComponent`). No modification check is
-    // possible then — the incoming version is written as is.
-    if (currentlyUsedVersion && component) {
+    if (currentlyUsedVersion) {
       const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
-      isModified = await consumer.isComponentModified(currentVersionObject, component);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      isModified = await consumer.isComponentModified(currentVersionObject, component!);
       const isRemoved = component && component.isRemoved();
       if (!isModified && !isRemoved && reset) {
         return returnFailure(`component ${id.toStringWithoutVersion()} is not modified`, true);
