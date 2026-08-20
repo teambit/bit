@@ -80,7 +80,6 @@
         "@shikijs/engine-javascript": "^3.0.0",
         "@shikijs/langs": "^3.0.0",
         "@svgr/webpack": "8.1.0",
-        "@tanstack/react-virtual": "^3.13.18",
         "@teambit/any-fs": "0.0.5",
         "@teambit/api-reference.explorer.api-reference-explorer": "~0.0.39",
         "@teambit/api-reference.hooks.use-api": "~0.0.57",
