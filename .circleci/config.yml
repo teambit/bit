@@ -151,7 +151,9 @@ commands:
               "@pnpm/util.lex-comparator": "3.0.2",
               "@pnpm/config.nerf-dart": "1.0.1"
             }'
-            pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
+            # Pin the release selected by setup_bit_version. Without the version, pnpm 12's default
+            # 24-hour minimum release age can select an older Bit release instead of the latest one.
+            pnpm add "@teambit/bit@${BIT_VERSION}" --os=<<parameters.os>> --cpu=<<parameters.cpu>>
 
   verify_pnpm_napi_bundle:
     parameters:
