@@ -170,7 +170,7 @@ export function ComponentMenu({
       <Route
         path={`${resolvedComponentIdStr}/*`}
         element={
-          <div className={classnames(styles.topBar, className)}>
+          <div className={classnames(styles.topBar, isMinimal && styles.topBarMinimal, className)}>
             <div className={styles.leftSide}>
               <CollapsibleMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
             </div>
