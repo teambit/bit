@@ -3,11 +3,14 @@ import { formatWarningSummary } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { LanesMain } from '@teambit/lanes';
 import type { CheckoutMain } from '@teambit/checkout';
+import type { Workspace } from '@teambit/workspace';
 import { git } from '../git';
 import type { CiMain } from '../ci.main.runtime';
 import type { CiSyncConfig } from './sync-config';
 import { SYNC_COMMIT_MARKER, isSyncAuthoredMessage } from './sync-state';
 import { currentLaneIdStr } from './workspace-lane';
+import type { MainFileHeal } from './heal-missing-main-files';
+import { healMissingMainFiles } from './heal-missing-main-files';
 import type { GitHostProvider } from './git-host-provider';
 import { HALT_SUMMARY_PREFIX, capEntries } from './lane-sync-executor';
 import {
@@ -28,6 +31,8 @@ import {
 export type MainSyncDeps = {
   checkout: CheckoutMain;
   lanes: LanesMain;
+  /** for the pre-checkout `.bitmap` heal (see `heal-missing-main-files`) */
+  workspace: Workspace;
   /** for reloadWorkspaceFromDisk + switchToLaneForSync */
   ci: CiMain;
   logger: Logger;
@@ -107,6 +112,11 @@ export class MainSyncExecutor {
           `"${currentLane}" rather than main, so the main-scope drift cannot be computed`
         );
       }
+
+      // An entry whose recorded main file is gone cannot be loaded, and one of those fails the whole
+      // checkout below. Heal them first (repoint the entry, or untrack it so `includeNewFromScope`
+      // re-imports it). Reported so the sync PR explains the `.bitmap` lines it carries.
+      const healedMainFiles = await healMissingMainFiles(this.deps.workspace, logger);
 
       // `checkoutByCLIValues` rather than `checkout`: it imports current objects first (so `head`
       // resolves to the remote scope's versions) and persists `.bitmap` on destroy.
@@ -193,7 +203,7 @@ export class MainSyncExecutor {
         const shortSha = (await git.revparse(['--short', 'HEAD'])).trim();
         return `main -> direct-push (pushed ${branch} @ ${shortSha})`;
       }
-      const prUrl = await this.ensureSyncPr({ branch, driftCount: drift.length, newFromScope });
+      const prUrl = await this.ensureSyncPr({ branch, driftCount: drift.length, newFromScope, healedMainFiles });
       return `main -> pushed sync commit to ${branch}${prUrl ? ` (PR ${prUrl})` : ''}`;
     } catch (e: any) {
       // Same contract as the lane executor: a HALTED line, never a throw mid-run.
@@ -304,10 +314,13 @@ export class MainSyncExecutor {
     branch,
     driftCount,
     newFromScope,
+    healedMainFiles,
   }: {
     branch: string;
     driftCount: number;
     newFromScope: string[];
+    /** `.bitmap` entries whose stale main file this run repaired; see the PR body */
+    healedMainFiles: MainFileHeal[];
   }): Promise<string | undefined> {
     const { gitHost, logger, defaultBranch } = this.deps;
     if (!gitHost) {
@@ -327,7 +340,7 @@ export class MainSyncExecutor {
         head: branch,
         base: defaultBranch,
         title: 'Bit sync: update to latest main scope versions',
-        body: mainSyncPrBody({ driftCount, newFromScope }),
+        body: mainSyncPrBody({ driftCount, newFromScope, healedMainFiles }),
       });
       logger.console(chalk.green(`Opened sync PR ${created.htmlUrl}`));
       return created.htmlUrl;
@@ -370,7 +383,15 @@ function mainSyncCommitMessage(driftCount: number): string {
   ].join('\n');
 }
 
-function mainSyncPrBody({ driftCount, newFromScope }: { driftCount: number; newFromScope: string[] }): string {
+function mainSyncPrBody({
+  driftCount,
+  newFromScope,
+  healedMainFiles = [],
+}: {
+  driftCount: number;
+  newFromScope: string[];
+  healedMainFiles?: MainFileHeal[];
+}): string {
   const lines = [
     'Automated sync PR: the Bit scope moved ahead of this repository. This PR checks the workspace out to the ' +
       'latest exported versions (`bit checkout head --auto-merge-resolve theirs`).',
@@ -386,6 +407,20 @@ function mainSyncPrBody({ driftCount, newFromScope }: { driftCount: number; newF
       // Bounded like the lane PR body: an over-long body is rejected by the host outright.
       ...capEntries(
         newFromScope.map((id) => `  - \`${id}\``),
+        '  - '
+      )
+    );
+  }
+  if (healedMainFiles.length) {
+    lines.push(
+      `- components whose \`.bitmap\` entry named a main file that no longer exists here ` +
+        `(${healedMainFiles.length}); the entry was repaired so the component can be loaded again:`,
+      ...capEntries(
+        healedMainFiles.map((heal) =>
+          heal.retargetedTo
+            ? `  - \`${heal.id}\` — main file repointed to \`${heal.retargetedTo}\``
+            : `  - \`${heal.id}\` — re-imported from the scope (no usable main file was left here)`
+        ),
         '  - '
       )
     );

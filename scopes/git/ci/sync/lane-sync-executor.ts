@@ -135,13 +135,23 @@ function laneComponentIds(components: LaneData['components']): string[] {
 }
 
 /**
- * The lane's components that do not belong to `defaultScope`. A lane may span scopes, and the
- * reconciler acts on a lane whole (fingerprint, materialize, snap, export), so foreign content is
- * refused rather than written into this repository. Soft-deleted components and `updateDependents`
- * entries are deliberately not read — the reconciler never materializes or exports them either.
+ * The lane's components that do not belong to `defaultScope`. A lane may span scopes; this
+ * repository reconciles only its own-scope slice (see `ownLaneComponents`), and the foreign entries
+ * ride along on the lane untouched — sourced in their own scopes' repositories and reachable here
+ * only as package dependencies. Soft-deleted components and `updateDependents` entries are
+ * deliberately not read — the reconciler never materializes or exports them either.
  */
 export function foreignLaneComponents(components: LaneData['components'], defaultScope: string): string[] {
   return components.filter((comp) => comp.id.scope !== defaultScope).map((comp) => comp.id.toStringWithoutVersion());
+}
+
+/**
+ * The slice of the lane this repository mirrors: the components that belong to `defaultScope`.
+ * Every reconciliation act — fingerprint, materialize, snap, export — operates on this slice, so a
+ * foreign component's head moving neither wakes the mirror nor reads as divergence.
+ */
+export function ownLaneComponents(components: LaneData['components'], defaultScope: string): LaneData['components'] {
+  return components.filter((comp) => comp.id.scope === defaultScope);
 }
 
 /** How many foreign component ids a cross-scope message names before it summarizes the rest. */
@@ -163,40 +173,45 @@ export function capEntries(entries: string[], overflowPrefix = '', max: number =
   return [...entries.slice(0, max), `${overflowPrefix}…and ${entries.length - max} more`];
 }
 
-/** The shared clause describing why a lane is cross-scope, used by the skip/refusal/halt outcomes. */
+/**
+ * The shared clause describing a lane with nothing of this repository's scope on it, used by the
+ * skip/refusal/halt outcomes. Only such a lane is refused: a lane that merely INCLUDES foreign
+ * components is reconciled over its own-scope slice.
+ */
 export function crossScopeDescription(foreignIds: string[], defaultScope: string): string {
   // The scope is everything before the FIRST '/': a component id is `<scope>/<namespace…>/<name>`.
   const scopes = [...new Set(foreignIds.map((id) => id.split('/', 1)[0]))].sort();
   const sample = capEntries(foreignIds, '', MAX_LISTED_FOREIGN_COMPONENTS).join(', ');
   return (
-    `components from scope(s) ${scopes.join(', ')} (this repo maps scope ${defaultScope}); ` +
+    `every component is from scope(s) ${scopes.join(', ')} (this repo maps scope ${defaultScope}); ` +
     `foreign components: ${sample}`
   );
 }
 
 /**
- * A cross-scope lane that was merely enumerated: a skip, and the run stays green — a standing, valid
- * lane must not turn every scheduled run permanently red.
+ * A lane with no own-scope components that was merely enumerated: a skip, and the run stays green — a
+ * standing, valid lane must not turn every scheduled run permanently red.
  */
 export function crossScopeSkipSummary(laneName: string, foreignIds: string[], defaultScope: string): string {
   return (
-    `${laneName} -> skipped (cross-scope lane: ${crossScopeDescription(foreignIds, defaultScope)} — ` +
+    `${laneName} -> skipped (nothing to mirror: ${crossScopeDescription(foreignIds, defaultScope)} — ` +
     `no branch created; see the docs' Cross-scope lanes section)`
   );
 }
 
 /**
- * A cross-scope lane the user named explicitly: exits non-zero with the explanation. A refusal, not a
- * halt — no PR is labelled, no branch is written. `existingBranch` keeps the closing sentence truthful
- * when a branch of that name already exists.
+ * A lane with no own-scope components that the user named explicitly: exits non-zero with the
+ * explanation. A refusal, not a halt — no PR is labelled, no branch is written. `existingBranch`
+ * keeps the closing sentence truthful when a branch of that name already exists.
  */
 export function crossScopeRefusal(foreignIds: string[], defaultScope: string, existingBranch?: string): string {
   const outcome = existingBranch
     ? `Nothing was written; the existing branch ${existingBranch} was left untouched`
     : 'No branch was created and nothing was written';
   return (
-    `cross-scope lane: ${crossScopeDescription(foreignIds, defaultScope)}; syncing cross-scope lanes is ` +
-    `not supported yet — see the docs' Cross-scope lanes section. ${outcome}`
+    `nothing to mirror: ${crossScopeDescription(foreignIds, defaultScope)} — this repository reconciles ` +
+    `only its own scope's slice of a lane, and this lane has none. See the docs' Cross-scope lanes ` +
+    `section. ${outcome}`
   );
 }
 
@@ -229,13 +244,15 @@ Do NOT run the usual "bit lane import" resolution steps on this branch — they 
 }
 
 /**
- * A lane that became cross-scope after this repository had already mirrored it onto a branch — the one
- * cross-scope shape that is a genuine halt: the pair is mid-flight and can no longer converge.
+ * A lane whose own-scope slice emptied out after this repository had already mirrored it onto a
+ * branch — the one cross-scope shape that is a genuine halt: the pair is mid-flight, and an empty
+ * slice fingerprints as a constant, which would read as converged forever over a stale mirror.
  */
 export function crossScopeMidFlightHaltReason(branch: string, foreignIds: string[], defaultScope: string): string {
   return (
-    `lane became cross-scope after it was mirrored onto ${branch}: ${crossScopeDescription(foreignIds, defaultScope)}; ` +
-    `the branch and the lane can no longer be reconciled automatically — see the docs' Cross-scope lanes section`
+    `every ${defaultScope} component left the lane after it was mirrored onto ${branch}: ` +
+    `${crossScopeDescription(foreignIds, defaultScope)}; the branch and the lane can no longer be ` +
+    `reconciled automatically — see the docs' Cross-scope lanes section`
   );
 }
 
@@ -364,7 +381,11 @@ export class LaneSyncExecutor {
 
     const remoteLane = await this.getRemoteLane(target);
 
-    const laneHead = remoteLane ? laneHeadFingerprint(remoteLane.components) : undefined;
+    // The slice of the lane this repository reconciles. Everything below — fingerprint, materialize,
+    // snap, export — acts on it alone: foreign components stay on the lane untouched and reach this
+    // repository only as package dependencies, so a foreign head moving is invisible here.
+    const ownComponents = remoteLane ? ownLaneComponents(remoteLane.components, defaultScope) : [];
+    const laneHead = remoteLane ? laneHeadFingerprint(ownComponents) : undefined;
     const branchExists = await branchExistsOnRemote(branch);
     const branchState: BranchSyncState = branchExists
       ? await readBranchSyncState(branch, defaultBranch, defaultScope)
@@ -410,11 +431,13 @@ export class LaneSyncExecutor {
       });
     }
 
-    // A cross-scope lane cannot be reconciled here — the reconciler acts on a lane whole, so mirroring
-    // one would write another repository's components into this one. The check lives in the executor
-    // because every trigger funnels through here, and it needs the lane's content.
+    // A lane with NO own-scope components cannot be reconciled here — there is nothing to mirror, and
+    // an empty slice fingerprints as a constant, which would read as converged forever. A lane that
+    // merely INCLUDES foreign components proceeds: it is reconciled over its own-scope slice. The
+    // check lives in the executor because every trigger funnels through here, and it needs the lane's
+    // content.
     const foreign = remoteLane ? foreignLaneComponents(remoteLane.components, defaultScope) : [];
-    if (foreign.length) {
+    if (foreign.length && !ownComponents.length) {
       return this.crossScopeOutcome({
         laneName,
         laneIdStr,
@@ -429,16 +452,27 @@ export class LaneSyncExecutor {
         dryRun,
       });
     }
+    if (foreign.length) {
+      logger.console(
+        formatWarningSummary(
+          `${laneName}: cross-scope lane — mirroring its ${ownComponents.length} ${defaultScope} component(s); ` +
+            `${foreign.length} component(s) from other scope(s) stay on the lane as package dependencies ` +
+            `(${capEntries(foreign, '', MAX_LISTED_FOREIGN_COMPONENTS).join(', ')})`
+        )
+      );
+    }
     // Attribution to THIS lane is required: the claim was computed for whichever lane the branch's
     // `.bitmap` names, and a claim on someone else's behalf licenses nothing here.
     const laneIsGone = branchExists && !laneHead;
     const ownership: LaneOwnershipEvidence = laneIsGone && mirroredLane === laneIdStr ? claim : 'inherited-or-none';
 
     // What the branch reflects, read off its own `.bitmap` — only when that `.bitmap` names THIS lane;
-    // otherwise the planner's `!lastSyncedHead` rows handle "no state of ours".
+    // otherwise the planner's `!lastSyncedHead` rows handle "no state of ours". Read over the OWN
+    // slice's ids, the same set `laneHead` fingerprints — a foreign component is never in `.bitmap`
+    // and counting it would read the pair as permanently diverged.
     const lastSyncedHead =
       remoteLane && branchState.bitmap && mirroredLane === laneIdStr
-        ? branchStateFingerprint(branchState.bitmap, laneComponentIds(remoteLane.components))
+        ? branchStateFingerprint(branchState.bitmap, laneComponentIds(ownComponents))
         : undefined;
 
     // `isSyncAuthoredMessage`, NOT `hasSyncMarker`: this feeds a branch deletion, and a message that
@@ -541,10 +575,12 @@ export class LaneSyncExecutor {
   }
 
   /**
-   * What a cross-scope lane means for this repository: a mid-flight halt when the branch is this
-   * lane's live mirror (checked first — the problem is the state of the pair, not the phrasing of the
-   * request); a refusal when the user named the lane explicitly; otherwise an enumerated skip that
-   * stays green — one standing cross-scope lane must not fail every scheduled run forever.
+   * What a lane with NO own-scope components means for this repository (a lane that merely includes
+   * foreign components never reaches here — it is reconciled over its own-scope slice): a mid-flight
+   * halt when the branch is this lane's live mirror (checked first — the problem is the state of the
+   * pair, not the phrasing of the request); a refusal when the user named the lane explicitly;
+   * otherwise an enumerated skip that stays green — one standing foreign lane must not fail every
+   * scheduled run forever.
    */
   private async crossScopeOutcome({
     laneName,
@@ -707,11 +743,13 @@ export class LaneSyncExecutor {
       // moved in between must re-plan (merge-diverged owns that shape): comparing the branch's files
       // with the newer lane would misread the lane's own advance as branch work, and the export would
       // put the older content on top of a concurrent developer's push. The materialize above just
-      // fetched, so this read and the status below see the same lane.
+      // fetched, so this read and the status below see the same lane. Own-slice fingerprints on both
+      // sides: a foreign head moving concurrently is not this pair's divergence.
       if (preExportLane) {
         const laneNow = await this.getRemoteLane(target);
-        const movedTo = laneNow ? laneHeadFingerprint(laneNow.components) : undefined;
-        if (movedTo !== laneHeadFingerprint(preExportLane.components)) {
+        const { defaultScope } = this.deps;
+        const movedTo = laneNow ? laneHeadFingerprint(ownLaneComponents(laneNow.components, defaultScope)) : undefined;
+        if (movedTo !== laneHeadFingerprint(ownLaneComponents(preExportLane.components, defaultScope))) {
           return `${laneName} -> noop (lane ${laneIdStr} moved while this run was planning; the next run re-plans)`;
         }
       }
@@ -890,11 +928,13 @@ export class LaneSyncExecutor {
 
       // Same freshness rule as the export probe: the plan's inputs must still describe the world.
       // A lane that moved since planning re-plans — the next run merges the newer head — rather
-      // than proceeding on a divergence assessment the planner never made.
+      // than proceeding on a divergence assessment the planner never made. Own-slice on both sides,
+      // like every fingerprint here.
       if (preExportLane) {
         const laneNow = await this.getRemoteLane(target);
-        const movedTo = laneNow ? laneHeadFingerprint(laneNow.components) : undefined;
-        if (movedTo !== laneHeadFingerprint(preExportLane.components)) {
+        const { defaultScope } = this.deps;
+        const movedTo = laneNow ? laneHeadFingerprint(ownLaneComponents(laneNow.components, defaultScope)) : undefined;
+        if (movedTo !== laneHeadFingerprint(ownLaneComponents(preExportLane.components, defaultScope))) {
           return `${laneName} -> noop (lane ${laneIdStr} moved while this run was planning; the next run re-plans)`;
         }
       }
@@ -1049,7 +1089,8 @@ export class LaneSyncExecutor {
   > {
     const remoteLane = await this.getRemoteLane(target);
     if (!remoteLane) return { status: 'unreadable' };
-    const laneHead = laneHeadFingerprint(remoteLane.components);
+    // Own-slice, like the planner's `laneHead`: the ledger records what THIS repository mirrors.
+    const laneHead = laneHeadFingerprint(ownLaneComponents(remoteLane.components, this.deps.defaultScope));
     const pushResult = await this.commitAllAndPush(branch, buildSyncCommitMessage(laneIdStr, laneHead, opts));
     if (pushResult.raced) return { status: 'raced' };
     return { status: 'ok', laneHead, remoteLane, branchTipSha: pushResult.pushedSha };
@@ -1101,6 +1142,10 @@ export class LaneSyncExecutor {
         promptMergeOptions: false,
         skipNpmInstall: true,
         workspaceOnly: false,
+        // `workspaceOnly: false` also ADDS lane components the workspace lacks; on a cross-scope lane
+        // that must stop at the own-scope slice — a foreign component merged in here would ride the
+        // sync commit into this repository.
+        restrictToScopes: [this.deps.defaultScope],
       });
 
       let conflictedFileCount = 0;
@@ -1480,6 +1525,10 @@ export class LaneSyncExecutor {
       // opposite of `bit ci pr`, where the git checkout is the source of truth and `switchToLane`'s
       // `workspaceOnly` default keeps the switch from writing lane-only components.
       workspaceOnly: false,
+      // A cross-scope lane's foreign components must never be written into this repository — they are
+      // sourced elsewhere and reach this workspace only as package dependencies. The lane object
+      // itself is still fetched and saved whole, so a later export preserves the foreign entries.
+      restrictToScopes: [this.deps.defaultScope],
       // Follows the direction: in adopt mode the missing-component retry must not write the lane's
       // files over the branch's — the ledger commit would then push the lane's content onto the branch.
       writeAdoptedFiles: theirsWins,
@@ -1574,7 +1623,8 @@ export class LaneSyncExecutor {
         branch,
         branchTipSha,
         laneHead,
-        changed: changedLaneComponents(preComponents, postComponents),
+        // Own-slice only: a foreign head that moved concurrently was not snapped by this export.
+        changed: ownLaneComponents(changedLaneComponents(preComponents, postComponents), this.deps.defaultScope),
       });
       await gitHost.upsertComment(pr.number, RUN_SUMMARY_MARKER, body);
     } catch (e: any) {
@@ -1689,7 +1739,14 @@ export class LaneSyncExecutor {
     // `replace('.', '/')` replaces only the first dot, which is correct: a scope id may contain at
     // most one dot (is-valid-scope-name.ts) — the same conversion `ScopeUrl.toPathname` does.
     const laneUrl = `https://${getCloudDomain()}/${target.hostScope.replace('.', '/')}/~lane/${target.name}`;
-    const body = laneSyncPrBody({ laneIdStr, laneUrl, branch, laneHead, components: remoteLane.components });
+    const body = laneSyncPrBody({
+      laneIdStr,
+      laneUrl,
+      branch,
+      laneHead,
+      components: remoteLane.components,
+      defaultScope: this.deps.defaultScope,
+    });
     try {
       const created = await gitHost.createPr({
         head: branch,
@@ -1738,8 +1795,11 @@ function isConflictFileStatus(status: string): boolean {
 }
 
 /**
- * The body of the pull request that mirrors a lane onto a branch. The component list is capped so the
- * body stays inside the git host's size limit however large the lane is; the total is not.
+ * The body of the pull request that mirrors a lane onto a branch. On a cross-scope lane only the
+ * own-scope slice is mirrored, and the foreign components get their own section — the branch's diff
+ * cannot show them, and a reviewer must know the lane carries more than this repository sees. Every
+ * component list is capped so the body stays inside the git host's size limit however large the lane
+ * is; the totals are not.
  */
 export function laneSyncPrBody({
   laneIdStr,
@@ -1747,28 +1807,45 @@ export function laneSyncPrBody({
   branch,
   laneHead,
   components,
+  defaultScope,
 }: {
   laneIdStr: string;
   laneUrl: string;
   branch: string;
   laneHead: string;
   components: LaneData['components'];
+  defaultScope: string;
 }): string {
+  const own = ownLaneComponents(components, defaultScope);
+  const foreignIds = foreignLaneComponents(components, defaultScope);
   const listed = capEntries(
-    components.map((comp) => `- \`${comp.id.toStringWithoutVersion()}\` @ \`${comp.head.slice(0, 9)}\``),
+    own.map((comp) => `- \`${comp.id.toStringWithoutVersion()}\` @ \`${comp.head.slice(0, 9)}\``),
     '- '
   ).join('\n');
-  return [
+  const lines = [
     `Mirrors the Bit lane [\`${laneIdStr}\`](${laneUrl}) onto \`${branch}\`.`,
     '',
     `- lane: ${laneUrl}`,
     `- lane head: \`${laneHead}\``,
     '',
-    `Components on the lane (${components.length}):`,
+    foreignIds.length
+      ? `Components mirrored from the lane (${own.length} of ${components.length}):`
+      : `Components on the lane (${components.length}):`,
     listed || '_none_',
-    '',
-    'This PR is maintained by `bit ci sync` — push to the branch to send changes back to the lane.',
-  ].join('\n');
+  ];
+  if (foreignIds.length) {
+    lines.push(
+      '',
+      `Also on this lane, from other scopes (${foreignIds.length}) — not mirrored into this repository; ` +
+        `this branch consumes them as package dependencies at their lane versions:`,
+      capEntries(
+        foreignIds.map((id) => `- \`${id}\``),
+        '- '
+      ).join('\n')
+    );
+  }
+  lines.push('', 'This PR is maintained by `bit ci sync` — push to the branch to send changes back to the lane.');
+  return lines.join('\n');
 }
 
 /**
