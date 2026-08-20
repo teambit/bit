@@ -59,7 +59,10 @@ export async function applyVersion(
   mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionWithComps> {
-  if (!checkoutProps.isLane && !componentFromFS)
+  // An unloadable-from-disk component tolerated under a "theirs" resolution arrives without an FS
+  // component too (see `getComponentStatusBeforeMergeAttempt`); it is written from the model below.
+  const theirsWins = checkoutProps.forceTheirs || checkoutProps.mergeStrategy === MergeOptions.theirs;
+  if (!checkoutProps.isLane && !componentFromFS && !theirsWins)
     throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
   const { mergeStrategy, forceOurs } = checkoutProps;
   let filesStatus = {};

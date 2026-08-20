@@ -6,3 +6,4 @@ export { SchemaName, CURRENT_SCHEMA, isSchemaSupport, SchemaFeature } from './co
 export { ComponentLoadOptions, DependencyLoaderOpts, LoadManyResult, ComponentLoader } from './component-loader';
 export { ComponentNotFoundInPath } from './exceptions/component-not-found-in-path';
 export { IgnoredDirectory } from './exceptions/ignored-directory';
+export { default as MainFileRemoved } from './exceptions/main-file-removed';
