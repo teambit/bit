@@ -41,10 +41,9 @@
   align-items: center;
   height: 100%;
 
-  // when the minimal top bar wraps into two rows on mobile, keep the breadcrumb row at the
-  // original bar height instead of stretching across both rows, and let a long component
-  // path clip rather than push the menu actions off-screen
+  // Let a long component path clip instead of pushing the menu actions off-screen.
   @media screen and (max-width: $br-md) {
+    flex: 1 1 0;
     height: 46px;
     min-width: 0;
     overflow: hidden;
@@ -153,16 +152,6 @@
     --bit-bg-heaviest: color-mix(in srgb, var(--bit-accent-color, #6c5ce7) 3%, var(--background-color, #fff));
     --bit-border-color-lightest: var(--bit-bg-heaviest);
     border-bottom: 1px solid var(--border-medium-color, #e6e6e6);
-
-    // Mobile: a single 46px row can't fit breadcrumb + nav tabs + pinned widgets + version
-    // dropdown. The component menu switches to `display: contents` (see the component menu's
-    // topBarMinimal in menu.module.scss) so its pieces join this wrapping row: breadcrumb and
-    // actions stay on the first row, and the nav tabs wrap to a second full-width row.
-    @media screen and (max-width: $br-md) {
-      height: auto;
-      min-height: 46px;
-      flex-wrap: wrap;
-    }
   }
 }
 

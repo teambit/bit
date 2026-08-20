@@ -6,5 +6,5 @@ export type CommandBarButtonProps = {
 };
 
 export function CommandBarButton({ onClick }: CommandBarButtonProps) {
-  return <ActionButton onClick={onClick} icon="magnifying-cli" displayName="Go to..." />;
+  return <ActionButton onClick={onClick} icon="magnifying" displayName="Go to..." />;
 }
