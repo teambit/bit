@@ -1716,8 +1716,7 @@
         "scope": "teambit.semantics",
         "version": "0.0.4",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/api-diff-view",
-        "config": {}
+        "rootDir": "components/ui/api-diff-view"
     },
     "ui/aspect-box": {
         "name": "ui/aspect-box",
@@ -1885,8 +1884,7 @@
         "scope": "teambit.explorer",
         "version": "0.0.6",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/components-overview",
-        "config": {}
+        "rootDir": "components/ui/components-overview"
     },
     "ui/composition-compare": {
         "name": "ui/composition-compare",
@@ -1921,8 +1919,7 @@
         "scope": "teambit.dependencies",
         "version": "0.0.3",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/deps-diff-table",
-        "config": {}
+        "rootDir": "components/ui/deps-diff-table"
     },
     "ui/diff-viewer": {
         "name": "ui/diff-viewer",
@@ -2030,16 +2027,14 @@
         "scope": "teambit.code",
         "version": "0.0.8",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-config-compare",
-        "config": {}
+        "rootDir": "components/ui/inline-config-compare"
     },
     "ui/inline-deps-compare": {
         "name": "ui/inline-deps-compare",
         "scope": "teambit.code",
         "version": "0.0.8",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-deps-compare",
-        "config": {}
+        "rootDir": "components/ui/inline-deps-compare"
     },
     "ui/inline-diff-viewer": {
         "name": "ui/inline-diff-viewer",
@@ -2053,16 +2048,14 @@
         "scope": "teambit.preview",
         "version": "0.0.4",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-preview-compare",
-        "config": {}
+        "rootDir": "components/ui/inline-preview-compare"
     },
     "ui/inline-tests-compare": {
         "name": "ui/inline-tests-compare",
         "scope": "teambit.code",
         "version": "0.0.8",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-tests-compare",
-        "config": {}
+        "rootDir": "components/ui/inline-tests-compare"
     },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
@@ -2125,8 +2118,7 @@
         "scope": "teambit.preview",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/preview-compare",
-        "config": {}
+        "rootDir": "components/ui/preview-compare"
     },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
