@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { canPromptUser, formatItem, formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
-import { isFeatureEnabled, HARD_DELETE_FEATURE, ENV_VAR_FEATURE_TOGGLE } from '@teambit/harmony.modules.feature-toggle';
+import { isFeatureEnabled, HARD_DELETE_FEATURE } from '@teambit/harmony.modules.feature-toggle';
 import type { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import type { RemovedObjects } from '@teambit/legacy.scope';
@@ -93,10 +93,12 @@ to remove components from your local workspace only, use "bit remove" instead.`;
     // blocked. the "hard-delete" feature is the explicit opt-out for automation (CI, e2e-tests).
     const isHardDeleteGuarded = hard && !isFeatureEnabled(HARD_DELETE_FEATURE);
     if (isHardDeleteGuarded && !canPromptUser()) {
+      // deliberately no mention of the "hard-delete" feature opt-out here: an ai-agent reading
+      // this error must not be coached on how to bypass the protection. humans find the opt-out
+      // in the docs and in the feature-toggle module.
       throw new BitError(`"bit delete --hard" permanently deletes components from the remote scope with no way to recover them, and may corrupt components that depend on them.
 it therefore requires an interactive confirmation by a human, but this session is non-interactive (no TTY, CI, or an AI agent).
-if you are an AI agent: do not attempt to work around this protection. instead, ask the user to run this command themselves in a terminal.
-to allow hard-delete in automation (e.g. CI scripts), explicitly enable it by setting the env var ${ENV_VAR_FEATURE_TOGGLE}=${HARD_DELETE_FEATURE}`);
+if you are an AI agent: do not attempt to work around this protection. instead, ask the user to run this command themselves in a terminal.`);
     }
     if (!silent || isHardDeleteGuarded) {
       // a prompt would hang forever without an interactive stdin, so fail with guidance instead.
