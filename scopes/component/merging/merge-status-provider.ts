@@ -6,7 +6,7 @@ import type { LaneId } from '@teambit/lane-id';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import { getDivergeData } from '@teambit/component.snap-distance';
-import type { Lane, ModelComponent, Version, Ref } from '@teambit/objects';
+import type { Lane, ModelComponent, Ref, Version } from '@teambit/objects';
 import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ImporterMain } from '@teambit/importer';
@@ -38,6 +38,7 @@ export type DataMergeResult = {
 };
 
 export const compIsAlreadyMergedMsg = 'component is already merged';
+export const compHasBeenRemovedMsg = 'component has been removed';
 export class MergeStatusProvider {
   constructor(
     private scope: ScopeMain,
@@ -60,10 +61,16 @@ export class MergeStatusProvider {
     );
     // whether or not we need to import the gap between the common-snap and the other lane.
     // the common-snap itself we need anyway in order to get the files hash/content for checking conflicts.
+    // the gap is needed only when the other side is a lane from a different scope than ours: its snaps
+    // exist only on that lane's scope, and once merged they become part of our history, so our export
+    // must push them onward (to each component's home scope when merging into main, or to the current
+    // lane's scope). when the other side is main, its history is already on every component's home scope
+    // and is never pushed by us (lane scopes are lean) — the VersionHistory (imported during the
+    // pre-fetch) covers the divergence traversal.
     const shouldImportHistoryOfOtherLane =
       !this.options?.shouldSquash && // when squashing, no need for all history, only the head is going to be pushed
-      (!this.currentLane || // on main. we need all history in order to push each component to its remote
-        this.currentLane.scope !== this.otherLane?.scope); // on lane, but the other lane is from a different scope. we need all history in order to push to the current lane's scope
+      Boolean(this.otherLane) &&
+      this.otherLane?.scope !== this.currentLane?.scope;
     const toImport = componentStatusBeforeMergeAttempt
       .map((compStatus) => {
         if (!compStatus.divergeData) return [];
@@ -264,7 +271,12 @@ other:   ${otherLaneHead.toString()}`);
     const otherLaneHead = modelComponent.getRef(version);
     const existingBitMapId = consumer?.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
     const componentOnOther: Version = await modelComponent.loadVersion(version, this.scope.legacyScope.objects);
-    const idOnCurrentLane = this.currentLane?.getComponent(id);
+    // include hidden lane.updateDependents — when merging main into a lane, a hidden cascade
+    // entry is the lane-side baseline for the 3-way merge. Without this the merge engine treats
+    // the comp as "not on the lane" and produces a snap with parents=[mainHead], losing the
+    // ancestral link to the lane's hidden head.
+    const idOnCurrentLane =
+      this.currentLane?.getComponent(id) || this.currentLane?.getUpdateDependentAsLaneComponent(id);
 
     if (componentOnOther.isRemoved()) {
       // if exist in current lane, we want the current lane to get the soft-remove update.
@@ -277,7 +289,7 @@ other:   ${otherLaneHead.toString()}`);
       } else {
         // on main, don't merge soft-removed components unless it's marked with removeOnMain.
         // on lane, if it's not part of the current lane, don't merge it.
-        return this.returnUnmerged(id, `component has been removed`, true);
+        return this.returnUnmerged(id, compHasBeenRemovedMsg, true);
       }
     }
     const getCurrentId = () => {
@@ -331,7 +343,7 @@ other:   ${otherLaneHead.toString()}`);
         ? isTargetNotAhead // option #2 and #3 above
         : !isRemovedOnMain; // it's main. option #1 above.
       if (shouldIgnore) {
-        return this.returnUnmerged(id, `component has been removed`, true);
+        return this.returnUnmerged(id, compHasBeenRemovedMsg, true);
       }
     }
 

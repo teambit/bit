@@ -155,6 +155,7 @@ export class ProcessBasedTsServer {
 
   private logger: Logger;
   private cancellationPipeName: string | undefined;
+  private killedIntentionally = false;
 
   constructor(
     private options: TspClientOptions,
@@ -174,6 +175,7 @@ export class ProcessBasedTsServer {
         reject(new Error('server already started'));
         return;
       }
+      this.killedIntentionally = false;
 
       const { tsserverPath } = this.options;
       const { logFile, logVerbosity, maxTsServerMemory, globalPlugins, pluginProbeLocations } = this.tsServerArgs;
@@ -208,6 +210,17 @@ export class ProcessBasedTsServer {
       process.on('exit', () => {
         this.kill();
         reject(new Error('TSServer was killed'));
+      });
+
+      this.tsServerProcess.on('exit', (code, signal) => {
+        if (this.killedIntentionally) return;
+        const msg = `TSServer process exited unexpectedly (code: ${code}, signal: ${signal})`;
+        this.logger.error(msg);
+        reject(new Error(msg));
+        this.rejectAllPendingRequests(msg);
+        this.tsServerProcess = null;
+        this.readlineInterface?.close();
+        this.readlineInterface = null;
       });
 
       this.readlineInterface.on('line', (line) => {
@@ -268,18 +281,29 @@ export class ProcessBasedTsServer {
       const result = await request;
       onCancelled?.dispose();
       return result;
-    } catch (error) {
-      this.logger.error(`Error in request: ${error}`);
+    } catch (error: any) {
+      this.logger.error(`Error in request "${command}" (seq ${seq}): ${stringifyError(error)}`, error);
       throw error;
     }
   }
 
   kill() {
+    this.killedIntentionally = true;
     this.tsServerProcess?.kill();
     this.tsServerProcess?.stdin?.destroy();
     this.readlineInterface?.close();
     this.tsServerProcess = null;
     this.readlineInterface = null;
+  }
+
+  private rejectAllPendingRequests(reason: string) {
+    const error = new Error(reason);
+    for (const deferred of Object.values(this.deferreds)) {
+      deferred.reject(error);
+    }
+    for (const seq of Object.keys(this.deferreds)) {
+      delete this.deferreds[seq];
+    }
   }
 
   private log(msg: string, obj: Record<string, any> = {}) {
@@ -345,10 +369,23 @@ export class ProcessBasedTsServer {
       if (success) {
         this.deferreds[request_seq].resolve(message);
       } else {
-        this.deferreds[request_seq].reject(message);
+        this.deferreds[request_seq].reject(this.toRequestError(message));
       }
       delete this.deferreds[request_seq];
     }
+  }
+
+  /**
+   * a failed tsserver response is a plain protocol object, and rejecting with it makes downstream
+   * logs print "[object Object]". convert it to an Error. `message` must stay identical to the
+   * response's message text - callers match on it (e.g. "No content available.").
+   */
+  private toRequestError(response: ts.server.protocol.Message): Error {
+    const { command, message } = response as ts.server.protocol.Response;
+    const error = new Error(message ?? `tsserver "${command}" request failed without an error message`);
+    (error as any).command = command;
+    (error as any).response = response;
+    return error;
   }
 
   private isEvent(message: ts.server.protocol.Message): message is ts.server.protocol.Event {
@@ -369,5 +406,14 @@ export class ProcessBasedTsServer {
     if (!this.tsServerProcess) {
       await this.restart();
     }
+  }
+}
+
+function stringifyError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
   }
 }

@@ -4,6 +4,7 @@ export {
   VariantPolicyFromConfigObjectOptions,
   SerializedVariantPolicy,
   VariantPolicyEntry,
+  VariantPolicyConfigEntryValue,
   VariantPolicyEntryValue,
   createVariantPolicyEntry,
   DependencySource,

@@ -1,8 +1,8 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatHint, errorSymbol } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
-import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { TypescriptMain } from '../typescript.main.runtime';
 
@@ -39,7 +39,7 @@ useful for catching type issues before tagging, snapping or building components.
     const start = Date.now();
     const { tsserver, componentsCount } = await this.runDiagnosticOnTsServer(false, pattern, unmodified);
     if (!tsserver) {
-      const data = chalk.bold(`no components found to check.
+      const data = formatHint(`no components found to check.
 use "--unmodified" flag to check all components or specify the ids to check.
 otherwise, only new and modified components will be checked`);
       return { code: 0, data };
@@ -50,12 +50,12 @@ otherwise, only new and modified components will be checked`);
     if (tsserver.lastDiagnostics.length) {
       return {
         code: strict ? 1 : 0,
-        data: chalk.red(`${msg}. found errors in ${tsserver.lastDiagnostics.length} files.`),
+        data: `${errorSymbol} ${msg}. found errors in ${tsserver.lastDiagnostics.length} files.`,
       };
     }
     return {
       code: 0,
-      data: chalk.green(`${msg}. no errors were found.`),
+      data: formatSuccessSummary(`${msg}. no errors were found.`),
     };
   }
 
@@ -91,24 +91,34 @@ otherwise, only new and modified components will be checked`);
     unmodified: boolean
   ): Promise<{ tsserver: ReturnType<TypescriptMain['getTsserverClient']>; componentsCount: number }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    // If pattern is provided, don't pass the unmodified flag - the pattern should take precedence
-    const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern);
-    if (!components.length) {
-      return { tsserver: undefined, componentsCount: 0 };
+    try {
+      this.logger.setStatusLine('check-types: loading components...');
+      // If pattern is provided, don't pass the unmodified flag - the pattern should take precedence
+      const components = await this.workspace.getComponentsByUserInput(pattern ? false : unmodified, pattern);
+      if (!components.length) {
+        return { tsserver: undefined, componentsCount: 0 };
+      }
+      const files = this.typescript.getSupportedFilesForTsserver(components);
+      this.logger.setStatusLine(
+        `check-types: starting tsserver for ${components.length} component(s), ${files.length} file(s)...`
+      );
+      await this.typescript.initTsserverClientFromWorkspace(
+        {
+          aggregateDiagnosticData: isJson,
+          printTypeErrors: !isJson,
+          // skip pre-opening so getDiagnostic can open/close per batch — keeps tsserver memory bounded
+          // by one batch's worth of files instead of the whole workspace.
+          openFilesOnInit: false,
+        },
+        files
+      );
+      const tsserver = this.typescript.getTsserverClient();
+      if (!tsserver) throw new Error(`unable to start tsserver`);
+      const BATCH_SIZE = 50;
+      await tsserver.getDiagnostic(files, files.length > BATCH_SIZE ? BATCH_SIZE : undefined);
+      return { tsserver, componentsCount: components.length };
+    } finally {
+      this.logger.clearStatusLine();
     }
-    const files = this.typescript.getSupportedFilesForTsserver(components);
-    await this.typescript.initTsserverClientFromWorkspace(
-      {
-        aggregateDiagnosticData: isJson,
-        printTypeErrors: !isJson,
-      },
-      files
-    );
-    const tsserver = this.typescript.getTsserverClient();
-    if (!tsserver) throw new Error(`unable to start tsserver`);
-    // Use batching for large file sets to avoid overwhelming tsserver
-    const BATCH_SIZE = 50;
-    await tsserver.getDiagnostic(files, files.length > BATCH_SIZE ? BATCH_SIZE : undefined);
-    return { tsserver, componentsCount: components.length };
   }
 }

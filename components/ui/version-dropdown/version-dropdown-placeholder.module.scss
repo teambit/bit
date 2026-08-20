@@ -44,6 +44,12 @@
   margin-right: 5px;
 }
 
+.newLabel {
+  border-color: var(--bit-accent-color, #6c5ce7);
+  color: var(--bit-accent-color, #6c5ce7);
+  cursor: default;
+}
+
 .loader {
   color: var(--bit-bg-dent, #f6f6f6);
 

@@ -1,7 +1,8 @@
 import { gql } from 'graphql-tag';
+import type { Schema } from '@teambit/graphql';
 import type { ComponentCompareMain, ComponentCompareResult } from './component-compare.main.runtime';
 
-export function componentCompareSchema(componentCompareMain: ComponentCompareMain) {
+export function componentCompareSchema(componentCompareMain: ComponentCompareMain): Schema {
   return {
     typeDefs: gql`
       type FileCompareResult {
@@ -20,19 +21,54 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
       type ComponentCompareResult {
         # unique id for graphql - baseId + compareId
         id: String!
+        baseId: String!
+        compareId: String!
         code(fileName: String): [FileCompareResult!]!
         aspects(aspectName: String): [FieldCompareResult!]!
         tests(fileName: String): [FileCompareResult!]
+        api: APIDiffResult
+      }
+
+      input ComponentComparePair {
+        baseId: String!
+        compareId: String!
       }
 
       extend type ComponentHost {
         compareComponent(baseId: String!, compareId: String!): ComponentCompareResult
+        # bulk compare a paginated slice of pairs; an element is null if that pair failed to compare
+        compareComponents(pairs: [ComponentComparePair!]!, offset: Int, limit: Int): [ComponentCompareResult]!
+        # bulk api-diff a paginated slice of pairs; an element is null if that pair's diff couldn't be computed
+        apiDiffs(pairs: [ComponentComparePair!]!, offset: Int, limit: Int): [APIDiffResult]!
       }
     `,
     resolvers: {
       ComponentHost: {
         compareComponent: async (_, { baseId, compareId }: { baseId: string; compareId: string }) => {
           return componentCompareMain.compare(baseId, compareId);
+        },
+        compareComponents: async (
+          _,
+          {
+            pairs,
+            offset,
+            limit,
+          }: { pairs: Array<{ baseId: string; compareId: string }>; offset?: number; limit?: number }
+        ) => {
+          return componentCompareMain.compareComponents(pairs, { offset, limit });
+        },
+        apiDiffs: async (
+          _,
+          {
+            pairs,
+            offset,
+            limit,
+          }: { pairs: Array<{ baseId: string; compareId: string }>; offset?: number; limit?: number }
+        ) => {
+          // each element is the plain record `getAPIDiff` returns (or null); the APIDiffResult
+          // fields resolve from it via graphql's default field resolvers, same as the single
+          // `apiDiff` resolver in @teambit/semantics.schema.
+          return componentCompareMain.apiDiffs(pairs, { offset, limit });
         },
       },
       ComponentCompareResult: {
@@ -70,6 +106,9 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
             return result.fields.filter((field) => field.fieldName === fieldName);
           }
           return result.fields;
+        },
+        api: async (result: ComponentCompareResult) => {
+          return (await componentCompareMain.getAPIDiff(result.baseId, result.compareId)) ?? null;
         },
       },
     },

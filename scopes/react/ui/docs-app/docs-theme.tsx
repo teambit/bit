@@ -1,5 +1,5 @@
 // import 'reset-css'; // do not include resets, we want compositions with native behavior
-import React from 'react';
+import React, { type ReactNode } from 'react';
 import classNames from 'classnames';
 // import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
@@ -7,7 +7,7 @@ import { IconFont } from '@teambit/design.theme.icons-font';
 import styles from './docs-app.module.scss';
 
 export type DocsAppProps = {
-  children: React.ReactChild;
+  children: ReactNode;
 };
 
 export function DocsTheme({ children }: DocsAppProps) {

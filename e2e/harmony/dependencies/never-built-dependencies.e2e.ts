@@ -16,7 +16,7 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('dangerouslyAllowAllScripts', true);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
@@ -24,7 +24,6 @@ chai.use(chaiFs);
       helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');
     });
     after(() => {
-      helper.command.delConfig('registry');
       npmCiRegistry.destroy();
       helper.scopeHelper.destroy();
     });
@@ -43,7 +42,8 @@ chai.use(chaiFs);
       ).not.to.be.a.path();
     });
   });
-  describe('using yarn', () => {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('using yarn', () => {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
@@ -56,14 +56,13 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
         '@pnpm.e2e/pre-and-postinstall-scripts-example',
       ]);
       helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');
     });
     after(() => {
-      helper.command.delConfig('registry');
       npmCiRegistry.destroy();
       helper.scopeHelper.destroy();
     });

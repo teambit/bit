@@ -96,8 +96,15 @@
   }
 }
 
+// The component top bar packs left-side nav (Overview, Code, Tests, Preview …) and right-side
+// dropdowns (Use package, Versions, Workspace) on the same row. Below `$br-lg` the right side
+// takes so much horizontal space that the ResponsiveNavbar collapses every nav tab into the
+// overflow "more" dropdown — which is what produces the "…" the user sees instead of tabs.
+// Hiding the Use-package dropdown earlier (at < lg, not < md) reclaims the room so the nav
+// stays visible on tablet viewports too. Users on mobile can still copy the install command
+// from the dedicated "Use package" panel that the docs overview renders inline.
 .hideOnMobile {
-  @media screen and (max-width: $br-md) {
+  @media screen and (max-width: $br-lg) {
     display: none;
   }
 }
@@ -105,4 +112,13 @@
 .useBoxContainer {
   width: 500px !important;
   border: 1px solid var(--border-medium-color, #ededed);
+
+  // Mobile: cap to viewport width, drop fixed pixel width, scroll horizontally if a tab title
+  // (or the install snippet) is wider. Without this the 500px container overflows past the
+  // viewport edge, which is why the second consume-method tab and the package-name snippet were
+  // both truncating to "…".
+  @media screen and (max-width: $br-md) {
+    width: calc(100vw - 24px) !important;
+    max-width: 500px;
+  }
 }

@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
+import type { SchemaChangeFact } from '../schema-diff';
+import { typesAreSemanticallyEqual, typeStr, deepEqualNoLocation, diffDoc } from '../schema-diff';
 import { ParameterSchema } from './parameter';
 import { DocSchema } from './docs';
 import { TagName } from './docs/tag';
@@ -134,6 +136,26 @@ export class FunctionLikeSchema extends SchemaNode {
     };
   }
 
+  /**
+   * display string for a function's return type in diffs. Normally the returnType node's rendering —
+   * but schemas extracted while type inference was degraded (e.g. unresolved React types) can carry
+   * a bogus SELF-referential returnType: a `TypeRefSchema` named after the function itself, while
+   * the checker-generated `signature` string holds the real inferred text (`…): any`). Such
+   * artifacts are already persisted for built versions and can't be re-extracted, so when the node
+   * renders to the function's own name but the signature's return annotation disagrees, the
+   * signature wins. (A legitimately self-typed function — e.g. one merged with a same-named
+   * interface — agrees with its signature and is unaffected.)
+   */
+  private static returnTypeDisplay(obj: Record<string, any>): string {
+    const nodeStr = typeStr(obj.returnType);
+    if (nodeStr !== obj.name) return nodeStr;
+    const signature: string | undefined = obj.signature;
+    const idx = signature ? signature.lastIndexOf('): ') : -1;
+    if (idx === -1 || !signature) return nodeStr;
+    const fromSignature = signature.slice(idx + 3).trim();
+    return fromSignature && fromSignature !== nodeStr ? fromSignature : nodeStr;
+  }
+
   static fromObject(obj: Record<string, any>) {
     return new FunctionLikeSchema(
       obj.location,
@@ -146,6 +168,281 @@ export class FunctionLikeSchema extends SchemaNode {
       obj.typeParams,
       obj.decorators?.map((decorator) => SchemaRegistry.fromObject(decorator))
     );
+  }
+
+  diff(other: SchemaNode): SchemaChangeFact[] {
+    if (!(other instanceof FunctionLikeSchema)) return super.diff(other);
+    const facts: SchemaChangeFact[] = [];
+    const baseObj = this.toObject();
+    const compareObj = other.toObject();
+
+    FunctionLikeSchema.diffParams(baseObj.params || [], compareObj.params || [], facts);
+
+    if (!typesAreSemanticallyEqual(baseObj.returnType, compareObj.returnType)) {
+      const fromType = FunctionLikeSchema.returnTypeDisplay(baseObj);
+      const toType = FunctionLikeSchema.returnTypeDisplay(compareObj);
+      facts.push({
+        changeKind: 'return-type-changed',
+        description: `return type changed: ${fromType} → ${toType}`,
+        context: { fromType, toType, position: 'return-type' },
+        from: fromType,
+        to: toType,
+      });
+    }
+
+    if (!deepEqualNoLocation(baseObj.typeParams, compareObj.typeParams)) {
+      facts.push({
+        changeKind: 'type-parameters-changed',
+        description: `type parameters changed: <${(baseObj.typeParams || []).join(', ') || 'none'}> → <${(compareObj.typeParams || []).join(', ') || 'none'}>`,
+        context: { from: (baseObj.typeParams || []).join(', '), to: (compareObj.typeParams || []).join(', ') },
+        from: (baseObj.typeParams || []).join(', '),
+        to: (compareObj.typeParams || []).join(', '),
+      });
+    }
+
+    FunctionLikeSchema.diffModifiers(this.modifiers || [], other.modifiers || [], facts);
+    facts.push(...diffDoc(baseObj.doc, compareObj.doc));
+    return facts;
+  }
+
+  private static diffModifiers(baseMods: string[], compareMods: string[], facts: SchemaChangeFact[]): void {
+    const base = baseMods.filter((m) => m !== 'export');
+    const compare = compareMods.filter((m) => m !== 'export');
+    if (deepEqualNoLocation(base, compare)) return;
+
+    const added = compare.filter((m) => !base.includes(m));
+    const removed = base.filter((m) => !compare.includes(m));
+    const parts: string[] = [];
+    if (added.length) parts.push(`added: ${added.join(', ')}`);
+    if (removed.length) parts.push(`removed: ${removed.join(', ')}`);
+    const accessNarrowed = removed.includes('public') || added.includes('private') || added.includes('protected');
+
+    facts.push({
+      changeKind: accessNarrowed ? 'access-narrowed' : 'modifiers-changed',
+      description: `modifiers changed (${parts.join('; ')})`,
+      context: { added, removed, accessNarrowed },
+      from: base.join(', ') || 'none',
+      to: compare.join(', ') || 'none',
+    });
+  }
+
+  private static diffParams(
+    baseParams: Record<string, any>[],
+    compareParams: Record<string, any>[],
+    facts: SchemaChangeFact[]
+  ): void {
+    for (const p of compareParams.slice(baseParams.length)) {
+      const isOpt = p.isOptional || p.defaultValue !== undefined;
+      facts.push({
+        changeKind: 'parameter-added',
+        description: `parameter '${p.name}: ${typeStr(p.type)}' added${isOpt ? ' (optional)' : ' (required)'}`,
+        context: {
+          paramName: p.name,
+          isOptional: !!p.isOptional,
+          hasDefault: p.defaultValue !== undefined,
+          paramType: typeStr(p.type),
+        },
+        to: `${p.name}${p.isOptional ? '?' : ''}: ${typeStr(p.type)}`,
+      });
+    }
+
+    for (const p of baseParams.slice(compareParams.length)) {
+      facts.push({
+        changeKind: 'parameter-removed',
+        description: `parameter '${p.name}: ${typeStr(p.type)}' removed`,
+        context: { paramName: p.name, isOptional: !!p.isOptional, paramType: typeStr(p.type) },
+        from: `${p.name}${p.isOptional ? '?' : ''}: ${typeStr(p.type)}`,
+      });
+    }
+
+    const minLen = Math.min(baseParams.length, compareParams.length);
+    for (let i = 0; i < minLen; i++) {
+      FunctionLikeSchema.diffOverlappingParam(baseParams[i], compareParams[i], i, facts);
+    }
+  }
+
+  private static diffOverlappingParam(
+    bp: Record<string, any>,
+    cp: Record<string, any>,
+    index: number,
+    facts: SchemaChangeFact[]
+  ): void {
+    if (bp.objectBindingNodes || cp.objectBindingNodes) {
+      FunctionLikeSchema.diffDestructuredParam(bp, cp, facts);
+      if (!typesAreSemanticallyEqual(bp.type, cp.type)) {
+        const paramName = cp.name || bp.name;
+        facts.push({
+          changeKind: 'parameter-type-changed',
+          description: `parameter at position ${index} type changed: ${typeStr(bp.type)} → ${typeStr(cp.type)}`,
+          context: { paramName, fromType: typeStr(bp.type), toType: typeStr(cp.type), position: 'parameter' },
+          from: typeStr(bp.type),
+          to: typeStr(cp.type),
+        });
+      }
+      return;
+    }
+
+    const nameEqual = bp.name === cp.name;
+    const typeEqual = typesAreSemanticallyEqual(bp.type, cp.type);
+    if (nameEqual && typeEqual && bp.isOptional === cp.isOptional && bp.defaultValue === cp.defaultValue) return;
+
+    const paramName = cp.name || bp.name;
+    if (!nameEqual) {
+      facts.push({
+        changeKind: 'parameter-renamed',
+        description: `parameter at position ${index} renamed: '${bp.name}' → '${cp.name}'`,
+        context: { fromName: bp.name, toName: cp.name, position: index },
+        from: bp.name,
+        to: cp.name,
+      });
+    }
+    if (!typeEqual) {
+      facts.push({
+        changeKind: 'parameter-type-changed',
+        description: `parameter '${paramName}' type changed: ${typeStr(bp.type)} → ${typeStr(cp.type)}`,
+        context: { paramName, fromType: typeStr(bp.type), toType: typeStr(cp.type), position: 'parameter' },
+        from: typeStr(bp.type),
+        to: typeStr(cp.type),
+      });
+    }
+    FunctionLikeSchema.diffParamOptionality(bp, cp, paramName, facts);
+    FunctionLikeSchema.diffParamDefault(bp, cp, paramName, facts);
+  }
+
+  private static diffParamOptionality(
+    bp: Record<string, any>,
+    cp: Record<string, any>,
+    paramName: string,
+    facts: SchemaChangeFact[]
+  ): void {
+    if (bp.isOptional && !cp.isOptional) {
+      facts.push({
+        changeKind: 'became-required',
+        description: `parameter '${paramName}' became required (was optional)`,
+        context: { paramName, position: 'parameter' },
+        from: 'optional',
+        to: 'required',
+      });
+    } else if (!bp.isOptional && cp.isOptional) {
+      facts.push({
+        changeKind: 'became-optional',
+        description: `parameter '${paramName}' became optional (was required)`,
+        context: { paramName, position: 'parameter' },
+        from: 'required',
+        to: 'optional',
+      });
+    }
+  }
+
+  private static diffParamDefault(
+    bp: Record<string, any>,
+    cp: Record<string, any>,
+    paramName: string,
+    facts: SchemaChangeFact[]
+  ): void {
+    if (bp.defaultValue === cp.defaultValue) return;
+    if (bp.defaultValue !== undefined && cp.defaultValue === undefined) {
+      facts.push({
+        changeKind: 'parameter-default-removed',
+        description: `parameter '${paramName}' default value removed (was: ${bp.defaultValue})`,
+        context: { paramName, isOptional: !!bp.isOptional, previousDefault: String(bp.defaultValue) },
+        from: String(bp.defaultValue),
+      });
+    } else if (bp.defaultValue === undefined && cp.defaultValue !== undefined) {
+      facts.push({
+        changeKind: 'parameter-default-added',
+        description: `parameter '${paramName}' default value added: ${cp.defaultValue}`,
+        context: { paramName, newDefault: String(cp.defaultValue) },
+        to: String(cp.defaultValue),
+      });
+    } else {
+      facts.push({
+        changeKind: 'parameter-default-changed',
+        description: `parameter '${paramName}' default value changed: ${bp.defaultValue} → ${cp.defaultValue}`,
+        context: { paramName, previousDefault: String(bp.defaultValue), newDefault: String(cp.defaultValue) },
+        from: String(bp.defaultValue),
+        to: String(cp.defaultValue),
+      });
+    }
+  }
+
+  private static diffDestructuredParam(
+    base: Record<string, any>,
+    compare: Record<string, any>,
+    facts: SchemaChangeFact[]
+  ): void {
+    const baseBindings: Record<string, any>[] = base.objectBindingNodes || [];
+    const compareBindings: Record<string, any>[] = compare.objectBindingNodes || [];
+    const baseMap = new Map(baseBindings.map((b) => [b.name || '', b]));
+    const compareMap = new Map(compareBindings.map((b) => [b.name || '', b]));
+
+    for (const [name] of compareMap) {
+      if (!baseMap.has(name)) {
+        facts.push({
+          changeKind: 'destructured-property-added',
+          description: `destructured property '${name}' added`,
+          context: { propertyName: name },
+          to: name,
+        });
+      }
+    }
+    for (const [name] of baseMap) {
+      if (!compareMap.has(name)) {
+        facts.push({
+          changeKind: 'destructured-property-removed',
+          description: `destructured property '${name}' removed`,
+          context: { propertyName: name },
+          from: name,
+        });
+      }
+    }
+    for (const [name, bb] of baseMap) {
+      const cb = compareMap.get(name);
+      if (!cb) continue;
+      FunctionLikeSchema.diffBindingDefault(name, bb, cb, !!base.isOptional, facts);
+      if (bb.type && cb.type && !typesAreSemanticallyEqual(bb.type, cb.type)) {
+        facts.push({
+          changeKind: 'destructured-property-type-changed',
+          description: `destructured property '${name}' type changed: ${typeStr(bb.type)} → ${typeStr(cb.type)}`,
+          context: { propertyName: name, fromType: typeStr(bb.type), toType: typeStr(cb.type), position: 'parameter' },
+          from: typeStr(bb.type),
+          to: typeStr(cb.type),
+        });
+      }
+    }
+  }
+
+  private static diffBindingDefault(
+    name: string,
+    bb: Record<string, any>,
+    cb: Record<string, any>,
+    parentIsOptional: boolean,
+    facts: SchemaChangeFact[]
+  ): void {
+    if (bb.defaultValue === cb.defaultValue) return;
+    if (bb.defaultValue !== undefined && cb.defaultValue === undefined) {
+      facts.push({
+        changeKind: 'destructured-property-default-removed',
+        description: `destructured property '${name}' default value removed (was: ${bb.defaultValue})`,
+        context: { propertyName: name, isOptional: parentIsOptional, previousDefault: String(bb.defaultValue) },
+        from: String(bb.defaultValue),
+      });
+    } else if (bb.defaultValue === undefined && cb.defaultValue !== undefined) {
+      facts.push({
+        changeKind: 'destructured-property-default-added',
+        description: `destructured property '${name}' default value added: ${cb.defaultValue}`,
+        context: { propertyName: name, newDefault: String(cb.defaultValue) },
+        to: String(cb.defaultValue),
+      });
+    } else {
+      facts.push({
+        changeKind: 'destructured-property-default-changed',
+        description: `destructured property '${name}' default value changed: ${bb.defaultValue} → ${cb.defaultValue}`,
+        context: { propertyName: name, previousDefault: String(bb.defaultValue), newDefault: String(cb.defaultValue) },
+        from: String(bb.defaultValue),
+        to: String(cb.defaultValue),
+      });
+    }
   }
 
   private modifiersToString() {

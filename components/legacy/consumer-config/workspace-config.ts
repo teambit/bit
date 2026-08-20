@@ -29,6 +29,11 @@ export type WorkspaceConfigProps = {
   defaultScope?: string;
 };
 
+// stored on globalThis because in build capsules this module may be loaded twice (once from the
+// capsule source and once from an installed dist). a static class field would then be set on one
+// copy and read from the other, making the workspace config silently fail to load.
+const workspaceConfigLoadingRegistryKey = '__bit_workspaceConfigLoadingRegistry';
+
 export default class WorkspaceConfig extends AbstractConfig {
   componentsDefaultDirectory: string;
   packageManager: PackageManagerClients;
@@ -39,7 +44,12 @@ export default class WorkspaceConfig extends AbstractConfig {
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | undefined; // default remote scope to export to
 
-  static workspaceConfigLoadingRegistry: WorkspaceConfigLoadFunction;
+  static get workspaceConfigLoadingRegistry(): WorkspaceConfigLoadFunction | undefined {
+    return (globalThis as any)[workspaceConfigLoadingRegistryKey];
+  }
+  static set workspaceConfigLoadingRegistry(func: WorkspaceConfigLoadFunction | undefined) {
+    (globalThis as any)[workspaceConfigLoadingRegistryKey] = func;
+  }
   static registerOnWorkspaceConfigLoading(func: WorkspaceConfigLoadFunction) {
     this.workspaceConfigLoadingRegistry = func;
   }

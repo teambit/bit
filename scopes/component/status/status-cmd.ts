@@ -1,4 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { renderSections, formatSuccessSummary, formatSection, formatItem, joinSections } from '@teambit/cli';
+import type { ComponentID } from '@teambit/component-id';
+import chalk from 'chalk';
 import type { StatusMain, StatusResult } from './status.main.runtime';
 import { formatStatusOutput } from './status-formatter';
 
@@ -9,6 +12,13 @@ type StatusFlags = {
   ignoreCircularDependencies?: boolean;
   warnings?: boolean;
   failOnError?: boolean;
+  quick?: boolean;
+  expand?: boolean;
+};
+
+type QuickStatusJsonResults = {
+  modified: string[];
+  newComponents: string[];
 };
 
 type StatusJsonResults = {
@@ -46,6 +56,7 @@ type StatusJsonResults = {
   currentLaneId: string;
   forkedLaneId: string | undefined;
   workspaceIssues: string[];
+  pendingUpdateDependents: string[];
 };
 
 export class StatusCmd implements Command {
@@ -54,7 +65,9 @@ export class StatusCmd implements Command {
   group = 'info-analysis';
   extendedDescription = `displays the current state of all workspace components including new, modified, staged, and problematic components.
 identifies blocking issues that prevent tagging/snapping and provides warnings with --warnings flag.
-essential for understanding workspace health before versioning components.`;
+essential for understanding workspace health before versioning components.
+use --quick for a faster check that only detects file-level changes (new/modified components).
+for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
@@ -64,12 +77,28 @@ essential for understanding workspace health before versioning components.`;
     ['', 'strict', 'exit with code 1 if any issues are found (both errors and warnings)'],
     ['', 'fail-on-error', 'exit with code 1 only when tag/snap blocker issues are found (not warnings)'],
     ['c', 'ignore-circular-dependencies', 'do not check for circular dependencies to get the results quicker'],
+    [
+      '',
+      'quick',
+      'show only new and modified components based on file changes. much faster, but does not detect dependency or config changes',
+    ],
+    ['', 'expand', 'expand all collapsed sections (e.g. auto-tag pending components)'],
   ] as CommandOptions;
   loader = true;
 
   constructor(private status: StatusMain) {}
 
-  async json(_args, { lanes, ignoreCircularDependencies }: StatusFlags): Promise<StatusJsonResults> {
+  async json(
+    _args,
+    { lanes, ignoreCircularDependencies, quick }: StatusFlags
+  ): Promise<StatusJsonResults | QuickStatusJsonResults> {
+    if (quick) {
+      const { modified, newComps } = await this.status.statusMini();
+      return {
+        modified: modified.map((m) => m.toStringWithoutVersion()),
+        newComponents: newComps.map((m) => m.toStringWithoutVersion()),
+      };
+    }
     const {
       newComponents,
       modifiedComponents,
@@ -92,6 +121,7 @@ essential for understanding workspace health before versioning components.`;
       forkedLaneId,
       workspaceIssues,
       localOnly,
+      pendingUpdateDependents,
     }: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
@@ -124,11 +154,46 @@ essential for understanding workspace health before versioning components.`;
       currentLaneId: currentLaneId.toString(),
       forkedLaneId: forkedLaneId?.toString(),
       workspaceIssues,
+      pendingUpdateDependents: pendingUpdateDependents.map((id) => id.toStringWithoutVersion()),
     };
   }
 
-  async report(_args, { strict, verbose, lanes, ignoreCircularDependencies, warnings, failOnError }: StatusFlags) {
+  async report(
+    _args,
+    { strict, verbose, lanes, ignoreCircularDependencies, warnings, failOnError, quick, expand }: StatusFlags
+  ) {
+    if (quick) {
+      return this.reportQuick();
+    }
     const statusResult: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
-    return formatStatusOutput(statusResult, { strict, verbose, warnings, failOnError });
+    const result = formatStatusOutput(statusResult, { strict, verbose, warnings, failOnError });
+
+    // Collapse long informational sections unless --expand
+    if (result.sections?.some((s) => s.collapsible)) {
+      return { data: renderSections(result.sections, expand), code: result.code };
+    }
+
+    return result;
+  }
+
+  private async reportQuick() {
+    const { modified, newComps } = await this.status.statusMini();
+    const formatCategory = (title: string, ids: ComponentID[]) => {
+      return formatSection(
+        title,
+        '',
+        ids.map((id) => formatItem(chalk.cyan(id.toStringWithoutVersion())))
+      );
+    };
+    const data =
+      joinSections([
+        formatCategory('modified components (files only)', modified),
+        formatCategory('new components', newComps),
+      ]) ||
+      formatSuccessSummary(
+        'no new or modified components (based on file changes only, use "bit status" for full check)'
+      );
+
+    return { data, code: 0 };
   }
 }

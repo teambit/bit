@@ -24,7 +24,7 @@ import type { ScopeUI, ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLin
 export type ScopeProps = {
   routeSlot: RouteSlot;
   menuSlot: RouteSlot;
-  sidebar: JSX.Element;
+  sidebar: React.JSX.Element;
   scopeUi: ScopeUI;
   badgeSlot: ScopeBadgeSlot;
   overviewLineSlot: OverviewLineSlot;

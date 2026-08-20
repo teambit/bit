@@ -49,6 +49,14 @@ export type UnmergedComponent = {
    * aspects config that were merged successfully
    */
   mergedConfig?: Record<string, any>;
+  /**
+   * when true, the upcoming merge-snap should be recorded as a squash:
+   * the lane-b head (stored in `head`) is NOT added as a second parent; instead it's
+   * captured in Version.squashed metadata. used by `bit lane merge --squash` for diverged
+   * components, so lane-b's history stays on its own scope and isn't pulled into the
+   * merging lane's scope on export.
+   */
+  shouldSquash?: boolean;
 };
 
 export const UNMERGED_FILENAME = 'unmerged.json';
@@ -96,7 +104,7 @@ export class UnmergedComponents {
     );
     if (existingComponent) {
       throw new Error(
-        `unable to add an unmerged component, a component with the same name already exist. name ${existingComponent.id.name}, scope: ${existingComponent.id.scope}`
+        `unable to add an unmerged component, a component with the same name already exists. name ${existingComponent.id.name}, scope: ${existingComponent.id.scope}`
       );
     }
     this.unmerged.push(unmergedComponent);

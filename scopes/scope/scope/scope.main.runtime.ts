@@ -21,6 +21,7 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
+import { startOrJoinLoadTrace } from '@teambit/harmony.modules.load-trace';
 import type { IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import { IsolatorAspect } from '@teambit/isolator';
 import type { LoggerMain, Logger } from '@teambit/logger';
@@ -200,6 +201,21 @@ export class ScopeMain implements ComponentFactory {
   priority?: boolean | undefined;
 
   localAspects: string[] = [];
+
+  /**
+   * Optional hook called immediately before an aspect is `require()`d from a
+   * scope-aspects capsule. Throws to refuse the load. The workspace aspect
+   * registers this to enforce the per-workspace scope-trust list.
+   */
+  private aspectLoadGuard?: (componentId: ComponentID) => Promise<void>;
+
+  setAspectLoadGuard(guard: (componentId: ComponentID) => Promise<void>): void {
+    this.aspectLoadGuard = guard;
+  }
+
+  getAspectLoadGuard(): ((componentId: ComponentID) => Promise<void>) | undefined {
+    return this.aspectLoadGuard;
+  }
 
   /**
    * name of the scope
@@ -557,15 +573,23 @@ export class ScopeMain implements ComponentFactory {
    * 3. global config. so for example if a user logs in or out it would be reflected.
    * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
    * Because these data are kept in memory, they're not up to date anymore.
+   *
+   * @param watchOptions - chokidar watch options (ignoreInitial is always enforced to true)
+   * @param additionalPaths - extra paths to watch (e.g. IPC events dir, unmerged.json)
+   * @param onAdditionalFileChange - callback invoked when a file in additionalPaths changes
    */
-  async watchScopeInternalFiles(watchOptions: WatchOptions = {}) {
+  async watchScopeInternalFiles(
+    watchOptions: WatchOptions = {},
+    additionalPaths: string[] = [],
+    onAdditionalFileChange?: (filePath: string) => Promise<void>
+  ) {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
     const globalStore = this.configStore.stores.global;
     const scopeStore = this.configStore.stores.scope;
     const globalConfigFile = globalStore.getPath();
     const scopeJsonPath = scopeStore.getPath();
-    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath];
+    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath, ...additionalPaths];
     // Use polling to reduce FSEvents stream consumption on macOS.
     // These files change infrequently (mainly during import/export operations),
     // so the small CPU overhead of polling is acceptable.
@@ -574,7 +598,8 @@ export class ScopeMain implements ComponentFactory {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
     });
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    watcher.on('change', async (filePath) => {
+    watcher.on('all', async (event, filePath) => {
+      if (event !== 'change' && event !== 'add') return;
       if (filePath === scopeIndexFile) {
         this.logger.debug('scope index file has been changed, reloading it');
         await this.legacyScope.objects.reLoadScopeIndex();
@@ -588,6 +613,8 @@ export class ScopeMain implements ComponentFactory {
         this.logger.debug('scope.json file has been changed, reloading it');
         await scopeStore.invalidateCache();
         this.configStore.invalidateCache();
+      } else if (onAdditionalFileChange) {
+        await onAdditionalFileChange(filePath);
       } else {
         this.logger.error(
           'unknown file has been changed, please check why it is watched by scope.watchSystemFiles',
@@ -893,11 +920,14 @@ export class ScopeMain implements ComponentFactory {
 
   async getMany(ids: ComponentID[], throwIfNotExist = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
-    const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
-      return throwIfNotExist ? this.getOrThrow(id) : this.get(id);
+    if (!idsWithoutEmpty.length) return [];
+    return startOrJoinLoadTrace('scope.getMany', { ids: idsWithoutEmpty.length }, async () => {
+      const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+        return throwIfNotExist ? this.getOrThrow(id) : this.get(id);
+      });
+      const components = await componentsP;
+      return compact(components);
     });
-    const components = await componentsP;
-    return compact(components);
   }
 
   /**
@@ -1160,6 +1190,30 @@ export class ScopeMain implements ComponentFactory {
     const remote = await remotes.resolve(scopeName);
     const results = await remote.list();
     return results.map(({ id }) => id);
+  }
+
+  /**
+   * best-effort check whether a component-id already exists on its remote scope.
+   * intended as an early-warning helper (e.g. during "bit add"/"bit create"), not as a source of
+   * truth. it never throws: if the workspace is offline, the scope can't be resolved, the user has
+   * no access, or the remote lacks the component, it resolves to `false` so callers can safely skip.
+   *
+   * pass a pre-resolved `remotes` when checking many ids to avoid reloading the global-remotes file
+   * from disk on every call.
+   */
+  async isComponentExistsOnRemote(id: ComponentID, remotes?: Remotes): Promise<boolean> {
+    if (!id.scope) return false;
+    try {
+      const resolvedRemotes = remotes || (await this.getRemoteScopes());
+      const remote = await resolvedRemotes.resolve(id.scope);
+      const componentFromRemote = await remote.show(id.changeVersion(undefined));
+      return Boolean(componentFromRemote);
+    } catch (err) {
+      // offline / scope-not-found / no-access / component-not-found — all mean "don't warn".
+      // trace at debug level so unexpected failures are still diagnosable via the debug.log.
+      this.logger.debug(`isComponentExistsOnRemote: skipping check for ${id.toString()}, got an error: ${err}`);
+      return false;
+    }
   }
 
   async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {

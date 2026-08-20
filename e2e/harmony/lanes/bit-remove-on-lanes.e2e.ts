@@ -123,8 +123,8 @@ describe('bit lane command', function () {
         expect(list).to.have.lengthOf(1);
         expect(list[0].id).to.not.have.string('comp2');
       });
-      it('should explain why it was not merged if --verbose was used', () => {
-        expect(mergeOutput).to.have.string('has been removed');
+      it('should explain why it was not merged', () => {
+        expect(mergeOutput).to.have.string('soft-removed');
       });
     });
     describe('importing the lane to a new workspace', () => {
@@ -231,7 +231,7 @@ describe('bit lane command', function () {
         output = helper.command.mergeLane('lane-a', '-x');
       });
       it('should indicate that the component was removed', () => {
-        expect(output).to.have.string('the following 1 component(s) have been removed');
+        expect(output).to.have.string('removed components (1)');
       });
       it('should remove the soft-removed component from .bitmap', () => {
         const list = helper.command.list();
@@ -260,7 +260,7 @@ describe('bit lane command', function () {
           abortOutput = helper.command.mergeAbortLane('-x');
         });
         it('should indicate that a component has been added', () => {
-          expect(abortOutput).to.have.string('have been added');
+          expect(abortOutput).to.have.string('added components (1)');
         });
         it('should add the previously removed component', () => {
           expect(path.join(helper.scopes.localPath, 'comp2')).to.be.a.directory();
@@ -300,7 +300,7 @@ describe('bit lane command', function () {
         output = helper.command.mergeLane('lane-a', '-x');
       });
       it('should indicate that the component was removed', () => {
-        expect(output).to.have.string('the following 1 component(s) have been removed');
+        expect(output).to.have.string('removed components (1)');
       });
       it('should remove the soft-removed component from .bitmap', () => {
         const list = helper.command.list();
@@ -393,8 +393,8 @@ describe('bit lane command', function () {
       helper.scopeHelper.getClonedWorkspace(laneBws);
       output = helper.command.mergeLane('lane-a', '-x --verbose');
     });
-    it('should show why the component was not merged when using --verbose flag', () => {
-      expect(output).to.have.string('component has been removed');
+    it('should show why the component was not merged', () => {
+      expect(output).to.have.string('soft-removed');
     });
     it('should not bring the marked-removed component to the workspace', () => {
       const list = helper.command.list();
@@ -426,7 +426,7 @@ describe('bit lane command', function () {
       output = helper.command.checkoutHead('-x');
     });
     it('should indicate that the component was removed', () => {
-      expect(output).to.have.string('the following 1 component(s) have been removed');
+      expect(output).to.have.string('removed components (1)');
     });
     it('should remove the soft-removed component from .bitmap', () => {
       const list = helper.command.list();
@@ -602,6 +602,60 @@ describe('bit lane command', function () {
     it('should keep the component marked with removeOnMain', () => {
       const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
       expect(removeData.config.removeOnMain).to.be.true;
+    });
+  });
+  describe('delete on a lane, re-import the deleted component, then merge from main', () => {
+    let onMain: string;
+    let onLane: string;
+    let importOutput: string;
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      onMain = helper.scopeHelper.cloneWorkspace();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.softRemoveOnLane('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      onLane = helper.scopeHelper.cloneWorkspace();
+      // advance comp1 on main so main is ahead
+      helper.scopeHelper.getClonedWorkspace(onMain);
+      helper.fixtures.populateComponents(1, undefined, ' v3');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      // go back to the lane and re-import the deleted component
+      helper.scopeHelper.getClonedWorkspace(onLane);
+      importOutput = helper.command.importComponent('comp1', '-x');
+    });
+    it('import output should warn that the component is deleted', () => {
+      expect(importOutput).to.have.string('marked as deleted');
+    });
+    it('import output should suggest running bit recover', () => {
+      expect(importOutput).to.have.string('bit recover');
+    });
+    describe('lane merge main', () => {
+      before(() => {
+        mergeOutput = helper.command.mergeLane('main', '-x');
+      });
+      it('should mention that the removed component was skipped', () => {
+        expect(mergeOutput).to.have.string('soft-removed');
+      });
+      it('should suggest running bit recover', () => {
+        expect(mergeOutput).to.have.string('bit recover');
+      });
+      describe('after recovering and re-merging', () => {
+        before(() => {
+          helper.command.recover(`${helper.scopes.remote}/comp1`);
+          mergeOutput = helper.command.mergeLane('main', '-x --ignore-config-changes');
+        });
+        it('should successfully merge the component from main', () => {
+          expect(mergeOutput).to.have.string('Total Merged: 1');
+        });
+      });
     });
   });
 });

@@ -2,6 +2,8 @@ import fs from 'fs-extra';
 import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { reject, isNil } from 'lodash';
 import type { BitIdStr } from '@teambit/legacy-bit-id';
 import type { LaneId } from '@teambit/lane-id';
@@ -25,7 +27,7 @@ import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-co
 import type { Consumer } from '@teambit/legacy.consumer';
 import { UnexpectedPackageName } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
-import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { isValidPath, type PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import { ScopeComponentsImporter } from './component-ops/scope-components-importer';
 import type { ComponentVersion } from './component-version';
@@ -40,9 +42,8 @@ import type {
   ComponentItem,
   ObjectItem,
   ObjectList,
-  DependenciesGraph,
 } from '@teambit/objects';
-import { ModelComponent, Symlink, BitObject, Ref, Repository, IndexType } from '@teambit/objects';
+import { DependenciesGraph, ModelComponent, Symlink, BitObject, Ref, Repository, IndexType } from '@teambit/objects';
 import type { RemovedObjects } from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
@@ -638,8 +639,25 @@ once done, to continue working, please run "bit cc"`
     return ComponentID.fromString(id);
   }
 
+  /**
+   * Build the on-disk path for a pending export's directory.
+   *
+   * `clientId` is request-supplied (push-options header for /scope/put, or
+   * options.clientId for /scope/action) and must be a single opaque
+   * segment, not a path. `isValidPath` blocks the traversal shapes (`..`/`.`,
+   * absolute, backslash, NUL, etc.); the additional `/` check enforces the
+   * single-segment invariant since `isValidPath` legitimately allows `/`
+   * for nested relative file paths in its other callers.
+   */
+  private getPendingDirPath(clientId: string): PathOsBasedAbsolute {
+    if (!isValidPath(clientId) || clientId.includes('/')) {
+      throw new BitError(`invalid clientId: ${JSON.stringify(clientId)}`);
+    }
+    return pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+  }
+
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {
-    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    const pendingDir = this.getPendingDirPath(clientId);
     if (fs.pathExistsSync(pendingDir)) {
       throw new ClientIdInUse(clientId);
     }
@@ -648,12 +666,12 @@ once done, to continue working, please run "bit cc"`
 
   async readObjectsFromPendingDir(clientId: string): Promise<ObjectList> {
     // @todo: implement the wait() mechanism.
-    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    const pendingDir = this.getPendingDirPath(clientId);
     return this.objects.readObjectsFromPendingDir(pendingDir);
   }
 
   async removePendingDir(clientId: string) {
-    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    const pendingDir = this.getPendingDirPath(clientId);
     try {
       await fs.remove(pendingDir); // no error is thrown if not exists
     } catch (err: any) {
@@ -743,18 +761,22 @@ once done, to continue working, please run "bit cc"`
   }
 
   public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
-    let allGraph: DependenciesGraph | undefined;
     if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
-    await Promise.all(
-      componentIds.map(async (componentId) => {
+    let allGraph: DependenciesGraph | undefined;
+    await pMapPool(
+      componentIds,
+      async (componentId) => {
         const graph = await this.getDependenciesGraphByComponentId(componentId);
         if (graph == null || graph.isEmpty()) return;
         if (allGraph == null) {
-          allGraph = graph;
+          // loadDependenciesGraph caches the graph on the Version object; merging into
+          // it in place would mutate the cached instance and corrupt subsequent callers.
+          allGraph = DependenciesGraph.deserialize(graph.serialize());
         } else {
           allGraph.merge(graph);
         }
-      })
+      },
+      { concurrency: concurrentComponentsLimit() }
     );
     return allGraph;
   }

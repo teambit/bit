@@ -7,6 +7,7 @@ export type { CreateFromComponentsOptions, ManifestDependenciesObject } from './
 export type {
   InstallationContext,
   PackageImportMethod,
+  PackageExtension,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
@@ -46,7 +47,7 @@ export type {
   SemverVersion,
   DependenciesManifest,
 } from './dependencies';
-export { WorkspacePolicy, VariantPolicy, EnvPolicy } from './policy';
+export { WorkspacePolicy, VariantPolicy, EnvPolicy, EnvPolicyEnvJsoncConfigObject } from './policy';
 export type {
   WorkspacePolicyEntry,
   WorkspacePolicyConfigObject,
@@ -79,4 +80,11 @@ export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
 export { isRange } from './manifest/deduping/hoist-dependencies';
 export type { DependencyEnv } from './dependency-env';
 export { DetectorHook, DependencyDetector, FileContext } from './detector-hook';
+export {
+  ensureHoistedDependencyResolution,
+  ensureSelfInstallationBridge,
+  hoistedResolutionDirs,
+  isGlobalVirtualStoreLayout,
+  selfInstallationRoot,
+} from './hoisted-resolution-bridge';
 export { DependencyResolverAspect as default, DependencyResolverAspect };

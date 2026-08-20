@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 For comprehensive Bit MCP workflow instructions and core principles, see: `.github/instructions/bit.instructions.md`
 
+## CLI Output Style Guide
+
+When modifying CLI command output, follow the style guide: `scopes/harmony/cli/cli-output-style-guide.md`
+
+Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/output-formatter.ts`) — never hardcode chalk styles for section titles or Unicode symbols.
+
 ## Development Commands
 
 **IMPORTANT**: This repository practices "dogfooding" - Bit is built using Bit itself. Always use `bit` commands rather than direct npm/pnpm commands where possible.
@@ -43,11 +49,14 @@ For comprehensive Bit MCP workflow instructions and core principles, see: `.gith
 
 ### Linting and Formatting
 
-- `npm run lint` - Run ESLint and TypeScript type checking
-- `npm run lint:fix` - Run ESLint with auto-fix
-- `npm run oxlint` - Run oxlint (faster linter)
+- `npm run lint` - Run Oxlint and TypeScript type checking (`tsc --noEmit`)
+- `npm run lint:fix` - Run Oxlint with auto-fix
 - `npm run format` - Format code with Prettier
 - `npm run prettier:check` - Check if code is formatted correctly
+
+Lint rules live in `.oxlintrc.json`. ESLint has been fully removed from this repo's linting; the `eslint` packages remaining in `workspace.jsonc` are for `@teambit/defender.eslint-linter` which is shipped to Bit users' envs.
+
+**IMPORTANT**: After making code changes, always run `npm run lint` to verify. Do NOT run `npx tsc --noEmit` or `npx oxlint` directly — `npm run lint` is the canonical command and covers both type checking and linting for this repo.
 
 ### Bit-specific Commands
 
@@ -124,7 +133,7 @@ Each aspect follows a standard structure:
 - TypeScript compilation with strict mode
 - Babel for transpilation
 - Webpack for bundling
-- ESLint for linting with custom rules
+- Oxlint for linting with custom rules (configured in `.oxlintrc.json`)
 
 ### Key Concepts
 

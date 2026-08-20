@@ -1,4 +1,4 @@
-import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import type { PeerDependencyIssuesByProjects } from '@pnpm/napi';
 import type { PeerDependencyRules, ProjectManifest, DependencyManifest } from '@pnpm/types';
 import type { ComponentID, ComponentMap, Component } from '@teambit/component';
 import { type DependenciesGraph } from '@teambit/objects';
@@ -9,6 +9,16 @@ import type { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runt
 export { PeerDependencyIssuesByProjects };
 
 export type PackageImportMethod = 'auto' | 'hardlink' | 'copy' | 'clone';
+
+/**
+ * Dependency groups grafted onto a package that under-declares them - pnpm's `packageExtensions`
+ * entry shape.
+ */
+export type PackageExtension = {
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+};
 
 export type PackageManagerInstallOptions = {
   cacheRootDir?: string;
@@ -24,6 +34,8 @@ export type PackageManagerInstallOptions = {
   excludeLinksFromLockfile?: boolean;
 
   installPeersFromEnvs?: boolean;
+
+  resolveEnvPeersFromRoot?: boolean;
 
   dependencyFilterFn?: DepsFilterFn;
 
@@ -41,6 +53,31 @@ export type PackageManagerInstallOptions = {
   packageManagerConfigRootDir?: string;
 
   packageImportMethod?: PackageImportMethod;
+
+  /**
+   * Create dependency directories once in the global virtual store and share them across
+   * workspaces, instead of re-creating them in every `node_modules/.pnpm`. Capsule installs
+   * never use it - the installer forces the project-local layout there.
+   */
+  enableGlobalVirtualStore?: boolean;
+
+  /**
+   * Where the global virtual store materializes those directories. pnpm's own shared
+   * `<storeDir>/links` unless overridden (see `PnpmPackageManager.getGlobalVirtualStoreDir` for
+   * why the shared root works).
+   */
+  globalVirtualStoreDir?: string;
+
+  /**
+   * A map of package name (optionally with a version range) to a patch file path.
+   * Relative paths are resolved against the installation root directory.
+   */
+  patchedDependencies?: Record<string, string>;
+
+  /**
+   * Dependency groups to graft onto packages that under-declare them (pnpm's `packageExtensions`).
+   */
+  packageExtensions?: Record<string, PackageExtension>;
 
   rootComponents?: boolean;
 
@@ -132,6 +169,11 @@ export type PackageManagerInstallOptions = {
   autoInstallPeers?: boolean;
 
   /**
+   * When true, pnpm will deduplicate peer dependencies where possible. It is enabled by default.
+   */
+  dedupePeers?: boolean;
+
+  /**
    * Tells the package manager to return the list of dependencies that has to be built.
    * This is used by Ripple CI.
    */
@@ -209,6 +251,13 @@ export interface PackageManager {
   ): Promise<PeerDependencyIssuesByProjects>;
 
   getInjectedDirs?(rootDir: string, componentDir: string, packageName: string): Promise<string[]>;
+
+  /**
+   * The directory the global virtual store materializes dependency directories in.
+   * `installationId` scopes it to the bit installation that is running - see
+   * `DependencyResolverMain.getGlobalVirtualStoreDir` for why that root cannot be shared.
+   */
+  getGlobalVirtualStoreDir?(options: { packageManagerConfigRootDir?: string; installationId: string }): Promise<string>;
 
   getRegistries?(): Promise<Registries>;
 

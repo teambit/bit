@@ -6,6 +6,11 @@
   contain: layout paint style;
   content-visibility: auto;
   contain-intrinsic-size: 360px 260px;
+
+  iframe {
+    overflow: clip;
+    overscroll-behavior: contain;
+  }
 }
 
 .loadingPlaceholder {

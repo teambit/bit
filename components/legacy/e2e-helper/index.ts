@@ -15,6 +15,7 @@ import ScopeHelper from './e2e-scope-helper';
 import ScopeJsonHelper from './e2e-scope-json-helper';
 import ScopesData, { ScopesOptions, DEFAULT_OWNER } from './e2e-scopes';
 import CapsulesHelper from './e2e-capsules-helper';
+import SnappingHelper from './e2e-snapping-helper';
 import * as fixtures from './fixtures';
 
 export {
@@ -36,6 +37,7 @@ export {
   ScopeHelper,
   ScopeJsonHelper,
   CapsulesHelper,
+  SnappingHelper,
   fixtures,
   DEFAULT_OWNER,
 };

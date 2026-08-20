@@ -1,8 +1,8 @@
 import { createContext, useContext } from 'react';
 import type { ComponentID } from '@teambit/component-id';
-import type { toUrlOptions } from './component-url';
+import type { ToUrlOptions } from './component-url';
 
-export type ComponentUrlResolver = (id: ComponentID, options?: toUrlOptions) => string | undefined;
+export type ComponentUrlResolver = (id: ComponentID, options?: ToUrlOptions) => string | undefined;
 
 export const ComponentUrlContext = createContext<ComponentUrlResolver | undefined>(undefined);
 

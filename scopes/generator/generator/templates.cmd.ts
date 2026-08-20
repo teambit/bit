@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatTitle, formatHint } from '@teambit/cli';
 import chalk from 'chalk';
 import { groupBy, countBy } from 'lodash';
 import type { GeneratorMain, TemplateDescriptor } from './generator.main.runtime';
@@ -72,7 +73,7 @@ export class TemplatesCmd implements Command {
     const titleStr = this.generator.isRunningInsideWorkspace()
       ? `The following template(s) are available with the command bit create:  \nExample - bit create <template-name> <component-name>`
       : `The following template(s) are available with the command bit new: \nExample - bit new <template-name> <workspace-name>`;
-    const title = chalk.green(`\n${titleStr}\n`);
+    const title = `\n${formatTitle(titleStr)}\n`;
     const templateOutput = (template: TemplateDescriptor) => {
       const desc = template.description ? ` (${template.description})` : '';
       return `    ${template.name}${chalk.dim(desc)}`;
@@ -91,7 +92,7 @@ export class TemplatesCmd implements Command {
       })
       .join('\n');
 
-    const learnMore = `\nfind and add templates in https://bit.dev/reference/generator/use-component-generator`;
+    const learnMore = `\n${formatHint('find and add templates in https://bit.dev/reference/generator/use-component-generator')}`;
     return title + output + learnMore;
   }
 

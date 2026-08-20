@@ -34,6 +34,7 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
   private = true;
   remoteOp = true;
   skipWorkspace = true;
+  pager = true;
 
   constructor(
     private workspace: Workspace,

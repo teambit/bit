@@ -1,5 +1,4 @@
 @import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
-$panelBg: #fafafa;
 
 .compositionsPage {
   height: 100%;
@@ -13,27 +12,285 @@ $panelBg: #fafafa;
 
 .left {
   min-width: 200px;
-
-  //cannot assign max-width directly to right side
   max-width: calc(100% - 200px);
-
   display: flex;
-  overflow-y: auto;
+  overflow: hidden;
   flex-direction: column;
+  background: var(--bit-bg-color, #ffffff);
 }
 
 .right {
-  background: var(--background-color, $panelBg);
   overflow-y: auto;
-  // this is to fix the right panel when it gets too big or too small
   min-width: 200px;
   max-width: calc(100% - 200px);
+  border-left: 1px solid var(--bit-border-color-lightest, #eaeaec);
 }
 
 .menuBar {
-  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #eaeaec);
+  background: var(--bit-bg-color, #ffffff);
+  flex-shrink: 0;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  // normalize all OptionButton instances to match our toolbar style
+  :global([class*='optionButton']) {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 6px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--bit-text-color-light, #8b8d98);
+    border: none;
+    cursor: pointer;
+    transition: all 140ms ease;
+
+    &:hover {
+      background: var(--surface-hover-color, #f0f0f2) !important;
+      color: var(--bit-text-color-heavy, #1c2024);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &:global(.active),
+    &[class*='active'] {
+      background: rgba(108, 92, 231, 0.1) !important;
+      color: var(--bit-accent-color, #6c5ce7) !important;
+    }
+  }
 }
 
+// ─── Toolbar ────────────────────────────────────────────────────────────
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+.toolbarButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--bit-text-color-light, #8b8d98);
+  cursor: pointer;
+  transition: all 140ms ease;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 0;
+
+  &:hover {
+    background: var(--surface-hover-color, #f0f0f2);
+    color: var(--bit-text-color-heavy, #1c2024);
+  }
+
+  &:active {
+    background: var(--bit-border-color-lightest, #eaeaec);
+    transform: scale(0.95);
+  }
+}
+
+.toolbarButtonActive {
+  background: rgba(108, 92, 231, 0.1);
+  color: var(--bit-accent-color, #6c5ce7);
+
+  &:hover {
+    background: rgba(108, 92, 231, 0.15);
+    color: var(--bit-accent-color, #6c5ce7);
+  }
+}
+
+// ─── Preview + Controls Tray area ───────────────────────────────────────
+.previewArea {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.compositionPanel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.dragOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  cursor: ns-resize;
+}
+
+// ─── Controls Tray (bottom panel, like DevTools) ────────────────────────
+.controlsTray {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--bit-border-color-lightest, #eaeaec);
+  background: var(--bit-bg-color, #ffffff);
+  overflow: hidden;
+  min-height: 0;
+  // Never overflow the previewArea: if the inline `height` (or a user-set
+  // resize) ends up taller than the parent allows (e.g. browser zoom shrinks
+  // available space, or there are many controls), `max-height` wins and the
+  // tray stays inside its container so `trayBody`'s `overflow-y: auto` keeps
+  // working instead of the bottom rows getting clipped off-screen.
+  max-height: calc(100% - 80px);
+  box-sizing: border-box;
+}
+
+.controlsTrayCollapsed {
+  // when collapsed, only show the header bar
+  height: auto;
+}
+
+// ─── Two-zone header: resize strip on top, click-to-collapse below ─────
+// The two zones are visually separated by a divider so the boundary is
+// obvious: top = "grab to resize", bottom = "click to collapse".
+
+.trayResizeStrip {
+  position: relative;
+  flex-shrink: 0;
+  height: 12px;
+  cursor: ns-resize;
+  user-select: none;
+  background: var(--surface01-color, rgba(0, 0, 0, 0.02));
+  border-bottom: 1px solid var(--bit-border-color-lightest, #eaeaec);
+  transition: background 140ms ease;
+
+  &:hover {
+    background: var(--surface-hover-color, rgba(0, 0, 0, 0.05));
+  }
+
+  &:hover .trayDragBar {
+    background: var(--bit-text-color-light, #8b8d98);
+    width: 48px;
+  }
+}
+
+.trayDragBar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--bit-border-color-lightest, #d0d0d3);
+  transition: all 140ms ease;
+  pointer-events: none;
+}
+
+.trayHeaderInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: background 140ms ease;
+
+  &:hover {
+    background: var(--surface-hover-color, rgba(0, 0, 0, 0.03));
+  }
+}
+
+// give the collapsed bar a bit more breathing room
+.controlsTrayCollapsed .trayHeaderInner {
+  padding: 10px 14px;
+}
+
+.trayTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trayIcon {
+  font-size: 13px;
+  color: var(--bit-accent-color, #6c5ce7);
+}
+
+.trayTitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--bit-text-color-light, #8b8d98);
+}
+
+.trayBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--bit-accent-color, #6c5ce7);
+  color: #ffffff;
+  line-height: 1;
+}
+
+.trayCollapseIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  color: var(--bit-text-color-light, #8b8d98);
+  transform: rotate(90deg);
+  transform-origin: center;
+  transition: transform 200ms ease-in-out;
+  pointer-events: none;
+}
+
+.trayCollapseIconCollapsed {
+  transform: rotate(-90deg);
+}
+
+.trayBody {
+  // `flex-basis: auto` so the body contributes its natural content height to
+  // the tray's intrinsic size — without this, an auto-sized tray collapses to
+  // just the header. `min-height: 0` keeps `overflow-y: auto` working when
+  // the parent's `max-height` clamps the tray.
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.trayEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  font-size: 12px;
+  color: var(--bit-text-color-light, #8b8d98);
+}
+
+// ─── Splitter ───────────────────────────────────────────────────────────
 .splitter {
   position: relative;
 
@@ -47,6 +304,7 @@ $panelBg: #fafafa;
   right: 0;
 }
 
+// ─── Tabs ───────────────────────────────────────────────────────────────
 .tabsContainer {
   display: flex;
   flex-direction: column;
@@ -78,6 +336,7 @@ $panelBg: #fafafa;
   }
 }
 
+// ─── Empty / error states ───────────────────────────────────────────────
 .noCompositionsPage {
   padding: 50px 40px 100px 40px;
   width: 100%;
@@ -96,9 +355,4 @@ $panelBg: #fafafa;
 
 .buildStatusMessage {
   margin: auto;
-}
-
-.compositionPanel {
-  display: flex;
-  flex: 1;
 }

@@ -1,17 +1,73 @@
 .changeLogPage {
-  padding: 50px 40px 100px 40px;
-  max-width: 1440px;
+  padding: 32px 40px 80px 40px;
+  max-width: 1060px;
   margin: 0 auto;
   width: 100%;
   overflow-y: auto;
   box-sizing: border-box;
 
   .title {
-    margin-bottom: 24px;
+    margin-bottom: 4px;
     font-size: var(--bit-h-xs, 26px);
   }
-  .separator {
-    margin-bottom: 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.subtitle {
+  display: block;
+  font-size: var(--bit-p-xs, 14px);
+  color: var(--bit-text-color-light, #6c707c);
+}
+
+.snapCount {
+  opacity: 0.7;
+}
+
+.showAllToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--bit-border-color-lightest, #ededed);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: var(--bit-p-xxs, 12px);
+  color: var(--bit-text-color-light, #6c707c);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    border-color: var(--bit-accent-color, #6c5ce7);
+    color: var(--bit-accent-color, #6c5ce7);
+  }
+}
+
+.toggleIcon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+}
+
+.timeline {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 118px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--bit-border-color-lightest, #ededed);
   }
 }
 
@@ -23,7 +79,20 @@
   margin-bottom: 8px;
 }
 
-.logContainer {
-  display: flex;
-  flex-direction: column;
+@media screen and (max-width: 768px) {
+  .changeLogPage {
+    padding: 24px 16px 60px 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .timeline {
+    &::before {
+      left: 82px;
+    }
+  }
 }

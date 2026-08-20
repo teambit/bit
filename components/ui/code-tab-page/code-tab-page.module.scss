@@ -37,6 +37,15 @@ $panelBg: #fafafa;
   right: 0px;
 }
 
+.label {
+  padding: 2px 4px;
+  font-size: 10px;
+  border-radius: 4px;
+  font-weight: 450;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
 .depNode {
   overflow: hidden;
   text-overflow: ellipsis;

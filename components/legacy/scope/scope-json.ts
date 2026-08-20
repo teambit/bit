@@ -134,7 +134,7 @@ export class ScopeJson {
   }
 
   trackLane(trackLaneData: TrackLane) {
-    const existing = this.getTrackLane(trackLaneData.localLane);
+    const existing = this.lanes.tracking.find((t) => t.localLane === trackLaneData.localLane);
     if (existing) {
       existing.remoteLane = trackLaneData.remoteLane;
       existing.remoteScope = trackLaneData.remoteScope;
@@ -150,9 +150,7 @@ export class ScopeJson {
     this.lanes.tracking.splice(index, 1);
     this.hasChanged = true;
   }
-  private getTrackLane(localLane: string): TrackLane | undefined {
-    return this.lanes.tracking.find((t) => t.localLane === localLane);
-  }
+
   setLaneAsNew(laneName: string) {
     if (!this.lanes.new) this.lanes.new = [];
     this.lanes.new.push(laneName);

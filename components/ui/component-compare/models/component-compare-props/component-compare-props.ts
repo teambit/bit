@@ -16,6 +16,14 @@ export interface TabItem {
   element?: React.ReactNode | null;
   widget?: boolean;
   changeType?: ChangeType;
+  /**
+   * defer mounting this tab's content until its panel is actually visible on screen (active view
+   * + scrolled near the viewport). Set on tabs whose mere mounting is expensive regardless of CSS
+   * visibility — iframe-based panels (preview, docs) fetch full env preview bundles on mount, so
+   * mounting one per component in a large lane compare saturates the network even when hidden.
+   * Once mounted the content is never unmounted, so switching views back stays instant.
+   */
+  lazy?: boolean;
 }
 
 export type ComponentCompareProps = {

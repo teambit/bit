@@ -1,4 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatItem, formatHint, joinSections } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
 import type { GeneratorMain } from './generator.main.runtime';
@@ -45,7 +46,7 @@ export class CreateCmd implements Command {
     {
       cmd: 'bit create mdx docs/create-components --aspect teambit.mdx/mdx-env --scope my-org.my-scope',
       description:
-        "creates an mdx component named 'docs/create-components' and sets it scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`.",
+        "creates an mdx component named 'docs/create-components' and sets its scope to 'my-org.my-scope'. \nby default, the scope is the `defaultScope` value, configured in your `workspace.jsonc`.",
     },
     {
       cmd: 'bit create react my-org.my-scope/hooks/use-session',
@@ -80,19 +81,17 @@ export class CreateCmd implements Command {
   ) {
     options.aspectId = options.aspectId ?? options.template;
     const results = await this.generator.generateComponentTemplate(componentNames, templateName, options);
-    const title = `${results.length} component(s) were created`;
 
     const componentsData = results
       .map((result) => {
-        return `${chalk.bold(result.id.toString())}
-    location: ${result.dir}
-    env:      ${result.envId} (set by ${result.envSetBy})
-    package:  ${result.packageName}
-`;
+        return `${formatItem(chalk.bold(result.id.toString()))}
+      location: ${result.dir}
+      env:      ${result.envId} (set by ${result.envSetBy})
+      package:  ${result.packageName}`;
       })
       .join('\n');
-    const footer = `env configuration is according to workspace variants, template config or --env flag.`;
+    const footer = formatHint(`env configuration is according to workspace variants, template config or --env flag.`);
 
-    return `${chalk.green(title)}\n\n${componentsData}\n\n${footer}`;
+    return joinSections([formatSuccessSummary(`${results.length} component(s) were created`), componentsData, footer]);
   }
 }

@@ -80,7 +80,7 @@ describe('bit lane snapping and tagging', function () {
       helper.fs.outputFile('comp3/index.js', `module.exports = () => 'comp3 v2';`);
 
       const statusOutput = helper.command.runCmd('bit status');
-      expect(statusOutput).to.have.string('components pending auto-tag (when their modified dependencies are tagged)');
+      expect(statusOutput).to.have.string('components pending auto-tag');
 
       snapOutput = helper.command.snapComponent('comp3');
       comp3Head = helper.command.getHeadOfLane('dev', 'comp3');
@@ -188,7 +188,7 @@ describe('bit lane snapping and tagging', function () {
       output = helper.command.resetAll();
     });
     it('should untag successfully', () => {
-      expect(output).to.have.string('1 component(s) were reset');
+      expect(output).to.have.string('1 component(s) reset successfully');
     });
     it('should change the component to be new', () => {
       const status = helper.command.statusJson();

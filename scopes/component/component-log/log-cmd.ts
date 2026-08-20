@@ -1,6 +1,7 @@
 import c from 'chalk';
 import Table from 'cli-table';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { warnSymbol, errorSymbol } from '@teambit/cli';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentLogMain, LogOpts } from './component-log.main.runtime';
 
@@ -36,6 +37,7 @@ use various format options for compact or detailed views of version history.`;
   ] as CommandOptions;
   remoteOp = true; // should support log against remote
   skipWorkspace = true;
+  pager = true;
   arguments = [{ name: 'id', description: 'component-id or component-name' }];
 
   constructor(private componentLog: ComponentLogMain) {}
@@ -93,11 +95,14 @@ export function paintAuthor(email: string | null | undefined, username: string |
 
 function paintLog(log: LegacyComponentLog): string {
   const { message, date, tag, hash, username, email, deleted, deprecated } = log;
-  const deletedStr = deleted ? c.red(' [deleted]') : '';
-  const deprecatedStr = !deleted && deprecated ? c.yellow(' [deprecated]') : '';
-  const title = tag ? `tag ${tag} (${hash})${deletedStr}${deprecatedStr}\n` : `snap ${hash}\n`;
+  const deletedStr = deleted ? ` ${c.red(`${errorSymbol} deleted`)}` : '';
+  const deprecatedStr = !deleted && deprecated ? ` ${c.yellow(`${warnSymbol} deprecated`)}` : '';
+  const title = tag ? `tag ${tag} (${hash})` : `snap ${hash}`;
   return (
     c.yellow(title) +
+    deletedStr +
+    deprecatedStr +
+    '\n' +
     paintAuthor(email, username) +
     (date ? c.white(`date: ${date}\n`) : '') +
     (message ? c.white(`\n      ${message}\n`) : '')

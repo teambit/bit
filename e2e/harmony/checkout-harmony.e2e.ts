@@ -641,6 +641,14 @@ describe('bit checkout command', function () {
       const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
       expect(policy.dependencies['lodash.get']).to.equal('4.4.1');
     });
+
+    // reproduces a bug where the comp has a range and the ws has an exact version higher than
+    // that range's min. e.g. comp: ^4.4.2, ws: 5.0.0. Previously threw "unhandled case".
+    it('if the ws has an exact version higher than the comp range, it should not throw', () => {
+      expect(() => initWsWithVer('5.0.0')).to.not.throw();
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('5.0.0');
+    });
   });
   describe('checkout reset with changes in component.json', () => {
     before(() => {
@@ -711,6 +719,62 @@ describe('bit checkout command', function () {
     it('status should not have invalid components', () => {
       const status = helper.command.statusJson();
       expect(status.invalidComponents).to.have.lengthOf(0);
+    });
+  });
+  describe('checkout head --include-new-from-scope', () => {
+    let workspaceBeforeCheckout: string;
+    before(() => {
+      // Workspace A: create 3 components, tag and export them all to the remote scope
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Workspace B: fresh workspace pointing to the same remote scope (as defaultScope),
+      // but only has 1 component in the workspace
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponentWithoutInstall('comp1');
+      workspaceBeforeCheckout = helper.scopeHelper.cloneWorkspace();
+    });
+    describe('without the flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(workspaceBeforeCheckout);
+        helper.command.checkoutHead('--skip-dependency-installation');
+      });
+      it('should NOT import new components from the scope', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+    });
+    describe('with the flag', () => {
+      let output: string;
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(workspaceBeforeCheckout);
+        output = helper.command.checkoutHead('--skip-dependency-installation --include-new-from-scope');
+      });
+      it('should import the new components from the defaultScope', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(3);
+      });
+      it('should show the new components in the output', () => {
+        expect(output).to.have.string('new components from scope');
+        expect(output).to.have.string('comp2');
+        expect(output).to.have.string('comp3');
+      });
+      it('should include the new-from-scope count in the summary', () => {
+        expect(output).to.have.string('New from scope (imported)');
+      });
+    });
+    describe('using the flag with a non-head target', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(workspaceBeforeCheckout);
+      });
+      it('should throw an error', () => {
+        expect(() => helper.command.runCmd('bit checkout reset --include-new-from-scope')).to.throw(
+          '--include-new-from-scope is only relevant when running "bit checkout head"'
+        );
+      });
     });
   });
 });

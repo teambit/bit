@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
@@ -6,9 +7,11 @@ import { ScopeAspect } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { isSnap } from '@teambit/component-version';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { BitMap } from '@teambit/legacy.bit-map';
+import type { ListScopeResult } from '@teambit/legacy.component-list';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { RemoveMain } from '@teambit/remove';
 import { RemoveAspect } from '@teambit/remove';
@@ -21,7 +24,8 @@ import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { Remotes, Remote } from '@teambit/scope.remotes';
-import { getScopeRemotes } from '@teambit/scope.remotes';
+import { getScopeRemotes, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
+import { InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import type { EjectMain, EjectResults } from '@teambit/eject';
 import { EjectAspect } from '@teambit/eject';
 import type { ExportOrigin } from '@teambit/scope.network';
@@ -30,7 +34,8 @@ import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
-import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
+import { writeLastExport } from './last-export';
+import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref, Version } from '@teambit/objects';
 import { ObjectList } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
@@ -133,6 +138,18 @@ export class ExportMain {
       });
     }
 
+    if (rippleJobs.length) {
+      const lane = exportedLanes[0];
+      await writeLastExport(this.workspace.scope.path, {
+        timestamp: new Date().toISOString(),
+        rippleJobs,
+        lane: lane ? { scope: lane.scope, name: lane.name } : undefined,
+        exportedComponents: exported.map((id) => id.toStringWithoutVersion()),
+      }).catch((err) => {
+        this.logger.error('failed to write last-export.json (this error does not stop the process)', err);
+      });
+    }
+
     return exportResults;
   }
 
@@ -165,9 +182,15 @@ export class ExportMain {
   }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
+    // `--fork-lane-new-scope`: after the `calculateRemote` fix, divergence baseline is the
+    // forked-from head, so components inherited unchanged from the original lane (e.g. comp2
+    // when only comp1 was snapped on the fork) are not staged. The fork still needs to push
+    // them — the new scope has no copy and would reject the lane object as referencing a
+    // missing component. Include non-staged to bring them into `idsToExport`; the laneHead
+    // push in `getVersionsToExport` then supplies their refs (divergence is empty for them).
     const { idsToExport, missingScope, laneObject } = await this.getComponentsToExport(
       ids,
-      includeNonStaged || headOnly
+      includeNonStaged || headOnly || params.forkLaneNewScope
     );
 
     if (!idsToExport.length && !laneObject) {
@@ -225,8 +248,16 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const workspaceIds = this.workspace.listIds();
+    // hidden updateDependents have no bitmap row by design — exclude them from the
+    // "files are not tracked" warning that would otherwise fire on every cascade export.
+    const laneUpdateDependents = laneObject?.updateDependents
+      ? ComponentIdList.fromArray(laneObject.updateDependents)
+      : undefined;
     const nonExistOnBitMap = exported.filter(
-      (id) => !workspaceIds.hasWithoutVersion(id) && !removedIds.hasWithoutVersion(id)
+      (id) =>
+        !workspaceIds.hasWithoutVersion(id) &&
+        !removedIds.hasWithoutVersion(id) &&
+        !laneUpdateDependents?.hasWithoutVersion(id)
     );
     const updatedIds = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
@@ -294,6 +325,22 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
     const idsGroupedByScope = groupByScopeName(ids);
 
+    const resolveRemote = async (scopeName: string): Promise<Remote> => {
+      try {
+        return await scopeRemotes.resolve(scopeName);
+      } catch (err) {
+        if (err instanceof ScopeNotFoundOrDenied && Http.getToken()) {
+          const bitError = new BitError(
+            `unable to export to the remote scope "${scopeName}". the scope may not exist, or you don't have access to it.
+if the scope name is wrong and you've already snapped/tagged, run "bit reset" to undo, then run "bit scope rename ${scopeName} <new-scope>" and snap/tag again`
+          );
+          (bitError as Error).cause = err;
+          throw bitError;
+        }
+        throw err;
+      }
+    };
+
     /**
      * when a component is exported for the first time, and the lane-scope is not the same as the component-scope, it's
      * important to validate that there is no such component in the original scope. otherwise, later, it'll be impossible
@@ -310,9 +357,21 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           // this validation is redundant if the lane-component is in the same scope as the lane-object
           return;
         }
-        // by getting the remote we also validate that this scope actually exists.
-        const remote = await scopeRemotes.resolve(scopeName);
-        const list = await remote.list();
+        // this check guards against a same-named component already existing in the target scope
+        // (which would make the eventual lane-merge impossible — two components, same id, no shared
+        // snap history). if the scope doesn't exist on the hub yet, or the user lacks access to it,
+        // there's nothing there to conflict with, so skip the check. malformed scope names
+        // (InvalidScopeName) are intentionally still raised — those are a genuine user error.
+        let list: ListScopeResult[];
+        try {
+          const remote = await scopeRemotes.resolve(scopeName);
+          list = await remote.list();
+        } catch (err) {
+          if (err instanceof ScopeNotFoundOrDenied || err instanceof InvalidScopeNameFromRemote) {
+            return;
+          }
+          throw err;
+        }
         const listIds = ComponentIdList.fromArray(list.map((listItem) => listItem.id));
         newIdsGrouped[scopeName].forEach((id) => {
           if (listIds.hasWithoutVersion(id)) {
@@ -351,7 +410,22 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         return [head];
       }
       const fromWorkspace = this.workspace?.getIdIfExist(modelComponent.toComponentId());
-      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
+      // populate lane-aware heads so divergence is computed against the LANE remote head —
+      // hidden updateDependents have no bitmap row, so without this their cascade snap is
+      // missed and the export silently sends 0 versions, triggering a remote merge error.
+      if (laneObject) await modelComponent.populateLocalAndRemoteHeads(scope.objects, laneObject);
+      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace, laneObject);
+      if (laneObject) {
+        // Ensure the lane's recorded head for this component is always part of the export refs.
+        // Required for cross-scope forks (lane head == forkedFrom baseline → divergence returns []
+        // for components inherited unchanged from the original lane). Without this, those
+        // components would be exported with zero refs and the new scope would reference an
+        // unresolvable hash. The filter in `filterLeanLaneRefs` already keeps lane-head refs.
+        const laneHead = laneObject.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
+        if (laneHead && !localTagsOrHashes.find((r) => r.isEqual(laneHead))) {
+          localTagsOrHashes.push(laneHead);
+        }
+      }
       if (!allVersions) {
         return localTagsOrHashes;
       }
@@ -359,6 +433,70 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects });
       await addMainHeadIfPossible(allHashes, modelComponent);
       return allHashes;
+    };
+
+    /**
+     * a component head may reference — via its flattened dependencies — a non-head snap of another
+     * component in the same export set. this happens when a component keeps pinning an older snap of
+     * a dependency that has since advanced (e.g. the component was soft-removed on the lane, so it
+     * never gets re-snapped), and the squash of a lane-merge dropped that snap from the dependency's
+     * own parent chain. no history traversal selects it (and a heads-only export selects only heads
+     * to begin with), so without it the remote dependency-integrity check
+     * (throwForMissingLocalDependencies) rejects the export. add any such snap that exists locally so
+     * it is shipped alongside the selected refs. snaps missing locally were fetched during the
+     * lane-merge, see MergeLanesMain.importMissingReferencedDeps().
+     * flattened (not only direct) deps are walked to mirror exactly what the remote check validates.
+     * this is cheap by design and a no-op for ordinary exports: only heads are inspected (the remote
+     * check validates only versions that are heads, and they're loaded later by the export anyway),
+     * only snaps are considered (tags are never squashed out of history), and a ref is added only
+     * when the dependency's head carries the `squashed` marker — i.e. only after a squashing
+     * lane-merge, the sole flow that removes snaps from a component's history.
+     */
+    const addReferencedSnapsIfPossible = async (
+      refsPerComponent: Array<{ modelComponent: ModelComponent; refs: Ref[] }>
+    ) => {
+      const headPerCompIdStr = new Map<
+        string,
+        { entry: { modelComponent: ModelComponent; refs: Ref[] }; headVersion: Version }
+      >();
+      await mapSeries(refsPerComponent, async (entry) => {
+        const { modelComponent, refs } = entry;
+        const headRef =
+          laneObject?.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId()) || modelComponent.head;
+        if (!headRef) return;
+        if (!refs.find((ref) => ref.isEqual(headRef))) return; // the head is not part of this export
+        const headVersion = await modelComponent.loadVersion(headRef.toString(), scope.objects, false);
+        if (!headVersion) return;
+        headPerCompIdStr.set(modelComponent.toComponentId().toStringWithoutVersion(), { entry, headVersion });
+      });
+      const anySquashed = [...headPerCompIdStr.values()].some(({ headVersion }) => headVersion.squashed);
+      if (!anySquashed) return; // no squash in this export set — no snap could have been dropped
+      await mapSeries([...headPerCompIdStr.values()], async ({ entry: headEntry, headVersion }) => {
+        await mapSeries(headVersion.getAllFlattenedDependencies(), async (depId) => {
+          // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`),
+          // so same-scope is all that needs shipping. also filters out most of the flattened list.
+          if (depId.scope !== headEntry.modelComponent.scope) return;
+          if (!depId.version || !isSnap(depId.version)) return;
+          const depComp = headPerCompIdStr.get(depId.toStringWithoutVersion());
+          if (!depComp) return; // the referenced component is not part of this export set
+          if (!depComp.headVersion.squashed) return; // dep history is intact — the pinned snap is on-chain
+          const depRef = depComp.entry.modelComponent.getRef(depId.version);
+          if (!depRef) return;
+          if (depComp.entry.refs.find((ref) => ref.isEqual(depRef))) return; // already included
+          if (!(await scope.objects.has(depRef))) return; // can only ship what exists locally
+          // the objects this version references (file sources, flattened-edges) get collected along
+          // with it, so they must be present locally as well. if they're not, don't add the ref —
+          // exporting it would fail on the missing objects, and the remote may have this version
+          // already anyway (in which case the export succeeds without shipping it).
+          const depVersion = await depComp.entry.modelComponent.loadVersion(depRef.toString(), scope.objects, false);
+          if (!depVersion) return;
+          const subRefs = depVersion.refsWithOptions(false, false);
+          // hasMultiple bounds the I/O concurrency, unlike a Promise.all of has() calls
+          const existingSubRefs = await scope.objects.hasMultiple(subRefs);
+          if (existingSubRefs.length !== subRefs.length) return;
+          depComp.entry.refs.push(depRef);
+        });
+      });
     };
 
     await validateTargetScopeForLanes();
@@ -373,7 +511,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       lane?: Lane
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
-      const remote: Remote = await scopeRemotes.resolve(remoteNameStr);
+      const remote: Remote = await resolveRemote(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
@@ -387,6 +525,8 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         const refs = await getVersionsToExport(modelComponent);
         return { modelComponent, refs };
       });
+
+      await addReferencedSnapsIfPossible(refsToPotentialExportPerComponent);
 
       const getRefsToExportPerComp = async () => {
         if (!filterOutExistingVersions) {
@@ -457,7 +597,10 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         objectList.addIfNotExist(allObjectsData);
       };
 
-      const refsToExportPerComponent = await getRefsToExportPerComp();
+      // The lean-lane filter (drop main-origin refs belonging to foreign components) is now
+      // applied inside `getVersionsToExport` via `ModelComponent.getLocalHashes(...lane)`, so
+      // refsPerComp is already filtered. We just drop empty entries.
+      const refsToExportPerComponent = (await getRefsToExportPerComp()).filter(({ refs }) => refs.length > 0);
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
       if (lane) {
@@ -603,9 +746,25 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
   async pushToRemotesCarefully(manyObjectsPerRemote: ObjectsPerRemote[], resumeExportId?: string) {
     const remotes = manyObjectsPerRemote.map((o) => o.remote);
-    const clientId = resumeExportId || Date.now().toString();
+    // The clientId is both the pending-dir name AND the cross-client export lock: `export-validate`'s
+    // waitIfNeeded queue sorts pending-dir names and lets only the first proceed to validate+persist.
+    // A pure `Date.now()` is not collision-safe — two exports to the same remote within the same
+    // millisecond (e.g. concurrent CI runners pushing the same lane) get the same clientId, share one
+    // pending-dir, collapse the queue to a single entry, and both validate against the pre-persist
+    // state, silently losing one runner's update. A random suffix keeps the timestamp prefix (so the
+    // sorted queue still roughly preserves arrival order) while making a same-millisecond collision
+    // vanishingly unlikely (64 bits of randomness). Use node's built-in `crypto` rather than a
+    // component helper so this core aspect doesn't gain a new component dependency.
+    const clientId = resumeExportId || `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
+    // Intentionally no cleanup on `persistRemotes` failure: pending dirs are the substrate for
+    // `bit export --resume <clientId>` AND act as a cross-client lock via `export-validate`'s
+    // waitIfNeeded queue (sorted by clientId). In a multi-scope persist with a partial-success
+    // failure (scopeA persisted, scopeB exhausted retries), removing the pending dirs would let
+    // another client race in against an inconsistent partial-commit state and would also strand
+    // the original user with no objects to resume from. Leave them in place; the user's recovery
+    // is `--resume` (or, on the server side, an explicit pending-dir cleanup tool).
     await persistRemotes(manyObjectsPerRemote, clientId);
   }
 

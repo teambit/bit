@@ -9,6 +9,7 @@ export const statesFilter = [
   'modified',
   'deprecated',
   'deleted',
+  'internal',
   'snappedOnMain',
   'softTagged',
   'codeModified',
@@ -29,6 +30,7 @@ export class Filter {
       modified: this.byModified,
       deprecated: this.byDeprecated,
       deleted: this.byDeleted,
+      internal: this.byInternal,
       snappedOnMain: this.bySnappedOnMain,
       softTagged: this.bySoftTagged,
       codeModified: this.byCodeModified,
@@ -107,6 +109,21 @@ export class Filter {
     const comps = await this.workspace.getMany(ids);
     const deletedIds = comps.filter((c) => c.isDeleted()).map((c) => c.id);
     return compact(deletedIds);
+  }
+
+  async byInternal(withinIds?: ComponentID[]) {
+    const ids = withinIds || (await this.workspace.listIds());
+    const results = await Promise.all(
+      ids.map(async (id) => {
+        const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true });
+        if (bitmapEntry?.isInternal()) return id;
+        if (bitmapEntry?.isUninternalized()) return null;
+        const modelComponent = await this.workspace.consumer.scope.getModelComponentIfExist(id);
+        const internal = await modelComponent?.isInternal(this.workspace.consumer.scope.objects);
+        return internal ? id : null;
+      })
+    );
+    return compact(results);
   }
 
   byDuringMergeState(): ComponentIdList {

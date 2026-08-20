@@ -79,6 +79,11 @@ export type TesterOptions = {
    */
   updateSnapshot?: boolean;
 
+  /**
+   * absolute paths of specific test files to run. when provided, only these files are tested.
+   */
+  testFiles?: string[];
+
   callback?: CallbackFn;
 };
 

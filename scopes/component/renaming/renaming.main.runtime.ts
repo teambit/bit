@@ -186,7 +186,9 @@ make sure this argument is the name only, without the scope-name. to change the 
 
     const targetComps = compact(renameData.map(({ targetComp }) => targetComp));
     await linkToNodeModulesByComponents(targetComps, this.workspace); // link the new-name to node-modules
-    await this.compileGracefully(targetComps.map((c) => c.id));
+    if (!options.skipCompile) {
+      await this.compileGracefully(targetComps.map((c) => c.id));
+    }
 
     return { refactoredIds, renameData };
   }
@@ -207,7 +209,12 @@ make sure this argument is the name only, without the scope-name. to change the 
   async renameScope(
     oldScope: string,
     newScope: string,
-    options: { refactor?: boolean; deprecate?: boolean; preserve?: boolean } = {}
+    options: {
+      refactor?: boolean;
+      deprecate?: boolean;
+      preserve?: boolean;
+      skipDependencyInstallation?: boolean;
+    } = {}
   ): Promise<RenameResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const allComponentsIds = this.workspace.listIds();
@@ -222,7 +229,16 @@ make sure this argument is the name only, without the scope-name. to change the 
       const targetId = ComponentID.fromObject({ name: compId.fullName }, newScope);
       return { sourceId: compId, targetId };
     });
-    return this.renameMultiple(multipleIds, options);
+    // defer compilation until after install, so newly-required deps are available.
+    const result = await this.renameMultiple(multipleIds, { ...options, skipCompile: true });
+    const targetIds = result.renameData.map(({ targetId }) => targetId);
+    if (!options.skipDependencyInstallation && targetIds.length) {
+      await this.installDepsGracefully();
+    }
+    if (targetIds.length) {
+      await this.compileGracefully(targetIds);
+    }
+    return result;
   }
 
   /**
@@ -285,6 +301,20 @@ make sure this argument is the name only, without the scope-name. to change the 
   private async deleteLinkFromNodeModules(packageName: string) {
     await fs.remove(path.join(this.workspace.path, 'node_modules', packageName));
   }
+  private async installDepsGracefully() {
+    try {
+      await this.install.install(undefined, {
+        dedupe: true,
+        import: false,
+        copyPeerToRuntimeOnRoot: true,
+        copyPeerToRuntimeOnComponents: false,
+        updateExisting: false,
+      });
+    } catch (err: any) {
+      this.logger.consoleFailure(`failed installing dependencies. error: ${err.message}. run "bit install" to retry.`);
+    }
+  }
+
   private async compileGracefully(ids: ComponentID[]) {
     try {
       await this.compiler.compileOnWorkspace(ids);

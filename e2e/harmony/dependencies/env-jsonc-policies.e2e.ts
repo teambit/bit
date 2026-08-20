@@ -103,6 +103,21 @@ const ENV_JSONC_LEVEL3 = {
   },
 };
 
+export const ENV_POLICY_WITH_TYPES_PEER = {
+  peers: [
+    {
+      name: 'react',
+      version: '^18.0.0',
+      supportedRange: '^17.0.0 || ^18.0.0',
+    },
+    {
+      name: '@types/react',
+      version: '18.0.25',
+      supportedRange: '^18.0.0',
+    },
+  ],
+};
+
 function generateEnvJsoncWithExtends(extendsName: string, envJsonc: object) {
   return {
     extends: extendsName,
@@ -496,6 +511,116 @@ describe('env-jsonc-policies', function () {
           });
         });
       });
+    });
+  });
+  describe('bit update', function () {
+    let envId;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      envId = 'react-based-env';
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            runtime: [
+              {
+                name: 'is-string',
+                version: '1.0.5',
+                force: true,
+              },
+            ],
+          },
+        },
+        false,
+        envId
+      );
+      helper.command.install();
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+
+    it('should update env.jsonc dependency to latest version', () => {
+      const envJsoncPath = path.join(helper.scopes.localPath, envId, 'env.jsonc');
+      const originalEnvJsonc = fs.readJsonSync(envJsoncPath);
+      expect(originalEnvJsonc.policy.runtime[0].version).to.equal('1.0.5');
+
+      helper.command.update('is-string --yes');
+
+      const updatedEnvJsonc = fs.readJsonSync(envJsoncPath);
+      expect(updatedEnvJsonc.policy.runtime[0].version).to.not.equal('1.0.5');
+    });
+
+    it('should update supportedRange for peerDependencies when new version is outside existing range', () => {
+      const envId2 = 'react-based-env-peers';
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: 'react',
+                version: '16.8.0',
+                supportedRange: '^16.8.0',
+              },
+            ],
+          },
+        },
+        false,
+        envId2
+      );
+      helper.command.install();
+
+      const envJsoncPath = path.join(helper.scopes.localPath, envId2, 'env.jsonc');
+      const originalEnvJsonc = fs.readJsonSync(envJsoncPath);
+      expect(originalEnvJsonc.policy.peers[0].supportedRange).to.equal('^16.8.0');
+
+      // Update react to latest (which is > 16.8.0, likely 18.x)
+      helper.command.update('react --yes');
+
+      const updatedEnvJsonc = fs.readJsonSync(envJsoncPath);
+      const newVersion = updatedEnvJsonc.policy.peers[0].version;
+      const newSupportedRange = updatedEnvJsonc.policy.peers[0].supportedRange;
+
+      expect(newVersion).to.not.equal('16.8.0');
+      // Should now contain the old range OR the new range/version
+      expect(newSupportedRange).to.include(' || ');
+      expect(newSupportedRange).to.include('^16.8.0');
+      expect(newSupportedRange).to.include(newVersion);
+    });
+  });
+  describe('@types/* package listed as a peer in env.jsonc', function () {
+    this.timeout(0);
+    let componentShowParsed;
+    let envId;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      envId = `${helper.scopes.remote}/react-based-env`;
+      helper.command.create('react', 'button', '-p button --env teambit.react/react');
+      // having @types/react in the workspace policy makes it auto-detected for the component
+      // (since the component uses react), so the env peer override below actually applies to it.
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { '@types/react': '18.0.25' } });
+      helper.env.setCustomNewEnv(undefined, undefined, { policy: ENV_POLICY_WITH_TYPES_PEER });
+      helper.command.setEnv('button', envId);
+      helper.command.install();
+      componentShowParsed = helper.command.showComponentParsed('button');
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should still add regular (non-@types/*) peer deps from env.jsonc to the component', () => {
+      expect(componentShowParsed.peerPackageDependencies).to.include({ react: '^17.0.0 || ^18.0.0' });
+    });
+    it('should not add auto-detected @types/* peers to the component peer deps', () => {
+      expect(componentShowParsed.peerPackageDependencies).to.not.have.property('@types/react');
+    });
+    it('should not leak auto-detected @types/* peers into the component runtime or dev deps', () => {
+      expect(componentShowParsed.packageDependencies).to.not.have.property('@types/react');
+      expect(componentShowParsed.devPackageDependencies).to.not.have.property('@types/react');
     });
   });
 });

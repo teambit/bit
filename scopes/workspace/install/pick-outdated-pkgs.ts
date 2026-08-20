@@ -80,9 +80,11 @@ export function makeOutdatedPkgChoices(outdatedPkgs: MergedOutdatedPkg[]) {
     if (!groupedChoices[context]) {
       groupedChoices[context] = [];
     }
+    // Make the name unique by combining package name with index
+    // This prevents issues when the same package appears in multiple contexts
     groupedChoices[context].push({
       message: renderedTable[index],
-      name: outdatedPkg.name,
+      name: `${outdatedPkg.name}-${index}`,
       value: outdatedPkg,
     });
   });
@@ -96,6 +98,9 @@ export function makeOutdatedPkgChoices(outdatedPkgs: MergedOutdatedPkg[]) {
 function renderContext(outdatedPkg: MergedOutdatedPkg) {
   if (outdatedPkg.variantPattern) {
     return `${outdatedPkg.variantPattern} (variant)`;
+  }
+  if (outdatedPkg.source === 'env-jsonc' && outdatedPkg.componentId) {
+    return `${outdatedPkg.componentId} (env.jsonc)`;
   }
   if (outdatedPkg.componentId) {
     return `${outdatedPkg.componentId} (component)`;

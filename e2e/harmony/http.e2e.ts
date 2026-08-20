@@ -57,8 +57,8 @@ import { HttpHelper } from '../http-helper';
         `lane "${helper.scopes.remote}/non-exist" was not found`
       );
     });
-    after(() => {
-      httpHelper.killHttp();
+    after(async () => {
+      await httpHelper.killHttp();
     });
   });
   describe('export with deleted components', () => {
@@ -92,8 +92,8 @@ import { HttpHelper } from '../http-helper';
       expect(list).to.have.lengthOf(1);
       expect(list[0].id).to.not.have.string('comp2');
     });
-    after(() => {
-      httpHelper.killHttp();
+    after(async () => {
+      await httpHelper.killHttp();
     });
   });
   describe('export', () => {
@@ -110,11 +110,11 @@ import { HttpHelper } from '../http-helper';
       exportOutput = helper.command.export();
       scopeAfterExport = helper.scopeHelper.cloneWorkspace();
     });
-    after(() => {
-      httpHelper.killHttp();
+    after(async () => {
+      await httpHelper.killHttp();
     });
     it('should export successfully', () => {
-      expect(exportOutput).to.have.string('exported the following 3 component');
+      expect(exportOutput).to.have.string('exported components (3)');
     });
     describe('bit log', () => {
       let logOutput: string;
@@ -144,7 +144,7 @@ import { HttpHelper } from '../http-helper';
       });
       it('should show descriptive error when removing component that has dependents', () => {
         const output = helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp2`);
-        expect(output).to.have.string(`error: unable to delete ${helper.scopes.remote}/comp2`);
+        expect(output).to.have.string(`unable to delete ${helper.scopes.remote}/comp2`);
         expect(output).to.have.string(`${helper.scopes.remote}/comp1`);
       });
       it('should remove successfully components that has no dependents', () => {
@@ -196,8 +196,8 @@ import { HttpHelper } from '../http-helper';
       expect(idsStr).to.not.include('beta/vitest-4/examples/hello-world');
     });
 
-    after(() => {
-      httpHelper.killHttp();
+    after(async () => {
+      await httpHelper.killHttp();
     });
   });
 });

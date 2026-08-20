@@ -1,6 +1,6 @@
 import path from 'path';
 import type { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
+import { formatItem, formatSuccessSummary } from '@teambit/cli';
 import { PATTERN_HELP } from '@teambit/legacy.constants';
 
 import type { EjectConfOptions, EjectConfResult, Workspace } from './workspace';
@@ -26,21 +26,19 @@ ${PATTERN_HELP('eject-conf')}`;
     [
       'p',
       'propagate',
-      'mark propagate true in the config file, so that component.json configs will be merge with workspace configs',
+      'mark propagate true in the config file, so that component.json configs will be merged with workspace configs',
     ],
-    ['o', 'override', 'override file if exist'],
+    ['o', 'override', 'override the file if it exists'],
   ] as CommandOptions;
 
   constructor(private workspace: Workspace) {}
 
   async report(args: EjectConfArgs, options: EjectConfOptionsCLI): Promise<string> {
     const ejectResult = await this.json(args, options);
-    const paths = ejectResult
+    const items = ejectResult
       .map((result) => result.configPath)
-      .map((p) => path.relative(this.workspace.path, p))
-      .join('\n');
-    return chalk.green(`successfully ejected config to the following path(s)
-${chalk.bold(paths)}`);
+      .map((p) => formatItem(path.relative(this.workspace.path, p)));
+    return `${formatSuccessSummary('ejected config to the following path(s)')}\n${items.join('\n')}`;
   }
 
   async json([pattern]: EjectConfArgs, options: EjectConfOptionsCLI): Promise<EjectConfResult[]> {

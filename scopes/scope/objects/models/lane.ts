@@ -50,10 +50,11 @@ export default class Lane extends BitObject {
   isNew = false; // doesn't get saved in the object. only needed for in-memory instance
   hasChanged = false; // doesn't get saved in the object. only needed for in-memory instance
   /**
-   * populated when a user clicks on "update" in the UI. it's a list of components that are dependents on the
-   * components in the lane. their dependencies are updated according to the lane.
-   * from the CLI perspective, it's added by "bit _snap" and merged by "bit _merge-lane".
-   * otherwise, the user is not aware of it. it's not imported to the workspace and the objects are not fetched.
+   * components that are dependents of components in the lane and need to be re-snapped against the
+   * lane's heads. populated by the bare-scope cascade producer (UI "snap updates" / `bit _snap`)
+   * and by `bit _merge-lane`. these entries are part of the lane's graph (Ripple CI builds them,
+   * merge engine refreshes them) but are intentionally hidden from workspace-facing flows
+   * (`bit status`, `bit compile`, `bit install`, the bitmap).
    */
   updateDependents?: ComponentID[];
   private overrideUpdateDependents?: boolean;
@@ -179,7 +180,12 @@ export default class Lane extends BitObject {
   addComponent(component: LaneComponent) {
     const existsComponent = this.getComponent(component.id);
     if (existsComponent) {
-      if (!existsComponent.head.isEqual(component.head)) this.hasChanged = true;
+      if (
+        !existsComponent.head.isEqual(component.head) ||
+        Boolean(existsComponent.isDeleted) !== Boolean(component.isDeleted)
+      ) {
+        this.hasChanged = true;
+      }
       existsComponent.id = component.id;
       existsComponent.head = component.head;
       existsComponent.isDeleted = component.isDeleted;
@@ -189,37 +195,47 @@ export default class Lane extends BitObject {
       this.hasChanged = true;
     }
   }
+  findUpdateDependent(componentId: ComponentID): ComponentID | undefined {
+    return this.updateDependents?.find((c) => c.isEqualWithoutVersion(componentId));
+  }
+  getUpdateDependentAsLaneComponent(componentId: ComponentID): LaneComponent | undefined {
+    const found = this.findUpdateDependent(componentId);
+    if (!found?.version) return undefined;
+    return { id: found.changeVersion(undefined), head: Ref.from(found.version) };
+  }
   removeComponentFromUpdateDependentsIfExist(componentId: ComponentID) {
-    const updateDependentsList = ComponentIdList.fromArray(this.updateDependents || []);
-    const exist = updateDependentsList.searchWithoutVersion(componentId);
-    if (!exist) return;
-    this.updateDependents = updateDependentsList.removeIfExist(exist);
-    if (!this.updateDependents.length) this.updateDependents = undefined;
+    if (!this.findUpdateDependent(componentId)) return;
+    this.updateDependents = this.updateDependents?.filter((c) => !c.isEqualWithoutVersion(componentId));
+    if (!this.updateDependents?.length) this.updateDependents = undefined;
     this.hasChanged = true;
   }
   addComponentToUpdateDependents(componentId: ComponentID) {
+    if (!componentId.hasVersion()) {
+      throw new ValidationError(`Lane.addComponentToUpdateDependents: ${componentId.toString()} is missing a version`);
+    }
     this.removeComponentFromUpdateDependentsIfExist(componentId);
     (this.updateDependents ||= []).push(componentId);
     this.hasChanged = true;
   }
   removeAllUpdateDependents() {
-    if (this.updateDependents?.length) return;
+    if (!this.updateDependents?.length) return;
     this.updateDependents = undefined;
     this.hasChanged = true;
   }
-  shouldOverrideUpdateDependents() {
-    return this.overrideUpdateDependents;
-  }
   /**
-   * !!! important !!!
-   * this should get called only on a "temp lane", such as running "bit _snap", which the scope gets destroys after the
-   * command is done. when _scope exports the lane, this "overrideUpdateDependents" is not saved to the remote-scope.
-   *
-   * on a user local lane object, this prop should never be true. otherwise, it'll override the remote-scope data.
+   * Signals an explicit `_snap --update-dependents` insertion. On export, the receiving scope
+   * gates its "add this new hidden entry" branch on this flag so a stale workspace lane can't
+   * resurrect entries the Cloud UI dropped. Workspace cascades — which only update existing
+   * entries — deliberately do NOT set the flag. The field is also serialized by `Lane.toObject`
+   * for older remotes that gate their pre-diverge-check override branch on it.
    */
   setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
     this.overrideUpdateDependents = overrideUpdateDependents;
     this.hasChanged = true;
+  }
+
+  shouldOverrideUpdateDependents(): boolean {
+    return Boolean(this.overrideUpdateDependents);
   }
 
   removeComponent(id: ComponentID): boolean {
@@ -240,7 +256,11 @@ export default class Lane extends BitObject {
   setLaneComponents(laneComponents: LaneComponent[]) {
     // this gets called when adding lane-components from other lanes/remotes, so it's better to
     // clone the objects to not change the original data.
-    this.components = laneComponents.map((c) => ({ id: c.id.clone(), head: c.head.clone() }));
+    this.components = laneComponents.map((c) => ({
+      id: c.id.clone(),
+      head: c.head.clone(),
+      ...(c.isDeleted && { isDeleted: c.isDeleted }),
+    }));
     this.hasChanged = true;
   }
   setReadmeComponent(id?: ComponentID) {
@@ -325,9 +345,7 @@ export default class Lane extends BitObject {
   getCompHeadIncludeUpdateDependents(componentId: ComponentID): Ref | undefined {
     const comp = this.getComponent(componentId);
     if (comp) return comp.head;
-    const fromUpdateDependents = this.updateDependents?.find((c) => c.isEqualWithoutVersion(componentId));
-    if (fromUpdateDependents) return Ref.from(fromUpdateDependents.version);
-    return undefined;
+    return this.getUpdateDependentAsLaneComponent(componentId)?.head;
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
@@ -353,9 +371,22 @@ export default class Lane extends BitObject {
   }
   isEqual(lane: Lane): boolean {
     if (this.id() !== lane.id()) return false;
-    const thisComponents = this.toComponentIds().toStringArray().sort();
-    const otherComponents = lane.toComponentIds().toStringArray().sort();
-    return isEqual(thisComponents, otherComponents);
+    // include isDeleted in equality so a soft-delete flip with the same head still counts as a
+    // state change — `Lane.isEqual` is used by importers to decide whether to write a
+    // LaneHistory entry.
+    const normalize = (l: Lane) =>
+      l.components
+        .map((c) => ({
+          id: c.id.toStringWithoutVersion(),
+          head: c.head.toString(),
+          isDeleted: Boolean(c.isDeleted),
+        }))
+        .sort((a, b) =>
+          `${a.id}@${a.head}:${a.isDeleted ? 1 : 0}`.localeCompare(`${b.id}@${b.head}:${b.isDeleted ? 1 : 0}`)
+        );
+    const thisUpdDeps = (this.updateDependents || []).map((c) => c.toString()).sort();
+    const otherUpdDeps = (lane.updateDependents || []).map((c) => c.toString()).sort();
+    return isEqual(normalize(this), normalize(lane)) && isEqual(thisUpdDeps, otherUpdDeps);
   }
   clone() {
     return new Lane({
@@ -363,6 +394,7 @@ export default class Lane extends BitObject {
       hash: this._hash,
       overrideUpdateDependents: this.overrideUpdateDependents,
       components: cloneDeep(this.components),
+      updateDependents: this.updateDependents ? cloneDeep(this.updateDependents) : undefined,
     });
   }
 }

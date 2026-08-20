@@ -66,9 +66,20 @@ export class ArtifactFiles {
   }
 
   populateVinylsFromPaths(rootDir: string) {
-    this.vinyls = this.paths.map(
-      (file) => new ArtifactVinyl({ path: file, contents: fs.readFileSync(path.join(rootDir, file)) })
-    );
+    const existingPaths: string[] = [];
+    this.vinyls = this.paths.reduce((acc: ArtifactVinyl[], file) => {
+      const fullPath = path.join(rootDir, file);
+      if (fs.existsSync(fullPath)) {
+        existingPaths.push(file);
+        acc.push(new ArtifactVinyl({ path: file, contents: fs.readFileSync(fullPath) }));
+      } else {
+        logger.debug(
+          `populateVinylsFromPaths: file "${fullPath}" not found, skipping. (may have been removed by a later build task)`
+        );
+      }
+      return acc;
+    }, []);
+    this.paths = existingPaths;
   }
 
   getExistingVinyls() {

@@ -12,6 +12,7 @@ type Options = {
   build?: boolean;
   strict?: boolean;
   increment?: ReleaseType;
+  autoTagIncrement?: ReleaseType;
   patch?: boolean;
   minor?: boolean;
   major?: boolean;
@@ -24,6 +25,7 @@ type Options = {
   forceTheirs?: boolean;
   laneName?: string;
   skipPush?: boolean;
+  noBitmapCommit?: boolean;
 };
 
 export class CiMergeCmd implements Command {
@@ -48,6 +50,13 @@ export class CiMergeCmd implements Command {
     ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`'],
     [
       '',
+      'auto-tag-increment <level>',
+      `the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease].
+by default, dependents are bumped by a patch, unless --increment is one of [prepatch, prerelease, preminor, premajor], which they follow.
+note that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level`,
+    ],
+    [
+      '',
       'increment-by <number>',
       '(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.',
     ],
@@ -61,6 +70,11 @@ export class CiMergeCmd implements Command {
     ['', 'force-theirs', 'do not merge during checkout, just overwrite with incoming files'],
     ['', 'lane-name <name>', 'specify the lane name to delete after merge (auto-detected if not provided)'],
     ['', 'skip-push', 'skip pushing the changes to the remote repository (useful when CI handles the push separately)'],
+    [
+      '',
+      'no-bitmap-commit',
+      'skip the post-tag git add/commit/push entirely. The new versions still land in the scope, but no .bitmap (or lockfile) commit is created on the default branch. Pair with `bitmapAutoSync: true` in workspace.jsonc so developers auto-sync their local .bitmap on the first bit command after `git pull`.',
+    ],
   ];
 
   constructor(
@@ -84,9 +98,11 @@ export class CiMergeCmd implements Command {
       throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
     }
 
-    const { releaseType, preReleaseId } = validateOptions(options);
+    const { releaseType, autoTagReleaseType, preReleaseId } = validateOptions(options);
 
-    // Check if user explicitly provided any version bump flags
+    // Check if user explicitly provided any version bump flags.
+    // --auto-tag-increment is deliberately excluded: it only affects dependents, so it shouldn't
+    // disable the commit-message auto-detection that determines the modified components' bump.
     const explicitVersionBump = Boolean(
       options.increment || options.patch || options.minor || options.major || options.preRelease
     );
@@ -96,6 +112,7 @@ export class CiMergeCmd implements Command {
       build: options.build,
       strict: options.strict,
       releaseType,
+      autoTagReleaseType,
       preReleaseId,
       incrementBy: options.incrementBy,
       explicitVersionBump,
@@ -105,6 +122,7 @@ export class CiMergeCmd implements Command {
       forceTheirs: options.forceTheirs,
       laneName: options.laneName,
       skipPush: options.skipPush,
+      noBitmapCommit: options.noBitmapCommit,
     });
   }
 }

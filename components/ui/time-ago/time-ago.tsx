@@ -28,7 +28,7 @@ export function TimeAgo({ date, tooltip, className, ...rest }: TimeAgoProps) {
     return timeAgo(date);
   }, [date, refreshIdx]);
 
-  const wrapWithTooltip = (element: JSX.Element) => {
+  const wrapWithTooltip = (element: React.JSX.Element) => {
     if (tooltip === undefined) return element;
 
     return (

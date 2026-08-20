@@ -9,6 +9,7 @@ import type {
   ServiceTransformationMap,
 } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
 import type { PubSubEngine } from 'graphql-subscriptions';
@@ -109,18 +110,20 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       return new Tests([]);
     }
     const tester: Tester = context.env.getTester();
-    const specFiles = ComponentMap.as(context.components, (component) => {
-      return detectTestFiles(component, this.devFiles);
+    // when specific test files were requested (e.g. `bit test path/to/comp.spec.ts`), run only them.
+    const requestedTestFiles = options.testFiles?.map((filePath) => pathNormalizeToLinux(filePath));
+    const allSpecFiles = ComponentMap.as(context.components, (component) => {
+      const files = detectTestFiles(component, this.devFiles);
+      if (!requestedTestFiles?.length) return files;
+      return files.filter((file) => requestedTestFiles.includes(pathNormalizeToLinux(file.path)));
     });
-    const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
+    // drop components with zero spec files before handing them to the tester — otherwise testers
+    // like Mocha invoke their reporter once per component and print "0 passing (0ms)" noise.
+    const specFiles = allSpecFiles.filter((files) => files.length > 0);
+    const componentWithTests = specFiles.toArray().length;
 
-    const componentWithTests = specFiles.toArray().reduce((acc: number, [, specs]) => {
-      if (specs.length > 0) acc += 1;
-      return acc;
-    }, 0);
-
-    if (testCount === 0 && !options.ui) {
-      this.logger.consoleWarning(`no tests found for components using environment ${chalk.cyan(context.id)}\n`);
+    if (componentWithTests === 0 && !options.ui) {
+      // silent: the final summary in `bit test` collapses no-test components into a single line.
       return new Tests([]);
     }
 
@@ -132,14 +135,23 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
       const packageRootDir = await this.workspace.getComponentPackagePath(component);
 
+      const getPaths = () => {
+        if (requestedTestFiles?.length) {
+          // pass the exact requested spec files to the tester instead of the dev patterns, so testers
+          // such as Jest (which relies on the patterns rather than on specFiles) run only these files.
+          const matchedSpecFiles = specFiles.getValueByComponentId(component.id) || [];
+          return matchedSpecFiles.map((file) => ({ path: file.path, relative: file.relative }));
+        }
+        return componentPatterns.map((pattern: string) => ({
+          path: resolve(componentDir, pattern),
+          relative: pattern,
+        }));
+      };
+
       return {
         componentDir,
         packageRootDir,
-        paths:
-          componentPatterns.map((pattern: string) => ({
-            path: resolve(componentDir, pattern),
-            relative: pattern,
-          })) || [],
+        paths: getPaths(),
       };
     });
 

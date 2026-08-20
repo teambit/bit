@@ -55,6 +55,14 @@ type ConsumerProps = {
 const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
 const BITMAP_HISTORY_METADATA_FILE_NAME = 'bitmap-history-metadata.txt';
 
+function isDirectory(dirPath: string): boolean {
+  try {
+    return fs.statSync(dirPath).isDirectory();
+  } catch {
+    return false; // path doesn't exist (or isn't accessible)
+  }
+}
+
 export default class Consumer {
   projectPath: PathOsBasedAbsolute;
   created: boolean;
@@ -79,7 +87,7 @@ export default class Consumer {
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
-    this.bitMap = await BitMap.load(this.getPath(), this.config.defaultScope);
+    this.bitMap = await BitMap.load(this.getPath(), this.config.defaultScope, this.config.ignoredFiles);
   }
 
   setPackageJson(packageJson: PackageJsonFile) {
@@ -353,6 +361,13 @@ export default class Consumer {
       componentFromModel.devPackageDependencies = sortObjectByKeys(componentFromModel.devPackageDependencies);
       componentFromModel.peerPackageDependencies = sortObjectByKeys(componentFromModel.peerPackageDependencies);
       sortOverrides(componentFromModel.overrides);
+      // normalize the order of the extensions. `Version.id()` (used for the hash comparison) serializes
+      // `extensionDependencies` - a getter derived from the order of `extensions` (extensionsBitIds). unlike the
+      // `extensions` config field, which id() already sorts via sortById(), this derived list is not normalized.
+      // so a mere reordering of extensions (e.g. the env aspect moving position) would otherwise make the
+      // component appear modified while "bit diff" shows no diff (it compares deps by identity, ignoring order).
+      version.extensions = version.extensions.sortById();
+      componentFromModel.extensions = componentFromModel.extensions.sortById();
     }
     function sortOverrides(overrides) {
       if (!overrides) return;
@@ -416,7 +431,10 @@ export default class Consumer {
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
     const gitDirPath = path.join(projectPath, DOT_GIT_DIR);
     let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
-    if (!noGit && fs.existsSync(gitDirPath) && !fs.existsSync(resolvedScopePath)) {
+    // only a real ".git" directory hosts the embedded scope at ".git/bit". in a git worktree or
+    // submodule ".git" is a pointer FILE, so fall back to a standalone ".bit" inside the workspace
+    // (same as a non-git workspace) instead of composing an invalid ".git/bit" path.
+    if (!noGit && isDirectory(gitDirPath) && !fs.existsSync(resolvedScopePath)) {
       resolvedScopePath = path.join(gitDirPath, BIT_GIT_DIR);
     }
     return resolvedScopePath;

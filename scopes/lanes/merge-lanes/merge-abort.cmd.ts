@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import type { CheckoutProps } from '@teambit/checkout';
 import { checkoutOutput } from '@teambit/checkout';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
+import { formatItem, formatSuccessSummary, joinSections } from '@teambit/cli';
 import type { MergeLanesMain } from './merge-lanes.main.runtime';
 
 export type MergeAbortOpts = {
@@ -36,7 +37,7 @@ also, checkout the workspace components according to the restored lane state`;
       verbose?: boolean;
       silent?: boolean;
     }
-  ): Promise<string> {
+  ): Promise<string | Report> {
     const checkoutProps: CheckoutProps = {
       reset: true,
       all: true,
@@ -57,10 +58,18 @@ please fix the error and then run "bit checkout reset --all" to revert the compo
       return chalk.red(errMsg);
     };
 
-    const checkoutOutputStr = checkoutResults ? checkoutOutput(checkoutResults, checkoutProps) : '';
-    const restoredItemsTitle = chalk.green('The following have been restored successfully:');
-    const restoredItemsOutput = restoredItems.map((item) => `[√] ${item}`).join('\n');
+    const checkoutResult = checkoutResults ? checkoutOutput(checkoutResults, checkoutProps) : '';
+    const restoredItemsOutput = restoredItems.map((item) => formatItem(item)).join('\n');
+    const extraSections = [
+      `${formatSuccessSummary('The following have been restored successfully')}\n${restoredItemsOutput}`,
+      getCheckoutErrorStr(),
+    ];
 
-    return `${checkoutOutputStr}\n\n${restoredItemsTitle}\n${restoredItemsOutput}${getCheckoutErrorStr()}`;
+    if (typeof checkoutResult !== 'string') {
+      const data = joinSections([checkoutResult.data, ...extraSections]);
+      const details = checkoutResult.details ? joinSections([checkoutResult.details, ...extraSections]) : undefined;
+      return { data, code: checkoutResult.code, details };
+    }
+    return joinSections([checkoutResult, ...extraSections]);
   }
 }

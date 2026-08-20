@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import multimatch from 'multimatch';
 import { isSnap } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
@@ -10,6 +11,8 @@ import { ComponentAspect } from '@teambit/component';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
+import { createHash } from 'crypto';
+import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect } from '@teambit/envs';
@@ -26,6 +29,7 @@ import {
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
+  CFG_ENABLE_GLOBAL_VIRTUAL_STORE,
   DEFAULT_HARMONY_PACKAGE_MANAGER,
   getCloudDomain,
 } from '@teambit/legacy.constants';
@@ -37,10 +41,9 @@ import { Http } from '@teambit/scope.network';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import fs from 'fs-extra';
-import { assign } from 'comment-json';
+import { assign, parse } from 'comment-json';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
-import { parseBareSpecifier } from '@pnpm/npm-resolver';
 import type { SourceFile } from '@teambit/component.sources';
 import type { ProjectManifest, DependencyManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
@@ -88,7 +91,7 @@ import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import type { DependencyDetector } from './detector-hook';
 import { DependenciesService } from './dependencies.service';
-import { EnvPolicy } from './policy/env-policy';
+import { EnvPolicy, type EnvJsoncPolicyEntry } from './policy/env-policy';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 
@@ -256,6 +259,71 @@ export class DependencyResolverMain {
     const pmName = packageManagerName || this.config.packageManager;
     if (pmName === 'teambit.dependencies/yarn') return 'hoisted';
     return 'isolated';
+  }
+
+  /**
+   * whether dependency directories should be created once in pnpm's global virtual store and
+   * shared across workspaces and capsules, rather than re-created inside every
+   * `node_modules/.pnpm`.
+   *
+   * opt-in, in precedence order: the workspace config, then the `enable_global_virtual_store`
+   * global config, then off. `BIT_ENABLE_GLOBAL_VIRTUAL_STORE` overrides both - it is what the e2e
+   * suite flips to run the whole matrix under the global virtual store.
+   *
+   * always off under `nodeLinker: hoisted`: the hoisted linker copies packages straight into
+   * `node_modules`, so there is no virtual store for the global one to replace. The pnpm adapter
+   * forces the engine option off in that case (see `lynx.ts`); reporting it off here too keeps
+   * every store-gated behavior (core-aspect links into the hoisted store, `NODE_PATH` bootstrap,
+   * the layout-transition guard) consistent with what the engine actually does.
+   */
+  enableGlobalVirtualStore(): boolean {
+    if (this.nodeLinker() === 'hoisted') return false;
+    const fromEnv = process.env.BIT_ENABLE_GLOBAL_VIRTUAL_STORE;
+    if (fromEnv != null && fromEnv !== '') return fromEnv === 'true' || fromEnv === '1';
+    if (this.config.enableGlobalVirtualStore != null) return this.config.enableGlobalVirtualStore;
+    // the config store surfaces hand-edited values as booleans and CLI-set values as strings
+    // (see isolatedCapsules); accept both, plus '1' for parity with the env var
+    const fromGlobalConfig = this.configStore.getConfig(CFG_ENABLE_GLOBAL_VIRTUAL_STORE) as boolean | string | undefined;
+    return fromGlobalConfig === true || fromGlobalConfig === 'true' || fromGlobalConfig === '1';
+  }
+
+  /**
+   * the directory the global virtual store materializes dependency directories in, or undefined
+   * when the global virtual store is off.
+   *
+   * pnpm's own shared `<storeDir>/links` root by default (see
+   * `PnpmPackageManager.getGlobalVirtualStoreDir` for why the shared root works and is
+   * preferable), overridable through the `globalVirtualStoreDir` config. The core aspects being
+   * phantom dependencies of every published env is solved outside the store: they are linked into
+   * the workspace's private hoisted directory (`DependencyLinker.linkCoreAspectsToHoistedStore`),
+   * which the hoisted-resolution bridge puts on the resolution path of store-linked packages.
+   */
+  async getGlobalVirtualStoreDir(rootDir?: string): Promise<string | undefined> {
+    if (!this.enableGlobalVirtualStore()) return undefined;
+    if (this.config.globalVirtualStoreDir) return this.config.globalVirtualStoreDir;
+    const packageManager = this.getPackageManager();
+    if (!packageManager?.getGlobalVirtualStoreDir) return undefined;
+    return packageManager.getGlobalVirtualStoreDir({
+      packageManagerConfigRootDir: rootDir,
+      installationId: this.bitInstallationId(),
+    });
+  }
+
+  /**
+   * stable identifier of the bit installation that is running, used to give it a private global
+   * virtual store root. Two checkouts of the same bit version ship different core aspects, so the
+   * version alone is not enough to tell them apart.
+   */
+  private bitInstallationId(): string {
+    const mainAspectPath = this.aspectLoader.mainAspect?.path ?? '';
+    let realMainAspectPath = mainAspectPath;
+    try {
+      realMainAspectPath = fs.realpathSync(mainAspectPath);
+    } catch {
+      // a path we cannot resolve still identifies the installation well enough to key on
+    }
+    const hash = createHash('sha1').update(realMainAspectPath).digest('hex').slice(0, 10);
+    return `${getBitVersionGracefully() ?? 'unknown'}-${hash}`;
   }
 
   linkCoreAspects(): boolean {
@@ -491,7 +559,16 @@ export class DependencyResolverMain {
       ...defaultCreateFromComponentsOptions,
       ...options,
     };
-    const workspaceManifestFactory = new WorkspaceManifestFactory(this, this.aspectLoader);
+    const resolveEnvPeersFromRoot = context?.inCapsule ? false : (this.config.resolveEnvPeersFromRoot ?? true);
+    const forceEnvPeersToRoot = this.config.forceEnvPeersToRoot ?? false;
+    const workspaceManifestFactory = new WorkspaceManifestFactory(
+      this,
+      this.aspectLoader,
+      this.logger,
+      resolveEnvPeersFromRoot,
+      forceEnvPeersToRoot
+    );
+
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
@@ -604,7 +681,7 @@ export class DependencyResolverMain {
     }
   ): Promise<void> {
     try {
-      let componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
+      const componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
         component,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
@@ -615,11 +692,7 @@ export class DependencyResolverMain {
         pkgName: this.getPackageName(component),
         componentRelativeDir,
       }));
-      if (!isFeatureEnabled(DEPS_GRAPH)) {
-        // We need to optimize the performance of dependency graph calculation.
-        // Temporarily we only calculate it for a limited number of components.
-        componentsForCalc = componentsForCalc.slice(0, 10);
-      }
+
       await this.getPackageManager()?.calcDependenciesGraph?.({
         components: componentsForCalc,
         rootDir: options.rootDir,
@@ -673,6 +746,8 @@ export class DependencyResolverMain {
       this.config.preferOffline,
       this.config.minimumReleaseAge,
       this.config.minimumReleaseAgeExclude,
+      this.config.patchedDependencies,
+      this.config.packageExtensions,
       options.installingContext
     );
   }
@@ -897,7 +972,7 @@ export class DependencyResolverMain {
     const packageManager = this.getPackageManager();
     let peerDependencyIssues!: PeerDependencyIssuesByProjects;
     const installer = this.getInstaller();
-    const manifests = await installer.getComponentManifests({
+    const { manifests } = await installer.getComponentManifests({
       ...options,
       componentDirectoryMap,
       rootPolicy,
@@ -1161,9 +1236,14 @@ export class DependencyResolverMain {
     }
     const policy = envManifest?.policy;
     if (!policy) return undefined;
-    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy, {
-      includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
-    });
+    const envId = envComponent?.id.toStringWithoutVersion();
+    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
+      policy,
+      {
+        includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
+      },
+      envId
+    );
     return allPoliciesFromEnv;
   }
 
@@ -1217,9 +1297,11 @@ export class DependencyResolverMain {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
         const idWithoutVersion = options.envId.split('@')[0];
-        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policiesFromEnvConfig, {
-          includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion),
-        });
+        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(
+          policiesFromEnvConfig,
+          { includeLegacyPeersInSelfPolicy: this.envs.isCoreEnv(idWithoutVersion) },
+          idWithoutVersion
+        );
         return allPoliciesFromEnv;
       }
     }
@@ -1440,7 +1522,9 @@ export class DependencyResolverMain {
 as an alternative, you can use "+" to keep the same version installed in the workspace`;
       }
       const isVersionValid = Boolean(
-        this.isValidVersionSpecifier(policyVersion) || allowedSpecialChars.includes(policyVersion)
+        this.isValidVersionSpecifier(policyVersion) ||
+          allowedSpecialChars.includes(policyVersion) ||
+          allowedPrefixes.some((prefix) => policyVersion.startsWith(prefix))
       );
       if (isVersionValid) return;
       errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not a valid semver version or range`;
@@ -1461,14 +1545,22 @@ as an alternative, you can use "+" to keep the same version installed in the wor
    *   E.g.: https://registry.npmjs.org/is-odd/-/is-odd-0.1.0.tgz)
    */
   isValidVersionSpecifier(spec: string): boolean {
-    return (
-      parseBareSpecifier(
-        spec,
-        'pkgname', // This argument is the package but we don't need it
-        'latest',
-        'https://registry.npmjs.org/'
-      ) != null
-    );
+    const trimmedSpec = spec.trim();
+    if (!trimmedSpec) return false;
+    if (semver.valid(trimmedSpec) || semver.validRange(trimmedSpec)) return true;
+    if (/^(?:workspace|file|link|git|git\+(?:https?|ssh)|ssh):/.test(trimmedSpec)) return true;
+    if (/^https?:\/\/registry\.npmjs\.org\/.+\/-.+\.tgz(?:[#?].*)?$/.test(trimmedSpec)) return true;
+    if (trimmedSpec.startsWith('npm:')) {
+      const alias = trimmedSpec.slice('npm:'.length);
+      // The version separator is the first `@` past a scope prefix — a
+      // scoped alias's leading `@` is part of the package name, and the
+      // version is optional (`npm:pkg` aliases the latest version).
+      const versionStart = alias.indexOf('@', alias.startsWith('@') ? 1 : 0);
+      const aliasName = versionStart === -1 ? alias : alias.slice(0, versionStart);
+      if (!/^(?:@[^/@\s]+\/)?[^/@\s]+$/.test(aliasName)) return false;
+      return versionStart === -1 || this.isValidVersionSpecifier(alias.slice(versionStart + 1));
+    }
+    return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(trimmedSpec);
   }
 
   /**
@@ -1493,6 +1585,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       variantPoliciesByPatterns,
       componentPolicies,
       components,
+      includeEnvJsoncDeps: true,
     });
     if (patterns?.length) {
       const selectedPkgNames = new Set(
@@ -1514,10 +1607,12 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     variantPoliciesByPatterns,
     componentPolicies,
     components,
+    includeEnvJsoncDeps = false,
   }: {
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
     components: Component[];
+    includeEnvJsoncDeps?: boolean;
   }): CurrentPkg[] {
     const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
     const componentModelVersions: ComponentModelVersion[] = components
@@ -1542,12 +1637,55 @@ as an alternative, you can use "+" to keep the same version installed in the wor
           }));
       })
       .flat();
-    return getAllPolicyPkgs({
-      rootPolicy: this.getWorkspacePolicyFromConfig(),
-      variantPoliciesByPatterns,
-      componentPolicies,
-      componentModelVersions,
-    });
+    return [
+      ...getAllPolicyPkgs({
+        rootPolicy: this.getWorkspacePolicyFromConfig(),
+        variantPoliciesByPatterns,
+        componentPolicies,
+        componentModelVersions,
+      }),
+      ...(includeEnvJsoncDeps ? this.getEnvJsoncPolicyPkgs(components) : []),
+    ];
+  }
+
+  getEnvJsoncPolicyPkgs(components: Component[]): CurrentPkg[] {
+    const policies = [
+      { field: 'peers', targetField: 'peerDependencies' as const },
+      { field: 'dev', targetField: 'devDependencies' as const },
+      { field: 'runtime', targetField: 'dependencies' as const },
+    ];
+    const pkgs: CurrentPkg[] = [];
+    for (const component of components) {
+      const isEnv = this.envs.isEnv(component);
+      if (!isEnv) continue;
+
+      const envJsoncFile = component.filesystem.files.find((file) => file.relative === 'env.jsonc');
+      if (!envJsoncFile) continue;
+
+      let envJsonc: EnvJsonc;
+      try {
+        envJsonc = parse(envJsoncFile.contents.toString()) as EnvJsonc;
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Failed to parse env.jsonc for component ${component.id.toString()}: ${errorMessage}`);
+        continue;
+      }
+      if (!envJsonc.policy) continue;
+
+      for (const { field, targetField } of policies) {
+        const deps: EnvJsoncPolicyEntry[] = envJsonc.policy?.[field] || [];
+        for (const dep of deps) {
+          pkgs.push({
+            name: dep.name,
+            currentRange: dep.version,
+            source: 'env-jsonc',
+            componentId: component.id,
+            targetField,
+          });
+        }
+      }
+    }
+    return pkgs;
   }
 
   getAllDedupedDirectDependencies(opts: {
@@ -1598,12 +1736,33 @@ as an alternative, you can use "+" to keep the same version installed in the wor
    */
   async fetchFullPackageManifest(packageName: string): Promise<DependencyManifest | undefined> {
     const pm = this.getSystemPackageManager();
-    const { manifest } = await pm.resolveRemoteVersion(packageName, {
+    const resolveOpts = {
       cacheRootDir: this.configStore.getConfig(CFG_PACKAGE_MANAGER_CACHE),
-      fullMetadata: true,
       // We can set anything here. The rootDir option is ignored, when resolving npm-hosted packages.
       rootDir: process.cwd(),
-    });
+    };
+    const { manifest } = await pm.resolveRemoteVersion(packageName, { ...resolveOpts, fullMetadata: true });
+    if (manifest && !('componentId' in manifest)) {
+      // the pnpm v12 engine (@pnpm/napi) strips non-standard fields such as componentId from the full
+      // package document (it caches it under "metadata-full-filtered"). the abbreviated document is
+      // returned unfiltered, and some registries (e.g. bit.cloud) include componentId there as well.
+      try {
+        // pin the lookup to the version the full manifest resolved to, so a tag/range/versionless spec
+        // cannot drift to a different version if a new one gets published in between the two calls.
+        const abbreviatedSpec =
+          manifest.name && manifest.version ? `${manifest.name}@${manifest.version}` : packageName;
+        const { manifest: abbreviated } = await pm.resolveRemoteVersion(abbreviatedSpec, resolveOpts);
+        if (abbreviated && 'componentId' in abbreviated && abbreviated.version === manifest.version) {
+          // the componentId (and any other non-standard field) of the abbreviated manifest survives the merge,
+          // as the full manifest got them stripped by the engine.
+          return { ...abbreviated, ...manifest };
+        }
+      } catch (err: any) {
+        // the fallback is best-effort. the full manifest was already fetched successfully, so return it
+        // rather than failing the entire resolution due to a transient error in the extra lookup.
+        this.logger.warn(`failed to fetch the abbreviated manifest of ${packageName}`, err);
+      }
+    }
     return manifest;
   }
 
@@ -1618,9 +1777,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       rootDir: string;
       forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
     },
-    pkgs: Array<
-      { name: string; currentRange: string; source: 'variants' | 'component' | 'rootPolicy' | 'component-model' } & T
-    >
+    pkgs: Array<{ name: string; currentRange: string; source: CurrentPkgSource } & T>
   ): Promise<Array<{ name: string; currentRange: string; latestRange: string } & T>> {
     this.logger.setStatusLine('checking the latest versions of dependencies');
     const resolver = await this.getVersionResolver();

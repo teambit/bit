@@ -28,4 +28,7 @@
 .preview {
   width: 264px;
   height: 170px;
+  // Gallery thumbnails are visual-only; clicks pass through to the card's
+  // onClick (which navigates to the composition).
+  pointer-events: none;
 }

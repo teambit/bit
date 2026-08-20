@@ -23,7 +23,7 @@ export type ButtonProps = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export function Button(props: ButtonProps) {
-  const ref = useRef();
+  const ref = useRef(null);
 
   // const { buttonProps } = useButton(
   //   {

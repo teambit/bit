@@ -1,6 +1,6 @@
-import chalk from 'chalk';
 import GraphLib from 'graphlib';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import type { GraphConfig } from '@teambit/legacy.dependency-graph';
 import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
@@ -31,7 +31,7 @@ by default shows only workspace components; use --include-dependencies for full 
     [
       '',
       'layout <name>',
-      'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
+      'Graphviz layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
     ['', 'png', 'save the graph as a png file instead of svg. requires "graphviz" to be installed'],
     ['', 'cycles', 'generate a graph of cycles only'],
@@ -81,7 +81,7 @@ by default shows only workspace components; use --include-dependencies for full 
     const visualDependencyGraph = await getVisualGraph();
     const result = await visualDependencyGraph.render(png ? 'png' : 'svg');
 
-    return chalk.green(`image created at ${result}`);
+    return formatSuccessSummary(`image created at ${result}`);
   }
 
   async json([id]: [string], graphOpts: GraphOpt) {

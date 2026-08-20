@@ -10,6 +10,7 @@ export type PinoLoggerResult = {
   pinoLogger: PinoLogger;
   pinoLoggerConsole: PinoLogger;
   pinoSSELogger: PinoLogger;
+  fileDestination?: ReturnType<typeof pino.destination>;
 };
 
 export function getPinoLogger(logLevel: string, jsonFormat: string, useWorkers = false): PinoLoggerResult {
@@ -161,5 +162,5 @@ export function getPinoLoggerWithoutWorkers(
 
   const prettySSELogger = pino(loggerOptions, prettySSEStream);
 
-  return { pinoLogger, pinoLoggerConsole, pinoSSELogger: prettySSELogger };
+  return { pinoLogger, pinoLoggerConsole, pinoSSELogger: prettySSELogger, fileDestination: dest };
 }

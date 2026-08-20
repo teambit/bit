@@ -19,6 +19,7 @@ export {
   TagParams,
   validateOptions,
   tagResultOutput,
+  compInBold,
   outputIdsIfExists,
 } from './tag-cmd';
 

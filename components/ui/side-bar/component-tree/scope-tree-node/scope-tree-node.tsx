@@ -1,6 +1,6 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import AnimateHeight from 'react-animate-height';
 
 import type { TreeNodeProps } from '@teambit/design.ui.tree';
@@ -13,30 +13,14 @@ export type ScopeTreeNodeProps = {} & TreeNodeProps<PayloadType>;
 
 export function ScopeTreeNode({ node, depth }: ScopeTreeNodeProps) {
   const { isCollapsed, activePath } = useTree();
-  const isActive = activePath?.startsWith(node.id);
+  const isActive = activePath?.startsWith(node.id) ?? false;
 
-  const initialOpen = isActive || !isCollapsed;
-
-  const [open, toggle] = useState<boolean | void>(initialOpen);
+  const [override, setOverride] = useState<{ isActive: boolean; isCollapsed?: boolean; open: boolean } | null>(null);
+  const overrideApplies = override?.isActive === isActive && override?.isCollapsed === isCollapsed;
+  const open = overrideApplies ? override!.open : isActive || !isCollapsed;
+  const toggleOpen = () => setOverride({ isActive, isCollapsed, open: !open });
 
   const displayName = getName(node.id.replace(/\/$/, ''));
-
-  const firstRun = useRef(true);
-  useEffect(() => {
-    const { current } = firstRun;
-    if (current) return;
-    if (isActive === true) toggle(true);
-  }, [isActive]);
-
-  useEffect(() => {
-    const { current } = firstRun;
-    if (current) return;
-    toggle(!isCollapsed);
-  }, [isCollapsed]);
-
-  useEffect(() => {
-    firstRun.current = false;
-  }, []);
 
   const highlighted = !open && isActive;
 
@@ -45,9 +29,9 @@ export function ScopeTreeNode({ node, depth }: ScopeTreeNodeProps) {
       {node.id && (
         <div
           className={classNames(indentClass, styles.scope, highlighted && styles.highlighted)}
-          onClick={() => toggle(!open)}
+          onClick={toggleOpen}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') toggle(!open);
+            if (e.key === 'Enter') toggleOpen();
           }}
           role="button"
           tabIndex={0}

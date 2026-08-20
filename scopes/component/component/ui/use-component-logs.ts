@@ -11,7 +11,8 @@ export function useComponentLogs(
   componentId: string,
   host: string,
   filters?: Filters,
-  skipFromProps?: boolean
+  skipFromProps?: boolean,
+  context?: Record<string, any>
 ): ComponentLogsResult {
   const { variables, skip } = useComponentLogsInit(componentId, host, filters, skipFromProps);
 
@@ -23,7 +24,7 @@ export function useComponentLogs(
     nextFetchPolicy: 'cache-first',
     returnPartialData: true,
     notifyOnNetworkStatusChange: false,
-    context: { skipBatch: true },
+    context: { skipBatch: true, ...context },
   });
 
   const rawComponent = data?.getHost?.get;

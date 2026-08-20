@@ -1,5 +1,5 @@
 import type { Component } from '@teambit/component';
-import { IssuesClasses } from '@teambit/component-issues';
+import { IssuesClasses, renderCycles } from '@teambit/component-issues';
 import type { GraphMain } from '@teambit/graph';
 import { uniq } from 'lodash';
 import type { Insight, InsightResult, RawResult } from '../insight';
@@ -38,17 +38,7 @@ export default class FindCycles implements Insight {
   }
 
   private renderData(data: RawResult) {
-    if (data.data.length === 0) {
-      return 'No cyclic dependencies';
-    }
-    const string = data.data
-      .map((cycle) => {
-        return `\nCyclic dependency (${cycle.length - 1} components)
----------------------------------
-- ${cycle.join('\n- ')}`;
-      })
-      .join('\n');
-    return string;
+    return renderCycles(data.data ?? []);
   }
 
   async run(opts?: RunInsightOptions): Promise<InsightResult> {
@@ -72,7 +62,7 @@ export default class FindCycles implements Insight {
 
   async addAsComponentIssue(components: Component[]) {
     const result = await this.runInsight({ ids: components.map((c) => c.id) });
-    if (!result.data.length) {
+    if (!result.data || !result.data.length) {
       return; // no circulars
     }
     const allIds = uniq(result.data.flat());

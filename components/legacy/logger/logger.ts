@@ -9,13 +9,15 @@ import yn from 'yn';
 import pMapSeries from 'p-map-series';
 
 import { Analytics } from '@teambit/legacy.analytics';
+import { getLoadTraceLogPrefix, setSpanEmitter } from '@teambit/harmony.modules.load-trace';
 import { getConfig } from '@teambit/config-store';
 import { defaultErrorHandler } from '@teambit/cli';
-import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG } from '@teambit/legacy.constants';
+import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_LOGS } from '@teambit/legacy.constants';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
 import { loader } from '@teambit/legacy.loader';
 import { rotateLogDaily } from './rotate-log-daily';
+import { rotateLogIfNeeded, cleanupLogsByTotalSize } from './rotate-log-file';
 
 export { Level as LoggerLevel };
 
@@ -32,9 +34,15 @@ const DEFAULT_LEVEL = 'debug';
 
 const logLevel = getLogLevel();
 
-rotateLogDaily(DEBUG_LOG);
+try {
+  rotateLogDaily(DEBUG_LOG);
+  rotateLogIfNeeded(DEBUG_LOG);
+  cleanupLogsByTotalSize(GLOBAL_LOGS);
+} catch {
+  // never prevent the CLI from starting due to log maintenance errors
+}
 
-const { pinoLogger, pinoLoggerConsole, pinoSSELogger } = getPinoLogger(logLevel, jsonFormat);
+const { pinoLogger, pinoLoggerConsole, pinoSSELogger, fileDestination } = getPinoLogger(logLevel, jsonFormat);
 
 export interface IBitLogger {
   trace(message: string, ...meta: any[]): void;
@@ -70,7 +78,8 @@ class BitLogger implements IBitLogger {
   private profiler: Profiler;
   private onBeforeExitFns: Function[] = [];
 
-  isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
+  private _isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
+  private _rotationTimer: ReturnType<typeof setInterval> | undefined;
   /**
    * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
    * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
@@ -88,6 +97,27 @@ class BitLogger implements IBitLogger {
     this.profiler = new Profiler();
   }
 
+  get isDaemon(): boolean {
+    return this._isDaemon;
+  }
+
+  set isDaemon(value: boolean) {
+    this._isDaemon = value;
+    if (value && !this._rotationTimer) {
+      const THIRTY_MINUTES = 30 * 60 * 1000;
+      this._rotationTimer = setInterval(() => {
+        try {
+          rotateLogDaily(DEBUG_LOG);
+          rotateLogIfNeeded(DEBUG_LOG, 100 * 1024 * 1024, 9, fileDestination);
+          cleanupLogsByTotalSize(GLOBAL_LOGS);
+        } catch {
+          // never crash the daemon for log rotation
+        }
+      }, THIRTY_MINUTES);
+      this._rotationTimer.unref();
+    }
+  }
+
   /**
    * @deprecated use trace instead
    */
@@ -95,28 +125,37 @@ class BitLogger implements IBitLogger {
     this.logger.trace(message, ...meta);
   }
 
+  /**
+   * prepend the active load-trace prefix, but only when the line will actually be emitted.
+   * building the prefix does an AsyncLocalStorage lookup + span-path walk — too costly to run on
+   * every discarded trace/debug line during component loading.
+   */
+  private withTracePrefix(level: Level, message: string): string {
+    return this.logger.isLevelEnabled(level) ? getLoadTraceLogPrefix() + message : message;
+  }
+
   trace(message: string, ...meta: any[]) {
-    this.logger.trace(message, ...meta);
+    this.logger.trace(this.withTracePrefix('trace', message), ...meta);
   }
 
   debug(message: string, ...meta: any[]) {
-    this.logger.debug(message, ...meta);
+    this.logger.debug(this.withTracePrefix('debug', message), ...meta);
   }
 
   warn(message: string, ...meta: any[]) {
-    this.logger.warn(message, ...meta);
+    this.logger.warn(this.withTracePrefix('warn', message), ...meta);
   }
 
   info(message: string, ...meta: any[]) {
-    this.logger.info(message, ...meta);
+    this.logger.info(this.withTracePrefix('info', message), ...meta);
   }
 
   error(message: string, ...meta: any[]) {
-    this.logger.error(message, ...meta);
+    this.logger.error(this.withTracePrefix('error', message), ...meta);
   }
 
   fatal(message: string, ...meta: any[]) {
-    this.logger.fatal(message, ...meta);
+    this.logger.fatal(this.withTracePrefix('fatal', message), ...meta);
   }
 
   get isJsonFormat() {
@@ -284,6 +323,18 @@ class BitLogger implements IBitLogger {
 }
 
 const logger = new BitLogger(pinoLogger);
+
+// emit closed load-trace spans to the log at trace level. the emitter fires after the span's
+// async context has exited, so the message carries the trace-id and span path explicitly
+// (bypassing the prefix in BitLogger methods to avoid double-prefixing).
+setSpanEmitter((span, traceId) => {
+  // span collection is always-on, but emission is trace-level only. bail before doing any string
+  // work when trace output is disabled (the common case), so the load hot path pays nothing.
+  if (!logger.logger.isLevelEnabled('trace')) return;
+  const attrs = Object.keys(span.attributes).length ? ` ${JSON.stringify(span.attributes)}` : '';
+  const duration = span.durationMs !== undefined ? `${span.durationMs.toFixed(2)}ms` : 'n/a';
+  logger.logger.trace(`load-trace [trace:${traceId}] ${span.path}: ${duration}${attrs}`);
+});
 
 export const printWarning = (msg: string) => {
   const cfgNoWarnings = getConfig(CFG_NO_WARNINGS);

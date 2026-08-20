@@ -1,6 +1,7 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import type { Component } from '@teambit/component';
-import { ComponentAspect, ComponentMain } from '@teambit/component';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import type { EnvsMain, EnvDefinition } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { Logger, LoggerMain } from '@teambit/logger';

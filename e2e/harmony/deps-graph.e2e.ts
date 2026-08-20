@@ -33,44 +33,49 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
 
-      helper.env.setCustomNewEnv(
-        undefined,
-        undefined,
-        {
-          policy: {
-            peers: [
-              {
-                name: 'react',
-                version: env1DefaultPeerVersion,
-                supportedRange: '^16.0.0',
+      const createPeerEnv = (envName: string, peerVersion: string, supportedRange: string) => {
+        const envFileName = envName.split('/').pop();
+        const className = envFileName === 'env1' ? 'PeerEnvOne' : 'PeerEnvTwo';
+        helper.fs.outputFile(
+          `${envName}/${envFileName}.bit-env.ts`,
+          `export class ${className} {
+  name = '${envFileName}';
+}
+
+export default new ${className}();
+`
+        );
+        helper.fs.outputFile(
+          `${envName}/index.ts`,
+          `export { default, ${className} } from './${envFileName}.bit-env';
+`
+        );
+        helper.fs.outputFile(
+          `${envName}/env.jsonc`,
+          JSON.stringify(
+            {
+              policy: {
+                peers: [
+                  {
+                    name: 'react',
+                    version: peerVersion,
+                    supportedRange,
+                  },
+                ],
               },
-            ],
-          },
-        },
-        false,
-        'custom-react/env1',
-        'custom-react/env1'
-      );
-      helper.env.setCustomNewEnv(
-        undefined,
-        undefined,
-        {
-          policy: {
-            peers: [
-              {
-                name: 'react',
-                version: env2DefaultPeerVersion,
-                supportedRange: '^17.0.0',
-              },
-            ],
-          },
-        },
-        false,
-        'custom-react/env2',
-        'custom-react/env2'
-      );
+            },
+            null,
+            2
+          )
+        );
+        helper.command.addComponent(envName, { i: envName });
+        helper.command.setEnv(envName, 'teambit.envs/env');
+      };
+
+      createPeerEnv('custom-react/env1', env1DefaultPeerVersion, '^16.0.0');
+      createPeerEnv('custom-react/env2', env2DefaultPeerVersion, '^17.0.0');
 
       helper.fixtures.populateComponents(2);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -80,26 +85,57 @@ chai.use(chaiFs);
         `comp1/index.js`,
         `const React = require("react"); require("@pnpm.e2e/foo"); // eslint-disable-line`
       );
+      helper.fs.createJsonFile('comp1/package.json', {
+        name: `@ci/${randomStr}.comp1`,
+        version: '0.0.1',
+        main: 'index.js',
+        dependencies: {
+          '@pnpm.e2e/foo': '^100.0.0',
+        },
+      });
       helper.fs.outputFile(
         `comp2/index.js`,
         `const React = require("react");const comp1 = require("@ci/${randomStr}.comp1"); require("@pnpm.e2e/bar"); // eslint-disable-line`
       );
+      helper.fs.createJsonFile('comp2/package.json', {
+        name: `@ci/${randomStr}.comp2`,
+        version: '0.0.1',
+        main: 'index.js',
+        dependencies: {
+          '@pnpm.e2e/bar': '^100.0.0',
+        },
+      });
+      helper.command.addComponent('comp1 comp2');
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-react/env1`, {});
       helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-react/env2`, {});
       helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
+      helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
+        policy: { dependencies: { '@pnpm.e2e/foo': '^100.0.0' } },
+      });
+      helper.extensions.addExtensionToVariant('comp2', 'teambit.dependencies/dependency-resolver', {
+        policy: { dependencies: { '@pnpm.e2e/bar': '^100.0.0' } },
+      });
+      helper.command.dependenciesSet('comp1', '@pnpm.e2e/foo@^100.0.0');
+      helper.command.dependenciesSet('comp2', '@pnpm.e2e/bar@^100.0.0');
+      const existingPolicyDeps = helper.workspaceJsonc.getPolicyFromDependencyResolver()?.dependencies || {};
       helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
+          ...existingPolicyDeps,
           '@pnpm.e2e/foo': '^100.0.0',
           '@pnpm.e2e/bar': '^100.0.0',
         },
       });
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
+        '@pnpm.e2e/foo': '100.0.0',
+        '@pnpm.e2e/bar': '100.0.0',
+      });
       helper.command.install('--add-missing-deps');
+      helper.command.tagWithoutBuild('custom-react/env1 custom-react/env2', '--skip-tests --skip-auto-tag');
       helper.command.tagAllComponents('--skip-tests');
       helper.command.export();
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
     it('should save dependencies graph to the model of comp1', () => {
@@ -128,6 +164,13 @@ chai.use(chaiFs);
         lifecycle: 'runtime',
         optional: false,
       });
+      expect(depsGraph2DirectDeps).deep.include({
+        name: '@pnpm.e2e/bar',
+        specifier: '100.0.0',
+        id: '@pnpm.e2e/bar@100.0.0',
+        lifecycle: 'runtime',
+        optional: false,
+      });
     });
     it('should replace pending version in direct dependency', () => {
       expect(depsGraph2DirectDeps).deep.include({
@@ -149,6 +192,7 @@ chai.use(chaiFs);
       before(async () => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setRegistry();
         await addDistTag({ package: '@pnpm.e2e/foo', version: '100.1.0', distTag: 'latest' });
         await addDistTag({ package: '@pnpm.e2e/bar', version: '100.1.0', distTag: 'latest' });
         helper.command.import(`${helper.scopes.remote}/comp2@latest`);
@@ -159,10 +203,16 @@ chai.use(chaiFs);
         expect(lockfile.bit.restoredFromModel).to.eq(true);
       });
       it('should import the component with its own resolved versions', () => {
-        expect(lockfile.packages).to.not.have.property('@pnpm.e2e/foo@100.1.0');
-        expect(lockfile.packages).to.not.have.property('@pnpm.e2e/bar@100.1.0');
-        expect(lockfile.packages).to.have.property('@pnpm.e2e/foo@100.0.0');
-        expect(lockfile.packages).to.have.property('@pnpm.e2e/bar@100.0.0');
+        const hasLockedVersion = (depName: string, version: string) =>
+          Object.keys(lockfile.packages || {}).some((pkgName) => pkgName.startsWith(`${depName}@${version}`)) ||
+          Object.values(lockfile.importers || {}).some(
+            (importer: any) => importer.dependencies?.[depName]?.version === version
+          ) ||
+          Object.values(lockfile.snapshots || {}).some((snapshot: any) => snapshot.dependencies?.[depName] === version);
+
+        expect(hasLockedVersion('@pnpm.e2e/foo', '100.1.0')).to.eq(false);
+        expect(hasLockedVersion('@pnpm.e2e/bar', '100.1.0')).to.eq(false);
+        expect(hasLockedVersion('@pnpm.e2e/foo', '100.0.0')).to.eq(true);
       });
     });
   });
@@ -175,7 +225,8 @@ chai.use(chaiFs);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
-      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -207,6 +258,8 @@ chai.use(chaiFs);
       await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.0', distTag: 'latest' });
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.fs.createFile('foo', 'foo.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('foo');
       helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env@0.0.1`, {});
@@ -216,6 +269,8 @@ chai.use(chaiFs);
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
     });
     let lockfile: any;
@@ -234,8 +289,78 @@ chai.use(chaiFs);
     });
     after(() => {
       npmCiRegistry.destroy();
-      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
+    });
+  });
+  // Covers the "reimport drift" path: when a second component is imported into a
+  // workspace that already has installed components, the graph-generated lockfile must
+  // not overwrite pnpm-lock.yaml with only the newly-imported component's subgraph — if
+  // it did, existing workspace dependencies would be re-resolved by pnpm against the
+  // manifest specifiers and drift to newer registry versions.
+  describe('importing a component into a workspace that already has an installed component', function () {
+    let randomStr: string;
+    let initialLockfile: any;
+    let lockfileAfterSecondImport: any;
+    before(async () => {
+      randomStr = generateRandomStr(4);
+      const name = `@ci/${randomStr}.{name}`;
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      npmCiRegistry.setRegistry();
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        { policy: { peers: [] } },
+        false,
+        'custom-env/env',
+        'custom-env/env'
+      );
+      helper.fs.createFile('comp1', 'comp1.js', 'require("@pnpm.e2e/foo"); // eslint-disable-line');
+      helper.command.addComponent('comp1');
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env`, {});
+      helper.fs.createFile('comp2', 'comp2.js', 'require("@pnpm.e2e/bar"); // eslint-disable-line');
+      helper.command.addComponent('comp2');
+      helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-env/env`, {});
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/bar', version: '100.0.0', distTag: 'latest' });
+      helper.command.install('--add-missing-deps');
+      helper.command.tagAllComponents('--skip-tests');
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.command.import(`${helper.scopes.remote}/comp1@latest`);
+      initialLockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
+
+      await addDistTag({ package: '@pnpm.e2e/foo', version: '100.1.0', distTag: 'latest' });
+
+      helper.command.import(`${helper.scopes.remote}/comp2@latest`);
+      lockfileAfterSecondImport = yaml.load(
+        fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')
+      );
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
+    });
+    it('first import should restore the lockfile from comp1 graph', () => {
+      expect(initialLockfile.bit.restoredFromModel).to.eq(true);
+      expect(initialLockfile.packages).to.have.property('@pnpm.e2e/foo@100.0.0');
+    });
+    it('second import should include comp2 deps at the versions stored in its graph', () => {
+      expect(lockfileAfterSecondImport.packages).to.have.property('@pnpm.e2e/bar@100.0.0');
+    });
+    // Regression coverage: graph-based lockfile regeneration previously overwrote
+    // pnpm-lock.yaml with only comp2's subgraph, causing foo to be re-resolved from the
+    // manifest specifier and drift to the newer registry version.
+    it('second import should preserve comp1 deps at their previously-locked versions', () => {
+      expect(lockfileAfterSecondImport.packages).to.have.property('@pnpm.e2e/foo@100.0.0');
+      expect(lockfileAfterSecondImport.packages).to.not.have.property('@pnpm.e2e/foo@100.1.0');
     });
   });
 });

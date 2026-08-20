@@ -10,9 +10,11 @@ import { CompositionsAspect } from '@teambit/compositions';
 import { ConfigAspect } from '@teambit/config';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { DeprecationAspect } from '@teambit/deprecation';
+import { InternalizeAspect } from '@teambit/internalize';
 import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/envs';
 import { EnvAspect } from '@teambit/env';
+import { EmptyEnvAspect } from '@teambit/empty-env';
 import { ExpressAspect } from '@teambit/express';
 import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
@@ -107,6 +109,7 @@ import { BitAspect } from './bit.aspect';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import { CliMcpServerAspect } from '@teambit/cli-mcp-server';
 import { CiAspect } from '@teambit/ci';
+import { RippleAspect } from '@teambit/ripple';
 import { ScriptsAspect } from '@teambit/scripts';
 
 /**
@@ -144,6 +147,7 @@ export const manifestsMap = {
   [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
   [EnvAspect.id]: EnvAspect,
+  [EmptyEnvAspect.id]: EmptyEnvAspect,
   [GraphAspect.id]: GraphAspect,
   [PubsubAspect.id]: PubsubAspect,
   [DependencyResolverAspect.id]: DependencyResolverAspect,
@@ -161,6 +165,7 @@ export const manifestsMap = {
   [BuilderAspect.id]: BuilderAspect,
   [VariantsAspect.id]: VariantsAspect,
   [DeprecationAspect.id]: DeprecationAspect,
+  [InternalizeAspect.id]: InternalizeAspect,
   [ExpressAspect.id]: ExpressAspect,
   [AspectAspect.id]: AspectAspect,
   [WebpackAspect.id]: WebpackAspect,
@@ -223,6 +228,7 @@ export const manifestsMap = {
   [ConfigStoreAspect.id]: ConfigStoreAspect,
   [CliMcpServerAspect.id]: CliMcpServerAspect,
   [CiAspect.id]: CiAspect,
+  [RippleAspect.id]: RippleAspect,
   [ScriptsAspect.id]: ScriptsAspect,
 };
 

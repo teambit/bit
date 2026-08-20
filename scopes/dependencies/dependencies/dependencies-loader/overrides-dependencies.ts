@@ -9,6 +9,12 @@ export default class OverridesDependencies {
   manuallyRemovedDependencies: ManuallyChangedDependencies;
   manuallyAddedDependencies: ManuallyChangedDependencies;
   missingPackageDependencies: string[];
+  /**
+   * package names of env-own dependencies (from env.jsonc selfPolicy).
+   * used by version resolution to skip these overrides for workspace components,
+   * so their version is resolved from the bitmap instead of the static env.jsonc version.
+   */
+  envOwnPkgNames: Set<string> = new Set();
   constructor(component: Component) {
     this.component = component;
     this.componentFromModel = this.component.componentFromModel;

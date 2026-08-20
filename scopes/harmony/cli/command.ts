@@ -54,6 +54,15 @@ export interface Command {
   loader?: boolean;
 
   /**
+   * opt this command's `report` output into paging (like git's log/diff).
+   * when true, and stdout is an interactive human terminal, the output is piped through a pager
+   * (`less` by default). non-interactive contexts (piped output, CI, ai-agents, bit-cli-server)
+   * always get the full output at once. users can override with --pager / --no-pager.
+   * the default is false.
+   */
+  pager?: boolean;
+
+  /**
    * Array of command options where each element is a tuple.
    * ['flag alias', 'flag name', 'flag description']
    * for example:
@@ -109,6 +118,7 @@ export interface Command {
    * @param args  - arguments object as defined in name.
    * @param flags - command flags as described in options.
    * @return - Report object. The Report.data is printed to the stdout as is.
+   * Optionally include Report.details for expanded output accessible via `bit details` after the command completes.
    */
   report?(args: CLIArgs, flags: Flags): Promise<string | Report>;
 
@@ -131,6 +141,15 @@ export interface Command {
 export type Flags = { [flagName: string]: string | boolean | undefined | any };
 export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
-export type Report = { data: string; code: number };
+export type Report = {
+  data: string;
+  code: number;
+  /**
+   * Optional expanded output persisted to disk and viewable via `bit details`.
+   * Use this for verbose information (e.g. auto-tagged dependents) that would clutter
+   * the default output but is useful after a one-shot command has already completed.
+   */
+  details?: string;
+};
 export type CommandArg = { name: string; description?: string };
 export type Example = { cmd: string; description: string };

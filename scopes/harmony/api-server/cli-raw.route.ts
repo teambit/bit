@@ -2,6 +2,7 @@ import type { CLIMain } from '@teambit/cli';
 import { CLIParser, YargsExitWorkaround } from '@teambit/cli';
 import fs from 'fs-extra';
 import path from 'path';
+import { isatty } from 'tty';
 import chalk from 'chalk';
 import type { Route, Request, Response } from '@teambit/express';
 import type { Logger } from '@teambit/logger';
@@ -9,6 +10,20 @@ import { logger as legacyLogger, getLevelFromArgv } from '@teambit/legacy.logger
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
 import { loader } from '@teambit/legacy.loader';
 import type { APIForIDE } from './api-for-ide';
+
+/**
+ * Strict allowlist of TTY device paths. Anything not matching is rejected
+ * before we attempt to open it. Combined with an `isatty` check on the
+ * opened fd, this blocks block devices, /proc files, and symlink-redirected
+ * targets.
+ *
+ *   /dev/tty            current process's controlling tty
+ *   /dev/ttyXXXNN       e.g. /dev/ttys000 (macOS), /dev/ttyS0 (Linux)
+ *   /dev/pts/N          pseudo-terminal slaves on Linux
+ *   /dev/ptmx           pseudo-terminal master
+ *   /dev/console        system console
+ */
+const TTY_PATH_RE = /^\/dev\/(tty[a-zA-Z0-9]*|pts\/\d+|ptmx|console)$/;
 
 /**
  * example usage:
@@ -43,13 +58,12 @@ export class CLIRawRoute implements Route {
         }
       }
 
-      // Validate ttyPath parameter to prevent path traversal
-      if (ttyPath) {
-        // ttyPath should be a legitimate terminal device path (e.g., /dev/ttys000, /dev/pts/0)
-        // Validate it's a device path and doesn't contain traversal sequences
-        if (ttyPath.includes('..') || !(ttyPath.startsWith('/dev/') || ttyPath.startsWith('/proc/'))) {
-          throw new Error(`Invalid ttyPath parameter. Must be a legitimate terminal device path.`);
-        }
+      // Validate ttyPath against a strict allowlist. The earlier check (string
+      // prefix /dev/ or /proc/) was too permissive — it allowed /dev/sda,
+      // /proc/sysrq-trigger, etc. After opening we also verify the fd is a
+      // TTY (catches symlinks pointing outside the allowlist).
+      if (ttyPath && !TTY_PATH_RE.test(ttyPath)) {
+        throw new Error(`Invalid ttyPath parameter. Must be a TTY device under /dev/.`);
       }
       // there are 3 methods to interact with bit-server: 1) SSE, 2) TTY, 3) PTY. See server-commander.ts for more info.
       const isSSE = !ttyPath && !isPty;
@@ -58,16 +72,23 @@ export class CLIRawRoute implements Route {
       const originalStdoutWrite = process.stdout.write;
       const originalStderrWrite = process.stderr.write;
 
+      let fileHandle: number | undefined;
       if (ttyPath) {
-        const fileHandle = await fs.open(ttyPath, 'w');
+        fileHandle = await fs.open(ttyPath, 'w');
+        if (!isatty(fileHandle)) {
+          await fs.close(fileHandle);
+          fileHandle = undefined;
+          throw new Error(`Invalid ttyPath parameter. Path is not a TTY.`);
+        }
+        const ttyFd = fileHandle;
         // @ts-ignore monkey patch the process stdout write method
         process.stdout.write = (chunk, encoding, callback) => {
-          fs.writeSync(fileHandle, chunk.toString());
+          fs.writeSync(ttyFd, chunk.toString());
           return originalStdoutWrite.call(process.stdout, chunk, encoding, callback);
         };
         // @ts-ignore monkey patch the process stderr write method
         process.stderr.write = (chunk, encoding, callback) => {
-          fs.writeSync(fileHandle, chunk.toString());
+          fs.writeSync(ttyFd, chunk.toString());
           return originalStderrWrite.call(process.stdout, chunk, encoding, callback);
         };
       }
@@ -127,6 +148,13 @@ export class CLIRawRoute implements Route {
         if (ttyPath) {
           process.stdout.write = originalStdoutWrite;
           process.stderr.write = originalStderrWrite;
+          if (fileHandle !== undefined) {
+            try {
+              await fs.close(fileHandle);
+            } catch (err) {
+              this.logger.debug(`cli-raw: failed to close tty fd: ${(err as Error).message}`);
+            }
+          }
         }
         if (isSSE) {
           delete process.env.BIT_CLI_SERVER_NO_TTY;

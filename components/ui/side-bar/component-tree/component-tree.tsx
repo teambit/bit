@@ -60,7 +60,7 @@ export function ComponentTree({
 
     if (transformTree) return transformTree(tree);
     return tree;
-  }, [components.length]);
+  }, [components.length, lanesModel?.viewedLane?.id.toString()]);
 
   return (
     <LanesContext.Provider value={{ lanesModel }}>

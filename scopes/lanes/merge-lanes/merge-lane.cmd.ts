@@ -1,5 +1,6 @@
 import chalk from 'chalk';
-import type { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions, Report } from '@teambit/cli';
+import { joinSections } from '@teambit/cli';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { mergeReport } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
@@ -21,7 +22,7 @@ when the components are not diverged in history, and the current lane is behind 
 simply update the components and the heads according to the merge candidate.
 to opt-out, use "--no-snap", the components will be written as the merge candidate, and will be left as modified.
 
-in case a component in both ends don't share history (no snap is found in common), the merge will require "--resolve-unrelated" flag.
+in case a component on both ends doesn't share history (no snap is found in common), the merge will require "--resolve-unrelated" flag.
 this flag keeps the history of one end and saves a reference to the other end. the decision of which end to keep is determined by the following:
 1. if the component exists on main, then the history linked to main will be kept.
 in this case, the strategy of "--resolve-unrelated" only determines which source-code to keep. it's not about the history.
@@ -76,7 +77,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     ],
     ['', 'verbose', 'display detailed information about components that were legitimately unmerged'],
     ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
-    ['', 'skip-fetch', 'use the local state of target-lane if exits locally, without updating it from the remote'],
+    ['', 'skip-fetch', 'use the local state of target-lane if exists locally, without updating it from the remote'],
     [
       '',
       'include-deps',
@@ -161,7 +162,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       detachHead?: boolean;
       loose?: boolean;
     }
-  ): Promise<string> {
+  ): Promise<string | Report> {
     build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     if (ours || theirs) {
       throw new BitError(
@@ -219,11 +220,18 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
-    const deleteOutput = `\n${deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : ''}${(
-      deleteResults.remoteResult || []
-    ).map((item) => removeTemplate(item, true))}${
-      (deleteResults.readmeResult && chalk.yellow(deleteResults.readmeResult)) || ''
-    }\n`;
-    return mergeResult + deleteOutput;
+    const localDeleteOutput = deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : '';
+    const remoteDeleteOutput = joinSections(
+      (deleteResults.remoteResult || []).map((item) => removeTemplate(item, true))
+    );
+    const readmeOutput = deleteResults.readmeResult ? chalk.yellow(deleteResults.readmeResult) : '';
+
+    if (typeof mergeResult !== 'string') {
+      const extraSections = [localDeleteOutput, remoteDeleteOutput, readmeOutput];
+      const data = joinSections([mergeResult.data, ...extraSections]);
+      const details = mergeResult.details ? joinSections([mergeResult.details, ...extraSections]) : undefined;
+      return { data, code: mergeResult.code, details };
+    }
+    return joinSections([mergeResult, localDeleteOutput, remoteDeleteOutput, readmeOutput]);
   }
 }

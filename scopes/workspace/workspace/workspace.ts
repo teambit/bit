@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { parse } from 'comment-json';
+import semver from 'semver';
 import mapSeries from 'p-map-series';
 import pMap from 'p-map';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -44,6 +45,7 @@ import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { LoadFailure } from '@teambit/harmony.modules.load-trace';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { ExtensionDataList, REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
@@ -53,7 +55,12 @@ import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import type { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy, uniq } from 'lodash';
-import { MergeConfigFilename, BIT_ROOTS_DIR, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy.constants';
+import {
+  MergeConfigFilename,
+  BIT_ROOTS_DIR,
+  CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
+  Extensions,
+} from '@teambit/legacy.constants';
 import path from 'path';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
@@ -112,6 +119,9 @@ import { CompFiles } from './workspace-component/comp-files';
 import { Filter } from './filter';
 import type { ComponentStatusLegacy, ComponentStatusResult } from './workspace-component/component-status-loader';
 import { ComponentStatusLoader } from './workspace-component/component-status-loader';
+import execa from 'execa';
+import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
+import { VERSION_ZERO } from '@teambit/objects';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 import type { ConfigStoreMain, Store } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
@@ -274,7 +284,7 @@ export class Workspace implements ComponentFactory {
     if (this.consumer.isLegacy) return;
     if (isEmpty(this.config))
       throw new BitError(
-        `fatal: workspace config is empty. probably one of bit files is missing. please run "bit init" to rewrite them`
+        `fatal: workspace config is empty. probably one of the bit files is missing. please run "bit init" to rewrite them`
       );
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
@@ -304,6 +314,15 @@ export class Workspace implements ComponentFactory {
         ? path.join(this.path, this.config.rootComponentsDirectory)
         : this.modulesPath;
     return path.join(baseDir, BIT_ROOTS_DIR);
+  }
+
+  /**
+   * Whether the workspace is configured to use root components — the per-env install
+   * layout written to `rootComponentsPath` (defaults to `node_modules/.bit_roots`,
+   * relocatable via `dependencyResolver.rootComponentsDirectory`).
+   */
+  hasRootComponents(): boolean {
+    return this.dependencyResolver.hasRootComponents();
   }
 
   /** get the `node_modules` folder of this workspace */
@@ -580,8 +599,34 @@ export class Workspace implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
-    return this.scope.getLogs(id, shortHash, startsFrom);
+  async getLogs(
+    id: ComponentID,
+    shortHash = false,
+    startsFrom?: string,
+    throwIfMissing = false
+  ): Promise<ComponentLog[]> {
+    const logs = await this.scope.getLogs(id, shortHash, startsFrom, throwIfMissing);
+    this.applyStagedDeprecation(id, logs);
+    return logs;
+  }
+
+  /**
+   * reflect the not-yet-snapped (staged) deprecation in the component logs.
+   * `bit deprecate` only writes the deprecation config to the workspace `.bitmap`; it's baked into a
+   * Version object on the next tag/snap. The `deprecated` field is otherwise computed from the committed
+   * head Version, so without this overlay a staged range-deprecation wouldn't be reflected in the logs
+   * (CLI `bit log` or the workspace UI version-history) until the next tag/snap. We mirror the model's
+   * range logic here so the staged state (including a staged `bit undeprecate` that clears the range)
+   * matches the post-snap output.
+   */
+  private applyStagedDeprecation(id: ComponentID, logs: ComponentLog[]): void {
+    const bitmapEntry = this.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true });
+    const stagedConfig = bitmapEntry?.config?.[Extensions.deprecation];
+    if (!stagedConfig || stagedConfig === '-') return;
+    const range = (stagedConfig as { range?: string }).range;
+    logs.forEach((log) => {
+      log.deprecated = Boolean(range && log.tag && semver.satisfies(log.tag, range));
+    });
   }
 
   async getGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<Graph<Component, string>> {
@@ -819,18 +864,23 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearCache();
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
+    this.aggregatedLoadFailures.clear();
     this._componentList = new ComponentsList(this);
   }
 
   clearComponentCache(id: ComponentID) {
-    this.componentLoader.clearComponentCache(id);
-    this.componentStatusLoader.clearOneComponentCache(id);
-    this.consumer.clearOneComponentCache(id);
-    this._componentList = new ComponentsList(this);
+    this.clearComponentsCache([id]);
   }
 
   clearComponentsCache(ids: ComponentID[]) {
-    ids.forEach((id) => this.clearComponentCache(id));
+    if (!ids.length) return; // nothing to clear, avoid scanning the caches for nothing
+    const uniqueIds = uniqBy(ids, (id) => id.toString());
+    this.componentLoader.clearComponentsCache(uniqueIds);
+    uniqueIds.forEach((id) => {
+      this.componentStatusLoader.clearOneComponentCache(id);
+      this.consumer.clearOneComponentCache(id);
+    });
+    this._componentList = new ComponentsList(this);
   }
 
   async warmCache() {
@@ -1164,7 +1214,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       return envIdFromConfig === env;
     });
     if (!foundComps.length && throwIfNotFound) {
-      throw new BitError(`unable to find components that using "${env}" env.
+      throw new BitError(`unable to find components that use "${env}" env.
 the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}`);
     }
     return foundComps;
@@ -1347,6 +1397,174 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return lane;
   }
 
+  /**
+   * When `bitmapAutoSync` is enabled in workspace.jsonc, reconcile `.bitmap` with the
+   * latest scope HEAD versions on the first Bit command after `git pull`. The sentinel
+   * file at `.bit/last-pull-sync` makes subsequent commands at the same git HEAD a no-op.
+   *
+   * On a failed remote-scope fetch the sentinel is NOT advanced, so the next command
+   * retries.
+   */
+  async reconcileBitmapWithScopeIfNeeded(): Promise<void> {
+    if (!this.config.bitmapAutoSync) return;
+    if (!this.consumer.isOnMain()) return;
+    if (!(await fs.pathExists(path.join(this.path, '.git')))) return;
+
+    // Read the sentinel before resolving git HEAD — most invocations are cached and
+    // exit cheaply here without forking a git subprocess. ENOENT (no sentinel yet) is
+    // the normal first-run path; any other read error (EACCES, EIO, etc.) indicates
+    // a genuine problem and should surface rather than be silently swallowed — masking
+    // it would put every subsequent command on the slow full-fetch path with no signal.
+    const sentinelPath = path.join(this.path, '.bit', 'last-pull-sync');
+    let sentinelHead: string | undefined;
+    try {
+      sentinelHead = (await fs.readFile(sentinelPath, 'utf-8')).trim();
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
+
+    const currentGitHead = await this.readCurrentGitHead();
+    if (!currentGitHead) return;
+    if (sentinelHead === currentGitHead) return;
+
+    this.logger.debug(`bitmapAutoSync: git HEAD changed since last sync, reconciling .bitmap with scope`);
+
+    // Resolve every bitmap entry to a "lookup id" that has scope filled in. New
+    // components (added via `bit add` on a feature branch but tagged only by CI) have
+    // an empty `scope` in the bitmap — only `defaultScope` is set. We must resolve
+    // those before the import, because the scope import filters out IDs without scope
+    // and the model lookup below needs scope to find the component.
+    //
+    // Related: `ComponentLoader._handleOutOfSyncScenarios` in
+    // components/legacy/consumer-component/component-loader.ts uses the same primitives
+    // (`getModelComponentIfExist`, `bitMap.updateComponentId`) to fix per-component
+    // out-of-sync states during component loading. It does NOT handle:
+    //   - scope HEAD has advanced past bitmap's version when that version still exists
+    //     in scope (the main case `bitmapAutoSync` is built for),
+    //   - bitmap entries with empty `scope` field (it doesn't fall back to defaultScope),
+    //   - triggering the import itself with `includeUnexported: true` for components
+    //     not yet in local scope.
+    // This reconcile fills those gaps; afterwards `_handleOutOfSyncScenarios` is a
+    // no-op for the same components (bitmap is already aligned with scope).
+    const lookupIds: ComponentID[] = [];
+    for (const bitmapId of this.consumer.bitMap.getAllIdsAvailableOnLane()) {
+      if (bitmapId.hasScope()) {
+        lookupIds.push(bitmapId);
+        continue;
+      }
+      const componentMap = this.consumer.bitMap.getComponentIfExist(bitmapId);
+      const defaultScope = componentMap?.defaultScope;
+      if (!defaultScope) continue;
+      lookupIds.push(bitmapId.changeScope(defaultScope));
+    }
+
+    // Fetch the latest scope HEADs from remote for all of these. Use the lower-level
+    // scope importer with `includeUnexported: true` — `importCurrentObjects` filters
+    // out IDs that aren't already in the local scope, which would skip brand-new
+    // components introduced by another teammate's PR (they exist on remote but the
+    // current workspace's local scope has never seen them).
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const idList = ComponentIdList.fromArray(lookupIds);
+    try {
+      await scopeComponentsImporter.importWithoutDeps(idList.toVersionLatest(), {
+        cache: false,
+        includeVersionHistory: true,
+        fetchHeadIfLocalIsBehind: true,
+        ignoreMissingHead: true,
+        includeUnexported: true,
+        reason: 'bitmapAutoSync: latest scope HEAD',
+      });
+      await scopeComponentsImporter.importMany({
+        ids: idList,
+        ignoreMissingHead: true,
+        preferDependencyGraph: true,
+        reFetchUnBuiltVersion: true,
+        throwForSeederNotFound: false,
+        includeUnexported: true,
+        reason: 'bitmapAutoSync: dependencies for sync',
+      });
+    } catch (err: any) {
+      this.logger.warn(
+        `bitmapAutoSync: failed to fetch latest scope objects: ${err?.message ?? err}. ` +
+          `Continuing with the cached state. The next bit command will re-attempt the sync.`
+      );
+      // Sentinel stays at the previous HEAD so the next command retries the fetch.
+      return;
+    }
+
+    const updatedIds = compact(
+      await pMap(
+        lookupIds,
+        async (lookupId) => {
+          const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(
+            lookupId.changeVersion(undefined)
+          );
+          if (!modelComponent) return undefined;
+          let scopeHead: string;
+          try {
+            scopeHead = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
+          } catch {
+            return undefined;
+          }
+          if (!scopeHead || scopeHead === VERSION_ZERO) return undefined;
+          if (lookupId.version === scopeHead) return undefined;
+          const newId = lookupId.changeVersion(scopeHead);
+          this.consumer.bitMap.updateComponentId(newId);
+          return newId;
+        },
+        { concurrency: 30 }
+      )
+    );
+
+    if (updatedIds.length > 0) {
+      await this.bitMap.write('bitmapAutoSync: reconciled with scope HEAD');
+      this.logger.console(`bitmapAutoSync: synced ${updatedIds.length} component(s) to scope HEAD`);
+    }
+
+    // Let a sentinel write failure throw — `.bit/` was already written above (bitmap
+    // and scope objects), so a permission failure here means something is genuinely
+    // broken. Catching would silently leave the sentinel stale and force every later
+    // command into the slow full-fetch path with no signal to the user.
+    await fs.outputFile(sentinelPath, currentGitHead);
+  }
+
+  /**
+   * Resolve the current git HEAD. Tries a direct read of `.git/HEAD` (+ the loose ref
+   * file it points at) for the common case to avoid forking a process. Falls back to
+   * `git rev-parse HEAD` for packed-refs, git worktrees / submodules (where `.git` is
+   * a file pointing at the real gitdir, not a directory), and any other layout. Returns
+   * null when HEAD can't be resolved at all — the caller treats that as "skip auto-sync."
+   */
+  private async readCurrentGitHead(): Promise<string | null> {
+    const gitPath = path.join(this.path, '.git');
+    let gitIsDir = false;
+    try {
+      gitIsDir = (await fs.stat(gitPath)).isDirectory();
+    } catch {
+      return null;
+    }
+
+    if (gitIsDir) {
+      try {
+        const headContent = (await fs.readFile(path.join(gitPath, 'HEAD'), 'utf-8')).trim();
+        if (!headContent.startsWith('ref: ')) return headContent; // detached HEAD
+        const refName = headContent.slice('ref: '.length);
+        return (await fs.readFile(path.join(gitPath, refName), 'utf-8')).trim();
+      } catch {
+        // Loose ref missing (likely packed) or some other unusual state. Fall through.
+      }
+    }
+
+    // Fallback: invoke git itself. Handles worktrees (where `.git` is a file with
+    // `gitdir:` indirection), packed-refs, submodules, and any other layout.
+    try {
+      const result = await execa(getGitExecutablePath(), ['rev-parse', 'HEAD'], { cwd: this.path });
+      return result.stdout.trim();
+    } catch {
+      return null;
+    }
+  }
+
   async use(aspectIdStr: string): Promise<string> {
     const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.use(aspectIdStr);
@@ -1495,10 +1713,13 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     } catch {
       return; // unable to get the component for some reason. don't sweat it. forget about the warning
     }
-    if (!this.envs.isUsingEnvEnv(env)) {
+    // isEnv covers all the signals identifying an env, including the *.bit-env.* plugin file -
+    // an env recognized by any of them is not misconfigured (isUsingEnvEnv alone misses plugin
+    // envs whose own env is not an env-env).
+    if (!this.envs.isEnv(env)) {
       this.warnedAboutMisconfiguredEnvs.push(envId);
       this.logger.consoleWarning(
-        `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} teambit.envs/env")`
+        `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} bitdev.general/envs/bit-env")`
       );
     }
   }
@@ -1536,7 +1757,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return { data, conflict };
   }
 
-  getWorkspaceIssues(): Error[] {
+  /**
+   * @param includeNonBlocking when true (default), also returns non-blocking issues (e.g. aggregated
+   * load failures) that should be shown in "bit status" but must not block tag/snap. The tag/snap
+   * gate (`builder.throwForComponentIssues`) passes `false` so previously-swallowed load failures
+   * stay best-effort — phase 1 of the loading redesign makes them visible without changing which
+   * operations succeed.
+   */
+  getWorkspaceIssues(opts?: { includeNonBlocking?: boolean }): Error[] {
+    const includeNonBlocking = opts?.includeNonBlocking ?? true;
     const errors: Error[] = [];
 
     // since PR #8393, the workspace.jsonc conflicts are not written to the config-merge file anymore.
@@ -1549,7 +1778,33 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         errors.push(err);
       }
     }
+    if (includeNonBlocking) {
+      this.aggregatedLoadFailures.forEach((failure) => {
+        const affected = failure.affected.size === 1 ? '1 component' : `${failure.affected.size} components`;
+        errors.push(
+          new Error(
+            `failed loading "${failure.failedId}" (during ${failure.phase}), affects ${affected}: ${failure.error}. the load continued without it, data computed by it may be missing`
+          )
+        );
+      });
+    }
     return errors;
+  }
+
+  /**
+   * load failures of aspects/envs that affect multiple components. aggregated here (instead of
+   * attaching an issue to every affected component) to keep "bit status" readable when e.g. one
+   * env used by 100 components fails to load. the failing component itself still gets a
+   * per-component LoadFailures issue.
+   */
+  private aggregatedLoadFailures: Map<string, LoadFailure & { affected: Set<string> }> = new Map();
+
+  registerAggregatedLoadFailure(failure: LoadFailure, affectedComponentId: string) {
+    // keyed by the failing id only: the same root cause may be reported from several load phases,
+    // and it should still render as a single workspace issue.
+    const existing = this.aggregatedLoadFailures.get(failure.failedId);
+    if (existing) existing.affected.add(affectedComponentId);
+    else this.aggregatedLoadFailures.set(failure.failedId, { ...failure, affected: new Set([affectedComponentId]) });
   }
 
   async listComponentsDuringMerge(): Promise<ComponentID[]> {
@@ -1743,6 +1998,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       return bitId;
     }
     return undefined;
+  }
+
+  private resolveIdFromRootDir(id: string | BitId | ComponentID): ComponentID | undefined {
+    if (typeof id !== 'string') return undefined;
+    const normalized = path.posix.normalize(pathNormalizeToLinux(id)).replace(/^\.\//, '');
+    return this.consumer.bitMap.getComponentIdByRootPath(normalized);
   }
 
   private async componentConfigFileFromComponentDirAndName(
@@ -1991,6 +2252,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
    * Transform the id to ComponentId and get the exact id as appear in bitmap
    */
   async resolveComponentId(id: string | BitId | ComponentID): Promise<ComponentID> {
+    const idFromPath = this.resolveIdFromRootDir(id);
+    if (idFromPath) return idFromPath;
     if (id instanceof BitId && id.hasScope() && id.hasVersion()) {
       // an optimization to make it faster when BitId is passed
       return ComponentID.fromLegacy(id);
@@ -2251,7 +2514,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     if (!envJson) {
       throw new BitError(`unable to find env.jsonc file in ${envId}`);
     }
-    const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+    let envManifest: EnvJsonc;
+    try {
+      envManifest = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+    } catch (err: any) {
+      const filePath = envJson.path || envJson.relative;
+      throw new BitError(
+        `Syntax error in env.jsonc for "${envId}" (${filePath}): ${err.message}. Please check the file for invalid JSONC syntax.`
+      );
+    }
 
     return envManifest;
   }

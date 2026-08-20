@@ -12,3 +12,4 @@ export {
   GetAllVersionHashesParams,
 } from './traverse-versions';
 export { TargetHeadNotFound } from './target-head-not-found';
+export { LocalHeadNotFound } from './local-head-not-found';

@@ -42,6 +42,7 @@ export class PreviewStartPlugin implements StartPlugin {
   private pendingServers: Map<string, ComponentServer> = new Map();
   private bootstrapActive = false;
   private lastBootstrapText = '';
+  private pendingPostInstallPublish = new Set<string>();
 
   private cacheServerLookup(server: ComponentServer) {
     const lookupKeys = new Set<string>([
@@ -168,6 +169,9 @@ export class PreviewStartPlugin implements StartPlugin {
   async onNewDevServersCreated(servers: ComponentServer[]) {
     for (const server of servers) {
       const envId = server.context.envRuntime.id;
+      if (this.serversMap[envId]) {
+        continue;
+      }
       this.cacheServerLookup(server);
       this.pendingServers.set(envId, server);
 
@@ -179,12 +183,9 @@ export class PreviewStartPlugin implements StartPlugin {
         isPendingPublish: false,
       };
 
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        server.listen();
-      } catch (err) {
+      server.listen().catch((err) => {
         this.logger.error(`failed to start server for ${envId}`, err);
-      }
+      });
     }
   }
 
@@ -378,6 +379,20 @@ export class PreviewStartPlugin implements StartPlugin {
     this.publishCompilationStatus(id, false, results).catch((err) => {
       this.logger.error(`failed to publish compilation-done status for ${id}`, err);
     });
+    const compilationErrors = results.errors || [];
+    if (
+      !compilationErrors.length &&
+      (this.pendingPostInstallPublish.has(id) || this.pendingPostInstallPublish.has(envId))
+    ) {
+      this.pendingPostInstallPublish.delete(id);
+      this.pendingPostInstallPublish.delete(envId);
+      const postInstallServer = this.resolveServerByEventId(id);
+      if (postInstallServer) {
+        this.publishServerStarted(postInstallServer).catch((err) => {
+          this.logger.error(`failed to publish post-install server event for ${id}`, err);
+        });
+      }
+    }
     if (this.serversState[envId]?.isPendingPublish) {
       const server = this.resolveServerByEventId(id);
       if (server) {
@@ -385,6 +400,35 @@ export class PreviewStartPlugin implements StartPlugin {
         this.publishServerStarted(server).catch((err) => {
           this.logger.error(`failed to publish server started event for ${server.context.envRuntime.id}`, err);
         });
+      }
+    }
+  }
+
+  markAllForPostInstallPublish() {
+    for (const envId of Object.keys(this.serversMap)) {
+      this.pendingPostInstallPublish.add(envId);
+    }
+  }
+
+  async restartExistingServers() {
+    for (const server of Object.values(this.serversMap)) {
+      const envId = server.context.envRuntime.id;
+      this.serversState[envId] = {
+        ...this.serversState[envId],
+        isCompiling: true,
+        isReady: false,
+        isStarted: false,
+        isCompilationDone: false,
+      };
+      await server.restart();
+    }
+  }
+
+  invalidateAllResolverCaches() {
+    for (const server of Object.values(this.serversMap)) {
+      const devServer = server.devServer as any;
+      if (typeof devServer._invalidateResolverCache === 'function') {
+        devServer._invalidateResolverCache();
       }
     }
   }

@@ -6,7 +6,7 @@ export default class NetworkError extends BitError {
   showDoctorMessage: boolean;
 
   constructor(remoteErr: string) {
-    super(`error: remote failed with error the following error:\n "${chalk.bold(remoteErr)}"`);
+    super(`error: remote failed with the following error:\n "${chalk.bold(remoteErr)}"`);
     this.remoteErr = remoteErr;
     this.showDoctorMessage = true;
   }

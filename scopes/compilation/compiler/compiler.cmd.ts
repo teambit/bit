@@ -1,7 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { Logger } from '@teambit/logger';
+import { formatSuccessSummary, formatWarningSummary, formatHint, joinSections } from '@teambit/cli';
+import type { Logger } from '@teambit/logger';
 import type { PubsubMain } from '@teambit/pubsub';
-import chalk from 'chalk';
 import prettyTime from 'pretty-time';
 import { formatCompileResults } from './output-formatter';
 import type { WorkspaceCompiler, CompileOptions, BuildResult } from './workspace-compiler';
@@ -29,6 +29,7 @@ automatically triggered by "bit watch", "bit start", or IDE extensions, but can 
     ['d', 'delete-dist-dir', 'delete existing dist folder before writing new compiled files'],
     ['', 'generate-types', 'EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)'],
   ] as CommandOptions;
+  loader = true;
 
   constructor(
     private compile: WorkspaceCompiler,
@@ -38,26 +39,22 @@ automatically triggered by "bit watch", "bit start", or IDE extensions, but can 
 
   async report([components = []]: [string[]], compilerOptions: CompileOptions) {
     const startTimestamp = process.hrtime();
-    this.logger.setStatusLine('Compiling your components, hold tight.');
+    this.logger.setStatusLine('compiling components...');
 
-    let outputString = '';
     const results = await this.compile.compileComponents(components, {
       ...compilerOptions,
       initiator: CompilationInitiator.CmdReport,
     });
     const compileTimeLength = process.hrtime(startTimestamp);
 
-    outputString += '\n';
-    outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
-    outputString += formatCompileResults(results, !!compilerOptions.verbose);
-    outputString += '\n';
-
-    outputString += this.getStatusLine(results, compileTimeLength);
+    const compiledOutput = formatCompileResults(results, !!compilerOptions.verbose);
+    const summaryLine = this.getSummaryLine(results);
+    const timingLine = formatHint(`Finished. (${prettyTime(compileTimeLength)})`);
 
     this.logger.clearStatusLine();
 
     return {
-      data: outputString,
+      data: joinSections([compiledOutput, `${summaryLine}\n${timingLine}`]),
       code: this.getExitCode(results),
     };
   }
@@ -79,31 +76,32 @@ automatically triggered by "bit watch", "bit start", or IDE extensions, but can 
     return componentsStatus.filter((component) => component.errors.length);
   }
 
-  private getSummaryIcon(componentsStatus: BuildResult[]) {
-    switch (this.failedComponents(componentsStatus).length) {
-      case 0:
-        return Logger.successSymbol();
-      case componentsStatus.length:
-        return chalk.red('✗');
-      default:
-        return chalk.yellow('⍻');
-    }
-  }
-
   private getExitCode(componentsStatus: BuildResult[]) {
     return this.failedComponents(componentsStatus).length ? 1 : 0;
   }
 
-  private getStatusLine(componentsStatus: BuildResult[], compileTimeLength) {
-    const numberOfComponents = componentsStatus.length;
-    const numberOfFailingComponents = this.failedComponents(componentsStatus).length;
-    const numberOfSuccessfulComponents = componentsStatus.filter((component) => !component.errors.length).length;
+  private getSummaryLine(componentsStatus: BuildResult[]) {
+    // a component whose env provides no compiler went through neither a success nor a failure, so
+    // it is kept out of the ratio and named separately - the ratio alone would report doing
+    // nothing as having compiled everything.
+    const skipped = componentsStatus.filter((component) => component.skipped);
+    const attempted = componentsStatus.filter((component) => !component.skipped);
+    const numberOfFailingComponents = this.failedComponents(attempted).length;
+    const numberOfSuccessfulComponents = attempted.length - numberOfFailingComponents;
+    const skippedSuffix = skipped.length ? ` ${skipped.length} component(s) skipped, no compiler.` : '';
 
-    const icon = this.getSummaryIcon(componentsStatus);
-    const summaryLine = numberOfFailingComponents
-      ? `${icon} ${numberOfFailingComponents}/${numberOfComponents} components failed to compile.`
-      : `${icon} ${numberOfSuccessfulComponents}/${numberOfComponents} components compiled successfully.`;
-
-    return `${summaryLine}\nFinished. (${prettyTime(compileTimeLength)})`;
+    if (numberOfFailingComponents) {
+      return formatWarningSummary(
+        `${numberOfFailingComponents}/${attempted.length} components failed to compile.${skippedSuffix}`
+      );
+    }
+    if (!attempted.length && skipped.length) {
+      return formatWarningSummary(
+        `nothing was compiled. ${skipped.length} component(s) have an env that provides no compiler.`
+      );
+    }
+    return formatSuccessSummary(
+      `${numberOfSuccessfulComponents}/${attempted.length} components compiled successfully.${skippedSuffix}`
+    );
   }
 }

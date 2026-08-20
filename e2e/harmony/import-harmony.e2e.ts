@@ -161,6 +161,60 @@ describe('import functionality on Harmony', function () {
       expect(importOutput).to.include('1 new version(s) available, latest 0.0.3');
     });
   });
+  describe('import into a non-empty directory that is not tracked in .bitmap (with --write-to-empty-dir)', () => {
+    let defaultDir: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      // import once to populate the default directory with the component files.
+      helper.command.importComponentWithoutInstall('comp1');
+      const bitMap = helper.bitMap.read();
+      defaultDir = bitMap.comp1.rootDir;
+      // remove the .bitmap tracking of comp1 but keep the files on disk. now the default target dir exists,
+      // is not empty and is not tracked - the exact scenario the IDE (vscode plugin) hits.
+      delete bitMap.comp1;
+      helper.bitMap.write(bitMap);
+    });
+    describe('without the flag', () => {
+      it('should throw an error about the directory not being empty', () => {
+        expect(() => helper.command.importComponentWithoutInstall('comp1')).to.throw('the directory is not empty');
+      });
+    });
+    describe('combined with --override', () => {
+      it('should throw an error that the two flags cannot be used together', () => {
+        expect(() => helper.command.importComponentWithoutInstall('comp1', '--write-to-empty-dir --override')).to.throw(
+          '--override and --write-to-empty-dir cannot be used together'
+        );
+      });
+    });
+    describe('combined with --path', () => {
+      it('should throw an error that the two flags cannot be used together', () => {
+        expect(() =>
+          helper.command.importComponentWithoutInstall('comp1', '--write-to-empty-dir --path some-dir')
+        ).to.throw('--path and --write-to-empty-dir cannot be used together');
+      });
+    });
+    describe('with --write-to-empty-dir flag', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.importComponentWithoutInstall('comp1', '--write-to-empty-dir');
+      });
+      it('should import the component successfully', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+      it('should import into an incremented empty dir', () => {
+        expect(helper.bitMap.read().comp1.rootDir).to.equal(`${defaultDir}_1`);
+      });
+      it('should leave the original directory untouched', () => {
+        expect(path.join(helper.scopes.localPath, defaultDir)).to.be.a.directory().and.not.empty;
+      });
+    });
+  });
   describe('multiple components some are directory of others', () => {
     let scopeBeforeImport: string;
     before(() => {

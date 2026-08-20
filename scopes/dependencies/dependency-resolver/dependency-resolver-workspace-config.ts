@@ -1,6 +1,6 @@
 import type { PeerDependencyRules } from '@pnpm/types';
 import type { WorkspacePolicyConfigObject } from './policy';
-import type { PackageImportMethod } from './package-manager';
+import type { PackageImportMethod, PackageExtension } from './package-manager';
 
 export type NodeLinker = 'hoisted' | 'isolated';
 
@@ -141,6 +141,37 @@ export interface DependencyResolverWorkspaceConfig {
   packageImportMethod?: PackageImportMethod;
 
   /*
+   * Opt in to pnpm's global virtual store. When enabled, dependency directories are created once
+   * in a directory shared by all workspaces on the machine, instead of being re-created inside
+   * every `node_modules/.pnpm`. This makes installation significantly faster, at the cost of a
+   * virtual store that is no longer contained in the workspace.
+   * Capsules are unaffected - they always keep the project-local layout. It also has no effect
+   * when `nodeLinker` is `hoisted`, which uses no virtual store.
+   */
+  enableGlobalVirtualStore?: boolean;
+
+  /*
+   * Path to the global virtual store directory. Defaults to pnpm's own shared `<storeDir>/links`.
+   * Only used when `enableGlobalVirtualStore` is on.
+   */
+  globalVirtualStoreDir?: string;
+
+  /*
+   * A map of package name (optionally with a version range) to a patch file path,
+   * relative to the workspace root. Equivalent to pnpm's `patchedDependencies`.
+   */
+  patchedDependencies?: Record<string, string>;
+
+  /*
+   * Declare dependencies that a published package uses but forgot to declare ("phantom"
+   * dependencies). Equivalent to pnpm's `packageExtensions`.
+   * This matters most with `enableGlobalVirtualStore`: a package in the shared store cannot reach
+   * anything hoisted into this workspace's `node_modules`, so declaring the dependency is the only
+   * way to put it where the package can resolve it.
+   */
+  packageExtensions?: Record<string, PackageExtension>;
+
+  /*
    * Use and cache the results of (pre/post)install hooks.
    */
   sideEffectsCache?: boolean;
@@ -221,6 +252,31 @@ export interface DependencyResolverWorkspaceConfig {
    * Tells pnpm to automatically install peer dependencies. It is true by default.
    */
   autoInstallPeers?: boolean;
+
+  /**
+   * When true (default), pnpm will deduplicate peer dependencies.
+   * Set to false to disable peer dependency deduplication.
+   */
+  dedupePeers?: boolean;
+
+  /**
+   * When true (default), env peer dependencies defined in env.jsonc are resolved once and merged
+   * into the workspace root manifest as regular dependencies, instead of being injected into each
+   * component's manifest individually. Conflicts between envs are resolved by picking the version
+   * that satisfies the most envs, with a warning logged for any conflicts.
+   * Set to false to revert to the legacy per-component env peer injection behavior.
+   */
+  resolveEnvPeersFromRoot?: boolean;
+
+  /**
+   * When true, ALL env peer dependencies are forced to the workspace root manifest,
+   * even when different envs specify conflicting versions. The best version is chosen
+   * (satisfying the most envs) and a warning is logged for unsatisfied envs.
+   * When false (default), conflicting peers without `workspaceSingleton` are injected
+   * per-component, allowing different envs to use different versions.
+   * Only applies when resolveEnvPeersFromRoot is true.
+   */
+  forceEnvPeersToRoot?: boolean;
 
   /**
    * By default, Bit saves component dependencies with exact versions (pinned) in the package.json,

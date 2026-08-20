@@ -18,7 +18,7 @@ import type { BuildTask } from '@teambit/builder';
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Bundler, BundlerContext } from '@teambit/bundler';
-import type { WebpackConfigTransformer } from '@teambit/webpack';
+import type { WebpackConfigTransformer } from '@teambit/webpack.webpack-bundler';
 import type { Tester } from '@teambit/tester';
 import type { PreviewStrategyName } from '@teambit/preview';
 import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
@@ -188,15 +188,15 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
         'react-dom': '-',
         '@types/mocha': '-',
         '@types/node': '12.20.4',
-        '@types/react': '^17.0.8',
-        '@types/react-dom': '^17.0.5',
+        '@types/react': '^19.0.0',
+        '@types/react-dom': '^19.0.0',
         '@types/jest': '^26.0.0',
         '@types/testing-library__jest-dom': '5.9.5',
       },
       peerDependencies: {
         // TODO: check if we really need react for aspects (maybe for ink support)
-        react: '^16.8.0 || ^17.0.0',
-        'react-dom': '^16.8.0 || ^17.0.0',
+        react: '^17.0.0 || ^18.0.0 || ^19.0.0',
+        'react-dom': '^17.0.0 || ^18.0.0 || ^19.0.0',
       },
     };
   }

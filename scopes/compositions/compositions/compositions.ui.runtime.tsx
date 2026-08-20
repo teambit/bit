@@ -7,9 +7,10 @@ import { ComponentAspect } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { CompositionCompareSection } from '@teambit/compositions.ui.composition-compare-section';
 import { CompositionCompare } from '@teambit/compositions.ui.composition-compare';
+import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare';
 import type { ComponentCompareUI } from '@teambit/component-compare';
 import { ComponentCompareAspect } from '@teambit/component-compare';
-import type { UseSandboxPermission } from '@teambit/preview.ui.component-preview';
+import type { UsePreviewProps, UseSandboxPermission } from '@teambit/preview.ui.component-preview';
 import { CompositionsSection } from './composition.section';
 import { CompositionsAspect } from './compositions.aspect';
 import type { MenuBarWidget } from './compositions';
@@ -18,12 +19,14 @@ import { CompositionContent } from './compositions';
 export type CompositionsMenuSlot = SlotRegistry<MenuBarWidget[]>;
 export type EmptyStateSlot = SlotRegistry<ComponentType>;
 export type UsePreviewSandboxSlot = SlotRegistry<UseSandboxPermission>;
+export type UsePreviewPropsSlot = SlotRegistry<UsePreviewProps>;
 
 export class CompositionsUI {
   constructor(
     private menuBarWidgetSlot: CompositionsMenuSlot,
     private emptyStateSlot: EmptyStateSlot,
-    private usePreviewSandboxSlot: UsePreviewSandboxSlot
+    private usePreviewSandboxSlot: UsePreviewSandboxSlot,
+    private usePreviewPropsSlot: UsePreviewPropsSlot
   ) {}
   /**
    * register a new tester empty state. this allows to register a different empty state from each environment for example.
@@ -41,6 +44,18 @@ export class CompositionsUI {
     this.usePreviewSandboxSlot.register(useSandboxPermission);
   }
 
+  /**
+   * register a per-component resolver for iframe attributes on the composition preview
+   * (`allow`, `referrerPolicy`, ...). The resolver runs at render time with the current
+   * `ComponentModel`; results from multiple resolvers merge with later keys winning. Use
+   * this to grant a specific subset of components extra Permissions Policy capabilities
+   * (e.g. `fullscreen` for chart/video components) without loosening the default for all
+   * components.
+   */
+  registerPreviewProps(usePreviewProps: UsePreviewProps) {
+    this.usePreviewPropsSlot.register(usePreviewProps);
+  }
+
   getCompositionsCompare = () => {
     return (
       <CompositionCompare
@@ -54,34 +69,65 @@ export class CompositionsUI {
 
   static dependencies = [ComponentAspect, ComponentCompareAspect];
   static runtime = UIRuntime;
-  static slots = [Slot.withType<ReactNode>(), Slot.withType<ComponentType>(), Slot.withType<UseSandboxPermission>()];
+  static slots = [
+    Slot.withType<ReactNode>(),
+    Slot.withType<ComponentType>(),
+    Slot.withType<UseSandboxPermission>(),
+    Slot.withType<UsePreviewProps>(),
+  ];
 
   static async provider(
     [component, componentCompare]: [ComponentUI, ComponentCompareUI],
     config: {},
-    [compositionMenuSlot, emptyStateSlot, usePreviewSandboxSlot]: [
+    [compositionMenuSlot, emptyStateSlot, usePreviewSandboxSlot, usePreviewPropsSlot]: [
       CompositionsMenuSlot,
       EmptyStateSlot,
       UsePreviewSandboxSlot,
+      UsePreviewPropsSlot,
     ]
   ) {
-    const compositions = new CompositionsUI(compositionMenuSlot, emptyStateSlot, usePreviewSandboxSlot);
+    const compositions = new CompositionsUI(
+      compositionMenuSlot,
+      emptyStateSlot,
+      usePreviewSandboxSlot,
+      usePreviewPropsSlot
+    );
     const section = new CompositionsSection(
       compositions,
       { menuBarWidgetSlot: compositions.menuBarWidgetSlot },
       emptyStateSlot,
-      usePreviewSandboxSlot
+      usePreviewSandboxSlot,
+      usePreviewPropsSlot
     );
     const compositionCompare = new CompositionCompareSection(compositions);
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation(compositionCompare);
     componentCompare.registerRoutes([compositionCompare.route]);
+    // Inline preview tab for the redesigned ComponentComparePage / lane-compare. Owned by the
+    // compositions aspect (owner of the preview/composition compare integration) instead of being
+    // hardcoded in component-compare, so component-compare stays decoupled from preview UI.
+    // lazy: the preview panel mounts base+compare composition iframes, each pulling the full env
+    // preview bundle on mount (even under `display: none`) — in a large lane compare that's hundreds
+    // of MB of hidden-iframe traffic starving the visible view.
+    componentCompare.registerCompareTab({
+      id: 'inline-preview',
+      order: 2,
+      displayName: 'Preview',
+      element: <InlinePreviewCompare />,
+      lazy: true,
+    });
     compositions.registerPreviewSandbox((manager, componentModel) => {
       if (componentModel?.host === 'teambit.scope/scope') {
         manager.add('allow-scripts');
         manager.add('allow-same-origin');
       }
+    });
+    // Default Permissions Policy: allow clipboard writes so copy-to-clipboard buttons in
+    // compositions work. Clipboard-read, camera, mic, geolocation, etc. remain denied. Other
+    // aspects may layer on (e.g. `fullscreen` for chart/video components).
+    compositions.registerPreviewProps((manager) => {
+      manager.set('allow', 'clipboard-write');
     });
     return compositions;
   }

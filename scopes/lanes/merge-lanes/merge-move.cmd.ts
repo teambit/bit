@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary, formatHint, joinSections } from '@teambit/cli';
 import type { MergeLanesMain } from './merge-lanes.main.runtime';
 import { BitError } from '@teambit/bit-error';
 
@@ -10,8 +11,8 @@ export type MergeAbortOpts = {
 export class MergeMoveLaneCmd implements Command {
   name = 'merge-move <new-lane-name>';
   description = `EXPERIMENT. move the current merge state into a new lane. the current lane will be reset`;
-  extendedDescription = `this command is useful when you got a messy merge state that from one hand you don't want
-to loose the changes, but on the other hand, you want to keep your lane without those changes.
+  extendedDescription = `this command is useful when you got a messy merge state that on one hand you don't want
+to lose the changes, but on the other hand, you want to keep your lane without those changes.
 this command does the following:
 1. create a new lane with the current merge state. including all the filesystem changes. (in practice, it leaves the fs intact)
 2. reset the current lane to the state before the merge. so then once done with the new lane, you can switch to the current lane and it'll be clean.`;
@@ -47,12 +48,12 @@ in order to move all local merge changes to a new lane, you can simply create a 
       : `the default-scope ${chalk.bold(
           result.laneId.scope
         )}. you can change the lane's scope, before it is exported, with the "bit lane change-scope" command`;
-    const title = chalk.green(
-      `successfully added and checked out to the new lane ${chalk.bold(
+    const title = formatSuccessSummary(
+      `added and checked out to the new lane ${chalk.bold(
         result.alias || result.laneId.name
       )} based on lane ${chalk.bold(currentLane.name)}`
     );
-    const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
-    return `${title}\n${remoteScopeOutput}`;
+    const remoteScopeOutput = formatHint(`this lane will be exported to ${remoteScopeOrDefaultScope}`);
+    return joinSections([title, remoteScopeOutput]);
   }
 }

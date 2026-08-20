@@ -22,6 +22,7 @@ import { SelfReference } from './self-reference';
 import { ImportFromDirectory } from './import-from-directory';
 import { DeprecatedDependencies } from './deprecated-dependencies';
 import { RemovedEnv } from './removed-env';
+import { LoadFailures } from './load-failures';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -47,6 +48,7 @@ export const IssuesClasses = {
   DeprecatedDependencies,
   SelfReference,
   ImportFromDirectory,
+  LoadFailures,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 

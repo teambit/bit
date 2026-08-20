@@ -14,10 +14,12 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
-import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
-import type { Ref, Lane, Version, Log } from '@teambit/objects';
+import type { Lane, Version, Log } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
+import { isSnap } from '@teambit/component-version';
 import pMapSeries from 'p-map-series';
 import type { Scope as LegacyScope } from '@teambit/legacy.scope';
 import type { ScopeMain } from '@teambit/scope';
@@ -71,6 +73,11 @@ export type MergeLaneOptions = {
   fetchCurrent?: boolean; // needed when merging from a bare-scope (because it's empty)
   detachHead?: boolean;
   loose?: boolean; // relevant for --build, to allow build to succeed even if tasks like tests or lint fail
+  // opt in to resolving each component's head on main from the REMOTE scope (via getHeadOnMain) when
+  // merging from main, so a base that lives only on the remote is still merged. off by default: the
+  // merge resolves heads from the local scope only (matches the historical behavior), so this remote
+  // round-trip is paid solely by callers that explicitly need it, not every merge-from-main consumer.
+  resolveMainHeadsFromRemote?: boolean;
 };
 export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean; configConflict?: string };
 
@@ -93,6 +100,14 @@ export class MergeLanesMain {
     }
     const currentLaneId = this.workspace.consumer.getCurrentLaneId();
     const otherLaneId = await this.workspace.consumer.getParsedLaneId(laneName);
+    // Hidden lane updateDependents must participate in every merge — otherwise main→lane refresh
+    // (`bit lane merge main`) leaves the lane's cascaded entries stuck on their old main-head
+    // base, and lane→main merge would push a partially-consistent lane state. The bare-scope
+    // counterpart (`bit _merge-lane`, used by Ripple / the UI's "update lane" button) already
+    // sets this; the workspace path was the missing leg.
+    if (options.shouldIncludeUpdateDependents === undefined) {
+      options.shouldIncludeUpdateDependents = true;
+    }
     return this.mergeLane(otherLaneId, currentLaneId, options);
   }
 
@@ -237,6 +252,7 @@ export class MergeLanesMain {
       skipDependencyInstallation,
       detachHead,
       loose,
+      shouldSquash,
     });
 
     if (snapshot) await lastMerged?.persistSnapshot(snapshot);
@@ -275,9 +291,91 @@ export class MergeLanesMain {
       }
     });
 
+    // A merged head may reference — via its flattened dependencies — a non-head snap of another
+    // component. When merging to main the squash removes intermediate snaps from each component's own
+    // chain, and a bare-scope merge (`bit _merge-lane --push`) exports heads only; in both cases such a
+    // referenced snap wouldn't be exported, and on lean lanes it lives only on the lane scope. Import
+    // any missing one now so the export can ship it (otherwise the remote's dependency-integrity check
+    // would reject the push). Not needed for non-squash workspace merges, which export full history.
+    if (shouldSquash || !this.workspace) {
+      await this.importMissingReferencedDeps(mergedSuccessfullyIds, otherLane);
+    }
+
     await this.workspace?.consumer.onDestroy(`lane-merge (${otherLaneId.name})`);
 
     return { mergeResults, deleteResults, configMergeResults, mergedSuccessfullyIds, conflicts };
+  }
+
+  /**
+   * A merged component head may reference, via its flattened dependencies, a non-head snap of another
+   * component — e.g. a deleted component that keeps pinning an older snap of a dependency that has
+   * since advanced. On lean lanes those snaps live only on the lane scope and are not fetched by the
+   * merge, so the heads-only export (used by `bit _merge-lane --push`) would leave them out and the
+   * remote's dependency-integrity check would fail. Import any such missing snap from the lane scope.
+   */
+  private async importMissingReferencedDeps(ids: ComponentID[], otherLane?: Lane) {
+    // the missing snaps live on the lane scope (lean lanes). without the source lane we don't know
+    // where to fetch them from, so there's nothing to do.
+    if (!otherLane) return;
+    const legacyScope = this.scope.legacyScope;
+    // one existence check per unique hash — the same snap appears in the flattened list of many heads
+    const checkedHashes = new Set<string>();
+    const candidateRefs: Ref[] = [];
+    await pMapSeries(ids, async (id) => {
+      // strip the version — a versioned lookup (sources.get) returns undefined when that Version
+      // object is missing locally, and only the model is needed here anyway (for its head).
+      const modelComponent = await legacyScope.getModelComponentIfExist(id.changeVersion(undefined));
+      const head = modelComponent?.head;
+      if (!modelComponent || !head) return;
+      const headVersion = await modelComponent.loadVersion(head.toString(), legacyScope.objects, false);
+      if (!headVersion) return;
+      // flattened (not only direct) to mirror the remote-side check, which validates the flattened
+      // dependencies of every exported head (see throwForMissingLocalDependencies). cheap: only the
+      // heads are loaded and each unique hash is stat-ed once.
+      headVersion.getAllFlattenedDependencies().forEach((depId) => {
+        // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`,
+        // cross-scope deps are fetched later by the remote itself), so same-scope is all the export
+        // needs to ship. this also filters out the vast majority of the flattened list.
+        if (depId.scope !== id.scope) return;
+        // only snaps can go missing this way — tags live on the home scope and are never squashed
+        // off a lane. (a tag version is a semver string, not an object hash, so Ref.from would be
+        // bogus for it anyway.)
+        if (!depId.version || !isSnap(depId.version)) return;
+        if (checkedHashes.has(depId.version)) return;
+        checkedHashes.add(depId.version);
+        candidateRefs.push(Ref.from(depId.version));
+      });
+    });
+    // hasMultiple bounds the I/O concurrency, unlike a Promise.all of has() calls
+    const existingRefs = await legacyScope.objects.hasMultiple(candidateRefs);
+    const existingHashes = new Set(existingRefs.map((ref) => ref.toString()));
+    const missingHashes = candidateRefs.map((ref) => ref.toString()).filter((hash) => !existingHashes.has(hash));
+    if (!missingHashes.length) return;
+    this.logger.debug(
+      `importMissingReferencedDeps, importing ${missingHashes.length} non-head dependency snaps referenced by the merged heads from ${otherLane.scope}`
+    );
+    // fetch the raw objects only (by hash, from the lane scope). importManyObjects does not touch
+    // component models/heads, so it can't leave a component pointing at a version whose object is
+    // missing — unlike a component-level import.
+    await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingHashes });
+    // a Version object references other objects the export must ship along with it — the file
+    // sources and the flattened-edges/dependencies-graph. fetch the missing ones too. (parents are
+    // not needed — the export doesn't collect them for these versions. artifacts are not needed
+    // either — the export tolerates missing artifacts for such non-local versions.)
+    const subRefs: Ref[] = [];
+    await pMapSeries(missingHashes, async (hash) => {
+      const versionObject = (await legacyScope.objects.load(Ref.from(hash))) as Version | null;
+      if (!versionObject) return; // the hash could not be fetched after all
+      versionObject.refsWithOptions(false, false).forEach((ref) => {
+        if (checkedHashes.has(ref.toString())) return;
+        checkedHashes.add(ref.toString());
+        subRefs.push(ref);
+      });
+    });
+    const existingSubRefs = new Set((await legacyScope.objects.hasMultiple(subRefs)).map((ref) => ref.toString()));
+    const missingSubRefs = subRefs.map((ref) => ref.toString()).filter((hash) => !existingSubRefs.has(hash));
+    if (!missingSubRefs.length) return;
+    await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingSubRefs });
   }
 
   private validateMergeFlags(otherLaneId: LaneId, currentLaneId: LaneId, options: MergeLaneOptions) {
@@ -312,7 +410,10 @@ export class MergeLanesMain {
     const isDefaultLane = otherLaneId.isDefault();
     if (isDefaultLane) {
       if (!skipFetch) {
-        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps);
+        // pass `shouldIncludeUpdateDependents` so the prefetch covers main objects for the
+        // lane's hidden entries too — the per-component merge engine needs main-side Version
+        // objects locally to compute divergence against the hidden cascade snaps.
+        const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps, shouldIncludeUpdateDependents);
         const compIdList = ComponentIdList.fromArray(ids).toVersionLatest();
         await this.importer.importObjectsFromMainIfExist(compIdList);
       }
@@ -323,7 +424,10 @@ export class MergeLanesMain {
       const shouldFetch = !lane || (!skipFetch && !lane.isNew);
       if (shouldFetch) {
         // don't assign `lane` to the result of this command. otherwise, if you have local snaps, it'll ignore them and use the remote-lane.
-        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId, shouldIncludeUpdateDependents);
+        // note: fetching always includes the lane's hidden updateDependents (and routes them to the
+        // lane's scope); `shouldIncludeUpdateDependents` still governs whether they take part in the
+        // merge itself, via `idsToMerge` below.
+        const otherLane = await this.lanes.fetchLaneWithItsComponents(otherLaneId);
         laneToFetchArtifactsFrom = otherLane;
         lane = await legacyScope.loadLane(otherLaneId);
       }
@@ -338,6 +442,20 @@ export class MergeLanesMain {
     const getBitIds = async () => {
       if (isDefaultLane) {
         const ids = await this.getMainIdsToMerge(currentLane, !excludeNonLaneComps, shouldIncludeUpdateDependents);
+        if (options.resolveMainHeadsFromRemote) {
+          // opt-in: resolve each head on main falling back to the remote scope, so a base that lives on
+          // the remote but wasn't fetched locally is still included instead of being skipped. a component
+          // with no head on main at all is genuinely new and dropped.
+          const idsWithHead = await Promise.all(
+            ids.map(async (id) => {
+              const head = await this.lanes.getHeadOnMain(id);
+              return head ? id.changeVersion(head) : null;
+            })
+          );
+          return compact(idsWithHead);
+        }
+        // default: resolve heads from the local scope only (historical behavior). a component not in the
+        // local scope throws, and one with no local head was never merged to main and is dropped.
         const modelComponents = await Promise.all(ids.map((id) => this.scope.legacyScope.getModelComponent(id)));
         return compact(
           modelComponents.map((c) => {
@@ -659,15 +777,6 @@ async function filterComponentsStatus(
   return filteredComponentStatus;
 }
 
-async function getLogForSquash(otherLaneId: LaneId) {
-  const basicLog = await getBasicLog();
-  const log = {
-    ...basicLog,
-    message: `squashed during merge from ${otherLaneId.toString()}`,
-  };
-  return log;
-}
-
 async function squashSnaps(
   succeededComponents: ComponentMergeStatus[],
   currentLaneId: LaneId,
@@ -724,11 +833,10 @@ async function squashOneComp(
         // for detach head, it's ok to have it as diverged. as long as the target is ahead, we want to squash.
         return true;
       }
-      throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
-  consider switching to "${
-    otherLaneId.name
-  }" first, merging "${currentLaneName}", then switching back to "${currentLaneName}" and merging "${otherLaneId.name}"
-  alternatively, use "--no-squash" flag to keep the entire history of "${otherLaneId.name}"`);
+      // diverged + --squash: skip the parent-rewrite path here. the merge snap will be created
+      // by snapForMerge with a single parent (and squashed metadata) because the corresponding
+      // UnmergedComponent entry has `shouldSquash: true`. see snapping.main.runtime.ts.
+      return false;
     }
     if (divergeData.isSourceAhead()) {
       // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")

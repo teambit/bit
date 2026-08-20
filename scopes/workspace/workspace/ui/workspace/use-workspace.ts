@@ -50,6 +50,7 @@ const wcComponentFieldsLight = gql`
     deprecation {
       isDeprecate
       newId
+      range
     }
     server {
       env
@@ -159,6 +160,7 @@ const wcComponentFields = gql`
     deprecation {
       isDeprecate
       newId
+      range
     }
     server {
       env

@@ -58,6 +58,7 @@ import { getPidByPort, getSocketPort } from './server-forever';
 const CMD_SERVER_PORT = 'cli-server-port';
 const CMD_SERVER_PORT_DELETE = 'cli-server-port-delete';
 const CMD_SERVER_SOCKET_PORT = 'cli-server-socket-port';
+const CMD_SERVER_TOKEN = 'cli-server-token';
 const SKIP_PORT_VALIDATION_ARG = '--skip-port-validation';
 
 class ServerPortFileNotFound extends Error {
@@ -112,9 +113,10 @@ export class ServerCommander {
     if (process.argv.includes(CMD_SERVER_PORT)) return this.printPortAndExit();
     if (process.argv.includes(CMD_SERVER_SOCKET_PORT)) return this.printSocketPortAndExit();
     if (process.argv.includes(CMD_SERVER_PORT_DELETE)) return this.deletePortAndExit();
+    if (process.argv.includes(CMD_SERVER_TOKEN)) return this.printServerTokenAndExit();
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
-    const url = `http://localhost:${port}/api`;
+    const url = `http://${resolveDialHost()}:${port}/api`;
     const shouldUsePTY = process.env.BIT_CLI_SERVER_PTY === 'true';
 
     if (shouldUsePTY) {
@@ -135,12 +137,15 @@ export class ServerCommander {
     const endpoint = `cli-raw`;
     const pwd = process.cwd();
     const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES, ttyPath, isPty: shouldUsePTY };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const token = this.getServerTokenIfExists();
+    if (token) headers.Authorization = `Bearer ${token}`;
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {
         method: 'post',
         body: JSON.stringify(body),
-        headers: { 'Content-Type': 'application/json' },
+        headers,
       });
     } catch (err: any) {
       if (err.code === 'ECONNREFUSED') {
@@ -237,7 +242,9 @@ Please run the command "bit server-forever" first to start the server.`)
    * it didn't work well. It was printed only after the response came back from the server.
    */
   private initSSE(url: string) {
-    const eventSource = new EventSource(`${url}/sse-events`);
+    const token = this.getServerTokenIfExists();
+    const eventSourceOpts = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+    const eventSource = new EventSource(`${url}/sse-events`, eventSourceOpts);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     eventSource.onerror = (_error: any) => {
       // eslint-disable-next-line no-console
@@ -287,6 +294,67 @@ Please run the command "bit server-forever" first to start the server.`)
     } catch (err: any) {
       console.error(err.message); // eslint-disable-line no-console
       process.exit(1);
+    }
+  }
+
+  /**
+   * Print the per-server bearer token written by bit-server at startup, used
+   * by clients (e.g. the bit-vscode extension) to authenticate to the local
+   * HTTP API. Prints empty if no token file exists (older bit-server with no
+   * auth requirement).
+   */
+  private async printServerTokenAndExit() {
+    try {
+      const filePath = this.getServerTokenFilePath();
+      try {
+        const token = await fs.readFile(filePath, 'utf8');
+        process.stdout.write(token.trim());
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') throw err;
+        // No token file — old bit-server, no auth required. Print empty.
+      }
+      process.exit(0);
+    } catch (err: any) {
+      if (err instanceof ScopeNotFound) {
+        process.exit(0);
+      }
+      console.error(err.message); // eslint-disable-line no-console
+      process.exit(1);
+    }
+  }
+
+  private getServerTokenFilePath() {
+    const scopePath = findScopePath(process.cwd());
+    if (!scopePath) {
+      throw new ScopeNotFound(process.cwd());
+    }
+    return join(scopePath, 'server-token.txt');
+  }
+
+  /**
+   * Read the server's bearer token, returning undefined if no token file
+   * exists (older bit-server with no auth requirement) or scope can't be
+   * resolved. Used by HTTP/SSE callers in this file to authenticate to the
+   * running bit-server.
+   *
+   * Only ENOENT and ScopeNotFound are swallowed — other read errors
+   * (EACCES, EPERM, corrupted file, …) are surfaced so the user sees the
+   * real cause instead of a misleading 401/upgrade message from the server.
+   */
+  private getServerTokenIfExists(): string | undefined {
+    let filePath: string;
+    try {
+      filePath = this.getServerTokenFilePath();
+    } catch (err: any) {
+      if (err instanceof ScopeNotFound) return undefined;
+      throw err;
+    }
+    try {
+      const token = fs.readFileSync(filePath, 'utf8').trim();
+      return token || undefined;
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return undefined;
+      throw err;
     }
   }
 
@@ -355,6 +423,26 @@ export function shouldUseBitServer() {
     process.argv.length > 2 && // if it has no args, it shows the help
     !commandsToSkip.includes(process.argv[2])
   );
+}
+
+/**
+ * Address the CLI uses to dial the local bit-server. Mirrors the api-server's
+ * bind host (`BIT_SERVER_HOST`) so the same env var works for both sides in
+ * hosted environments. Two host values need translating: `0.0.0.0` / `::`
+ * are bind-only wildcards — not valid as destinations — so dial loopback
+ * instead. Raw IPv6 addresses get bracketed for URL safety.
+ */
+function resolveDialHost(): string {
+  const override = process.env.BIT_SERVER_HOST?.trim();
+  if (!override) return '127.0.0.1';
+  if (override === '0.0.0.0') return '127.0.0.1';
+  if (override === '::') return '[::1]';
+  // Bracket any literal IPv6 (contains ':' but isn't an IPv4 with port —
+  // detected by 2+ colons).
+  if (override.includes(':') && override.split(':').length > 2 && !override.startsWith('[')) {
+    return `[${override}]`;
+  }
+  return override;
 }
 
 /**

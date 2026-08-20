@@ -24,12 +24,24 @@ import { WebpackBundler } from './webpack.bundler';
 import { WebpackDevServer } from './webpack.dev-server';
 import { runTransformersWithContext } from './run-transformer';
 
+/**
+ * @deprecated the bundler/dev-server that build component previews/apps no longer go through this
+ * aspect - the react/node/aspect envs bundle with `@teambit/webpack.webpack-bundler` directly (see
+ * https://bit.cloud/teambit/webpack/~change-requests/decouple-webpack-bundler-from-webpack-aspect).
+ * Source this type from `@teambit/webpack.webpack-bundler` instead.
+ */
 export type WebpackConfigTransformContext = GlobalWebpackConfigTransformContext & {
   target: Target;
 };
 
+/**
+ * @deprecated source from `@teambit/webpack.webpack-bundler` instead; see `WebpackConfigTransformContext`.
+ */
 export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransformContext & DevServerContext;
 
+/**
+ * @deprecated source from `@teambit/webpack.webpack-bundler` instead; see `WebpackConfigTransformContext`.
+ */
 export type GlobalWebpackConfigTransformContext = {
   mode: BundlerMode;
   /**
@@ -45,16 +57,32 @@ export type GlobalWebpackConfigTransformContext = {
   hostRootDir?: string;
 };
 
+/**
+ * @deprecated source from `@teambit/webpack.webpack-bundler` instead; see `WebpackConfigTransformContext`.
+ * Constructing this against `@teambit/webpack`'s own `WebpackConfigMutator` re-export and applying
+ * it to a config built by `@teambit/webpack.webpack-bundler` mixes two independently-resolved
+ * webpack instances.
+ */
 export type WebpackConfigTransformer = (
   config: WebpackConfigMutator,
   context: WebpackConfigTransformContext
 ) => WebpackConfigMutator;
 
+/**
+ * @deprecated source from `@teambit/webpack.webpack-dev-server` instead; see `WebpackConfigTransformContext`.
+ */
 export type WebpackConfigDevServerTransformer = (
   config: WebpackConfigMutator,
   context: WebpackConfigDevServerTransformContext
 ) => WebpackConfigMutator;
 
+/**
+ * @deprecated component previews/apps no longer build through this aspect - the react/node/aspect
+ * envs bundle with `@teambit/webpack.webpack-bundler` and `@teambit/webpack.webpack-dev-server`
+ * directly (see
+ * https://bit.cloud/teambit/webpack/~change-requests/decouple-webpack-bundler-from-webpack-aspect).
+ * `createBundler`/`createDevServer` will be removed in a follow-up; use those packages instead.
+ */
 export class WebpackMain {
   constructor(
     /**
@@ -80,6 +108,7 @@ export class WebpackMain {
 
   /**
    * create an instance of bit-compliant webpack dev server for a set of components
+   * @deprecated use `@teambit/webpack.webpack-dev-server`'s `WebpackDevServer.from`/`.create` instead.
    */
   createDevServer(
     context: DevServerContext,
@@ -109,10 +138,16 @@ export class WebpackMain {
     return new WebpackDevServer(afterMutation.raw, this.getWebpackInstance(webpackModulePath, webpack), wdsPath);
   }
 
+  /**
+   * @deprecated thin wrapper around `webpack-merge`; call it directly instead.
+   */
   mergeConfig(target: any, source: any): any {
     return merge(target, source);
   }
 
+  /**
+   * @deprecated use `@teambit/webpack.webpack-bundler`'s `WebpackBundler.from`/`.create` instead.
+   */
   createBundler(
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = [],

@@ -64,6 +64,19 @@ describe('Bit Ignore functionality', function () {
       expect(files).to.not.include('hello.json');
     });
   });
+  describe('using ignoredFiles config in workspace.jsonc', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.workspaceJsonc.addKeyValToWorkspace('ignoredFiles', ['hello.json']);
+      helper.fs.outputFile('comp1/hello.json', '{"hello": "world"}');
+    });
+    it('should ignore files matching the configured patterns', () => {
+      const files = helper.command.getComponentFiles('comp1');
+      expect(files).to.not.include('hello.json');
+      expect(files).to.include('index.js');
+    });
+  });
   describe('adding .gitignore and .bitignore in the component dir', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();

@@ -1,0 +1,365 @@
+import { expect } from 'chai';
+import { Extensions } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { IssuesClasses } from '@teambit/component-issues';
+
+describe('bit deprecate and undeprecate commands', function () {
+  this.timeout(0);
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  describe('deprecate tagged component', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.deprecateComponent('comp2');
+    });
+    it('bit show should show the component as deprecated', () => {
+      const deprecationData = helper.command.showAspectConfig('comp2', Extensions.deprecation);
+      expect(deprecationData.config.deprecate).to.be.true;
+    });
+    it('bit status should show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(1);
+      expect(status.modifiedComponents[0]).to.include('comp2');
+    });
+    describe('tagging the component', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild();
+      });
+      it('the component should not be modified', () => {
+        const status = helper.command.statusJson();
+        expect(status.modifiedComponents).to.have.lengthOf(0);
+      });
+      it('bit show should show the component as deprecated', () => {
+        const deprecationData = helper.command.showAspectConfig('comp2', Extensions.deprecation);
+        expect(deprecationData.config.deprecate).to.be.true;
+      });
+      it('.bitmap should not containing the config', () => {
+        const bitmap = helper.bitMap.read();
+        expect(bitmap.comp2).to.not.have.property('config');
+      });
+      it('bit list should show the component as deprecated', () => {
+        const list = helper.command.listParsed();
+        const comp2 = list.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+        expect(comp2?.deprecated).to.be.true;
+      });
+      describe('exporting the component', () => {
+        before(() => {
+          helper.command.export();
+        });
+        it('should delete the config from the .bitmap file.', () => {
+          const bitmap = helper.bitMap.read();
+          expect(bitmap.comp2).to.not.have.property('config');
+        });
+        describe('testing some config-merge', () => {
+          before(() => {
+            helper.workspaceJsonc.setVariant(undefined, 'comp2', {
+              'teambit.component/deprecation': { someRandomData: true },
+            });
+          });
+          // @todo: fix. currently it overrides the data unexpectedly.
+          it.skip('should not delete the deprecation data from the config', () => {
+            const deprecationData = helper.command.showAspectConfig('comp2', Extensions.deprecation);
+            expect(deprecationData.config.deprecate).to.be.true;
+          });
+        });
+        describe('importing a deprecated component', () => {
+          let importOutput: string;
+          before(() => {
+            helper.scopeHelper.reInitWorkspace();
+            helper.scopeHelper.addRemoteScope();
+            importOutput = helper.command.importComponent('comp2');
+          });
+          it('should indicate that the component is deprecated', () => {
+            expect(importOutput).to.have.string('deprecated');
+          });
+        });
+        describe('bit list of a remote deprecated component', () => {
+          before(() => {
+            helper.scopeHelper.reInitWorkspace();
+            helper.scopeHelper.addRemoteScope();
+          });
+          it('should indicate that the component is deprecated', () => {
+            const list = helper.command.listRemoteScopeParsed();
+            const comp2 = list.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+            expect(comp2.deprecated).to.equal(true);
+          });
+        });
+        describe('importing all scope', () => {
+          let output: string;
+          before(() => {
+            helper.scopeHelper.reInitWorkspace();
+            helper.scopeHelper.addRemoteScope();
+            output = helper.command.importComponent('* -x');
+          });
+          it('should not include deprecated by default', () => {
+            expect(output).to.have.string('2 components');
+          });
+        });
+        describe('importing all scope with --include-deprecated flag', () => {
+          let output: string;
+          before(() => {
+            helper.scopeHelper.reInitWorkspace();
+            helper.scopeHelper.addRemoteScope();
+            output = helper.command.importComponent('* -x --include-deprecated');
+          });
+          it('should include deprecated', () => {
+            expect(output).to.have.string('3 components');
+          });
+        });
+      });
+    });
+  });
+  describe('deprecate and undeprecate multiple components by pattern', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+    });
+    describe('deprecating all components with a wildcard pattern', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.deprecateComponent('"**"');
+      });
+      it('should indicate that multiple components were deprecated', () => {
+        expect(output).to.have.string('3 component');
+      });
+      it('should mark all matched components as deprecated', () => {
+        ['comp1', 'comp2', 'comp3'].forEach((id) => {
+          const deprecationData = helper.command.showAspectConfig(id, Extensions.deprecation);
+          expect(deprecationData.config.deprecate).to.be.true;
+        });
+      });
+    });
+    describe('undeprecating multiple components with a wildcard pattern', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.undeprecateComponent('"**"');
+      });
+      it('should indicate that multiple components were undeprecated', () => {
+        expect(output).to.have.string('3 component');
+      });
+      it('should remove the deprecation status from all of them', () => {
+        ['comp1', 'comp2', 'comp3'].forEach((id) => {
+          const deprecationData = helper.command.showAspectConfig(id, Extensions.deprecation);
+          expect(deprecationData.config.deprecate).to.be.false;
+        });
+      });
+    });
+    describe('using --new-id when the pattern matches more than one component', () => {
+      it('should throw an error', () => {
+        const cmd = () => helper.command.deprecateComponent('"**"', '--new-id comp1');
+        expect(cmd).to.throw();
+      });
+    });
+  });
+  describe('undeprecating components that are not deprecated by pattern', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      output = helper.command.undeprecateComponent('"**"');
+    });
+    it('should indicate that no changes were made', () => {
+      expect(output).to.have.string('no changes have been made');
+    });
+    it('should not write a deprecation config nor mark the components as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
+    });
+  });
+  describe('undeprecating a range-deprecation by pattern', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      // range-deprecations are stored with "deprecate: false", so undeprecate must still clear them
+      helper.command.deprecateComponent('comp1', '--range "<1.0.0"');
+      output = helper.command.undeprecateComponent('"**"');
+    });
+    it('should undeprecate the range-deprecated component (not bucket it as "not deprecated")', () => {
+      expect(output).to.have.string('undeprecated successfully');
+    });
+    it('should clear the range from the deprecation config', () => {
+      const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+      expect(deprecationData.config.deprecate).to.be.false;
+      expect(deprecationData.config).to.not.have.property('range');
+    });
+  });
+  describe('reverting the deprecation by "bit checkout reset"', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.deprecateComponent('comp1');
+      // intermediate test
+      const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+      expect(deprecationData.config.deprecate).to.be.true;
+
+      helper.command.checkoutReset('comp1');
+    });
+    it('should remove the deprecation config', () => {
+      const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+      expect(deprecationData).to.be.undefined;
+    });
+  });
+  describe('deprecate previous versions', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(2, undefined, 'version2');
+      helper.command.deprecateComponent('comp2', '--range 0.0.1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    it('should not show the current version as deprecated', () => {
+      const deprecationData = helper.command.showComponentParsedHarmonyByTitle('comp2', 'deprecated');
+      expect(deprecationData.isDeprecate).to.be.false;
+      expect(deprecationData.range).to.equal('0.0.1');
+    });
+    it('should show the previous version as deprecated', () => {
+      const deprecationData = helper.command.showComponentParsedHarmonyByTitle('comp2@0.0.1', 'deprecated');
+      expect(deprecationData.isDeprecate).to.be.true;
+      expect(deprecationData.range).to.equal('0.0.1');
+    });
+    it('bit list should not show the component as deprecated', () => {
+      const list = helper.command.listParsed();
+      const comp2 = list.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+      expect(comp2?.deprecated).to.be.false;
+    });
+    it('un-deprecating the component should remove the range data', () => {
+      helper.command.undeprecateComponent('comp2');
+
+      const deprecationData = helper.command.showComponentParsedHarmonyByTitle('comp2@0.0.1', 'deprecated');
+      expect(deprecationData.isDeprecate).to.be.false;
+      expect(deprecationData).to.not.have.property('range');
+    });
+    describe('importing the component', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('import the latest version should not show the deprecated message', () => {
+        const output = helper.command.importComponent('comp2', '-x');
+        expect(output).to.not.have.string('deprecated');
+      });
+      it('import the previous version should show the deprecated message', () => {
+        const output = helper.command.importComponent('comp2@0.0.1', '-x --override');
+        expect(output).to.have.string('deprecated');
+      });
+    });
+  });
+  describe('deprecate previous versions with --range before snapping (staged)', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild(); // 0.0.1
+      helper.fixtures.populateComponents(1, undefined, 'version2');
+      helper.command.tagAllWithoutBuild(); // 0.0.2
+      // deprecate a previous version but intentionally do NOT snap/tag afterwards
+      helper.command.deprecateComponent('comp1', '--range 0.0.1');
+    });
+    it('bit log should show the in-range version as deprecated even before snapping', () => {
+      const log = helper.command.logParsed('comp1');
+      const v1 = log.find((l) => l.tag === '0.0.1');
+      const v2 = log.find((l) => l.tag === '0.0.2');
+      expect(v1.deprecated).to.be.true;
+      expect(v2.deprecated).to.be.false;
+    });
+    describe('un-deprecating before snapping', () => {
+      before(() => {
+        helper.command.undeprecateComponent('comp1');
+      });
+      it('bit log should no longer show the version as deprecated', () => {
+        const log = helper.command.logParsed('comp1');
+        const v1 = log.find((l) => l.tag === '0.0.1');
+        expect(v1.deprecated).to.be.false;
+      });
+    });
+  });
+  describe('deprecate with an invalid --range', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should throw a clear error instead of persisting an invalid range', () => {
+      expect(() => helper.command.deprecateComponent('comp1', '--range "not-a-range"')).to.throw('invalid');
+    });
+  });
+  describe('deprecating with --range when it overlaps the current version', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.deprecateComponent('comp1', '--range "<1.0.0"');
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should show the component as deprecated', () => {
+      const deprecationData = helper.command.showComponentParsedHarmonyByTitle('comp1', 'deprecated');
+      expect(deprecationData.isDeprecate).to.be.true;
+      expect(deprecationData.range).to.equal('<1.0.0');
+    });
+    it('when the range is outside the current version it should not show as deprecated', () => {
+      helper.command.tagAllWithoutBuild('--ver 2.0.0 --unmodified');
+      const deprecationData = helper.command.showComponentParsedHarmonyByTitle('comp1', 'deprecated');
+      expect(deprecationData.isDeprecate).to.be.false;
+    });
+  });
+  describe('using deprecated components', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.deprecateComponent('comp2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    it('bit status should show the DeprecatedDependencies component-issue', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.DeprecatedDependencies.name);
+    });
+    describe('deprecating the dependent component as well (before tag)', () => {
+      before(() => {
+        helper.command.deprecateComponent('comp1');
+      });
+      it('bit status should not show the DeprecatedDependencies component-issue', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.DeprecatedDependencies.name);
+      });
+      after(() => {
+        helper.command.undeprecateComponent('comp1');
+      });
+    });
+    describe('deprecating the dependent component as well (after tag and export)', () => {
+      before(() => {
+        helper.command.deprecateComponent('comp1');
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+      });
+      it('bit status should not show the DeprecatedDependencies component-issue', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.DeprecatedDependencies.name);
+      });
+      after(() => {
+        helper.command.undeprecateComponent('comp1');
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+      });
+    });
+    describe('un-deprecating it', () => {
+      before(() => {
+        helper.command.undeprecateComponent('comp2');
+      });
+      it('bit status should not show the DeprecatedDependencies component-issue anymore', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.DeprecatedDependencies.name);
+      });
+    });
+  });
+});

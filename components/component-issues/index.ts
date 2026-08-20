@@ -3,3 +3,4 @@ export { ISSUE_FORMAT_SPACE as MISSING_DEPS_SPACE, ComponentIssue } from './comp
 export { UntrackedFileDependencyEntry, MISSING_NESTED_DEPS_SPACE } from './untracked-dependencies';
 export { RelativeComponentsAuthoredEntry } from './relative-components-authored';
 export type { MissingPackagesData } from './missing-packages-dependencies-on-fs';
+export { renderCycles } from './render-cycles';

@@ -72,3 +72,7 @@
   opacity: 0;
   transform: translateY(-3px);
 }
+
+:export {
+  menuZIndex: #{$modal-z-index + 1};
+}

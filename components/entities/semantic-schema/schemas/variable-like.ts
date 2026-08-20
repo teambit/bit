@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
+import type { SchemaChangeFact } from '../schema-diff';
+import { typesAreSemanticallyEqual, typeStr, diffDoc } from '../schema-diff';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '../schema-registry';
 
@@ -62,6 +64,58 @@ export class VariableLikeSchema extends SchemaNode {
       doc: this.doc?.toObject(),
       defaultValue: this.defaultValue,
     };
+  }
+
+  diff(other: SchemaNode): SchemaChangeFact[] {
+    if (!(other instanceof VariableLikeSchema)) return super.diff(other);
+    const facts: SchemaChangeFact[] = [];
+    if (!typesAreSemanticallyEqual(this.type.toObject(), other.type.toObject())) {
+      facts.push({
+        changeKind: 'type-annotation-changed',
+        description: `type changed: ${typeStr(this.type.toObject())} → ${typeStr(other.type.toObject())}`,
+        context: {
+          fromType: typeStr(this.type.toObject()),
+          toType: typeStr(other.type.toObject()),
+          position: 'variable',
+        },
+        from: typeStr(this.type.toObject()),
+        to: typeStr(other.type.toObject()),
+      });
+    }
+    if (this.isOptional && !other.isOptional) {
+      facts.push({
+        changeKind: 'became-required',
+        description: 'became required (was optional)',
+        context: { position: 'variable' },
+        from: 'optional',
+        to: 'required',
+      });
+    } else if (!this.isOptional && other.isOptional) {
+      facts.push({
+        changeKind: 'became-optional',
+        description: 'became optional (was required)',
+        context: { position: 'variable' },
+        from: 'required',
+        to: 'optional',
+      });
+    }
+    if (this.defaultValue !== other.defaultValue) {
+      const changeKind =
+        this.defaultValue === undefined
+          ? 'parameter-default-added'
+          : other.defaultValue === undefined
+            ? 'parameter-default-removed'
+            : 'parameter-default-changed';
+      facts.push({
+        changeKind,
+        description: `default value changed: ${this.defaultValue ?? 'none'} → ${other.defaultValue ?? 'none'}`,
+        context: { previousDefault: this.defaultValue, newDefault: other.defaultValue },
+        from: this.defaultValue,
+        to: other.defaultValue,
+      });
+    }
+    facts.push(...diffDoc(this.doc?.toObject(), other.doc?.toObject()));
+    return facts;
   }
 
   static fromObject(obj: Record<string, any>): VariableLikeSchema {

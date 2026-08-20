@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
+import { formatSuccessSummary } from '@teambit/cli';
 import type { RenamingMain } from './renaming.main.runtime';
 
 export type RenameOptions = {
@@ -9,6 +10,7 @@ export type RenameOptions = {
   preserve?: boolean;
   ast?: boolean;
   deprecate?: boolean;
+  skipCompile?: boolean;
 };
 
 export class RenameCmd implements Command {
@@ -37,7 +39,7 @@ for local components: simply renames the existing component in place.`;
     ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
     ['', 'ast', 'use ast to transform files instead of regex'],
     ['', 'delete', 'DEPRECATED. this is now the default'],
-    ['', 'deprecate', 'instead of deleting the original component, deprecating it'],
+    ['', 'deprecate', 'instead of deleting the original component, deprecate it'],
     [
       'p',
       'path <relative-path>',
@@ -51,8 +53,8 @@ for local components: simply renames the existing component in place.`;
 
   async report([sourceId, targetId]: [string, string], options: RenameOptions): Promise<string> {
     const results = await this.renaming.rename(sourceId, targetId, options);
-    return chalk.green(
-      `successfully renamed ${chalk.bold(results.sourceId.toString())} to ${chalk.bold(results.targetId.toString())}`
+    return formatSuccessSummary(
+      `renamed ${chalk.bold(results.sourceId.toString())} to ${chalk.bold(results.targetId.toString())}`
     );
   }
 }
