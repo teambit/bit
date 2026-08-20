@@ -224,118 +224,118 @@ importers:
         specifier: 0.0.5
         version: 0.0.5
       '@teambit/api-reference.explorer.api-reference-explorer':
-        specifier: ^0.0.39
+        specifier: ~0.0.39
         version: 0.0.39(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-reference.hooks.use-api':
-        specifier: ^0.0.57
+        specifier: ~0.0.57
         version: 0.0.57(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.hooks.use-api-ref-url':
-        specifier: ^0.0.25
+        specifier: ~0.0.25
         version: 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: ^0.0.37
+        specifier: ~0.0.37
         version: 0.0.37(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-node-renderer':
-        specifier: ^0.0.53
+        specifier: ~0.0.53
         version: 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-reference-model':
-        specifier: ^0.0.53
+        specifier: ~0.0.53
         version: 0.0.53
       '@teambit/api-reference.overview.api-reference-table-of-contents':
-        specifier: ^0.0.41
+        specifier: ~0.0.41
         version: 0.0.41(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary':
-        specifier: ^0.0.76
+        specifier: ~0.0.76
         version: 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details':
-        specifier: ^0.0.86
+        specifier: ~0.0.86
         version: 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.class':
-        specifier: ^0.0.89
+        specifier: ~0.0.89
         version: 0.0.89(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.decorator':
-        specifier: ^0.0.43
+        specifier: ~0.0.43
         version: 0.0.43(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.enum':
-        specifier: ^0.0.87
+        specifier: ~0.0.87
         version: 0.0.87(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.function':
-        specifier: ^0.0.90
+        specifier: ~0.0.90
         version: 0.0.90(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary':
-        specifier: ^0.0.85
+        specifier: ~0.0.85
         version: 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.inference-type':
-        specifier: ^0.0.66
+        specifier: ~0.0.66
         version: 0.0.66(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-reference.renderers.interface':
-        specifier: ^0.0.87
+        specifier: ~0.0.87
         version: 0.0.87(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.parameter':
-        specifier: ^0.0.72
+        specifier: ~0.0.72
         version: 0.0.72(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.react':
-        specifier: ^0.0.71
+        specifier: ~0.0.71
         version: 0.0.71(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.schema-node-member-summary':
-        specifier: ^0.0.85
+        specifier: ~0.0.85
         version: 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.schema-nodes-index':
-        specifier: ^0.0.75
+        specifier: ~0.0.75
         version: 0.0.75(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.this':
-        specifier: ^0.0.72
+        specifier: ~0.0.72
         version: 0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.tuple-type':
-        specifier: ^0.0.34
+        specifier: ~0.0.34
         version: 0.0.34(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type':
-        specifier: ^0.0.85
+        specifier: ~0.0.85
         version: 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.type-array':
-        specifier: ^0.0.55
+        specifier: ~0.0.55
         version: 0.0.55(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type-intersection':
-        specifier: ^0.0.55
+        specifier: ~0.0.55
         version: 0.0.55(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type-literal':
-        specifier: ^0.0.78
+        specifier: ~0.0.78
         version: 0.0.78(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.type-ref':
-        specifier: ^0.0.102
+        specifier: ~0.0.102
         version: 0.0.102(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.type-union':
-        specifier: ^0.0.55
+        specifier: ~0.0.55
         version: 0.0.55(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.unresolved':
-        specifier: ^0.0.83
+        specifier: ~0.0.83
         version: 0.0.83(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.variable':
-        specifier: ^0.0.83
+        specifier: ~0.0.83
         version: 0.0.83(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.sections.api-reference-page':
-        specifier: ^0.0.120
+        specifier: ~0.0.120
         version: 0.0.120(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-reference.sections.api-reference-section':
-        specifier: ^0.0.16
+        specifier: ~0.0.16
         version: 0.0.16(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.utils.code-editor-options':
-        specifier: ^0.0.16
+        specifier: ~0.0.16
         version: 0.0.16
       '@teambit/api-reference.utils.copy-schema-node':
-        specifier: ^0.0.48
+        specifier: ~0.0.48
         version: 0.0.48(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
-        specifier: ^0.0.16
+        specifier: ~0.0.16
         version: 0.0.16
       '@teambit/api-reference.utils.group-schema-node-by-signature':
-        specifier: ^0.0.45
+        specifier: ~0.0.45
         version: 0.0.45
       '@teambit/api-reference.utils.schema-node-signature-transform':
-        specifier: ^0.0.47
+        specifier: ~0.0.47
         version: 0.0.47
       '@teambit/api-reference.utils.sort-api-nodes':
-        specifier: ^0.0.53
+        specifier: ~0.0.53
         version: 0.0.53
       '@teambit/base-react.content.image':
         specifier: 1.97.1
@@ -353,7 +353,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.graph.tree.collapsable-tree-node':
-        specifier: ^0.0.12
+        specifier: ~0.0.12
         version: 0.0.12(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.graph.tree.indent':
         specifier: 1.0.0
@@ -449,7 +449,7 @@ importers:
         specifier: 0.0.8
         version: 0.0.8(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/code.ui.code-tab-tree':
-        specifier: ^0.0.620
+        specifier: ~0.0.620
         version: 0.0.620(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/code.ui.hooks.use-code-params':
         specifier: 0.0.497
@@ -458,7 +458,7 @@ importers:
         specifier: 0.0.1
         version: 0.0.1(react@19.2.7)
       '@teambit/code.ui.queries.get-component-code':
-        specifier: ^0.0.503
+        specifier: ~0.0.503
         version: 0.0.503(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/code.ui.utils.get-file-icon':
         specifier: 0.0.496
@@ -491,85 +491,85 @@ importers:
         specifier: 1.96.6
         version: 1.96.6(react@19.2.7)
       '@teambit/component.filters.base-filter':
-        specifier: ^0.0.6
+        specifier: ~0.0.6
         version: 0.0.6(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.instructions.exporting-components':
         specifier: 0.0.8
         version: 0.0.8(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.artifacts.artifacts-tree':
-        specifier: ^0.0.28
+        specifier: ~0.0.28
         version: 0.0.28(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.artifacts.models.component-artifacts-model':
-        specifier: ^0.0.12
+        specifier: ~0.0.12
         version: 0.0.12(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.artifacts.queries.use-component-artifacts':
-        specifier: ^0.0.14
+        specifier: ~0.0.14
         version: 0.0.14(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.compare-aspects.compare-aspects':
-        specifier: ^0.0.155
+        specifier: ~0.0.155
         version: 0.0.155(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(@types/react@19.2.18)(monaco-editor@0.33.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-compare.hooks.use-component-compare':
-        specifier: ^0.0.113
+        specifier: ~0.0.113
         version: 0.0.113(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.hooks.use-component-compare-url':
-        specifier: ^0.0.13
+        specifier: ~0.0.13
         version: 0.0.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset':
-        specifier: ^0.0.10
+        specifier: ~0.0.10
         version: 0.0.10(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-change-type':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-hooks':
-        specifier: ^0.0.11
+        specifier: ~0.0.11
         version: 0.0.11(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-model':
-        specifier: ^0.0.112
+        specifier: ~0.0.112
         version: 0.0.112(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-state':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.status-resolver':
-        specifier: ^0.0.12
+        specifier: ~0.0.12
         version: 0.0.12(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-compare.utils.group-by-version':
-        specifier: ^0.0.8
+        specifier: ~0.0.8
         version: 0.0.8(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.utils.sort-logs':
-        specifier: ^0.0.8
+        specifier: ~0.0.8
         version: 0.0.8(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.utils.sort-tabs':
         specifier: 0.0.104
         version: 0.0.104(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/component.ui.component-deprecated':
-        specifier: ^0.0.41
+        specifier: ~0.0.41
         version: 0.0.41(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-size':
-        specifier: ^0.0.77
+        specifier: ~0.0.77
         version: 0.0.77(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-status-resolver':
-        specifier: ^0.0.510
+        specifier: ~0.0.510
         version: 0.0.510(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.deprecation-icon':
-        specifier: ^0.0.509
+        specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.hooks.use-fetch-docs':
-        specifier: ^0.0.21
+        specifier: ~0.0.21
         version: 0.0.21(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.version-label':
-        specifier: ^0.0.509
+        specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.composition-live-controls':
-        specifier: ^0.0.6
+        specifier: ~0.0.6
         version: 0.0.6(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar':
-        specifier: ^0.0.177
+        specifier: ~0.0.177
         version: 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.compositions-overview':
-        specifier: ^0.0.10
+        specifier: ~0.0.10
         version: 0.0.10(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.hooks.use-composition':
-        specifier: ^0.0.177
+        specifier: ~0.0.177
         version: 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/defender.content.formatter-overview':
         specifier: 1.96.11
@@ -599,13 +599,13 @@ importers:
         specifier: ^1.0.14
         version: 1.0.14
       '@teambit/defender.ui.test-compare-section':
-        specifier: ^0.0.102
+        specifier: ~0.0.102
         version: 0.0.102(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/defender.ui.test-loader':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/defender.ui.test-table':
-        specifier: ^0.0.512
+        specifier: ~0.0.512
         version: 0.0.512(react-dom@19.2.7)(react@19.2.7)
       '@teambit/dependencies.modules.packages-excluder':
         specifier: ^1.0.8
@@ -614,19 +614,19 @@ importers:
         specifier: 1.0.1
         version: 1.0.1
       '@teambit/design.buttons.action-button':
-        specifier: ^0.0.4
+        specifier: ~0.0.4
         version: 0.0.4(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.content.table':
-        specifier: ^0.0.4
+        specifier: ~0.0.4
         version: 0.0.4(@testing-library/react@14.3.1)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/design.controls.menu':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.elements.icon':
         specifier: 1.0.24
         version: 1.0.24(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.date-picker':
-        specifier: ^0.0.3
+        specifier: ~0.0.3
         version: 0.0.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.dropdown':
         specifier: ^1.3.3
@@ -644,22 +644,22 @@ importers:
         specifier: ^2.0.17
         version: 2.0.17(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.inputs.text-area':
-        specifier: ^0.0.20
+        specifier: ~0.0.20
         version: 0.0.20(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.inputs.toggle-button':
         specifier: 0.0.16
         version: 0.0.16(@testing-library/react@14.3.1)(react@19.2.7)
       '@teambit/design.inputs.toggle-switch':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.navigation.content-tabs':
         specifier: 0.0.5
         version: 0.0.5(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.navigation.responsive-navbar':
-        specifier: ^0.0.8
+        specifier: ~0.0.8
         version: 0.0.8(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.skeletons.base-skeleton':
-        specifier: ^0.0.2
+        specifier: ~0.0.2
         version: 0.0.2(react@19.2.7)
       '@teambit/design.theme.icons-font':
         specifier: 2.0.29
@@ -695,7 +695,7 @@ importers:
         specifier: 1.1.29
         version: 1.1.29(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.input.color-picker':
-        specifier: ^0.0.56
+        specifier: ~0.0.56
         version: 0.0.56(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.ui.input.option-button':
         specifier: 1.0.13
@@ -743,7 +743,7 @@ importers:
         specifier: ^1.0.13
         version: 1.0.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.surfaces.menu.section':
-        specifier: ^0.0.357
+        specifier: ~0.0.357
         version: 0.0.357(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.surfaces.status-message-card':
         specifier: 0.0.18
@@ -761,7 +761,7 @@ importers:
         specifier: ^1.0.12
         version: 1.0.12(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/docs.ui.overview-compare-section':
-        specifier: ^0.0.102
+        specifier: ~0.0.102
         version: 0.0.102(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/documenter.theme.theme-compositions':
         specifier: 4.1.5
@@ -830,7 +830,7 @@ importers:
         specifier: ^2.0.19
         version: 2.0.19(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/explorer.ui.component-card':
-        specifier: ^0.0.52
+        specifier: ~0.0.52
         version: 0.0.52(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/explorer.ui.gallery.component-grid':
         specifier: 0.0.496
@@ -860,19 +860,19 @@ importers:
         specifier: 0.0.12
         version: 0.0.12(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lanes.ui.icons.lane-icon':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lanes.ui.lane-details':
-        specifier: ^0.0.205
+        specifier: ~0.0.205
         version: 0.0.205(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lanes.ui.menus.lanes-overview-menu':
-        specifier: ^0.0.11
+        specifier: ~0.0.11
         version: 0.0.11(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        specifier: ^0.0.299
+        specifier: ~0.0.299
         version: 0.0.299(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lanes.ui.navigation.lane-switcher':
-        specifier: ^0.0.239
+        specifier: ~0.0.239
         version: 0.0.239(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/legacy-bit-id':
         specifier: ^1.1.3
@@ -884,10 +884,10 @@ importers:
         specifier: ^1.0.14
         version: 1.0.14
       '@teambit/mdx.modules.mdx-pre-loader':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1
       '@teambit/mdx.modules.mdx-v3-options':
-        specifier: ^0.0.3
+        specifier: ~0.0.3
         version: 0.0.3(rollup@2.80.0)(supports-color@9.4.0)
       '@teambit/mdx.ui.mdx-layout':
         specifier: ^1.0.14
@@ -899,22 +899,22 @@ importers:
         specifier: ~0.0.6
         version: 0.0.6
       '@teambit/node.utils.esm-loader':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7
       '@teambit/pkg.config.auth':
-        specifier: ^0.0.3
+        specifier: ~0.0.3
         version: 0.0.3(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/pkg.content.packages-overview':
         specifier: 1.96.9
         version: 1.96.9(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/pkg.entities.registry':
-        specifier: ^0.0.4
+        specifier: ~0.0.4
         version: 0.0.4
       '@teambit/pkg.package-json.validator':
         specifier: 0.0.1
         version: 0.0.1
       '@teambit/preview.cli.dev-server-events-listener':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1
       '@teambit/preview.modules.preview-modules':
         specifier: ^1.0.3
@@ -953,22 +953,22 @@ importers:
         specifier: 1.96.8
         version: 1.96.8(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/scope.ui.empty-scope':
-        specifier: ^0.0.510
+        specifier: ~0.0.510
         version: 0.0.510(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/scope.ui.hooks.use-scope':
-        specifier: ^0.0.456
+        specifier: ~0.0.456
         version: 0.0.456(@apollo/client@3.12.11)(@types/chai@4.2.15)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/scope.ui.scope-details':
-        specifier: ^0.0.526
+        specifier: ~0.0.526
         version: 0.0.526(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/scope.ui.scope-icon':
         specifier: 0.0.100
         version: 0.0.100(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/scopes.scope-descriptor':
-        specifier: ^0.0.34
+        specifier: ~0.0.34
         version: 0.0.34(react@19.2.7)
       '@teambit/scopes.scope-id':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9
       '@teambit/styling.deps-detectors.detective-css':
         specifier: ~0.0.6
@@ -998,7 +998,7 @@ importers:
         specifier: ~0.0.2
         version: 0.0.2
       '@teambit/toolbox.time.time-format':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502
       '@teambit/typescript.deps-detectors.detective-typescript':
         specifier: ~0.0.10
@@ -1010,58 +1010,58 @@ importers:
         specifier: ^5.0.1
         version: 5.0.2(react@19.2.7)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.corner':
-        specifier: ^0.0.520
+        specifier: ~0.0.520
         version: 0.0.520(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/ui-foundation.ui.empty-component-gallery':
-        specifier: ^0.0.512
+        specifier: ~0.0.512
         version: 0.0.512(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.full-loader':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.global-loader':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.200
+        specifier: ~0.0.200
         version: 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.hooks.use-user-agent':
-        specifier: ^0.0.200
+        specifier: ~0.0.200
         version: 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.keycap':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.main-dropdown':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu':
-        specifier: ^0.0.503
+        specifier: ~0.0.503
         version: 0.0.503(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu-widget-icon':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.navigation.react-router-adapter':
         specifier: ^6.1.3
         version: 6.1.3(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/ui-foundation.ui.notifications.notification-center':
-        specifier: ^0.0.523
+        specifier: ~0.0.523
         version: 0.0.523(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.notifications.notification-context':
-        specifier: ^0.0.501
+        specifier: ~0.0.501
         version: 0.0.501(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.notifications.store':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.top-bar':
-        specifier: ^0.0.515
+        specifier: ~0.0.515
         version: 0.0.515(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/ui-foundation.ui.tree.drawer':
         specifier: ^1.0.0
@@ -1076,19 +1076,19 @@ importers:
         specifier: 0.0.517
         version: 0.0.517(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.use-box.bottom-link':
-        specifier: ^0.0.119
+        specifier: ~0.0.119
         version: 0.0.119(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.use-box.dropdown':
-        specifier: ^0.0.151
+        specifier: ~0.0.151
         version: 0.0.151(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.use-box.menu':
         specifier: ^1.0.16
         version: 1.0.16(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.use-box.scope-menu':
-        specifier: ^0.0.147
+        specifier: ~0.0.147
         version: 0.0.147(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.use-box.tab':
-        specifier: ^0.0.122
+        specifier: ~0.0.122
         version: 0.0.122(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack.modules.exclude-node-modules-js':
         specifier: 0.0.1
@@ -1121,10 +1121,10 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       '@teambit/workspace.ui.empty-workspace':
-        specifier: ^0.0.509
+        specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/workspace.ui.load-preview':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/dom':
         specifier: ^10.0.0
@@ -2446,7 +2446,7 @@ importers:
         specifier: ~0.0.312
         version: 0.0.312
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       core-js:
         specifier: ^3.0.0
@@ -2569,7 +2569,7 @@ importers:
         specifier: ~0.0.312
         version: 0.0.312
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       oxlint:
         specifier: 1.55.0
@@ -3632,58 +3632,58 @@ importers:
   components/renderers/default-node-renderers:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer':
-        specifier: ^0.0.53
+        specifier: ~0.0.53
         version: 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.class':
-        specifier: ^0.0.89
+        specifier: ~0.0.89
         version: 0.0.89(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.decorator':
-        specifier: ^0.0.43
+        specifier: ~0.0.43
         version: 0.0.43(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.enum':
-        specifier: ^0.0.87
+        specifier: ~0.0.87
         version: 0.0.87(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.function':
-        specifier: ^0.0.90
+        specifier: ~0.0.90
         version: 0.0.90(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.inference-type':
-        specifier: ^0.0.66
+        specifier: ~0.0.66
         version: 0.0.66(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-reference.renderers.interface':
-        specifier: ^0.0.87
+        specifier: ~0.0.87
         version: 0.0.87(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.parameter':
-        specifier: ^0.0.72
+        specifier: ~0.0.72
         version: 0.0.72(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.this':
-        specifier: ^0.0.72
+        specifier: ~0.0.72
         version: 0.0.72(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.tuple-type':
-        specifier: ^0.0.34
+        specifier: ~0.0.34
         version: 0.0.34(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type':
-        specifier: ^0.0.85
+        specifier: ~0.0.85
         version: 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.type-array':
-        specifier: ^0.0.55
+        specifier: ~0.0.55
         version: 0.0.55(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type-intersection':
-        specifier: ^0.0.55
+        specifier: ~0.0.55
         version: 0.0.55(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type-literal':
-        specifier: ^0.0.78
+        specifier: ~0.0.78
         version: 0.0.78(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.type-ref':
-        specifier: ^0.0.102
+        specifier: ~0.0.102
         version: 0.0.102(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.type-union':
-        specifier: ^0.0.55
+        specifier: ~0.0.55
         version: 0.0.55(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.unresolved':
-        specifier: ^0.0.83
+        specifier: ~0.0.83
         version: 0.0.83(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.variable':
-        specifier: ^0.0.83
+        specifier: ~0.0.83
         version: 0.0.83(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       core-js:
         specifier: ^3.0.0
@@ -3806,16 +3806,16 @@ importers:
   components/tagged-exports:
     dependencies:
       '@teambit/api-reference.hooks.use-api':
-        specifier: ^0.0.57
+        specifier: ~0.0.57
         version: 0.0.57(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: ^0.0.37
+        specifier: ~0.0.37
         version: 0.0.37(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-reference-model':
-        specifier: ^0.0.53
+        specifier: ~0.0.53
         version: 0.0.53
       '@teambit/api-reference.overview.api-reference-table-of-contents':
-        specifier: ^0.0.41
+        specifier: ~0.0.41
         version: 0.0.41(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-react.themes.theme-switcher':
         specifier: ^1.1.2
@@ -3941,7 +3941,7 @@ importers:
         specifier: 1.0.5
         version: 1.0.5(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -4011,7 +4011,7 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(react-dom@19.2.7)(react@19.2.7)
       '@teambit/code.ui.queries.get-component-code':
-        specifier: ^0.0.503
+        specifier: ~0.0.503
         version: 0.0.503(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/code.ui.utils.get-file-icon':
         specifier: 0.0.496
@@ -4020,10 +4020,10 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/component.ui.component-compare.hooks.use-component-compare-url':
-        specifier: ^0.0.13
+        specifier: ~0.0.13
         version: 0.0.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.status-resolver':
-        specifier: ^0.0.12
+        specifier: ~0.0.12
         version: 0.0.12(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.inputs.selectors.checkbox-item':
         specifier: 1.2.0
@@ -4044,10 +4044,10 @@ importers:
         specifier: 1.0.3
         version: 1.0.3(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.tree.drawer':
         specifier: ^1.0.0
@@ -4169,25 +4169,25 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/code.ui.code-tab-tree':
-        specifier: ^0.0.620
+        specifier: ~0.0.620
         version: 0.0.620(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/code.ui.hooks.use-code-params':
         specifier: 0.0.497
         version: 0.0.497(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/code.ui.queries.get-component-code':
-        specifier: ^0.0.503
+        specifier: ~0.0.503
         version: 0.0.503(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/code.ui.utils.get-file-icon':
         specifier: 0.0.496
         version: 0.0.496(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.artifacts.artifacts-tree':
-        specifier: ^0.0.28
+        specifier: ~0.0.28
         version: 0.0.28(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.artifacts.models.component-artifacts-model':
-        specifier: ^0.0.12
+        specifier: ~0.0.12
         version: 0.0.12(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.artifacts.queries.use-component-artifacts':
-        specifier: ^0.0.14
+        specifier: ~0.0.14
         version: 0.0.14(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.tree':
         specifier: 0.0.16
@@ -4196,10 +4196,10 @@ importers:
         specifier: 4.0.9
         version: 4.0.9(react@19.2.7)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.200
+        specifier: ~0.0.200
         version: 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.tree.tree-node':
         specifier: 0.0.517
@@ -4266,7 +4266,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/code.ui.queries.get-component-code':
-        specifier: ^0.0.503
+        specifier: ~0.0.503
         version: 0.0.503(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.code-snippet':
         specifier: ^4.2.7
@@ -4324,7 +4324,7 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/component.ui.component-compare.models.component-compare-state':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.utils.sort-tabs':
         specifier: 0.0.104
@@ -4462,7 +4462,7 @@ importers:
   components/ui/component-compare/changelog:
     dependencies:
       '@teambit/component.ui.component-compare.utils.sort-logs':
-        specifier: ^0.0.8
+        specifier: ~0.0.8
         version: 0.0.8(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -4514,31 +4514,31 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(react@19.2.7)
       '@teambit/code.ui.queries.get-component-code':
-        specifier: ^0.0.503
+        specifier: ~0.0.503
         version: 0.0.503(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component-id':
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/component.ui.component-compare.hooks.use-component-compare':
-        specifier: ^0.0.113
+        specifier: ~0.0.113
         version: 0.0.113(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.hooks.use-component-compare-url':
-        specifier: ^0.0.13
+        specifier: ~0.0.13
         version: 0.0.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-change-type':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-hooks':
-        specifier: ^0.0.11
+        specifier: ~0.0.11
         version: 0.0.11(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-model':
-        specifier: ^0.0.112
+        specifier: ~0.0.112
         version: 0.0.112(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.utils.group-by-version':
-        specifier: ^0.0.8
+        specifier: ~0.0.8
         version: 0.0.8(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.utils.sort-logs':
-        specifier: ^0.0.8
+        specifier: ~0.0.8
         version: 0.0.8(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.utils.sort-tabs':
         specifier: 0.0.104
@@ -4593,13 +4593,13 @@ importers:
   components/ui/component-compare/context:
     dependencies:
       '@teambit/component.ui.component-compare.models.component-compare-hooks':
-        specifier: ^0.0.11
+        specifier: ~0.0.11
         version: 0.0.11(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-model':
-        specifier: ^0.0.112
+        specifier: ~0.0.112
         version: 0.0.112(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-state':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       core-js:
         specifier: ^3.0.0
@@ -4639,13 +4639,13 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-change-type':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-hooks':
-        specifier: ^0.0.11
+        specifier: ~0.0.11
         version: 0.0.11(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-state':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       core-js:
         specifier: ^3.0.0
@@ -4728,10 +4728,10 @@ importers:
   components/ui/component-compare/version-picker:
     dependencies:
       '@teambit/component.ui.component-compare.hooks.use-component-compare-url':
-        specifier: ^0.0.13
+        specifier: ~0.0.13
         version: 0.0.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -4887,7 +4887,7 @@ importers:
   components/ui/component-filters/deprecate-filter:
     dependencies:
       '@teambit/design.inputs.toggle-switch':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -4982,10 +4982,10 @@ importers:
   components/ui/component-filters/show-main-filter:
     dependencies:
       '@teambit/design.inputs.toggle-switch':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lanes.ui.icons.lane-icon':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -5064,10 +5064,10 @@ importers:
         specifier: 1.0.3
         version: 1.0.3(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -5116,7 +5116,7 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/component.filters.base-filter':
-        specifier: ^0.0.6
+        specifier: ~0.0.6
         version: 0.0.6(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.inputs.toggle-button':
         specifier: 0.0.16
@@ -5125,13 +5125,13 @@ importers:
         specifier: 0.0.496
         version: 0.0.496(react-dom@19.2.7)(react@19.2.7)
       '@teambit/scopes.scope-id':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/workspace.ui.load-preview':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -5171,13 +5171,13 @@ importers:
         specifier: 2.0.33
         version: 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.hooks.use-component-compare-url':
-        specifier: ^0.0.13
+        specifier: ~0.0.13
         version: 0.0.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset':
-        specifier: ^0.0.10
+        specifier: ~0.0.10
         version: 0.0.10(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.hooks.use-composition':
-        specifier: ^0.0.177
+        specifier: ~0.0.177
         version: 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.elements.icon':
         specifier: 1.0.24
@@ -5195,10 +5195,10 @@ importers:
         specifier: 1.0.3
         version: 1.0.3(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -5290,10 +5290,10 @@ importers:
   components/ui/deps-diff-table:
     dependencies:
       '@teambit/component.ui.component-compare.status-resolver':
-        specifier: ^0.0.12
+        specifier: ~0.0.12
         version: 0.0.12(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.menu-widget-icon':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502(react-dom@19.2.7)(react@19.2.7)
       react:
         specifier: 19.2.7
@@ -5472,7 +5472,7 @@ importers:
         specifier: ^3.12.0
         version: 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
       '@teambit/ui-foundation.ui.notifications.notification-context':
-        specifier: ^0.0.501
+        specifier: ~0.0.501
         version: 0.0.501(react-dom@19.2.7)(react@19.2.7)
       core-js:
         specifier: ^3.0.0
@@ -5677,10 +5677,10 @@ importers:
         specifier: ~0.0.312
         version: 0.0.312
       '@teambit/lanes.ui.icons.lane-icon':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -5744,7 +5744,7 @@ importers:
         specifier: ~0.0.312
         version: 0.0.312
       '@teambit/ui-foundation.ui.empty-component-gallery':
-        specifier: ^0.0.512
+        specifier: ~0.0.512
         version: 0.0.512(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -6119,7 +6119,7 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/component.ui.deprecation-icon':
-        specifier: ^0.0.509
+        specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.tree':
         specifier: 0.0.16
@@ -6183,13 +6183,13 @@ importers:
         specifier: ^3.12.0
         version: 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
       '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset':
-        specifier: ^0.0.10
+        specifier: ~0.0.10
         version: 0.0.10(react-dom@19.2.7)(react@19.2.7)
       '@teambit/defender.ui.test-loader':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/defender.ui.test-table':
-        specifier: ^0.0.512
+        specifier: ~0.0.512
         version: 0.0.512(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.alert-card':
         specifier: 0.0.27
@@ -6247,13 +6247,13 @@ importers:
         specifier: ^3.12.0
         version: 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
       '@teambit/defender.ui.test-loader':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/defender.ui.test-table':
-        specifier: ^0.0.512
+        specifier: ~0.0.512
         version: 0.0.512(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.content.table':
-        specifier: ^0.0.4
+        specifier: ~0.0.4
         version: 0.0.4(@testing-library/react@14.3.1)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/design.ui.alert-card':
         specifier: 0.0.27
@@ -6274,7 +6274,7 @@ importers:
         specifier: ^1.0.14
         version: 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -6381,7 +6381,7 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.200
+        specifier: ~0.0.200
         version: 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@tippyjs/react':
         specifier: 4.2.0
@@ -6470,7 +6470,7 @@ importers:
         specifier: 2.0.33
         version: 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.version-label':
-        specifier: ^0.0.509
+        specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/evangelist.elements.icon':
         specifier: 1.0.5
@@ -6519,7 +6519,7 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(react@19.2.7)
       '@teambit/component.ui.version-label':
-        specifier: ^0.0.509
+        specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.pill-label':
         specifier: 0.0.360
@@ -6537,10 +6537,10 @@ importers:
         specifier: 1.0.3
         version: 1.0.3(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.use-box.tab':
-        specifier: ^0.0.122
+        specifier: ~0.0.122
         version: 0.0.122(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -6610,13 +6610,13 @@ importers:
   components/ui/workspace-component-card:
     dependencies:
       '@teambit/explorer.ui.component-card':
-        specifier: ^0.0.52
+        specifier: ~0.0.52
         version: 0.0.52(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/scopes.scope-id':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9
       '@teambit/workspace.ui.load-preview':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       classnames:
         specifier: ^2.5.1
@@ -18134,19 +18134,19 @@ importers:
   scopes/api-reference/api-reference:
     dependencies:
       '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: ^0.0.37
+        specifier: ~0.0.37
         version: 0.0.37(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-node-renderer':
-        specifier: ^0.0.53
+        specifier: ~0.0.53
         version: 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.sections.api-reference-page':
-        specifier: ^0.0.120
+        specifier: ~0.0.120
         version: 0.0.120(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-reference.sections.api-reference-section':
-        specifier: ^0.0.16
+        specifier: ~0.0.16
         version: 0.0.16(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-change-type':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
@@ -18189,16 +18189,16 @@ importers:
         specifier: ~0.0.404
         version: 0.0.404
       '@teambit/design.controls.menu':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/scopes.scope-descriptor':
-        specifier: ^0.0.34
+        specifier: ~0.0.34
         version: 0.0.34(react@19.2.7)
       '@teambit/scopes.scope-id':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9
       '@testing-library/react':
         specifier: ^14.3.1
@@ -18259,10 +18259,10 @@ importers:
         specifier: ^3.12.0
         version: 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
       '@teambit/scopes.scope-descriptor':
-        specifier: ^0.0.34
+        specifier: ~0.0.34
         version: 0.0.34(react@19.2.7)
       '@teambit/scopes.scope-id':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9
       oxlint:
         specifier: 1.55.0
@@ -18331,7 +18331,7 @@ importers:
   scopes/cloud/models/cloud-scope:
     dependencies:
       '@teambit/scopes.scope-descriptor':
-        specifier: ^0.0.34
+        specifier: ~0.0.34
         version: 0.0.34(react@19.2.7)
       oxlint:
         specifier: 1.55.0
@@ -18505,7 +18505,7 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(react@19.2.7)
       '@teambit/design.controls.menu':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.navigation.link':
         specifier: ^1.96.12
@@ -18514,7 +18514,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       core-js:
         specifier: ^3.0.0
@@ -18927,7 +18927,7 @@ importers:
         specifier: ^1.0.14
         version: 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)
       '@teambit/ui-foundation.ui.menu-widget-icon':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -19028,7 +19028,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/ui-foundation.ui.menu-widget-icon':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -19074,10 +19074,10 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/component.ui.deprecation-icon':
-        specifier: ^0.0.509
+        specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.navigation.responsive-navbar':
-        specifier: ^0.0.8
+        specifier: ~0.0.8
         version: 0.0.8(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.empty-box':
         specifier: 0.0.364
@@ -19110,19 +19110,19 @@ importers:
         specifier: ^1.1.3
         version: 1.1.3
       '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.main-dropdown':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu-widget-icon':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.use-box.dropdown':
-        specifier: ^0.0.151
+        specifier: ~0.0.151
         version: 0.0.151(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.use-box.menu':
         specifier: ^1.0.16
@@ -19222,25 +19222,25 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/component.ui.component-compare.compare-aspects.compare-aspects':
-        specifier: ^0.0.155
+        specifier: ~0.0.155
         version: 0.0.155(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(@types/react@19.2.18)(monaco-editor@0.33.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-compare.hooks.use-component-compare-url':
-        specifier: ^0.0.13
+        specifier: ~0.0.13
         version: 0.0.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.models.component-compare-change-type':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.utils.group-by-version':
-        specifier: ^0.0.8
+        specifier: ~0.0.8
         version: 0.0.8(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.utils.sort-logs':
-        specifier: ^0.0.8
+        specifier: ~0.0.8
         version: 0.0.8(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/ui-foundation.ui.menu-widget-icon':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -19415,7 +19415,7 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-size':
-        specifier: ^0.0.77
+        specifier: ~0.0.77
         version: 0.0.77(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.pill-label':
         specifier: 0.0.360
@@ -19424,7 +19424,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -19575,7 +19575,7 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/component.ui.component-deprecated':
-        specifier: ^0.0.41
+        specifier: ~0.0.41
         version: 0.0.41(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
@@ -19743,16 +19743,16 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/component.ui.component-compare.models.component-compare-change-type':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.status-resolver':
-        specifier: ^0.0.12
+        specifier: ~0.0.12
         version: 0.0.12(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon':
-        specifier: ^0.0.509
+        specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.skeletons.base-skeleton':
-        specifier: ^0.0.2
+        specifier: ~0.0.2
         version: 0.0.2(react@19.2.7)
       '@teambit/design.ui.pages.not-found':
         specifier: 0.0.371
@@ -19776,7 +19776,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -20856,7 +20856,7 @@ importers:
   scopes/compositions/compositions:
     dependencies:
       '@teambit/api-reference.hooks.use-api':
-        specifier: ^0.0.57
+        specifier: ~0.0.57
         version: 0.0.57(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-react.navigation.link':
         specifier: 2.0.33
@@ -20871,16 +20871,16 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.composition-live-controls':
-        specifier: ^0.0.6
+        specifier: ~0.0.6
         version: 0.0.6(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar':
-        specifier: ^0.0.177
+        specifier: ~0.0.177
         version: 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.hooks.use-composition':
-        specifier: ^0.0.177
+        specifier: ~0.0.177
         version: 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.date-picker':
-        specifier: ^0.0.3
+        specifier: ~0.0.3
         version: 0.0.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.dropdown':
         specifier: ^1.3.3
@@ -20892,10 +20892,10 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(react@19.2.7)
       '@teambit/design.inputs.text-area':
-        specifier: ^0.0.20
+        specifier: ~0.0.20
         version: 0.0.20(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.inputs.toggle-switch':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.alert-card':
         specifier: 0.0.27
@@ -20904,7 +20904,7 @@ importers:
         specifier: 0.0.364
         version: 0.0.364(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.input.color-picker':
-        specifier: ^0.0.56
+        specifier: ~0.0.56
         version: 0.0.56(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.ui.input.option-button':
         specifier: 1.0.13
@@ -20934,13 +20934,13 @@ importers:
         specifier: ^1.0.14
         version: 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.200
+        specifier: ~0.0.200
         version: 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.menu-widget-icon':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -21529,7 +21529,7 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/defender.ui.test-compare-section':
-        specifier: ^0.0.102
+        specifier: ~0.0.102
         version: 0.0.102(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/design.ui.pill-label':
         specifier: 0.0.360
@@ -21895,7 +21895,7 @@ importers:
         specifier: ^1.1.3
         version: 1.1.3
       '@teambit/pkg.entities.registry':
-        specifier: ^0.0.4
+        specifier: ~0.0.4
         version: 0.0.4
       '@teambit/toolbox.object.sorter':
         specifier: ~0.0.2
@@ -22050,7 +22050,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/pkg.entities.registry':
-        specifier: ^0.0.4
+        specifier: ~0.0.4
         version: 0.0.4
       '@teambit/ui-foundation.ui.use-box.menu':
         specifier: ^1.0.16
@@ -22129,7 +22129,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/pkg.entities.registry':
-        specifier: ^0.0.4
+        specifier: ~0.0.4
         version: 0.0.4
       '@teambit/ui-foundation.ui.use-box.menu':
         specifier: ^1.0.16
@@ -22211,7 +22211,7 @@ importers:
         specifier: ^1.0.12
         version: 1.0.12(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/docs.ui.overview-compare-section':
-        specifier: ^0.0.102
+        specifier: ~0.0.102
         version: 0.0.102(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
@@ -22484,7 +22484,7 @@ importers:
         specifier: ~0.0.404
         version: 0.0.404
       '@teambit/design.buttons.action-button':
-        specifier: ^0.0.4
+        specifier: ~0.0.4
         version: 0.0.4(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.ui.styles.ellipsis':
         specifier: 0.0.357
@@ -22496,10 +22496,10 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.keycap':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -23163,7 +23163,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/node.utils.esm-loader':
-        specifier: ^0.0.7
+        specifier: ~0.0.7
         version: 0.0.7
       '@testing-library/react':
         specifier: ^14.3.1
@@ -23786,7 +23786,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -24286,7 +24286,7 @@ importers:
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(html-webpack-plugin@5.3.2)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
       '@teambit/ui-foundation.ui.is-browser':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@types/mocha':
         specifier: 9.1.0
@@ -24567,13 +24567,13 @@ importers:
         specifier: ~0.0.312
         version: 0.0.312
       '@teambit/lanes.ui.menus.lanes-overview-menu':
-        specifier: ^0.0.11
+        specifier: ~0.0.11
         version: 0.0.11(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/lanes.ui.menus.use-lanes-menu':
-        specifier: ^0.0.299
+        specifier: ~0.0.299
         version: 0.0.299(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/lanes.ui.navigation.lane-switcher':
-        specifier: ^0.0.239
+        specifier: ~0.0.239
         version: 0.0.239(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/legacy-bit-id':
         specifier: ^1.1.3
@@ -24582,10 +24582,10 @@ importers:
         specifier: 0.0.100
         version: 0.0.100(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu':
-        specifier: ^0.0.503
+        specifier: ~0.0.503
         version: 0.0.503(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.use-query':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -24894,7 +24894,7 @@ importers:
         specifier: ^1.0.14
         version: 1.0.14
       '@teambit/mdx.modules.mdx-v3-options':
-        specifier: ^0.0.3
+        specifier: ~0.0.3
         version: 0.0.3(rollup@2.80.0)(supports-color@9.4.0)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -25358,10 +25358,10 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/mdx.modules.mdx-v3-options':
-        specifier: ^0.0.3
+        specifier: ~0.0.3
         version: 0.0.3(rollup@2.80.0)(supports-color@9.4.0)
       '@teambit/preview.cli.dev-server-events-listener':
-        specifier: ^0.0.1
+        specifier: ~0.0.1
         version: 0.0.1
       '@teambit/preview.modules.preview-modules':
         specifier: ^1.0.3
@@ -25721,7 +25721,7 @@ importers:
         specifier: 8.1.0
         version: 8.1.0(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/api-reference.renderers.react':
-        specifier: ^0.0.71
+        specifier: ~0.0.71
         version: 0.0.71(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.1.0)(react-router-dom@6.30.4)(react@19.1.0)
       '@teambit/bit-error':
         specifier: ~0.0.404
@@ -25730,7 +25730,7 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/compositions.ui.hooks.use-composition':
-        specifier: ^0.0.177
+        specifier: ~0.0.177
         version: 0.0.177(react-dom@19.1.0)(react@19.1.0)
       '@teambit/defender.eslint-linter':
         specifier: ^1.0.56
@@ -25751,7 +25751,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/mdx.modules.mdx-v3-options':
-        specifier: ^0.0.3
+        specifier: ~0.0.3
         version: 0.0.3(rollup@2.80.0)(supports-color@9.4.0)
       '@teambit/react.instructions.react.adding-compositions':
         specifier: 0.0.8
@@ -26121,7 +26121,7 @@ importers:
   scopes/react/ui/docs/compositions-carousel:
     dependencies:
       '@teambit/compositions.ui.compositions-overview':
-        specifier: ^0.0.10
+        specifier: ~0.0.10
         version: 0.0.10(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.linked-heading':
         specifier: 4.1.10
@@ -26213,7 +26213,7 @@ importers:
   scopes/react/ui/docs/properties-table:
     dependencies:
       '@teambit/component.ui.hooks.use-fetch-docs':
-        specifier: ^0.0.21
+        specifier: ~0.0.21
         version: 0.0.21(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.linked-heading':
         specifier: 4.1.10
@@ -26724,7 +26724,7 @@ importers:
         specifier: 0.0.16
         version: 0.0.16(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/explorer.ui.component-card':
-        specifier: ^0.0.52
+        specifier: ~0.0.52
         version: 0.0.52(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/explorer.ui.gallery.component-grid':
         specifier: 0.0.496
@@ -26742,46 +26742,46 @@ importers:
         specifier: ^1.1.3
         version: 1.1.3
       '@teambit/scope.ui.empty-scope':
-        specifier: ^0.0.510
+        specifier: ~0.0.510
         version: 0.0.510(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/scope.ui.hooks.use-scope':
-        specifier: ^0.0.456
+        specifier: ~0.0.456
         version: 0.0.456(@apollo/client@3.12.11)(@types/chai@4.2.15)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/scope.ui.scope-details':
-        specifier: ^0.0.526
+        specifier: ~0.0.526
         version: 0.0.526(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/scopes.scope-id':
-        specifier: ^0.0.9
+        specifier: ~0.0.9
         version: 0.0.9
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.corner':
-        specifier: ^0.0.520
+        specifier: ~0.0.520
         version: 0.0.520(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/ui-foundation.ui.full-loader':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-is-mobile':
-        specifier: ^0.0.200
+        specifier: ~0.0.200
         version: 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.main-dropdown':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu':
-        specifier: ^0.0.503
+        specifier: ~0.0.503
         version: 0.0.503(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.top-bar':
-        specifier: ^0.0.515
+        specifier: ~0.0.515
         version: 0.0.515(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/ui-foundation.ui.tree.drawer':
         specifier: ^1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.use-box.dropdown':
-        specifier: ^0.0.151
+        specifier: ~0.0.151
         version: 0.0.151(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.use-box.scope-menu':
-        specifier: ^0.0.147
+        specifier: ~0.0.147
         version: 0.0.147(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -27862,13 +27862,13 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/ui-foundation.ui.notifications.notification-center':
-        specifier: ^0.0.523
+        specifier: ~0.0.523
         version: 0.0.523(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.notifications.notification-context':
-        specifier: ^0.0.501
+        specifier: ~0.0.501
         version: 0.0.501(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.notifications.store':
-        specifier: ^0.0.500
+        specifier: ~0.0.500
         version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -27976,7 +27976,7 @@ importers:
   scopes/ui-foundation/sidebar:
     dependencies:
       '@teambit/design.ui.surfaces.menu.section':
-        specifier: ^0.0.357
+        specifier: ~0.0.357
         version: 0.0.357(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
@@ -28037,10 +28037,10 @@ importers:
         specifier: 1.6.0
         version: 1.6.0(react-refresh@0.10.0)(webpack-hot-middleware@2.26.1)
       '@teambit/api-reference.hooks.use-api':
-        specifier: ^0.0.57
+        specifier: ~0.0.57
         version: 0.0.57(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.hooks.use-api-renderers':
-        specifier: ^0.0.37
+        specifier: ~0.0.37
         version: 0.0.37(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-react.navigation.link':
         specifier: 2.0.33
@@ -28079,10 +28079,10 @@ importers:
         specifier: ^1.0.4
         version: 1.0.5(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.global-loader':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-user-agent':
-        specifier: ^0.0.200
+        specifier: ~0.0.200
         version: 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/webpack.modules.exclude-node-modules-js':
         specifier: 0.0.1
@@ -28200,7 +28200,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/ui-foundation.ui.hooks.use-user-agent':
-        specifier: ^0.0.200
+        specifier: ~0.0.200
         version: 0.0.200(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@testing-library/react':
         specifier: ^14.3.1
@@ -28234,10 +28234,10 @@ importers:
   scopes/vue/vue:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer':
-        specifier: ^0.0.53
+        specifier: ~0.0.53
         version: 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-reference-model':
-        specifier: ^0.0.53
+        specifier: ~0.0.53
         version: 0.0.53
       '@teambit/documenter.ui.table':
         specifier: 4.1.13
@@ -28753,7 +28753,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/toolbox.time.time-format':
-        specifier: ^0.0.502
+        specifier: ~0.0.502
         version: 0.0.502
       '@teambit/workspace.root-components':
         specifier: ^1.0.1
@@ -29155,7 +29155,7 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       '@teambit/component.ui.component-status-resolver':
-        specifier: ^0.0.510
+        specifier: ~0.0.510
         version: 0.0.510(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/dependencies.modules.packages-excluder':
         specifier: ^1.0.8
@@ -29182,22 +29182,22 @@ importers:
         specifier: ^1.1.3
         version: 1.1.3
       '@teambit/ui-foundation.ui.constants.z-indexes':
-        specifier: ^0.0.504
+        specifier: ~0.0.504
         version: 0.0.504(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.corner':
-        specifier: ^0.0.520
+        specifier: ~0.0.520
         version: 0.0.520(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/ui-foundation.ui.main-dropdown':
-        specifier: ^0.0.505
+        specifier: ~0.0.505
         version: 0.0.505(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu':
-        specifier: ^0.0.503
+        specifier: ~0.0.503
         version: 0.0.503(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.notifications.notification-context':
-        specifier: ^0.0.501
+        specifier: ~0.0.501
         version: 0.0.501(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.top-bar':
-        specifier: ^0.0.515
+        specifier: ~0.0.515
         version: 0.0.515(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/ui-foundation.ui.tree.drawer':
         specifier: ^1.0.0
@@ -68002,10 +68002,6 @@ snapshots:
       - supports-color
       - ts-node
 
-  '@teambit/compositions.ui.composition-live-controls@0.0.6(react@18.3.1)':
-    dependencies:
-      react: 18.3.1
-
   '@teambit/compositions.ui.composition-live-controls@0.0.6(react@19.2.7)':
     dependencies:
       react: 19.2.7
@@ -68080,7 +68076,7 @@ snapshots:
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.ui.composition-compare': file:components/ui/composition-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.ui.composition-compare-section': file:components/ui/composition-compare-section(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
-      '@teambit/compositions.ui.composition-live-controls': 0.0.6(react@18.3.1)
+      '@teambit/compositions.ui.composition-live-controls': 0.0.7(react@18.3.1)
       '@teambit/compositions.ui.compositions-menu-bar': 0.0.177(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.ui.hooks.use-composition': 0.0.177(react-dom@18.3.1)(react@18.3.1)
       '@teambit/design.inputs.date-picker': 0.0.3(@testing-library/react@14.3.1)(react-dom@18.3.1)(react@18.3.1)
@@ -68154,7 +68150,7 @@ snapshots:
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.ui.composition-compare': file:components/ui/composition-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.ui.composition-compare-section': file:components/ui/composition-compare-section(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
-      '@teambit/compositions.ui.composition-live-controls': 0.0.6(react@18.3.1)
+      '@teambit/compositions.ui.composition-live-controls': 0.0.7(react@18.3.1)
       '@teambit/compositions.ui.compositions-menu-bar': 0.0.177(react-dom@18.3.1)(react@18.3.1)
       '@teambit/compositions.ui.hooks.use-composition': 0.0.177(react-dom@18.3.1)(react@18.3.1)
       '@teambit/design.inputs.date-picker': 0.0.3(@testing-library/react@14.3.1)(react-dom@18.3.1)(react@18.3.1)
@@ -68228,7 +68224,7 @@ snapshots:
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.composition-compare': file:components/ui/composition-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.ui.composition-compare-section': file:components/ui/composition-compare-section(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
-      '@teambit/compositions.ui.composition-live-controls': 0.0.6(react@19.2.7)
+      '@teambit/compositions.ui.composition-live-controls': 0.0.7(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar': 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.hooks.use-composition': 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.date-picker': 0.0.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
@@ -68302,7 +68298,7 @@ snapshots:
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.composition-compare': file:components/ui/composition-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.ui.composition-compare-section': file:components/ui/composition-compare-section(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
-      '@teambit/compositions.ui.composition-live-controls': 0.0.6(react@19.2.7)
+      '@teambit/compositions.ui.composition-live-controls': 0.0.7(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar': 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.hooks.use-composition': 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.date-picker': 0.0.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
@@ -68376,7 +68372,7 @@ snapshots:
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.composition-compare': file:components/ui/composition-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.ui.composition-compare-section': file:components/ui/composition-compare-section(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-dom@19.2.4)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(graphql@15.8.0)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
-      '@teambit/compositions.ui.composition-live-controls': 0.0.6(react@19.2.7)
+      '@teambit/compositions.ui.composition-live-controls': 0.0.7(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar': 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.hooks.use-composition': 0.0.177(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.date-picker': 0.0.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
