@@ -1149,7 +1149,7 @@ export class DependencyResolverMain {
       // the comment symbols in place, and the assign re-adds the entries in the new (sorted) order.
       for (const [fieldName, updatedEntries] of Object.entries(workspacePolicyObject)) {
         const existingEntries = this.config.policy[fieldName];
-        if (!existingEntries || typeof existingEntries !== 'object') {
+        if (!existingEntries || typeof existingEntries !== 'object' || Array.isArray(existingEntries)) {
           this.config.policy[fieldName] = updatedEntries;
           continue;
         }

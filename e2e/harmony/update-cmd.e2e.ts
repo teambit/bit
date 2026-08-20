@@ -119,10 +119,13 @@ describe('update command', function () {
         });
         helper.command.install();
         const workspaceJsonc = helper.fs.readFile('workspace.jsonc');
-        helper.fs.outputFile(
-          'workspace.jsonc',
-          workspaceJsonc.replace('"is-odd"', '// this dependency must stay pinned\n        "is-odd"')
+        const workspaceJsoncWithComment = workspaceJsonc.replace(
+          /(\n(\s*))"is-odd":/,
+          '$1// this dependency must stay pinned\n$2"is-odd":'
         );
+        // guard against a formatting change turning the replace into a no-op
+        expect(workspaceJsoncWithComment).to.not.equal(workspaceJsonc);
+        helper.fs.outputFile('workspace.jsonc', workspaceJsoncWithComment);
         helper.command.update('--yes is-posit*');
         workspaceConfigAfter = helper.fs.readFile('workspace.jsonc');
       });
