@@ -151,7 +151,9 @@ commands:
               "@pnpm/util.lex-comparator": "3.0.2",
               "@pnpm/config.nerf-dart": "1.0.1"
             }'
-            pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
+            # Pin the release selected by setup_bit_version. Without the version, pnpm 12's default
+            # 24-hour minimum release age can select an older Bit release instead of the latest one.
+            pnpm add "@teambit/bit@${BIT_VERSION}" --os=<<parameters.os>> --cpu=<<parameters.cpu>>
 
   verify_pnpm_napi_bundle:
     parameters:
@@ -280,7 +282,12 @@ commands:
   install_bvm:
     steps:
       - run: npm config set prefix '~/.npm-global'
-      - run: npm install --global @teambit/bvm
+      # pinned: bvm 3.1.0 installs bit with the pnpm v12 native engine, which mis-hoists the
+      # bundle (drops execa's sibling deps from @pnpm/network.git-utils's nested node_modules),
+      # so `bbit install` crashes on an ESM named-import of the CJS npm-run-path that resolution
+      # falls back to. Unpin once a fixed bvm ships (also bump the bvm cache-key prefix again -
+      # the broken layout is cached).
+      - run: npm install --global @teambit/bvm@3.0.4
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
 
@@ -296,7 +303,7 @@ commands:
       - run: bbit
       - run: bbit -v
       - save_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
 
@@ -458,7 +465,7 @@ commands:
           key: bitsrc-registry10
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
 
   # Complete Bit environment setup
   setup_bit_environment:
@@ -539,7 +546,7 @@ commands:
           key: bitsrc-registry10
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
       # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       # - run: 'chmod 400 ~/.ssh/id_rsa'
       # - run: 'ssh-add ~/.ssh/id_rsa'
