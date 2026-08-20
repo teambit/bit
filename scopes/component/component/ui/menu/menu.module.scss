@@ -10,11 +10,12 @@
 }
 
 .topBarMinimal {
-  // The workspace breadcrumb and component menu are siblings in minimal mode. Let the menu
-  // size from its actions instead of claiming the full top-bar width, then share any remaining
-  // space with the breadcrumb. This keeps every pinned action reachable on narrow screens.
-  flex: 1 1 auto;
-  width: auto;
+  @media screen and (max-width: $br-md) {
+    // The breadcrumb owns the remaining mobile space, while this menu keeps the intrinsic width
+    // of its pinned actions and right-side controls.
+    flex: 0 0 auto;
+    width: auto;
+  }
 }
 
 .leftSide {
@@ -23,6 +24,15 @@
   height: 100%;
   flex-grow: 1;
   min-width: 0;
+}
+
+.leftSideMinimal {
+  @media screen and (max-width: $br-md) {
+    // Pinned actions are the compact navigation. Collapse and clip the secondary responsive nav
+    // so its overflow trigger cannot paint outside its flex region and overlap those actions.
+    flex: 0 0 0;
+    overflow: hidden;
+  }
 }
 
 .navigation {

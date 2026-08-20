@@ -43,6 +43,7 @@
 
   // Let a long component path clip instead of pushing the menu actions off-screen.
   @media screen and (max-width: $br-md) {
+    flex: 1 1 0;
     height: 46px;
     min-width: 0;
     overflow: hidden;
