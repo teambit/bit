@@ -29139,6 +29139,9 @@ importers:
       '@teambit/base-react.themes.theme-switcher':
         specifier: ^1.1.2
         version: 1.1.2(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/base-ui.layout.breakpoints':
+        specifier: 1.0.0
+        version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter':
         specifier: 1.0.1
         version: 1.0.1(react-dom@19.2.7)(react@19.2.7)
@@ -98971,6 +98974,7 @@ snapshots:
       '@apollo/client': 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(subscriptions-transport-ws@0.11.0)
       '@react-hook/latest': 1.0.3(react@18.3.1)
       '@teambit/base-react.themes.theme-switcher': 1.1.2(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/base-ui.layout.breakpoints': 1.0.0(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
       '@teambit/bit-error': 0.0.404
@@ -99074,6 +99078,7 @@ snapshots:
       '@apollo/client': 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
       '@react-hook/latest': 1.0.3(react@19.2.7)
       '@teambit/base-react.themes.theme-switcher': 1.1.2(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/base-ui.layout.breakpoints': 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/bit-error': 0.0.404
@@ -99177,6 +99182,7 @@ snapshots:
       '@apollo/client': 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
       '@react-hook/latest': 1.0.3(react@19.2.7)
       '@teambit/base-react.themes.theme-switcher': 1.1.2(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/base-ui.layout.breakpoints': 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
       '@teambit/bit-error': 0.0.404
