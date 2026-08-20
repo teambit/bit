@@ -21851,6 +21851,9 @@ importers:
       execa:
         specifier: 2.1.0
         version: 2.1.0
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -21873,6 +21876,9 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(html-webpack-plugin@5.3.2)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-hot-middleware@2.26.1)
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -60776,6 +60782,7 @@ snapshots:
       chai: 4.3.0
       chalk: 4.1.2
       execa: 2.1.0
+      fs-extra: 10.0.0
       lodash: 4.17.21
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
       oxlint-tsgolint: 0.17.0
@@ -60811,6 +60818,7 @@ snapshots:
       chai: 4.3.0
       chalk: 4.1.2
       execa: 2.1.0
+      fs-extra: 10.0.0
       lodash: 4.17.21
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
       oxlint-tsgolint: 0.17.0
@@ -60846,6 +60854,7 @@ snapshots:
       chai: 5.2.1
       chalk: 4.1.2
       execa: 2.1.0
+      fs-extra: 10.0.0
       lodash: 4.17.21
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
       oxlint-tsgolint: 0.17.0
