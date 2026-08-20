@@ -37,18 +37,22 @@ export type MainFileHeal = { id: string; retargetedTo?: string };
 /**
  * Fetch the remote head of the stale components. Without it the local scope still holds the version
  * this repository already had — whose main file is the missing one — and every entry would look
- * unrepairable. Returns whether the fetch succeeded: a failure is not fatal on its own (local
- * objects may still answer), but it must never be mistaken for "the scope says this is gone".
+ * unrepairable. A failure is not fatal on its own (local objects may still answer), but it must
+ * never be mistaken for "the scope says this is gone", and its cause is the first thing an operator
+ * needs when a scheduled run starts leaving entries untouched — so it is carried, not swallowed.
  */
-async function importHeadsOf(workspace: Workspace, ids: ComponentID[]): Promise<boolean> {
+async function importHeadsOf(
+  workspace: Workspace,
+  ids: ComponentID[]
+): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     await workspace.scope.legacyScope.scopeImporter.importWithoutDeps(
       ComponentIdList.fromArray(ids).toVersionLatest(),
       { cache: false, ignoreMissingHead: true }
     );
-    return true;
-  } catch {
-    return false;
+    return { ok: true };
+  } catch (e: any) {
+    return { ok: false, error: e?.message || String(e) };
   }
 }
 
@@ -92,7 +96,7 @@ export async function healMissingMainFiles(workspace: Workspace, logger: Logger)
   });
   if (!stale.length) return [];
 
-  const imported = await importHeadsOf(
+  const headFetch = await importHeadsOf(
     workspace,
     stale.map((componentMap) => componentMap.id)
   );
@@ -101,7 +105,6 @@ export async function healMissingMainFiles(workspace: Workspace, logger: Logger)
   const skipped: string[] = [];
   for (const componentMap of stale) {
     const id = componentMap.id.toStringWithoutVersion();
-    // eslint-disable-next-line no-await-in-loop
     const onScope = await mainFileOnScopeHead(workspace, componentMap.id);
     if (onScope.status === 'read' && onDisk(componentMap.rootDir as string, onScope.mainFile)) {
       componentMap.mainFile = onScope.mainFile;
@@ -122,8 +125,8 @@ export async function healMissingMainFiles(workspace: Workspace, logger: Logger)
   if (skipped.length) {
     logger.consoleWarning(
       `Left ${skipped.length} .bitmap entr(ies) with a missing main file untouched — the scope could not ` +
-        `confirm what to repair them to${imported ? '' : ', and fetching their heads failed'}: ` +
-        `${capEntries(skipped).join(', ')}`
+        `confirm what to repair them to: ${capEntries(skipped).join(', ')}` +
+        (headFetch.ok ? '' : `. Fetching their heads failed first: ${headFetch.error}`)
     );
   }
 
