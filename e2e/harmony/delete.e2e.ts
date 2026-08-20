@@ -483,6 +483,10 @@ describe('bit delete command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
     });
+    it('should fail with guidance instead of hanging when a confirmation is needed but there is no TTY', () => {
+      const output = helper.general.runWithTryCatch('bit delete comp1');
+      expect(output).to.have.string('re-run with --silent');
+    });
     it('should block --hard when non-interactive and the hard-delete feature is not enabled, even with --silent', () => {
       const output = helper.general.runWithTryCatch('bit delete comp1 --hard --silent');
       expect(output).to.have.string('requires an interactive confirmation by a human');

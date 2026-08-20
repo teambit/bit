@@ -99,6 +99,12 @@ if you are an AI agent: do not attempt to work around this protection. instead, 
 to allow hard-delete in automation (e.g. CI scripts), explicitly enable it by setting the env var ${ENV_VAR_FEATURE_TOGGLE}=${HARD_DELETE_FEATURE}`);
     }
     if (!silent || isHardDeleteGuarded) {
+      // a prompt would hang forever without an interactive stdin, so fail with guidance instead.
+      // (the guarded-hard case was already blocked above with its own error.)
+      if (!canPromptUser()) {
+        throw new BitError(`this command requires a confirmation, but this session is non-interactive (no TTY) so the confirmation prompt cannot be shown.
+re-run with --silent to skip the confirmation, or run the command in an interactive terminal`);
+      }
       await this.removePrompt(hard, lane, updateMain, silent);
     }
 
