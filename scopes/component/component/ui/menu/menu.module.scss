@@ -17,6 +17,51 @@
   min-width: 0;
 }
 
+// Minimal mode, mobile: one 46px row can't fit breadcrumb + nav tabs + pinned widgets +
+// version dropdown, and since only the nav can shrink, ResponsiveNavbar collapses every tab
+// (Overview / Preview) into an overflow dropdown that itself gets clipped — leaving no way to
+// reach the preview. `display: contents` promotes this bar's children into the workspace
+// top bar's wrapping flex row (see workspace.module.scss), producing two rows:
+// back + breadcrumb + pinned widgets + right-side actions, then the nav tabs at full width.
+.topBarMinimal {
+  @media screen and (max-width: $br-md) {
+    display: contents;
+
+    > .leftSide {
+      order: 10;
+      flex: 1 0 100%;
+      box-sizing: border-box;
+      height: 40px;
+      overflow-x: auto;
+      padding: 0 8px 0 4px;
+
+      // ResponsiveNavbar hides any tab that doesn't fit its container and reserves extra room
+      // for its "…" overflow button. Sizing the nav to its content makes the width check always
+      // pass (the row scrolls instead), and the now-useless overflow button is dropped so its
+      // reserved width can't hide the last tab.
+      nav {
+        min-width: max-content;
+
+        > div:last-child {
+          display: none;
+        }
+      }
+    }
+
+    // the pinned widgets carry an inline `height: 100%`, which in the wrapped two-row bar
+    // resolves against the full (two-row) height and inflates the first row until the nav row
+    // is pushed outside the bar, over the page content — pin every first-row item to the bar
+    // height instead
+    > :not(.leftSide) {
+      height: 46px !important;
+    }
+
+    > .rightSide {
+      margin-left: auto;
+    }
+  }
+}
+
 .navigation {
   list-style: none;
   height: 100%;
