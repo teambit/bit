@@ -215,7 +215,7 @@ describe('bit export command', function () {
         expect(list).to.have.lengthOf(1);
       });
     });
-    describe('export with --all flag', () => {
+    describe('export with --all-versions flag', () => {
       before(() => {
         helper.scopeHelper.reInitRemoteScope();
         helper.command.export(`${helper.scopes.remote} ${helper.scopes.remote}/* --all-versions`);
