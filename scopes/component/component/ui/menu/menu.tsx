@@ -143,20 +143,24 @@ export function ComponentMenu({
     useComponent
   );
 
-  const rightSideContent = RightNode || (
-    <>
-      <VersionRelatedDropdowns
-        host={hostFromProps}
-        consumeMethods={consumeMethodSlot}
-        componentId={componentId?.toString() || idFromLocation}
-        useComponent={useComponentVersions}
-        componentFilters={componentFilters}
-        authToken={authToken}
-        // loading={loading}
-      />
-      {rightSideItems.map(({ item }) => item)}
-      {!isMinimal && <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />}
-    </>
+  const RightSide = (
+    <div className={styles.rightSide}>
+      {RightNode || (
+        <>
+          <VersionRelatedDropdowns
+            host={hostFromProps}
+            consumeMethods={consumeMethodSlot}
+            componentId={componentId?.toString() || idFromLocation}
+            useComponent={useComponentVersions}
+            componentFilters={componentFilters}
+            authToken={authToken}
+            // loading={loading}
+          />
+          {rightSideItems.map(({ item }) => item)}
+          {!isMinimal && <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />}
+        </>
+      )}
+    </div>
   );
 
   return (
@@ -172,7 +176,7 @@ export function ComponentMenu({
               pinnedWidgets.map((pinnedWidget) => (
                 <PinnedWidgetComponent key={`key-${pinnedWidget.order}`} {...pinnedWidget.props} />
               ))}
-            {!skipRightSide && <div className={styles.rightSide}>{rightSideContent}</div>}
+            {!skipRightSide && <div className={styles.rightSide}>{RightSide}</div>}
           </div>
         }
       />

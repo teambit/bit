@@ -20,6 +20,12 @@
     // version controls is unnecessary here and can be returned to the component breadcrumb.
     .rightSide {
       padding-left: 0;
+
+      // Keep the established nested right-side structure for non-minimal consumers, including
+      // custom RightNode integrations, but remove its extra layout box where mobile space is scarce.
+      > .rightSide {
+        display: contents;
+      }
     }
   }
 }
