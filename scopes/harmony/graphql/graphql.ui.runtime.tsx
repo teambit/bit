@@ -111,7 +111,11 @@ export class GraphqlUI {
         const originKey = window.location.host.replace(/[^a-z0-9_-]+/gi, '_');
         const t0 = performance.now();
         await persistCache({
-          cache,
+          // in a build capsule, apollo3-cache-persist resolves its own @apollo/client peer
+          // instance (a second pnpm copy with a different peer hash), so our InMemoryCache is not
+          // assignable to *its* ApolloCache declaration - the types are identical but nominally
+          // distinct. runtime-wise it is the same object shape either way.
+          cache: cache as unknown as Parameters<typeof persistCache>[0]['cache'],
           storage: new LocalStorageWrapper(window.localStorage),
           key: `apollo-cache-${originKey}-${workspaceKey}`,
           maxSize: 1048576 * 5, // 5MB
