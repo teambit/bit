@@ -6,7 +6,7 @@ import { capitalize } from '@teambit/toolbox.string.capitalize';
 import type { ComponentModel } from '@teambit/component';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { DocsAspect } from '@teambit/docs';
-import { isBatchedPreviewEnabled, registerPreview, unregisterPreview, hasRendered } from './preview-canvas';
+import { isPooledPreviewEnabled, registerPreview, unregisterPreview, hasRendered } from './preview-canvas';
 import styles from './preview-placeholder.module.scss';
 
 // Keep a lightweight in-memory warm set so previews that were already hydrated once
@@ -281,9 +281,9 @@ export function PreviewPlaceholder({
     };
   }, [previewKey]);
 
-  // Batched mode renders this card inside a per-env realm shared by every visible card, instead of
-  // giving it an iframe (and a full preview-runtime bootstrap) of its own. See preview-canvas.ts.
-  const batched = isBatchedPreviewEnabled();
+  // Pooled mode shows this card through a recycled preview iframe rather than mounting one of its
+  // own, so scrolling re-points existing realms instead of booting new ones. See preview-canvas.ts.
+  const batched = isPooledPreviewEnabled();
   const [canvasRendered, setCanvasRendered] = useState(false);
 
   useEffect(() => {
