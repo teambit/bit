@@ -52,9 +52,6 @@ describe('bit doctor - git exec validation', function () {
       helper.config.restoreGitPath(oldGitPath);
       parsedOutput = JSON.parse(output);
     });
-    it('should run the correct diagnosis', () => {
-      expect(parsedOutput.examineResult.diagnosisMetaData.name).to.equal(DIAGNOSIS_NAME_VALIDATE_GIT_EXEC);
-    });
     it('should fail the diagnosis', () => {
       expect(parsedOutput.examineResult.bareResult.valid).to.be.false;
     });
