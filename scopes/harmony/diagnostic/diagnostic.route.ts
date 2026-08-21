@@ -1,4 +1,4 @@
-import type { Route, Request, Response } from '@teambit/express';
+import type { Route, Request, Response, Middleware } from '@teambit/express';
 import { Verb } from '@teambit/express';
 import type { DiagnosticMain } from './diagnostic.main.runtime';
 
@@ -7,12 +7,12 @@ export class DiagnosticRoute implements Route {
 
   method = 'GET';
   route = '/_diagnostic';
-  verb = Verb.READ;
+  verb = Verb.WRITE;
 
-  middlewares = [
+  middlewares: Middleware[] = [
     async (req: Request, res: Response) => {
       const diagnosticData = this.diagnosticMain.getDiagnosticData();
-      res.json(diagnosticData);
+      return res.json(diagnosticData);
     },
   ];
 }
