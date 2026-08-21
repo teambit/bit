@@ -113,7 +113,59 @@ export default class ScopeHelper {
     isGlobal = false
   ) {
     const globalArg = isGlobal ? '-g' : '';
-    return this.command.runCmd(`bit remote add file://${remoteScopePath} ${globalArg}`, cwd);
+    const cmd = `bit remote add file://${remoteScopePath} ${globalArg}`;
+    const result = this.command.runCmd(cmd, cwd);
+    // Verify the remote actually landed in the workspace scope.json and retry a few times if not.
+    // Under a capsule build (`bit ci pr --build`) dozens of these integration specs run back-to-back
+    // in a single long-lived process while the host build machinery touches the same shared global
+    // config/scope. That occasionally leaves the just-added `<hash>-remote` unresolvable to a later
+    // in-process import, which then falls through to the bit.cloud hub and throws
+    // `InvalidScopeNameFromRemote`. A bounded re-add recovers a transient write race; if it still
+    // can't be verified we log a loud, diagnosable message (rather than throw) so we never regress
+    // the hundreds of other callers, and so a residual CI failure clearly points at registration
+    // vs. an import-side resolution problem.
+    if (!isGlobal) {
+      const maxRetries = 3;
+      for (let attempt = 0; attempt < maxRetries && !this.isRemoteRegistered(remoteScopePath, cwd); attempt += 1) {
+        this.command.runCmd(cmd, cwd);
+      }
+      if (!this.isRemoteRegistered(remoteScopePath, cwd)) {
+        // eslint-disable-next-line no-console
+        console.log(
+          `[e2e-helper] WARNING: remote "file://${remoteScopePath}" is not registered in the workspace ` +
+            `scope.json at "${cwd}" after ${maxRetries + 1} attempts. remotes on disk: ` +
+            JSON.stringify(this.readWorkspaceRemotes(cwd))
+        );
+      }
+    }
+    return result;
+  }
+
+  /**
+   * read the `remotes` map from the scope.json of the scope at `cwd`. the map is
+   * `{ [scopeName]: host }` (see ScopeJson.addRemote), and for e2e file remotes the scope name is
+   * the remote directory's basename. scope.json lives under `.bit/` for a workspace but at the root
+   * for a bare scope (`bit init --bare`), and `bit remote add` can target either — so check both.
+   */
+  private readWorkspaceRemotes(cwd: string): Record<string, string> {
+    const candidatePaths = [path.join(cwd, '.bit', 'scope.json'), path.join(cwd, 'scope.json')];
+    for (const scopeJsonPath of candidatePaths) {
+      if (!fs.existsSync(scopeJsonPath)) continue;
+      const scopeJson = fs.readJsonSync(scopeJsonPath, { throws: false });
+      if (scopeJson && scopeJson.remotes) return scopeJson.remotes;
+    }
+    return {};
+  }
+
+  private isRemoteRegistered(remoteScopePath: string, cwd: string): boolean {
+    const scopeName = path.basename(remoteScopePath);
+    const remotes = this.readWorkspaceRemotes(cwd);
+    // match by scope name (the registered key) or by the host value referencing the remote path —
+    // basename is stable against any path normalization the remote-add may apply to the host.
+    return (
+      scopeName in remotes ||
+      Object.values(remotes).some((host) => typeof host === 'string' && host.includes(scopeName))
+    );
   }
 
   addRemoteHttpScope(port = '3000') {
