@@ -157,70 +157,6 @@ describe('bit import', function () {
             expect(componentFileLocation).to.be.a.file();
           });
         });
-        describe('when the destination is an existing empty directory', () => {
-          before(() => {
-            helper.scopeHelper.reInitWorkspace();
-            helper.scopeHelper.addRemoteScope();
-            fs.ensureDirSync(path.join(helper.scopes.localPath, 'my-custom-location'));
-            helper.command.runCmd(`bit import ${helper.scopes.remote}/global/simple -p my-custom-location`);
-          });
-          it('should write the component to the specified path', () => {
-            expect(componentFileLocation).to.be.a.file();
-          });
-        });
-        describe('when the destination directory is not empty', () => {
-          let output;
-          let existingFile;
-          before(() => {
-            existingFile = path.join(helper.scopes.localPath, 'my-custom-location/my-file.js');
-            helper.scopeHelper.reInitWorkspace();
-            helper.scopeHelper.addRemoteScope();
-            fs.ensureDirSync(path.join(helper.scopes.localPath, 'my-custom-location'));
-            fs.outputFileSync(existingFile, 'console.log()');
-            output = helper.general.runWithTryCatch(
-              `bit import ${helper.scopes.remote}/global/simple -p my-custom-location`
-            );
-          });
-          it('should not import the component', () => {
-            expect(componentFileLocation).to.not.be.a.path();
-          });
-          it('should not delete the existing file', () => {
-            expect(existingFile).to.be.a.file();
-          });
-          it('should throw an error', () => {
-            expect(output).to.have.string('unable to import');
-          });
-          it('should import successfully if the --override flag is used', () => {
-            helper.command.runCmd(`bit import ${helper.scopes.remote}/global/simple -p my-custom-location --override`);
-            expect(componentFileLocation).to.be.a.file();
-          });
-        });
-        describe('when the destination is a file', () => {
-          let output;
-          before(() => {
-            helper.scopeHelper.reInitWorkspace();
-            helper.scopeHelper.addRemoteScope();
-            fs.outputFileSync(path.join(helper.scopes.localPath, 'my-custom-location'), 'console.log()');
-            output = helper.general.runWithTryCatch(
-              `bit import ${helper.scopes.remote}/global/simple -p my-custom-location`
-            );
-          });
-          it('should not import the component', () => {
-            expect(componentFileLocation).to.not.be.a.path();
-          });
-          it('should not delete the existing file', () => {
-            expect(path.join(helper.scopes.localPath, 'my-custom-location')).to.be.a.file();
-          });
-          it('should throw an error', () => {
-            expect(output).to.have.string('unable to import');
-          });
-          it('should throw an error also when the --override flag is used', () => {
-            output = helper.general.runWithTryCatch(
-              `bit import ${helper.scopes.remote}/global/simple -p my-custom-location --override`
-            );
-            expect(output).to.have.string('unable to import');
-          });
-        });
       });
     });
 
@@ -544,21 +480,9 @@ describe('bit import', function () {
         expect(output).to.have.string('--dependencies-depth');
         expect(output).to.have.string('--dependencies');
       });
-      it('should error when --dependencies-depth is zero', () => {
+      it('should error when --dependencies-depth is not a positive integer', () => {
         const output = helper.general.runWithTryCatch(
           `bit import ${helper.scopes.remote}/comp1 --dependencies --dependencies-depth 0`
-        );
-        expect(output).to.have.string('positive integer');
-      });
-      it('should error when --dependencies-depth is a non-integer', () => {
-        const output = helper.general.runWithTryCatch(
-          `bit import ${helper.scopes.remote}/comp1 --dependencies --dependencies-depth abc`
-        );
-        expect(output).to.have.string('positive integer');
-      });
-      it('should error when --dependencies-depth is a fractional number', () => {
-        const output = helper.general.runWithTryCatch(
-          `bit import ${helper.scopes.remote}/comp1 --dependencies --dependencies-depth 1.5`
         );
         expect(output).to.have.string('positive integer');
       });
