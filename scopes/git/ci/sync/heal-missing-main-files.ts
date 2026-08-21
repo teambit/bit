@@ -62,19 +62,39 @@ async function importHeadsOf(
  */
 type ScopeMainFile =
   | { status: 'read'; mainFile: string }
-  /** the scope has no such component, or no head for it — nothing to compare against */
-  | { status: 'absent' }
+  /**
+   * nothing on the scope to compare against. Carries which of the three it was, because they send
+   * an operator to three different places and a single blanket wording sent this bug's
+   * investigation to the wrong one.
+   */
+  | { status: 'absent'; reason: AbsentReason }
   /** objects could not be read (failed import, corrupt object) — the answer is unknown */
   | { status: 'unreadable'; reason: string };
+
+/** Phrased for the skip line an operator reads, since that is the only consumer. */
+type AbsentReason = 'not on the scope' | 'no head on the scope' | 'the head records no main file';
 
 async function mainFileOnScopeHead(workspace: Workspace, id: ComponentID): Promise<ScopeMainFile> {
   const legacyScope = workspace.scope.legacyScope;
   try {
-    const modelComponent = await legacyScope.getModelComponentIfExist(id);
-    const head = modelComponent?.getHeadRegardlessOfLaneAsTagOrHash();
-    if (!modelComponent || !head) return { status: 'absent' };
+    // Ask for the component, NOT for the version `.bitmap` happens to record. `sources.get` is
+    // version-sensitive: when the id carries a version whose Version object is not on the
+    // filesystem, it returns `undefined` — indistinguishable here from "the scope has no such
+    // component", which sends this function down the `absent` path and makes the heal decline.
+    //
+    // That is the common case rather than an edge case. The entry being healed is stale by
+    // definition, and its recorded version is frequently one this repository never installed: an
+    // orphaned tag, or a snap that main has since moved past. `bit install` populates the scope
+    // from the `.bitmap` of the branch it ran on, and the main-scope reconciler then checks out a
+    // DIFFERENT branch (the sync branch) whose `.bitmap` names that stale version. So the lookup
+    // failed precisely when the heal was needed, and the run stayed red reporting a component the
+    // scope has as "not on the scope".
+    const modelComponent = await legacyScope.getModelComponentIfExist(id.changeVersion(undefined));
+    if (!modelComponent) return { status: 'absent', reason: 'not on the scope' };
+    const head = modelComponent.getHeadRegardlessOfLaneAsTagOrHash();
+    if (!head) return { status: 'absent', reason: 'no head on the scope' };
     const version = await modelComponent.loadVersion(head, legacyScope.objects);
-    if (!version?.mainFile) return { status: 'absent' };
+    if (!version?.mainFile) return { status: 'absent', reason: 'the head records no main file' };
     return { status: 'read', mainFile: version.mainFile };
   } catch (e: any) {
     return { status: 'unreadable', reason: e?.message || String(e) };
@@ -117,7 +137,7 @@ export async function healMissingMainFiles(workspace: Workspace, logger: Logger)
       healed.push({ id });
     } else {
       // Unknown, never assumed: leave the entry and let the checkout fail with its own message.
-      skipped.push(`${id} (${onScope.status === 'absent' ? 'not on the scope' : `unreadable: ${onScope.reason}`})`);
+      skipped.push(`${id} (${onScope.status === 'absent' ? onScope.reason : `unreadable: ${onScope.reason}`})`);
     }
   }
   if (healed.length) await bitMap.write();
