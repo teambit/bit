@@ -39,6 +39,8 @@ type Realm = {
 };
 
 const entries = new Map<string, CanvasEntry>();
+/** last rect sent per key, so an unchanged card is not re-sent every frame */
+const lastSent = new Map<string, string>();
 const realms = new Map<string, Realm>();
 const renderedKeys = new Set<string>();
 let host: HTMLDivElement | undefined;
@@ -104,6 +106,7 @@ function flush() {
   frame = undefined;
   const viewportHeight = window.innerHeight;
   const byServer = new Map<string, any[]>();
+  const seen = new Map<string, string>();
 
   for (const entry of entries.values()) {
     const rect = entry.getRect();
@@ -119,6 +122,10 @@ function flush() {
       rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height },
     });
     byServer.set(entry.serverUrl, items);
+    // rounding to whole pixels keeps sub-pixel scroll jitter from looking like a change: restyling
+    // a surface every frame retriggers its ResizeObserver, and a resize loop is what the dev
+    // server's error overlay was reporting
+    seen.set(entry.key, `${Math.round(rect.top)},${Math.round(rect.left)},${Math.round(rect.width)},${Math.round(rect.height)}`);
   }
 
   for (const [serverUrl, items] of byServer) {
@@ -127,8 +134,15 @@ function flush() {
       realm.pending = items;
       continue;
     }
+    // skip the message entirely when nothing moved, so a settled grid goes quiet
+    const unchanged =
+      items.length === [...seen.keys()].filter((k) => entries.get(k)?.serverUrl === serverUrl).length &&
+      items.every((item: any) => lastSent.get(item.key) === seen.get(item.key));
+    if (unchanged) continue;
     realm.iframe.contentWindow?.postMessage({ type: 'bit-preview-set', items }, '*');
   }
+  lastSent.clear();
+  seen.forEach((value, key) => lastSent.set(key, value));
   // realms whose cards all scrolled away still need to be told, so they can drop their containers
   for (const [serverUrl, realm] of realms) {
     if (byServer.has(serverUrl) || !realm.ready) continue;

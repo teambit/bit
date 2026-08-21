@@ -30,6 +30,9 @@ export type RenderingContextOptions = { aspectsFilter?: string[] };
 export type RenderingContextProvider = (options: RenderingContextOptions) => { [key: string]: any };
 export type RenderingContextSlot = SlotRegistry<RenderingContextProvider>;
 
+/** how long a preview surface survives after the host stops reporting it on screen */
+const MULTI_SURFACE_GRACE_MS = 1500;
+
 export class PreviewPreview {
   constructor(
     /**
@@ -127,6 +130,9 @@ export class PreviewPreview {
   private multiSurfaces = new Map<string, { container: HTMLElement; frame: HTMLIFrameElement; mount: HTMLElement }>();
 
   private multiRendered = new Set<string>();
+
+  /** when each surface was last reported on screen, so a transient gap does not destroy it */
+  private multiLastSeen = new Map<string, number>();
 
   private styleSyncObserver?: MutationObserver;
 
@@ -262,8 +268,14 @@ export class PreviewPreview {
       const previewModule = await this.getPreviewModule(name, componentId);
       const context = this.getRenderingContext(undefined);
       // the mounter reads `container` off the rendering context and keeps one react root per
-      // container, so previews live side by side instead of replacing each other
-      Object.assign(context as any, { container: surface.mount });
+      // container, so previews live side by side instead of replacing each other.
+      //
+      // `noControls` matters just as much. Live controls decide whether to render from
+      // `needLiveControls(window.location)` and build their href from `window.location.hash` - both
+      // of which assume the iframe is dedicated to one preview. A realm hosting many previews has a
+      // single location, so that decision collapses and the controls panel renders at realm scale
+      // over the whole grid. A batched preview is a card thumbnail; it never wants them.
+      Object.assign(context as any, { container: surface.mount, noControls: true });
       await preview.render(componentId, item.envId || '', previewModule, [], context);
       window.parent?.postMessage({ type: 'bit-preview-rendered', key }, '*');
     } catch (err: any) {
@@ -285,11 +297,21 @@ export class PreviewPreview {
       if (!data || data.type !== 'bit-preview-set' || !Array.isArray(data.items)) return;
 
       const wanted = new Set<string>(data.items.map((i: any) => i.key));
+      const now = Date.now();
+      wanted.forEach((key) => this.multiLastSeen.set(key, now));
+
+      // Retiring a surface the moment it drops out of one message is too eager: during a scroll the
+      // host can report an empty or partial set for a frame (cards remounting, a rect briefly
+      // unmeasurable), and destroying every surface then rebuilding them makes previews blink and
+      // pay their render cost again. Keep a surface until it has been absent for a beat.
       for (const [key, surface] of this.multiSurfaces) {
         if (wanted.has(key)) continue;
+        const lastSeen = this.multiLastSeen.get(key) ?? 0;
+        if (now - lastSeen < MULTI_SURFACE_GRACE_MS) continue;
         surface.container.remove();
         this.multiSurfaces.delete(key);
         this.multiRendered.delete(key);
+        this.multiLastSeen.delete(key);
       }
       for (const item of data.items) void this.renderOneInto(item);
     });
