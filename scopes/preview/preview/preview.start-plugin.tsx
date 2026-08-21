@@ -1,5 +1,5 @@
 import { flatten } from 'lodash';
-import type { BundlerMain, ComponentServer } from '@teambit/bundler';
+import type { BundlerMain, ComponentServer, DevServerFailure } from '@teambit/bundler';
 import {
   BundlerAspect,
   ComponentServerCompilationChangedEvent,
@@ -43,6 +43,7 @@ export class PreviewStartPlugin implements StartPlugin {
   private bootstrapActive = false;
   private lastBootstrapText = '';
   private pendingPostInstallPublish = new Set<string>();
+  private bootstrapFailureReported = false;
 
   private cacheServerLookup(server: ComponentServer) {
     const lookupKeys = new Set<string>([
@@ -213,6 +214,20 @@ export class PreviewStartPlugin implements StartPlugin {
       const previewServers = await this.bundler.devServer(components);
       const envCreateMs = Date.now() - envCreateStart;
       const envCount = previewServers.length;
+      // envs that could not build their preview no longer take the healthy envs down with them -
+      // they come back here as failures so we can report them and carry on. see DevServerService.
+      const failures = this.bundler.getDevServerFailures();
+      failures.forEach((failure) => {
+        this.logger.error(`failed to create a preview dev server for env ${failure.envId}`, failure.error);
+      });
+
+      if (!envCount && failures.length) {
+        this.bootstrapFailureReported = true;
+        this.failBootstrapSpinner(
+          `no preview dev server could be created - component previews will be unavailable.\n${formatDevServerFailures(failures)}`
+        );
+        throw new Error(`preview dev servers failed for all ${failures.length} environment groups`);
+      }
 
       if (!envCount) {
         this.succeedBootstrapSpinner('No preview dev servers were created (no preview environments matched).');
@@ -223,6 +238,15 @@ export class PreviewStartPlugin implements StartPlugin {
             envCount === 1 ? '' : 's'
           } ${chalk.dim(`in ${(envCreateMs / 1000).toFixed(1)}s`)}. Waiting for compilation...`
         );
+        if (failures.length) {
+          this.logger.console(
+            chalk.yellow(
+              `preview bootstrap: ${failures.length} environment${
+                failures.length === 1 ? '' : 's'
+              } could not be served - their components will have no preview:\n`
+            ) + formatDevServerFailures(failures)
+          );
+        }
       }
 
       previewServers.forEach((server) => {
@@ -256,13 +280,15 @@ export class PreviewStartPlugin implements StartPlugin {
         });
       this.previewServers = this.previewServers.concat(previewServers);
     } catch (err: any) {
-      // one env failing to bundle rejects the whole `devServer()` call, so every env loses its
-      // preview server. the UI stays up, which means the only signal the developer gets is this
-      // message - dumping raw bundler stats here buried the actual cause (a missing module) under
-      // hundreds of lines of module listings.
-      this.failBootstrapSpinner(
-        `Preview dev servers failed to start - component previews will be unavailable.\n${summarizeBundlerError(err)}`
-      );
+      // reached only when the whole bootstrap failed (e.g. loading components or creating the env
+      // runtime), not when a single env failed to bundle - that is isolated per env above. the UI
+      // stays up, which means the only signal the developer gets is this message, and dumping raw
+      // bundler stats here buried the actual cause under hundreds of lines of module listings.
+      if (!this.bootstrapFailureReported) {
+        this.failBootstrapSpinner(
+          `Preview dev servers failed to start - component previews will be unavailable.\n${summarizeBundlerError(err)}`
+        );
+      }
       this.logger.error('preview dev server bootstrap failed', err);
       throw err;
     }
@@ -513,13 +539,33 @@ function stringifyIncludedEnvs(includedEnvs: string[] = [], verbose = false) {
   return includedEnvs.join(', ');
 }
 
+export type BundlerErrorSummaryOptions = {
+  /**
+   * how many `ERROR in ...` blocks to summarize before collapsing the rest into a count.
+   */
+  maxErrors?: number;
+
+  /**
+   * env the error belongs to. used when the failing capsule cannot be recovered from the error, so
+   * the summary still says which env is affected.
+   */
+  envId?: string;
+
+  /**
+   * append the "full output is in the debug log" hint. turn it off when summarizing several errors
+   * in a row so the hint is printed once for the whole group.
+   */
+  debugLogHint?: boolean;
+};
+
 /**
  * Turn a bundler failure into something a developer can act on. Rspack rejects with its full stats
  * as the error message - hundreds of lines of module listings around a couple of real errors - so
  * pull out the errors themselves and the env each one came from. The untouched original still goes
  * to the debug log for when the summary is not enough.
  */
-export function summarizeBundlerError(err: any, maxErrors = 5): string {
+export function summarizeBundlerError(err: any, options: BundlerErrorSummaryOptions = {}): string {
+  const { maxErrors = 5, envId: knownEnvId, debugLogHint = true } = options;
   const message: string = err?.message || String(err);
   const lines = message.split('\n');
   const errorIndexes = lines.reduce<number[]>((acc, line, index) => {
@@ -529,7 +575,7 @@ export function summarizeBundlerError(err: any, maxErrors = 5): string {
 
   if (!errorIndexes.length) {
     const firstLines = lines.slice(0, 4).join('\n  ');
-    return `  ${firstLines}`;
+    return `  ${knownEnvId ? `${knownEnvId}: ` : ''}${firstLines}`;
   }
 
   const summaries = errorIndexes.slice(0, maxErrors).map((start) => {
@@ -541,7 +587,7 @@ export function summarizeBundlerError(err: any, maxErrors = 5): string {
     // capsule dirs are named `<scope>_<namespace>_<name>@<version>`, which is the env id with the
     // separators flattened - recover it so the message names a component, not a cache path.
     const capsule = block.join('\n').match(/capsules[/\\][^/\\]+[/\\]([^/\\]+@[^/\\]+)/)?.[1];
-    const envId = capsule ? capsule.replace(/_/g, '/') : undefined;
+    const envId = (capsule ? capsule.replace(/_/g, '/') : undefined) || knownEnvId;
     // drop the trailing `in '<capsule path>'` - the env id above already says where this happened
     const concise = reason.trim().replace(/ in '[^']*'$/, '');
     return `  ${envId ? `${envId}: ` : ''}${concise}`;
@@ -549,6 +595,30 @@ export function summarizeBundlerError(err: any, maxErrors = 5): string {
 
   const remaining = errorIndexes.length - summaries.length;
   if (remaining > 0) summaries.push(`  ...and ${remaining} more error${remaining === 1 ? '' : 's'}`);
-  summaries.push(`  full bundler output was written to the debug log (bit globals)`);
+  if (debugLogHint) summaries.push(`  full bundler output was written to the debug log (bit globals)`);
   return summaries.join('\n');
+}
+
+/**
+ * one console block for the envs left without a preview dev server: the envs themselves, and under
+ * them the errors that took them out. envs that share a dev server also share its failure, so the
+ * failures are grouped by error to report it once instead of once per env.
+ */
+function formatDevServerFailures(failures: DevServerFailure[]): string {
+  const byError = new Map<Error, string[]>();
+  failures.forEach((failure) => {
+    const envIds = byError.get(failure.error) || [];
+    byError.set(failure.error, envIds.concat(failure.envId, failure.relatedEnvIds));
+  });
+
+  const blocks = Array.from(byError.entries()).map(([error, envIds]) => {
+    const summary = summarizeBundlerError(error, {
+      envId: envIds.length === 1 ? envIds[0] : undefined,
+      maxErrors: 3,
+      debugLogHint: false,
+    });
+    return `  ${chalk.yellow(envIds.join(', '))}\n${summary}`;
+  });
+  blocks.push(chalk.dim('  full bundler output was written to the debug log (bit globals)'));
+  return blocks.join('\n');
 }
