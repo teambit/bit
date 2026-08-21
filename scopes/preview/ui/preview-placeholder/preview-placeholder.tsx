@@ -6,6 +6,7 @@ import { capitalize } from '@teambit/toolbox.string.capitalize';
 import type { ComponentModel } from '@teambit/component';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { DocsAspect } from '@teambit/docs';
+import { isBatchedPreviewEnabled, registerPreview, unregisterPreview, hasRendered } from './preview-canvas';
 import styles from './preview-placeholder.module.scss';
 
 // Keep a lightweight in-memory warm set so previews that were already hydrated once
@@ -280,6 +281,34 @@ export function PreviewPlaceholder({
     };
   }, [previewKey]);
 
+  // Batched mode renders this card inside a per-env realm shared by every visible card, instead of
+  // giving it an iframe (and a full preview-runtime bootstrap) of its own. See preview-canvas.ts.
+  const batched = isBatchedPreviewEnabled();
+  const [canvasRendered, setCanvasRendered] = useState(false);
+
+  useEffect(() => {
+    if (!batched || !previewKey || !serverUrl || !shouldShowPreview) return undefined;
+
+    registerPreview({
+      key: previewKey,
+      id: previewKey,
+      serverUrl,
+      preview: 'compositions',
+      getRect: () => intersectionRef.current?.getBoundingClientRect(),
+    });
+
+    const onRendered = (event: Event) => {
+      if ((event as CustomEvent).detail?.key === previewKey) setCanvasRendered(true);
+    };
+    document.addEventListener('bit-preview-canvas-rendered', onRendered);
+    if (hasRendered(previewKey)) setCanvasRendered(true);
+
+    return () => {
+      document.removeEventListener('bit-preview-canvas-rendered', onRendered);
+      unregisterPreview(previewKey);
+    };
+  }, [batched, previewKey, serverUrl, shouldShowPreview]);
+
   const compositionsKey = compositions?.map((c) => c.identifier).join(',');
   const selectedPreview = useMemo(() => {
     if (!shouldShowPreview || !component) return undefined;
@@ -326,6 +355,26 @@ export function PreviewPlaceholder({
         </div>
       </div>
     );
+
+  if (batched) {
+    return (
+      <div ref={intersectionRef} className={styles.previewPlaceholder} data-tip="" data-for={name}>
+        {!canvasRendered && (
+          <div className={styles.placeholderShimmer}>
+            <div className={styles.placeholderChrome}>
+              <div className={styles.placeholderDot} />
+              <div className={styles.placeholderDot} />
+              <div className={styles.placeholderDot} />
+            </div>
+            <div className={styles.placeholderCanvas}>
+              <div className={styles.placeholderBar} style={{ width: '60%' }} />
+              <div className={styles.placeholderBar} style={{ width: '40%' }} />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div ref={intersectionRef}>

@@ -110,11 +110,108 @@ export class PreviewPreview {
   };
 
   /**
+   * Batched mode: render many components inside ONE realm.
+   *
+   * A workspace grid gives every card its own preview iframe, and every iframe is a JS realm that
+   * pays the full preview-runtime bootstrap - measured at ~0.22s of main thread and ~76-300MB of
+   * heap per card, the same whether the card shows a real component or a behaviour with no UI. With
+   * 79 cards live that is ~17s of blocking work, and it is what makes scrolling a large workspace
+   * stutter. Resolving an extra component inside an already-booted realm, by contrast, measured at
+   * ~0ms: the realm already holds every component in the env.
+   *
+   * So in this mode the host mounts one iframe per env and drives it over postMessage: it sends the
+   * set of components currently on screen with the rect each should occupy, and this runtime renders
+   * them into absolutely positioned containers. Scrolling only moves the boxes - nothing re-renders,
+   * and nothing bootstraps a second time.
+   */
+  private multiContainers = new Map<string, HTMLElement>();
+
+  private multiRendered = new Set<string>();
+
+  private isMultiMode() {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('multi') === 'true';
+  }
+
+  private multiRoot(): HTMLElement {
+    let host = window.document.getElementById('bit-preview-multi-root');
+    if (!host) {
+      host = window.document.createElement('div');
+      host.id = 'bit-preview-multi-root';
+      host.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
+      window.document.body.appendChild(host);
+    }
+    return host;
+  }
+
+  private applyRect(el: HTMLElement, rect: { top: number; left: number; width: number; height: number }) {
+    el.style.cssText =
+      `position:absolute;overflow:hidden;contain:layout paint style;` +
+      `top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;`;
+  }
+
+  private async renderOneInto(item: any) {
+    const { key, id, preview: previewName, rect } = item;
+    const componentId = ComponentID.tryFromString(id);
+    const name = previewName || this.getDefault();
+    const preview = this.getPreview(name);
+    if (!preview || !componentId) return;
+
+    let container = this.multiContainers.get(key);
+    if (!container) {
+      container = window.document.createElement('div');
+      this.multiContainers.set(key, container);
+      this.multiRoot().appendChild(container);
+    }
+    this.applyRect(container, rect);
+    if (this.multiRendered.has(key)) return; // already mounted; the rect update above is enough
+
+    this.multiRendered.add(key);
+    try {
+      const previewModule = await this.getPreviewModule(name, componentId);
+      const context = this.getRenderingContext(undefined);
+      // the mounter reads `container` off the rendering context and keeps one react root per
+      // container, so previews in this realm live side by side instead of replacing each other.
+      Object.assign(context as any, { container });
+      await preview.render(componentId, item.envId || '', previewModule, [], context);
+      window.parent?.postMessage({ type: 'bit-preview-rendered', key }, '*');
+    } catch (err: any) {
+      this.multiRendered.delete(key);
+      // eslint-disable-next-line no-console
+      console.error('[preview][multi:render:fail]', id, err);
+    }
+  }
+
+  private startMultiMode() {
+    window.document.body.style.margin = '0';
+    window.addEventListener('message', (event) => {
+      const data = event.data;
+      if (!data || data.type !== 'bit-preview-set' || !Array.isArray(data.items)) return;
+
+      const wanted = new Set<string>(data.items.map((i: any) => i.key));
+      for (const [key, el] of this.multiContainers) {
+        if (wanted.has(key)) continue;
+        el.remove();
+        this.multiContainers.delete(key);
+        this.multiRendered.delete(key);
+      }
+      for (const item of data.items) void this.renderOneInto(item);
+    });
+    window.parent?.postMessage({ type: 'bit-preview-multi-ready' }, '*');
+  }
+
+  /**
    * render the preview.
    */
   render = async (rootExt?: string) => {
     // fit content always.
     window.document.body.style.width = 'auto';
+
+    if (this.isMultiMode()) {
+      if (rootExt) this.isDev = rootExt === 'teambit.workspace/workspace';
+      this.startMultiMode();
+      return undefined;
+    }
 
     const { previewName, componentId, envId } = this.getLocation();
     const name = previewName || this.getDefault();
