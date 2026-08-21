@@ -50,11 +50,22 @@ const pools = new Map<string, PooledFrame[]>();
 const renderedKeys = new Set<string>();
 let host: HTMLDivElement | undefined;
 let scrollRoot: HTMLElement | undefined;
+/** last scroll offset, used to tell which way the grid is moving */
+let lastScrollTop = 0;
+let scrollingDown = true;
 let frame: number | undefined;
 let listening = false;
 
-/** how far outside the viewport a card is still worth showing */
-const OVERSCAN_PX = 400;
+/**
+ * How far outside the viewport a card is still worth showing. Wide enough that a frame is assigned
+ * and positioned well before it scrolls into view: a frame that arrives late keeps its previous
+ * card's position for a moment, which reads as a preview jumping into place.
+ */
+const OVERSCAN_PX = 1400;
+
+/** cards in the direction of travel are worth a frame more than the ones being left behind */
+const AHEAD_BIAS = 0.4;
+const BEHIND_BIAS = 1.8;
 
 function getPoolSize(): number {
   if (typeof window === 'undefined') return 12;
@@ -240,11 +251,23 @@ function flush() {
   const viewportHeight = window.innerHeight;
   const visibleByServer = new Map<string, Array<{ entry: CanvasEntry; rect: DOMRect; distance: number }>>();
 
+  const currentTop = scrollRoot === document.body ? window.scrollY : scrollRoot?.scrollTop || 0;
+  if (currentTop !== lastScrollTop) {
+    scrollingDown = currentTop > lastScrollTop;
+    lastScrollTop = currentTop;
+  }
+
   for (const entry of entries.values()) {
     const rect = entry.getRect();
     if (!rect || rect.width === 0 || rect.height === 0) continue;
     if (rect.bottom < -OVERSCAN_PX || rect.top > viewportHeight + OVERSCAN_PX) continue;
-    const distance = rect.top < 0 ? -rect.top : Math.max(0, rect.top - viewportHeight);
+
+    const offscreen = rect.top < 0 ? -rect.top : Math.max(0, rect.top - viewportHeight);
+    // on screen, everything is equally urgent; off screen, prefer whichever side we are heading
+    // towards, so the pool spends its frames on cards about to appear rather than ones just left
+    const ahead = rect.top < 0 ? !scrollingDown : scrollingDown;
+    const distance = offscreen === 0 ? 0 : offscreen * (ahead ? AHEAD_BIAS : BEHIND_BIAS);
+
     const list = visibleByServer.get(entry.serverUrl) || [];
     list.push({ entry, rect, distance });
     visibleByServer.set(entry.serverUrl, list);
