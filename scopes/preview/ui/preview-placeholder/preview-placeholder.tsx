@@ -23,6 +23,68 @@ function getHydrationConcurrency() {
 const HYDRATION_CONCURRENCY = getHydrationConcurrency();
 const HYDRATION_SLOT_FALLBACK_RELEASE_MS = 1800;
 const AUTO_WARM_PREVIEW_LIMIT = Math.max(16, HYDRATION_CONCURRENCY * 3);
+
+// Every hydrated preview is an <iframe>, and every iframe is its own JS realm that parses and runs
+// the env's preview bundle. The hydration queue above bounds how *fast* previews mount, but nothing
+// bounded how *many* stayed mounted: scrolling a large workspace grew the live set monotonically
+// (measured on a 194-component workspace: 9 -> 25 -> 41 -> 57 -> 73 -> 79 iframes over eight scroll
+// steps, never shrinking). Keep a bounded window of live realms and retire the ones furthest from
+// the viewport - `warmedPreviews` means a retired preview re-mounts without waiting for a slot, and
+// its assets come from the browser cache.
+function getMaxLivePreviews() {
+  const fallback = Math.max(24, HYDRATION_CONCURRENCY * 4);
+  if (typeof window === 'undefined') return fallback;
+  // escape hatch, and the knob that makes this measurable: `?maxLivePreviews=999` keeps every
+  // preview alive (the old behaviour) so a before/after can be run against one build and one server
+  const raw = new URLSearchParams(window.location.search).get('maxLivePreviews');
+  const parsed = raw === null ? NaN : Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const MAX_LIVE_PREVIEWS = getMaxLivePreviews();
+// Don't retire anything within this many pixels of the viewport, so scrolling never blanks a card
+// the user can see or is about to see. It must stay above the observer's `rootMargin` below,
+// otherwise a preview would be retired while still inside the band that re-triggers hydration and
+// the two would fight each other.
+const LIVE_PREVIEW_KEEP_MARGIN_PX = 2000;
+
+// A retired preview keeps its `warmedPreviews` entry (so re-mounting skips the queue) but must go
+// back through intersection before it re-mounts - otherwise the auto-warm fast path below would
+// re-hydrate it the moment it was retired.
+const retiredPreviews = new Set<string>();
+
+type LivePreview = { previewKey: string; getTop: () => number | undefined; retire: () => void };
+const livePreviews = new Map<string, LivePreview>();
+
+function distanceFromViewport(entry: LivePreview): number {
+  const top = entry.getTop();
+  if (top === undefined) return Number.POSITIVE_INFINITY;
+  const viewportHeight = typeof window === 'undefined' ? 0 : window.innerHeight;
+  if (top >= 0 && top <= viewportHeight) return 0;
+  return top < 0 ? -top : top - viewportHeight;
+}
+
+function registerLivePreview(entry: LivePreview) {
+  livePreviews.set(entry.previewKey, entry);
+  if (livePreviews.size <= MAX_LIVE_PREVIEWS) return;
+
+  // retire the furthest-away previews until we are back within budget. anything still near the
+  // viewport is never a candidate, so an over-budget screenful simply stays live.
+  const candidates = [...livePreviews.values()]
+    .map((live) => ({ live, distance: distanceFromViewport(live) }))
+    .filter(({ distance }) => distance > LIVE_PREVIEW_KEEP_MARGIN_PX)
+    .sort((a, b) => b.distance - a.distance);
+
+  for (const { live } of candidates) {
+    if (livePreviews.size <= MAX_LIVE_PREVIEWS) break;
+    livePreviews.delete(live.previewKey);
+    live.retire();
+  }
+}
+
+function unregisterLivePreview(previewKey: string) {
+  livePreviews.delete(previewKey);
+}
 const hydrationQueue: Array<{ previewKey: string; run: () => void; priority: number; seq: number }> = [];
 const queuedPreviewKeys = new Set<string>();
 let activeHydrationSlots = 0;
@@ -129,6 +191,10 @@ export function PreviewPlaceholder({
   const [canHydratePreview, setCanHydratePreview] = useState(() => !!previewKey && warmedPreviews.has(previewKey));
   const slotHeldRef = useRef(false);
   const slotReleaseTimerRef = useRef<number | undefined>(undefined);
+  // tracks the *component* lifetime. the `isMounted` flag inside the hydration effect below only
+  // tracks that effect run, and the effect re-runs as soon as hydration flips its own dependency -
+  // so a callback that outlives the effect (like `retire`) has to consult this instead.
+  const componentMountedRef = useRef(true);
 
   const clearSlotReleaseTimer = () => {
     if (!slotReleaseTimerRef.current) return;
@@ -155,6 +221,16 @@ export function PreviewPlaceholder({
       warmedPreviews.add(previewKey);
       slotHeldRef.current = true;
       setCanHydratePreview(true);
+      registerLivePreview({
+        previewKey,
+        getTop: () => intersectionRef.current?.getBoundingClientRect().top,
+        retire: () => {
+          if (!componentMountedRef.current) return;
+          retiredPreviews.add(previewKey);
+          autoWarmPreviews.delete(previewKey);
+          setCanHydratePreview(false);
+        },
+      });
       slotReleaseTimerRef.current = window.setTimeout(() => {
         releaseSlotIfHeld();
       }, HYDRATION_SLOT_FALLBACK_RELEASE_MS);
@@ -162,7 +238,8 @@ export function PreviewPlaceholder({
 
     // Eagerly warm the first visible wave of previews so startup feels instant.
     // Remaining previews are still intersection-gated to keep network pressure controlled.
-    if (reserveAutoWarmPreview(previewKey)) {
+    // A previously retired preview always takes the intersection path.
+    if (!retiredPreviews.has(previewKey) && reserveAutoWarmPreview(previewKey)) {
       requestHydrationSlot(previewKey, hydratePreview);
       return () => {
         isMounted = false;
@@ -176,6 +253,7 @@ export function PreviewPlaceholder({
 
         const distanceFromViewportTop = Math.abs(entry.boundingClientRect.top);
         const priority = Math.max(0, 100000 - distanceFromViewportTop);
+        retiredPreviews.delete(previewKey);
         requestHydrationSlot(previewKey, hydratePreview, priority);
         observer.disconnect();
       },
@@ -196,9 +274,11 @@ export function PreviewPlaceholder({
 
   useEffect(() => {
     return () => {
+      componentMountedRef.current = false;
       releaseSlotIfHeld();
+      unregisterLivePreview(previewKey);
     };
-  }, []);
+  }, [previewKey]);
 
   const compositionsKey = compositions?.map((c) => c.identifier).join(',');
   const selectedPreview = useMemo(() => {
