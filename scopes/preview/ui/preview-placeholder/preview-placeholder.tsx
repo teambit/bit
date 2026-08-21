@@ -297,6 +297,7 @@ export function PreviewPlaceholder({
       // matches the viewport the non-batched path passes to ComponentComposition
       viewport: 1280,
       getRect: () => intersectionRef.current?.getBoundingClientRect(),
+      getNode: () => intersectionRef.current || undefined,
     });
 
     const onRendered = (event: Event) => {

@@ -31,9 +31,13 @@ export type CanvasEntry = {
   viewport?: number;
   /** the card's preview area in viewport coordinates, or undefined once unmounted */
   getRect: () => DOMRect | undefined;
+  /** the card's element, used once to find the scroller the grid lives in */
+  getNode?: () => HTMLElement | undefined;
 };
 
 type PooledFrame = {
+  /** clips the scaled frame to the card, and is the only box that occupies layout */
+  wrapper: HTMLDivElement;
   iframe: HTMLIFrameElement;
   /** the card this frame is currently showing, if any */
   assignedKey?: string;
@@ -45,6 +49,7 @@ const entries = new Map<string, CanvasEntry>();
 const pools = new Map<string, PooledFrame[]>();
 const renderedKeys = new Set<string>();
 let host: HTMLDivElement | undefined;
+let scrollRoot: HTMLElement | undefined;
 let frame: number | undefined;
 let listening = false;
 
@@ -65,15 +70,86 @@ export function isPooledPreviewEnabled(): boolean {
   return new URLSearchParams(window.location.search).get('batchedPreviews') === 'true';
 }
 
-function ensureHost(): HTMLDivElement {
+/**
+ * The element the grid actually scrolls in, which is rarely the window.
+ *
+ * Deliberately does not require the container to be scrollable *yet*: when the first card registers
+ * the grid is usually still filling, so a height check answers "no" and the overlay would be
+ * anchored to the body - which is how previews ended up being repositioned by javascript on every
+ * scroll event, drifting behind the cards.
+ */
+function findScrollRoot(from?: HTMLElement): HTMLElement {
+  let node = from?.parentElement || null;
+  while (node && node !== document.body && node !== document.documentElement) {
+    const style = window.getComputedStyle(node);
+    if (/(auto|scroll)/.test(style.overflowY)) return node;
+    node = node.parentElement;
+  }
+  return document.body;
+}
+
+/**
+ * Any card element currently in the dom. The *first registered* card is not good enough: a grid
+ * recycles cards as it scrolls, so that entry is frequently unmounted and hands back nothing, which
+ * silently left the overlay anchored to the body.
+ */
+function anyLiveNode(): HTMLElement | undefined {
+  for (const entry of entries.values()) {
+    const node = entry.getNode?.();
+    if (node && node.isConnected) return node;
+  }
+  return undefined;
+}
+
+/**
+ * Re-home the overlay if the grid turned out to scroll somewhere else. The first card can register
+ * before the layout that reveals the real scroller exists, and being anchored to the wrong element
+ * is exactly the bug this module exists to avoid.
+ */
+function reanchorIfNeeded(near?: HTMLElement) {
+  if (!host || !scrollRoot) return;
+  const isScroller = scrollRoot !== document.body && scrollRoot.scrollHeight > scrollRoot.clientHeight + 40;
+  if (isScroller) return;
+
+  const candidate = findScrollRoot(near);
+  if (candidate === scrollRoot) return;
+
+  scrollRoot = candidate;
+  if (scrollRoot !== document.body && window.getComputedStyle(scrollRoot).position === 'static') {
+    scrollRoot.style.position = 'relative';
+  }
+  scrollRoot.appendChild(host);
+}
+
+function ensureHost(near?: HTMLElement): HTMLDivElement {
   if (host) return host;
+  scrollRoot = findScrollRoot(near);
+
+  // The overlay lives *inside* the scroller and is positioned in its content coordinates, not the
+  // viewport's. A fixed overlay has to be repositioned every frame to follow the cards, and it can
+  // never keep up with compositor-driven scrolling - the previews visibly drift behind the page and
+  // snap back. Anchored in the content instead, native scrolling moves previews and cards together
+  // and no javascript runs while the page scrolls.
+  if (scrollRoot !== document.body && window.getComputedStyle(scrollRoot).position === 'static') {
+    scrollRoot.style.position = 'relative';
+  }
+
   host = document.createElement('div');
   host.id = 'bit-preview-canvas';
-  // covers the viewport so card rects can be used as-is. it must never swallow clicks: the cards
-  // underneath own all interaction.
-  host.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;';
-  document.body.appendChild(host);
+  // never swallow clicks: the cards underneath own all interaction
+  host.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:0;pointer-events:none;z-index:1;';
+  scrollRoot.appendChild(host);
   return host;
+}
+
+/** a card's position in the scroller's content box, which does not change as the page scrolls */
+function toContentCoords(rect: DOMRect) {
+  const root = scrollRoot || document.body;
+  if (root === document.body) {
+    return { top: rect.top + window.scrollY, left: rect.left + window.scrollX };
+  }
+  const rootRect = root.getBoundingClientRect();
+  return { top: rect.top - rootRect.top + root.scrollTop, left: rect.left - rootRect.left + root.scrollLeft };
 }
 
 function previewHash(entry: CanvasEntry): string {
@@ -97,12 +173,20 @@ function poolFor(serverUrl: string): PooledFrame[] {
 }
 
 function createFrame(serverUrl: string, entry: CanvasEntry): PooledFrame {
+  // A scaled iframe still occupies its unscaled box in layout - 1280px wide for a 328px card - so
+  // placing frames directly in the scroller inflated its scrollable area and the grid overflowed.
+  // The wrapper is the only thing that takes up space, and it is exactly the size of the card.
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:absolute;overflow:hidden;contain:layout paint size style;';
+
   const iframe = document.createElement('iframe');
   iframe.setAttribute('title', `preview ${entry.id}`);
-  iframe.style.cssText = 'position:absolute;border:0;background:transparent;transform-origin:top left;';
+  iframe.style.cssText = 'position:absolute;top:0;left:0;border:0;background:transparent;transform-origin:top left;';
   iframe.src = `${serverUrl}${previewHash(entry)}`;
-  ensureHost().appendChild(iframe);
-  const pooled: PooledFrame = { iframe, assignedKey: entry.key, booted: true };
+
+  wrapper.appendChild(iframe);
+  ensureHost(entry.getNode?.()).appendChild(wrapper);
+  const pooled: PooledFrame = { wrapper, iframe, assignedKey: entry.key, booted: true };
   poolFor(serverUrl).push(pooled);
   return pooled;
 }
@@ -126,26 +210,33 @@ function assign(pooled: PooledFrame, entry: CanvasEntry) {
 function place(pooled: PooledFrame, rect: DOMRect, viewport?: number) {
   const width = viewport && viewport > 0 ? viewport : rect.width;
   const scale = rect.width / width;
-  const style = pooled.iframe.style;
-  const top = `${Math.round(rect.top)}px`;
-  const left = `${Math.round(rect.left)}px`;
+  const coords = toContentCoords(rect);
+
   // only touch style when something actually moved: restyling every frame retriggers each realm's
-  // ResizeObserver, which is what the dev server used to report as a resize loop
-  if (style.top !== top) style.top = top;
-  if (style.left !== left) style.left = left;
+  // ResizeObserver, which the dev server used to report as a resize loop
+  const wrap = pooled.wrapper.style;
+  const top = `${Math.round(coords.top)}px`;
+  const left = `${Math.round(coords.left)}px`;
+  const boxW = `${Math.round(rect.width)}px`;
+  const boxH = `${Math.round(rect.height)}px`;
+  if (wrap.top !== top) wrap.top = top;
+  if (wrap.left !== left) wrap.left = left;
+  if (wrap.width !== boxW) wrap.width = boxW;
+  if (wrap.height !== boxH) wrap.height = boxH;
+  if (wrap.visibility !== 'visible') wrap.visibility = 'visible';
+
+  const style = pooled.iframe.style;
   const w = `${Math.round(width)}px`;
   const h = `${Math.round(rect.height / (scale || 1))}px`;
   if (style.width !== w) style.width = w;
   if (style.height !== h) style.height = h;
   const transform = `scale(${scale})`;
   if (style.transform !== transform) style.transform = transform;
-  // each frame is clipped to its card by a wrapper-free approach: the card's own box is the clip,
-  // so keep the frame hidden until it is placed
-  if (style.visibility !== 'visible') style.visibility = 'visible';
 }
 
 function flush() {
   frame = undefined;
+  reanchorIfNeeded(anyLiveNode());
   const viewportHeight = window.innerHeight;
   const visibleByServer = new Map<string, Array<{ entry: CanvasEntry; rect: DOMRect; distance: number }>>();
 
@@ -188,15 +279,15 @@ function flush() {
     // park whatever is left over off-screen rather than destroying it: a retired realm costs a
     // bootstrap to bring back, and keeping it is what makes scrolling cheap
     for (const pooled of free) {
-      if (pooled.iframe.style.visibility === 'hidden') continue;
-      pooled.iframe.style.visibility = 'hidden';
+      if (pooled.wrapper.style.visibility === 'hidden') continue;
+      pooled.wrapper.style.visibility = 'hidden';
     }
   }
 
   for (const [serverUrl, pool] of pools) {
     if (visibleByServer.has(serverUrl)) continue;
     pool.forEach((pooled) => {
-      pooled.iframe.style.visibility = 'hidden';
+      pooled.wrapper.style.visibility = 'hidden';
     });
   }
 }
@@ -235,6 +326,8 @@ function ensureListeners() {
 export function registerPreview(entry: CanvasEntry) {
   ensureListeners();
   entries.set(entry.key, entry);
+  // resolve the scroller from the first card we see, before any frame needs placing
+  if (!host) ensureHost(entry.getNode?.());
   schedule();
 }
 
