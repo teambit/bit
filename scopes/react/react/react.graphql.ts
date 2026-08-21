@@ -41,7 +41,7 @@ export function reactSchema(react: ReactMain) {
           };
 
           if (!component) return empty;
-          const docs = react.getDocs(component);
+          const docs = await react.getDocs(component);
           if (!docs) return empty;
 
           return docs;
