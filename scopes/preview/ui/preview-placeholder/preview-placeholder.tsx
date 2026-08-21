@@ -294,6 +294,8 @@ export function PreviewPlaceholder({
       id: previewKey,
       serverUrl,
       preview: 'compositions',
+      // matches the viewport the non-batched path passes to ComponentComposition
+      viewport: 1280,
       getRect: () => intersectionRef.current?.getBoundingClientRect(),
     });
 

@@ -27,6 +27,8 @@ export type CanvasEntry = {
   preview?: string;
   /** returns the card's preview area in viewport coordinates, or undefined if unmounted */
   getRect: () => DOMRect | undefined;
+  /** width the composition should believe it has, before being scaled into the card */
+  viewport?: number;
 };
 
 type Realm = {
@@ -70,7 +72,10 @@ function ensureRealm(serverUrl: string): Realm {
   const separator = serverUrl.includes('?') ? '&' : '?';
   iframe.src = `${serverUrl}${separator}multi=true`;
   iframe.setAttribute('title', `bit preview realm ${serverUrl}`);
-  iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;';
+  iframe.style.cssText =
+    'position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color-scheme:normal;';
+  // the realm is see-through except where it paints a preview, so the grid underneath stays visible
+  iframe.setAttribute('allowtransparency', 'true');
   ensureHost().appendChild(iframe);
 
   const realm: Realm = { iframe, ready: false, pending: [] };
@@ -110,6 +115,7 @@ function flush() {
       key: entry.key,
       id: entry.id,
       preview: entry.preview,
+      viewport: entry.viewport,
       rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height },
     });
     byServer.set(entry.serverUrl, items);

@@ -144,10 +144,25 @@ export class PreviewPreview {
     return host;
   }
 
-  private applyRect(el: HTMLElement, rect: { top: number; left: number; width: number; height: number }) {
+  private applyRect(
+    el: HTMLElement,
+    rect: { top: number; left: number; width: number; height: number },
+    viewport?: number
+  ) {
     el.style.cssText =
       `position:absolute;overflow:hidden;contain:layout paint style;` +
       `top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;`;
+
+    // A card is a few hundred pixels wide, but a composition expects to render at the viewport width
+    // it was authored for. The per-card path scales the whole iframe; here the iframe is the shared
+    // realm, so each preview gets its own scaled layer instead.
+    const inner = el.firstElementChild as HTMLElement | null;
+    if (!inner) return;
+    const scale = viewport && viewport > 0 ? rect.width / viewport : 1;
+    inner.style.cssText =
+      `width:${viewport && viewport > 0 ? viewport : rect.width}px;` +
+      `height:${scale > 0 ? rect.height / scale : rect.height}px;` +
+      `transform:scale(${scale});transform-origin:top left;`;
   }
 
   private async renderOneInto(item: any) {
@@ -160,10 +175,12 @@ export class PreviewPreview {
     let container = this.multiContainers.get(key);
     if (!container) {
       container = window.document.createElement('div');
+      const scaled = window.document.createElement('div');
+      container.appendChild(scaled);
       this.multiContainers.set(key, container);
       this.multiRoot().appendChild(container);
     }
-    this.applyRect(container, rect);
+    this.applyRect(container, rect, item.viewport);
     if (this.multiRendered.has(key)) return; // already mounted; the rect update above is enough
 
     this.multiRendered.add(key);
@@ -172,7 +189,7 @@ export class PreviewPreview {
       const context = this.getRenderingContext(undefined);
       // the mounter reads `container` off the rendering context and keeps one react root per
       // container, so previews in this realm live side by side instead of replacing each other.
-      Object.assign(context as any, { container });
+      Object.assign(context as any, { container: container.firstElementChild || container });
       await preview.render(componentId, item.envId || '', previewModule, [], context);
       window.parent?.postMessage({ type: 'bit-preview-rendered', key }, '*');
     } catch (err: any) {
@@ -184,6 +201,11 @@ export class PreviewPreview {
 
   private startMultiMode() {
     window.document.body.style.margin = '0';
+    // This realm is an overlay stretched across the host's viewport: anything it paints outside a
+    // preview container would cover the grid underneath it. The preview html gives the document an
+    // opaque background, which is right for a single preview filling its own iframe and wrong here.
+    window.document.documentElement.style.background = 'transparent';
+    window.document.body.style.background = 'transparent';
     window.addEventListener('message', (event) => {
       const data = event.data;
       if (!data || data.type !== 'bit-preview-set' || !Array.isArray(data.items)) return;
