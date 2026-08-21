@@ -62,10 +62,17 @@ async function importHeadsOf(
  */
 type ScopeMainFile =
   | { status: 'read'; mainFile: string }
-  /** the scope has no such component, or no head for it — nothing to compare against */
-  | { status: 'absent' }
+  /**
+   * nothing on the scope to compare against. Carries which of the three it was, because they send
+   * an operator to three different places and a single blanket wording sent this bug's
+   * investigation to the wrong one.
+   */
+  | { status: 'absent'; reason: AbsentReason }
   /** objects could not be read (failed import, corrupt object) — the answer is unknown */
   | { status: 'unreadable'; reason: string };
+
+/** Phrased for the skip line an operator reads, since that is the only consumer. */
+type AbsentReason = 'not on the scope' | 'no head on the scope' | 'the head records no main file';
 
 async function mainFileOnScopeHead(workspace: Workspace, id: ComponentID): Promise<ScopeMainFile> {
   const legacyScope = workspace.scope.legacyScope;
@@ -83,10 +90,11 @@ async function mainFileOnScopeHead(workspace: Workspace, id: ComponentID): Promi
     // failed precisely when the heal was needed, and the run stayed red reporting a component the
     // scope has as "not on the scope".
     const modelComponent = await legacyScope.getModelComponentIfExist(id.changeVersion(undefined));
-    const head = modelComponent?.getHeadRegardlessOfLaneAsTagOrHash();
-    if (!modelComponent || !head) return { status: 'absent' };
+    if (!modelComponent) return { status: 'absent', reason: 'not on the scope' };
+    const head = modelComponent.getHeadRegardlessOfLaneAsTagOrHash();
+    if (!head) return { status: 'absent', reason: 'no head on the scope' };
     const version = await modelComponent.loadVersion(head, legacyScope.objects);
-    if (!version?.mainFile) return { status: 'absent' };
+    if (!version?.mainFile) return { status: 'absent', reason: 'the head records no main file' };
     return { status: 'read', mainFile: version.mainFile };
   } catch (e: any) {
     return { status: 'unreadable', reason: e?.message || String(e) };
@@ -129,9 +137,7 @@ export async function healMissingMainFiles(workspace: Workspace, logger: Logger)
       healed.push({ id });
     } else {
       // Unknown, never assumed: leave the entry and let the checkout fail with its own message.
-      skipped.push(
-        `${id} (${onScope.status === 'absent' ? 'no head on the scope to compare against' : `unreadable: ${onScope.reason}`})`
-      );
+      skipped.push(`${id} (${onScope.status === 'absent' ? onScope.reason : `unreadable: ${onScope.reason}`})`);
     }
   }
   if (healed.length) await bitMap.write();
