@@ -1,6 +1,5 @@
 import type { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
 import type { Capsule } from '@teambit/isolator';
-import { hardLinkDirectory } from '@teambit/toolbox.fs.hard-link-directory';
 import type { EnvContext, EnvHandler } from '@teambit/envs';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import fs from 'fs-extra';
@@ -58,6 +57,11 @@ export class CompilerTask implements BuildTask {
    * then the `dist` folder of the `button` component will be copied to `<card_capsule>/node_modules/button/dist`.
    */
   private async _hardLinkBuildArtifactsOnCapsules(context: BuildContext): Promise<void> {
+    // lazy on purpose: this is the only build-time-only dependency of this module, and the module
+    // itself loads on every bit invocation (via envs). a top-level import pulls the package plus
+    // its own fs-extra tree (~36 files in the released bundle's hoisted layout) into every
+    // bootstrap/status, which is what pushed the filesystem-read e2e guard over its threshold.
+    const { hardLinkDirectory } = await import('@teambit/toolbox.fs.hard-link-directory');
     await Promise.all(
       context.capsuleNetwork.seedersCapsules.map(async (capsule) => {
         const relCompDir = path.relative(context.capsuleNetwork.capsulesRootDir, capsule.path).replace(/\\/g, '/');
