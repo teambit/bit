@@ -8,6 +8,7 @@ export { globalFlags };
 export { defaultErrorHandler };
 export type { Command, CLIArgs, Flags, GenericObject, CommandOptions, Report } from './command';
 export { getArgsData, getCommandName, getFlagsData } from './command-helper';
+export { canPromptUser } from './pager';
 export * from './exceptions';
 
 export {

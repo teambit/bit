@@ -2817,7 +2817,7 @@
       [
         "",
         "hard",
-        "NOT-RECOMMENDED. delete a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents."
+        "NOT-RECOMMENDED. delete a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents. requires interactive confirmation by a human (--silent does not skip it)"
       ],
       [
         "f",
