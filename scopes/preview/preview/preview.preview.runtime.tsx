@@ -124,9 +124,11 @@ export class PreviewPreview {
    * them into absolutely positioned containers. Scrolling only moves the boxes - nothing re-renders,
    * and nothing bootstraps a second time.
    */
-  private multiContainers = new Map<string, HTMLElement>();
+  private multiSurfaces = new Map<string, { container: HTMLElement; frame: HTMLIFrameElement; mount: HTMLElement }>();
 
   private multiRendered = new Set<string>();
+
+  private styleSyncObserver?: MutationObserver;
 
   private isMultiMode() {
     if (typeof window === 'undefined') return false;
@@ -144,25 +146,99 @@ export class PreviewPreview {
     return host;
   }
 
+  /**
+   * Mirror the realm's stylesheets into a surface document. Previews are rendered into their own
+   * documents (see `ensureSurface`), which means they do not inherit the realm's styles - the env's
+   * css has to be copied in, and kept in sync as the dev server injects more of it.
+   */
+  private syncStyles(target: Document) {
+    const isStyle = (node: Node): node is HTMLElement =>
+      node instanceof HTMLElement &&
+      (node.tagName === 'STYLE' || (node.tagName === 'LINK' && node.getAttribute('rel') === 'stylesheet'));
+
+    const copyAll = () => {
+      const wanted = [...window.document.head.children].filter(isStyle);
+      target.head.querySelectorAll('[data-bit-mirrored]').forEach((n) => n.remove());
+      wanted.forEach((node) => {
+        const clone = node.cloneNode(true) as HTMLElement;
+        clone.setAttribute('data-bit-mirrored', 'true');
+        target.head.appendChild(clone);
+      });
+    };
+    copyAll();
+
+    if (!this.styleSyncObserver) {
+      // one observer for every surface: re-mirroring is cheap next to a preview render, and dev
+      // servers inject styles continuously as chunks arrive
+      this.styleSyncObserver = new MutationObserver(() => {
+        for (const surface of this.multiSurfaces.values()) {
+          const doc = surface.frame.contentDocument;
+          if (doc) this.syncStyles(doc);
+        }
+      });
+      this.styleSyncObserver.observe(window.document.head, { childList: true, characterData: true, subtree: true });
+    }
+  }
+
+  /**
+   * Give a preview its own document.
+   *
+   * Rendering every preview into the single realm document looked cheapest, but a component that
+   * uses `position: fixed` or portals into `document.body` - sticky bars, modals, drawers - escapes
+   * its box and paints over the whole grid, and no CSS can scope a portal. A blank same-origin
+   * iframe restores that isolation. It carries no `src`, so it loads no bundle: the react root is
+   * created here, in the one realm that already parsed everything, and renders into the child
+   * document. That keeps the single-bootstrap win while making each preview a real page again.
+   */
+  private ensureSurface(key: string, container: HTMLElement) {
+    const existing = this.multiSurfaces.get(key);
+    if (existing) return existing;
+
+    const frame = window.document.createElement('iframe');
+    frame.setAttribute('title', `preview ${key}`);
+    frame.style.cssText = 'border:0;display:block;background:transparent;';
+    container.appendChild(frame);
+
+    const doc = frame.contentDocument;
+    if (!doc) throw new Error('[preview.preview] preview surface has no document');
+    doc.open();
+    doc.write('<!doctype html><html><head></head><body style="margin:0"></body></html>');
+    doc.close();
+
+    // relative urls inside a preview resolve against the document, and an about:blank document has
+    // no useful base of its own
+    const base = doc.createElement('base');
+    base.href = window.location.href;
+    doc.head.appendChild(base);
+    this.syncStyles(doc);
+
+    const mount = doc.createElement('div');
+    doc.body.appendChild(mount);
+
+    const surface = { container, frame, mount };
+    this.multiSurfaces.set(key, surface);
+    return surface;
+  }
+
   private applyRect(
-    el: HTMLElement,
+    key: string,
     rect: { top: number; left: number; width: number; height: number },
     viewport?: number
   ) {
-    el.style.cssText =
+    const surface = this.multiSurfaces.get(key);
+    if (!surface) return;
+    surface.container.style.cssText =
       `position:absolute;overflow:hidden;contain:layout paint style;` +
       `top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;`;
 
-    // A card is a few hundred pixels wide, but a composition expects to render at the viewport width
-    // it was authored for. The per-card path scales the whole iframe; here the iframe is the shared
-    // realm, so each preview gets its own scaled layer instead.
-    const inner = el.firstElementChild as HTMLElement | null;
-    if (!inner) return;
-    const scale = viewport && viewport > 0 ? rect.width / viewport : 1;
-    inner.style.cssText =
-      `width:${viewport && viewport > 0 ? viewport : rect.width}px;` +
-      `height:${scale > 0 ? rect.height / scale : rect.height}px;` +
-      `transform:scale(${scale});transform-origin:top left;`;
+    // a composition renders at the viewport width it was authored for, then gets scaled into the
+    // card - the same thing the per-card path does by scaling its iframe
+    const width = viewport && viewport > 0 ? viewport : rect.width;
+    const scale = rect.width / width;
+    surface.frame.style.width = `${width}px`;
+    surface.frame.style.height = `${scale > 0 ? rect.height / scale : rect.height}px`;
+    surface.frame.style.transform = `scale(${scale})`;
+    surface.frame.style.transformOrigin = 'top left';
   }
 
   private async renderOneInto(item: any) {
@@ -172,15 +248,13 @@ export class PreviewPreview {
     const preview = this.getPreview(name);
     if (!preview || !componentId) return;
 
-    let container = this.multiContainers.get(key);
-    if (!container) {
-      container = window.document.createElement('div');
-      const scaled = window.document.createElement('div');
-      container.appendChild(scaled);
-      this.multiContainers.set(key, container);
+    let surface = this.multiSurfaces.get(key);
+    if (!surface) {
+      const container = window.document.createElement('div');
       this.multiRoot().appendChild(container);
+      surface = this.ensureSurface(key, container);
     }
-    this.applyRect(container, rect, item.viewport);
+    this.applyRect(key, rect, item.viewport);
     if (this.multiRendered.has(key)) return; // already mounted; the rect update above is enough
 
     this.multiRendered.add(key);
@@ -188,8 +262,8 @@ export class PreviewPreview {
       const previewModule = await this.getPreviewModule(name, componentId);
       const context = this.getRenderingContext(undefined);
       // the mounter reads `container` off the rendering context and keeps one react root per
-      // container, so previews in this realm live side by side instead of replacing each other.
-      Object.assign(context as any, { container: container.firstElementChild || container });
+      // container, so previews live side by side instead of replacing each other
+      Object.assign(context as any, { container: surface.mount });
       await preview.render(componentId, item.envId || '', previewModule, [], context);
       window.parent?.postMessage({ type: 'bit-preview-rendered', key }, '*');
     } catch (err: any) {
@@ -211,10 +285,10 @@ export class PreviewPreview {
       if (!data || data.type !== 'bit-preview-set' || !Array.isArray(data.items)) return;
 
       const wanted = new Set<string>(data.items.map((i: any) => i.key));
-      for (const [key, el] of this.multiContainers) {
+      for (const [key, surface] of this.multiSurfaces) {
         if (wanted.has(key)) continue;
-        el.remove();
-        this.multiContainers.delete(key);
+        surface.container.remove();
+        this.multiSurfaces.delete(key);
         this.multiRendered.delete(key);
       }
       for (const item of data.items) void this.renderOneInto(item);
