@@ -57,6 +57,7 @@ export type CheckoutProps = {
   allowAddingComponentsFromScope?: boolean; // in case the id doesn't exist in .bitmap, add it from the scope (relevant for switch)
   includeLocallyDeleted?: boolean; // include components that were deleted locally. currently enabled for "bit checkout reset" only.
   includeNewFromScope?: boolean; // import components from the defaultScope that don't exist in the workspace
+  restrictToScopes?: string[]; // add lane components missing from the workspace only when they belong to these scopes ("bit ci sync" mirrors only a lane's own-scope slice)
 };
 
 export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -159,6 +160,10 @@ export class CheckoutMain {
     let newFromLaneAdded = false;
     if (checkoutProps.head) {
       newFromLane = await this.getNewComponentsFromLane(checkoutProps.ids || []);
+      const { restrictToScopes } = checkoutProps;
+      if (restrictToScopes?.length) {
+        newFromLane = newFromLane.filter((id) => restrictToScopes.includes(id.scope));
+      }
       if (!checkoutProps.workspaceOnly) {
         const compsNewFromLane = await Promise.all(
           newFromLane.map((id) => consumer.loadComponentFromModelImportIfNeeded(id))

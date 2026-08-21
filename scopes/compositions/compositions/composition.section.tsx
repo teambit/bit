@@ -1,5 +1,6 @@
 import type { Section } from '@teambit/component';
 import React from 'react';
+import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { Compositions } from './compositions';
 import type {
   CompositionsUI,
@@ -20,12 +21,15 @@ export class CompositionsSection implements Section {
     private options: Options,
     private emptyStateSlot: EmptyStateSlot,
     private usePreviewSandboxSlot: UsePreviewSandboxSlot,
-    private usePreviewPropsSlot: UsePreviewPropsSlot
+    private usePreviewPropsSlot: UsePreviewPropsSlot,
+    private pinned = false
   ) {}
 
   navigationLink = {
     href: '~compositions',
-    children: 'Preview',
+    children: this.pinned ? <MenuWidgetIcon icon="preview" tooltipContent="Preview" /> : 'Preview',
+    displayName: 'Preview',
+    hideInMinimalMode: !this.pinned,
   };
 
   route = {
@@ -41,5 +45,5 @@ export class CompositionsSection implements Section {
     ),
   };
 
-  order = 20;
+  order = this.pinned ? 10 : 20;
 }
