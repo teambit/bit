@@ -43,6 +43,8 @@ type PooledFrame = {
   assignedKey?: string;
   /** set once the frame has loaded a document, so later assignments only change the hash */
   booted: boolean;
+  /** true once something has actually rendered, which is when it is safe to show */
+  ready: boolean;
 };
 
 const entries = new Map<string, CanvasEntry>();
@@ -53,6 +55,8 @@ let scrollRoot: HTMLElement | undefined;
 /** last scroll offset, used to tell which way the grid is moving */
 let lastScrollTop = 0;
 let scrollingDown = true;
+/** frames created but not yet showing anything */
+let booting = 0;
 let frame: number | undefined;
 let listening = false;
 
@@ -66,6 +70,18 @@ const OVERSCAN_PX = 1400;
 /** cards in the direction of travel are worth a frame more than the ones being left behind */
 const AHEAD_BIAS = 0.4;
 const BEHIND_BIAS = 1.8;
+
+/**
+ * Booting a realm is expensive and they all contend for one dev server, so the pool fills in
+ * gradually rather than all at once. Letting the whole pool start together made the *first* preview
+ * take tens of seconds: twenty realms fetched and parsed the env bundle simultaneously and none of
+ * them finished early. On-screen cards sort first, so the first screenful is what gets built.
+ */
+const MAX_BOOTING_AT_ONCE = 3;
+const MAX_NEW_FRAMES_PER_FLUSH = 1;
+
+/** a frame stays hidden until its preview is up, so the card's own skeleton shows through */
+const REVEAL_AFTER_LOAD_MS = 120;
 
 function getPoolSize(): number {
   if (typeof window === 'undefined') return 12;
@@ -183,12 +199,25 @@ function poolFor(serverUrl: string): PooledFrame[] {
   return pool;
 }
 
+function markReady(pooled: PooledFrame) {
+  if (pooled.ready) return;
+  pooled.ready = true;
+  booting = Math.max(0, booting - 1);
+  if (pooled.assignedKey) {
+    renderedKeys.add(pooled.assignedKey);
+    document.dispatchEvent(
+      new CustomEvent('bit-preview-canvas-rendered', { detail: { key: pooled.assignedKey } })
+    );
+  }
+  schedule();
+}
+
 function createFrame(serverUrl: string, entry: CanvasEntry): PooledFrame {
   // A scaled iframe still occupies its unscaled box in layout - 1280px wide for a 328px card - so
-  // placing frames directly in the scroller inflated its scrollable area and the grid overflowed.
-  // The wrapper is the only thing that takes up space, and it is exactly the size of the card.
+  // placing frames directly in the scroller inflated its scrollable area. The wrapper is the only
+  // thing that takes up space, and it is exactly the size of the card.
   const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:absolute;overflow:hidden;contain:layout paint size style;';
+  wrapper.style.cssText = 'position:absolute;overflow:hidden;contain:layout paint size style;visibility:hidden;';
 
   const iframe = document.createElement('iframe');
   iframe.setAttribute('title', `preview ${entry.id}`);
@@ -197,7 +226,15 @@ function createFrame(serverUrl: string, entry: CanvasEntry): PooledFrame {
 
   wrapper.appendChild(iframe);
   ensureHost(entry.getNode?.()).appendChild(wrapper);
-  const pooled: PooledFrame = { wrapper, iframe, assignedKey: entry.key, booted: true };
+  const pooled: PooledFrame = { wrapper, iframe, assignedKey: entry.key, booted: true, ready: false };
+
+  booting += 1;
+  // the preview paints an opaque background before it has rendered anything, so revealing on load
+  // would replace the card's skeleton with a blank white box
+  iframe.addEventListener('load', () => {
+    window.setTimeout(() => markReady(pooled), REVEAL_AFTER_LOAD_MS);
+  });
+
   poolFor(serverUrl).push(pooled);
   return pooled;
 }
@@ -205,6 +242,11 @@ function createFrame(serverUrl: string, entry: CanvasEntry): PooledFrame {
 function assign(pooled: PooledFrame, entry: CanvasEntry) {
   if (pooled.assignedKey === entry.key) return;
   pooled.assignedKey = entry.key;
+  // it is showing the previous card's component until the new one renders
+  pooled.wrapper.style.visibility = 'hidden';
+  pooled.ready = false;
+  booting += 1;
+  window.setTimeout(() => markReady(pooled), REVEAL_AFTER_LOAD_MS * 4);
   pooled.iframe.setAttribute('title', `preview ${entry.id}`);
   const hash = previewHash(entry);
   try {
@@ -234,7 +276,8 @@ function place(pooled: PooledFrame, rect: DOMRect, viewport?: number) {
   if (wrap.left !== left) wrap.left = left;
   if (wrap.width !== boxW) wrap.width = boxW;
   if (wrap.height !== boxH) wrap.height = boxH;
-  if (wrap.visibility !== 'visible') wrap.visibility = 'visible';
+  const shouldShow = pooled.ready ? 'visible' : 'hidden';
+  if (wrap.visibility !== shouldShow) wrap.visibility = shouldShow;
 
   const style = pooled.iframe.style;
   const w = `${Math.round(width)}px`;
@@ -288,12 +331,20 @@ function flush() {
       free.push(pooled);
     }
 
+    let createdThisFlush = 0;
     for (const { entry, rect } of wanted) {
       let pooled = pool.find((f) => f.assignedKey === entry.key);
       if (!pooled) {
         pooled = free.pop();
         if (pooled) assign(pooled, entry);
-        else if (pool.length < poolSize) pooled = createFrame(serverUrl, entry);
+        else if (
+          pool.length < poolSize &&
+          booting < MAX_BOOTING_AT_ONCE &&
+          createdThisFlush < MAX_NEW_FRAMES_PER_FLUSH
+        ) {
+          pooled = createFrame(serverUrl, entry);
+          createdThisFlush += 1;
+        }
       }
       if (!pooled) continue;
       place(pooled, rect, entry.viewport);
