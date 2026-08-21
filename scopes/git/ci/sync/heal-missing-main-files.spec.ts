@@ -9,35 +9,30 @@ const ID_STR = 'teambit.api-reference/renderers/schema-node-member-summary';
 /** A version this repository never installed: an orphaned tag whose Version object is not on the fs. */
 const STALE_VERSION = '0.0.0-75238957ce4bc43dee7758156dde5bc3a343e70d';
 const SCOPE_HEAD = '0.0.85';
+const ROOT_DIR = 'components/renderers/schema-node-member-summary';
 
 /**
- * A workspace on disk whose `.bitmap` entry points at `dist/index.d.ts` while only `index.ts`
- * exists — the shape the main-scope reconciler hits after the scope moves a component's main file
- * back to source.
+ * What the scope answers for the component. `absent` means `getModelComponentIfExist` resolves to
+ * undefined; `headless` and `mainFileless` exercise the other two paths that also yield an `absent`
+ * verdict, which must each report their own reason.
  */
-function workspaceOnDisk(): { wsPath: string; rootDir: string } {
-  const wsPath = fs.mkdtempSync(path.join(os.tmpdir(), 'heal-main-file-'));
-  const rootDir = 'components/renderers/schema-node-member-summary';
-  fs.outputFileSync(path.join(wsPath, rootDir, 'index.ts'), 'export {};\n');
-  return { wsPath, rootDir };
-}
+type ScopeState = 'has-head' | 'absent' | 'headless' | 'mainFileless';
 
 /**
- * Real heal code over stubbed deps. `getModelComponentIfExist` reproduces the behaviour that caused
- * the bug: `sources.get` is version-sensitive, so an id carrying a version whose Version object is
- * absent from the filesystem resolves to `undefined`, while the same id without a version resolves
- * to the component. `lookedUp` records every id the heal asked for.
+ * Real heal code over stubbed deps. `getModelComponentIfExist` reproduces what made this fail:
+ * `sources.get` is version-sensitive, so an id carrying a version whose Version object is absent
+ * from the filesystem resolves to undefined, while the same id without a version resolves to the
+ * component. `lookedUp` records every id the heal asked the scope for.
  */
-function stubWorkspace(wsPath: string, rootDir: string, headMainFile: string | undefined) {
+function stubWorkspace(wsPath: string, scope: ScopeState, mainFileInBitmap = 'dist/index.d.ts') {
   const id = ComponentID.fromString(`${ID_STR}@${STALE_VERSION}`);
-  const componentMap: any = { id, mainFile: 'dist/index.d.ts', rootDir };
+  const componentMap: any = { id, mainFile: mainFileInBitmap, rootDir: ROOT_DIR };
   const lookedUp: string[] = [];
-  const written: string[] = [];
   const removed: string[] = [];
 
   const modelComponent = {
-    getHeadRegardlessOfLaneAsTagOrHash: () => SCOPE_HEAD,
-    loadVersion: async () => (headMainFile ? { mainFile: headMainFile } : undefined),
+    getHeadRegardlessOfLaneAsTagOrHash: () => (scope === 'headless' ? undefined : SCOPE_HEAD),
+    loadVersion: async () => (scope === 'mainFileless' ? {} : { mainFile: 'index.ts' }),
   };
 
   const workspace: any = {
@@ -45,9 +40,9 @@ function stubWorkspace(wsPath: string, rootDir: string, headMainFile: string | u
     consumer: {
       bitMap: {
         components: [componentMap],
-        markAsChanged: () => written.push('markAsChanged'),
+        markAsChanged: () => {},
         removeComponent: (compId: ComponentID) => removed.push(compId.toString()),
-        write: async () => written.push('write'),
+        write: async () => {},
       },
     },
     scope: {
@@ -56,27 +51,35 @@ function stubWorkspace(wsPath: string, rootDir: string, headMainFile: string | u
         scopeImporter: { importWithoutDeps: async () => undefined },
         getModelComponentIfExist: async (asked: ComponentID) => {
           lookedUp.push(asked.toString());
-          // The crux: only a version-less lookup resolves.
-          return asked.hasVersion() ? undefined : modelComponent;
+          // The crux: a versioned lookup resolves to undefined even when the component is there.
+          if (asked.hasVersion()) return undefined;
+          return scope === 'absent' ? undefined : modelComponent;
         },
       },
     },
   };
 
   const warnings: string[] = [];
-  const consoleLines: string[] = [];
-  const logger: any = {
-    console: (msg: string) => consoleLines.push(msg),
-    consoleWarning: (msg: string) => warnings.push(msg),
-  };
-  return { workspace, logger, componentMap, lookedUp, warnings, consoleLines, removed };
+  const logger: any = { console: () => {}, consoleWarning: (msg: string) => warnings.push(msg) };
+  return { workspace, logger, componentMap, lookedUp, warnings, removed };
 }
 
 describe('healMissingMainFiles', () => {
+  let wsPath: string;
+
+  beforeEach(() => {
+    wsPath = fs.mkdtempSync(path.join(os.tmpdir(), 'heal-main-file-'));
+    // The `.bitmap` entry points at dist/index.d.ts; only the source file is on disk.
+    fs.outputFileSync(path.join(wsPath, ROOT_DIR, 'index.ts'), 'export {};\n');
+  });
+
+  afterEach(() => {
+    fs.rmSync(wsPath, { recursive: true, force: true });
+  });
+
   describe('when the .bitmap entry records a version the scope cannot resolve', () => {
     it('retargets the entry at the main file the scope head records', async () => {
-      const { wsPath, rootDir } = workspaceOnDisk();
-      const { workspace, logger, componentMap } = stubWorkspace(wsPath, rootDir, 'index.ts');
+      const { workspace, logger, componentMap } = stubWorkspace(wsPath, 'has-head');
 
       const healed = await healMissingMainFiles(workspace, logger);
 
@@ -86,11 +89,9 @@ describe('healMissingMainFiles', () => {
     });
 
     // The regression guard. Looking the component up WITH the stale version made every scheduled
-    // main sync decline with "not on the scope" for a component the scope had, and no amount of
-    // retrying could clear it.
+    // main sync decline for a component the scope had, and no amount of retrying could clear it.
     it('never asks the scope for the stale version, only for the component', async () => {
-      const { wsPath, rootDir } = workspaceOnDisk();
-      const { workspace, logger, lookedUp } = stubWorkspace(wsPath, rootDir, 'index.ts');
+      const { workspace, logger, lookedUp } = stubWorkspace(wsPath, 'has-head');
 
       await healMissingMainFiles(workspace, logger);
 
@@ -100,22 +101,31 @@ describe('healMissingMainFiles', () => {
     });
   });
 
-  it('leaves the entry alone and says so when the head names no main file', async () => {
-    const { wsPath, rootDir } = workspaceOnDisk();
-    const { workspace, logger, componentMap, warnings, removed } = stubWorkspace(wsPath, rootDir, undefined);
+  // All three leave the entry alone, so the reported reason is the only thing telling an operator
+  // which one happened. A blanket wording here is what made this bug look like a scope problem.
+  describe('when the scope cannot say what to repair to', () => {
+    const cases: Array<{ scope: ScopeState; reason: string }> = [
+      { scope: 'absent', reason: 'not on the scope' },
+      { scope: 'headless', reason: 'no head on the scope' },
+      { scope: 'mainFileless', reason: 'the head records no main file' },
+    ];
 
-    const healed = await healMissingMainFiles(workspace, logger);
+    cases.forEach(({ scope, reason }) => {
+      it(`reports "${reason}" and touches nothing`, async () => {
+        const { workspace, logger, componentMap, warnings, removed } = stubWorkspace(wsPath, scope);
 
-    expect(healed).to.have.lengthOf(0);
-    expect(removed).to.have.lengthOf(0);
-    expect(componentMap.mainFile).to.equal('dist/index.d.ts');
-    expect(warnings.join('\n')).to.contain('no head on the scope to compare against');
+        const healed = await healMissingMainFiles(workspace, logger);
+
+        expect(healed).to.have.lengthOf(0);
+        expect(removed).to.have.lengthOf(0);
+        expect(componentMap.mainFile).to.equal('dist/index.d.ts');
+        expect(warnings.join('\n')).to.contain(`${ID_STR} (${reason})`);
+      });
+    });
   });
 
   it('does nothing when every recorded main file is on disk', async () => {
-    const { wsPath, rootDir } = workspaceOnDisk();
-    const { workspace, logger, lookedUp } = stubWorkspace(wsPath, rootDir, 'index.ts');
-    workspace.consumer.bitMap.components[0].mainFile = 'index.ts';
+    const { workspace, logger, lookedUp } = stubWorkspace(wsPath, 'has-head', 'index.ts');
 
     const healed = await healMissingMainFiles(workspace, logger);
 
