@@ -15,17 +15,14 @@ import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
-import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
-import type { PeerDependencyIssuesByProjects, ResolvedConfig } from '@pnpm/napi';
+import type * as NodeApi from '@pnpm/napi';
+import type { DependentNode, DependentsTree, PeerDependencyIssuesByProjects, ResolvedConfig } from '@pnpm/napi';
 import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
 import type * as LockfileFs from '@pnpm/lockfile.fs';
 import type { Modules } from '@pnpm/installing.modules-yaml';
 import type * as ModulesYaml from '@pnpm/installing.modules-yaml';
-import type { ImporterInfo } from '@pnpm/deps.inspection.tree-builder';
-import { buildDependentsTree } from '@pnpm/deps.inspection.tree-builder';
-import { renderDependentsTree } from '@pnpm/deps.inspection.list';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
@@ -248,7 +245,7 @@ export class PnpmPackageManager implements PackageManager {
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
-          process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
+          outputStream: process.env.BIT_CLI_SERVER_NO_TTY ? new ServerSendOutStream() : undefined,
           throttleProgress: installOptions.throttleProgress,
           hideProgressPrefix: installOptions.hideProgressPrefix,
           hideLifecycleOutput: installOptions.hideLifecycleOutput,
@@ -457,45 +454,23 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async findUsages(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string> {
-    const {
-      lockfileFs: { readWantedLockfile },
-    } = await loadPnpmEsm();
-    const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
-    if (!lockfile) return '';
-    const importerIds = Object.keys(lockfile.importers ?? {}).filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`));
-    const projectPaths = importerIds.map((id) => join(opts.lockfileDir, id));
-    const importerInfoMap = new Map<string, ImporterInfo>();
-    for (const importerId of importerIds) {
-      const pkgJson = tryReadPackageJson(join(opts.lockfileDir, importerId));
-      importerInfoMap.set(importerId, {
-        name: pkgJson?.name ?? importerId,
-        version: pkgJson?.version ?? '',
-      });
-    }
-    const trees = await buildDependentsTree([depName], projectPaths, {
-      include: {
-        dependencies: true,
-        devDependencies: true,
-        optionalDependencies: true,
-      },
-      lockfileDir: opts.lockfileDir,
-      registries: {
-        default: 'https://registry.npmjs.org',
-      },
-      importerInfoMap,
-      lockfile,
-      nameFormatter({ manifest }) {
-        if ('componentId' in manifest) {
-          const { scope, name } = manifest.componentId as { scope: string; name: string };
-          return `${scope}/${name}`;
-        }
-        return manifest.name;
-      },
+    // Required lazily so the native engine binary is not mapped into every
+    // `bit` process at startup (same convention as the `./lynx` require sites).
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const nodeApi = require('@pnpm/napi') as typeof NodeApi;
+    const trees = await nodeApi.getDependents({
+      dir: opts.lockfileDir,
+      packages: [depName],
+      // The generated importers under `.bit_roots` wire the workspace
+      // together; they are not somewhere a user's dependency comes from.
+      excludeProjectPatterns: [`*${BIT_ROOTS_DIR}/*`],
+      // The engine walks the lockfile, which knows package names. Ask it
+      // for the field that carries the component id so the tree can be
+      // rendered in Bit's terms instead.
+      manifestFields: ['componentId'],
     });
-    return renderDependentsTree(trees, {
-      depth: opts.depth ?? Infinity,
-      long: false,
-    });
+    applyComponentIdNames(trees);
+    return nodeApi.renderDependents(trees, { depth: opts.depth, long: false });
   }
 
   /**
@@ -606,12 +581,22 @@ function isDefaultHoistPattern(hoistPattern: string[]): boolean {
   return hoistPattern.length === 1 && hoistPattern[0] === '*';
 }
 
-function tryReadPackageJson(pkgDir: string) {
-  try {
-    return JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'));
-  } catch {
-    return undefined;
-  }
+/**
+ * Rename every node the engine resolved to a Bit component after its
+ * component id, in place. The engine has no notion of one — it reports the
+ * package name from the lockfile — so it is asked for the `componentId`
+ * field of each node's manifest and Bit turns that into the display name,
+ * which the renderer then prefers over the package name.
+ */
+function applyComponentIdNames(trees: DependentsTree[]): void {
+  const rename = (node: DependentsTree | DependentNode) => {
+    const componentId = node.manifest?.componentId as { scope?: string; name?: string } | undefined;
+    if (componentId?.scope && componentId.name) {
+      node.displayName = `${componentId.scope}/${componentId.name}`;
+    }
+    node.dependents?.forEach(rename);
+  };
+  trees.forEach(rename);
 }
 
 // Merge a graph-derived lockfile into an existing wanted lockfile. The graph lockfile is
