@@ -170,22 +170,27 @@ function _VersionDropdown({
         )}
         placeholder={PlaceholderComponent}
       >
-        <VersionMenu
-          className={menuClassName}
-          key={key}
-          currentVersion={currentVersion}
-          latestVersion={latestVersion}
-          localVersion={localVersion}
-          overrideVersionHref={overrideVersionHref}
-          showVersionDetails={showVersionDetails}
-          currentLane={currentLane}
-          getActiveTabIndex={getActiveTabIndex}
-          lanes={lanes}
-          useVersions={useComponentVersions}
-          shouldPrefetchVersions={prefetchRequested}
-          onVersionClicked={() => setOpen(false)}
-          open={open}
-        />
+        {/* the menu is not mounted until the user shows intent (hover/focus/press/open). versions
+            load lazily, and mounting the menu eagerly would render its rows into the dom for every
+            card in a workspace grid before anyone asked for them. */}
+        {prefetchRequested || open ? (
+          <VersionMenu
+            className={menuClassName}
+            key={key}
+            currentVersion={currentVersion}
+            latestVersion={latestVersion}
+            localVersion={localVersion}
+            overrideVersionHref={overrideVersionHref}
+            showVersionDetails={showVersionDetails}
+            currentLane={currentLane}
+            getActiveTabIndex={getActiveTabIndex}
+            lanes={lanes}
+            useVersions={useComponentVersions}
+            shouldPrefetchVersions={prefetchRequested}
+            onVersionClicked={() => setOpen(false)}
+            open={open}
+          />
+        ) : null}
       </Dropdown>
     </div>
   );
