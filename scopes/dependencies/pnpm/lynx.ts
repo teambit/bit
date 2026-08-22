@@ -462,7 +462,13 @@ export async function install(
     rebuild: async () => {
       // Reached without an install of its own after a dry run.
       addNodeGypToPath(logger);
-      const rebuildReportOptions: ReportOptions = { appendOnly: true, hideLifecycleOutput: true };
+      // Same output routing as the install: the CLI server's stream has to
+      // carry the rebuild's output too, not just the install's.
+      const rebuildReportOptions: ReportOptions = {
+        ...options.reportOptions,
+        appendOnly: true,
+        hideLifecycleOutput: true,
+      };
       await nodeApi.rebuild(
         {
           ...installOptions,
@@ -576,8 +582,9 @@ function toReporterOptions(opts?: ReportOptions): nodeApi.ReporterOptions {
     // noise. Other @teambit/ dependencies still show; only the ones
     // symlinked from outside the workspace are hidden.
     hideLinkedPkgsDiff: ['@teambit/*'],
-    // pnpm's `outputMaxWidth`.
-    width: stream.columns ? stream.columns - 2 : 80,
+    // pnpm's `outputMaxWidth`, floored: a terminal reporting one or two
+    // columns would otherwise ask the engine to wrap at zero.
+    width: stream.columns ? Math.max(stream.columns - 2, 1) : 80,
     // chalk is the switch Bit already flips for its own output (the CLI
     // server enables it per request and resets it afterwards), so the
     // engine follows it rather than probing the terminal itself.

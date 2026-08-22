@@ -14,7 +14,14 @@ export async function pnpmPruneModules(rootDir: string): Promise<void> {
   const pkgDirs = await readPackageDirsFromVirtualStore(virtualStoreDir);
   if (pkgDirs.length === 0) return;
   const lockfile = await nodeApi.readLockfile({ dir: rootDir, kind: 'current' });
-  const snapshots = (lockfile?.snapshots ?? {}) as Record<string, unknown>;
+  // No current lockfile means nothing is known about what was materialized,
+  // not that nothing belongs here — pruning against an empty set would empty
+  // the virtual store and leave the workspace needing a reinstall.
+  if (lockfile == null) return;
+  // The virtual store's directory names come from the peer-suffixed dep
+  // paths, which is what `snapshots` is keyed by; `packages` is keyed
+  // without the suffix and would not match.
+  const snapshots = (lockfile.snapshots ?? {}) as Record<string, unknown>;
   const dirsShouldBePresent = Object.keys(snapshots).map((depPath) => depPathToDirName(depPath));
   const extraneous = difference(pkgDirs, dirsShouldBePresent);
   // the usual case, and the one worth keeping cheap: scanning the loaded modules below is
