@@ -21,6 +21,7 @@ export type {
   EntryAssets,
 } from './bundler';
 export type { BundlerMain } from './bundler.main.runtime';
+export type { DevServerFailure, DevServerRunOnceResult } from './dev-server.service';
 export type { ComponentDir } from './get-entry';
 export { ComponentServer } from './component-server';
 export * from './events';

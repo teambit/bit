@@ -71,19 +71,18 @@ export class GraphqlRenderPlugins implements SSR.RenderPlugin<RenderContext, { s
 
   private _client: ApolloClient<NormalizedCacheObject> | undefined = undefined;
 
-  browserInit = ({ state }: { state?: NormalizedCacheObject } = {}, { host }: { host?: string } = {}) => {
+  browserInit = async ({ state }: { state?: NormalizedCacheObject } = {}, { host }: { host?: string } = {}) => {
     const { location } = window;
     const isInsecure = location.protocol === 'http:';
     const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/subscriptions`;
 
-    const client = this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl, host });
+    const client = await this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl, host });
     this._client = client;
 
     return { client };
   };
 
   getClient() {
-    if (!this._client) return this.browserInit().client;
     return this._client;
   }
 

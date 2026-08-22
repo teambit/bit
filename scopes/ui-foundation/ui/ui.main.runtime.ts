@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import type { ComponentType } from 'react';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { getAspectDirFromBvm } from '@teambit/aspect-loader';
@@ -24,7 +24,7 @@ import pMapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { createRoot } from '@teambit/harmony.modules.harmony-root-generator';
-import { join, resolve as pathResolve } from 'path';
+import { join, sep, resolve as pathResolve } from 'path';
 import { rspack } from '@rspack/core';
 import { UiServerStartedEvent } from './events';
 import { UnknownUI, UnknownBuildError } from './exceptions';
@@ -362,10 +362,16 @@ export class UiMain {
     );
   }
 
-  private async initiatePlugins(options: StartPluginOptions) {
-    const plugins = this.startPluginSlot.values();
-    await pMapSeries(plugins, (plugin) => plugin.initiate(options));
-    return plugins;
+  private initiatePlugins(plugins: StartPlugin[], options: StartPluginOptions) {
+    // Fire-and-forget: preview servers register proxies dynamically via addComponentServerProxy
+    // when each env's compilation finishes. The catch-all /preview and /_hmr proxies in WDS
+    // forward to express, which routes to individual preview servers as they come online.
+    // This decouples the main UI server startup from preview dev server creation/compilation.
+    plugins.forEach((plugin) => {
+      Promise.resolve(plugin.initiate(options)).catch((err: any) => {
+        this.logger.error(`Plugin initiation error: ${err?.message || err}`);
+      });
+    });
   }
 
   runtimeOptions: RuntimeOptions = {};
@@ -386,11 +392,7 @@ export class UiMain {
 
     const [uiRootAspectId, uiRoot] = maybeUiRoot;
 
-    const plugins = await this.initiatePlugins({
-      verbose,
-      pattern,
-      showInternalUrls,
-    });
+    const plugins = this.startPluginSlot.values();
 
     if (this.componentExtension.isHost(uiRootAspectId)) this.componentExtension.setHostPriority(uiRootAspectId);
 
@@ -410,8 +412,17 @@ export class UiMain {
 
     // Adding signal listeners to make sure we immediately close the process on sigint / sigterm (otherwise webpack dev server closing will take time)
     this.addSignalListener();
+    const startPluginOptions: StartPluginOptions = {
+      verbose,
+      pattern,
+      showInternalUrls,
+    };
     if (dev) {
-      await uiServer.dev({ portRange: port || this.config.portRange });
+      // Start preview/runtime plugins in parallel with UI dev-server startup so
+      // there is no silent gap between "UI server boot" and preview compilation kickoff.
+      const devServerPromise = uiServer.dev({ portRange: port || this.config.portRange });
+      this.initiatePlugins(plugins, startPluginOptions);
+      await devServerPromise;
     } else {
       if (!skipUiBuild) await this.buildUI(uiRootAspectId, uiRoot, rebuild);
       const bundleUiPath = this.getBundleUiPath();
@@ -423,6 +434,7 @@ export class UiMain {
       if (bundleUiRoot)
         this.logger.debug(`UI createRuntime of ${uiRootAspectId}, bundle will be served from ${bundleUiRoot}`);
       await uiServer.start({ portRange: port || this.config.portRange, bundleUiRoot });
+      this.initiatePlugins(plugins, startPluginOptions);
     }
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, uiServer.port, uiRoot));
@@ -640,21 +652,36 @@ export class UiMain {
 
     const currentBuildUiHash = await this.createBuildUiHash(uiRoot);
     const cachedBuildUiHash = await this.cache.get(uiRoot.path);
+    let staleSource: string | undefined;
     if (currentBuildUiHash === cachedBuildUiHash && !force) {
-      this.logger.debug(`buildIfChanged, uiRootAspectId ${uiRootAspectId}, returned from ui build cache`);
-      return false;
+      // the hash above only covers *which* aspects are in the bundle, not what they contain, so an
+      // edited-and-recompiled UI aspect leaves it untouched and the previous bundle would be served
+      // as if it were current - silently testing stale code. Fall through to a rebuild when a UI
+      // aspect's compiled output is newer than the bundle we are about to reuse.
+      staleSource = await this.findAspectNewerThanBundle(uiRoot);
+      if (!staleSource) {
+        this.logger.debug(`buildIfChanged, uiRootAspectId ${uiRootAspectId}, returned from ui build cache`);
+        return false;
+      }
     }
 
-    if (!cachedBuildUiHash) {
+    const publicDirName = await this.publicDir(uiRoot);
+    if (staleSource) {
+      this.logger.console(
+        `${chalk.magenta('[Rspack]')} Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}' - ${chalk.cyan(
+          staleSource
+        )} changed since the last build.`
+      );
+    } else if (!cachedBuildUiHash) {
       this.logger.console(
         `${chalk.magenta('[Rspack]')} Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
-          await this.publicDir(uiRoot)
+          publicDirName
         )}. The first time we build the UI it may take a few minutes.`
       );
     } else {
       this.logger.console(
         `${chalk.magenta('[Rspack]')} Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
-          await this.publicDir(uiRoot)
+          publicDirName
         )}' as ${uiRoot.configFile} has been changed.`
       );
     }
@@ -662,6 +689,44 @@ export class UiMain {
     await this.build(uiRootAspectId);
     await this.cache.set(uiRoot.path, currentBuildUiHash);
     return true;
+  }
+
+  /**
+   * Find an aspect whose compiled output is newer than the UI bundle on disk - i.e. the bundle no
+   * longer reflects the code it was built from. Returns the offending path, or undefined when the
+   * bundle is current.
+   *
+   * Only aspects that contribute a UI runtime are walked (~30 packages / ~2k files, measured at
+   * ~90ms), so the many main-runtime-only aspects never trigger a UI rebuild. Two rough edges are
+   * deliberate: a non-UI edit *inside* a UI aspect package still counts as a change (the walk does
+   * not trace which files reach the bundle), and non-aspect UI components pulled in transitively are
+   * not covered at all - `--rebuild` remains the escape hatch for the latter.
+   */
+  private async findAspectNewerThanBundle(uiRoot: UIRoot, runtime = 'ui'): Promise<string | undefined> {
+    const bundleTime = await this.getBundleBuildTime(uiRoot);
+    if (!bundleTime) return undefined;
+
+    const aspects = await uiRoot.resolveAspects(runtime);
+    for (const aspect of aspects) {
+      const aspectPath = aspect.aspectPath;
+      if (!aspectPath) continue;
+      const newer = findFileNewerThan(aspectPath, bundleTime);
+      // report it the way a developer thinks about it - the package, not the install path
+      if (newer) return newer.split(`node_modules${sep}`).pop() as string;
+    }
+
+    return undefined;
+  }
+
+  private async getBundleBuildTime(uiRoot: UIRoot): Promise<number | undefined> {
+    // `asset-manifest.json` is rewritten by every rspack build and sits at the root of the output,
+    // so its mtime is the build time without having to stat the emitted assets themselves.
+    const manifest = join(uiRoot.path, await this.publicDir(uiRoot), 'asset-manifest.json');
+    try {
+      return statSync(manifest).mtimeMs;
+    } catch {
+      return undefined;
+    }
   }
 
   private async createBuildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
@@ -808,6 +873,38 @@ export class UiMain {
 
     return ui;
   }
+}
+
+/**
+ * Walk `dir` for the first file modified after `time`, skipping nested `node_modules` (a linked
+ * dependency is not this aspect's own source). Returns as soon as one is found - the caller only
+ * needs to know *whether* the tree changed, so the common "nothing changed" case is the only one
+ * that pays for a full walk.
+ */
+function findFileNewerThan(dir: string, time: number): string | undefined {
+  let entries: ReturnType<typeof readdirSync>;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return undefined;
+  }
+
+  for (const entry of entries) {
+    if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+    const entryPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      const found = findFileNewerThan(entryPath, time);
+      if (found) return found;
+      continue;
+    }
+    try {
+      if (statSync(entryPath).mtimeMs > time) return entryPath;
+    } catch {
+      // a file that vanished mid-walk cannot be the reason the bundle is stale
+    }
+  }
+
+  return undefined;
 }
 
 UIAspect.addRuntime(UiMain);

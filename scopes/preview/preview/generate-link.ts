@@ -303,8 +303,16 @@ function getComponentImports(componentLinks: ComponentLink[] = []): string {
             }
           }   
           else {
-            // Don't import non-active modules at all
-            ${module.varName} = { default: function Placeholder() { return null; } };
+            // Not the component this iframe was opened for. Keep it out of the initial load, but
+            // hand back a loader instead of a null-rendering placeholder: a realm that renders
+            // several previews at once (a workspace grid batching cards into one iframe) needs to
+            // pull these in on demand, and normalizeEntries already calls functions. The active
+            // component's path above is untouched, so a single-preview iframe loads exactly what it
+            // loaded before.
+            ${module.varName} = () => import("${module.resolveFrom}").catch((err) => {
+              __bitSurfaceToOverlay(err, "${link.componentIdString}");
+              return { default: function ErrorFallback() { return null; }, __loadError: err };
+            });
         }`;
       });
     })

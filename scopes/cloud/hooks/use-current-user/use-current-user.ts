@@ -1,6 +1,5 @@
 import React from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { useMutation, gql } from '@apollo/client';
+import { gql, useQuery, useApolloClient } from '@apollo/client';
 import type { CloudUser } from '@teambit/cloud.models.cloud-user';
 
 export const SET_REDIRECT_URL_MUTATION = gql`
@@ -27,22 +26,22 @@ export function useCurrentUser(): {
   isLoggedIn?: boolean;
   loading?: boolean;
 } {
-  const [setRedirectUrl] = useMutation(SET_REDIRECT_URL_MUTATION);
+  const client = useApolloClient();
 
   // read the href during render rather than inside the dependency array: a dependency array is
   // evaluated on every render, including the server-side one, where `window` does not exist. the
   // effect body itself never runs on the server, so only the dependency needed guarding.
   const redirectUrl = typeof window === 'undefined' ? undefined : window.location.href;
 
+  // Fire-and-forget: don't block UI rendering. This just sets an in-memory URL on the server.
   React.useEffect(() => {
     if (!redirectUrl) return;
-    setRedirectUrl({ variables: { redirectUrl } }).catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error('Error setting redirect URL:', error);
-    });
+    client
+      .mutate({ mutation: SET_REDIRECT_URL_MUTATION, variables: { redirectUrl }, fetchPolicy: 'no-cache' })
+      .catch(() => {});
   }, [redirectUrl]);
 
-  const { data, loading } = useDataQuery(CURRENT_USER_QUERY, {
+  const { data, loading } = useQuery(CURRENT_USER_QUERY, {
     fetchPolicy: 'cache-first',
   });
 

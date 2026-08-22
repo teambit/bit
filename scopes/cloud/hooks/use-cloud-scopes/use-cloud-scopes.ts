@@ -1,5 +1,4 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import { ScopeDescriptor } from '@teambit/scopes.scope-descriptor';
 import { ScopeID } from '@teambit/scopes.scope-id';
 
@@ -15,8 +14,16 @@ export const GET_CLOUD_SCOPES_QUERY = gql`
   }
 `;
 
+type CloudScopeQueryResult = {
+  id: string;
+  icon?: string;
+  backgroundIconColor?: string;
+  stripColor?: string;
+  displayName?: string;
+};
+
 export function useCloudScopes(ids?: string[]): { cloudScopes?: ScopeDescriptor[] } {
-  const { data } = useDataQuery<{ getCloudScopes?: (ScopeDescriptor & { id: string })[] }>(GET_CLOUD_SCOPES_QUERY, {
+  const { data } = useQuery<{ getCloudScopes?: CloudScopeQueryResult[] }>(GET_CLOUD_SCOPES_QUERY, {
     variables: {
       ids,
     },
@@ -26,7 +33,7 @@ export function useCloudScopes(ids?: string[]): { cloudScopes?: ScopeDescriptor[
     cloudScopes: (data?.getCloudScopes || []).map((scope) => {
       const scopeId = ScopeID.fromString(scope.id);
       const scopeDescriptorObj = {
-        ...scope,
+        displayName: scope.displayName,
         id: scopeId.toObject(),
         scopeStyle: {
           icon: scope.icon,
