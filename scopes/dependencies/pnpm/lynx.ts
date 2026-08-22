@@ -14,6 +14,7 @@ import type {
 } from '@pnpm/types';
 import * as nodeApi from '@pnpm/napi';
 import type { PeerDependencyIssuesByProjects } from '@pnpm/napi';
+import { type LockfileFile } from '@pnpm/lockfile.types';
 import type { Registries } from '@teambit/pkg.entities.registry';
 import toNerfDart from 'nerf-dart';
 import type {
@@ -24,8 +25,6 @@ import type {
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
-import type * as LockfileFs from '@pnpm/lockfile.fs';
-import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types';
 import type { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { isEqual } from 'lodash';
@@ -41,19 +40,6 @@ import { addNodeGypToPath } from './node-gyp-bin';
 const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-js-pure', 'core-js'];
 
 const installsRunning: Record<string, Promise<any>> = {};
-type LockfileFsModule = typeof LockfileFs;
-let lockfileFsPromise: Promise<LockfileFsModule> | undefined;
-
-function loadLockfileFs(): Promise<LockfileFsModule> {
-  lockfileFsPromise ??= (async () => {
-    const { loadEsm } = require('./load-pnpm-esm.cjs') as {
-      loadEsm: () => Promise<{ lockfileFs: LockfileFsModule }>;
-    };
-    const { lockfileFs } = await loadEsm();
-    return lockfileFs;
-  })();
-  return lockfileFsPromise;
-}
 
 /**
  * Minimal structural signature of the `resolve` function returned by
@@ -842,8 +828,7 @@ export function mergeBitLockfileAttrs(
  */
 async function readBitLockfileAttrs(rootDir: string): Promise<Partial<BitLockfileAttributes> | undefined> {
   try {
-    const { readWantedLockfile } = await loadLockfileFs();
-    const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true })) as BitLockfile | null;
+    const lockfile = await nodeApi.readLockfile<BitLockfileFile>({ dir: rootDir });
     return lockfile?.bit;
   } catch {
     // A malformed lockfile fails the install itself later with a proper
@@ -859,19 +844,20 @@ async function readBitLockfileAttrs(rootDir: string): Promise<Partial<BitLockfil
  * survives the rewrite.
  */
 async function addBitAttributesToLockfile(rootDir: string, attrs: Partial<BitLockfileAttributes>) {
-  const { readWantedLockfile, writeWantedLockfile } = await loadLockfileFs();
-  const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true })) as BitLockfile;
+  const lockfile = await nodeApi.readLockfile<BitLockfileFile>({ dir: rootDir });
   if (lockfile == null) return;
   const merged = { ...lockfile.bit, ...attrs };
   if (isEqual(lockfile.bit, merged)) return;
   lockfile.bit = merged as BitLockfileAttributes;
-  await writeWantedLockfile(rootDir, lockfile);
+  await nodeApi.writeLockfile({ dir: rootDir, lockfile });
 }
 
-export interface BitLockfile extends LockfileObject {
-  bit?: BitLockfileAttributes;
-}
-
+/**
+ * A `pnpm-lock.yaml` as the engine reads and writes it, plus the `bit:`
+ * block Bit records beside pnpm's own keys. The engine preserves top-level
+ * keys it does not define, so reading, editing that block, and writing the
+ * file back leaves everything else untouched.
+ */
 export interface BitLockfileFile extends LockfileFile {
   bit?: BitLockfileAttributes;
 }

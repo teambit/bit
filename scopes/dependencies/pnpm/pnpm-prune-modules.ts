@@ -1,23 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { difference } from 'lodash';
-import type * as LockfileFs from '@pnpm/lockfile.fs';
+import * as nodeApi from '@pnpm/napi';
 import { depPathToDirName } from '@teambit/dependencies.pnpm.dep-path';
 import { loadedVirtualStoreDirNames } from './preserve-loaded-virtual-store-dirs';
-
-type LockfileFsModule = typeof LockfileFs;
-let lockfileFsPromise: Promise<LockfileFsModule> | undefined;
-
-function loadLockfileFs(): Promise<LockfileFsModule> {
-  lockfileFsPromise ??= (async () => {
-    const { loadEsm } = require('./load-pnpm-esm.cjs') as {
-      loadEsm: () => Promise<{ lockfileFs: LockfileFsModule }>;
-    };
-    const { lockfileFs } = await loadEsm();
-    return lockfileFs;
-  })();
-  return lockfileFsPromise;
-}
 
 /**
  * Reads the private lockfile at node_modules/.pnpm/lock.yaml
@@ -27,9 +13,9 @@ export async function pnpmPruneModules(rootDir: string): Promise<void> {
   const virtualStoreDir = path.join(rootDir, 'node_modules/.pnpm');
   const pkgDirs = await readPackageDirsFromVirtualStore(virtualStoreDir);
   if (pkgDirs.length === 0) return;
-  const { readCurrentLockfile } = await loadLockfileFs();
-  const lockfile = await readCurrentLockfile(virtualStoreDir, { ignoreIncompatible: false });
-  const dirsShouldBePresent = Object.keys(lockfile?.packages ?? {}).map((depPath) => depPathToDirName(depPath));
+  const lockfile = await nodeApi.readLockfile({ dir: rootDir, kind: 'current' });
+  const snapshots = (lockfile?.snapshots ?? {}) as Record<string, unknown>;
+  const dirsShouldBePresent = Object.keys(snapshots).map((depPath) => depPathToDirName(depPath));
   const extraneous = difference(pkgDirs, dirsShouldBePresent);
   // the usual case, and the one worth keeping cheap: scanning the loaded modules below is
   // proportional to how much this process has loaded, and with nothing to remove it decides nothing
