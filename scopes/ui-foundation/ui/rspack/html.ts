@@ -10,7 +10,12 @@ type HtmlOptions = {
 export function html(title: string, withDevTools?: boolean, options?: HtmlOptions) {
   const serviceWorkerMode = options?.serviceWorkerMode ?? 'register';
   const workspaceCacheKey = options?.workspaceCacheKey || title;
-  const serviceWorkerBuildToken = options?.serviceWorkerBuildToken || 'dev';
+  // The token names the service worker's caches (`bit-dev-ui-<ws>-<token>-*`) and versions its
+  // registration url. It must change when the bundle changes: the worker's activate handler deletes
+  // every cache with a different token, so a stale token means offline fallbacks from an older
+  // build survive forever. This template renders when the bundle is built, so a timestamp taken
+  // here rotates the token exactly once per build.
+  const serviceWorkerBuildToken = options?.serviceWorkerBuildToken || String(Date.now());
   const autoReloadOnSwControllerChange = options?.autoReloadOnSwControllerChange ?? false;
   const serviceWorkerDevSessionReset = options?.serviceWorkerDevSessionReset ?? false;
 
