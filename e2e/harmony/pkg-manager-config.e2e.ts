@@ -2,16 +2,12 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import chaiString from 'chai-string';
 import chaiFs from 'chai-fs';
-import type { Modules } from '@pnpm/installing.modules-yaml';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import type { ModulesManifest } from '../modules-manifest';
+import { readModulesManifest } from '../modules-manifest';
 
 chai.use(chaiFs);
 chai.use(chaiString);
-
-async function readModulesManifest(modulesDir: string): Promise<Modules | null> {
-  const m = await import('@pnpm/installing.modules-yaml');
-  return m.readModulesManifest(modulesDir);
-}
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
   'workspace package-manager config is read when installation is in a capsule',
@@ -73,7 +69,7 @@ async function readModulesManifest(modulesDir: string): Promise<Modules | null> 
       });
     });
     describe('using pnpm', () => {
-      let modulesState: Modules | null;
+      let modulesState: ModulesManifest | null;
       before(async () => {
         helper.scopeHelper.reInitWorkspace();
         helper.fs.outputFile('pnpm-workspace.yaml', 'hoistPattern:\n  - capsule-hoist-pattern\n');
