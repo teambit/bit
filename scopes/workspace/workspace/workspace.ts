@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { AsyncLocalStorage } from 'async_hooks';
 import { parse } from 'comment-json';
 import semver from 'semver';
 import mapSeries from 'p-map-series';
@@ -182,7 +183,9 @@ const DEFAULT_VENDOR_DIR = 'vendor';
  */
 export class Workspace implements ComponentFactory {
   private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
-  private componentsBeingPreloaded = new Set<string>(); // guard against re-entrance during preloadComponents
+  // ids being preloaded in the current async call-chain. guards against recursive re-entrance during preloadComponents
+  private preloadingContext = new AsyncLocalStorage<Set<string>>();
+  private preloadsInFlight = new Map<string, Promise<void>>(); // id-str => the in-flight preload promise
   priority = true;
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
@@ -1243,17 +1246,46 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     const existingIds = compact(
       ids.map((id) => this.consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true }))
     );
-    const idsToLoad = existingIds.filter((id) => !this.componentsBeingPreloaded.has(id.toString()));
-    if (!idsToLoad.length) return;
-    idsToLoad.forEach((id) => this.componentsBeingPreloaded.add(id.toString()));
-    try {
-      await this.getMany(idsToLoad, undefined, false);
-    } catch (err: any) {
-      // the loader can still throw for errors it does not classify as invalid-component errors
-      this.logger.warn(`failed pre-loading components, continuing without the pre-loaded cache`, err);
-    } finally {
-      idsToLoad.forEach((id) => this.componentsBeingPreloaded.delete(id.toString()));
+    // recursive re-entry: ids whose preload is in progress in the current async call-chain (i.e. this
+    // call originated from within their own grouped load). don't load and don't wait, it would deadlock
+    const idsInCurrentContext = this.preloadingContext.getStore();
+    const relevantIds = idsInCurrentContext
+      ? existingIds.filter((id) => !idsInCurrentContext.has(id.toString()))
+      : existingIds;
+    if (!relevantIds.length) return;
+    // ids being preloaded by an independent concurrent caller. don't re-load them, but do wait for
+    // their preload to complete, so the caller won't compute the status on a half-built component
+    const preloadsToWaitFor: Promise<void>[] = [];
+    const idsToLoad: ComponentID[] = [];
+    relevantIds.forEach((id) => {
+      const inFlight = this.preloadsInFlight.get(id.toString());
+      if (inFlight) preloadsToWaitFor.push(inFlight);
+      else idsToLoad.push(id);
+    });
+    if (idsToLoad.length) {
+      const contextIds = new Set([...(idsInCurrentContext || []), ...idsToLoad.map((id) => id.toString())]);
+      // an explicit promise rather than the return value of preloadingContext.run, as some @types/node
+      // versions type the latter as void
+      const loadPromise = new Promise<void>((resolve) => {
+        void this.preloadingContext.run(contextIds, async () => {
+          try {
+            await this.getMany(idsToLoad, undefined, false);
+          } catch (err: any) {
+            // the loader can still throw for errors it does not classify as invalid-component errors
+            this.logger.warn(`failed pre-loading components, continuing without the pre-loaded cache`, err);
+          } finally {
+            resolve();
+          }
+        });
+      });
+      idsToLoad.forEach((id) => this.preloadsInFlight.set(id.toString(), loadPromise));
+      try {
+        await loadPromise;
+      } finally {
+        idsToLoad.forEach((id) => this.preloadsInFlight.delete(id.toString()));
+      }
     }
+    await Promise.all(preloadsToWaitFor);
   }
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
