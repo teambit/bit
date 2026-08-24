@@ -30,6 +30,18 @@ const MAX_FILES_READ = 1100;
 // Every run also prints a physical/logical/duplication report line; once CI logs accumulate the
 // true CI baselines, tighten this to measured + ~30.
 const MAX_LOGICAL_MODULES_STATUS = 1700;
+// Second guard: DUPLICATE COPIES (physical files minus logical modules). The logical metric alone
+// is blind to duplication — if bit starts loading two copies/versions of the same package (real
+// extra I/O, memory, and potential instanceof bugs), logical modules stay flat. Duplication was a
+// core motivation for this e2e test in the first place, so it gets its own ceiling. Unlike the
+// logical metric this one IS exposed to hoisting-layout drift (the released bundle's baseline
+// crept +1-3 per nightly), so it needs headroom: measured baselines (2026/08/11) are 211 (2.0.33),
+// 232 (2.0.35), ~233 (2.0.74 linux bundle), and the repo `.pnpm` flavor is lower. The ceiling
+// catches a duplication explosion (e.g. a whole second copy of a dependency tree) and bounds the
+// slow creep, while the per-run report line tracks the trend. On failure, the error names the
+// most-duplicated packages and their install locations. Tighten alongside the logical threshold
+// once CI report lines establish per-environment baselines.
+const MAX_DUPLICATE_COPIES_STATUS = 350;
 
 /**
  * as of now (2026/08/08) ~1,072 files are loaded during bit-bootstrap (recent additions: the
@@ -95,14 +107,15 @@ describe('Filesystem read count', function () {
         const { linesFromBitInstallation } = getLinesFromBitInstallation(output);
         const physicalFiles = _.uniq(linesFromBitInstallation);
         const logicalModules = toLogicalModules(linesFromBitInstallation);
+        const duplicateCopies = physicalFiles.length - logicalModules.length;
         // always print the metrics: CI logs accumulate the true per-environment baselines
         // (repo flavor in e2e_test, released bundle in e2e_test_bbit), enabling threshold
-        // tightening from measurements instead of projections, and making duplication trends
-        // (physical minus logical) visible without failing anyone.
+        // tightening from measurements instead of projections, and keeping duplication trends
+        // visible below the ceiling.
         console.log(
           `bit status filesystem-read report: total reads ${numberOfReads}, ` +
             `physical files ${physicalFiles.length}, logical modules ${logicalModules.length}, ` +
-            `duplicate copies ${physicalFiles.length - logicalModules.length}`
+            `duplicate copies ${duplicateCopies}`
         );
         if (logicalModules.length >= MAX_LOGICAL_MODULES_STATUS) {
           // the snapshot is generated offline and is a superset of what CI's leaner fixture
@@ -119,6 +132,11 @@ describe('Filesystem read count', function () {
               getNewlyLoadedModules(logicalModules, 'files-snapshot-status.txt')
             )
           );
+        }
+        // checked after the logical guard: when a change adds both new modules and duplication,
+        // the logical failure (which names the new modules) is the more root-cause signal.
+        if (duplicateCopies >= MAX_DUPLICATE_COPIES_STATUS) {
+          throw new Error(buildDuplicationError(duplicateCopies, MAX_DUPLICATE_COPIES_STATUS, physicalFiles));
         }
       });
       it('should take less than 2 seconds', () => {
@@ -211,13 +229,60 @@ function getNewlyLoadedFiles(cmdOutput: string, snapshotFile = 'files-snapshot.t
  * the same module without bit loading any new code.
  */
 function toLogicalModules(installationLines: string[]): string[] {
+  return _.uniq(installationLines.map(toLogicalId));
+}
+
+function toLogicalId(installationPath: string): string {
   const nm = 'node_modules/';
-  return _.uniq(
-    installationLines.map((line) => {
-      const idx = line.lastIndexOf(nm);
-      return idx >= 0 ? line.slice(idx + nm.length) : line;
-    })
+  const idx = installationPath.lastIndexOf(nm);
+  return idx >= 0 ? installationPath.slice(idx + nm.length) : installationPath;
+}
+
+/**
+ * builds the failure message for the duplicate-copies ceiling: names the packages with the most
+ * duplicated files and the distinct node_modules locations their copies load from, so the red run
+ * points straight at the offending package instead of at a bare number.
+ */
+function buildDuplicationError(duplicateCopies: number, max: number, physicalFiles: string[]): string {
+  const packageOfLogicalId = (logicalId: string): string => {
+    const segments = logicalId.split('/');
+    return logicalId.startsWith('@') ? segments.slice(0, 2).join('/') : segments[0];
+  };
+  const installLocationOf = (physicalPath: string): string => {
+    const nm = 'node_modules/';
+    const idx = physicalPath.lastIndexOf(nm);
+    return idx > 0 ? physicalPath.slice(0, idx) : '<installation root>';
+  };
+  const filesByLogicalId = _.groupBy(physicalFiles, toLogicalId);
+  const duplicatedFiles = Object.entries(filesByLogicalId).filter(([, copies]) => copies.length > 1);
+  const duplicatesByPackage = _.groupBy(duplicatedFiles, ([logicalId]) => packageOfLogicalId(logicalId));
+  const packageSummaries = Object.entries(duplicatesByPackage)
+    .map(([packageName, entries]) => ({
+      packageName,
+      // count extra copies only (a file present in N locations contributes N-1 duplicates)
+      extraCopies: _.sumBy(entries, ([, copies]) => copies.length - 1),
+      locations: _.uniq(entries.flatMap(([, copies]) => copies.map(installLocationOf))).sort(),
+    }))
+    .sort((a, b) => b.extraCopies - a.extraCopies);
+  const lines = [
+    `bit status loaded ${duplicateCopies} duplicate module copies (physical files minus logical modules), ` +
+      `exceeding the allowed maximum of ${max}.`,
+    'The same module being read from multiple node_modules locations means bit loads redundant copies/versions ' +
+      'of packages. Most-duplicated packages and the locations their copies load from:',
+  ];
+  packageSummaries.slice(0, 20).forEach(({ packageName, extraCopies, locations }) => {
+    lines.push(`  ${packageName}: ${extraCopies} duplicate file read(s) from ${locations.length} locations:`);
+    locations.slice(0, 5).forEach((location) => lines.push(`    - ${location}`));
+    if (locations.length > 5) lines.push(`    - ... and ${locations.length - 5} more`);
+  });
+  if (packageSummaries.length > 20) {
+    lines.push(`  ... and ${packageSummaries.length - 20} more packages with duplicates`);
+  }
+  lines.push(
+    'If this duplication is expected (e.g. an intentional dependency-layout change), bump ' +
+      'MAX_DUPLICATE_COPIES_STATUS in filesystem-read.e2e.ts.'
   );
+  return `\n${lines.join('\n')}`;
 }
 
 /**
