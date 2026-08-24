@@ -25,8 +25,17 @@ export function toPreviewServer(component: ComponentModel, previewName?: string)
   const explicitUrl = component.server?.url;
   // We use the explicit server url only if there is no host
   // we prefer host over url, because host is the host of the component server, and url is the dev server url.
+  //
+  // "host" only qualifies when it is absolute. The host preference exists for the cloud, where the
+  // component server lives on another origin and `host` is a full URL. A local dev server publishes
+  // a bare hostname ("localhost") in its compilation events; composing that into a src produces a
+  // RELATIVE url ("localhost/preview/...") that the browser resolves under the current page path -
+  // the SPA catch-all then serves the workspace html INTO the preview iframe, which never reports
+  // ready and retries forever.
   // this is required for backward compatibility with the cloud.
-  if (explicitUrl && !component.server.host) return explicitUrl;
+  const absoluteHost =
+    component.server?.host && /^(https?:)?\/\//.test(component.server.host) ? component.server.host : undefined;
+  if (explicitUrl && !absoluteHost) return explicitUrl;
 
   // Checking specifically with === false, to make sure we fallback to the old url
   if (component.preview?.includesEnvTemplate === false) {
@@ -43,7 +52,9 @@ function getEnvIdQueryParam(component: ComponentModel, includeEnvId = true): str
   if (!includeEnvId) return undefined;
   // This is remote host server, used by cloud, as opposed to local dev server host
   // which is under component.server.
-  if (component.server?.host || component.server?.basePath) return undefined;
+  const qualifiedHost =
+    component.server?.host && /^(https?:)?\/\//.test(component.server.host) ? component.server.host : undefined;
+  if (qualifiedHost || component.server?.basePath) return undefined;
   // If there is no local dev server url, it means it's a scope and we don't need the env id.
   if (!component.server?.url) return undefined;
   return component.environment?.id;
@@ -55,7 +66,9 @@ function getEnvIdQueryParam(component: ComponentModel, includeEnvId = true): str
  * @returns
  */
 function toComponentPreviewUrl(component: ComponentModel) {
-  const prefix = createPrefix(component.server?.basePath, component.server?.host);
+  const absHost =
+    component.server?.host && /^(https?:)?\/\//.test(component.server.host) ? component.server.host : undefined;
+  const prefix = createPrefix(component.server?.basePath, absHost);
 
   const componentBasedUrl = `${prefix}/${component.id.toString()}/~aspect/preview/`;
   return componentBasedUrl;
@@ -83,7 +96,9 @@ function toEnvTemplatePreviewUrl(component: ComponentModel, previewName?: string
   // otherwise might have leftovers when switching between components of the same env.
   // This query param is currently not used yet.
   const search = `compId=${component.id.toString()}`;
-  const prefix = createPrefix(component.server?.basePath, component.server?.host);
+  const absHost =
+    component.server?.host && /^(https?:)?\/\//.test(component.server.host) ? component.server.host : undefined;
+  const prefix = createPrefix(component.server?.basePath, absHost);
 
   const envBasedUrl = `${prefix}/${envId}/~aspect/env-template/${previewName}/?${search}`;
   return envBasedUrl;

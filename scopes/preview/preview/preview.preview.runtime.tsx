@@ -140,6 +140,10 @@ export class PreviewPreview {
    * render the preview.
    */
   render = async (rootExt?: string) => {
+    // preview registration is asynchronous (link files initialize their modules through a dynamic
+    // import), so rendering must wait for the active preview - and its includes - to have
+    // registered. setup() resolves immediately once ready, so steady-state renders pay nothing.
+    await this.setup();
     // fit content always.
     window.document.body.style.width = 'auto';
 
@@ -284,7 +288,12 @@ export class PreviewPreview {
   async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {
     const compShortId = id.fullName;
 
-    const relevantModel = PREVIEW_MODULES.get(previewName);
+    let relevantModel = PREVIEW_MODULES.get(previewName);
+    if (!relevantModel) {
+      // an include can be requested before its link finished registering - wait once, then fail
+      await this.setup();
+      relevantModel = PREVIEW_MODULES.get(previewName);
+    }
     if (!relevantModel) throw new Error(`[preview.preview] missing preview "${previewName}"`);
     if (relevantModel.componentMap[compShortId]) return relevantModel;
 
