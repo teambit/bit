@@ -129,8 +129,16 @@ export class MergeStatusProvider {
     const bitMap = this.workspace.consumer.bitMap;
     const existingIds = compact(bitIds.map((id) => bitMap.getComponentIdIfExist(id, { ignoreVersion: true })));
     if (!existingIds.length) return;
-    // don't throw. errors during component-load are handled later per-component when calculating its status
-    await this.workspace.getMany(existingIds, undefined, false);
+    try {
+      // don't throw on component-load failures. they are handled later per-component when calculating its status
+      await this.workspace.getMany(existingIds, undefined, false);
+    } catch (err: any) {
+      // the loader can still throw for errors it does not classify as invalid-component errors. this pre-load
+      // is a best-effort cache-warming, it should never fail the merge. a component that genuinely fails to
+      // load will surface a proper error later in the per-component flow, and a component that the merge
+      // legitimately skips without loading (e.g. locally-removed) should not fail it here.
+      this.logger.warn(`failed pre-loading components for merge, continuing without the pre-loaded cache`, err);
+    }
   }
 
   private async getComponentMergeStatus(
