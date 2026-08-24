@@ -559,6 +559,8 @@
         "multimatch": "5.0.0",
         "nerf-dart": "1.0.0",
         "node-fetch": "2.6.7",
+        // put on PATH by teambit.dependencies/pnpm so dependency build scripts
+        // can shell out to it; the pnpm engine ships no node-gyp of its own
         "node-gyp": "11.5.0",
         "node-source-walk": "4.2.0",
         "normalize-path": "3.0.0",
