@@ -311,12 +311,16 @@ function getModuleImports(
   outputFileSync(tempFilePath, tempFileContents);
   return {
     // A lazy loader instead of a static import: the env template modules (the docs app among them)
-    // must not evaluate while a thumbnail realm's link is deferred. webpackMode "eager" keeps them
-    // in the same chunks as a static import - no new request for regular preview pages - but their
-    // module factories only run once a preview actually initializes.
+    // must not evaluate while a thumbnail realm's link is deferred. A true async import also keeps
+    // their code out of the *initial* chunk graph, which is what makes it matter: the docs-app chunk
+    // alone measured 5.4 MB on the wire, downloaded by every realm that would never run it. Each
+    // preview's temp file must form its OWN async chunk - a shared webpackChunkName merged the
+    // compositions mounter with the overview docs template, and initializing compositions dragged
+    // the whole docs app back in. A grid thumbnail now neither evaluates nor fetches it; a real
+    // preview page pays one extra request the first time its template initializes.
     statement: `let __bitMainModulesNs;
 async function __bitLoadMainModules() {
-  __bitMainModulesNs ??= await import(/* webpackMode: "eager" */ "${normalizePath(tempFilePath)}");
+  __bitMainModulesNs ??= await import("${normalizePath(tempFilePath)}");
   return __bitMainModulesNs;
 }`,
     tempFilePath: normalizePath(tempFilePath),
