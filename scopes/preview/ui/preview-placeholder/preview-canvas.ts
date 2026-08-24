@@ -72,13 +72,25 @@ const AHEAD_BIAS = 0.4;
 const BEHIND_BIAS = 1.8;
 
 /**
- * Booting a realm is expensive and they all contend for one dev server, so the pool fills in
- * gradually rather than all at once. Letting the whole pool start together made the *first* preview
- * take tens of seconds: twenty realms fetched and parsed the env bundle simultaneously and none of
- * them finished early. On-screen cards sort first, so the first screenful is what gets built.
+ * Realms contend for one dev server, so the pool fills adaptively. Letting the whole pool start
+ * together on a cold page made the *first* preview take tens of seconds: twenty realms fetched and
+ * parsed the env bundles simultaneously and none finished early. But once ONE realm has rendered,
+ * every asset is in the browser's HTTP cache and a thumbnail realm evaluates in ~30ms - holding the
+ * gates closed then just delays the grid (measured: 20 x 29ms of work stretched to 3.7s). So the
+ * first realm boots nearly alone to warm the cache, and its render opens the gates.
  */
-const MAX_BOOTING_AT_ONCE = 3;
-const MAX_NEW_FRAMES_PER_FLUSH = 1;
+const COLD_BOOTING_AT_ONCE = 2;
+const WARM_BOOTING_AT_ONCE = 12;
+const COLD_FRAMES_PER_FLUSH = 1;
+const WARM_FRAMES_PER_FLUSH = 6;
+
+let assetsWarmed = false;
+function maxBooting() {
+  return assetsWarmed ? WARM_BOOTING_AT_ONCE : COLD_BOOTING_AT_ONCE;
+}
+function maxNewFramesPerFlush() {
+  return assetsWarmed ? WARM_FRAMES_PER_FLUSH : COLD_FRAMES_PER_FLUSH;
+}
 
 /** a frame stays hidden until its preview is up, so the card's own skeleton shows through */
 const REVEAL_AFTER_LOAD_MS = 120;
@@ -208,6 +220,12 @@ function markReady(pooled: PooledFrame) {
   if (pooled.ready) return;
   pooled.ready = true;
   booting = Math.max(0, booting - 1);
+  // the first rendered preview proves the env assets are cached and the server is responsive -
+  // from here on, realm boot is ~30ms of evaluation and the gates can open
+  if (!assetsWarmed) {
+    assetsWarmed = true;
+    schedule();
+  }
   if (pooled.assignedKey) {
     renderedKeys.add(pooled.assignedKey);
     document.dispatchEvent(new CustomEvent('bit-preview-canvas-rendered', { detail: { key: pooled.assignedKey } }));
@@ -342,8 +360,8 @@ function flush() {
         if (pooled) assign(pooled, entry);
         else if (
           pool.length < poolSize &&
-          booting < MAX_BOOTING_AT_ONCE &&
-          createdThisFlush < MAX_NEW_FRAMES_PER_FLUSH
+          booting < maxBooting() &&
+          createdThisFlush < maxNewFramesPerFlush()
         ) {
           pooled = createFrame(serverUrl, entry);
           createdThisFlush += 1;
@@ -367,6 +385,13 @@ function flush() {
       pooled.wrapper.style.visibility = 'hidden';
     });
   }
+
+  // creation is rationed per flush; while visible cards still lack frames, keep the pump running
+  // instead of waiting for the next scroll or message event
+  const wantsMore = [...visibleByServer.values()].some((list) =>
+    list.some(({ entry }) => !poolFor(entry.serverUrl).some((f) => f.assignedKey === entry.key))
+  );
+  if (wantsMore) schedule();
 }
 
 function schedule() {
