@@ -21,7 +21,6 @@ import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/leg
     this.timeout(0);
     let helper: Helper;
     let npmCiRegistry: NpmCiRegistry;
-    let mergeOutput: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -62,17 +61,22 @@ import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/leg
       npmCiRegistry.destroy();
       helper.scopeHelper.destroy();
     });
-    it('bit status should show a clean workspace before the merge', () => {
+    it('bit status should not show the component as modified before the merge', () => {
       const status = helper.command.statusJson();
       expect(status.modifiedComponents).to.have.lengthOf(0);
     });
-    it('bit lane merge main should not fail with a "config changes" false positive', () => {
-      mergeOutput = helper.command.mergeLaneWithoutBuild('main', '-x');
-      expect(mergeOutput).to.not.have.string('config changes');
-      expect(mergeOutput).to.have.string('successfully merged');
-    });
-    it('the merge should snap the diverged component', () => {
-      expect(mergeOutput).to.have.string('merge-snapped components');
+    describe('bit lane merge main', () => {
+      let mergeOutput: string;
+      before(() => {
+        mergeOutput = helper.command.mergeLaneWithoutBuild('main', '-x');
+      });
+      it('should not fail with a "config changes" false positive', () => {
+        expect(mergeOutput).to.not.have.string('config changes');
+        expect(mergeOutput).to.have.string('successfully merged');
+      });
+      it('should snap the diverged component', () => {
+        expect(mergeOutput).to.have.string('merge-snapped components');
+      });
     });
   }
 );

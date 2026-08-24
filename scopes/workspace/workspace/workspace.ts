@@ -1232,60 +1232,66 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   /**
-   * pre-load the given components (only those that exist in the workspace) through the grouped workspace
-   * loader, which loads their envs before the components themselves. this populates the loaders caches with
-   * correctly-built components, making them the single source of truth for subsequent loads, e.g. by the
-   * legacy loader when calculating the modified-status. loading a component cold outside this pipeline (a
-   * single-component load) may miss the env's dependency-policy, in which case the recalculated component
-   * hash differs from the model and the component is mistakenly marked as modified (config changes).
+   * pre-load the given components (only those that exist in the workspace and were not loaded yet) through
+   * the grouped workspace loader, which loads their envs before the components themselves. this populates
+   * the loaders caches with correctly-built components for subsequent loads, e.g. by the legacy loader when
+   * calculating the modified-status. loading a component cold outside this pipeline (a single-component
+   * load) may miss the env's dependency-policy, in which case the recalculated component hash differs from
+   * the model and the component is mistakenly marked as modified (config changes).
+   * note that this is a cache-warmer. it cannot repair a component that was already loaded incorrectly, so
+   * call it before any cold single-component load. (the deeper fix would be for the single-component load
+   * path to load the component's env first, similarly to the grouped loader. see
+   * workspace-component-loader "getWithSpan").
    * this method never throws. a component that fails to load here will surface a proper error when loaded
    * later by the calling flow, and a component the calling flow legitimately skips without loading
    * (e.g. locally-removed) should not fail it here.
    */
   async preloadComponents(ids: ComponentID[]): Promise<void> {
-    const existingIds = compact(
-      ids.map((id) => this.consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true }))
-    );
-    // recursive re-entry: ids whose preload is in progress in the current async call-chain (i.e. this
-    // call originated from within their own grouped load). don't load and don't wait, it would deadlock
-    const idsInCurrentContext = this.preloadingContext.getStore();
-    const relevantIds = idsInCurrentContext
-      ? existingIds.filter((id) => !idsInCurrentContext.has(id.toString()))
-      : existingIds;
-    if (!relevantIds.length) return;
+    // ids whose preload is in progress in the current async call-chain (i.e. this call originated from
+    // within their own grouped load). loading or even waiting for them here would deadlock
+    const chainIds = this.preloadingContext.getStore() ?? new Set<string>();
+    const bitmapIds = this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
+    const candidates: Array<{ id: ComponentID; idStr: string }> = [];
+    ids.forEach((id) => {
+      const existingId = bitmapIds.searchWithoutVersion(id);
+      if (!existingId) return;
+      const idStr = existingId.toString();
+      if (chainIds.has(idStr)) return;
+      if (this.componentLoader.isLoaded(existingId)) return; // already warm
+      candidates.push({ id: existingId, idStr });
+    });
+    if (!candidates.length) return;
     // ids being preloaded by an independent concurrent caller. don't re-load them, but do wait for
     // their preload to complete, so the caller won't compute the status on a half-built component
-    const preloadsToWaitFor: Promise<void>[] = [];
-    const idsToLoad: ComponentID[] = [];
-    relevantIds.forEach((id) => {
-      const inFlight = this.preloadsInFlight.get(id.toString());
-      if (inFlight) preloadsToWaitFor.push(inFlight);
-      else idsToLoad.push(id);
+    const preloadsToAwait: Promise<void>[] = [];
+    const toLoad: Array<{ id: ComponentID; idStr: string }> = [];
+    candidates.forEach((candidate) => {
+      const inFlight = this.preloadsInFlight.get(candidate.idStr);
+      if (inFlight) preloadsToAwait.push(inFlight);
+      else toLoad.push(candidate);
     });
-    if (idsToLoad.length) {
-      const contextIds = new Set([...(idsInCurrentContext || []), ...idsToLoad.map((id) => id.toString())]);
-      // an explicit promise rather than the return value of preloadingContext.run, as some @types/node
-      // versions type the latter as void
-      const loadPromise = new Promise<void>((resolve) => {
-        void this.preloadingContext.run(contextIds, async () => {
-          try {
-            await this.getMany(idsToLoad, undefined, false);
-          } catch (err: any) {
+    if (toLoad.length) {
+      const contextIds = new Set([...chainIds, ...toLoad.map((c) => c.idStr)]);
+      // assign the promise from within run() rather than using its return value, which some
+      // @types/node versions type as void
+      let loadPromise!: Promise<void>;
+      this.preloadingContext.run(contextIds, () => {
+        loadPromise = this.getMany(
+          toLoad.map((c) => c.id),
+          undefined,
+          false
+        ).then(
+          () => undefined,
+          (err) => {
             // the loader can still throw for errors it does not classify as invalid-component errors
             this.logger.warn(`failed pre-loading components, continuing without the pre-loaded cache`, err);
-          } finally {
-            resolve();
           }
-        });
+        );
       });
-      idsToLoad.forEach((id) => this.preloadsInFlight.set(id.toString(), loadPromise));
-      try {
-        await loadPromise;
-      } finally {
-        idsToLoad.forEach((id) => this.preloadsInFlight.delete(id.toString()));
-      }
+      toLoad.forEach((c) => this.preloadsInFlight.set(c.idStr, loadPromise));
+      preloadsToAwait.push(loadPromise.finally(() => toLoad.forEach((c) => this.preloadsInFlight.delete(c.idStr))));
     }
-    await Promise.all(preloadsToWaitFor);
+    await Promise.all(preloadsToAwait);
   }
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
@@ -2771,8 +2777,6 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
-    // pre-load in one batch. otherwise, each getComponentStatusById pre-loads its component individually
-    await this.preloadComponents(ids);
     return this.componentStatusLoader.getManyComponentsStatuses(ids);
   }
 

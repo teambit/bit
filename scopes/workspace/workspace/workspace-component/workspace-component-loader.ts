@@ -897,6 +897,13 @@ export class WorkspaceComponentLoader {
     component.state.issues.getOrCreate(IssuesClasses.MultipleEnvs).data = envIds;
   }
 
+  /**
+   * whether the component exists in the in-memory cache in its fully-loaded form
+   */
+  isLoaded(id: ComponentID): boolean {
+    return Boolean(this.getFromCache(id, { loadExtensions: true, executeLoadSlot: true }));
+  }
+
   clearCache() {
     this.componentsCache.deleteAll();
     this.scopeComponentsCache.deleteAll();

@@ -32,6 +32,8 @@ export class ComponentStatusLoader {
   }
 
   async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
+    // pre-load in one batch. otherwise, each getStatus pre-loads its component individually
+    await this.workspace.preloadComponents(ids);
     const results: ComponentStatusResult[] = [];
     await mapSeries(ids, async (id) => {
       const status = await this.getComponentStatusById(id);
@@ -65,9 +67,8 @@ export class ComponentStatusLoader {
 
   private async getStatus(id: ComponentID) {
     // make sure the component is loaded through the grouped workspace loader (envs first), so the
-    // modified-status below is calculated on a correctly-built component. without it, the load from
-    // the file-system below may build the component without its env's dependency-policy applied and
-    // mistakenly mark it as modified. (no-op if the component was already loaded or is not in the workspace)
+    // modified-status below is calculated on a correctly-built component. no-op if the component was
+    // already loaded or is not in the workspace. see workspace.preloadComponents.
     await this.workspace.preloadComponents([id]);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const status: ComponentStatusLegacy = {};
