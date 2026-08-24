@@ -17,50 +17,50 @@ describe('determineMainFile', () => {
   describe('user did not specify a main file', () => {
     it('should throw MissingMainFile when no file matches any strategy', () => {
       const addedComponent = createAddedComponent({
-        files: [{ relativePath: 'foo1.js' }, { relativePath: 'foo2.js' }],
+        files: [{ relativePath: 'bar/foo1.js' }, { relativePath: 'bar/foo2.js' }],
       });
       expect(() => determineMainFile(addedComponent, null)).to.throw(MissingMainFile);
     });
     it('should use the only file when the component has a single file', () => {
       const addedComponent = createAddedComponent({
-        files: [{ relativePath: 'foo1.js' }],
+        files: [{ relativePath: 'bar/foo1.js' }],
       });
-      expect(determineMainFile(addedComponent, null)).to.equal('foo1.js');
+      expect(determineMainFile(addedComponent, null)).to.equal('bar/foo1.js');
     });
     it('should identify the closest index file as the main file when multiple index files exist', () => {
       const addedComponent = createAddedComponent({
         files: [
-          { relativePath: 'exceptions/some-exception.js' },
-          { relativePath: 'exceptions/index.js' },
-          { relativePath: 'index.js' },
-          { relativePath: 'foo.js' },
+          { relativePath: 'bar/exceptions/some-exception.js' },
+          { relativePath: 'bar/exceptions/index.js' },
+          { relativePath: 'bar/index.js' },
+          { relativePath: 'bar/foo.js' },
         ],
       });
-      expect(determineMainFile(addedComponent, null)).to.equal('index.js');
+      expect(determineMainFile(addedComponent, null)).to.equal('bar/index.js');
     });
     it('should resolve a file with the same name as the immediate directory when no index file exists', () => {
       const addedComponent = createAddedComponent({
-        files: [{ relativePath: 'bar.js' }, { relativePath: 'foo.js' }],
+        files: [{ relativePath: 'bar/bar.js' }, { relativePath: 'bar/foo.js' }],
         immediateDir: 'bar',
       });
-      expect(determineMainFile(addedComponent, null)).to.equal('bar.js');
+      expect(determineMainFile(addedComponent, null)).to.equal('bar/bar.js');
     });
     it('should prefer an index file over a file with the same name as the immediate directory', () => {
       const addedComponent = createAddedComponent({
-        files: [{ relativePath: 'bar.js' }, { relativePath: 'index.js' }],
+        files: [{ relativePath: 'bar/bar.js' }, { relativePath: 'bar/index.js' }],
         immediateDir: 'bar',
       });
-      expect(determineMainFile(addedComponent, null)).to.equal('index.js');
+      expect(determineMainFile(addedComponent, null)).to.equal('bar/index.js');
     });
     it('should resolve the angular entry point file', () => {
       const addedComponent = createAddedComponent({
-        files: [{ relativePath: 'public-api.ts' }, { relativePath: 'foo.ts' }],
+        files: [{ relativePath: 'bar/public-api.ts' }, { relativePath: 'bar/foo.ts' }],
       });
-      expect(determineMainFile(addedComponent, null)).to.equal('public-api.ts');
+      expect(determineMainFile(addedComponent, null)).to.equal('bar/public-api.ts');
     });
     it('should keep the main file of the existing component-map', () => {
       const addedComponent = createAddedComponent({
-        files: [{ relativePath: 'foo1.js' }, { relativePath: 'foo2.js' }],
+        files: [{ relativePath: 'bar/foo1.js' }, { relativePath: 'bar/foo2.js' }],
       });
       const existingComponentMap = { mainFile: 'foo2.js', rootDir: 'bar' };
       // @ts-ignore only the mainFile and rootDir props are needed
@@ -70,14 +70,14 @@ describe('determineMainFile', () => {
   describe('user specified a main file', () => {
     it('should use the specified main file when it exists in the files', () => {
       const addedComponent = createAddedComponent({
-        files: [{ relativePath: 'foo1.js' }, { relativePath: 'foo2.js' }],
-        mainFile: 'foo2.js',
+        files: [{ relativePath: 'bar/foo1.js' }, { relativePath: 'bar/foo2.js' }],
+        mainFile: 'bar/foo2.js',
       });
-      expect(determineMainFile(addedComponent, null)).to.equal('foo2.js');
+      expect(determineMainFile(addedComponent, null)).to.equal('bar/foo2.js');
     });
     it('should throw MissingMainFile when the specified main file is not in the files', () => {
       const addedComponent = createAddedComponent({
-        files: [{ relativePath: 'foo1.js' }, { relativePath: 'foo2.js' }],
+        files: [{ relativePath: 'bar/foo1.js' }, { relativePath: 'bar/foo2.js' }],
         mainFile: 'non-exist.js',
       });
       expect(() => determineMainFile(addedComponent, null)).to.throw(MissingMainFile);
