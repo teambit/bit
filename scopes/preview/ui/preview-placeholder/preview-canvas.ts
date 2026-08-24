@@ -185,6 +185,11 @@ function previewHash(entry: CanvasEntry): string {
     `preview=${entry.preview || 'compositions'}`,
     'disableCta=true',
     'onlyOverview=true',
+    // thumbnail mode: the realm boots only what a static grid card needs. Link files for other
+    // preview types stay unevaluated (the docs app is most of a realm's boot cost), the pubsub
+    // handshake - which this pool never answers - is skipped, and the realm reports its size with
+    // a plain postMessage that onMessage below uses as the render signal.
+    'thumbnail=true',
     `viewport=${entry.viewport || 1280}`,
     theme ? `theme=${theme}` : '',
   ].filter(Boolean);
@@ -205,9 +210,7 @@ function markReady(pooled: PooledFrame) {
   booting = Math.max(0, booting - 1);
   if (pooled.assignedKey) {
     renderedKeys.add(pooled.assignedKey);
-    document.dispatchEvent(
-      new CustomEvent('bit-preview-canvas-rendered', { detail: { key: pooled.assignedKey } })
-    );
+    document.dispatchEvent(new CustomEvent('bit-preview-canvas-rendered', { detail: { key: pooled.assignedKey } }));
   }
   schedule();
 }
@@ -375,15 +378,13 @@ function onMessage(event: MessageEvent) {
   const data = event.data;
   if (!data || typeof data !== 'object') return;
   // the preview runtime reports its size once it has rendered; use it as the "this card is live"
-  // signal so the card can drop its skeleton
+  // signal so the card can drop its skeleton and the frame can be revealed - it arrives when the
+  // preview really rendered, where the reveal timers below are blind guesses kept as fallback
   if (data.type !== 'preview-size' && data.event !== 'preview-size') return;
   for (const pool of pools.values()) {
     for (const pooled of pool) {
       if (pooled.iframe.contentWindow !== event.source || !pooled.assignedKey) continue;
-      renderedKeys.add(pooled.assignedKey);
-      document.dispatchEvent(
-        new CustomEvent('bit-preview-canvas-rendered', { detail: { key: pooled.assignedKey } })
-      );
+      markReady(pooled);
     }
   }
 }

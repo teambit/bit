@@ -73,20 +73,10 @@ export function generateLink(
     : [];
 
   const sourceModeBootstrap = `
-function __bitActivePreviewName() {
-  try {
-    const { hash } = window.location;
-    if (!hash) return null;
-    const [, query = ""] = hash.slice(1).split("?");
-    const params = new URLSearchParams(query);
-    return params.get("preview");
-  } catch {
-    return null;
-  }
-}
-
 let __bitInitialized = false;
 async function __bitMaybeInitialize(force = false, shouldNotify = false) {
+  // a deferred thumbnail link stays uninitialized until a hashchange asks for its preview
+  if (__bitThumbnailDefer()) return;
   if (__bitInitialized && !force) return;
   __bitInitialized = true;
   // Always call initializeModules() so linkModules runs for every preview
@@ -138,9 +128,20 @@ window.addEventListener('hashchange', () => {
   const runtimeBootstrap = useSource
     ? sourceModeBootstrap
     : `
-(async function initializeModulesOnLoad() {
+let __bitInitialized = false;
+async function __bitInitializeOnce() {
+  if (__bitInitialized) return;
+  __bitInitialized = true;
   await initializeModules();
-})();
+}
+if (__bitThumbnailDefer()) {
+  // deferred: initialize only if a later hash actually asks for this preview
+  window.addEventListener('hashchange', () => {
+    if (!__bitThumbnailDefer()) void __bitInitializeOnce();
+  });
+} else {
+  void __bitInitializeOnce();
+}
 `;
 
   const contents = `import { linkModules } from '${normalizePath(join(previewDistDir, 'preview-modules.js'))}';
@@ -166,6 +167,37 @@ function __bitActiveComponentId() {
 
 const __bitActiveId = __bitActiveComponentId();
 
+function __bitActivePreviewName() {
+  try {
+    const { hash } = window.location;
+    if (!hash) return null;
+    const [, query = ""] = hash.slice(1).split("?");
+    const params = new URLSearchParams(query);
+    return params.get("preview");
+  } catch {
+    return null;
+  }
+}
+
+// A pooled grid "thumbnail" realm (see preview-canvas.ts) renders exactly one preview type, yet
+// every preview's link file evaluates its env template module at boot: the overview template is a
+// full docs app, measured at ~250ms of a ~500ms realm boot on a grid that only ever renders
+// compositions. When the hash carries thumbnail=true, a link whose preview is not the active one
+// defers all module evaluation until a hashchange actually asks for it. Without the marker
+// nothing defers, so regular preview pages load exactly what they loaded before.
+function __bitThumbnailDefer() {
+  try {
+    const [, query = ""] = (window.location.hash || "").slice(1).split("?");
+    const params = new URLSearchParams(query);
+    if (params.get("thumbnail") !== "true") return false;
+    const active = params.get("preview");
+    if (!active) return false;
+    return active !== ${JSON.stringify(prefix)};
+  } catch {
+    return false;
+  }
+}
+
 function __bitShouldSurfaceFor(componentId) {
   if (!__bitActiveId) return false;
   const act = __bitNormalizeId(__bitActiveId);
@@ -190,6 +222,7 @@ function __bitSurfaceToOverlay(err, componentId) {
 
 ${moduleImports.statement}
 async function initializeModules() {
+const {${moduleLinks.map((m) => m.varName).join(', ')}} = await __bitLoadMainModules();
 ${getComponentImports(componentLinks)}
 linkModules('${prefix}', {
   modulesMap: {
@@ -277,9 +310,15 @@ function getModuleImports(
     .join('\n');
   outputFileSync(tempFilePath, tempFileContents);
   return {
-    statement: `import {${moduleLinks.map((moduleLink) => moduleLink.varName).join(', ')}} from "${normalizePath(
-      tempFilePath
-    )}";`,
+    // A lazy loader instead of a static import: the env template modules (the docs app among them)
+    // must not evaluate while a thumbnail realm's link is deferred. webpackMode "eager" keeps them
+    // in the same chunks as a static import - no new request for regular preview pages - but their
+    // module factories only run once a preview actually initializes.
+    statement: `let __bitMainModulesNs;
+async function __bitLoadMainModules() {
+  __bitMainModulesNs ??= await import(/* webpackMode: "eager" */ "${normalizePath(tempFilePath)}");
+  return __bitMainModulesNs;
+}`,
     tempFilePath: normalizePath(tempFilePath),
   };
 }

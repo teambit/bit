@@ -83,6 +83,16 @@ export class PreviewPreview {
     }
   }
 
+  /**
+   * A pooled grid thumbnail (hash carries `thumbnail=true`, set by preview-canvas.ts). Thumbnail
+   * realms render with `onlyOverview=true`, which drops included previews at render time - so
+   * their link files stay deferred (never evaluated, see generate-link.ts) and readiness must not
+   * wait for modules that will never load. Regular preview pages never carry the marker.
+   */
+  private isThumbnail() {
+    return this.getParam(this.getQuery(), 'thumbnail') === 'true';
+  }
+
   private isReady() {
     const { previewName } = this.getLocation();
     const name = previewName || this.getDefault();
@@ -90,7 +100,8 @@ export class PreviewPreview {
     if (!PREVIEW_MODULES.has(name)) return false;
     const preview = this.getPreview(name);
     if (!preview) return false;
-    const includedReady = preview.include?.every((included) => PREVIEW_MODULES.has(included)) ?? true;
+    const includedReady =
+      this.isThumbnail() || (preview.include?.every((included) => PREVIEW_MODULES.has(included)) ?? true);
     if (!includedReady) return false;
 
     return true;
@@ -143,15 +154,19 @@ export class PreviewPreview {
 
     this.listenToHashChanges(rootExt);
 
-    const includesAll = await Promise.all(
-      (preview.include || []).map(async (inclPreviewName) => {
-        const includedPreview = this.getPreview(inclPreviewName);
-        if (!includedPreview) return undefined;
+    // thumbnails discard includes below (they render with onlyOverview), so don't resolve the
+    // included previews' modules at all - their link files are deferred and must stay that way
+    const includesAll = this.isThumbnail()
+      ? []
+      : await Promise.all(
+          (preview.include || []).map(async (inclPreviewName) => {
+            const includedPreview = this.getPreview(inclPreviewName);
+            if (!includedPreview) return undefined;
 
-        const inclPreviewModule = await this.getPreviewModule(inclPreviewName, componentId);
-        return includedPreview.selectPreviewModel?.(componentId.fullName, inclPreviewModule);
-      })
-    );
+            const inclPreviewModule = await this.getPreviewModule(inclPreviewName, componentId);
+            return includedPreview.selectPreviewModel?.(componentId.fullName, inclPreviewModule);
+          })
+        );
 
     const query = this.getQuery();
     const onlyOverview = this.getParam(query, 'onlyOverview');
@@ -239,6 +254,12 @@ export class PreviewPreview {
     const publish = () => {
       const { width, height } = measure();
       this.pubsub.pub(PreviewAspect.id, new SizeEvent({ width, height }));
+      // A pooled thumbnail host (preview-canvas.ts) creates its iframes with raw DOM and never
+      // opens a penpal connection, so the pubsub event above cannot reach it. Send the size as a
+      // plain postMessage too - the pool uses it as the "this card actually rendered" signal.
+      if (this.isThumbnail() && window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: SizeEvent.TYPE, data: { width, height } }, '*');
+      }
     };
     // publish right away so the parent gets the first real size as soon as possible
     publish();
