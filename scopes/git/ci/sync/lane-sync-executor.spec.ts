@@ -15,6 +15,7 @@ import {
   laneHeadFingerprint,
   LaneSyncExecutor,
   laneSyncPrBody,
+  ownLaneComponents,
   racedLedgerPushSummary,
   RUN_SUMMARY_MARKER,
   runSummaryCommentBody,
@@ -102,12 +103,38 @@ describe('foreignLaneComponents', () => {
   });
 });
 
+describe('ownLaneComponents', () => {
+  const DEFAULT_SCOPE = 'acme.shop';
+  const ours = comp('acme.shop/comp1', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1');
+  const theirs = comp('other.scope/comp2', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2');
+
+  it('is the exact complement of foreignLaneComponents: together they cover the lane', () => {
+    const own = ownLaneComponents([ours, theirs], DEFAULT_SCOPE);
+    expect(own.map((c) => c.id.toStringWithoutVersion())).to.deep.equal(['acme.shop/comp1']);
+    expect(foreignLaneComponents([ours, theirs], DEFAULT_SCOPE)).to.deep.equal(['other.scope/comp2']);
+  });
+
+  it('fingerprints only the own slice, so a foreign head moving does not read as the lane moving', () => {
+    const theirsMoved = comp('other.scope/comp2', 'cccccccccccccccccccccccccccccccccccccc33');
+    expect(laneHeadFingerprint(ownLaneComponents([ours, theirs], DEFAULT_SCOPE))).to.equal(
+      laneHeadFingerprint(ownLaneComponents([ours, theirsMoved], DEFAULT_SCOPE))
+    );
+  });
+
+  it('an own head moving still reads as the lane moving', () => {
+    const oursMoved = comp('acme.shop/comp1', 'dddddddddddddddddddddddddddddddddddddd44');
+    expect(laneHeadFingerprint(ownLaneComponents([ours, theirs], DEFAULT_SCOPE))).to.not.equal(
+      laneHeadFingerprint(ownLaneComponents([oursMoved, theirs], DEFAULT_SCOPE))
+    );
+  });
+});
+
 describe('crossScopeDescription', () => {
   const DEFAULT_SCOPE = 'acme.shop';
 
   it('names the foreign scopes and this repository scope', () => {
     const description = crossScopeDescription(['other.scope/comp2', 'third.scope/comp3'], DEFAULT_SCOPE);
-    expect(description).to.include('components from scope(s) other.scope, third.scope');
+    expect(description).to.include('every component is from scope(s) other.scope, third.scope');
     expect(description).to.include(`(this repo maps scope ${DEFAULT_SCOPE})`);
     expect(description).to.include('foreign components: other.scope/comp2, third.scope/comp3');
   });
@@ -129,15 +156,21 @@ describe('crossScopeDescription', () => {
 describe('laneSyncPrBody', () => {
   const LANE_HEAD = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1';
 
-  function body(componentCount: number) {
+  function body(componentCount: number, foreignCount = 0) {
     return laneSyncPrBody({
       laneIdStr: 'acme.shop/my-lane',
       laneUrl: 'https://bit.cloud/acme/shop/~lane/my-lane',
       branch: 'my-lane',
       laneHead: LANE_HEAD,
-      components: Array.from({ length: componentCount }, (_, index) =>
-        comp(`acme.shop/namespace/component-with-a-realistic-name-${index}`, `${'0'.repeat(39)}${index % 10}`)
-      ),
+      components: [
+        ...Array.from({ length: componentCount }, (_, index) =>
+          comp(`acme.shop/namespace/component-with-a-realistic-name-${index}`, `${'0'.repeat(39)}${index % 10}`)
+        ),
+        ...Array.from({ length: foreignCount }, (_, index) =>
+          comp(`other.scope/namespace/foreign-component-${index}`, `${'1'.repeat(39)}${index % 10}`)
+        ),
+      ],
+      defaultScope: 'acme.shop',
     });
   }
 
@@ -165,15 +198,43 @@ describe('laneSyncPrBody', () => {
   it('says so explicitly when the lane has no components', () => {
     expect(body(0)).to.include('_none_');
   });
+
+  it('a single-scope lane gets no foreign section and no "N of M" phrasing', () => {
+    const rendered = body(3);
+    expect(rendered).to.include('Components on the lane (3):');
+    expect(rendered).to.not.include('other scopes');
+    expect(rendered).to.not.include(' of ');
+  });
+
+  it('a cross-scope lane lists the mirrored slice and the foreign components separately', () => {
+    const rendered = body(2, 3);
+    expect(rendered).to.include('Components mirrored from the lane (2 of 5):');
+    expect(rendered).to.include('component-with-a-realistic-name-1');
+    expect(rendered).to.include('Also on this lane, from other scopes (3)');
+    expect(rendered).to.include('package dependencies');
+    expect(rendered).to.include('`other.scope/namespace/foreign-component-2`');
+    // The foreign entries must not appear in the mirrored list's id/head format.
+    expect(rendered).to.not.include('`other.scope/namespace/foreign-component-0` @');
+  });
+
+  it('the foreign section is capped like the mirrored list, so the body stays inside the host limit', () => {
+    const rendered = body(2, 100);
+    expect(rendered).to.include('foreign-component-19');
+    expect(rendered).to.not.include('foreign-component-20`');
+    expect(rendered).to.include('and 80 more');
+    expect(body(2000, 3000).length).to.be.below(60000);
+  });
 });
 
+// These outcomes apply ONLY to a lane with no own-scope components at all — a lane that merely
+// includes foreign components is reconciled over its own-scope slice and never reaches them.
 describe('cross-scope outcome messages', () => {
   const DEFAULT_SCOPE = 'acme.shop';
   const FOREIGN = ['other.scope/comp2'];
 
   it('an enumerated lane is SKIPPED, in the vocabulary of a healthy run', () => {
     const summary = crossScopeSkipSummary('my-lane', FOREIGN, DEFAULT_SCOPE);
-    expect(summary).to.match(/^my-lane -> skipped \(cross-scope lane: /);
+    expect(summary).to.match(/^my-lane -> skipped \(nothing to mirror: /);
     expect(summary).to.include('no branch created');
     // A HALTED/REFUSED marker in this line would flip the exit code of a healthy repository.
     expect(summary).to.not.include('HALTED');
@@ -182,8 +243,8 @@ describe('cross-scope outcome messages', () => {
 
   it('an explicitly requested lane is REFUSED, with the reason and the "nothing was written" promise', () => {
     const refusal = crossScopeRefusal(FOREIGN, DEFAULT_SCOPE);
-    expect(refusal).to.include('cross-scope lane: components from scope(s) other.scope');
-    expect(refusal).to.include("not supported yet — see the docs' Cross-scope lanes section");
+    expect(refusal).to.include('nothing to mirror: every component is from scope(s) other.scope');
+    expect(refusal).to.include("See the docs' Cross-scope lanes section");
     expect(refusal).to.include('No branch was created and nothing was written');
   });
 
@@ -193,9 +254,9 @@ describe('cross-scope outcome messages', () => {
     expect(refusal).to.not.include('No branch was created');
   });
 
-  it('a lane that became cross-scope mid-flight names the branch it can no longer converge with', () => {
+  it('a mirrored lane whose own slice emptied names the branch it can no longer converge with', () => {
     const reason = crossScopeMidFlightHaltReason('my-lane', FOREIGN, DEFAULT_SCOPE);
-    expect(reason).to.include('lane became cross-scope after it was mirrored onto my-lane');
+    expect(reason).to.include('every acme.shop component left the lane after it was mirrored onto my-lane');
     expect(reason).to.include('can no longer be reconciled automatically');
   });
 });
@@ -598,6 +659,15 @@ describe('executeExportBranch bails when the lane moved since planning', () => {
 
   it('an unmoved lane proceeds to the probe', async () => {
     const { run, touched } = stubExport(L1, L1);
+    const summary = await run();
+    expect(summary).to.include('my-lane -> noop (converged)');
+    expect(touched).to.deep.equal(['status']);
+  });
+
+  it('a lane whose only movement is a foreign head proceeds — foreign heads are not this mirror to diverge', async () => {
+    const planned = [...L1, comp('other.scope/comp2', 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee5')];
+    const current = [...L1, comp('other.scope/comp2', 'fffffffffffffffffffffffffffffffffffffff6')];
+    const { run, touched } = stubExport(current, planned);
     const summary = await run();
     expect(summary).to.include('my-lane -> noop (converged)');
     expect(touched).to.deep.equal(['status']);

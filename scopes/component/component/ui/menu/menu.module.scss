@@ -9,6 +9,27 @@
   min-width: 0;
 }
 
+.topBarMinimal {
+  @media screen and (max-width: $br-md) {
+    // The breadcrumb owns the remaining mobile space, while this menu keeps the intrinsic width
+    // of its pinned actions and right-side controls.
+    flex: 0 0 auto;
+    width: auto;
+
+    // Pinned actions already include their own touch-target spacing, so the desktop gutter before
+    // version controls is unnecessary here and can be returned to the component breadcrumb.
+    .rightSide {
+      padding-left: 0;
+
+      // Keep the established nested right-side structure for non-minimal consumers, including
+      // custom RightNode integrations, but remove its extra layout box where mobile space is scarce.
+      > .rightSide {
+        display: contents;
+      }
+    }
+  }
+}
+
 .leftSide {
   display: flex;
   align-items: center;
@@ -17,48 +38,51 @@
   min-width: 0;
 }
 
-// Minimal mode, mobile: one 46px row can't fit breadcrumb + nav tabs + pinned widgets +
-// version dropdown, and since only the nav can shrink, ResponsiveNavbar collapses every tab
-// (Overview / Preview) into an overflow dropdown that itself gets clipped — leaving no way to
-// reach the preview. `display: contents` promotes this bar's children into the workspace
-// top bar's wrapping flex row (see workspace.module.scss), producing two rows:
-// back + breadcrumb + pinned widgets + right-side actions, then the nav tabs at full width.
-.topBarMinimal {
+.leftSideMinimal {
   @media screen and (max-width: $br-md) {
-    display: contents;
+    // The compact More menu owns its intrinsic width; pinned actions follow as siblings.
+    flex: 0 0 auto;
+  }
+}
 
-    > .leftSide {
-      order: 10;
-      flex: 1 0 100%;
-      box-sizing: border-box;
-      height: 40px;
-      overflow-x: auto;
-      padding: 0 8px 0 4px;
+.minimalMoreNav {
+  display: none;
 
-      // ResponsiveNavbar hides any tab that doesn't fit its container and reserves extra room
-      // for its "…" overflow button. Sizing the nav to its content makes the width check always
-      // pass (the row scrolls instead), and the now-useless overflow button is dropped so its
-      // reserved width can't hide the last tab.
-      nav {
-        min-width: max-content;
+  @media screen and (max-width: $br-md) {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+}
 
-        > div:last-child {
-          display: none;
-        }
-      }
-    }
+.minimalMoreButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
 
-    // the pinned widgets carry an inline `height: 100%`, which in the wrapped two-row bar
-    // resolves against the full (two-row) height and inflates the first row until the nav row
-    // is pushed outside the bar, over the page content — pin every first-row item to the bar
-    // height instead
-    > :not(.leftSide) {
-      height: 46px !important;
-    }
+  &:hover {
+    background-color: var(--bit-bg-heavy);
+  }
 
-    > .rightSide {
-      margin-left: auto;
-    }
+  > img {
+    width: 16px;
+  }
+}
+
+.minimalMenuItem {
+  padding: 0;
+
+  > * {
+    width: 100%;
+  }
+}
+
+.hideMinimalMobileNav {
+  @media screen and (max-width: $br-md) {
+    display: none;
   }
 }
 

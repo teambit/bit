@@ -76,6 +76,15 @@ export const DEPS_GRAPH = 'deps-graph';
 export const DISABLE_CAPSULE_OPTIMIZATION = 'disable-capsule-optimization';
 
 /**
+ * Allow `bit delete --hard` to run without an interactive confirmation (e.g. in CI scripts and
+ * e2e tests). Without this feature enabled, hard-delete must be confirmed by a human in an
+ * interactive terminal: `--silent` doesn't skip its prompt, and non-interactive sessions
+ * (no TTY, CI, AI agents) are blocked. Enable with `BIT_FEATURES=hard-delete` or
+ * `bit config set features=hard-delete`.
+ */
+export const HARD_DELETE_FEATURE = 'hard-delete';
+
+/**
  * Opt-in to the automatic pruning of the global capsules cache (bounds its disk usage by
  * deleting stale workspace/aspect/scope capsules once per ~24h). Experimental — gated until
  * it's validated in the wild. Enable with `BIT_FEATURES=capsule-auto-prune` or
