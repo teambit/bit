@@ -7653,7 +7653,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@18.3.1)(react@18.3.1)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@18.3.1)(react@18.3.1)
@@ -8715,7 +8715,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@19.2.7)(react@19.2.7)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@19.2.7)(react@19.2.7)
@@ -9777,7 +9777,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@18.3.1)(react@18.3.1)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@18.3.1)(react@18.3.1)
@@ -10836,7 +10836,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@18.3.1)(react@18.3.1)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@18.3.1)(react@18.3.1)
@@ -11889,7 +11889,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@19.2.7)(react@19.2.7)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@19.2.7)(react@19.2.7)
@@ -12924,7 +12924,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@19.2.7)(react@19.2.7)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@19.2.7)(react@19.2.7)
@@ -13959,7 +13959,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@19.2.7)(react@19.2.7)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@19.2.7)(react@19.2.7)
@@ -15006,7 +15006,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@19.2.7)(react@19.2.7)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@19.2.7)(react@19.2.7)
@@ -16044,7 +16044,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@19.2.7)(react@19.2.7)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@19.2.7)(react@19.2.7)
@@ -17061,7 +17061,7 @@ importers:
         version: file:scopes/toolbox/url/query-string(react-dom@19.2.7)(react@19.2.7)
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server(react-dom@19.2.7)(react@19.2.7)
@@ -19835,6 +19835,9 @@ importers:
       array-difference:
         specifier: 0.0.2
         version: 0.0.2
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -36904,6 +36907,8 @@ packages:
 
   '@teambit/tracker@file:scopes/component/tracker':
     resolution: {directory: scopes/component/tracker, type: directory}
+    peerDependencies:
+      chai: 5.2.1
 
   '@teambit/ts-server@file:scopes/typescript/ts-server':
     resolution: {directory: scopes/typescript/ts-server, type: directory}
@@ -91547,7 +91552,7 @@ snapshots:
       - react
       - react-dom
 
-  '@teambit/tracker@file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)':
+  '@teambit/tracker@file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
@@ -91564,6 +91569,7 @@ snapshots:
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       array-difference: 0.0.2
+      chai: 4.3.0
       chalk: 4.1.2
       firstline: 2.0.2
       fs-extra: 10.0.0
@@ -91583,7 +91589,7 @@ snapshots:
       - react-dom
       - supports-color
 
-  '@teambit/tracker@file:scopes/component/tracker(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
+  '@teambit/tracker@file:scopes/component/tracker(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
@@ -91600,6 +91606,44 @@ snapshots:
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       array-difference: 0.0.2
+      chai: 4.3.0
+      chalk: 4.1.2
+      firstline: 2.0.2
+      fs-extra: 10.0.0
+      glob: 13.0.0
+      ignore: 3.3.10
+      lodash: 4.17.21
+      oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
+      oxlint-tsgolint: 0.17.0
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+      string-format: 0.5.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - domexception
+      - encoding
+      - graphql
+      - react
+      - react-dom
+      - supports-color
+
+  '@teambit/tracker@file:scopes/component/tracker(@types/react@19.2.18)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/component-id': 1.2.4
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/legacy-bit-id': 1.1.3
+      '@teambit/legacy.analytics': file:components/legacy/analytics(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/legacy.constants': file:components/legacy/constants(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/legacy.consumer': file:components/legacy/consumer(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/legacy.logger': file:components/legacy/logger(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/legacy.utils': file:components/legacy/utils(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      array-difference: 0.0.2
+      chai: 5.2.1
       chalk: 4.1.2
       firstline: 2.0.2
       fs-extra: 10.0.0
@@ -103156,6 +103200,7 @@ snapshots:
       es-object-atoms: 1.1.2
       es-set-tostringtag: 2.1.0
       es-to-primitive: 1.3.4
+      for-each: 0.3.5
       function.prototype.name: 1.2.0
       get-intrinsic: 1.3.0
       get-proto: 1.0.1
