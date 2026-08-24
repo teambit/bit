@@ -56,6 +56,7 @@ export class MergeStatusProvider {
     if (!this.currentLane && this.otherLane) {
       await this.importer.importObjectsFromMainIfExist(this.otherLane.toBitIds().toVersionLatest());
     }
+    await this.loadCurrentComponentsIfExistOnWorkspace(bitIds);
     const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id)
     );
@@ -113,6 +114,23 @@ export class MergeStatusProvider {
 
     results.push(...compStatusNotNeedMerge);
     return results;
+  }
+
+  /**
+   * load the components that exist in the workspace through the workspace loader, which loads their envs
+   * before loading the components themselves, and populates the loaders caches with correctly-built components.
+   * without this, getComponentStatusBeforeMergeAttempt loads each component individually via the legacy loader,
+   * which can load a component before its env is loaded into Harmony. the env's dependency-policy is then not
+   * applied, the recalculated component-hash differs from the model, and the merge fails with a
+   * "component has config changes" false positive, even though bit-status/bit-diff show no changes.
+   */
+  private async loadCurrentComponentsIfExistOnWorkspace(bitIds: ComponentID[]) {
+    if (!this.workspace) return;
+    const bitMap = this.workspace.consumer.bitMap;
+    const existingIds = compact(bitIds.map((id) => bitMap.getComponentIdIfExist(id, { ignoreVersion: true })));
+    if (!existingIds.length) return;
+    // don't throw. errors during component-load are handled later per-component when calculating its status
+    await this.workspace.getMany(existingIds, undefined, false);
   }
 
   private async getComponentMergeStatus(
