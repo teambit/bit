@@ -56,7 +56,9 @@ export class MergeStatusProvider {
     if (!this.currentLane && this.otherLane) {
       await this.importer.importObjectsFromMainIfExist(this.otherLane.toBitIds().toVersionLatest());
     }
-    await this.loadCurrentComponentsIfExistOnWorkspace(bitIds);
+    // pre-load in one batch through the grouped workspace loader (envs first), so the modified-status
+    // calculated per component below works on correctly-built components. see workspace.preloadComponents.
+    if (this.workspace) await this.workspace.preloadComponents(bitIds);
     const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id)
     );
@@ -114,31 +116,6 @@ export class MergeStatusProvider {
 
     results.push(...compStatusNotNeedMerge);
     return results;
-  }
-
-  /**
-   * load the components that exist in the workspace through the workspace loader, which loads their envs
-   * before loading the components themselves, and populates the loaders caches with correctly-built components.
-   * without this, getComponentStatusBeforeMergeAttempt loads each component individually via the legacy loader,
-   * which can load a component before its env is loaded into Harmony. the env's dependency-policy is then not
-   * applied, the recalculated component-hash differs from the model, and the merge fails with a
-   * "component has config changes" false positive, even though bit-status/bit-diff show no changes.
-   */
-  private async loadCurrentComponentsIfExistOnWorkspace(bitIds: ComponentID[]) {
-    if (!this.workspace) return;
-    const bitMap = this.workspace.consumer.bitMap;
-    const existingIds = compact(bitIds.map((id) => bitMap.getComponentIdIfExist(id, { ignoreVersion: true })));
-    if (!existingIds.length) return;
-    try {
-      // don't throw on component-load failures. they are handled later per-component when calculating its status
-      await this.workspace.getMany(existingIds, undefined, false);
-    } catch (err: any) {
-      // the loader can still throw for errors it does not classify as invalid-component errors. this pre-load
-      // is a best-effort cache-warming, it should never fail the merge. a component that genuinely fails to
-      // load will surface a proper error later in the per-component flow, and a component that the merge
-      // legitimately skips without loading (e.g. locally-removed) should not fail it here.
-      this.logger.warn(`failed pre-loading components for merge, continuing without the pre-loaded cache`, err);
-    }
   }
 
   private async getComponentMergeStatus(

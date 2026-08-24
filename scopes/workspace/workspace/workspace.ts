@@ -182,6 +182,7 @@ const DEFAULT_VENDOR_DIR = 'vendor';
  */
 export class Workspace implements ComponentFactory {
   private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
+  private componentsBeingPreloaded = new Set<string>(); // guard against re-entrance during preloadComponents
   priority = true;
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
@@ -1225,6 +1226,34 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
     this.logger.debug(`getMany, completed. ${components.length} components`);
     return components;
+  }
+
+  /**
+   * pre-load the given components (only those that exist in the workspace) through the grouped workspace
+   * loader, which loads their envs before the components themselves. this populates the loaders caches with
+   * correctly-built components, making them the single source of truth for subsequent loads, e.g. by the
+   * legacy loader when calculating the modified-status. loading a component cold outside this pipeline (a
+   * single-component load) may miss the env's dependency-policy, in which case the recalculated component
+   * hash differs from the model and the component is mistakenly marked as modified (config changes).
+   * this method never throws. a component that fails to load here will surface a proper error when loaded
+   * later by the calling flow, and a component the calling flow legitimately skips without loading
+   * (e.g. locally-removed) should not fail it here.
+   */
+  async preloadComponents(ids: ComponentID[]): Promise<void> {
+    const existingIds = compact(
+      ids.map((id) => this.consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true }))
+    );
+    const idsToLoad = existingIds.filter((id) => !this.componentsBeingPreloaded.has(id.toString()));
+    if (!idsToLoad.length) return;
+    idsToLoad.forEach((id) => this.componentsBeingPreloaded.add(id.toString()));
+    try {
+      await this.getMany(idsToLoad, undefined, false);
+    } catch (err: any) {
+      // the loader can still throw for errors it does not classify as invalid-component errors
+      this.logger.warn(`failed pre-loading components, continuing without the pre-loaded cache`, err);
+    } finally {
+      idsToLoad.forEach((id) => this.componentsBeingPreloaded.delete(id.toString()));
+    }
   }
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
@@ -2710,6 +2739,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   async getManyComponentsStatuses(ids: ComponentID[]): Promise<ComponentStatusResult[]> {
+    // pre-load in one batch. otherwise, each getComponentStatusById pre-loads its component individually
+    await this.preloadComponents(ids);
     return this.componentStatusLoader.getManyComponentsStatuses(ids);
   }
 

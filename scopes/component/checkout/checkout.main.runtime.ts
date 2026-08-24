@@ -85,6 +85,9 @@ export class CheckoutMain {
     const addedComponents = await this.restoreMissingComponents(checkoutProps);
     const newComponents = await this.addNewComponents(checkoutProps);
     const bitIds = ComponentIdList.fromArray(ids || []);
+    // pre-load the components through the grouped workspace loader (envs first), so the modified-status
+    // calculated per component below works on correctly-built components. see workspace.preloadComponents.
+    await this.workspace.preloadComponents(bitIds);
     // don't use Promise.all, it loads the components and this operation must be in sequence.
     const allComponentStatusBeforeMerge = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id, checkoutProps)

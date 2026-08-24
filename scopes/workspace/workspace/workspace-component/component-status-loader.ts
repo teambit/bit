@@ -64,6 +64,11 @@ export class ComponentStatusLoader {
   }
 
   private async getStatus(id: ComponentID) {
+    // make sure the component is loaded through the grouped workspace loader (envs first), so the
+    // modified-status below is calculated on a correctly-built component. without it, the load from
+    // the file-system below may build the component without its env's dependency-policy applied and
+    // mistakenly mark it as modified. (no-op if the component was already loaded or is not in the workspace)
+    await this.workspace.preloadComponents([id]);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const status: ComponentStatusLegacy = {};
     const componentFromModel: ModelComponent | undefined = await this.consumer.scope.getModelComponentIfExist(id);
