@@ -7,6 +7,12 @@ import type { Compiler, Configuration, StatsCompilation, StatsAsset } from 'webp
 import { sep } from 'path';
 
 type AssetsMap = { [assetId: string]: Asset };
+
+/**
+ * @deprecated duplicated by `@teambit/webpack.webpack-bundler`'s own `WebpackBundler`, which is
+ * what the react/node/aspect envs actually build with now. Use that package instead - depending on
+ * both pulls in two independently-resolved webpack instances.
+ */
 export class WebpackBundler implements Bundler {
   constructor(
     /**

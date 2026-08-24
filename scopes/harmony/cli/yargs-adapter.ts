@@ -58,6 +58,11 @@ export class YargsAdapter implements CommandModule {
 
   static optionsToBuilder(command: Command): { [key: string]: Options } {
     const flagsData = getFlagsData(command);
+    // yargs options are global by default, which would let a command's own flags reach its
+    // sub-commands. a sub-command may declare the same flag name with a different arity - e.g.
+    // `bit lane --remote <scope>` takes a value where `bit lane remove --remote` is a boolean - and
+    // the parent's definition would shadow it. the global options below stay global on purpose.
+    const isLocalToCommand = Boolean(command.commands?.length);
     const option = flagsData.reduce((acc, flag) => {
       acc[flag.name] = {
         alias: flag.alias,
@@ -65,6 +70,7 @@ export class YargsAdapter implements CommandModule {
         group: STANDARD_GROUP,
         type: flag.type,
         requiresArg: flag.requiresArg,
+        ...(isLocalToCommand ? { global: false } : {}),
       } as Options;
       return acc;
     }, {});

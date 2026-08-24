@@ -169,7 +169,7 @@ the remote scope "${scopeName}" was not found`);
       throw err;
     }
     try {
-      return await remote.fetch(ids, this.getFetchOptionsPerRemote(scopeName), this.context);
+      return await this.fetchFromRemoteWithRetry(remote, ids, scopeName);
     } catch (err: any) {
       if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
         logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
@@ -180,6 +180,30 @@ the remote scope "${scopeName}" was not found`);
         throw err;
       }
       return null;
+    }
+  }
+
+  /**
+   * a fetch is read-only and idempotent, so transient server failures (UnexpectedNetworkError,
+   * e.g. a 500 from a remote under load) are worth a couple of retries before failing the whole
+   * command — a single transient 500 used to kill hour-long CI builds (`bit ci pr` on a lane with
+   * hundreds of components). other error types (auth, scope-not-found) still throw immediately.
+   */
+  private async fetchFromRemoteWithRetry(remote: Remote, ids: string[], scopeName: string): Promise<ObjectItemsStream> {
+    const maxAttempts = 3;
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        return await remote.fetch(ids, this.getFetchOptionsPerRemote(scopeName), this.context);
+      } catch (err: any) {
+        if (!(err instanceof UnexpectedNetworkError) || attempt >= maxAttempts) throw err;
+        const delayMs = 3000 * 4 ** (attempt - 1); // 3s, then 12s
+        logger.warn(
+          `fetch from "${scopeName}" failed with a network error (attempt ${attempt}/${maxAttempts}), retrying in ${
+            delayMs / 1000
+          }s. error: ${err.message}`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
     }
   }
 

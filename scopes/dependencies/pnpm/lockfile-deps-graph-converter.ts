@@ -2,7 +2,6 @@ import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
-import type { getLockfileImporterId as GetLockfileImporterId } from '@pnpm/lockfile.fs';
 import { pick, partition } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -31,16 +30,15 @@ type ResolveFunction = (
   opts: { lockfileDir?: string; projectDir?: string; preferredVersions?: Record<string, unknown> }
 ) => Promise<{ resolution?: Record<string, unknown> }>;
 
-// @pnpm/deps.path and @pnpm/lockfile.fs are ESM-only; load them through a .cjs
-// shim so the require() chain in the build capsule's mocha runner doesn't trip
-// on the transitive ESM import. Call `init()` once before invoking the public
-// converters; helpers reach for these module-level slots synchronously.
+// @pnpm/deps.path is ESM-only; load it through a .cjs shim so the require()
+// chain in the build capsule's mocha runner doesn't trip on the transitive ESM
+// import. Call `init()` once before invoking the public converters; helpers
+// reach for this module-level slot synchronously.
 let dp!: typeof Dp;
-let getLockfileImporterId!: typeof GetLockfileImporterId;
 let loading: Promise<void> | undefined;
 
 function ensureInitialized(): void {
-  if (!dp || !getLockfileImporterId) {
+  if (!dp) {
     throw new Error('lockfile-deps-graph-converter: await init() before calling the converters');
   }
 }
@@ -48,13 +46,20 @@ function ensureInitialized(): void {
 export function init(): Promise<void> {
   loading ??= (async () => {
     const { loadEsm } = require('./load-pnpm-esm.cjs') as {
-      loadEsm: () => Promise<{ dp: typeof Dp; getLockfileImporterId: typeof GetLockfileImporterId }>;
+      loadEsm: () => Promise<{ dp: typeof Dp }>;
     };
     const m = await loadEsm();
     dp = m.dp;
-    getLockfileImporterId = m.getLockfileImporterId;
   })();
   return loading;
+}
+
+/**
+ * The lockfile's id for the importer at `projectDir`: its POSIX-normalized
+ * path relative to the lockfile root, or `.` for the root project itself.
+ */
+function getLockfileImporterId(lockfileDir: string, projectDir: string): string {
+  return normalizePath(path.relative(lockfileDir, projectDir)) || '.';
 }
 
 function convertLockfileToGraphFromCapsule(

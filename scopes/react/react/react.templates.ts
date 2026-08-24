@@ -1,7 +1,6 @@
 import {
   ReactComponentTemplate,
   ReactHookTemplate,
-  ReactWebpackTemplate,
   ReactViteTemplate,
   ReactJSComponentTemplate,
   ReactEnvTemplate,
@@ -17,7 +16,6 @@ const templateListHandler = TemplateList.from([
   ReactHookTemplate.from({ env: 'bitdev.react/react-env' }),
   ThemeTemplate.from({ env: 'bitdev.react/react-env' }),
   // ReactContextTemplate.from({ env: 'bitdev.react/react-env' }),
-  ReactWebpackTemplate.from({ env: 'bitdev.react/react-env' }),
   // ReactWebpackAppTemplate.from({ env: 'bitdev.react/react-env' }),
   ReactJSComponentTemplate.from({ env: 'bitdev.react/react-env' }),
   ReactEnvTemplate.from(),

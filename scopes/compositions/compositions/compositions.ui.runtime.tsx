@@ -99,9 +99,18 @@ export class CompositionsUI {
       usePreviewSandboxSlot,
       usePreviewPropsSlot
     );
+    const pinnedSection = new CompositionsSection(
+      compositions,
+      { menuBarWidgetSlot: compositions.menuBarWidgetSlot },
+      emptyStateSlot,
+      usePreviewSandboxSlot,
+      usePreviewPropsSlot,
+      true
+    );
     const compositionCompare = new CompositionCompareSection(compositions);
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
+    component.registerPinnedWidget(pinnedSection.navigationLink, pinnedSection.order);
     componentCompare.registerNavigation(compositionCompare);
     componentCompare.registerRoutes([compositionCompare.route]);
     // Inline preview tab for the redesigned ComponentComparePage / lane-compare. Owned by the
