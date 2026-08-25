@@ -1,5 +1,5 @@
 import type { ComponentMap } from '@teambit/component';
-import { join, relative } from 'path';
+import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
 import normalizePath from 'normalize-path';
 import objectHash from 'object-hash';
@@ -61,26 +61,17 @@ export function generateLink(
     return { envId, varName, resolveFrom };
   });
   const moduleImports = getModuleImports(moduleLinks, tempPackageDir);
-  // The link file is the graph parent of every component module it imports. Accepting
-  // those modules here gives non-react-refresh updates a hot boundary: a module whose
-  // exports are not all React components (e.g. a composition exporting a live-controls
-  // config object) is not a refresh boundary, so its update bubbles up — without this
-  // accept it reaches the entry and forces a full page reload. Refresh-boundary modules
-  // still self-accept first (state-preserving); this only catches what they can't.
-  // In source mode the imports are workspace-relative requests; in dist mode accept the
-  // exact specifiers the import() calls use so they resolve to the same modules.
-  const acceptedDependencies = Array.from(
-    new Set([
-      ...componentLinks.flatMap((link) =>
-        link.modules.map((module) =>
-          useSource ? toWebpackRequestId(module.resolveFrom, workspacePath) : module.resolveFrom
-        )
-      ),
-      ...(useSource && moduleImports.tempFilePath
-        ? [toWebpackRequestId(moduleImports.tempFilePath, workspacePath)]
-        : []),
-    ])
-  );
+  // The link file is the graph parent of every component module it imports, which makes
+  // it the hot boundary for updates react-refresh can't take (a module whose exports are
+  // not all React components — e.g. a composition exporting a live-controls config —
+  // is not a refresh boundary, so its update bubbles up; unhandled, it reaches the entry
+  // and forces a full page reload). The boundary must be a no-argument self-accept:
+  // listing the imported modules explicitly makes the bundler resolve every listed file
+  // into a dependency of this entry — hundreds of composition/docs modules get pulled
+  // into the initial build, which bloats it and breaks lazy per-component loading
+  // (webpack-served envs visibly regressed). Self-accept adds no dependencies: a
+  // bubbling child disposes and re-executes this module, and the dispose data below
+  // marks the re-run so the bootstrap re-initializes and notifies the preview UI.
 
   const sourceModeBootstrap = `
 let __bitInitialized = false;
@@ -109,19 +100,19 @@ async function __bitMaybeInitialize(force = false, shouldNotify = false) {
   }
 }
 
-// The accept/dispose calls must be the literal \`import.meta.webpackHot.accept(...)\`
-// member expression: bundlers create the hot-accept dependencies by static analysis
-// of exactly that form. Calling through an alias compiles the dependency list into
-// plain runtime strings that map to no module id — updates bubble past this file and
-// force a full reload.
+// The literal \`import.meta.webpackHot\` member expression is required: bundlers wire
+// hot acceptance by static analysis of exactly that form; an alias is invisible to it
+// and updates bubble past this file into a full reload.
 if (import.meta.webpackHot) {
-  import.meta.webpackHot.accept(${JSON.stringify(acceptedDependencies)}, () => {
-    __bitInitialized = false;
-    void __bitMaybeInitialize(true, true);
+  import.meta.webpackHot.accept();
+  import.meta.webpackHot.dispose((data) => {
+    data.bitHmrRerun = true;
   });
-  import.meta.webpackHot.dispose(() => {
-    __bitInitialized = false;
-  });
+}
+if (import.meta.webpackHot && import.meta.webpackHot.data && import.meta.webpackHot.data.bitHmrRerun) {
+  // this evaluation is an HMR re-execution after a child module updated —
+  // re-link the fresh modules and tell the preview UI to re-render.
+  void __bitMaybeInitialize(true, true);
 }
 
 // Defer source-mode initialization until after webpack marks the current entry
@@ -157,17 +148,19 @@ async function __bitInitializeOnce(force = false, shouldNotify = false) {
   }
 }
 
-// Literal \`import.meta.webpackHot\` member expressions on purpose — see the
-// source-mode bootstrap note: an alias breaks the bundler's static hot-accept
-// analysis and the dependency list degrades to inert runtime strings.
+// Literal \`import.meta.webpackHot\` member expressions on purpose — an alias breaks
+// the bundler's static hot-accept analysis. No-argument self-accept on purpose too —
+// see the acceptedDependencies note in generate-link.ts: listing modules would pull
+// them all into this entry's build.
 if (import.meta.webpackHot) {
-  import.meta.webpackHot.accept(${JSON.stringify(acceptedDependencies)}, () => {
-    __bitInitialized = false;
-    void __bitInitializeOnce(true, true);
+  import.meta.webpackHot.accept();
+  import.meta.webpackHot.dispose((data) => {
+    data.bitHmrRerun = true;
   });
-  import.meta.webpackHot.dispose(() => {
-    __bitInitialized = false;
-  });
+}
+if (import.meta.webpackHot && import.meta.webpackHot.data && import.meta.webpackHot.data.bitHmrRerun) {
+  // HMR re-execution after a child module updated — re-link and re-render.
+  void __bitInitializeOnce(true, true);
 }
 
 if (__bitThumbnailDefer()) {
@@ -314,21 +307,6 @@ function getEnvVarName(envId: string) {
   const envNameFormatted = camelcase(envId.replace('@', '').replace('.', '-').replace(/\//g, '-'));
   const varName = `${envNameFormatted}MainModule`;
   return varName;
-}
-
-function toWebpackRequestId(filePath: string, workspacePath?: string): string {
-  if (!workspacePath) return filePath;
-  const normalizedWorkspacePath = normalizePath(workspacePath);
-  const normalizedFilePath = normalizePath(filePath);
-  if (normalizedFilePath === normalizedWorkspacePath) return '.';
-  if (
-    normalizedFilePath.startsWith(`${normalizedWorkspacePath}/`) ||
-    normalizedFilePath.startsWith(`${normalizedWorkspacePath}\\`)
-  ) {
-    const relPath = normalizePath(relative(workspacePath, filePath));
-    return relPath.startsWith('.') ? relPath : `./${relPath}`;
-  }
-  return filePath;
 }
 
 function getModuleImports(
