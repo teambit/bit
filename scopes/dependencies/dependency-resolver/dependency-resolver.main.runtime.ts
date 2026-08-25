@@ -283,7 +283,10 @@ export class DependencyResolverMain {
     if (this.config.enableGlobalVirtualStore != null) return this.config.enableGlobalVirtualStore;
     // the config store surfaces hand-edited values as booleans and CLI-set values as strings
     // (see isolatedCapsules); accept both, plus '1' for parity with the env var
-    const fromGlobalConfig = this.configStore.getConfig(CFG_ENABLE_GLOBAL_VIRTUAL_STORE) as boolean | string | undefined;
+    const fromGlobalConfig = this.configStore.getConfig(CFG_ENABLE_GLOBAL_VIRTUAL_STORE) as
+      | boolean
+      | string
+      | undefined;
     return fromGlobalConfig === true || fromGlobalConfig === 'true' || fromGlobalConfig === '1';
   }
 
@@ -1137,8 +1140,23 @@ export class DependencyResolverMain {
 
   private updateConfigPolicy(workspacePolicy: WorkspacePolicy) {
     const workspacePolicyObject = workspacePolicy.toConfigObject();
-    // Use assign from comment-json to preserve comments when merging policy
-    assign(this.config.policy, workspacePolicyObject);
+    if (!this.config.policy) {
+      this.config.policy = workspacePolicyObject;
+    } else {
+      // merge each policy field (dependencies/peerDependencies) into its existing object rather than
+      // replacing it wholesale. a shallow assign would drop comments attached to entries inside the
+      // field object, as they are stored as symbol properties on that object. deleting the keys keeps
+      // the comment symbols in place, and the assign re-adds the entries in the new (sorted) order.
+      for (const [fieldName, updatedEntries] of Object.entries(workspacePolicyObject)) {
+        const existingEntries = this.config.policy[fieldName];
+        if (!existingEntries || typeof existingEntries !== 'object' || Array.isArray(existingEntries)) {
+          this.config.policy[fieldName] = updatedEntries;
+          continue;
+        }
+        Object.keys(existingEntries).forEach((key) => delete existingEntries[key]);
+        assign(existingEntries, updatedEntries);
+      }
+    }
     this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
       mergeIntoExisting: true,
       ignoreVersion: true,
