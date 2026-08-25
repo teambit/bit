@@ -106,7 +106,10 @@ function getPoolSize(): number {
 
 export function isPooledPreviewEnabled(): boolean {
   if (typeof window === 'undefined') return false;
-  return new URLSearchParams(window.location.search).get('batchedPreviews') === 'true';
+  // Pooled previews are the default. An opt-in query param doesn't survive in-app
+  // navigation (route changes rewrite the search string), so grids silently fell
+  // back to one-iframe-per-card mid-session. `batchedPreviews=false` opts out.
+  return new URLSearchParams(window.location.search).get('batchedPreviews') !== 'false';
 }
 
 /**
@@ -358,11 +361,7 @@ function flush() {
       if (!pooled) {
         pooled = free.pop();
         if (pooled) assign(pooled, entry);
-        else if (
-          pool.length < poolSize &&
-          booting < maxBooting() &&
-          createdThisFlush < maxNewFramesPerFlush()
-        ) {
+        else if (pool.length < poolSize && booting < maxBooting() && createdThisFlush < maxNewFramesPerFlush()) {
           pooled = createFrame(serverUrl, entry);
           createdThisFlush += 1;
         }
