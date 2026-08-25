@@ -1,0 +1,13 @@
+/**
+ * @see https://bit.dev/reference/typescript/typescript-config
+ */
+{
+  "extends": "@teambit/react.react-env/dist/config/tsconfig.json",
+  "compilerOptions": {
+    // match the relaxations used by core-aspect-env and the node envs: capsule
+    // builds type-check foreign components' sources (see core-react-env.bit-env.ts),
+    // and those sources are only clean under these rules.
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false
+  }
+}
