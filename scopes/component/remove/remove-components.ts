@@ -155,7 +155,10 @@ If you understand the risks and wish to proceed with the removal, please use the
   const idsToCleanFromWorkspace = ComponentIdList.fromArray(
     idsToRemove.filter((id) => newComponents.hasWithoutVersion(id))
   );
-  const { components: componentsToRemove } = await consumer.loadComponents(idsToRemove, false);
+  // load through the workspace aspect (and not consumer.loadComponents) to get the components
+  // from the env-first grouped load pipeline. see workspace-component-loader.shouldDelegateToGetMany.
+  const workspaceComponents = await workspace.getMany(idsToRemove, undefined, false);
+  const componentsToRemove = workspaceComponents.map((workspaceComponent) => workspaceComponent.state._consumer);
   const { removedComponentIds, missingComponents, dependentBits, removedFromLane } = await consumer.scope.removeMany(
     idsToRemoveFromScope,
     force,

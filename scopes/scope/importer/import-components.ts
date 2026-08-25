@@ -965,7 +965,10 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
     if (!componentStatus.modified) return mergeStatus;
     const componentModel = await this.consumer.scope.getModelComponent(component.id);
     const existingBitMapBitId = this.consumer.bitMap.getComponentId(component.id, { ignoreVersion: true });
-    const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
+    // load through the workspace aspect (and not consumer.loadComponent) to get the component
+    // from the env-first grouped load pipeline. see workspace-component-loader.shouldDelegateToGetMany.
+    const fsWorkspaceComponent = await this.workspace.get(existingBitMapBitId);
+    const fsComponent = fsWorkspaceComponent.state._consumer;
     const currentlyUsedVersion = existingBitMapBitId.version;
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
     const otherComponent: Version = await componentModel.loadVersion(component.id.version, this.consumer.scope.objects);

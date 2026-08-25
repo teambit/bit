@@ -115,8 +115,10 @@ export class ComponentsEjector {
   }
 
   async loadComponentsToEject() {
-    const { components } = await this.consumer.loadComponents(this.idsToEject);
-    this.componentsToEject = components;
+    // load through the workspace aspect (and not consumer.loadComponents) to get the components
+    // from the env-first grouped load pipeline. see workspace-component-loader.shouldDelegateToGetMany.
+    const workspaceComponents = await this.workspace.getMany(this.idsToEject);
+    this.componentsToEject = workspaceComponents.map((workspaceComponent) => workspaceComponent.state._consumer);
   }
 
   async removeComponentsFromNodeModules() {

@@ -889,8 +889,9 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     }
     this.logger.setStatusLine(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
-    // load the components for fixing any out-of-sync issues.
-    await consumer.loadComponents(ComponentIdList.fromArray(parsedIds));
+    // load the components for fixing any out-of-sync issues. loaded through the workspace aspect
+    // (and not consumer.loadComponents) to go through the env-first grouped load pipeline.
+    await this.workspace.getMany(parsedIds);
 
     return throwForLocalOnlyIfNeeded(ComponentIdList.fromArray(parsedIds));
   }

@@ -110,6 +110,12 @@ export class WorkspaceComponentLoader {
   }>;
 
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
+
+  /**
+   * ids currently being loaded through the getMany pipeline on behalf of a single `get` call.
+   * used to break recursion when the pipeline itself asks for the same id. see shouldDelegateToGetMany.
+   */
+  private idsBeingLoadedThroughGetMany = new Set<string>();
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -849,8 +855,14 @@ export class WorkspaceComponentLoader {
       return fromCache;
     }
     span.setAttribute('componentsCache', 'miss');
-    let consumerComponent = legacyComponent;
     const inWs = await this.isInWsIncludeDeleted(id);
+    if (!legacyComponent && this.shouldDelegateToGetMany(id, inWs, useCache, storeInCache, loadOptsWithDefaults)) {
+      const fromGetMany = await this.loadOneThroughGetMany(id);
+      if (fromGetMany) return fromGetMany;
+      // the grouped pipeline didn't yield the component (e.g. an out-of-sync id changed during
+      // the load). fall through so the flow below reports the precise error for the requested id.
+    }
+    let consumerComponent = legacyComponent;
     if (inWs && !consumerComponent) {
       consumerComponent = await loadSpan('consumer-fs-load', { id: id.toString() }, () =>
         this.getConsumerComponent(id, loadOptsWithDefaults)
@@ -866,6 +878,42 @@ export class WorkspaceComponentLoader {
       this.saveInCache(component, loadOptsWithDefaults);
     }
     return component;
+  }
+
+  /**
+   * a cold single-component load resolves the component's env lazily in the middle of its own
+   * load, without the env-first group ordering of the getMany pipeline (see buildLoadGroups).
+   * when the env fails to load at that point, dependency policies silently fall back to defaults,
+   * producing a component with wrong dependency data (which then surfaces as phantom
+   * modifications in status/diff/merge). to keep one source of truth, a plain cache-miss load of
+   * a workspace component is delegated to the grouped pipeline.
+   */
+  private shouldDelegateToGetMany(
+    id: ComponentID,
+    inWs: boolean,
+    useCache: boolean,
+    storeInCache: boolean,
+    loadOpts: ComponentLoadOptions
+  ): boolean {
+    if (!inWs) return false; // scope components load from the model, no dependency-policy calculation
+    if (!useCache || !storeInCache) return false; // getMany always uses and populates the cache
+    // partial-load options are managed by the getMany pipeline itself per load-stage, so only a
+    // full load can be delegated.
+    if (loadOpts.loadExtensions === false || loadOpts.executeLoadSlot === false) return false;
+    // re-entrance from within the pipeline of the same id (e.g. an onLoad subscriber asking for
+    // the component it's calculating) must use the direct flow, otherwise it recurses forever.
+    return !this.idsBeingLoadedThroughGetMany.has(id.toString());
+  }
+
+  private async loadOneThroughGetMany(id: ComponentID): Promise<Component | undefined> {
+    const idStr = id.toString();
+    this.idsBeingLoadedThroughGetMany.add(idStr);
+    try {
+      const { components } = await this.getMany([id]);
+      return components.length === 1 ? components[0] : undefined;
+    } finally {
+      this.idsBeingLoadedThroughGetMany.delete(idStr);
+    }
   }
 
   async getIfExist(componentId: ComponentID) {
