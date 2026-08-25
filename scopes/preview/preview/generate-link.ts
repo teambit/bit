@@ -88,9 +88,11 @@ async function __bitMaybeInitialize(force = false, shouldNotify = false) {
   await initializeModules();
   if (shouldNotify) {
     // Only the active preview dispatches the update event so unrelated previews
-    // don't cause extra rerenders during HMR.
+    // don't cause extra rerenders during HMR. A realm whose hash names no preview
+    // is showing the default one (e.g. overview pages) — it must notify too, or
+    // docs edits never re-render there.
     const activePreview = __bitActivePreviewName();
-    if (activePreview === ${JSON.stringify(prefix)}) {
+    if (activePreview === ${JSON.stringify(prefix)} || activePreview === null) {
       window.dispatchEvent(
         new CustomEvent('bit-preview-modules-updated', {
           detail: { previewName: ${JSON.stringify(prefix)} },
@@ -136,9 +138,11 @@ async function __bitInitializeOnce(force = false, shouldNotify = false) {
   await initializeModules();
   if (shouldNotify) {
     // Only the active preview dispatches the update event so unrelated previews
-    // don't cause extra rerenders during HMR.
+    // don't cause extra rerenders during HMR. A realm whose hash names no preview
+    // is showing the default one (e.g. overview pages) — it must notify too, or
+    // docs edits never re-render there.
     const activePreview = __bitActivePreviewName();
-    if (activePreview === ${JSON.stringify(prefix)}) {
+    if (activePreview === ${JSON.stringify(prefix)} || activePreview === null) {
       window.dispatchEvent(
         new CustomEvent('bit-preview-modules-updated', {
           detail: { previewName: ${JSON.stringify(prefix)} },

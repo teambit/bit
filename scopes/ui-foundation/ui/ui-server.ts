@@ -254,7 +254,9 @@ export class UIServer {
           );
 
           if (!entry) {
-            this.closeUpgradeSocket(socket);
+            // Not this env's route. Every env registers its own upgrade handler on the
+            // shared server and they all see every upgrade — closing here would let
+            // whichever env's handler runs first kill another env's HMR socket.
             return;
           }
 
@@ -281,9 +283,14 @@ export class UIServer {
       router.use((req, res) => {
         try {
           const runtimeEntry = this._componentProxyEntries.get(envId);
-          if (!runtimeEntry?.active) {
-            const reqPath = req.originalUrl || req.url || '';
-            const isScript = /\.js(?:\?.*)?$/i.test(reqPath) || hotUpdateRequestRegex.test(reqPath);
+          const reqPath = req.originalUrl || req.url || '';
+          // Hot-update requests must reach the dev server even mid-compilation — its own
+          // middleware holds them until the build settles. Answering 503/offline here
+          // instead makes the HMR client abort the update ("Failed to fetch update
+          // manifest") whenever a fetch races a rebuild, silently dropping the edit.
+          const isHotUpdate = hotUpdateRequestRegex.test(reqPath);
+          if (!runtimeEntry?.active && !isHotUpdate) {
+            const isScript = /\.js(?:\?.*)?$/i.test(reqPath);
             if (isScript) {
               this.sendPreviewOfflineScript(res);
               return;
@@ -298,8 +305,8 @@ export class UIServer {
           req.url = originalUrl.replace(/([^:])\/\/+/g, '$1/');
           dynamicProxy.web(req, res, { target: entries[0].target }, () => {
             if (res.headersSent) return;
-            const reqPath = req.originalUrl || req.url || '';
-            const isScript = /\.js(?:\?.*)?$/i.test(reqPath) || hotUpdateRequestRegex.test(reqPath);
+            const failedPath = req.originalUrl || req.url || '';
+            const isScript = /\.js(?:\?.*)?$/i.test(failedPath) || hotUpdateRequestRegex.test(failedPath);
             if (isScript) {
               this.sendPreviewOfflineScript(res);
               return;
@@ -386,7 +393,12 @@ export class UIServer {
         return;
       }
 
-      if (!hasComponentProxy) {
+      // Only close upgrades on routes this proxy owns. Other upgrade listeners share
+      // this server — the graphql subscription endpoint most importantly — and they
+      // run in registration order: closing an unrecognized path here races them and
+      // kills their sockets with a 503 (observed: /subscriptions failing whenever
+      // this listener won the race).
+      if (path.startsWith('/preview/') && !hasComponentProxy) {
         this.closeUpgradeSocket(socket);
       }
     });

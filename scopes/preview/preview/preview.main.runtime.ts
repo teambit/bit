@@ -20,7 +20,7 @@ import { CACHE_ROOT } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
-import { writeFileSync, existsSync, mkdirSync, ensureDirSync, writeJSONSync, readdirSync } from 'fs-extra';
+import { writeFileSync, existsSync, mkdirSync, ensureDirSync, writeJSONSync } from 'fs-extra';
 import { join } from 'path';
 import type { PkgMain } from '@teambit/pkg';
 import { PkgAspect } from '@teambit/pkg';
@@ -230,13 +230,6 @@ export class PreviewMain {
   ) {}
 
   private previewService: PreviewService;
-
-  /**
-   * assigned by the provider (kept out of the constructor to avoid growing its
-   * positional parameter list). Used to reach the running dev server of a changed
-   * component so it can be told to rebuild.
-   */
-  bundler?: BundlerMain;
 
   get tempFolder(): string {
     return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
@@ -1178,86 +1171,6 @@ export class PreviewMain {
       dependencyResolver,
       express
     );
-    preview.bundler = bundler;
-
-    // Rebuild the changed component's preview dev server. The compiler writes fresh
-    // dists into node_modules, which bundler watchers treat as immutable — without an
-    // explicit invalidate the running bundle keeps serving stale code and no hot
-    // update ever reaches the browser. The workspace publishes these events only
-    // after the whole OnComponentChange hook series completes, which is the earliest
-    // moment the fresh dist is guaranteed on disk (preview's own hook runs before the
-    // compiler's, so invalidating there rebuilds stale code; the env-level
-    // compile-done event fires minutes later behind the bulk-compile queue).
-    if (workspace) {
-      // A bundler rebuild only re-reads files it believes changed, and its own watcher
-      // never reports node_modules files — so collect every on-disk copy of the changed
-      // component's package (the root dir plus each pnpm store variant; only one is in
-      // the module graph but enumerating is cheaper than resolving which) and hand the
-      // file list to the dev server.
-      const collectPackageFiles = (pkgName: string): string[] => {
-        const results: string[] = [];
-        const listFilesRec = (dir: string) => {
-          for (const entry of readdirSync(dir, { withFileTypes: true })) {
-            if (entry.name === 'node_modules') continue;
-            const full = join(dir, entry.name);
-            if (entry.isDirectory()) listFilesRec(full);
-            else if (entry.isFile()) results.push(full);
-          }
-        };
-        const roots: string[] = [];
-        const wsPath = workspace.path;
-        roots.push(join(wsPath, 'node_modules', pkgName));
-        const pnpmDir = join(wsPath, 'node_modules', '.pnpm');
-        const pnpmPrefix = `${pkgName.replace('/', '+')}@`;
-        try {
-          for (const entry of readdirSync(pnpmDir)) {
-            if (entry.startsWith(pnpmPrefix)) roots.push(join(pnpmDir, entry, 'node_modules', pkgName));
-          }
-        } catch {
-          // no .pnpm dir — nothing more to enumerate
-        }
-        for (const root of roots) {
-          try {
-            listFilesRec(root);
-          } catch {
-            // package copy without files on disk — skip
-          }
-        }
-        return results;
-      };
-
-      const invalidateChangedComponentServer = async (payload: {
-        componentChanged?: { component: Component };
-        componentAdded?: { component: Component };
-      }) => {
-        try {
-          const component = payload?.componentChanged?.component || payload?.componentAdded?.component;
-          if (!component) return;
-          const envId = await envs.getOrCalculateEnvId(component);
-          const server = bundler.getComponentServerByEnvId(envId.toString());
-          const devServer = server?.devServer as
-            | {
-                invalidate?: (changedFiles?: string[]) => Promise<void> | void;
-              }
-            | undefined;
-          if (devServer && typeof devServer.invalidate === 'function') {
-            const pkgName = pkg.getPackageName(component);
-            const changedFiles = pkgName ? collectPackageFiles(pkgName) : [];
-            logger.debug(
-              `invalidating the dev server of ${envId.toString()} after component-change hooks completed ` +
-                `(${changedFiles.length} candidate files of ${pkgName})`
-            );
-            void devServer.invalidate(changedFiles);
-          }
-        } catch (err: any) {
-          logger.debug(`failed to invalidate a dev server on component change: ${err.message}`);
-        }
-      };
-      // event names as published by workspace.triggerOnComponentChange / triggerOnComponentAdd
-      void graphql.pubsub.subscribe('componentChanged', invalidateChangedComponentServer, {});
-      void graphql.pubsub.subscribe('componentAdded', invalidateChangedComponentServer, {});
-    }
-
     cli.register(new GeneratePreviewCmd(preview), new ServePreviewCmd(preview));
 
     if (workspace)
