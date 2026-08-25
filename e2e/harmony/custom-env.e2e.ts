@@ -254,10 +254,6 @@ describe('custom env', function () {
         const tagOutput = helper.general.runWithTryCatch('bit tag -m msg');
         expect(tagOutput).to.have.string('failed loading env - external env without a version');
       });
-      describe('running any other command', () => {
-        // @Gilad TODO
-        it.skip('should warn or error about the misconfigured env and suggest to enter the version', () => {});
-      });
     });
 
     describe('set up the env using bit env set without a version', () => {
@@ -414,9 +410,6 @@ describe('custom env', function () {
       it('bit status should not show it as an issue', () => {
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
       });
-    });
-    after(() => {
-      npmCiRegistry.destroy();
     });
   });
 });
