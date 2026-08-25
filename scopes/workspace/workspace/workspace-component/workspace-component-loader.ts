@@ -910,7 +910,15 @@ export class WorkspaceComponentLoader {
     this.idsBeingLoadedThroughGetMany.add(idStr);
     try {
       const { components } = await this.getMany([id]);
-      return components.length === 1 ? components[0] : undefined;
+      if (components.length === 1) return components[0];
+      // the load may have fixed an out-of-sync .bitmap and changed the component-id in the process
+      // (e.g. a stale version was removed or bumped). in that case getMany filtered the component
+      // out because it no longer matches the requested id. look it up by its updated .bitmap id.
+      const updatedBitmapId = this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved.searchWithoutVersion(id);
+      if (updatedBitmapId && updatedBitmapId.version !== id.version) {
+        return this.getFromCache(updatedBitmapId, { loadExtensions: true, executeLoadSlot: true });
+      }
+      return undefined;
     } finally {
       this.idsBeingLoadedThroughGetMany.delete(idStr);
     }
