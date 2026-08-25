@@ -2521,7 +2521,13 @@
         "scope": "teambit.code",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/diff-viewer"
+        "rootDir": "components/ui/diff-viewer",
+        "config": {
+            "teambit.harmony/envs/core-react-env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-react-env"
+            }
+        }
     },
     "ui/docs-app": {
         "name": "ui/docs-app",
@@ -2642,7 +2648,13 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/hooks/use-bulk-paged-query"
+        "rootDir": "components/ui/hooks/use-bulk-paged-query",
+        "config": {
+            "teambit.harmony/envs/core-react-env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-react-env"
+            }
+        }
     },
     "ui/hooks/use-core-aspects": {
         "name": "ui/hooks/use-core-aspects",
@@ -2708,7 +2720,13 @@
         "scope": "teambit.code",
         "version": "0.0.9",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-diff-viewer"
+        "rootDir": "components/ui/inline-diff-viewer",
+        "config": {
+            "teambit.harmony/envs/core-react-env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-react-env"
+            }
+        }
     },
     "ui/inline-preview-compare": {
         "name": "ui/inline-preview-compare",

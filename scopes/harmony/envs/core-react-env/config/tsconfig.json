@@ -9,5 +9,11 @@
     // and those sources are only clean under these rules.
     "noImplicitAny": false,
     "strictPropertyInitialization": false
-  }
+  },
+  // re-declared (identical to the base): `include`/`exclude` inherited through
+  // `extends` are resolved relative to the BASE file's directory, so leaving them
+  // inherited makes capsule builds compile react-env's package config dir instead
+  // of the component's files (emitting no dist, so jest then finds no tests).
+  "exclude": ["artifacts", "public", "dist", "node_modules", "package.json", "**/*.cjs"],
+  "include": ["**/*", "**/*.json"]
 }
