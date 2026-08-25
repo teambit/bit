@@ -2,21 +2,17 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
-import type { Modules } from '@pnpm/installing.modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper, fixtures, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 import assertArrays from 'chai-arrays';
+import type { ModulesManifest } from '../modules-manifest';
+import { readModulesManifest } from '../modules-manifest';
 chai.use(chaiFs);
 
 chai.use(assertArrays);
-
-async function readModulesManifest(modulesDir: string): Promise<Modules | null> {
-  const m = await import('@pnpm/installing.modules-yaml');
-  return m.readModulesManifest(modulesDir);
-}
 
 describe('dependency-resolver extension', function () {
   let helper: Helper;
@@ -291,7 +287,7 @@ describe('dependency-resolver extension', function () {
     });
   });
   describe('hoist patterns', function () {
-    let modulesState: Modules | null;
+    let modulesState: ModulesManifest | null;
     before(async () => {
       helper = new Helper();
       helper.scopeHelper.reInitWorkspace();

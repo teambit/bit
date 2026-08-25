@@ -476,4 +476,28 @@ describe('bit delete command', function () {
       expect(() => helper.command.status()).not.to.throw();
     });
   });
+  describe('hard-delete guard in non-interactive sessions', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    it('should fail with guidance instead of hanging when a confirmation is needed but there is no TTY', () => {
+      const output = helper.general.runWithTryCatch('bit delete comp1');
+      expect(output).to.have.string('re-run with --silent');
+    });
+    it('should block --hard when non-interactive and the hard-delete feature is not enabled, even with --silent', () => {
+      const output = helper.general.runWithTryCatch('bit delete comp1 --hard --silent');
+      expect(output).to.have.string('requires an interactive confirmation by a human');
+      // the component should still exist on the remote
+      expect(() =>
+        helper.command.catComponent(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath)
+      ).to.not.throw();
+    });
+    it('should allow --hard when the hard-delete feature is explicitly enabled', () => {
+      expect(() => helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp1`)).to.not.throw();
+      expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath)).to.throw();
+    });
+  });
 });
