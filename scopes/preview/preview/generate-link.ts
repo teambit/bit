@@ -61,16 +61,26 @@ export function generateLink(
     return { envId, varName, resolveFrom };
   });
   const moduleImports = getModuleImports(moduleLinks, tempPackageDir);
-  const acceptedDependencies = useSource
-    ? Array.from(
-        new Set([
-          ...componentLinks.flatMap((link) =>
-            link.modules.map((module) => toWebpackRequestId(module.resolveFrom, workspacePath))
-          ),
-          ...(moduleImports.tempFilePath ? [toWebpackRequestId(moduleImports.tempFilePath, workspacePath)] : []),
-        ])
-      )
-    : [];
+  // The link file is the graph parent of every component module it imports. Accepting
+  // those modules here gives non-react-refresh updates a hot boundary: a module whose
+  // exports are not all React components (e.g. a composition exporting a live-controls
+  // config object) is not a refresh boundary, so its update bubbles up — without this
+  // accept it reaches the entry and forces a full page reload. Refresh-boundary modules
+  // still self-accept first (state-preserving); this only catches what they can't.
+  // In source mode the imports are workspace-relative requests; in dist mode accept the
+  // exact specifiers the import() calls use so they resolve to the same modules.
+  const acceptedDependencies = Array.from(
+    new Set([
+      ...componentLinks.flatMap((link) =>
+        link.modules.map((module) =>
+          useSource ? toWebpackRequestId(module.resolveFrom, workspacePath) : module.resolveFrom
+        )
+      ),
+      ...(useSource && moduleImports.tempFilePath
+        ? [toWebpackRequestId(moduleImports.tempFilePath, workspacePath)]
+        : []),
+    ])
+  );
 
   const sourceModeBootstrap = `
 let __bitInitialized = false;
@@ -99,17 +109,17 @@ async function __bitMaybeInitialize(force = false, shouldNotify = false) {
   }
 }
 
-const __bitHot =
-  import.meta.webpackHot
-  || (typeof module !== 'undefined' && module.hot)
-  || undefined;
-
-if (__bitHot) {
-  __bitHot.accept(${JSON.stringify(acceptedDependencies)}, () => {
+// The accept/dispose calls must be the literal \`import.meta.webpackHot.accept(...)\`
+// member expression: bundlers create the hot-accept dependencies by static analysis
+// of exactly that form. Calling through an alias compiles the dependency list into
+// plain runtime strings that map to no module id — updates bubble past this file and
+// force a full reload.
+if (import.meta.webpackHot) {
+  import.meta.webpackHot.accept(${JSON.stringify(acceptedDependencies)}, () => {
     __bitInitialized = false;
     void __bitMaybeInitialize(true, true);
   });
-  __bitHot.dispose(() => {
+  import.meta.webpackHot.dispose(() => {
     __bitInitialized = false;
   });
 }
@@ -129,11 +139,37 @@ window.addEventListener('hashchange', () => {
     ? sourceModeBootstrap
     : `
 let __bitInitialized = false;
-async function __bitInitializeOnce() {
-  if (__bitInitialized) return;
+async function __bitInitializeOnce(force = false, shouldNotify = false) {
+  if (__bitInitialized && !force) return;
   __bitInitialized = true;
   await initializeModules();
+  if (shouldNotify) {
+    // Only the active preview dispatches the update event so unrelated previews
+    // don't cause extra rerenders during HMR.
+    const activePreview = __bitActivePreviewName();
+    if (activePreview === ${JSON.stringify(prefix)}) {
+      window.dispatchEvent(
+        new CustomEvent('bit-preview-modules-updated', {
+          detail: { previewName: ${JSON.stringify(prefix)} },
+        })
+      );
+    }
+  }
 }
+
+// Literal \`import.meta.webpackHot\` member expressions on purpose — see the
+// source-mode bootstrap note: an alias breaks the bundler's static hot-accept
+// analysis and the dependency list degrades to inert runtime strings.
+if (import.meta.webpackHot) {
+  import.meta.webpackHot.accept(${JSON.stringify(acceptedDependencies)}, () => {
+    __bitInitialized = false;
+    void __bitInitializeOnce(true, true);
+  });
+  import.meta.webpackHot.dispose(() => {
+    __bitInitialized = false;
+  });
+}
+
 if (__bitThumbnailDefer()) {
   // deferred: initialize only if a later hash actually asks for this preview
   window.addEventListener('hashchange', () => {

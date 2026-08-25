@@ -134,11 +134,31 @@ export class BundlerMain {
   getComponentServer(component: Component): undefined | ComponentServer {
     if (!this._componentServers) return undefined;
     const envId = this.envs.getEnvId(component);
-    const server = this._componentServers.find(
+    return this.getComponentServerByEnvId(envId);
+  }
+
+  /**
+   * get a running dev server by its env id. Matching ignores the version suffix —
+   * callers hold ids from different sources (env runtime, execution context,
+   * component env) that name the same env with and without a version.
+   */
+  getComponentServerByEnvId(envId: string): undefined | ComponentServer {
+    if (!this._componentServers) return undefined;
+    const withoutVersion = (id: string) => id.split('@')[0];
+    const exact = this._componentServers.find(
       (componentServer) =>
-        componentServer.context.relatedContexts.includes(envId) || componentServer.context.id === envId
+        componentServer.context.relatedContexts.includes(envId) ||
+        componentServer.context.id === envId ||
+        componentServer.context.envRuntime.id === envId
     );
-    return server;
+    if (exact) return exact;
+    const envIdNoVersion = withoutVersion(envId);
+    return this._componentServers.find(
+      (componentServer) =>
+        componentServer.context.relatedContexts.some((related) => withoutVersion(related) === envIdNoVersion) ||
+        withoutVersion(componentServer.context.id) === envIdNoVersion ||
+        withoutVersion(componentServer.context.envRuntime.id) === envIdNoVersion
+    );
   }
 
   /**

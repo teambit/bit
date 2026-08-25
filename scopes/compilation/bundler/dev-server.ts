@@ -10,6 +10,18 @@ export interface DevServer {
   listen(port: number): Server | Promise<Server>;
 
   /**
+   * ask the running bundler to re-read its inputs and rebuild (hot updates included).
+   * Needed for dev servers whose bundler cannot watch the compiled component
+   * packages itself (bundler watchers treat node_modules as immutable), so the
+   * host — which knows when a component finished compiling — drives the rebuild.
+   *
+   * `changedFiles` are absolute paths the host knows were rewritten. Without them a
+   * bundler rebuild has no changed-file set (its own watcher reported nothing) and
+   * may re-read nothing at all — pass them whenever known.
+   */
+  invalidate?(changedFiles?: string[]): Promise<void> | void;
+
+  /**
    * display name of the dev server.
    */
   displayName?: string;

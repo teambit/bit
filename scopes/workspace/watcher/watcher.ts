@@ -146,6 +146,8 @@ export class Watcher {
   private signalCleanupHandler: (() => void) | null = null;
   // Cached Watchman availability (checked once per process lifetime)
   private watchmanAvailable: boolean | null = null;
+  // Backend proven to deliver events on this machine (resolved once per watch start)
+  private resolvedParcelBackend: ParcelWatcherOptions['backend'] | null = null;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -185,7 +187,9 @@ export class Watcher {
 
     // On macOS, prefer Watchman if available to avoid FSEvents stream limit
     if (process.platform === 'darwin') {
-      if (this.isWatchmanAvailable()) {
+      if (this.resolvedParcelBackend) {
+        options.backend = this.resolvedParcelBackend;
+      } else if (this.isWatchmanAvailable()) {
         options.backend = 'watchman';
         this.logger.debug('Using Watchman backend for file watching');
       } else {
@@ -194,6 +198,68 @@ export class Watcher {
     }
 
     return options;
+  }
+
+  /**
+   * A subscribed backend is not the same as a working one. On macOS both watchman
+   * and FSEvents can accept a subscription and then deliver nothing at all — a
+   * wedged watchman daemon (stale clock/cookie state after heavy churn) and the
+   * system-wide FSEvents stream limit both fail this way, silently. The watcher
+   * then looks alive while every edit is ignored, which surfaces to users as
+   * "bit watch/bit start stopped compiling my changes".
+   *
+   * So before committing to a backend, prove it delivers: subscribe, write a probe
+   * file, and require the event within the timeout. Try watchman first (cheapest,
+   * no per-file streams), then FSEvents, then kqueue (always works, but holds a
+   * file descriptor per watched dir, so it is the last resort).
+   */
+  private async resolveParcelBackend(): Promise<void> {
+    if (process.platform !== 'darwin' || this.resolvedParcelBackend) return;
+    // 'kqueue' is supported by the @parcel/watcher runtime but missing from its
+    // published BackendType, hence the cast.
+    const candidates = (this.isWatchmanAvailable()
+      ? ['watchman', 'fs-events', 'kqueue']
+      : ['fs-events', 'kqueue']) as unknown as NonNullable<ParcelWatcherOptions['backend']>[];
+    for (const backend of candidates) {
+      if (await this.parcelBackendDelivers(backend)) {
+        this.resolvedParcelBackend = backend;
+        this.logger.debug(`Using ${backend} backend for file watching (verified delivery)`);
+        if (backend !== candidates[0]) {
+          this.logger.console(
+            `Warning: the ${candidates[0]} file-watching backend is not delivering events on this machine, using ${backend} instead`
+          );
+        }
+        return;
+      }
+      this.logger.debug(`file-watching backend ${backend} did not deliver the probe event, trying the next backend`);
+    }
+    // Nothing passed the probe (e.g. a heavily loaded machine timing out) — keep the
+    // default preference rather than refusing to watch.
+    this.logger.warn('no file-watching backend passed the delivery probe; falling back to the default backend');
+  }
+
+  private async parcelBackendDelivers(backend: NonNullable<ParcelWatcherOptions['backend']>): Promise<boolean> {
+    const probeFile = join(this.workspace.path, `.bit-watcher-probe-${process.pid}`);
+    let subscription: AsyncSubscription | undefined;
+    try {
+      let sawEvent: () => void = () => {};
+      const delivered = new Promise<boolean>((resolve) => {
+        sawEvent = () => resolve(true);
+        setTimeout(() => resolve(false), 2500);
+      });
+      subscription = await getParcelWatcher().subscribe(this.workspace.path, () => sawEvent(), {
+        ignore: this.getParcelIgnorePatterns(),
+        backend,
+      });
+      await fs.writeFile(probeFile, String(Date.now()));
+      return await delivered;
+    } catch (err: any) {
+      this.logger.debug(`file-watching backend ${backend} failed to subscribe: ${err.message}`);
+      return false;
+    } finally {
+      await subscription?.unsubscribe().catch(() => {});
+      await fs.remove(probeFile).catch(() => {});
+    }
   }
 
   /**
@@ -339,6 +405,10 @@ export class Watcher {
     if (process.platform === 'darwin' && this.isWatchmanAvailable()) {
       await this.ensureWatchmanConfig();
     }
+
+    // Pick a backend that provably delivers events (a subscribed-but-silent
+    // watchman/FSEvents is a real failure mode) before any subscription is made.
+    await this.resolveParcelBackend();
 
     // Use shared watcher daemon pattern to avoid FSEvents limit on macOS
     // FSEvents has a system-wide limit on concurrent watchers, which causes
