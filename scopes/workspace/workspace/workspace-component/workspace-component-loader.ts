@@ -123,6 +123,9 @@ export class WorkspaceComponentLoader {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
+  // id-strings of components that were built by the grouped load pipeline. see isLoadedThroughGroupPipeline
+  private idsLoadedThroughGroupPipeline = new Set<string>();
+
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
     const idsWithoutEmpty = compact(ids);
     if (!idsWithoutEmpty.length) {
@@ -452,6 +455,9 @@ export class WorkspaceComponentLoader {
       concurrency: concurrentComponentsLimit(),
     });
     this.logger.profileTrace('executeLoadSlot');
+    // these components were built with their envs loaded beforehand (the load-groups load envs first),
+    // so their env-derived data (e.g. dependency policies) is reliable. see isLoadedThroughGroupPipeline
+    wsComponentsWithAspects.forEach((component) => this.idsLoadedThroughGroupPipeline.add(component.id.toString()));
     await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);
     // }
 
@@ -864,6 +870,9 @@ export class WorkspaceComponentLoader {
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
       this.saveInCache(component, loadOptsWithDefaults);
+      // this single-component load overwrote the cache. if this load is part of a grouped load, the
+      // component gets marked once its group completes (getAndLoadSlot)
+      this.idsLoadedThroughGroupPipeline.delete(component.id.toString());
     }
     return component;
   }
@@ -904,11 +913,24 @@ export class WorkspaceComponentLoader {
     return Boolean(this.getFromCache(id, { loadExtensions: true, executeLoadSlot: true }));
   }
 
+  /**
+   * whether the component exists in the in-memory cache in its fully-loaded form AND was built by the
+   * grouped load pipeline, which loads envs before the components that use them. a cached component that
+   * was built by a cold single-component load is not considered loaded here, as it may have been built
+   * without its env's dependency-policy applied.
+   */
+  isLoadedThroughGroupPipeline(id: ComponentID): boolean {
+    const fromCache = this.getFromCache(id, { loadExtensions: true, executeLoadSlot: true });
+    if (!fromCache) return false;
+    return this.idsLoadedThroughGroupPipeline.has(fromCache.id.toString());
+  }
+
   clearCache() {
     this.componentsCache.deleteAll();
     this.scopeComponentsCache.deleteAll();
     this.componentsExtensionsCache.deleteAll();
     this.componentLoadedSelfAsAspects.deleteAll();
+    this.idsLoadedThroughGroupPipeline.clear();
   }
 
   clearComponentCache(id: ComponentID) {
@@ -936,6 +958,7 @@ export class WorkspaceComponentLoader {
         }
       }
     });
+    idsStr.forEach((idStr) => this.idsLoadedThroughGroupPipeline.delete(idStr));
   }
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, loadOpts?: ComponentLoadOptions) {

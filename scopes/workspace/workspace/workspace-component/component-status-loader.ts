@@ -67,8 +67,9 @@ export class ComponentStatusLoader {
 
   private async getStatus(id: ComponentID) {
     // make sure the component is loaded through the grouped workspace loader (envs first), so the
-    // modified-status below is calculated on a correctly-built component. no-op if the component was
-    // already loaded or is not in the workspace. see workspace.preloadComponents.
+    // modified-status below is calculated on a correctly-built component - regardless of whether and how
+    // the component was loaded before. no-op if the component was already loaded through the grouped
+    // loader or is not in the workspace. see workspace.preloadComponents.
     await this.workspace.preloadComponents([id]);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const status: ComponentStatusLegacy = {};

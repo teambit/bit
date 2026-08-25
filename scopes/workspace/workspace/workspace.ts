@@ -1232,16 +1232,16 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   /**
-   * pre-load the given components (only those that exist in the workspace and were not loaded yet) through
-   * the grouped workspace loader, which loads their envs before the components themselves. this populates
-   * the loaders caches with correctly-built components for subsequent loads, e.g. by the legacy loader when
-   * calculating the modified-status. loading a component cold outside this pipeline (a single-component
-   * load) may miss the env's dependency-policy, in which case the recalculated component hash differs from
-   * the model and the component is mistakenly marked as modified (config changes).
-   * note that this is a cache-warmer. it cannot repair a component that was already loaded incorrectly, so
-   * call it before any cold single-component load. (the deeper fix would be for the single-component load
-   * path to load the component's env first, similarly to the grouped loader. see
-   * workspace-component-loader "getWithSpan").
+   * pre-load the given components (only those that exist in the workspace) through the grouped workspace
+   * loader, which loads their envs before the components themselves. this populates the loaders caches
+   * with correctly-built components for subsequent loads, e.g. by the legacy loader when calculating the
+   * modified-status. loading a component cold outside this pipeline (a single-component load) may miss the
+   * env's dependency-policy, in which case the recalculated component hash differs from the model and the
+   * component is mistakenly marked as modified (config changes). a component that was already loaded that
+   * way gets evicted from the caches and rebuilt through the grouped loader (note that references obtained
+   * before the eviction keep pointing to the old instance). the deeper fix would be for the
+   * single-component load path to load the component's env first, similarly to the grouped loader. see
+   * workspace-component-loader "getWithSpan".
    * this method never throws. a component that fails to load here will surface a proper error when loaded
    * later by the calling flow, and a component the calling flow legitimately skips without loading
    * (e.g. locally-removed) should not fail it here.
@@ -1251,26 +1251,31 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     // within their own grouped load). loading or even waiting for them here would deadlock
     const chainIds = this.preloadingContext.getStore() ?? new Set<string>();
     const bitmapIds = this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
-    const candidates: Array<{ id: ComponentID; idStr: string }> = [];
+    const candidates: Array<{ id: ComponentID; idStr: string; needsEviction?: boolean }> = [];
     ids.forEach((id) => {
       const existingId = bitmapIds.searchWithoutVersion(id);
       if (!existingId) return;
       const idStr = existingId.toString();
       if (chainIds.has(idStr)) return;
-      if (this.componentLoader.isLoaded(existingId)) return; // already warm
-      candidates.push({ id: existingId, idStr });
+      if (this.componentLoader.isLoadedThroughGroupPipeline(existingId)) return; // already correctly built
+      // if cached, it was built by a cold single-component load and its env-derived data may be wrong
+      candidates.push({ id: existingId, idStr, needsEviction: this.componentLoader.isLoaded(existingId) });
     });
     if (!candidates.length) return;
     // ids being preloaded by an independent concurrent caller. don't re-load them, but do wait for
     // their preload to complete, so the caller won't compute the status on a half-built component
     const preloadsToAwait: Promise<void>[] = [];
-    const toLoad: Array<{ id: ComponentID; idStr: string }> = [];
+    const toLoad: Array<{ id: ComponentID; idStr: string; needsEviction?: boolean }> = [];
     candidates.forEach((candidate) => {
       const inFlight = this.preloadsInFlight.get(candidate.idStr);
       if (inFlight) preloadsToAwait.push(inFlight);
       else toLoad.push(candidate);
     });
     if (toLoad.length) {
+      // evict components built by a cold single-component load, so getMany rebuilds them through the
+      // grouped pipeline rather than returning the cached (possibly env-less) instances
+      const toEvict = toLoad.filter((c) => c.needsEviction).map((c) => c.id);
+      this.clearComponentsCache(toEvict);
       const contextIds = new Set([...chainIds, ...toLoad.map((c) => c.idStr)]);
       // assign the promise from within run() rather than using its return value, which some
       // @types/node versions type as void

@@ -56,8 +56,8 @@ export class MergeStatusProvider {
     if (!this.currentLane && this.otherLane) {
       await this.importer.importObjectsFromMainIfExist(this.otherLane.toBitIds().toVersionLatest());
     }
-    // must happen before the per-component flow below, which loads components cold via the legacy loader
-    // (getCurrentComponent) before their modified-status is calculated. see workspace.preloadComponents.
+    // batching optimization: load all components in one grouped load, before the per-component flow below
+    // loads them one by one cold via the legacy loader. see workspace.preloadComponents.
     if (this.workspace) await this.workspace.preloadComponents(bitIds);
     const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id)
