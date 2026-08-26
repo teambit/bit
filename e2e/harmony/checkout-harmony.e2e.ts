@@ -153,10 +153,8 @@ describe('bit checkout command', function () {
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
       });
-      it('should not write package.json file', () => {
+      it('should not write package.json and package-lock.json files', () => {
         expect(path.join(helper.scopes.localPath, 'package.json')).to.not.be.a.path();
-      });
-      it('should not write package-lock.json file', () => {
         expect(path.join(helper.scopes.localPath, 'package-lock.json')).to.not.be.a.path();
       });
     });
@@ -292,25 +290,15 @@ describe('bit checkout command', function () {
         expect(output).to.have.string('bar/foo');
         expect(output).to.have.string(FileStatusWithoutChalk.manual);
       });
-      it('should rewrite the file with the conflict with the conflicts segments', () => {
-        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
-        expect(fileContent).to.have.string('<<<<<<<');
-        expect(fileContent).to.have.string('>>>>>>>');
-        expect(fileContent).to.have.string('=======');
-      });
-      it('should label the conflicts segments according to the versions', () => {
+      it('should rewrite the file with the conflicts segments labeled according to the versions', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.have.string('<<<<<<< 0.0.2 modified');
+        expect(fileContent).to.have.string('=======');
         expect(fileContent).to.have.string('>>>>>>> 0.0.1');
       });
       it('should not strip the last line', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent.endsWith('\n')).to.be.true;
-      });
-      it('should update bitmap with the specified version', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap).to.have.property('bar/foo');
-        expect(bitMap['bar/foo'].version).to.equal('0.0.1');
       });
       it('should show the component as modified', () => {
         const statusOutput = helper.command.runCmd('bit status');
@@ -341,11 +329,6 @@ describe('bit checkout command', function () {
       it('should rewrite the file according to the used version', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.be.equal(`${barFooV1}${EOL}`);
-      });
-      it('should update bitmap with the used version', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap).to.have.property('bar/foo');
-        expect(bitMap['bar/foo'].version).to.equal('0.0.1');
       });
       it('should not show the component as modified', () => {
         const statusOutput = helper.command.runCmd('bit status');

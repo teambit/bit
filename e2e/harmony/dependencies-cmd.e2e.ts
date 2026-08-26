@@ -53,6 +53,7 @@ describe('bit dependencies command', function () {
           before(() => {
             helper.command.ejectConf('comp1');
             helper.command.dependenciesSet('comp1', 'some-pkg@1.1.2', '--dev');
+            showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
           });
           it('should not remove the dep that was added before', () => {
             const dep = showConfig.data.dependencies.find((d) => d.id === 'lodash');

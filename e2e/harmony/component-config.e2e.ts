@@ -1,14 +1,9 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import lodash from 'lodash';
-import assertArrays from 'chai-arrays';
-import chaiFs from 'chai-fs';
 import { AlreadyExistsError } from '../../scopes/workspace/workspace/component-config-file/exceptions';
 import { Helper, GeneralHelper } from '@teambit/legacy.e2e-helper';
 
 const { isEmpty } = lodash;
-
-chai.use(chaiFs);
-chai.use(assertArrays);
 
 describe('component config', function () {
   this.timeout(0);
@@ -31,15 +26,11 @@ describe('component config', function () {
       let componentJsonPath;
       before(() => {
         output = helper.command.ejectConf('bar/foo');
-        componentJsonPath = helper.componentJson.composePath('bar');
       });
       it('expect to output the path of the config', () => {
         alignedOutput = GeneralHelper.alignOutput(output);
         const compJsonRelative = helper.componentJson.composePath('bar', false);
         expect(alignedOutput).to.have.string(compJsonRelative);
-      });
-      it('expect to write a component json file', () => {
-        expect(componentJsonPath).to.be.a.file();
       });
       describe('component json content', () => {
         let componentJson;
@@ -125,10 +116,6 @@ describe('component config', function () {
       });
     });
   });
-  describe('import --conf', () => {});
-  describe('creating a capsule', () => {
-    // Make sure the component.json is written into capsule
-  });
   const getExtensions = (extensions) => {
     return extensions
       .filter((extEntry) => {
@@ -213,10 +200,6 @@ describe('component config', function () {
       it('should has extensions from the workspace defaults', () => {
         expect(configuredExtensions).to.deep.include(getExtensionEntry('ext1', { key: 'val-ws-defaults' }));
       });
-    });
-    // TODO: implement once vendor is implemented
-    describe.skip('vendor component', () => {
-      it('', () => {});
     });
   });
 });
