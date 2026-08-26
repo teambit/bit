@@ -8,10 +8,14 @@ name: e2e-tests
 
 on:
   pull_request:
-    # mirrors the doc-only skip of the CircleCI e2e_test job (skip_when_doc_only)
-    paths-ignore:
-      - '**.md'
-      - '**.mdx'
+    # mirrors the doc-only skip of the CircleCI e2e_test job (skip_when_doc_only):
+    # doc-only PRs skip e2e, but doc files under e2e/ are test fixtures, not docs,
+    # so they still trigger the workflow (last matching pattern wins).
+    paths:
+      - '**'
+      - '!**.md'
+      - '!**.mdx'
+      - 'e2e/**'
   workflow_dispatch:
 
 env:
@@ -99,5 +103,5 @@ jobs:
           name: e2e-results-shard-${{ matrix.shard }}
           path: |
             junit
-            ~/.cache/Bit/logs
+            ~/Library/Caches/Bit/logs
           if-no-files-found: ignore
