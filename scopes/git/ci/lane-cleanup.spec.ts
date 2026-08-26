@@ -12,7 +12,7 @@ describe('LaneCleanup', () => {
     ({
       components: Object.entries(heads).map(([id, head]) => entry(id, head)),
       updateDependents: Object.entries(hidden).map(([id, head]) => entry(id, head)),
-    } as any);
+    }) as any;
 
   function cleanup(lanes: Array<any | Error>) {
     const calls: string[] = [];
@@ -34,7 +34,7 @@ describe('LaneCleanup', () => {
       importMainObjects: async () => {},
       getModelComponent: async () => undefined,
       importObjectsByHashes: async () => {},
-      isReleasedByThisRun: () => false,
+      releasedHeadByThisRun: () => undefined,
       objects: {} as any,
       warn: () => {},
     };

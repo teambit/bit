@@ -28,7 +28,7 @@ export type ForeignLaneComponent = {
   /** the scope the component belongs to (never this repository's `defaultScope`) */
   scope: string;
   /**
-   * `true` when this run tagged and exported the component, or the lane head is already on the
+   * `true` when this run tagged and exported the component from this very lane head, or the lane head is already on the
    * component's main — in its history, or as the content of its head — or, for a component the lane
    * deletes, when its main is already removed;
    * `false` when it is not (including a component that has no main yet);
@@ -65,8 +65,11 @@ export type LaneArchiveDeps = {
   getModelComponent(id: ComponentID): Promise<ModelComponent | undefined>;
   /** fetch these raw objects (lane heads) from the lane's hosting scope, if missing locally */
   importObjectsByHashes(scope: string, hashes: string[]): Promise<void>;
-  /** did this run's tag and export include the component (by scope and name) */
-  isReleasedByThisRun(id: ComponentID): boolean;
+  /**
+   * the lane head this run tagged and exported the component from, if this run released it; a lane
+   * entry counts as released here only while it still sits at that head
+   */
+  releasedHeadByThisRun(id: ComponentID): string | undefined;
   objects: Repository;
   warn(message: string): void;
 };
@@ -284,10 +287,14 @@ export async function foreignLaneComponentsReleaseState(
     scope: comp.id.scope as string,
     released,
   });
-  // A component this run tagged and exported is released by definition. Being in `.bitmap` is not
-  // enough: the tag covers changed components only, and a mirror writes the defaultScope slice only.
-  const releasedHere = foreign.filter((comp) => deps.isReleasedByThisRun(comp.id.changeVersion(undefined)));
-  const others = foreign.filter((comp) => !deps.isReleasedByThisRun(comp.id.changeVersion(undefined)));
+  // A component this run tagged and exported is released by definition — as long as the lane still
+  // sits at the head this run tagged from; a head that moved since is another writer's work. Being
+  // in `.bitmap` is not enough: the tag covers changed components only, and a mirror writes the
+  // defaultScope slice only.
+  const releasedByThisRun = (comp: LaneEntry) =>
+    deps.releasedHeadByThisRun(comp.id.changeVersion(undefined)) === comp.head;
+  const releasedHere = foreign.filter(releasedByThisRun);
+  const others = foreign.filter((comp) => !releasedByThisRun(comp));
   if (!others.length) return releasedHere.map((comp) => entry(comp, true));
 
   // Each other component's main history comes from its own scope, and its lane head from the

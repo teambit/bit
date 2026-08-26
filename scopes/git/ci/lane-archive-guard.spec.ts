@@ -63,12 +63,12 @@ describe('laneArchiveDecision', () => {
       importMainObjects: noop,
       getModelComponent: async () => undefined,
       importObjectsByHashes: noop,
-      isReleasedByThisRun: () => false,
+      releasedHeadByThisRun: () => undefined,
       objects: {} as any,
       warn: () => {},
       ...overrides,
-    } as Parameters<typeof laneArchiveDecision>[2]);
-  const snapshot = (components: any[], updateDependents: any[] = []) => ({ components, updateDependents } as any);
+    }) as Parameters<typeof laneArchiveDecision>[2];
+  const snapshot = (components: any[], updateDependents: any[] = []) => ({ components, updateDependents }) as any;
   const foreignEntry = {
     id: { scope: 'acme.payments', changeVersion: () => ({}), toStringWithoutVersion: () => 'acme.payments/ui/table' },
     head: 'abc',
@@ -111,16 +111,24 @@ describe('laneArchiveDecision', () => {
     expect(warnings.join('\n')).to.include('no route to acme.payments');
   });
 
+  it('does not count a component this run released if its lane head has moved since', async () => {
+    // another writer exported to the lane after this run tagged from it; the entry is no longer what
+    // this run released, so it goes through the on-main check like any other (here: no main → pending)
+    const decision = await laneArchiveDecision(
+      laneId,
+      'acme.cards',
+      deps({ readLane: async () => snapshot([foreignEntry]), releasedHeadByThisRun: () => 'an-older-head' })
+    );
+    expect(decision.archive).to.be.false;
+  });
+
   it('counts a foreign component this run tagged and exported as released, and archives', async () => {
     // the one-repository, many-scopes shape: the repo holds components of several scopes and this
     // very run tagged and exported all of them — nothing else to wait for.
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({
-        readLane: async () => snapshot([foreignEntry]),
-        isReleasedByThisRun: () => true,
-      })
+      deps({ readLane: async () => snapshot([foreignEntry]), releasedHeadByThisRun: () => foreignEntry.head })
     );
     expect(decision.archive).to.be.true;
     expect(decision.summary).to.include('All 1 component(s) from other scope(s) (acme.payments)');
@@ -138,7 +146,7 @@ describe('laneArchiveDecision', () => {
 
   it('counts a foreign component the lane deletes as pending until its main is removed', async () => {
     const deleted = { ...foreignEntry, isDeleted: true };
-    const model = (removed: boolean) => ({ getHead: () => ({}), isRemoved: async () => removed } as any);
+    const model = (removed: boolean) => ({ getHead: () => ({}), isRemoved: async () => removed }) as any;
     const pending = await laneArchiveDecision(
       laneId,
       'acme.cards',
@@ -250,7 +258,8 @@ describe('sameReleasedState', () => {
           ],
         }),
         version({ files: [['a.ts', '1']] }),
-        []
+        [],
+        new Map()
       )
     ).to.be.false;
     expect(
@@ -262,7 +271,8 @@ describe('sameReleasedState', () => {
             ['b.ts', '2'],
           ],
         }),
-        []
+        [],
+        new Map()
       )
     ).to.be.false;
   });
@@ -283,7 +293,8 @@ describe('sameReleasedState', () => {
       sameReleasedState(
         version({ config: [['teambit.envs/envs', { env: 'node' }]] }),
         version({ config: [['teambit.envs/envs', { env: 'react' }]] }),
-        []
+        [],
+        new Map()
       )
     ).to.be.false;
   });

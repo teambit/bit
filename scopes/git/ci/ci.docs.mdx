@@ -169,7 +169,8 @@ flag changes only the dependents, so you can combine it with the detection.
    ```
 
 3. **Archive the remote lane.** This step is house-keeping, with one condition. A lane can carry
-   components of several scopes. Every component this run tagged and exported is released, so a
+   components of several scopes. Every component this run tagged and exported is released (while
+   the lane still sits at the head it was tagged from), so a
    repository that holds components of several scopes archives as before. Any other component
    of another scope is released only if its lane head is already
    on its own main — in main's history, or released onto main's head: the same sources, package
