@@ -526,6 +526,11 @@ commands:
       bit_bin:
         type: string
         default: ""
+      # comma-separated e2e directories to skip because they run on GitHub Actions instead
+      # (see .github/workflows/e2e-tests.yml). Pass "" to run the full suite.
+      exclude_dirs:
+        type: string
+        default: "e2e/commands"
     steps:
       - attach_workspace:
           at: ./
@@ -560,7 +565,7 @@ commands:
           # which mocha attributes to no testcase, so the splitter sees ~13% of the real cost.
           # The timings manifest is derived from actual CI node run times; refresh it occasionally
           # with: node scripts/generate-e2e-timings.js
-          command: 'cd bit && node scripts/split-e2e-tests.js | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          command: 'cd bit && node scripts/split-e2e-tests.js --exclude-dir=<< parameters.exclude_dirs >> | xargs npm run mocha-circleci << parameters.bit_bin >>'
           no_output_timeout: '50m'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
@@ -954,8 +959,11 @@ jobs:
             fi
             BV=$(bbit --version | tr -d '[:space:]')
             node bit/scripts/verify-released-exports.js "$HOME/.bvm/versions/$BV/bit-$BV/node_modules/@teambit"
+      # the released binary is not covered by the GitHub Actions e2e workflow (it tests the
+      # repo binary), so this job keeps running the full suite, with no excluded directories.
       - e2e_test_cmd:
          bit_bin: "--bit_bin=bbit"
+         exclude_dirs: ""
 
   # setup job: creates cleaned bit bundle and persists to workspace (runs once)
   setup_bundle_simulation:
@@ -1006,8 +1014,11 @@ jobs:
       - run:
           name: verify cleaned binary works
           command: source $BASH_ENV && bit-cleaned --version
+      # the cleaned bundle is not covered by the GitHub Actions e2e workflow, so this job
+      # keeps running the full suite, with no excluded directories.
       - e2e_test_cmd:
           bit_bin: "--bit_bin=bit-cleaned"
+          exclude_dirs: ""
 
   # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
   # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the

@@ -18,6 +18,9 @@
  *   .github/workflows/e2e-tests.yml)
  * Optional: --dir=e2e/commands
  *   Only split the files under the given repo-relative directory.
+ * Optional: --exclude-dir=e2e/commands (comma-separated for multiple; empty value is a no-op)
+ *   Skip the files under the given repo-relative directories. Used on CircleCI to skip
+ *   directories that run on GitHub Actions instead (see .github/workflows/e2e-tests.yml).
  * Debugging: node scripts/split-e2e-tests.js --stats
  *   Prints the predicted load of every node instead.
  */
@@ -63,18 +66,22 @@ function main() {
   const showStats = process.argv.includes('--stats');
   const dirArg = process.argv.find((arg) => arg.startsWith('--dir='));
   const scanDir = dirArg ? path.join(REPO_ROOT, dirArg.slice('--dir='.length)) : E2E_DIR;
+  const excludeArg = process.argv.find((arg) => arg.startsWith('--exclude-dir='));
+  const excludeDirs = excludeArg ? excludeArg.slice('--exclude-dir='.length).split(',').filter(Boolean) : [];
 
   const timings = loadTimings();
   const defaultWeight = median(Object.values(timings));
 
-  const files = findE2eFiles(scanDir).map((abs) => {
-    const rel = path.relative(REPO_ROOT, abs).split(path.sep).join('/');
-    const weight = timings[rel] ?? defaultWeight;
-    if (!(rel in timings)) {
-      process.stderr.write(`note: ${rel} not in timings manifest, assuming ${defaultWeight}s\n`);
-    }
-    return { abs, rel, weight };
-  });
+  const files = findE2eFiles(scanDir)
+    .map((abs) => ({ abs, rel: path.relative(REPO_ROOT, abs).split(path.sep).join('/') }))
+    .filter(({ rel }) => !excludeDirs.some((dir) => rel.startsWith(`${dir}/`)))
+    .map(({ abs, rel }) => {
+      const weight = timings[rel] ?? defaultWeight;
+      if (!(rel in timings)) {
+        process.stderr.write(`note: ${rel} not in timings manifest, assuming ${defaultWeight}s\n`);
+      }
+      return { abs, rel, weight };
+    });
 
   // LPT bin-packing: heaviest first, each file goes to the least-loaded node.
   // Sort is fully deterministic (weight desc, then path) so every node computes
