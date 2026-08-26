@@ -122,6 +122,16 @@ describe('laneArchiveDecision', () => {
     expect(decision.summary).to.include('All 1 component(s) from other scope(s) (acme.payments)');
   });
 
+  it('counts a foreign component hidden in updateDependents as lane work too', async () => {
+    const decision = await laneArchiveDecision(
+      laneId,
+      'acme.cards',
+      deps({ getLanes: async () => [{ components: [], updateDependents: [foreignEntry] } as any] })
+    );
+    expect(decision.archive).to.be.false;
+    expect(decision.summary).to.include('not on their main yet: acme.payments/ui/table.');
+  });
+
   it('treats a foreign component with no main yet as not released', async () => {
     const decision = await laneArchiveDecision(
       laneId,

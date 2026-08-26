@@ -181,9 +181,18 @@ async function laneHeadIsOnMain(
   return sameReleasedState(laneVersion, mainVersion, laneComponentIds);
 }
 
+/**
+ * Every versioned entry on the lane: the listed components and the hidden `updateDependents`
+ * cascade entries. The hidden entries are lane state too — they carry snaps, they can be foreign,
+ * and a release must account for them — even though no `.bitmap` ever lists them.
+ */
+export function allLaneEntries(lane: LaneData): LaneData['components'] {
+  return [...lane.components, ...(lane.updateDependents ?? [])];
+}
+
 /** The lane's `id@head` set — what an archive decision is made on, and what must not move before it acts. */
 export function laneFingerprint(lane: LaneData): string {
-  return lane.components
+  return allLaneEntries(lane)
     .map((comp) => `${comp.id.toStringWithoutVersion()}@${comp.head}`)
     .sort()
     .join('\n');
@@ -212,9 +221,10 @@ export async function foreignLaneComponentsReleaseState(
   defaultScope: string,
   deps: LaneArchiveDeps
 ): Promise<ForeignLaneComponent[]> {
-  const foreign = lane.components.filter((comp) => comp.id.scope !== defaultScope);
+  const entries = allLaneEntries(lane);
+  const foreign = entries.filter((comp) => comp.id.scope !== defaultScope);
   if (!foreign.length) return [];
-  const laneComponentIds = lane.components.map((comp) => comp.id.toStringWithoutVersion());
+  const laneComponentIds = entries.map((comp) => comp.id.toStringWithoutVersion());
 
   const entry = (comp: (typeof foreign)[number], released: boolean | undefined): ForeignLaneComponent => ({
     id: comp.id.toStringWithoutVersion(),

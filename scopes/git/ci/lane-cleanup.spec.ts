@@ -4,12 +4,14 @@ import type { LaneCleanupDeps } from './lane-cleanup';
 
 describe('LaneCleanup', () => {
   const laneId = { scope: 'acme.cards', name: 'feature', toString: () => 'acme.cards/feature' } as any;
-  const lane = (heads: Record<string, string>) =>
+  const entry = (id: string, head: string) => ({
+    id: { scope: id.split('/')[0], toStringWithoutVersion: () => id, changeVersion: () => ({}) },
+    head,
+  });
+  const lane = (heads: Record<string, string>, hidden: Record<string, string> = {}) =>
     ({
-      components: Object.entries(heads).map(([id, head]) => ({
-        id: { scope: id.split('/')[0], toStringWithoutVersion: () => id, changeVersion: () => ({}) },
-        head,
-      })),
+      components: Object.entries(heads).map(([id, head]) => entry(id, head)),
+      updateDependents: Object.entries(hidden).map(([id, head]) => entry(id, head)),
     } as any);
 
   function cleanup(lanes: Array<any[] | Error>) {
@@ -58,5 +60,16 @@ describe('LaneCleanup', () => {
     await run();
     expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
     expect(calls.join('\n')).to.include('Could not re-read lane acme.cards/feature before archiving it');
+  });
+
+  it('leaves the lane open when only a hidden updateDependents entry moved before the archive', async () => {
+    const own = { 'acme.cards/ui/card': 'aaa' };
+    const { run, calls } = cleanup([
+      [lane(own, { 'acme.cards/ui/row': 'h1' })],
+      [lane(own, { 'acme.cards/ui/row': 'h2' })],
+    ]);
+    await run();
+    expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
+    expect(calls.join('\n')).to.include('changed while the release was checking it');
   });
 });
