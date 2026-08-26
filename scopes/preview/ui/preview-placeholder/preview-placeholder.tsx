@@ -86,7 +86,12 @@ function registerLivePreview(entry: LivePreview) {
 function unregisterLivePreview(previewKey: string) {
   livePreviews.delete(previewKey);
 }
-const hydrationQueue: Array<{ previewKey: string; run: () => void; priority: number; seq: number }> = [];
+const hydrationQueue: Array<{
+  previewKey: string;
+  run: (slotAcquired: boolean) => void;
+  priority: number;
+  seq: number;
+}> = [];
 const queuedPreviewKeys = new Set<string>();
 let activeHydrationSlots = 0;
 let hydrationSeq = 0;
@@ -97,19 +102,22 @@ function processHydrationQueue() {
     if (!next) break;
     queuedPreviewKeys.delete(next.previewKey);
     activeHydrationSlots += 1;
-    next.run();
+    next.run(true);
   }
 }
 
-function requestHydrationSlot(previewKey: string, run: () => void, priority = 0) {
+// The callback learns whether it owns a slot: warmed previews run without taking one,
+// and marking them as holders made their release path decrement a slot owned by some
+// other hydration - the limiter then admitted more cold boots than its budget.
+function requestHydrationSlot(previewKey: string, run: (slotAcquired: boolean) => void, priority = 0) {
   if (!previewKey) return;
   if (warmedPreviews.has(previewKey)) {
-    run();
+    run(false);
     return;
   }
   if (activeHydrationSlots < HYDRATION_CONCURRENCY) {
     activeHydrationSlots += 1;
-    run();
+    run(true);
     return;
   }
   if (queuedPreviewKeys.has(previewKey)) return;
@@ -217,15 +225,15 @@ export function PreviewPlaceholder({
     const node = intersectionRef.current;
     if (!node) return;
     let isMounted = true;
-    const hydratePreview = () => {
+    const hydratePreview = (slotAcquired: boolean) => {
       if (!isMounted) {
-        // the slot was already taken on our behalf by the queue/direct path;
-        // an unmounted card must hand it back or the concurrency budget leaks away
-        releaseHydrationSlot();
+        // an unmounted card must hand back the slot taken on its behalf,
+        // or the concurrency budget leaks away
+        if (slotAcquired) releaseHydrationSlot();
         return;
       }
       warmedPreviews.add(previewKey);
-      slotHeldRef.current = true;
+      slotHeldRef.current = slotAcquired;
       setCanHydratePreview(true);
       registerLivePreview({
         previewKey,
@@ -237,9 +245,11 @@ export function PreviewPlaceholder({
           setCanHydratePreview(false);
         },
       });
-      slotReleaseTimerRef.current = window.setTimeout(() => {
-        releaseSlotIfHeld();
-      }, HYDRATION_SLOT_FALLBACK_RELEASE_MS);
+      if (slotAcquired) {
+        slotReleaseTimerRef.current = window.setTimeout(() => {
+          releaseSlotIfHeld();
+        }, HYDRATION_SLOT_FALLBACK_RELEASE_MS);
+      }
     };
 
     // Eagerly warm the first visible wave of previews so startup feels instant.
