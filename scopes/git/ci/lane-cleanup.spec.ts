@@ -72,4 +72,11 @@ describe('LaneCleanup', () => {
     expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
     expect(calls.join('\n')).to.include('changed while the release was checking it');
   });
+
+  it('re-reads an empty lane too, and leaves it open when work arrived before the archive', async () => {
+    const { run, calls } = cleanup([lane({}), lane({ 'acme.cards/ui/card': 'new' })]);
+    await run();
+    expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
+    expect(calls.join('\n')).to.include('changed while the release was checking it');
+  });
 });

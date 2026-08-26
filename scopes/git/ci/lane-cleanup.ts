@@ -94,7 +94,8 @@ export class LaneCleanup {
       );
     }
     if (!decision.archive) return 'kept';
-    if (decision.fingerprint) {
+    if (decision.fingerprint !== undefined) {
+      // an existing lane with no entries fingerprints to '' and still deserves the re-read
       // Re-read right before the forced removal: a writer may have exported to the lane since the
       // decision was made. The window between this read and the removal remains, but it no longer
       // spans the object imports and history checks above. A failed re-read keeps the lane open,
