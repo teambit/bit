@@ -1,0 +1,81 @@
+# Experiment: offload e2e tests from CircleCI to GitHub Actions (free for public repos).
+# Currently runs a single e2e file (e2e/commands/add.e2e.ts) to validate the approach.
+# The setup mirrors .circleci/config.yml: setup_harmony (bvm -> bbit install/compile)
+# followed by e2e_test_cmd (link repo bin/bit.js as the global `bit`, run mocha).
+name: e2e-tests
+
+on:
+  push:
+    branches:
+      - gh-actions-e2e-experiment
+  workflow_dispatch:
+
+env:
+  BITSRC_ENV: stg
+  BIT_FEATURES: cloud-importer-v2
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+
+      - name: install bvm and latest bit (bbit)
+        run: |
+          npm install --global @teambit/bvm
+          bvm config set RELEASE_TYPE nightly
+          bvm config set DEFAULT_LINK bbit
+          bvm upgrade
+          bvm link --verbose
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: configure bbit
+        run: |
+          bbit -v
+          bbit config set analytics_reporting false
+          bbit config set error_reporting false
+          bbit config set user.name CI
+          bbit config set user.email ci@bit.dev
+
+      - name: install dependencies (bbit install)
+        run: |
+          bbit init
+          bbit install
+
+      - name: compile (bbit compile)
+        run: bbit compile
+
+      - name: link the repo bit binary for the e2e tests
+        run: |
+          mkdir -p "$HOME/.npm-global/bin"
+          ln -sf "$GITHUB_WORKSPACE/bin/bit.js" "$HOME/.npm-global/bin/bit"
+          echo "$HOME/.npm-global/bin" >> "$GITHUB_PATH"
+
+      - name: configure git and npm for the e2e tests
+        run: |
+          which bit
+          git config --global user.name "CI"
+          git config --global user.email "ci@bit.dev"
+          echo "user-agent=bit-e2e-github-actions" >> ~/.npmrc
+
+      - name: run e2e tests
+        run: |
+          mkdir -p junit
+          npm run mocha-circleci ./e2e/commands/add.e2e.ts
+        env:
+          MOCHA_FILE: junit/e2e-test-results.xml
+
+      - name: upload test results and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: |
+            junit
+            ~/.cache/Bit/logs
+          if-no-files-found: ignore
