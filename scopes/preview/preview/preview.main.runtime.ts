@@ -1027,6 +1027,7 @@ export class PreviewMain {
     updater(executionRef);
     const previews = this.previewSlot.values();
     await this.updateLinkFiles(previews, executionRef.currentComponents, executionRef.executionCtx);
+
     return noopResult;
   };
 
@@ -1170,7 +1171,6 @@ export class PreviewMain {
       dependencyResolver,
       express
     );
-
     cli.register(new GeneratePreviewCmd(preview), new ServePreviewCmd(preview));
 
     if (workspace)

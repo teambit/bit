@@ -1,3 +1,4 @@
+import { flatten } from 'lodash';
 import type { PubsubMain } from '@teambit/pubsub';
 import { PubsubAspect } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
@@ -16,6 +17,7 @@ import type { ComponentServer } from './component-server';
 import { NewDevServersCreatedEvent } from './events';
 import type { BundlerContext } from './bundler-context';
 import { devServerSchema } from './dev-server.graphql';
+import type { DevServerFailure, DevServerRunOnceResult } from './dev-server.service';
 import { DevServerService } from './dev-server.service';
 import { BundlerService } from './bundler.service';
 import type { DevServer } from './dev-server';
@@ -38,6 +40,11 @@ export class BundlerMain {
    * component servers.
    */
   private _componentServers: ComponentServer[] = [];
+
+  /**
+   * envs that failed to create a dev server on the last `devServer()` call.
+   */
+  private _devServerFailures: DevServerFailure[] = [];
 
   constructor(
     readonly config: BundlerConfig,
@@ -90,15 +97,34 @@ export class BundlerMain {
 
   async devServer(components: Component[], opts: { configureProxy?: boolean } = {}): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
-    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer>(this.devService, {
+    // a failing env no longer rejects the whole batch - it comes back in `failures` instead, so the
+    // envs that did build still get their servers. see `DevServerService.runOnce`.
+    const { servers, failures }: DevServerRunOnceResult = await envRuntime.runOnce(this.devService, {
       dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
     });
+    this._devServerFailures = failures;
     if (opts.configureProxy) {
       this.pubsub.pub(BundlerAspect.id, new NewDevServersCreatedEvent(servers, Date.now(), this.graphql, true));
     }
     this._componentServers = servers;
     this.indexByComponent();
     return servers;
+  }
+
+  /**
+   * envs that failed to create a dev server on the last `devServer()` call, with the error that
+   * caused it. their components have no preview - everything else is unaffected.
+   */
+  getDevServerFailures(): DevServerFailure[] {
+    return this._devServerFailures;
+  }
+
+  /**
+   * ids of all envs left without a preview dev server, including the envs that were deduped into a
+   * failing env. useful for telling the user (or later, the UI) which components have no preview.
+   */
+  getEnvIdsWithoutDevServer(): string[] {
+    return flatten(this._devServerFailures.map((failure) => [failure.envId, ...failure.relatedEnvIds]));
   }
 
   /**

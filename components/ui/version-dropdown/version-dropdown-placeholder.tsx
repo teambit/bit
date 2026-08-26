@@ -47,7 +47,7 @@ export function SimpleVersion({
       <Ellipsis className={classNames(styles.versionName)} onClick={rest.onClick}>
         {formattedVersion}
       </Ellipsis>
-      {hasMoreVersions && <Icon of="fat-arrow-down" onClick={rest.onClick} />}
+      {hasMoreVersions !== false && <Icon of="fat-arrow-down" onClick={rest.onClick} />}
     </div>
   );
 }
@@ -95,7 +95,7 @@ export function DetailedVersion({
       <Ellipsis className={styles.versionTimestamp} onClick={rest.onClick}>
         <TimeAgo date={timestamp} onClick={rest.onClick} />
       </Ellipsis>
-      {hasMoreVersions && <Icon of="fat-arrow-down" onClick={rest.onClick} />}
+      {hasMoreVersions !== false && <Icon of="fat-arrow-down" onClick={rest.onClick} />}
     </div>
   );
 }

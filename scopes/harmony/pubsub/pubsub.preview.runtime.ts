@@ -47,6 +47,24 @@ export class PubsubPreview {
     }
   }
 
+  /**
+   * A pooled grid thumbnail realm (hash carries `thumbnail=true`, set by preview-canvas.ts). Its
+   * host creates iframes with raw DOM and never answers the penpal handshake, so connecting would
+   * only burn ten 300ms-timeout retries during boot. Size reaches the pool as a plain postMessage
+   * (see preview.preview.runtime) and errors via the injected error-reporting script - neither
+   * needs this connection. The pool never re-points a realm at a non-thumbnail hash, so skipping
+   * the connection for the realm's lifetime is safe.
+   */
+  private isThumbnailRealm() {
+    try {
+      if (!isBrowser) return false;
+      const [, query = ''] = (window.location.hash || '').slice(1).split('?');
+      return new URLSearchParams(query).get('thumbnail') === 'true';
+    } catch {
+      return false;
+    }
+  }
+
   private connectToParentPubSub = (retries = 10): Promise<ParentMethods | undefined> => {
     if (retries <= 0) throw new PubSubNoParentError();
 
@@ -73,7 +91,7 @@ export class PubsubPreview {
   static async provider(): Promise<PubsubPreview> {
     const pubsubPreview = new PubsubPreview();
 
-    if (pubsubPreview.inIframe()) {
+    if (pubsubPreview.inIframe() && !pubsubPreview.isThumbnailRealm()) {
       pubsubPreview.connectToParentPubSub().catch((err) => {
         // parent window is not required to accept connections
         if (err instanceof PubSubNoParentError) return;

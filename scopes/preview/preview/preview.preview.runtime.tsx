@@ -64,6 +64,34 @@ export class PreviewPreview {
   }
 
   private isDev = false;
+  private sizeObserver?: ResizeObserver;
+  private sizePublishRaf?: number;
+  private sizePublishDebounced?: ReturnType<typeof debounce>;
+
+  private cleanupSizeObserver() {
+    if (this.sizeObserver) {
+      this.sizeObserver.disconnect();
+      this.sizeObserver = undefined;
+    }
+    if (this.sizePublishRaf) {
+      window.cancelAnimationFrame(this.sizePublishRaf);
+      this.sizePublishRaf = undefined;
+    }
+    if (this.sizePublishDebounced) {
+      this.sizePublishDebounced.cancel();
+      this.sizePublishDebounced = undefined;
+    }
+  }
+
+  /**
+   * A pooled grid thumbnail (hash carries `thumbnail=true`, set by preview-canvas.ts). Thumbnail
+   * realms render with `onlyOverview=true`, which drops included previews at render time - so
+   * their link files stay deferred (never evaluated, see generate-link.ts) and readiness must not
+   * wait for modules that will never load. Regular preview pages never carry the marker.
+   */
+  private isThumbnail() {
+    return this.getParam(this.getQuery(), 'thumbnail') === 'true';
+  }
 
   private isReady() {
     const { previewName } = this.getLocation();
@@ -72,11 +100,28 @@ export class PreviewPreview {
     if (!PREVIEW_MODULES.has(name)) return false;
     const preview = this.getPreview(name);
     if (!preview) return false;
-    const includedReady = preview.include?.every((included) => PREVIEW_MODULES.has(included)) ?? true;
+    const includedReady =
+      this.isThumbnail() || (preview.include?.every((included) => PREVIEW_MODULES.has(included)) ?? true);
     if (!includedReady) return false;
 
     return true;
   }
+
+  /**
+   * A host that recycles preview iframes - a workspace grid reusing a small pool of them while
+   * scrolling, rather than mounting one per card - re-points an iframe at another component by
+   * changing its hash. Only the fragment changes, so the document is not reloaded and the realm
+   * keeps everything it already parsed: re-rendering costs a render, not a bootstrap.
+   */
+  private listenToHashChanges(rootExt?: string) {
+    if (typeof window === 'undefined' || this.hashListenerAttached) return;
+    this.hashListenerAttached = true;
+    window.addEventListener('hashchange', () => {
+      void this.render(rootExt);
+    });
+  }
+
+  private hashListenerAttached = false;
 
   private _setupPromise?: Promise<void>;
   setup = () => {
@@ -94,9 +139,19 @@ export class PreviewPreview {
   /**
    * render the preview.
    */
+  private renderSeq = 0;
+
   render = async (rootExt?: string) => {
+    // a pooled iframe can be re-pointed while a previous render is still awaiting modules;
+    // without a sequence guard the older render can commit last and win over the newer hash
+    const seq = ++this.renderSeq;
+    // preview registration is asynchronous (link files initialize their modules through a dynamic
+    // import), so rendering must wait for the active preview - and its includes - to have
+    // registered. setup() resolves immediately once ready, so steady-state renders pay nothing.
+    await this.setup();
+    if (seq !== this.renderSeq) return undefined;
     // fit content always.
-    window.document.body.style.width = 'fit-content';
+    window.document.body.style.width = 'auto';
 
     const { previewName, componentId, envId } = this.getLocation();
     const name = previewName || this.getDefault();
@@ -107,15 +162,21 @@ export class PreviewPreview {
       throw new PreviewNotFound(previewName);
     }
 
-    const includesAll = await Promise.all(
-      (preview.include || []).map(async (inclPreviewName) => {
-        const includedPreview = this.getPreview(inclPreviewName);
-        if (!includedPreview) return undefined;
+    this.listenToHashChanges(rootExt);
 
-        const inclPreviewModule = await this.getPreviewModule(inclPreviewName, componentId);
-        return includedPreview.selectPreviewModel?.(componentId.fullName, inclPreviewModule);
-      })
-    );
+    // thumbnails discard includes below (they render with onlyOverview), so don't resolve the
+    // included previews' modules at all - their link files are deferred and must stay that way
+    const includesAll = this.isThumbnail()
+      ? []
+      : await Promise.all(
+          (preview.include || []).map(async (inclPreviewName) => {
+            const includedPreview = this.getPreview(inclPreviewName);
+            if (!includedPreview) return undefined;
+
+            const inclPreviewModule = await this.getPreviewModule(inclPreviewName, componentId);
+            return includedPreview.selectPreviewModel?.(componentId.fullName, inclPreviewModule);
+          })
+        );
 
     const query = this.getQuery();
     const onlyOverview = this.getParam(query, 'onlyOverview');
@@ -135,9 +196,11 @@ export class PreviewPreview {
               return module;
             });
 
-    // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
-    const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
+    // Aspect filtering is not needed in dev mode — all providers in the bundle are safe to use,
+    // and the GQL call to fetch aspects blocks rendering of every preview iframe.
+    const componentAspects = undefined;
     const previewModule = await this.getPreviewModule(name, componentId);
+    if (seq !== this.renderSeq) return undefined;
     const render = preview.render(
       componentId,
       envId || '',
@@ -168,48 +231,76 @@ export class PreviewPreview {
   setViewport() {
     const query = this.getQuery();
     const viewPort = this.getParam(query, 'viewport');
+    const body = window.document.body;
+
     if (!viewPort) {
-      window.document.body.style.width = '100%';
+      body.style.width = '100%';
+      body.style.maxWidth = '';
       return;
     }
 
-    window.document.body.style.maxWidth = `${viewPort}px`;
+    body.style.width = 'auto';
+    body.style.maxWidth = `${viewPort}px`;
   }
 
   reportSize() {
     if (!window?.parent || !window?.document) return;
-    // In Preview, the <body> is always exactly as tall as the iframe viewport, not as tall as the content.
-    // by measuring the scrollHeight of the root element, we can get the height of the content.
+    this.cleanupSizeObserver();
+    // In Preview, the <body> can stay viewport-sized while the actual content extends beyond it.
+    // Avoid style mutations in ResizeObserver callbacks (which can create ResizeObserver loop errors).
     const measure = () => {
       const root = window.document.getElementById('root') ?? window.document.documentElement;
-      const prevHeight = root.style.height;
-      // set height auto to make the browser calculate the natural block formatting height
-      // scrollHeight of an element that has height: 100% reports the viewport height, not the content height
-      root.style.height = 'auto';
-      const height = root.scrollHeight;
-      const width = root.scrollWidth;
-      // restore the previous height so nothing visually changes within the same tick
-      root.style.height = prevHeight;
+      const docEl = window.document.documentElement;
+      const body = window.document.body;
+      const rootRect = root.getBoundingClientRect();
+      const height = Math.max(
+        root.scrollHeight,
+        docEl.scrollHeight,
+        body?.scrollHeight || 0,
+        Math.ceil(rootRect.height)
+      );
+      const width = Math.max(root.scrollWidth, docEl.scrollWidth, body?.scrollWidth || 0, Math.ceil(rootRect.width));
       return { width, height };
     };
     const publish = () => {
       const { width, height } = measure();
       this.pubsub.pub(PreviewAspect.id, new SizeEvent({ width, height }));
+      // A pooled thumbnail host (preview-canvas.ts) creates its iframes with raw DOM and never
+      // opens a penpal connection, so the pubsub event above cannot reach it. Send the size as a
+      // plain postMessage too - the pool uses it as the "this card actually rendered" signal.
+      if (this.isThumbnail() && window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: SizeEvent.TYPE, data: { width, height } }, '*');
+      }
     };
     // publish right away so the parent gets the first real size as soon as possible
     publish();
     // publish dimension changes when the content size actually changes
-    const debounced = debounce(publish, 100);
-    const resizedObserver = new ResizeObserver(debounced);
-    resizedObserver.observe(window.document.documentElement);
+    this.sizePublishDebounced = debounce(publish, 100);
+    const schedulePublish = () => {
+      if (this.sizePublishRaf) {
+        window.cancelAnimationFrame(this.sizePublishRaf);
+      }
+      this.sizePublishRaf = window.requestAnimationFrame(() => {
+        this.sizePublishRaf = undefined;
+        this.sizePublishDebounced?.();
+      });
+    };
+    this.sizeObserver = new ResizeObserver(schedulePublish);
+    this.sizeObserver.observe(window.document.documentElement);
     const root = window.document.getElementById('root');
-    if (root) resizedObserver.observe(root);
+    if (root) this.sizeObserver.observe(root);
+    if (window.document.body) this.sizeObserver.observe(window.document.body);
   }
 
   async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {
     const compShortId = id.fullName;
 
-    const relevantModel = PREVIEW_MODULES.get(previewName);
+    let relevantModel = PREVIEW_MODULES.get(previewName);
+    if (!relevantModel) {
+      // an include can be requested before its link finished registering - wait once, then fail
+      await this.setup();
+      relevantModel = PREVIEW_MODULES.get(previewName);
+    }
     if (!relevantModel) throw new Error(`[preview.preview] missing preview "${previewName}"`);
     if (relevantModel.componentMap[compShortId]) return relevantModel;
 
@@ -410,10 +501,8 @@ export class PreviewPreview {
       preview.rerenderOnPreviewModulesUpdated();
     });
 
-    window.addEventListener('hashchange', () => {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      preview.render();
-    });
+    // hash changes are handled by listenToHashChanges(), attached by the first render();
+    // a second listener here made every hash change render twice.
 
     return preview;
   }

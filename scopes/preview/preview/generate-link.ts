@@ -1,5 +1,5 @@
 import type { ComponentMap } from '@teambit/component';
-import { join, relative } from 'path';
+import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
 import normalizePath from 'normalize-path';
 import objectHash from 'object-hash';
@@ -61,32 +61,23 @@ export function generateLink(
     return { envId, varName, resolveFrom };
   });
   const moduleImports = getModuleImports(moduleLinks, tempPackageDir);
-  const acceptedDependencies = useSource
-    ? Array.from(
-        new Set([
-          ...componentLinks.flatMap((link) =>
-            link.modules.map((module) => toWebpackRequestId(module.resolveFrom, workspacePath))
-          ),
-          ...(moduleImports.tempFilePath ? [toWebpackRequestId(moduleImports.tempFilePath, workspacePath)] : []),
-        ])
-      )
-    : [];
+  // The link file is the graph parent of every component module it imports, which makes
+  // it the hot boundary for updates react-refresh can't take (a module whose exports are
+  // not all React components — e.g. a composition exporting a live-controls config —
+  // is not a refresh boundary, so its update bubbles up; unhandled, it reaches the entry
+  // and forces a full page reload). The boundary must be a no-argument self-accept:
+  // listing the imported modules explicitly makes the bundler resolve every listed file
+  // into a dependency of this entry — hundreds of composition/docs modules get pulled
+  // into the initial build, which bloats it and breaks lazy per-component loading
+  // (webpack-served envs visibly regressed). Self-accept adds no dependencies: a
+  // bubbling child disposes and re-executes this module, and the dispose data below
+  // marks the re-run so the bootstrap re-initializes and notifies the preview UI.
 
   const sourceModeBootstrap = `
-function __bitActivePreviewName() {
-  try {
-    const { hash } = window.location;
-    if (!hash) return null;
-    const [, query = ""] = hash.slice(1).split("?");
-    const params = new URLSearchParams(query);
-    return params.get("preview");
-  } catch {
-    return null;
-  }
-}
-
 let __bitInitialized = false;
 async function __bitMaybeInitialize(force = false, shouldNotify = false) {
+  // a deferred thumbnail link stays uninitialized until a hashchange asks for its preview
+  if (__bitThumbnailDefer()) return;
   if (__bitInitialized && !force) return;
   __bitInitialized = true;
   // Always call initializeModules() so linkModules runs for every preview
@@ -97,9 +88,11 @@ async function __bitMaybeInitialize(force = false, shouldNotify = false) {
   await initializeModules();
   if (shouldNotify) {
     // Only the active preview dispatches the update event so unrelated previews
-    // don't cause extra rerenders during HMR.
+    // don't cause extra rerenders during HMR. A realm whose hash names no preview
+    // is showing the default one (e.g. overview pages) — it must notify too, or
+    // docs edits never re-render there.
     const activePreview = __bitActivePreviewName();
-    if (activePreview === ${JSON.stringify(prefix)}) {
+    if (activePreview === ${JSON.stringify(prefix)} || activePreview === null) {
       window.dispatchEvent(
         new CustomEvent('bit-preview-modules-updated', {
           detail: { previewName: ${JSON.stringify(prefix)} },
@@ -109,19 +102,19 @@ async function __bitMaybeInitialize(force = false, shouldNotify = false) {
   }
 }
 
-const __bitHot =
-  import.meta.webpackHot
-  || (typeof module !== 'undefined' && module.hot)
-  || undefined;
-
-if (__bitHot) {
-  __bitHot.accept(${JSON.stringify(acceptedDependencies)}, () => {
-    __bitInitialized = false;
-    void __bitMaybeInitialize(true, true);
+// The literal \`import.meta.webpackHot\` member expression is required: bundlers wire
+// hot acceptance by static analysis of exactly that form; an alias is invisible to it
+// and updates bubble past this file into a full reload.
+if (import.meta.webpackHot) {
+  import.meta.webpackHot.accept();
+  import.meta.webpackHot.dispose((data) => {
+    data.bitHmrRerun = true;
   });
-  __bitHot.dispose(() => {
-    __bitInitialized = false;
-  });
+}
+if (import.meta.webpackHot && import.meta.webpackHot.data && import.meta.webpackHot.data.bitHmrRerun) {
+  // this evaluation is an HMR re-execution after a child module updated —
+  // re-link the fresh modules and tell the preview UI to re-render.
+  void __bitMaybeInitialize(true, true);
 }
 
 // Defer source-mode initialization until after webpack marks the current entry
@@ -138,9 +131,50 @@ window.addEventListener('hashchange', () => {
   const runtimeBootstrap = useSource
     ? sourceModeBootstrap
     : `
-(async function initializeModulesOnLoad() {
+let __bitInitialized = false;
+async function __bitInitializeOnce(force = false, shouldNotify = false) {
+  if (__bitInitialized && !force) return;
+  __bitInitialized = true;
   await initializeModules();
-})();
+  if (shouldNotify) {
+    // Only the active preview dispatches the update event so unrelated previews
+    // don't cause extra rerenders during HMR. A realm whose hash names no preview
+    // is showing the default one (e.g. overview pages) — it must notify too, or
+    // docs edits never re-render there.
+    const activePreview = __bitActivePreviewName();
+    if (activePreview === ${JSON.stringify(prefix)} || activePreview === null) {
+      window.dispatchEvent(
+        new CustomEvent('bit-preview-modules-updated', {
+          detail: { previewName: ${JSON.stringify(prefix)} },
+        })
+      );
+    }
+  }
+}
+
+// Literal \`import.meta.webpackHot\` member expressions on purpose — an alias breaks
+// the bundler's static hot-accept analysis. No-argument self-accept on purpose too —
+// see the acceptedDependencies note in generate-link.ts: listing modules would pull
+// them all into this entry's build.
+if (import.meta.webpackHot) {
+  import.meta.webpackHot.accept();
+  import.meta.webpackHot.dispose((data) => {
+    data.bitHmrRerun = true;
+  });
+}
+if (import.meta.webpackHot && import.meta.webpackHot.data && import.meta.webpackHot.data.bitHmrRerun) {
+  // HMR re-execution after a child module updated — re-link and re-render.
+  void __bitInitializeOnce(true, true);
+}
+
+if (__bitThumbnailDefer()) {
+  // deferred: initialize only if a later hash actually asks for this preview
+  window.addEventListener('hashchange', () => {
+    if (!__bitThumbnailDefer()) void __bitInitializeOnce();
+  });
+} else {
+  void __bitInitializeOnce();
+}
 `;
 
   const contents = `import { linkModules } from '${normalizePath(join(previewDistDir, 'preview-modules.js'))}';
@@ -164,11 +198,44 @@ function __bitActiveComponentId() {
   }
 }
 
-const __bitActiveId = __bitActiveComponentId();
+function __bitActivePreviewName() {
+  try {
+    const { hash } = window.location;
+    if (!hash) return null;
+    const [, query = ""] = hash.slice(1).split("?");
+    const params = new URLSearchParams(query);
+    return params.get("preview");
+  } catch {
+    return null;
+  }
+}
+
+// A pooled grid "thumbnail" realm (see preview-canvas.ts) renders exactly one preview type, yet
+// every preview's link file evaluates its env template module at boot: the overview template is a
+// full docs app, measured at ~250ms of a ~500ms realm boot on a grid that only ever renders
+// compositions. When the hash carries thumbnail=true, a link whose preview is not the active one
+// defers all module evaluation until a hashchange actually asks for it. Without the marker
+// nothing defers, so regular preview pages load exactly what they loaded before.
+function __bitThumbnailDefer() {
+  try {
+    const [, query = ""] = (window.location.hash || "").slice(1).split("?");
+    const params = new URLSearchParams(query);
+    if (params.get("thumbnail") !== "true") return false;
+    const active = params.get("preview");
+    if (!active) return false;
+    return active !== ${JSON.stringify(prefix)};
+  } catch {
+    return false;
+  }
+}
 
 function __bitShouldSurfaceFor(componentId) {
-  if (!__bitActiveId) return false;
-  const act = __bitNormalizeId(__bitActiveId);
+  // resolved per call, not captured at realm boot: a pooled iframe is re-pointed at
+  // other components by changing only its hash, and a boot-time snapshot would keep
+  // selecting the first component's modules for same-fullName collisions.
+  const activeId = __bitActiveComponentId();
+  if (!activeId) return false;
+  const act = __bitNormalizeId(activeId);
   const cmp = __bitNormalizeId(componentId);
   if (!act || !cmp) return false;
   if (act === cmp) return true;
@@ -190,6 +257,7 @@ function __bitSurfaceToOverlay(err, componentId) {
 
 ${moduleImports.statement}
 async function initializeModules() {
+const {${moduleLinks.map((m) => m.varName).join(', ')}} = await __bitLoadMainModules();
 ${getComponentImports(componentLinks)}
 linkModules('${prefix}', {
   modulesMap: {
@@ -247,21 +315,6 @@ function getEnvVarName(envId: string) {
   return varName;
 }
 
-function toWebpackRequestId(filePath: string, workspacePath?: string): string {
-  if (!workspacePath) return filePath;
-  const normalizedWorkspacePath = normalizePath(workspacePath);
-  const normalizedFilePath = normalizePath(filePath);
-  if (normalizedFilePath === normalizedWorkspacePath) return '.';
-  if (
-    normalizedFilePath.startsWith(`${normalizedWorkspacePath}/`) ||
-    normalizedFilePath.startsWith(`${normalizedWorkspacePath}\\`)
-  ) {
-    const relPath = normalizePath(relative(workspacePath, filePath));
-    return relPath.startsWith('.') ? relPath : `./${relPath}`;
-  }
-  return filePath;
-}
-
 function getModuleImports(
   moduleLinks: ModuleLink[] = [],
   tempPackageDir?: string
@@ -277,9 +330,19 @@ function getModuleImports(
     .join('\n');
   outputFileSync(tempFilePath, tempFileContents);
   return {
-    statement: `import {${moduleLinks.map((moduleLink) => moduleLink.varName).join(', ')}} from "${normalizePath(
-      tempFilePath
-    )}";`,
+    // A lazy loader instead of a static import: the env template modules (the docs app among them)
+    // must not evaluate while a thumbnail realm's link is deferred. A true async import also keeps
+    // their code out of the *initial* chunk graph, which is what makes it matter: the docs-app chunk
+    // alone measured 5.4 MB on the wire, downloaded by every realm that would never run it. Each
+    // preview's temp file must form its OWN async chunk - a shared webpackChunkName merged the
+    // compositions mounter with the overview docs template, and initializing compositions dragged
+    // the whole docs app back in. A grid thumbnail now neither evaluates nor fetches it; a real
+    // preview page pays one extra request the first time its template initializes.
+    statement: `let __bitMainModulesNs;
+async function __bitLoadMainModules() {
+  __bitMainModulesNs ??= await import("${normalizePath(tempFilePath)}");
+  return __bitMainModulesNs;
+}`,
     tempFilePath: normalizePath(tempFilePath),
   };
 }
@@ -303,8 +366,16 @@ function getComponentImports(componentLinks: ComponentLink[] = []): string {
             }
           }   
           else {
-            // Don't import non-active modules at all
-            ${module.varName} = { default: function Placeholder() { return null; } };
+            // Not the component this iframe was opened for. Keep it out of the initial load, but
+            // hand back a loader instead of a null-rendering placeholder: a realm that renders
+            // several previews at once (a workspace grid batching cards into one iframe) needs to
+            // pull these in on demand, and normalizeEntries already calls functions. The active
+            // component's path above is untouched, so a single-preview iframe loads exactly what it
+            // loaded before.
+            ${module.varName} = () => import("${module.resolveFrom}").catch((err) => {
+              __bitSurfaceToOverlay(err, "${link.componentIdString}");
+              return { default: function ErrorFallback() { return null; }, __loadError: err };
+            });
         }`;
       });
     })

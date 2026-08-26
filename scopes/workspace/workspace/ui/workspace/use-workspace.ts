@@ -1,31 +1,38 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql, useApolloClient } from '@apollo/client';
+import { gql, useQuery, useApolloClient } from '@apollo/client';
 import type { ComponentIdObj } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';
 
-type UseWorkspaceResult = Omit<ReturnType<typeof useDataQuery>, 'data' | 'previousData'> & {
-  workspace: Workspace | undefined;
+const CONNECTION_STATUS_EVENT = 'bit-dev-server-connection-status';
+const WORKSPACE_SHELL_READY_EVENT = 'bit-workspace-shell-ready';
+const STATUS_SHELL_READY_FALLBACK_MS = 2500;
+const STATUS_PREVIEW_READY_FALLBACK_MS = 12000;
+const STATUS_IDLE_ARM_MS = 1000;
+
+type ConnectionEventDetail = {
+  online?: boolean;
+  reason?: 'network' | 'browser-offline' | 'preview';
+  previewKey?: string;
+  previewSnapshot?: {
+    presenceKeys: string[];
+    readyKeys: string[];
+    compilingKeys: string[];
+  };
 };
 
 type UseWorkspaceOptions = {
   onComponentAdded?: (component: ComponentModel[]) => void;
   onComponentUpdated?: (component: ComponentModel[]) => void;
   onComponentRemoved?: (compId: ComponentID[]) => void;
+  enableStatusQuery?: boolean;
 };
 type RawComponent = { id: ComponentIdObj };
 
-/**
- * Cheap, card-renderable fields only. Everything here resolves from already-loaded component
- * metadata (id, env, aspects, compositions, preview, deprecation, server, buildStatus, description),
- * so the light query returns fast and the grid can paint immediately. The two expensive async
- * resolvers — `status` (getStatus(): git/scope compare) and `issuesCount` (getIssues(): dependency
- * analysis) — are deliberately omitted here and fetched separately by `wcComponentDetailFields`.
- */
+// Light fragment — fast initial render (no status/issues — those are the slow N+1 resolvers)
 const wcComponentFieldsLight = gql`
   fragment wcComponentFieldsLight on Component {
     id {
@@ -33,17 +40,6 @@ const wcComponentFieldsLight = gql`
       version
       scope
     }
-    aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
-      # 'id' property in gql refers to a *global* identifier and used for caching.
-      # this makes aspect data cache under the same key, even when they are under different components.
-      # renaming the property fixes that.
-      aspectId: id
-      data
-    }
-    compositions {
-      identifier
-    }
-    description
     buildStatus
     preview {
       includesEnvTemplate
@@ -59,27 +55,43 @@ const wcComponentFieldsLight = gql`
     server {
       env
       url
+      isCompiling
     }
     env {
       id
       icon
     }
+    compositions {
+      identifier
+    }
   }
 `;
 
-/**
- * The expensive per-component fields, split out so they never block first paint. These drive the
- * status pills (changed/building) and the issues badge, both of which gracefully degrade to a
- * neutral "built" / no-issues state until this query resolves.
- */
-const wcComponentDetailFields = gql`
-  fragment wcComponentDetailFields on Component {
+// Heavy fragment — deferred but fast (no status — status is the slow N+1 resolver)
+const wcComponentFieldsHeavy = gql`
+  fragment wcComponentFieldsHeavy on Component {
     id {
       name
       version
       scope
     }
+    aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
+      aspectId: id
+      data
+    }
+    description
     issuesCount
+  }
+`;
+
+// Status fragment — separate because status resolution is ~13s for all components
+const wcComponentFieldsStatus = gql`
+  fragment wcComponentFieldsStatus on Component {
+    id {
+      name
+      version
+      scope
+    }
     status {
       isOutdated
       isNew
@@ -94,21 +106,78 @@ const wcComponentDetailFields = gql`
   }
 `;
 
-/**
- * Full per-component shape (light + detail). Used by the subscriptions: a single added/changed
- * component is cheap to fully resolve, so live updates always carry fresh status.
- */
-const wcComponentFieldsFull = gql`
-  fragment wcComponentFieldsFull on Component {
-    ...wcComponentFieldsLight
-    ...wcComponentDetailFields
+// Server fragment — lightweight fallback source of truth for preview compilation state.
+const wcComponentFieldsServer = gql`
+  fragment wcComponentFieldsServer on Component {
+    id {
+      name
+      version
+      scope
+    }
+    server {
+      env
+      url
+      isCompiling
+    }
   }
-  ${wcComponentFieldsLight}
-  ${wcComponentDetailFields}
 `;
 
-const WORKSPACE_LIGHT = gql`
-  query workspaceLight {
+// Full fragment — used for subscriptions (need complete data for updates)
+const wcComponentFields = gql`
+  fragment wcComponentFields on Component {
+    id {
+      name
+      version
+      scope
+    }
+    aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
+      aspectId: id
+      data
+    }
+    compositions {
+      identifier
+    }
+    description
+    labels
+    issuesCount
+    status {
+      isOutdated
+      isNew
+      isInScope
+      isStaged
+      modifyInfo {
+        hasModifiedFiles
+        hasModifiedDependencies
+      }
+      isDeleted
+    }
+    buildStatus
+    preview {
+      includesEnvTemplate
+      legacyHeader
+      isScaling
+      skipIncludes
+    }
+    deprecation {
+      isDeprecate
+      newId
+      range
+    }
+    server {
+      env
+      url
+      isCompiling
+    }
+    env {
+      id
+      icon
+    }
+  }
+`;
+
+// Initial query — uses light fragment for fast render
+const WORKSPACE = gql`
+  query workspace {
     workspace {
       name
       path
@@ -121,46 +190,70 @@ const WORKSPACE_LIGHT = gql`
   ${wcComponentFieldsLight}
 `;
 
-// The detail fields are fetched one page at a time via the existing `components(offset, limit)`
-// resolver. getStatus()/getIssues() are synchronous CPU work; fetching all 204 at once blocks the
-// server's event loop for ~5s straight (a navigation query issued during that window waited ~10s).
-// Paging it lets the loop breathe between chunks — measured ping latency dropped from ~10s to ~0.3s.
-const WORKSPACE_DETAILS_PAGE = gql`
-  query workspaceDetailsPage($offset: Int!, $limit: Int!) {
+// Deferred query — fills in heavy fields after initial render (fast: ~30ms)
+const WORKSPACE_HEAVY = gql`
+  query workspaceHeavy {
     workspace {
-      components(offset: $offset, limit: $limit) {
-        ...wcComponentDetailFields
+      name
+      components {
+        ...wcComponentFieldsHeavy
       }
     }
   }
-  ${wcComponentDetailFields}
+  ${wcComponentFieldsHeavy}
 `;
 
-// Small pages keep any single server-blocking burst under ~350ms; the gap yields the event loop so
-// other requests (navigation, lanes) are serviced promptly between pages.
-const DETAIL_CHUNK_SIZE = 15;
-const DETAIL_CHUNK_GAP_MS = 60;
+// Status query — chunked because status resolution is synchronous server work
+// (~13s for 212 components in one operation). One unpaginated query would hold the
+// server event loop for the whole duration and freeze graphql, previews, and
+// subscriptions; per-chunk requests bound each stall and yield between chunks.
+const WORKSPACE_STATUS_CHUNK = gql`
+  query workspaceStatusChunk($ids: [String!]!) {
+    getHost {
+      id
+      getMany(ids: $ids) {
+        ...wcComponentFieldsStatus
+      }
+    }
+  }
+  ${wcComponentFieldsStatus}
+`;
+const STATUS_CHUNK_SIZE = 24;
+
+// Lightweight server-status poll query.
+// Used as a fallback when startup subscriptions are delayed or dropped.
+const WORKSPACE_SERVER = gql`
+  query workspaceServer {
+    workspace {
+      name
+      components {
+        ...wcComponentFieldsServer
+      }
+    }
+  }
+  ${wcComponentFieldsServer}
+`;
 
 const COMPONENT_SUBSCRIPTION_ADDED = gql`
   subscription OnComponentAdded {
     componentAdded {
       component {
-        ...wcComponentFieldsFull
+        ...wcComponentFields
       }
     }
   }
-  ${wcComponentFieldsFull}
+  ${wcComponentFields}
 `;
 
 const COMPONENT_SUBSCRIPTION_CHANGED = gql`
   subscription OnComponentChanged {
     componentChanged {
       component {
-        ...wcComponentFieldsFull
+        ...wcComponentFields
       }
     }
   }
-  ${wcComponentFieldsFull}
+  ${wcComponentFields}
 `;
 
 const COMPONENT_SUBSCRIPTION_REMOVED = gql`
@@ -182,99 +275,367 @@ const COMPONENT_SERVER_STARTED = gql`
       url
       host
       basePath
+      isCompiling
     }
   }
 `;
 
-function componentKey(id: ComponentIdObj): string {
-  return `${id.scope}/${id.name}@${id.version}`;
-}
-
-export function useWorkspace(options: UseWorkspaceOptions = {}): UseWorkspaceResult {
-  // Light query drives first paint. cache-and-network so a revisit paints instantly from cache,
-  // then refreshes in the background (the workspace host otherwise defaults to network-only).
-  // `previousData` is destructured out (not spread into `...rest`) so the returned shape matches
-  // UseWorkspaceResult, which omits it (along with `data`, replaced by `workspace`).
-  const {
-    data,
-    previousData: _previousData,
-    subscribeToMore,
-    loading,
-    ...rest
-  } = useDataQuery(WORKSPACE_LIGHT, {
-    fetchPolicy: 'cache-and-network',
-  });
-
-  // CRITICAL: the detail data (status + issuesCount) is NOT fetched in parallel with the light query.
-  // getStatus()/getIssues() are synchronous CPU work that monopolizes the server's single-threaded
-  // event loop for several seconds on large workspaces; running it concurrently would stall the light
-  // query behind it (measured: light alone ~10ms, but ~5s when racing the detail query) and the grid
-  // would never paint early. So we wait for the light data to arrive AND for the browser to go idle
-  // (i.e. the grid has painted) before kicking off the (chunked) detail fetch in the background.
-  const [detailEnabled, setDetailEnabled] = useState(false);
-  const lightDataReady = Boolean(data?.workspace);
-  const totalComponents = data?.workspace?.components?.length ?? 0;
-
-  useEffect(() => {
-    if (!lightDataReady || detailEnabled || typeof window === 'undefined') return undefined;
-    const enable = () => setDetailEnabled(true);
-    const ric = (window as any).requestIdleCallback as
-      | ((cb: () => void, opts?: { timeout: number }) => number)
-      | undefined;
-    if (ric) {
-      const handle = ric(enable, { timeout: 1000 });
-      return () => (window as any).cancelIdleCallback?.(handle);
+const COMPONENT_SERVER_COMPILATION_CHANGED = gql`
+  subscription OnComponentServerCompilationChanged {
+    componentServerCompilationChanged {
+      env
+      affectedEnvs
+      isCompiling
+      url
+      host
+      basePath
+      errorCount
+      warningCount
     }
-    const handle = window.setTimeout(enable, 200);
-    return () => window.clearTimeout(handle);
-  }, [lightDataReady, detailEnabled]);
+  }
+`;
 
-  // Detail (status + issuesCount) is paged in once the grid has painted, with a yield between pages
-  // so the server stays responsive. Results accumulate by component key and merge in progressively —
-  // status pills and issue counts fill in chunk by chunk rather than all-or-nothing after ~5s.
-  const client = useApolloClient();
-  const [detailByKey, setDetailByKey] = useState<Map<string, { status?: any; issuesCount?: number }>>(new Map());
+export function useWorkspace(options: UseWorkspaceOptions = {}) {
+  const { enableStatusQuery = true } = options;
+  // Use useQuery directly (NOT useDataQuery) to avoid triggering the global LoaderRibbon.
+  // This ensures the workspace layout renders instantly — no loading spinner at all.
+  // Data arrives in ~120ms and the UI fills in seamlessly.
+  const { data, subscribeToMore, loading, error, refetch, ...rest } = useQuery(WORKSPACE, {
+    // cache-and-network: serve cached data instantly on reload, then refresh from network.
+    // nextFetchPolicy: after initial fetch, settle to cache-first — subsequent cache updates
+    // (from subscriptions) won't trigger new network requests, preventing re-render storms.
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+    errorPolicy: 'all',
+  });
+  const optionsRef = useLatest(options);
+  const [shouldFetchStatus, setShouldFetchStatus] = useState(false);
+  const [shellReady, setShellReady] = useState(false);
+  const [previewReady, setPreviewReady] = useState(false);
+  const [useServerFallbackQuery, setUseServerFallbackQuery] = useState(false);
+  const [hasFreshWorkspaceSnapshot, setHasFreshWorkspaceSnapshot] = useState(false);
+  const serverPollingIntervalRef = useRef<number | null>(null);
+  const recoveryRetryTimerRef = useRef<number | undefined>(undefined);
+  const recoveryRetryDelayRef = useRef(1200);
+  const recoveryInFlightRef = useRef(false);
+  const hasWorkspaceNetworkError = !!error?.networkError;
 
-  useEffect(() => {
-    if (!detailEnabled || !totalComponents) return undefined;
-    let cancelled = false;
+  const dispatchPreviewConnectionEvent = useCallback(
+    (detail: {
+      previewSnapshot?: {
+        presenceKeys: string[];
+        readyKeys: string[];
+        compilingKeys: string[];
+      };
+    }) => {
+      if (typeof window === 'undefined') return;
+      window.dispatchEvent(
+        new CustomEvent(CONNECTION_STATUS_EVENT, {
+          detail: { ...detail, reason: 'preview', timestamp: Date.now() },
+        })
+      );
+    },
+    []
+  );
 
-    (async () => {
-      for (let offset = 0; offset < totalComponents; offset += DETAIL_CHUNK_SIZE) {
-        if (cancelled) return;
-        try {
-          const res = await client.query({
-            query: WORKSPACE_DETAILS_PAGE,
-            variables: { offset, limit: DETAIL_CHUNK_SIZE },
-            fetchPolicy: 'network-only',
-          });
-          if (cancelled) return;
-          const comps: { id: ComponentIdObj; status?: any; issuesCount?: number }[] =
-            res.data?.workspace?.components ?? [];
-          if (comps.length) {
-            setDetailByKey((prev) => {
-              const next = new Map(prev);
-              for (const c of comps) next.set(componentKey(c.id), { status: c.status, issuesCount: c.issuesCount });
-              return next;
-            });
-          }
-        } catch {
-          // a failed page must not abort the rest of the pages
+  const clearRecoveryRetryTimer = useCallback(() => {
+    if (!recoveryRetryTimerRef.current) return;
+    window.clearTimeout(recoveryRetryTimerRef.current);
+    recoveryRetryTimerRef.current = undefined;
+  }, []);
+
+  const triggerRecoveryRefetch = useCallback(
+    async (opts?: { immediateRetry?: boolean }) => {
+      if (recoveryInFlightRef.current) return;
+      recoveryInFlightRef.current = true;
+      try {
+        await refetch();
+        recoveryRetryDelayRef.current = 1200;
+      } catch {
+        if (!opts?.immediateRetry) {
+          recoveryRetryDelayRef.current = Math.min(Math.round(recoveryRetryDelayRef.current * 1.8), 10000);
         }
-        if (cancelled) return;
-        // yield the server event loop between pages
-        await new Promise((resolve) => {
-          setTimeout(resolve, DETAIL_CHUNK_GAP_MS);
-        });
+      } finally {
+        recoveryInFlightRef.current = false;
       }
-    })();
+    },
+    [refetch]
+  );
+
+  // Cache hydration should remain instant, but if the first network sync failed
+  // (common during dev-server restarts), aggressively retry in background so stale
+  // cached component lists converge quickly to current workspace reality.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    // no cached workspace + no error just means the first load is in flight;
+    // a first-load network failure must still schedule retries or the page
+    // stays on its skeleton forever
+    if (!data?.workspace && !hasWorkspaceNetworkError) return undefined;
+
+    if (!hasWorkspaceNetworkError) {
+      clearRecoveryRetryTimer();
+      recoveryRetryDelayRef.current = 1200;
+      return undefined;
+    }
+
+    const scheduleRetry = () => {
+      clearRecoveryRetryTimer();
+      recoveryRetryTimerRef.current = window.setTimeout(async () => {
+        await triggerRecoveryRefetch();
+        if (hasWorkspaceNetworkError) scheduleRetry();
+      }, recoveryRetryDelayRef.current);
+    };
+
+    scheduleRetry();
+    return () => {
+      clearRecoveryRetryTimer();
+    };
+  }, [data?.workspace?.name, hasWorkspaceNetworkError, clearRecoveryRetryTimer, triggerRecoveryRefetch]);
+
+  // Trigger an immediate sync retry on explicit reconnect signals.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    if (!hasWorkspaceNetworkError) return undefined;
+
+    const onOnline = () => {
+      void triggerRecoveryRefetch({ immediateRetry: true });
+    };
+    const onConnectionEvent = (event: Event) => {
+      const { detail } = event as CustomEvent<ConnectionEventDetail>;
+      if (detail?.reason === 'preview') return;
+      if (detail?.online === true) {
+        void triggerRecoveryRefetch({ immediateRetry: true });
+      }
+    };
+
+    window.addEventListener('online', onOnline);
+    window.addEventListener(CONNECTION_STATUS_EVENT, onConnectionEvent as EventListener);
 
     return () => {
-      cancelled = true;
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener(CONNECTION_STATUS_EVENT, onConnectionEvent as EventListener);
     };
-  }, [detailEnabled, totalComponents, client]);
+  }, [hasWorkspaceNetworkError, triggerRecoveryRefetch]);
 
-  const optionsRef = useLatest(options);
+  // Heavy query — fires after light query returns; uses useQuery (not useDataQuery)
+  // to avoid showing the global loading spinner while heavy fields resolve.
+  // Fast (~30ms) because status is excluded.
+  // IMPORTANT: use 'no-cache' to prevent writing to Apollo cache, which would
+  // overwrite the light query's components array and lose env/server/buildStatus fields.
+  const { data: heavyResult } = useQuery(WORKSPACE_HEAVY, {
+    skip: !data?.workspace,
+    fetchPolicy: 'no-cache',
+  });
+
+  useEffect(() => {
+    if (!data?.workspace) {
+      setHasFreshWorkspaceSnapshot(false);
+      return;
+    }
+    if (!loading && !error?.networkError) {
+      setHasFreshWorkspaceSnapshot(true);
+    }
+  }, [data?.workspace?.name, loading, error?.networkError]);
+
+  const {
+    data: serverResult,
+    startPolling: startServerPolling,
+    stopPolling: stopServerPolling,
+  } = useQuery(WORKSPACE_SERVER, {
+    skip: !data?.workspace || !useServerFallbackQuery,
+    // Fallback query is purely runtime-state (preview server readiness/compiling),
+    // so it must always come from the current process, never restored Apollo cache.
+    fetchPolicy: 'no-cache',
+    notifyOnNetworkStatusChange: false,
+    errorPolicy: 'ignore',
+  });
+
+  const setServerPollingInterval = useCallback(
+    (nextMs: number | null) => {
+      if (serverPollingIntervalRef.current === nextMs) return;
+      serverPollingIntervalRef.current = nextMs;
+      if (nextMs === null) {
+        stopServerPolling();
+        return;
+      }
+      startServerPolling(nextMs);
+    },
+    [startServerPolling, stopServerPolling]
+  );
+
+  useEffect(() => {
+    if (!data?.workspace || !useServerFallbackQuery) {
+      setServerPollingInterval(null);
+      return;
+    }
+
+    const serverComponents = serverResult?.workspace?.components;
+    if (!serverComponents?.length) {
+      setServerPollingInterval(1500);
+      return;
+    }
+
+    const hasCompilingServers = serverComponents.some((component: any) => component?.server?.isCompiling === true);
+    // Keep fallback polling active only while previews are actively compiling.
+    // Once all previews are ready, subscriptions become the primary source of truth.
+    if (hasCompilingServers) {
+      setServerPollingInterval(1500);
+      return;
+    }
+
+    setServerPollingInterval(null);
+    setUseServerFallbackQuery(false);
+  }, [data?.workspace?.name, serverResult?.workspace?.components, setServerPollingInterval, useServerFallbackQuery]);
+
+  useEffect(() => {
+    if (!data?.workspace) {
+      setUseServerFallbackQuery(false);
+      return;
+    }
+    // Arm fallback at workspace boot; cache-first keeps this cheap on subsequent visits.
+    setUseServerFallbackQuery(true);
+  }, [data?.workspace?.name]);
+
+  useEffect(() => {
+    return () => {
+      setServerPollingInterval(null);
+    };
+  }, [setServerPollingInterval]);
+
+  // Delay status query until startup-critical UI is ready.
+  // We wait for:
+  // 1) sidebar shell readiness signal (from workspace drawer), and
+  // 2) first preview-ready signal (or fallback timeout).
+  // This keeps status as the final query so it cannot contend with startup paths.
+  useEffect(() => {
+    if (!data?.workspace || !enableStatusQuery) {
+      setShouldFetchStatus(false);
+      setShellReady(false);
+      setPreviewReady(false);
+      return;
+    }
+
+    if (typeof window === 'undefined') {
+      setShellReady(true);
+      setPreviewReady(true);
+      return;
+    }
+
+    setShouldFetchStatus(false);
+    setShellReady(false);
+    setPreviewReady(false);
+
+    const onShellReady = () => setShellReady(true);
+    const onConnectionEvent = (event: Event) => {
+      const { detail } = event as CustomEvent<ConnectionEventDetail>;
+      if (detail?.reason !== 'preview') return;
+
+      const snapshot = detail?.previewSnapshot;
+      if (!snapshot) return;
+
+      if ((snapshot.presenceKeys?.length ?? 0) === 0) {
+        setPreviewReady(true);
+        return;
+      }
+
+      if ((snapshot.readyKeys?.length ?? 0) >= (snapshot.presenceKeys?.length ?? 0)) {
+        setPreviewReady(true);
+      }
+    };
+
+    window.addEventListener(WORKSPACE_SHELL_READY_EVENT, onShellReady as EventListener);
+    window.addEventListener(CONNECTION_STATUS_EVENT, onConnectionEvent as EventListener);
+
+    const shellFallback = window.setTimeout(() => setShellReady(true), STATUS_SHELL_READY_FALLBACK_MS);
+    const previewFallback = window.setTimeout(() => setPreviewReady(true), STATUS_PREVIEW_READY_FALLBACK_MS);
+
+    return () => {
+      window.removeEventListener(WORKSPACE_SHELL_READY_EVENT, onShellReady as EventListener);
+      window.removeEventListener(CONNECTION_STATUS_EVENT, onConnectionEvent as EventListener);
+      window.clearTimeout(shellFallback);
+      window.clearTimeout(previewFallback);
+    };
+  }, [data?.workspace?.name, enableStatusQuery]);
+
+  useEffect(() => {
+    if (!enableStatusQuery) return;
+    if (!data?.workspace || !shellReady || !previewReady || shouldFetchStatus) return;
+
+    if (typeof window === 'undefined') {
+      setShouldFetchStatus(true);
+      return;
+    }
+
+    let armTimeout: number | undefined;
+    let idleId: number | undefined;
+
+    const armStatusQuery = () => {
+      armTimeout = window.setTimeout(() => {
+        setShouldFetchStatus(true);
+      }, STATUS_IDLE_ARM_MS);
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+      idleId = window.requestIdleCallback(armStatusQuery, { timeout: 2500 });
+    } else {
+      armStatusQuery();
+    }
+
+    return () => {
+      if (idleId !== undefined && typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(idleId);
+      }
+      if (armTimeout !== undefined) {
+        window.clearTimeout(armTimeout);
+      }
+    };
+  }, [data?.workspace?.name, shellReady, previewReady, shouldFetchStatus, enableStatusQuery]);
+
+  // Status stays fully deferred and runs in background only after shell + preview are
+  // ready. Chunks fetch sequentially so each server-side stall is bounded and the event
+  // loop yields between chunks; pills fill in progressively as chunks land. A chunk
+  // whose resolver rejects is skipped — one broken component must not discard the
+  // statuses that resolved, and readiness still settles.
+  const apolloClient = useApolloClient();
+  const [statusComponents, setStatusComponents] = useState<any[] | undefined>(undefined);
+  const [statusDone, setStatusDone] = useState(false);
+  const statusRunRef = useRef(0);
+  useEffect(() => {
+    if (!enableStatusQuery || !data?.workspace || !shouldFetchStatus) return undefined;
+    const run = ++statusRunRef.current;
+    const ids: string[] = (data.workspace.components || []).map((comp: any) =>
+      comp.id.version ? `${comp.id.scope}/${comp.id.name}@${comp.id.version}` : `${comp.id.scope}/${comp.id.name}`
+    );
+    setStatusComponents(undefined);
+    setStatusDone(false);
+    void (async () => {
+      const collected: any[] = [];
+      for (let i = 0; i < ids.length; i += STATUS_CHUNK_SIZE) {
+        if (run !== statusRunRef.current) return;
+        try {
+          const chunk = await apolloClient.query({
+            query: WORKSPACE_STATUS_CHUNK,
+            variables: { ids: ids.slice(i, i + STATUS_CHUNK_SIZE) },
+            fetchPolicy: 'no-cache',
+            errorPolicy: 'all',
+            context: { skipBatch: true },
+          });
+          const comps = chunk.data?.getHost?.getMany || [];
+          collected.push(...comps.filter(Boolean));
+          if (run !== statusRunRef.current) return;
+          setStatusComponents([...collected]);
+        } catch {
+          // this chunk's resolver failed; the remaining chunks still run
+        }
+        // yield so interleaved requests (previews, subscriptions) are served between chunks
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      if (run === statusRunRef.current) setStatusDone(true);
+    })();
+    return () => {
+      statusRunRef.current += 1;
+    };
+  }, [enableStatusQuery, data?.workspace?.name, shouldFetchStatus]);
 
   useEffect(() => {
     const unSubCompAddition = subscribeToMore({
@@ -351,23 +712,89 @@ export function useWorkspace(options: UseWorkspaceOptions = {}): UseWorkspaceRes
         const update = subscriptionData.data;
         if (!update) return prev;
 
-        const serverInfo = update.componentServerStarted;
-        if (!serverInfo || serverInfo.length === 0) return prev;
+        const serverPayload = update.componentServerStarted;
+        const serverInfo = Array.isArray(serverPayload) ? serverPayload[0] : serverPayload;
+        if (!serverInfo?.env) return prev;
 
+        let changed = false;
         const updatedComponents = prev.workspace.components.map((component) => {
-          if (component.env?.id === serverInfo[0].env) {
-            return {
-              ...component,
-              server: {
-                env: serverInfo[0].env,
-                url: serverInfo[0].url,
-                host: serverInfo[0].host,
-                basePath: serverInfo[0].basePath,
-              },
-            };
-          }
-          return component;
+          const componentEnvIds = [component.server?.env, component.env?.id].filter(Boolean);
+          const matches = componentEnvIds.includes(serverInfo.env);
+          if (!matches) return component;
+
+          const nextServer = {
+            ...component.server,
+            env: serverInfo.env,
+            url: serverInfo.url || component.server?.url,
+            host: serverInfo.host || component.server?.host,
+            basePath: serverInfo.basePath || component.server?.basePath,
+            isCompiling: serverInfo.isCompiling ?? component.server?.isCompiling ?? true,
+          };
+
+          const sameServer =
+            component.server?.env === nextServer.env &&
+            component.server?.url === nextServer.url &&
+            component.server?.host === nextServer.host &&
+            component.server?.basePath === nextServer.basePath &&
+            component.server?.isCompiling === nextServer.isCompiling;
+          if (sameServer) return component;
+          changed = true;
+          return { ...component, server: nextServer };
         });
+
+        if (!changed) return prev;
+
+        return {
+          ...prev,
+          workspace: {
+            ...prev.workspace,
+            components: updatedComponents,
+          },
+        };
+      },
+    });
+
+    const unSubServerCompilationChanged = subscribeToMore({
+      document: COMPONENT_SERVER_COMPILATION_CHANGED,
+      updateQuery: (prev, { subscriptionData }) => {
+        const status = subscriptionData?.data?.componentServerCompilationChanged;
+        if (!status?.env) return prev;
+
+        const affectedEnvs = new Set<string>([status.env]);
+        if (Array.isArray(status.affectedEnvs)) {
+          status.affectedEnvs.forEach((envId) => {
+            if (envId) affectedEnvs.add(envId);
+          });
+        }
+
+        let changed = false;
+        const updatedComponents = prev.workspace.components.map((component) => {
+          const componentEnvIds = [component.server?.env, component.env?.id].filter(Boolean);
+          const matches = componentEnvIds.some((envId) => affectedEnvs.has(envId));
+          if (!matches) return component;
+
+          const nextServer = {
+            ...component.server,
+            env: component.server?.env || status.env,
+            url: status.url || component.server?.url,
+            host: status.host || component.server?.host,
+            basePath: status.basePath || component.server?.basePath,
+            isCompiling: !!status.isCompiling,
+          };
+
+          const sameServer =
+            component.server?.env === nextServer.env &&
+            component.server?.url === nextServer.url &&
+            component.server?.host === nextServer.host &&
+            component.server?.basePath === nextServer.basePath &&
+            component.server?.isCompiling === nextServer.isCompiling;
+          if (sameServer) return component;
+
+          changed = true;
+          return { ...component, server: nextServer };
+        });
+
+        if (!changed) return prev;
 
         return {
           ...prev,
@@ -384,34 +811,158 @@ export function useWorkspace(options: UseWorkspaceOptions = {}): UseWorkspaceRes
       unSubCompChange();
       unSubCompRemoved();
       unSubServerStarted();
+      unSubServerCompilationChanged();
     };
   }, [optionsRef]);
 
   const workspace = useMemo(() => {
-    const rawWorkspace = data?.workspace;
-    if (!rawWorkspace) return undefined;
+    if (!data?.workspace) return undefined;
 
-    // Merge the paged-in heavy fields (status, issuesCount) onto the light components by id.
-    // Components are not normalized in the Apollo cache (their `id` is an object, not a scalar key),
-    // so the detail pages are accumulated in `detailByKey` and merged here by hand. The light
-    // component wins when it already carries a value — a live subscription update (full fragment)
-    // refreshes status there, and the paged detail is only the initial enrichment.
-    const components = rawWorkspace.components.map((component: any) => {
-      const detail = detailByKey.get(componentKey(component.id));
-      if (!detail) return component;
-      return {
-        ...component,
-        status: component.status ?? detail.status,
-        issuesCount: component.issuesCount ?? detail.issuesCount,
+    const heavyComponents = heavyResult?.workspace?.components;
+    const serverComponents = useServerFallbackQuery ? serverResult?.workspace?.components : undefined;
+
+    // If we have any deferred data, merge it into the light data
+    if (heavyComponents || statusComponents || serverComponents) {
+      // Build lookup maps for deferred data
+      const heavyMap = new Map<string, any>();
+      if (heavyComponents) {
+        for (const comp of heavyComponents) {
+          heavyMap.set(`${comp.id.scope}/${comp.id.name}@${comp.id.version || ''}`, comp);
+        }
+      }
+      const statusMap = new Map<string, any>();
+      if (statusComponents) {
+        for (const comp of statusComponents) {
+          statusMap.set(`${comp.id.scope}/${comp.id.name}@${comp.id.version || ''}`, comp);
+        }
+      }
+      const serverMap = new Map<string, any>();
+      if (serverComponents) {
+        for (const comp of serverComponents) {
+          serverMap.set(`${comp.id.scope}/${comp.id.name}@${comp.id.version || ''}`, comp?.server);
+        }
+      }
+
+      // Merge: light base ← heavy fields ← status fields.
+      // The deferred queries are one-shot snapshots while the light model keeps
+      // receiving subscription updates - so they only FILL fields the light model
+      // doesn't have, never override ones it does (an older snapshot must not
+      // revert a live update). The server object merges field-wise for the same
+      // reason: the fallback query omits host/basePath.
+      const fillMissing = (base: any, extra: any) => {
+        if (!extra) return {};
+        const out: any = {};
+        for (const field of Object.keys(extra)) {
+          if (base[field] === undefined || base[field] === null) out[field] = extra[field];
+        }
+        return out;
       };
-    });
+      const merged = {
+        ...data.workspace,
+        components: data.workspace.components.map((comp: any) => {
+          const key = `${comp.id.scope}/${comp.id.name}@${comp.id.version || ''}`;
+          const heavy = heavyMap.get(key);
+          const status = statusMap.get(key);
+          const server = serverMap.get(key);
+          return {
+            ...comp,
+            ...fillMissing(comp, heavy),
+            ...fillMissing(comp, status),
+            ...(server ? { server: { ...comp.server, ...server } } : {}),
+          };
+        }),
+      };
+      return Workspace.from(merged);
+    }
 
-    return Workspace.from({ ...rawWorkspace, components });
-  }, [data?.workspace, detailByKey]);
+    return Workspace.from(data.workspace);
+  }, [
+    data?.workspace,
+    heavyResult?.workspace?.components,
+    statusComponents,
+    serverResult?.workspace?.components,
+    useServerFallbackQuery,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!workspace) return;
+
+    const currentComponents = workspace.components || [];
+    // A cache-hydrated workspace snapshot can be stale during process restarts.
+    // Until we have a fresh network snapshot for this session (or server fallback data),
+    // force preview state to loading instead of publishing stale ready/online status.
+    const canTrustRuntimeServerState = hasFreshWorkspaceSnapshot || !!serverResult?.workspace?.components;
+    const nextPresence = new Set<string>();
+    const nextReady = new Set<string>();
+    const nextCompiling = new Set<string>();
+
+    for (const component of currentComponents) {
+      if ((component.compositions?.length ?? 0) === 0) continue;
+      const previewKey = `${component.id.toString()}:overview`;
+      nextPresence.add(previewKey);
+
+      if (!canTrustRuntimeServerState) {
+        nextCompiling.add(previewKey);
+        continue;
+      }
+
+      const isCompiling = (component.server as { isCompiling?: boolean } | undefined)?.isCompiling === true;
+      if (isCompiling) {
+        nextCompiling.add(previewKey);
+      }
+      if (component.server?.url && !isCompiling) {
+        nextReady.add(previewKey);
+      }
+    }
+
+    const snapshot = {
+      presenceKeys: Array.from(nextPresence),
+      readyKeys: Array.from(nextReady),
+      compilingKeys: Array.from(nextCompiling),
+    };
+
+    if (nextPresence.size === 0) {
+      setUseServerFallbackQuery(false);
+    } else if (nextCompiling.size > 0 || nextReady.size < nextPresence.size) {
+      setUseServerFallbackQuery(true);
+    } else {
+      setUseServerFallbackQuery(false);
+    }
+
+    dispatchPreviewConnectionEvent({ previewSnapshot: snapshot });
+    // Keep latest preview-state snapshot available for late listeners (e.g. user-bar effect ordering on refresh).
+    (window as any).__BIT_PREVIEW_STATUS__ = snapshot;
+  }, [
+    workspace?.components,
+    dispatchPreviewConnectionEvent,
+    hasFreshWorkspaceSnapshot,
+    serverResult?.workspace?.components,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window === 'undefined') return;
+      (window as any).__BIT_PREVIEW_STATUS__ = { presenceKeys: [], readyKeys: [], compilingKeys: [] };
+    };
+  }, [dispatchPreviewConnectionEvent]);
+
+  const statusReady = !enableStatusQuery || (shouldFetchStatus && statusDone);
+  const isStatusLoading = shouldFetchStatus && !statusDone;
+
+  // `loading` alone can't tell "workspace has no components" from "we don't know yet": with
+  // `errorPolicy: 'all'` a failed/aborted light query settles to loading=false with no data, and a
+  // cache-and-network read can hand back an empty shell before the network answers. Callers that
+  // render an empty state (the overview's "create your first component") need to know the light
+  // query actually resolved once, so a transient no-data frame doesn't get shown as "empty".
+  const workspaceResolved = !!data?.workspace;
 
   return {
     workspace,
     loading,
+    workspaceResolved,
+    statusLoading: isStatusLoading,
+    statusReady,
     subscribeToMore,
     ...rest,
   };
