@@ -17,6 +17,7 @@ import type { WatcherMain } from '@teambit/watcher';
 import { CheckTypes } from '@teambit/watcher';
 import type { GraphqlMain } from '@teambit/graphql';
 import chalk from 'chalk';
+import { bulletSymbol } from '@teambit/cli';
 
 type ServerState = {
   isCompiling?: boolean;
@@ -196,14 +197,14 @@ export class PreviewStartPlugin implements StartPlugin {
       this.listenToDevServers(options.showInternalUrls);
       const workspaceIdsCount = this.workspace.listIds().length;
       this.upsertBootstrapSpinner(
-        `Preview dev servers: loading workspace components ${chalk.dim('→')} ${chalk.cyan(workspaceIdsCount.toString())}`
+        `Preview dev servers: loading workspace components ${bulletSymbol} ${chalk.cyan(workspaceIdsCount.toString())}`
       );
       const componentsLoadStart = Date.now();
       const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
       const componentsLoadMs = Date.now() - componentsLoadStart;
       const componentsCount = components.length;
       this.upsertBootstrapSpinner(
-        `Preview dev servers: runtime ready ${chalk.dim('→')} ${chalk.cyan(componentsCount.toString())} component${
+        `Preview dev servers: runtime ready ${bulletSymbol} ${chalk.cyan(componentsCount.toString())} component${
           componentsCount === 1 ? '' : 's'
         } ${chalk.dim(`in ${(componentsLoadMs / 1000).toFixed(1)}s`)}`
       );
@@ -234,7 +235,7 @@ export class PreviewStartPlugin implements StartPlugin {
         this.setReady();
       } else {
         this.upsertBootstrapSpinner(
-          `Preview dev servers: bootstrapped ${chalk.dim('→')} ${chalk.cyan(envCount.toString())} environment${
+          `Preview dev servers: bootstrapped ${bulletSymbol} ${chalk.cyan(envCount.toString())} environment${
             envCount === 1 ? '' : 's'
           } ${chalk.dim(`in ${(envCreateMs / 1000).toFixed(1)}s`)}. Waiting for compilation...`
         );
@@ -354,7 +355,7 @@ export class PreviewStartPlugin implements StartPlugin {
     uiServer?.setComponentServerProxyActive(envId, false);
     if (this.bootstrapActive) {
       const label = chalk.cyan(envId);
-      this.succeedBootstrapSpinner(`Preview compilation started ${chalk.dim('→')} ${label}`);
+      this.succeedBootstrapSpinner(`Preview compilation started ${bulletSymbol} ${label}`);
     }
 
     this.serversState[envId] = {

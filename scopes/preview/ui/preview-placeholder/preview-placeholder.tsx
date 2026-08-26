@@ -329,7 +329,7 @@ export function PreviewPlaceholder({
       document.removeEventListener('bit-preview-canvas-rendered', onRendered);
       unregisterPreview(previewKey);
     };
-  }, [batched, previewKey, serverUrl, shouldShowPreview]);
+  }, [batched, previewKey, serverUrl, shouldShowPreview, isServerCompiling]);
 
   const compositionsKey = compositions?.map((c) => c.identifier).join(',');
   const selectedPreview = useMemo(() => {

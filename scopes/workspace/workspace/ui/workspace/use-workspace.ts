@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ComponentModel } from '@teambit/component';
 import useLatest from '@react-hook/latest';
-import { gql, useQuery } from '@apollo/client';
+import { gql, useQuery, useApolloClient } from '@apollo/client';
 import type { ComponentIdObj } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
 
@@ -203,19 +203,22 @@ const WORKSPACE_HEAVY = gql`
   ${wcComponentFieldsHeavy}
 `;
 
-// Status query — separate because status resolution is slow (~13s for 212 components)
-// Fires independently so it doesn't block heavy data from rendering.
-const WORKSPACE_STATUS = gql`
-  query workspaceStatus {
-    workspace {
-      name
-      components {
+// Status query — chunked because status resolution is synchronous server work
+// (~13s for 212 components in one operation). One unpaginated query would hold the
+// server event loop for the whole duration and freeze graphql, previews, and
+// subscriptions; per-chunk requests bound each stall and yield between chunks.
+const WORKSPACE_STATUS_CHUNK = gql`
+  query workspaceStatusChunk($ids: [String!]!) {
+    getHost {
+      id
+      getMany(ids: $ids) {
         ...wcComponentFieldsStatus
       }
     }
   }
   ${wcComponentFieldsStatus}
 `;
+const STATUS_CHUNK_SIZE = 24;
 
 // Lightweight server-status poll query.
 // Used as a fallback when startup subscriptions are delayed or dropped.
@@ -588,14 +591,51 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     };
   }, [data?.workspace?.name, shellReady, previewReady, shouldFetchStatus, enableStatusQuery]);
 
-  // Status query stays fully deferred and runs in background only after shell + preview are ready.
-  // Keep it a single query for correctness simplicity (no pagination merge complexity).
-  const { data: statusResult, loading: statusLoading } = useQuery(WORKSPACE_STATUS, {
-    skip: !enableStatusQuery || !data?.workspace || !shouldFetchStatus,
-    fetchPolicy: 'no-cache',
-    context: { skipBatch: true },
-    notifyOnNetworkStatusChange: false,
-  });
+  // Status stays fully deferred and runs in background only after shell + preview are
+  // ready. Chunks fetch sequentially so each server-side stall is bounded and the event
+  // loop yields between chunks; pills fill in progressively as chunks land. A chunk
+  // whose resolver rejects is skipped — one broken component must not discard the
+  // statuses that resolved, and readiness still settles.
+  const apolloClient = useApolloClient();
+  const [statusComponents, setStatusComponents] = useState<any[] | undefined>(undefined);
+  const [statusDone, setStatusDone] = useState(false);
+  const statusRunRef = useRef(0);
+  useEffect(() => {
+    if (!enableStatusQuery || !data?.workspace || !shouldFetchStatus) return undefined;
+    const run = ++statusRunRef.current;
+    const ids: string[] = (data.workspace.components || []).map((comp: any) =>
+      comp.id.version ? `${comp.id.scope}/${comp.id.name}@${comp.id.version}` : `${comp.id.scope}/${comp.id.name}`
+    );
+    setStatusComponents(undefined);
+    setStatusDone(false);
+    void (async () => {
+      const collected: any[] = [];
+      for (let i = 0; i < ids.length; i += STATUS_CHUNK_SIZE) {
+        if (run !== statusRunRef.current) return;
+        try {
+          const chunk = await apolloClient.query({
+            query: WORKSPACE_STATUS_CHUNK,
+            variables: { ids: ids.slice(i, i + STATUS_CHUNK_SIZE) },
+            fetchPolicy: 'no-cache',
+            errorPolicy: 'all',
+            context: { skipBatch: true },
+          });
+          const comps = chunk.data?.getHost?.getMany || [];
+          collected.push(...comps.filter(Boolean));
+          if (run !== statusRunRef.current) return;
+          setStatusComponents([...collected]);
+        } catch {
+          // this chunk's resolver failed; the remaining chunks still run
+        }
+        // yield so interleaved requests (previews, subscriptions) are served between chunks
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      if (run === statusRunRef.current) setStatusDone(true);
+    })();
+    return () => {
+      statusRunRef.current += 1;
+    };
+  }, [enableStatusQuery, data?.workspace?.name, shouldFetchStatus]);
 
   useEffect(() => {
     const unSubCompAddition = subscribeToMore({
@@ -779,7 +819,6 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     if (!data?.workspace) return undefined;
 
     const heavyComponents = heavyResult?.workspace?.components;
-    const statusComponents = statusResult?.workspace?.components;
     const serverComponents = useServerFallbackQuery ? serverResult?.workspace?.components : undefined;
 
     // If we have any deferred data, merge it into the light data
@@ -840,7 +879,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
   }, [
     data?.workspace,
     heavyResult?.workspace?.components,
-    statusResult?.workspace?.components,
+    statusComponents,
     serverResult?.workspace?.components,
     useServerFallbackQuery,
   ]);
@@ -908,8 +947,8 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     };
   }, [dispatchPreviewConnectionEvent]);
 
-  const statusReady = !enableStatusQuery || (shouldFetchStatus && !!statusResult?.workspace);
-  const isStatusLoading = shouldFetchStatus && !statusReady && statusLoading;
+  const statusReady = !enableStatusQuery || (shouldFetchStatus && statusDone);
+  const isStatusLoading = shouldFetchStatus && !statusDone;
 
   // `loading` alone can't tell "workspace has no components" from "we don't know yet": with
   // `errorPolicy: 'all'` a failed/aborted light query settles to loading=false with no data, and a

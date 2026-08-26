@@ -28,6 +28,7 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
         if (!('serviceWorker' in navigator)) return;
         var hadController = Boolean(navigator.serviceWorker.controller);
         void (async function() {
+          var ownedSwFound = false;
           try {
             // Only touch what this app owns: localhost origins are shared across unrelated
             // dev servers over time, so an unconditional sweep would clear their state too.
@@ -35,11 +36,16 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
             await Promise.all(registrations.map(function(reg) {
               var scriptUrl = (reg.active || reg.waiting || reg.installing || {}).scriptURL || '';
               if (scriptUrl.indexOf('/service-worker.js') === -1) return undefined;
+              ownedSwFound = true;
               return reg.unregister();
             }));
           } catch {}
           try {
-            if ('caches' in window) {
+            // Workbox cache names are not unique per application, so name filtering alone
+            // cannot distinguish this app's caches from another Workbox app that used the
+            // same origin. Only sweep when this app's own service worker was present -
+            // its caches are then the ones the sweep targets.
+            if (ownedSwFound && 'caches' in window) {
               var cacheNames = await caches.keys();
               await Promise.all(cacheNames.map(function(name) {
                 if (name.indexOf('workbox-') !== 0) return undefined;
@@ -71,14 +77,18 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
         async function clearServiceWorkersAndCaches() {
           try {
             // Scope to bit's own artifacts: unrelated apps served earlier on this
-            // localhost origin keep their service workers and caches.
+            // localhost origin keep their service workers and caches. Workbox cache
+            // names are not unique per application, so caches are swept only when
+            // this app's own service worker registration was present.
+            var ownedSwFound = false;
             var registrations = await navigator.serviceWorker.getRegistrations();
             await Promise.all(registrations.map(function(reg) {
               var scriptUrl = (reg.active || reg.waiting || reg.installing || {}).scriptURL || '';
               if (scriptUrl.indexOf('/service-worker.js') === -1) return undefined;
+              ownedSwFound = true;
               return reg.unregister();
             }));
-            if ('caches' in window) {
+            if (ownedSwFound && 'caches' in window) {
               var cacheNames = await caches.keys();
               await Promise.all(cacheNames.map(function(name) {
                 if (name.indexOf('workbox-') !== 0) return undefined;

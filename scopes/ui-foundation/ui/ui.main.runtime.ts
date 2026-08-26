@@ -5,7 +5,7 @@ import { getAspectDirFromBvm } from '@teambit/aspect-loader';
 import type { CacheMain } from '@teambit/cache';
 import { CacheAspect } from '@teambit/cache';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime, formatItem } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { ExpressMain } from '@teambit/express';
@@ -670,15 +670,14 @@ export class UiMain {
     const publicDirName = await this.publicDir(uiRoot);
     if (staleSource) {
       this.logger.console(
-        `${chalk.magenta('[Rspack]')} Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}' - ${chalk.cyan(
-          staleSource
-        )} changed since the last build.`
+        formatItem(`Rebuilding UI assets for '${uiRoot.name}' - ${staleSource} changed since the last build.`)
       );
     } else if (!cachedBuildUiHash) {
       this.logger.console(
-        `${chalk.magenta('[Rspack]')} Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
-          publicDirName
-        )}. The first time we build the UI it may take a few minutes.`
+        formatItem(
+          `Building UI assets for '${uiRoot.name}' in target directory: ${publicDirName}. ` +
+            `The first time we build the UI it may take a few minutes.`
+        )
       );
     } else {
       this.logger.console(

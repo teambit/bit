@@ -198,8 +198,6 @@ function __bitActiveComponentId() {
   }
 }
 
-const __bitActiveId = __bitActiveComponentId();
-
 function __bitActivePreviewName() {
   try {
     const { hash } = window.location;
@@ -232,8 +230,12 @@ function __bitThumbnailDefer() {
 }
 
 function __bitShouldSurfaceFor(componentId) {
-  if (!__bitActiveId) return false;
-  const act = __bitNormalizeId(__bitActiveId);
+  // resolved per call, not captured at realm boot: a pooled iframe is re-pointed at
+  // other components by changing only its hash, and a boot-time snapshot would keep
+  // selecting the first component's modules for same-fullName collisions.
+  const activeId = __bitActiveComponentId();
+  if (!activeId) return false;
+  const act = __bitNormalizeId(activeId);
   const cmp = __bitNormalizeId(componentId);
   if (!act || !cmp) return false;
   if (act === cmp) return true;
