@@ -33,11 +33,11 @@
  *   "Merge Queue Dashboard" issue (label: merge-queue) is kept up to date.
  *
  * The loop is stateless and idempotent: every run re-derives the queue from the GitHub + CircleCI
- * APIs, so a skipped or crashed run costs nothing. It runs from three places for redundancy:
- * the GitHub Actions workflow (event-driven + cron), a CircleCI scheduled workflow
- * (merge_queue_heartbeat, every 10m — survives Actions outages on independent infrastructure),
- * and, as a break-glass, any machine: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
- * (add MERGE_QUEUE_DRY_RUN=true to observe without mutating).
+ * APIs, so a skipped or crashed run costs nothing. It normally runs from the GitHub Actions
+ * workflow (event-driven + cron) and, as a break-glass (e.g. during an Actions outage), from any
+ * machine: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
+ * (add MERGE_QUEUE_DRY_RUN=true to observe without mutating). A CircleCI heartbeat used to run
+ * it every 10m as outage insurance; removed 2026-08 — it flooded the CircleCI pipeline views.
  *
  * Required env: GITHUB_TOKEN (statuses+issues write). Optional: CIRCLE_TOKEN (CircleCI API,
  * read) — the project is public so unauthenticated reads work; set it only to avoid shared-IP
@@ -131,7 +131,7 @@ async function githubGraphql(query) {
 
 // transient CircleCI failures get bounded retries: the reconcile is this queue's outage
 // fallback, and (especially unauthenticated) reads can hit rate limits or blips — one 429/5xx
-// must not abort a whole heartbeat run. Hard failures (401/404/...) still throw immediately,
+// must not abort a whole reconcile run. Hard failures (401/404/...) still throw immediately,
 // and exhausting retries throws too: "couldn't check bit_merge" is never treated as settled.
 const RETRYABLE_CIRCLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 
