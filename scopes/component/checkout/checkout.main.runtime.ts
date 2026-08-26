@@ -474,11 +474,9 @@ export class CheckoutMain {
     let existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
     const getComponent = async () => {
       try {
-        // when the id is not in the .bitmap, throw the same error consumer.loadComponents used to
-        // throw. (workspace.get would have returned the component from the scope instead).
+        // an id that is not in the .bitmap must fail here. (workspace.get below would have
+        // returned the component from the scope instead of throwing)
         if (!existingBitMapId) throw new MissingBitMapComponent(id.toString());
-        // load through the workspace aspect (and not consumer.loadComponents) to get the component
-        // from the env-first grouped load pipeline. see workspace-component-loader.shouldDelegateToGetMany.
         const workspaceComp = await this.workspace.get(id);
         const legacyComp: ConsumerComponent = workspaceComp.state._consumer;
         if (!legacyComp.isRemoved()) return legacyComp;

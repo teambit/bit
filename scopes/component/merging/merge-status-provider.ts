@@ -320,8 +320,6 @@ other:   ${otherLaneHead.toString()}`);
     }
     const getCurrentComponent = async () => {
       if (existingBitMapId && this.workspace) {
-        // load through the workspace aspect (and not consumer.loadComponent) to get the component
-        // from the env-first grouped load pipeline. see workspace-component-loader.shouldDelegateToGetMany.
         const currentWorkspaceComp = await this.workspace.get(existingBitMapId);
         return currentWorkspaceComp.state._consumer;
       }

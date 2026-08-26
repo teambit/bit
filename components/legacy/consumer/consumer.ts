@@ -268,11 +268,25 @@ export default class Consumer {
     return consumerComp;
   }
 
+  /**
+   * @deprecated load components via the workspace aspect instead: `workspace.get()` (then
+   * `component.state._consumer` when the legacy ConsumerComponent is needed).
+   * loading directly through the consumer skips the env-first grouped load pipeline of the
+   * workspace aspect (see workspace-component-loader.buildLoadGroups), so when the component's env
+   * is not loaded yet, dependency policies may silently fall back to defaults, producing a
+   * component with wrong dependency data (phantom "modified" status, wrong diff, etc.).
+   * the remaining callers are the workspace-component-loader bridge itself and legacy code that
+   * has no access to the workspace aspect.
+   */
   async loadComponent(id: ComponentID, loadOpts?: ComponentLoadOptions): Promise<Component> {
     const { components } = await this.loadComponents(ComponentIdList.fromArray([id]), true, loadOpts);
     return components[0];
   }
 
+  /**
+   * @deprecated load components via the workspace aspect instead: `workspace.getMany()`.
+   * see the deprecation note on `loadComponent` above for the reasoning.
+   */
   async loadComponents(
     ids: ComponentIdList,
     throwOnFailure = true,

@@ -23,8 +23,6 @@ export async function getAutoTagInfo(
   if (!changedComponents.length) return [];
   const potentialComponents = potentialComponentsForAutoTagging(workspace.consumer, changedComponents);
   const idsToLoad = new ComponentIdList(...potentialComponents, ...changedComponents);
-  // load through the workspace aspect (and not consumer.loadComponents) to get the components
-  // from the env-first grouped load pipeline. see workspace-component-loader.shouldDelegateToGetMany.
   const workspaceComponents = await workspace.getMany(idsToLoad, undefined, false);
   const components = workspaceComponents.map((workspaceComponent) => workspaceComponent.state._consumer);
   const graph = buildGraph(components);

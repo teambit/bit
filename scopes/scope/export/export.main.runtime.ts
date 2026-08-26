@@ -890,16 +890,14 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     }
     this.logger.setStatusLine(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
-    // an id that is not in the workspace should fail the export, same as consumer.loadComponents
-    // used to before the load moved to the workspace aspect. (workspace.getMany would have loaded
-    // it from the scope instead of throwing)
+    // an id that is not in the workspace should fail the export. (workspace.getMany below would
+    // have loaded it from the scope instead of throwing)
     parsedIds.forEach((parsedId) => {
       if (!consumer.bitMap.getComponentIdIfExist(parsedId, { ignoreVersion: true })) {
         throw new MissingBitMapComponent(parsedId.toString());
       }
     });
-    // load the components for fixing any out-of-sync issues. loaded through the workspace aspect
-    // (and not consumer.loadComponents) to go through the env-first grouped load pipeline.
+    // load the components for fixing any out-of-sync issues.
     await this.workspace.getMany(parsedIds);
 
     return throwForLocalOnlyIfNeeded(ComponentIdList.fromArray(parsedIds));
