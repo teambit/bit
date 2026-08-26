@@ -77,22 +77,22 @@ importers:
         specifier: 7.28.2
         version: 7.28.2
       '@bitdev/node.generators.node-starters':
-        specifier: ^1.0.0
+        specifier: ^1.0.2
         version: 1.0.2
       '@bitdev/node.generators.node-templates':
-        specifier: ^6.0.1
+        specifier: ^6.0.6
         version: 6.0.6
       '@bitdev/react.generators.react-starters':
-        specifier: ^2.0.0
+        specifier: ^2.0.2
         version: 2.0.2
       '@bitdev/react.generators.react-templates':
         specifier: ^6.0.9
         version: 6.0.9
       '@bitdev/symphony.generators.symphony-starters':
-        specifier: ^1.0.0
+        specifier: ^1.0.2
         version: 1.0.2
       '@bitdev/symphony.generators.symphony-templates':
-        specifier: ^5.0.2
+        specifier: ^5.0.4
         version: 5.0.4
       '@dagrejs/dagre':
         specifier: ^1.1.2
@@ -149,8 +149,8 @@ importers:
         specifier: 1100.0.19
         version: 1100.0.19
       '@pnpm/napi':
-        specifier: 12.0.0-rc.10
-        version: 12.0.0-rc.10
+        specifier: 12.0.0-rc.11
+        version: 12.0.0-rc.11
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -303,7 +303,7 @@ importers:
         version: 0.0.16
       '@teambit/api-reference.utils.copy-schema-node':
         specifier: ~0.0.48
-        version: 0.0.48(react-dom@19.2.7)(react@19.2.7)
+        version: 0.0.48
       '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme':
         specifier: ~0.0.16
         version: 0.0.16
@@ -560,7 +560,7 @@ importers:
         specifier: 1.96.12
         version: 1.96.12(@teambit/community.ui.bit-cli.commands-provider@0.0.52)(@teambit/community.ui.community-highlighter@1.96.28)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/defender.eslint-linter':
-        specifier: ^1.0.56
+        specifier: ^1.0.60
         version: 1.0.60(eslint@8.56.0)(react@19.2.7)
       '@teambit/defender.fs.global-bit-temp-dir':
         specifier: 0.0.1
@@ -611,7 +611,7 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.input-text':
-        specifier: ^1.1.5
+        specifier: ^1.1.6
         version: 1.1.6(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.inputs.selectors.checkbox-item':
         specifier: 1.2.0
@@ -917,7 +917,7 @@ importers:
         specifier: 2.0.3
         version: 2.0.3(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/react.rendering.ssr':
-        specifier: ^1.0.4
+        specifier: ^1.0.5
         version: 1.0.5(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/react.ui.component-highlighter':
         specifier: 0.2.8
@@ -1083,13 +1083,13 @@ importers:
         version: 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-externals':
         specifier: 0.1.0
-        version: 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+        version: 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@teambit/webpack.webpack-bundler':
         specifier: 1.1.0
-        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@teambit/webpack.webpack-dev-server':
         specifier: 1.1.0
-        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       '@teambit/workspace.content.variants':
         specifier: 1.96.7
         version: 1.96.7(react@19.2.7)
@@ -1711,9 +1711,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
@@ -2204,6 +2201,9 @@ importers:
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   components/bit/get-bit-version:
     dependencies:
@@ -5746,7 +5746,7 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.input-text':
-        specifier: ^1.1.5
+        specifier: ^1.1.6
         version: 1.1.6(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.ui.styles.ellipsis':
         specifier: 0.0.357
@@ -19976,9 +19976,6 @@ importers:
       '@teambit/base-ui.surfaces.split-pane.split-pane':
         specifier: 1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/compositions.ui.composition-live-controls':
         specifier: ~0.0.6
         version: 0.0.6(react@19.2.7)
@@ -19995,7 +19992,7 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.input-text':
-        specifier: ^1.1.5
+        specifier: ^1.1.6
         version: 1.1.6(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/design.inputs.selectors.menu-item':
         specifier: ^1.1.0
@@ -20085,6 +20082,9 @@ importers:
         specifier: ^6.30.1
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.7
         version: 2.0.7(@babel/core@7.28.3)(@babel/traverse@7.29.8)(babel-plugin-macros@3.1.0)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
@@ -20276,7 +20276,7 @@ importers:
   scopes/defender/eslint-config-mutator:
     dependencies:
       '@teambit/defender.eslint-linter':
-        specifier: ^1.0.56
+        specifier: ^1.0.60
         version: 1.0.60(eslint@8.56.0)(react@19.2.7)
       eslint:
         specifier: 8.56.0
@@ -20974,8 +20974,8 @@ importers:
   scopes/dependencies/dependency-resolver:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.0.0-rc.10
-        version: 12.0.0-rc.10
+        specifier: 12.0.0-rc.11
+        version: 12.0.0-rc.11
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -21117,8 +21117,8 @@ importers:
         specifier: 1100.0.19
         version: 1100.0.19
       '@pnpm/napi':
-        specifier: 12.0.0-rc.10
-        version: 12.0.0-rc.10
+        specifier: 12.0.0-rc.11
+        version: 12.0.0-rc.11
       '@pnpm/plugin-trusted-deps':
         specifier: 0.2.2
         version: 0.2.2
@@ -21289,9 +21289,6 @@ importers:
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.2
         version: 1.0.2(react@19.2.7)
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/design.ui.surfaces.status-message-card':
         specifier: 0.0.18
         version: 0.0.18(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
@@ -21335,6 +21332,9 @@ importers:
         specifier: ^6.30.1
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/docs.content.docs-overview':
         specifier: 1.96.8
         version: 1.96.8(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -22089,10 +22089,10 @@ importers:
         specifier: 7.27.1
         version: 7.27.1(@babel/core@7.28.3)(supports-color@9.4.0)
       '@bitdev/symphony.generators.symphony-starters':
-        specifier: ^1.0.0
+        specifier: ^1.0.2
         version: 1.0.2
       '@bitdev/symphony.generators.symphony-templates':
-        specifier: ^5.0.2
+        specifier: ^5.0.4
         version: 5.0.4
       '@teambit/bit-error':
         specifier: ~0.0.404
@@ -22104,7 +22104,7 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4
       '@teambit/defender.eslint-linter':
-        specifier: ^1.0.56
+        specifier: ^1.0.60
         version: 1.0.60(eslint@8.56.0)(react@19.2.7)
       '@teambit/defender.jest-tester':
         specifier: ^2.1.3
@@ -22126,7 +22126,7 @@ importers:
         version: 5.0.3(react@19.2.7)
       '@teambit/webpack.webpack-bundler':
         specifier: 1.1.0
-        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -22335,6 +22335,9 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.4
         version: 1.2.4
+      '@teambit/design.ui.brand.logo':
+        specifier: 1.96.19
+        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
@@ -22441,9 +22444,6 @@ importers:
       '@teambit/bit.content.what-is-bit':
         specifier: 1.96.13
         version: 1.96.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/design.ui.brand.logo':
-        specifier: 1.96.19
-        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.7
         version: 2.0.7(@babel/core@7.28.3)(@babel/traverse@7.29.8)(babel-plugin-macros@3.1.0)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
@@ -23276,10 +23276,10 @@ importers:
   scopes/harmony/node:
     dependencies:
       '@bitdev/node.generators.node-starters':
-        specifier: ^1.0.0
+        specifier: ^1.0.2
         version: 1.0.2
       '@bitdev/node.generators.node-templates':
-        specifier: ^6.0.1
+        specifier: ^6.0.6
         version: 6.0.6
       '@teambit/component-id':
         specifier: ^1.2.4
@@ -23354,9 +23354,6 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
-      '@teambit/ui-foundation.ui.is-browser':
-        specifier: ~0.0.500
-        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -23382,6 +23379,9 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.7
         version: 2.0.7(@babel/core@7.28.3)(@babel/traverse@7.29.8)(babel-plugin-macros@3.1.0)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
+      '@teambit/ui-foundation.ui.is-browser':
+        specifier: ~0.0.500
+        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -24299,8 +24299,8 @@ importers:
   scopes/pkg/pkg:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.0.0-rc.10
-        version: 12.0.0-rc.10
+        specifier: 12.0.0-rc.11
+        version: 12.0.0-rc.11
       '@teambit/bit-error':
         specifier: ~0.0.404
         version: 0.0.404
@@ -24475,9 +24475,6 @@ importers:
       chalk:
         specifier: 4.1.2
         version: 4.1.2
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
       filenamify:
         specifier: 4.2.0
         version: 4.2.0
@@ -24496,9 +24493,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lru-cache:
-        specifier: 10.4.3
-        version: 10.4.3
       mime:
         specifier: 2.5.2
         version: 2.5.2
@@ -24563,6 +24557,12 @@ importers:
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
+      cross-fetch:
+        specifier: 3.1.5
+        version: 3.1.5
+      lru-cache:
+        specifier: 10.4.3
+        version: 10.4.3
 
   scopes/preview/ui/component-preview:
     dependencies:
@@ -24797,7 +24797,7 @@ importers:
         specifier: 7.23.2
         version: 7.23.2
       '@bitdev/react.generators.react-starters':
-        specifier: ^2.0.0
+        specifier: ^2.0.2
         version: 2.0.2
       '@bitdev/react.generators.react-templates':
         specifier: ^6.0.9
@@ -24827,7 +24827,7 @@ importers:
         specifier: ~0.0.177
         version: 0.0.177(react-dom@19.1.0)(react@19.1.0)
       '@teambit/defender.eslint-linter':
-        specifier: ^1.0.56
+        specifier: ^1.0.60
         version: 1.0.60(eslint@8.56.0)(react@19.1.0)
       '@teambit/defender.jest-tester':
         specifier: ^2.1.3
@@ -24857,7 +24857,7 @@ importers:
         specifier: ^1.0.38
         version: 1.0.38(@babel/core@7.28.3)(@babel/traverse@7.29.8)(bufferutil@4.0.3)(jest@29.3.1)(supports-color@9.4.0)(utf-8-validate@5.0.5)
       '@teambit/react.rendering.ssr':
-        specifier: ^1.0.4
+        specifier: ^1.0.5
         version: 1.0.5(react-dom@19.1.0)(react@19.1.0)(supports-color@9.4.0)
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta':
         specifier: 0.0.45
@@ -24867,10 +24867,10 @@ importers:
         version: 5.0.3(react@19.1.0)
       '@teambit/webpack.webpack-bundler':
         specifier: 1.1.0
-        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(uglify-js@3.19.3)
+        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(uglify-js@3.19.3)
       '@teambit/webpack.webpack-dev-server':
         specifier: 1.1.0
-        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+        version: 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.1.0)(react@19.1.0)
@@ -24949,9 +24949,6 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
       mini-css-extract-plugin:
         specifier: 2.2.2
         version: 2.2.2(webpack@5.109.2)
@@ -25085,6 +25082,9 @@ importers:
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
 
   scopes/react/ui/compositions-app:
     dependencies:
@@ -27170,7 +27170,7 @@ importers:
         specifier: 0.4.12
         version: 0.4.12
       '@teambit/react.rendering.ssr':
-        specifier: ^1.0.4
+        specifier: ^1.0.5
         version: 1.0.5(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/ui-foundation.ui.global-loader':
         specifier: ~0.0.502
@@ -27537,7 +27537,7 @@ importers:
         version: 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-externals':
         specifier: 0.1.0
-        version: 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+        version: 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -30755,52 +30755,52 @@ packages:
     resolution: {integrity: sha512-A3bRMTIZ5ptDPAE/KsDeY1J5UqqOiyo66+k/mUvaVjx++OJdMbp9If5kisEq9ljAV5r5TRpkxsJbSdrdJ5WtzQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/napi.darwin-arm64@12.0.0-rc.10':
-    resolution: {integrity: sha512-cbITxyhMaO974/hUl/d4xDO5W1oIOPdPMUmckVVkFqYFKLGzVBSKsVAI3Iazmrvp6sd3pNMOD6O9IMxfshtI+g==}
+  '@pnpm/napi.darwin-arm64@12.0.0-rc.11':
+    resolution: {integrity: sha512-uB5dfvB4JNFcquMmr+UYmTl00yf4FP0I0U95VD7swLXTPtJaC8MVd0DePfThkvO4bdTiFAkZNJW54NMKMWsrQg==}
     cpu: [arm64]
     os: [darwin]
 
-  '@pnpm/napi.darwin-x64@12.0.0-rc.10':
-    resolution: {integrity: sha512-69i4igvNw6kR8ZTl9+sa2p6ch4MgK1DG0XorjKuVOIMcpWKx0bamhWLKAJY04Tbkt2PloFLbab0oVqXS8833EQ==}
+  '@pnpm/napi.darwin-x64@12.0.0-rc.11':
+    resolution: {integrity: sha512-paiFD2J9ZyW9FQ31As9en1M10ahPzybQGM4H2/2OJHUWwhjpMVDO+uhdlt0a29YI/OwFqgtOPS1DQ9Ivw3HHsg==}
     cpu: [x64]
     os: [darwin]
 
-  '@pnpm/napi.linux-arm64-musl@12.0.0-rc.10':
-    resolution: {integrity: sha512-nSqPwHphyhxF5Ij87jRXLlZUCSm/hvwaCv7BOnAV+8fAhLu025TcoIHBQosv5DghMKHxwFpafHd7Rbm4B0Fa7A==}
+  '@pnpm/napi.linux-arm64-musl@12.0.0-rc.11':
+    resolution: {integrity: sha512-/xyevLMfbdf/ItDfWDTFRiLFtyHSSTMbs5Wy2R1GTKiSBfMXZGMtDk1WO5BtDPOXfQH7c7PgQ8yzM9r2SkYcgg==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-arm64@12.0.0-rc.10':
-    resolution: {integrity: sha512-JlWwXx/EHJ6uyaPoVBwlK3z2JFN8EteauXQwO7C+E6N5dnjxr/vlbk3tTlBD0l2cn8eYi/T+Y3swr7mIYLLK6w==}
+  '@pnpm/napi.linux-arm64@12.0.0-rc.11':
+    resolution: {integrity: sha512-06kiSxfw355woV16jCj3NE2wdoZ3ubM5814ACQ+oh/DTYA/SgDmRgWzE9klbMaEprTZSQCPSSYwCwqFwAZzz3w==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-x64-musl@12.0.0-rc.10':
-    resolution: {integrity: sha512-iWbF+bShAowDXSb61vh47FC+eCqwlZORAq8woOjae+kcqr0jKCSCAPZOWjsebhBl5u/+y4MWtMG5iLX0CbqgKw==}
+  '@pnpm/napi.linux-x64-musl@12.0.0-rc.11':
+    resolution: {integrity: sha512-oyXiwGurvvXk1gCZTdAKiRx1xJVHC6Bmah2FPVucwI2mR7E7lTZmN5RagKHdQBw6P94rEYZoInnAlEZkYPLiFw==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-x64@12.0.0-rc.10':
-    resolution: {integrity: sha512-/bVVwW/HQ0OBApb5QxieX7Al+h5zMMsLc9D26wnBZi6KU2O+T0JZd5RQuYZLPDu45CcxzxJNxFS+I/KsYrFotg==}
+  '@pnpm/napi.linux-x64@12.0.0-rc.11':
+    resolution: {integrity: sha512-njAxNeX8cJC8q/Dq6J0C6vWdnjoPEmUgWlB3tBKDTnI9PhxSznk+SJZYJ/8aoY8Ax5jtA5B+t5+++s4qEJIc6g==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.win32-arm64@12.0.0-rc.10':
-    resolution: {integrity: sha512-ebjsnkjVg/CWfmGN+ypENReEpko/aRnEyodNWt/U0xmb9Vos5tGdBly+WP5XdtFIZ0CVO4iPCRSqv/YYx1UZpA==}
+  '@pnpm/napi.win32-arm64@12.0.0-rc.11':
+    resolution: {integrity: sha512-nFvabR8utPCRmemgE2rnzHwU72Spjk9lazZx1dnZZPSUJRCann1N4b9fr9qPtma+0dITZgGpxPd4WnEixxvooA==}
     cpu: [arm64]
     os: [win32]
 
-  '@pnpm/napi.win32-x64@12.0.0-rc.10':
-    resolution: {integrity: sha512-dVWNKFHAtV4XfD69NBSFD8ZIkxGGqaLT9T/xBHXssMC0dQNHwPdzmbWvZwmfRl2nGVwoy3e2wJmj1FLutkH4PQ==}
+  '@pnpm/napi.win32-x64@12.0.0-rc.11':
+    resolution: {integrity: sha512-2SQQ8CchSKUcp5/k0+aZUyUEShSNA+qSFTabc8jZylhGcpTw73a8DjOLtLtGfEwi0gjFsae+m8LHwp2hZ7h5NA==}
     cpu: [x64]
     os: [win32]
 
-  '@pnpm/napi@12.0.0-rc.10':
-    resolution: {integrity: sha512-9C9hQpppjSg6Gh1zeYaMYnunnY3667TJY7+6bjQHsm/kB+s7OV7ahxlv1RNmcdUNZvLIXPVJvaGtbInRTlGp5Q==}
+  '@pnpm/napi@12.0.0-rc.11':
+    resolution: {integrity: sha512-uEwuubnb8YNs3hK2zrYLxM/vnKJo9pbOeVvDVQn8LjZazrGyCPI2njDRUNehkALhGhb8+APu4nS1uFoMBvzIlQ==}
     engines: {node: '>=18.*'}
 
   '@pnpm/network.agent@0.1.0':
@@ -36595,6 +36595,10 @@ packages:
     resolution: {integrity: sha512-m7bghFzO6t1cp1nFhNHjhr+Nd8qOmhqeP7XmcGGLnj7lqMkqjrNW3I/Ygwv76w/gXOv3isCb0zIhGyiTN6Sedw==}
     engines: {node: '>=12.22.0'}
 
+  '@teambit/semantics.entities.semantic-schema@0.0.113':
+    resolution: {integrity: sha512-abQZUP2TlYkxK0MPFZ6GgYm8hkhxI6we0HVp2dWaVtuU5fFR73kJImFMSxPfR0bGwCJ95/ZM+eQViB9PYtV6gQ==}
+    engines: {node: '>=12.22.0'}
+
   '@teambit/semantics.entities.semantic-schema@0.0.92':
     resolution: {integrity: sha512-dHwiEXrknEmIK3NArEaxbDpOWTvEsvfg0hfe2N7O548ZnMWfeOexYNmvTiVlSern82wcFOOTOcoQ5vgnve60Ww==}
     engines: {node: '>=12.22.0'}
@@ -37436,6 +37440,10 @@ packages:
 
   '@teambit/webpack.modules.generate-externals@0.0.21':
     resolution: {integrity: sha512-D6Vp0JucQrsn4lttENKjadpJ/m3pibtmuD7ysCs5ZgOKhSXvmSXTLGU2k1ZZTLqqk7j9FMpiKO36pxDxjpM+/w==}
+    engines: {node: '>=12.22.0'}
+
+  '@teambit/webpack.modules.generate-externals@0.0.43':
+    resolution: {integrity: sha512-FCu150OP3L/nDmM2d6Fkr6jbG4mTLDWKTjpcWk72SUpIRjv0wt7fmvoCO8bD6yoZOafo5YKaHKd1Ipdy+dME7Q==}
     engines: {node: '>=12.22.0'}
 
   '@teambit/webpack.modules.generate-externals@file:scopes/webpack/modules/generate-externals':
@@ -54178,40 +54186,40 @@ snapshots:
       bole: 5.0.29
       split2: 4.2.0
 
-  '@pnpm/napi.darwin-arm64@12.0.0-rc.10':
+  '@pnpm/napi.darwin-arm64@12.0.0-rc.11':
     optional: true
 
-  '@pnpm/napi.darwin-x64@12.0.0-rc.10':
+  '@pnpm/napi.darwin-x64@12.0.0-rc.11':
     optional: true
 
-  '@pnpm/napi.linux-arm64-musl@12.0.0-rc.10':
+  '@pnpm/napi.linux-arm64-musl@12.0.0-rc.11':
     optional: true
 
-  '@pnpm/napi.linux-arm64@12.0.0-rc.10':
+  '@pnpm/napi.linux-arm64@12.0.0-rc.11':
     optional: true
 
-  '@pnpm/napi.linux-x64-musl@12.0.0-rc.10':
+  '@pnpm/napi.linux-x64-musl@12.0.0-rc.11':
     optional: true
 
-  '@pnpm/napi.linux-x64@12.0.0-rc.10':
+  '@pnpm/napi.linux-x64@12.0.0-rc.11':
     optional: true
 
-  '@pnpm/napi.win32-arm64@12.0.0-rc.10':
+  '@pnpm/napi.win32-arm64@12.0.0-rc.11':
     optional: true
 
-  '@pnpm/napi.win32-x64@12.0.0-rc.10':
+  '@pnpm/napi.win32-x64@12.0.0-rc.11':
     optional: true
 
-  '@pnpm/napi@12.0.0-rc.10':
+  '@pnpm/napi@12.0.0-rc.11':
     optionalDependencies:
-      '@pnpm/napi.darwin-arm64': 12.0.0-rc.10
-      '@pnpm/napi.darwin-x64': 12.0.0-rc.10
-      '@pnpm/napi.linux-arm64': 12.0.0-rc.10
-      '@pnpm/napi.linux-arm64-musl': 12.0.0-rc.10
-      '@pnpm/napi.linux-x64': 12.0.0-rc.10
-      '@pnpm/napi.linux-x64-musl': 12.0.0-rc.10
-      '@pnpm/napi.win32-arm64': 12.0.0-rc.10
-      '@pnpm/napi.win32-x64': 12.0.0-rc.10
+      '@pnpm/napi.darwin-arm64': 12.0.0-rc.11
+      '@pnpm/napi.darwin-x64': 12.0.0-rc.11
+      '@pnpm/napi.linux-arm64': 12.0.0-rc.11
+      '@pnpm/napi.linux-arm64-musl': 12.0.0-rc.11
+      '@pnpm/napi.linux-x64': 12.0.0-rc.11
+      '@pnpm/napi.linux-x64-musl': 12.0.0-rc.11
+      '@pnpm/napi.win32-arm64': 12.0.0-rc.11
+      '@pnpm/napi.win32-x64': 12.0.0-rc.11
 
   '@pnpm/network.agent@0.1.0(supports-color@9.4.0)':
     dependencies:
@@ -55428,7 +55436,7 @@ snapshots:
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       pluralize: 8.0.0
@@ -55452,7 +55460,7 @@ snapshots:
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       pluralize: 8.0.0
@@ -55476,7 +55484,7 @@ snapshots:
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       pluralize: 8.0.0
@@ -55643,7 +55651,7 @@ snapshots:
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -55660,7 +55668,7 @@ snapshots:
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -55677,7 +55685,7 @@ snapshots:
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -55693,7 +55701,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -55709,7 +55717,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -55725,7 +55733,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -55838,7 +55846,7 @@ snapshots:
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -55855,7 +55863,7 @@ snapshots:
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -55872,7 +55880,7 @@ snapshots:
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -55889,7 +55897,7 @@ snapshots:
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.parameter': 0.0.72(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 18.3.1
@@ -55907,7 +55915,7 @@ snapshots:
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.parameter': 0.0.72(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
@@ -55925,7 +55933,7 @@ snapshots:
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.parameter': 0.0.72(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
@@ -55943,7 +55951,7 @@ snapshots:
       '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.45
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 18.3.1
@@ -55961,7 +55969,7 @@ snapshots:
       '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.45
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
@@ -55979,7 +55987,7 @@ snapshots:
       '@teambit/api-reference.renderers.schema-node-member-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.utils.group-schema-node-by-signature': 0.0.45
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
@@ -56027,7 +56035,7 @@ snapshots:
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -56044,7 +56052,7 @@ snapshots:
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56061,7 +56069,7 @@ snapshots:
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56077,7 +56085,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56090,7 +56098,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@18.3.1)(react@18.3.1)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -56103,7 +56111,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.1.0)(react@19.1.0)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
@@ -56116,7 +56124,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56130,7 +56138,7 @@ snapshots:
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.parameter': 0.0.72(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.2.6
       core-js: 3.13.0
       react: 18.3.1
@@ -56148,7 +56156,7 @@ snapshots:
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.1.0)(react-router-dom@6.30.4)(react@19.1.0)
       '@teambit/api-reference.renderers.parameter': 0.0.72(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.1.0)(react@19.1.0)
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.1.0)(react@19.1.0)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.2.6
       core-js: 3.13.0
       react: 19.1.0
@@ -56166,7 +56174,7 @@ snapshots:
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.parameter': 0.0.72(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.2.6
       core-js: 3.13.0
       react: 19.2.7
@@ -56188,7 +56196,7 @@ snapshots:
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
@@ -56208,7 +56216,7 @@ snapshots:
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@18.3.1)(react@18.3.1)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 18.3.1
@@ -56231,7 +56239,7 @@ snapshots:
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
@@ -56254,7 +56262,7 @@ snapshots:
       '@teambit/api-reference.utils.schema-node-signature-transform': 0.0.47
       '@teambit/documenter.ui.table-heading-row': 4.0.11(react-dom@19.2.7)(react@19.2.7)
       '@teambit/documenter.ui.table-row': 4.1.17(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
@@ -56353,7 +56361,7 @@ snapshots:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.renderers.type-ref': 0.0.102(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -56369,7 +56377,7 @@ snapshots:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type-ref': 0.0.102(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56385,7 +56393,7 @@ snapshots:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.type-ref': 0.0.102(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56399,7 +56407,7 @@ snapshots:
   '@teambit/api-reference.renderers.tuple-type@0.0.34(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -56407,7 +56415,7 @@ snapshots:
   '@teambit/api-reference.renderers.tuple-type@0.0.34(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56451,8 +56459,8 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/api-reference.utils.copy-schema-node': 0.0.48(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/api-reference.utils.copy-schema-node': 0.0.48
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -56468,8 +56476,8 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/api-reference.utils.copy-schema-node': 0.0.48(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.utils.copy-schema-node': 0.0.48
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56485,8 +56493,8 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.grouped-schema-nodes-summary': 0.0.85(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/api-reference.utils.copy-schema-node': 0.0.48(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.utils.copy-schema-node': 0.0.48
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56502,11 +56510,11 @@ snapshots:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/api-reference.utils.copy-schema-node': 0.0.48(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/api-reference.utils.copy-schema-node': 0.0.48
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/component-id': 1.2.4
       '@teambit/component.modules.component-url': 0.0.190(@types/react@19.2.18)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 18.3.1
@@ -56522,11 +56530,11 @@ snapshots:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/api-reference.utils.copy-schema-node': 0.0.48(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.utils.copy-schema-node': 0.0.48
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component-id': 1.2.4
       '@teambit/component.modules.component-url': 0.0.190(@types/react@19.2.18)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
@@ -56542,11 +56550,11 @@ snapshots:
       '@teambit/api-reference.hooks.use-api-ref-url': 0.0.25(@teambit/base-react.navigation.link@2.0.33)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/api-reference.utils.copy-schema-node': 0.0.48(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/api-reference.utils.copy-schema-node': 0.0.48
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component-id': 1.2.4
       '@teambit/component.modules.component-url': 0.0.190(@types/react@19.2.18)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       classnames: 2.5.1
       core-js: 3.13.0
       react: 19.2.7
@@ -56580,7 +56588,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -56596,7 +56604,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56612,7 +56620,7 @@ snapshots:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary': 0.0.76(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56627,7 +56635,7 @@ snapshots:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -56641,7 +56649,7 @@ snapshots:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56655,7 +56663,7 @@ snapshots:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56669,7 +56677,7 @@ snapshots:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@18.3.1)(react@18.3.1)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react-router-dom@6.30.4)(react@18.3.1)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -56683,7 +56691,7 @@ snapshots:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56697,7 +56705,7 @@ snapshots:
     dependencies:
       '@teambit/api-reference.models.api-node-renderer': 0.0.53(react-dom@19.2.7)(react@19.2.7)
       '@teambit/api-reference.renderers.api-node-details': 0.0.86(@testing-library/react-hooks@8.0.1)(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
       core-js: 3.13.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56785,19 +56793,9 @@ snapshots:
     dependencies:
       monaco-editor: 0.33.0
 
-  '@teambit/api-reference.utils.copy-schema-node@0.0.48(react-dom@18.3.1)(react@18.3.1)':
+  '@teambit/api-reference.utils.copy-schema-node@0.0.48':
     dependencies:
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@18.3.1)(react@18.3.1)
-    transitivePeerDependencies:
-      - react
-      - react-dom
-
-  '@teambit/api-reference.utils.copy-schema-node@0.0.48(react-dom@19.2.7)(react@19.2.7)':
-    dependencies:
-      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema(react-dom@19.2.7)(react@19.2.7)
-    transitivePeerDependencies:
-      - react
-      - react-dom
+      '@teambit/semantics.entities.semantic-schema': 0.0.113
 
   '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme@0.0.16': {}
 
@@ -57121,7 +57119,7 @@ snapshots:
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/typescript.typescript-compiler': 5.0.3(react@19.2.7)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.26.9)(@babel/traverse@7.29.8)
       chalk: 4.1.2
@@ -57186,7 +57184,7 @@ snapshots:
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/typescript.typescript-compiler': 5.0.3(react@19.2.7)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)
       chalk: 4.1.2
@@ -57251,7 +57249,7 @@ snapshots:
       '@teambit/react.eslint-config-bit-react': file:scopes/react/eslint-config-bit-react(eslint@8.56.0)(jest@29.3.1)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path(react-dom@19.2.7)(react@19.2.7)
       '@teambit/typescript.typescript-compiler': 5.0.3(react@19.2.7)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)
       chalk: 4.1.2
@@ -58995,6 +58993,7 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
+      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/legacy-bit-id': 1.1.3
@@ -59066,6 +59065,7 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version(react-dom@19.2.7)(react@19.2.7)
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
+      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/legacy-bit-id': 1.1.3
@@ -66321,7 +66321,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
@@ -66396,7 +66395,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@18.3.1)(react@18.3.1)
@@ -66471,7 +66469,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -66546,7 +66543,6 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(react-dom@19.2.7)(react@19.2.7)
@@ -68391,7 +68387,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.0.0-rc.10
+      '@pnpm/napi': 12.0.0-rc.11
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -68457,7 +68453,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.0.0-rc.10
+      '@pnpm/napi': 12.0.0-rc.11
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -68523,7 +68519,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.0.0-rc.10
+      '@pnpm/napi': 12.0.0-rc.11
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -71419,7 +71415,6 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.4)(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.18)(chai@4.3.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@18.3.1)(react@18.3.1)
@@ -71453,7 +71448,6 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.4)(@types/react@19.2.18)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.18)(chai@4.3.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -71487,7 +71481,6 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@types/react-dom@19.2.4)(@types/react@19.2.18)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
-      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/react@14.3.1)(@types/react@19.2.18)(chai@5.2.1)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(react-dom@19.2.7)(react@19.2.7)
@@ -81001,7 +80994,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.0.0-rc.10
+      '@pnpm/napi': 12.0.0-rc.11
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues(react-dom@18.3.1)(react@18.3.1)
@@ -81042,7 +81035,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(@types/react@19.2.18)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.0.0-rc.10
+      '@pnpm/napi': 12.0.0-rc.11
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues(react-dom@19.2.7)(react@19.2.7)
@@ -81085,7 +81078,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.0.0-rc.10
+      '@pnpm/napi': 12.0.0-rc.11
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -81128,7 +81121,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.0.0-rc.10
+      '@pnpm/napi': 12.0.0-rc.11
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -81171,7 +81164,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.0.0-rc.10
+      '@pnpm/napi': 12.0.0-rc.11
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -81533,8 +81526,8 @@ snapshots:
       '@bitdev/react.preview.react-docs-app': 0.0.11
       '@teambit/react.mounter': 1.1.9(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/react.webpack.react-webpack': 1.0.60(@babel/core@7.28.3)(@rspack/core@1.7.12)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(react-dom@18.3.1)(react@18.3.1)(rollup@2.80.0)(sass-embedded@1.102.0)(sass@1.63.6)(supports-color@9.4.0)(type-fest@0.21.3)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       html-webpack-inject-plugin: 5.3.1(html-webpack-plugin@5.3.2)(webpack@5.109.2)
       object-hash: 3.0.0
       react: 18.3.1
@@ -81589,8 +81582,8 @@ snapshots:
       '@bitdev/react.preview.react-docs-app': 0.0.11
       '@teambit/react.mounter': 1.1.9(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/react.webpack.react-webpack': 1.0.60(@babel/core@7.28.3)(@rspack/core@1.7.12)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(react-dom@18.3.1)(react@18.3.1)(rollup@2.80.0)(sass-embedded@1.102.0)(sass@1.63.6)(supports-color@9.4.0)(type-fest@4.41.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       html-webpack-inject-plugin: 5.3.1(html-webpack-plugin@5.3.2)(webpack@5.109.2)
       object-hash: 3.0.0
       react: 18.3.1
@@ -81645,8 +81638,8 @@ snapshots:
       '@bitdev/react.preview.react-docs-app': 0.0.11
       '@teambit/react.mounter': 1.1.9(@types/node@22.10.5)(@types/react@19.2.18)(babel-plugin-macros@3.1.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/react.webpack.react-webpack': 1.0.60(@babel/core@7.28.3)(@rspack/core@1.7.12)(@types/webpack@5.28.5)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(react-dom@19.2.7)(react@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(sass@1.63.6)(supports-color@9.4.0)(type-fest@0.21.3)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.0)(webpack-hot-middleware@2.26.1)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       html-webpack-inject-plugin: 5.3.1(html-webpack-plugin@5.3.2)(webpack@5.109.2)
       object-hash: 3.0.0
       react: 19.2.7
@@ -81883,14 +81876,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -81953,14 +81944,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -82023,14 +82012,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -82093,14 +82080,12 @@ snapshots:
       camelcase: 6.2.0
       chai: 5.2.1
       chalk: 4.1.2
-      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -82137,7 +82122,6 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/harmony': 0.4.12
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -82152,7 +82136,6 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/harmony': 0.4.12
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       eventemitter2: 6.4.4
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -85361,8 +85344,8 @@ snapshots:
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
@@ -85389,7 +85372,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -85511,8 +85493,8 @@ snapshots:
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(uglify-js@3.19.3)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
@@ -85539,7 +85521,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -85661,8 +85642,8 @@ snapshots:
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
@@ -85689,7 +85670,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -85811,8 +85791,8 @@ snapshots:
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(uglify-js@3.19.3)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@18.3.1)(react@18.3.1)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
@@ -85839,7 +85819,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -85961,8 +85940,8 @@ snapshots:
       '@teambit/webpack.modules.config-mutator': file:scopes/webpack/config-mutator(@swc/css@0.0.20)(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(uglify-js@3.19.3)
       '@teambit/webpack.modules.generate-style-loaders': file:scopes/webpack/modules/generate-style-loaders(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
       '@teambit/webpack.modules.style-regexps': file:scopes/webpack/style-regexps(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-dev-server': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@typescript-eslint/eslint-plugin': 7.1.0(@typescript-eslint/parser@7.1.0)(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
       '@typescript-eslint/parser': 7.1.0(eslint@8.56.0)(supports-color@9.4.0)(typescript@5.9.2)
@@ -85989,7 +85968,6 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
-      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
@@ -88947,6 +88925,13 @@ snapshots:
       lodash: 4.17.21
       pluralize: 8.0.0
 
+  '@teambit/semantics.entities.semantic-schema@0.0.113':
+    dependencies:
+      '@teambit/component-id': 1.2.4
+      chalk: 4.1.2
+      lodash: 4.17.21
+      pluralize: 8.0.0
+
   '@teambit/semantics.entities.semantic-schema@0.0.92':
     dependencies:
       '@teambit/component-id': 1.2.4
@@ -88970,19 +88955,6 @@ snapshots:
       oxlint-tsgolint: 0.17.0
       pluralize: 8.0.0
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@18.3.1)
-    transitivePeerDependencies:
-      - react
-      - react-dom
-
-  '@teambit/semantics.entities.semantic-schema@file:components/entities/semantic-schema(react-dom@19.1.0)(react@19.1.0)':
-    dependencies:
-      '@teambit/component-id': 1.2.4
-      chalk: 4.1.2
-      lodash: 4.17.21
-      oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
-      oxlint-tsgolint: 0.17.0
-      pluralize: 8.0.0
-      react-router-dom: 6.30.4(react-dom@19.1.0)(react@19.1.0)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -93511,20 +93483,13 @@ snapshots:
 
   '@teambit/webpack.modules.generate-externals@0.0.21': {}
 
+  '@teambit/webpack.modules.generate-externals@0.0.43': {}
+
   '@teambit/webpack.modules.generate-externals@file:scopes/webpack/modules/generate-externals(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
       oxlint-tsgolint: 0.17.0
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@18.3.1)
-    transitivePeerDependencies:
-      - react
-      - react-dom
-
-  '@teambit/webpack.modules.generate-externals@file:scopes/webpack/modules/generate-externals(react-dom@19.1.0)(react@19.1.0)':
-    dependencies:
-      oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
-      oxlint-tsgolint: 0.17.0
-      react-router-dom: 6.30.4(react-dom@19.1.0)(react@19.1.0)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -93681,10 +93646,10 @@ snapshots:
       - uglify-js
       - webpack-cli
 
-  '@teambit/webpack.transformers.generate-externals@0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)':
+  '@teambit/webpack.transformers.generate-externals@0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)':
     dependencies:
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
-      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/webpack.modules.generate-externals': 0.0.43
       camelcase: 6.3.0
     transitivePeerDependencies:
       - '@minify-html/node'
@@ -93699,14 +93664,13 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - uglify-js
       - webpack-cli
 
-  '@teambit/webpack.transformers.generate-externals@0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(uglify-js@3.19.3)':
+  '@teambit/webpack.transformers.generate-externals@0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(uglify-js@3.19.3)':
     dependencies:
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(uglify-js@3.19.3)
-      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@19.1.0)(react@19.1.0)
+      '@teambit/webpack.modules.generate-externals': 0.0.43
       camelcase: 6.3.0
     transitivePeerDependencies:
       - '@minify-html/node'
@@ -93721,14 +93685,13 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - uglify-js
       - webpack-cli
 
-  '@teambit/webpack.transformers.generate-externals@0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)':
+  '@teambit/webpack.transformers.generate-externals@0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)':
     dependencies:
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.modules.generate-externals': file:scopes/webpack/modules/generate-externals(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/webpack.modules.generate-externals': 0.0.43
       camelcase: 6.3.0
     transitivePeerDependencies:
       - '@minify-html/node'
@@ -93743,7 +93706,6 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - uglify-js
       - webpack-cli
 
@@ -94147,12 +94109,12 @@ snapshots:
       - uglify-js
       - webpack-cli
 
-  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)':
+  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
-      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       assert: 2.0.0
       browserify-zlib: 0.2.0
       buffer: 6.0.3
@@ -94196,16 +94158,15 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - uglify-js
       - webpack-cli
 
-  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(uglify-js@3.19.3)':
+  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(uglify-js@3.19.3)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(uglify-js@3.19.3)
-      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(uglify-js@3.19.3)
       assert: 2.0.0
       browserify-zlib: 0.2.0
       buffer: 6.0.3
@@ -94249,16 +94210,15 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - uglify-js
       - webpack-cli
 
-  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)':
+  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       assert: 2.0.0
       browserify-zlib: 0.2.0
       buffer: 6.0.3
@@ -94302,16 +94262,15 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - uglify-js
       - webpack-cli
 
-  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)':
+  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
-      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       assert: 2.0.0
       browserify-zlib: 0.2.0
       buffer: 6.0.3
@@ -94355,16 +94314,15 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - uglify-js
       - webpack-cli
 
-  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)':
+  '@teambit/webpack.webpack-bundler@1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       assert: 2.0.0
       browserify-zlib: 0.2.0
       buffer: 6.0.3
@@ -94408,7 +94366,6 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - uglify-js
       - webpack-cli
 
@@ -94736,12 +94693,12 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
+  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
     dependencies:
       '@teambit/toolbox.path.path': 0.0.8
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       find-root: 1.1.0
       html-webpack-plugin: 5.6.8(@rspack/core@1.7.12)(webpack@5.109.2)
       object-hash: 3.0.0
@@ -94766,7 +94723,6 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - supports-color
       - typescript
       - uglify-js
@@ -94774,12 +94730,12 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
+  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(typescript@6.0.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
     dependencies:
       '@teambit/toolbox.path.path': 0.0.8
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       find-root: 1.1.0
       html-webpack-plugin: 5.6.8(@rspack/core@1.7.12)(webpack@5.109.2)
       object-hash: 3.0.0
@@ -94804,7 +94760,6 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - supports-color
       - typescript
       - uglify-js
@@ -94812,12 +94767,12 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
+  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
     dependencies:
       '@teambit/toolbox.path.path': 0.0.8
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(uglify-js@3.19.3)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.1.0)(react@19.1.0)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.1.0)(uglify-js@3.19.3)
       find-root: 1.1.0
       html-webpack-plugin: 5.6.8(@rspack/core@1.7.12)(webpack@5.109.2)
       object-hash: 3.0.0
@@ -94842,7 +94797,6 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - supports-color
       - typescript
       - uglify-js
@@ -94850,12 +94804,12 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
+  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
     dependencies:
       '@teambit/toolbox.path.path': 0.0.8
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       find-root: 1.1.0
       html-webpack-plugin: 5.6.8(@rspack/core@1.7.12)(webpack@5.109.2)
       object-hash: 3.0.0
@@ -94880,7 +94834,6 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - supports-color
       - typescript
       - uglify-js
@@ -94888,12 +94841,12 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
+  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
     dependencies:
       '@teambit/toolbox.path.path': 0.0.8
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       find-root: 1.1.0
       html-webpack-plugin: 5.6.8(@rspack/core@2.1.10)(webpack@5.109.2)
       object-hash: 3.0.0
@@ -94918,7 +94871,6 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - supports-color
       - typescript
       - uglify-js
@@ -94926,12 +94878,12 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
+  '@teambit/webpack.webpack-dev-server@1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)':
     dependencies:
       '@teambit/toolbox.path.path': 0.0.8
       '@teambit/webpack.modules.config-mutator': 0.0.177(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
-      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.webpack-bundler': 1.1.0(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       find-root: 1.1.0
       html-webpack-plugin: 5.6.8(@rspack/core@2.1.10)(webpack@5.109.2)
       object-hash: 3.0.0
@@ -94956,7 +94908,6 @@ snapshots:
       - lightningcss
       - postcss
       - react
-      - react-dom
       - supports-color
       - typescript
       - uglify-js
@@ -94975,7 +94926,7 @@ snapshots:
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
-      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -95054,7 +95005,7 @@ snapshots:
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@18.3.1)(react@18.3.1)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
-      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@18.3.1)(react@18.3.1)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@18.3.1)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -95133,7 +95084,7 @@ snapshots:
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -95212,7 +95163,7 @@ snapshots:
       '@teambit/webpack.plugins.inject-head-webpack-plugin': file:scopes/webpack/plugins/inject-head-webpack-plugin(html-webpack-plugin@5.3.2)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/webpack.plugins.webpack-bit-reporter-plugin': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
       '@teambit/webpack.transformers.generate-add-aliases-from-peers': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
-      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-dom@19.2.7)(react@19.2.7)(uglify-js@3.19.3)
+      '@teambit/webpack.transformers.generate-externals': 0.1.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(uglify-js@3.19.3)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       assert: 2.1.0
       browserify-zlib: 0.2.0
@@ -101811,6 +101762,7 @@ snapshots:
       es-object-atoms: 1.1.2
       es-set-tostringtag: 2.1.0
       es-to-primitive: 1.3.4
+      for-each: 0.3.5
       function.prototype.name: 1.2.0
       get-intrinsic: 1.3.0
       get-proto: 1.0.1
