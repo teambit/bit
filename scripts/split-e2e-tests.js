@@ -14,6 +14,10 @@
  *
  * Usage (on CircleCI): node scripts/split-e2e-tests.js
  *   Prints the absolute paths of the e2e files assigned to $CIRCLE_NODE_INDEX (of $CIRCLE_NODE_TOTAL).
+ *   (GitHub Actions reuses the script by setting the same two env vars, see
+ *   .github/workflows/e2e-tests.yml)
+ * Optional: --dir=e2e/commands
+ *   Only split the files under the given repo-relative directory.
  * Debugging: node scripts/split-e2e-tests.js --stats
  *   Prints the predicted load of every node instead.
  */
@@ -57,11 +61,13 @@ function main() {
   const nodeTotal = parseInt(process.env.CIRCLE_NODE_TOTAL || '1', 10);
   const nodeIndex = parseInt(process.env.CIRCLE_NODE_INDEX || '0', 10);
   const showStats = process.argv.includes('--stats');
+  const dirArg = process.argv.find((arg) => arg.startsWith('--dir='));
+  const scanDir = dirArg ? path.join(REPO_ROOT, dirArg.slice('--dir='.length)) : E2E_DIR;
 
   const timings = loadTimings();
   const defaultWeight = median(Object.values(timings));
 
-  const files = findE2eFiles(E2E_DIR).map((abs) => {
+  const files = findE2eFiles(scanDir).map((abs) => {
     const rel = path.relative(REPO_ROOT, abs).split(path.sep).join('/');
     const weight = timings[rel] ?? defaultWeight;
     if (!(rel in timings)) {

@@ -1,5 +1,6 @@
-# Experiment: offload e2e tests from CircleCI to GitHub Actions (free for public repos).
-# Currently runs a single e2e file (e2e/commands/add.e2e.ts) to validate the approach.
+# Offload e2e tests from CircleCI to GitHub Actions (free for public repos).
+# Currently runs the e2e/commands directory, sharded across parallel jobs with the same
+# timings-based bin-packing used on CircleCI (scripts/split-e2e-tests.js).
 # The setup mirrors .circleci/config.yml: setup_harmony (bvm -> bbit install/compile)
 # followed by e2e_test_cmd (link repo bin/bit.js as the global `bit`, run mocha).
 name: e2e-tests
@@ -13,11 +14,16 @@ on:
 env:
   BITSRC_ENV: stg
   BIT_FEATURES: cloud-importer-v2
+  E2E_SHARDS_TOTAL: 3
 
 jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
     steps:
       - uses: actions/checkout@v4
 
@@ -41,6 +47,15 @@ jobs:
           bbit config set error_reporting false
           bbit config set user.name CI
           bbit config set user.email ci@bit.dev
+          bbit config set package-manager.cache "$HOME/package-manager-cache"
+
+      - name: restore package-manager cache
+        uses: actions/cache@v4
+        with:
+          path: ~/package-manager-cache
+          key: pm-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pm-cache-${{ runner.os }}-
 
       - name: install dependencies (bbit install)
         run: |
@@ -63,18 +78,21 @@ jobs:
           git config --global user.email "ci@bit.dev"
           echo "user-agent=bit-e2e-github-actions" >> ~/.npmrc
 
-      - name: run e2e tests
+      - name: run e2e tests (shard ${{ matrix.shard }} of ${{ env.E2E_SHARDS_TOTAL }})
         run: |
           mkdir -p junit
-          npm run mocha-circleci ./e2e/commands/add.e2e.ts
+          node scripts/split-e2e-tests.js --dir=e2e/commands | xargs npm run mocha-circleci
         env:
+          # split-e2e-tests.js reads the CircleCI env names; map the matrix shard onto them.
+          CIRCLE_NODE_TOTAL: ${{ env.E2E_SHARDS_TOTAL }}
+          CIRCLE_NODE_INDEX: ${{ matrix.shard }}
           MOCHA_FILE: junit/e2e-test-results.xml
 
       - name: upload test results and logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-results
+          name: e2e-results-shard-${{ matrix.shard }}
           path: |
             junit
             ~/.cache/Bit/logs
