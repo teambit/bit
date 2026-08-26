@@ -1755,6 +1755,9 @@ export class CiMain {
             id: id.changeVersion(undefined),
             head: id.version as string,
           })),
+          readme: lane.readmeComponent
+            ? `${lane.readmeComponent.id.toStringWithoutVersion()}@${lane.readmeComponent.head?.toString() ?? ''}`
+            : undefined,
         };
       },
       // no cache: a model already present locally may predate another scope's release

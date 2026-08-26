@@ -8,10 +8,11 @@ describe('LaneCleanup', () => {
     id: { scope: id.split('/')[0], toStringWithoutVersion: () => id, changeVersion: () => ({}) },
     head,
   });
-  const lane = (heads: Record<string, string>, hidden: Record<string, string> = {}) =>
+  const lane = (heads: Record<string, string>, hidden: Record<string, string> = {}, readme?: string) =>
     ({
       components: Object.entries(heads).map(([id, head]) => entry(id, head)),
       updateDependents: Object.entries(hidden).map(([id, head]) => entry(id, head)),
+      readme,
     }) as any;
 
   function cleanup(lanes: Array<any | Error>) {
@@ -78,5 +79,15 @@ describe('LaneCleanup', () => {
     await run();
     expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
     expect(calls.join('\n')).to.include('changed while the release was checking it');
+  });
+
+  it('leaves the lane open when its readme changed before the archive', async () => {
+    const own = { 'acme.cards/ui/card': 'aaa' };
+    const { run, calls } = cleanup([
+      lane(own, {}, 'acme.cards/docs/readme@r1'),
+      lane(own, {}, 'acme.cards/docs/readme@r2'),
+    ]);
+    await run();
+    expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
   });
 });

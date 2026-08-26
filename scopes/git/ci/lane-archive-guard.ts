@@ -54,7 +54,12 @@ export type LaneEntry = { id: ComponentID; head: string; isDeleted?: boolean };
  * ones included, since a deletion is lane work the owning scope's release applies — and the hidden
  * `updateDependents` cascade entries.
  */
-export type LaneSnapshot = { components: LaneEntry[]; updateDependents: LaneEntry[] };
+export type LaneSnapshot = {
+  components: LaneEntry[];
+  updateDependents: LaneEntry[];
+  /** the lane's readme component and its head, when one is set — lane state a writer can change too */
+  readme?: string;
+};
 
 export type LaneArchiveDeps = {
   /** the remote lane, from its hosting scope; rejects with "was not found" when the lane is gone */
@@ -247,12 +252,12 @@ export function allLaneEntries(lane: LaneSnapshot): LaneEntry[] {
   return [...lane.components, ...lane.updateDependents];
 }
 
-/** The lane's `id@head` set — what an archive decision is made on, and what must not move before it acts. */
+/** The lane's `id@head` set and its readme — what an archive decision is made on, and what must not move before it acts. */
 export function laneFingerprint(lane: LaneSnapshot): string {
-  return allLaneEntries(lane)
+  const entries = allLaneEntries(lane)
     .map((comp) => `${comp.id.toStringWithoutVersion()}@${comp.head}${comp.isDeleted ? ' (deleted)' : ''}`)
-    .sort()
-    .join('\n');
+    .sort();
+  return [...entries, `readme:${lane.readme ?? ''}`].join('\n');
 }
 
 /**
