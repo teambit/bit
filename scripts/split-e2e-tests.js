@@ -16,8 +16,8 @@
  *   Prints the absolute paths of the e2e files assigned to $CIRCLE_NODE_INDEX (of $CIRCLE_NODE_TOTAL).
  *   (GitHub Actions reuses the script by setting the same two env vars, see
  *   .github/workflows/e2e-tests.yml)
- * Optional: --dir=e2e/commands
- *   Only split the files under the given repo-relative directory.
+ * Optional: --dir=e2e/commands (comma-separated for multiple)
+ *   Only split the files under the given repo-relative directories.
  * Optional: --exclude-dir=e2e/commands (comma-separated for multiple; empty value is a no-op)
  *   Skip the files under the given repo-relative directories. Used on CircleCI to skip
  *   directories that run on GitHub Actions instead (see .github/workflows/e2e-tests.yml).
@@ -65,14 +65,17 @@ function main() {
   const nodeIndex = parseInt(process.env.CIRCLE_NODE_INDEX || '0', 10);
   const showStats = process.argv.includes('--stats');
   const dirArg = process.argv.find((arg) => arg.startsWith('--dir='));
-  const scanDir = dirArg ? path.join(REPO_ROOT, dirArg.slice('--dir='.length)) : E2E_DIR;
+  const scanDirs = dirArg
+    ? dirArg.slice('--dir='.length).split(',').filter(Boolean).map((dir) => path.join(REPO_ROOT, dir))
+    : [E2E_DIR];
   const excludeArg = process.argv.find((arg) => arg.startsWith('--exclude-dir='));
   const excludeDirs = excludeArg ? excludeArg.slice('--exclude-dir='.length).split(',').filter(Boolean) : [];
 
   const timings = loadTimings();
   const defaultWeight = median(Object.values(timings));
 
-  const files = findE2eFiles(scanDir)
+  const files = scanDirs
+    .flatMap((dir) => findE2eFiles(dir))
     .map((abs) => ({ abs, rel: path.relative(REPO_ROOT, abs).split(path.sep).join('/') }))
     .filter(({ rel }) => !excludeDirs.some((dir) => rel.startsWith(`${dir}/`)))
     .map(({ abs, rel }) => {
