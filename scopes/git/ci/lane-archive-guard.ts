@@ -131,6 +131,14 @@ export function decideLaneArchive(
  * Anything else the lane changed (a dependency bump, an env change) leaves `main` different and the
  * component pending — a false "pending" costs a manual archive, a false "released" costs the work.
  */
+/**
+ * The extension's identity without a version: a component id (`teambit.envs/envs`) by scope and name,
+ * a legacy package-named extension (`@scope/pkg`) by its name.
+ */
+function extensionKey(ext: Version['extensions'][number]): string {
+  return ext.extensionId ? ext.extensionId.toStringWithoutVersion() : ext.stringId;
+}
+
 /** JSON with object keys in sorted order at every depth, so equal objects serialize equally. */
 function stableStringify(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
@@ -138,7 +146,7 @@ function stableStringify(value: unknown): string {
     const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
     return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(',')}}`;
   }
-  return JSON.stringify(value);
+  return JSON.stringify(value) ?? 'undefined';
 }
 
 export function sameReleasedState(lane: Version, main: Version, laneComponentIds: string[]): boolean {
@@ -165,9 +173,7 @@ export function sameReleasedState(lane: Version, main: Version, laneComponentIds
       .join('|');
   const configs = (v: Version) =>
     stableStringify(
-      v.extensions
-        .map((ext) => [ext.stringId.split('@')[0], ext.config ?? {}] as const)
-        .sort(([a], [b]) => a.localeCompare(b))
+      v.extensions.map((ext) => [extensionKey(ext), ext.config ?? {}] as const).sort(([a], [b]) => a.localeCompare(b))
     );
   return (
     lane.mainFile === main.mainFile &&

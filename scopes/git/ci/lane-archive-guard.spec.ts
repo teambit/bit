@@ -164,7 +164,14 @@ describe('sameReleasedState', () => {
       const [name, ver] = id.split('@');
       return { toString: () => id, toStringWithoutVersion: () => name, version: ver };
     };
-    const extensions = config.map(([stringId, cfg], i) => ({ stringId, config: cfg, data: data[i]?.[1] ?? {} }));
+    const extensions = config.map(([stringId, cfg], i) => ({
+      stringId,
+      extensionId: stringId.startsWith('@')
+        ? undefined
+        : { toStringWithoutVersion: () => stringId.split('@')[0], toString: () => stringId },
+      config: cfg,
+      data: data[i]?.[1] ?? {},
+    }));
     return {
       mainFile,
       files: files.map(([relativePath, hash]) => ({ relativePath, file: { toString: () => hash } })),
@@ -240,6 +247,13 @@ describe('sameReleasedState', () => {
         []
       )
     ).to.be.false;
+  });
+
+  it('keeps package-named extensions apart by their full name', () => {
+    const a = version({ config: [['@scope/a', { x: 1 }]] });
+    const b = version({ config: [['@scope/b', { x: 1 }]] });
+    expect(sameReleasedState(a, b, [])).to.be.false;
+    expect(sameReleasedState(a, version({ config: [['@scope/a', { x: 1 }]] }), [])).to.be.true;
   });
 
   it('is insensitive to key order in package dependencies and nested extension config', () => {
