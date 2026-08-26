@@ -125,7 +125,9 @@ export function decideLaneArchive(
  * - package dependencies (dependencies, dev, peer) with their ranges;
  * - component dependencies (dependencies, dev, peer) by id and version — except that a dependency
  *   which is itself on the lane is compared by id only, because the release re-versions it;
- * - every extension's `config`; not `data`, which the release recomputes (builder, dependencies).
+ * - every extension's `config`, keyed by the extension id without its version — an extension that is
+ *   itself a component on the lane is re-versioned by the release too; not `data`, which the release
+ *   recomputes (builder, dependencies).
  * Anything else the lane changed (a dependency bump, an env change) leaves `main` different and the
  * component pending — a false "pending" costs a manual archive, a false "released" costs the work.
  */
@@ -153,7 +155,9 @@ export function sameReleasedState(lane: Version, main: Version, laneComponentIds
       .join('|');
   const configs = (v: Version) =>
     JSON.stringify(
-      v.extensions.map((ext) => [ext.stringId, ext.config ?? {}] as const).sort(([a], [b]) => a.localeCompare(b))
+      v.extensions
+        .map((ext) => [ext.stringId.split('@')[0], ext.config ?? {}] as const)
+        .sort(([a], [b]) => a.localeCompare(b))
     );
   return (
     lane.mainFile === main.mainFile &&

@@ -242,6 +242,14 @@ describe('sameReleasedState', () => {
     ).to.be.false;
   });
 
+  it('compares extension config by extension id, so an env re-versioned by the release still matches', () => {
+    const lane = version({ config: [['teambit.react/react@0.0.0-abc123', { compiler: 'swc' }]] });
+    const released = version({ config: [['teambit.react/react@1.2.3', { compiler: 'swc' }]] });
+    expect(sameReleasedState(lane, released, [])).to.be.true;
+    expect(sameReleasedState(lane, version({ config: [['teambit.react/react@1.2.3', { compiler: 'tsc' }]] }), [])).to.be
+      .false;
+  });
+
   it('tolerates the version drift of a dependency that is itself on the lane, and ignores extension data', () => {
     const lane = version({
       deps: ['acme.cards/x@abc123'],
