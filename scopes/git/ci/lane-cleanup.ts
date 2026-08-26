@@ -4,6 +4,7 @@
  * (see `lane-archive-guard`).
  */
 import chalk from 'chalk';
+import { formatSuccessSummary, formatTitle, formatWarningSummary } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { LaneId } from '@teambit/lane-id';
 import type { Lane } from '@teambit/objects';
@@ -29,7 +30,7 @@ export class LaneCleanup {
    */
   async run(currentLane: Lane | undefined, explicitLaneName?: string, initialCommitSha?: string) {
     const { logger } = this.deps;
-    logger.console('🗑️ Lane Cleanup');
+    logger.console(formatTitle('Lane Cleanup'));
 
     // If we already have a current lane, use it
     if (currentLane) {
@@ -79,7 +80,9 @@ export class LaneCleanup {
     const { logger } = this.deps;
     const decision = await laneArchiveDecision(laneId, this.deps.defaultScope, this.deps);
     if (decision.summary) {
-      logger.console(decision.archive ? chalk.blue(decision.summary) : chalk.yellow(decision.summary));
+      logger.console(
+        decision.archive ? formatSuccessSummary(decision.summary) : formatWarningSummary(decision.summary)
+      );
     }
     if (!decision.archive) return 'kept';
     return this.deps.archiveLane(laneId.toString());

@@ -1,6 +1,6 @@
 import type { RuntimeDefinition, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { CLIAspect, type CLIMain, MainRuntime } from '@teambit/cli';
+import { CLIAspect, type CLIMain, MainRuntime, formatWarningSummary } from '@teambit/cli';
 import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
@@ -1731,12 +1731,13 @@ export class CiMain {
       convertBranchToLaneId: (branch) => this.convertBranchToLaneId(branch),
       archiveLane: (laneId) => this.archiveLane(laneId),
       getLanes: (opts) => this.lanes.getLanes(opts),
-      importMainObjects: (ids) => this.importer.importObjectsFromMainIfExist(ids, { cache: true }),
+      // no cache: a model already present locally may predate another scope's release
+      importMainObjects: (ids) => this.importer.importObjectsFromMainIfExist(ids),
       getModelComponent: (id) => this.workspace.scope.legacyScope.getModelComponentIfExist(id),
       importObjectsByHashes: (scope, hashes) => this.importer.importObjectsByHashes(hashes, scope),
       isTracked: (id) => this.workspace.listIds().hasWithoutVersion(id),
       objects: this.workspace.scope.legacyScope.objects,
-      warn: (text) => this.logger.console(chalk.yellow(text)),
+      warn: (text) => this.logger.console(formatWarningSummary(text)),
     }).run(currentLane, laneName, initialCommitSha);
 
     return { code: 0, data: '' };
