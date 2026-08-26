@@ -242,6 +242,18 @@ describe('sameReleasedState', () => {
     ).to.be.false;
   });
 
+  it('is insensitive to key order in package dependencies and nested extension config', () => {
+    const a = version({
+      packages: { lodash: '^4', react: '^18' },
+      config: [['teambit.envs/envs', { env: 'node', opts: { a: 1, b: 2 } }]],
+    });
+    const b = version({
+      packages: { react: '^18', lodash: '^4' },
+      config: [['teambit.envs/envs', { opts: { b: 2, a: 1 }, env: 'node' }]],
+    });
+    expect(sameReleasedState(a, b, [])).to.be.true;
+  });
+
   it('compares extension config by extension id, so an env re-versioned by the release still matches', () => {
     const lane = version({ config: [['teambit.react/react@0.0.0-abc123', { compiler: 'swc' }]] });
     const released = version({ config: [['teambit.react/react@1.2.3', { compiler: 'swc' }]] });

@@ -3,8 +3,7 @@
  * unless the lane still carries components of other scopes that have not reached their own main
  * (see `lane-archive-guard`).
  */
-import chalk from 'chalk';
-import { formatSuccessSummary, formatTitle, formatWarningSummary } from '@teambit/cli';
+import { formatHint, formatSuccessSummary, formatTitle, formatWarningSummary } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { LaneId } from '@teambit/lane-id';
 import type { Lane } from '@teambit/objects';
@@ -40,14 +39,14 @@ export class LaneCleanup {
 
     // If we already have a current lane, use it
     if (currentLane) {
-      logger.console(chalk.blue(`Found current lane: ${currentLane.name}`));
+      logger.console(formatHint(`Found current lane: ${currentLane.name}`));
       await this.archiveIfFullyReleased(currentLane.toLaneId());
       return;
     }
 
     // If no current lane but explicit lane name provided, try to archive it
     if (explicitLaneName) {
-      logger.console(chalk.blue(`Using explicitly provided lane name: ${explicitLaneName}`));
+      logger.console(formatHint(`Using explicitly provided lane name: ${explicitLaneName}`));
       try {
         const laneId = await this.deps.parseLaneId(explicitLaneName);
         await this.archiveIfFullyReleased(laneId);
@@ -69,7 +68,7 @@ export class LaneCleanup {
     try {
       const laneIdStr = this.deps.convertBranchToLaneId(sourceBranchName);
       logger.console(
-        chalk.blue(`Attempting to archive lane based on source branch: ${sourceBranchName} -> ${laneIdStr}`)
+        formatHint(`Attempting to archive lane based on source branch: ${sourceBranchName} -> ${laneIdStr}`)
       );
       const laneId = await this.deps.parseLaneId(laneIdStr);
       await this.archiveIfFullyReleased(laneId);

@@ -131,6 +131,16 @@ export function decideLaneArchive(
  * Anything else the lane changed (a dependency bump, an env change) leaves `main` different and the
  * component pending — a false "pending" costs a manual archive, a false "released" costs the work.
  */
+/** JSON with object keys in sorted order at every depth, so equal objects serialize equally. */
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
 export function sameReleasedState(lane: Version, main: Version, laneComponentIds: string[]): boolean {
   const onLane = new Set(laneComponentIds);
   const files = (v: Version) =>
@@ -139,7 +149,7 @@ export function sameReleasedState(lane: Version, main: Version, laneComponentIds
       .sort()
       .join('\n');
   const packages = (v: Version) =>
-    JSON.stringify([v.packageDependencies, v.devPackageDependencies, v.peerPackageDependencies]);
+    stableStringify([v.packageDependencies, v.devPackageDependencies, v.peerPackageDependencies]);
   const components = (v: Version) =>
     [v.dependencies, v.devDependencies, v.peerDependencies]
       .map((deps) =>
@@ -154,7 +164,7 @@ export function sameReleasedState(lane: Version, main: Version, laneComponentIds
       )
       .join('|');
   const configs = (v: Version) =>
-    JSON.stringify(
+    stableStringify(
       v.extensions
         .map((ext) => [ext.stringId.split('@')[0], ext.config ?? {}] as const)
         .sort(([a], [b]) => a.localeCompare(b))
