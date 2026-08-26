@@ -1,17 +1,1814 @@
-# TEMPORARY (this branch only): the real CircleCI config is replaced with a no-op
-# while experimenting with running e2e tests on GitHub Actions
-# (see .github/workflows/e2e-tests.yml). Do NOT merge this file to master.
 version: 2.1
 
-jobs:
-  noop:
-    docker:
-      - image: cimg/base:stable
-    resource_class: small
+# ========================================
+# ANCHORS & ALIASES
+# ========================================
+
+# Base configurations
+default_image: &default_image
+  docker:
+    - image: cimg/node:22.22.0
+
+default_resource_class: &default_resource_class
+  resource_class: medium
+
+default_working_dir: &default_working_dir
+  working_directory: ~/bit
+
+defaults: &defaults
+  <<: [*default_image, *default_resource_class, *default_working_dir]
+
+# Windows configurations
+windows_default_resource_size: &windows_default_resource_size
+  size: medium
+
+windows_default_working_dir: &windows_default_working_dir
+  working_directory: C:\Users\circleci\project\bit
+
+windows_default_executor_name: &windows_default_executor_name
+  name: win/default
+
+windows_default_executor: &windows_default_executor
+  executor:
+    <<: [*windows_default_executor_name, *windows_default_resource_size]
+
+windows_defaults: &windows_defaults
+  <<: [*windows_default_executor, *windows_default_working_dir]
+
+# Filters
+semver_tags_only_filters: &semver_tags_only_filters
+  filters:
+    # ignore any commit on any branch by default
+    branches:
+      ignore: /.*/
+    # only act on version tags
+    tags:
+      only: /^v[0-9]+(\.[0-9]+)*$/
+
+master_only_filter: &master_only_filter
+  filters:
+    branches:
+      only: master
+
+# ========================================
+# PIPELINE PARAMETERS
+# ========================================
+
+parameters:
+  run_set_stable:
+    type: boolean
+    default: false
+  run_deploy:
+    type: boolean
+    default: false
+  release_version:
+    type: string
+    default: ""
+  release_stable:
+    type: enum
+    enum: ["true", "false"]
+    default: "true"
+  release_test_mode:
+    type: enum
+    enum: ["true", "false"]
+    default: "false"
+
+# ========================================
+# ORBS
+# ========================================
+
+orbs:
+  win: circleci/windows@5.0
+  slack: circleci/slack@5.2.3
+
+# ========================================
+# COMMANDS
+# ========================================
+
+commands:
+  # Wakes the merge-queue GitHub workflow (see .github/workflows/merge-queue.yml). The queue's
+  # turn handoff depends on this ping: the bump commit is "[skip ci]" (fires no Actions run) and
+  # the cron is throttled, so without it the next queued PR waits minutes instead of seconds.
+  # Non-fatal on purpose — the queue's scheduled safety net covers a missed ping.
+  notify_merge_queue:
     steps:
-      - run: echo "no-op - this branch runs its CI on GitHub Actions (e2e-tests.yml experiment)"
+      - run:
+          name: notify merge-queue
+          command: >
+            curl -sf -X POST
+            -H "Authorization: token $GH_RELEASE_GITHUB_API_TOKEN"
+            -H "Accept: application/vnd.github+json"
+            -H "Content-Type: application/json"
+            https://api.github.com/repos/teambit/bit/dispatches
+            -d '{"event_type":"merge-queue-reconcile"}'
+            || echo "merge-queue notify failed (non-fatal)"
+          when: always
+
+  # Bundle installation with hoisting and overrides.
+  # pnpm no longer reads its settings from .npmrc or from package.json's "pnpm" field, so every
+  # setting below is written with `pnpm config set`, which routes each one to its own home:
+  # pnpm settings to pnpm-workspace.yaml, npm-compatible ones (registry) to .npmrc.
+  install_bit_bundle:
+    parameters:
+      os:
+        type: string
+        default: "linux"
+      cpu:
+        type: string
+        default: "x64"
+      # The bundle is always built on Linux, so bin entries are symlinks unless this is turned off.
+      # Windows bundles need real executables.
+      prefer_symlinked_executables:
+        type: string
+        default: "true"
+      directory:
+        type: string
+        default: "bit-${BIT_VERSION}"
+    steps:
+      - run:
+          name: install bit bundle for <<parameters.os>> <<parameters.cpu>>
+          command: |
+            cd <<parameters.directory>>
+            pnpm init
+            pnpm config set --location=project registry https://node-registry.bit.cloud
+            pnpm config set --location=project nodeLinker hoisted
+            pnpm config set --location=project packageImportMethod copy
+            pnpm config set --location=project userAgent bvm-bundle-circleci
+            pnpm config set --location=project preferSymlinkedExecutables <<parameters.prefer_symlinked_executables>>
+            # dependency build scripts have never run for the bundle; pnpm fails an install that
+            # skips one unless the skip is spelled out, and the set of packages that ask to build
+            # changes with every dependency bump.
+            pnpm config set --location=project strictDepBuilds false
+            pnpm config set --location=project --json overrides '{
+              "uri-js": "npm:uri-js-replace",
+              "cross-spawn@7": "^7.0.5",
+              "lodash@4": "4.17.21",
+              "trim@0": "0.0.3",
+              "@teambit/harmony": "0.4.12",
+              "postcss@8": "^8.4.19",
+              "ajv@6": "^6.12.6",
+              "@teambit/semantics.entities.semantic-schema": "^0.0.99",
+              "@pnpm/util.lex-comparator": "3.0.2",
+              "@pnpm/config.nerf-dart": "1.0.1"
+            }'
+            # Pin the release selected by setup_bit_version. Without the version, pnpm 12's default
+            # 24-hour minimum release age can select an older Bit release instead of the latest one.
+            pnpm add "@teambit/bit@${BIT_VERSION}" --os=<<parameters.os>> --cpu=<<parameters.cpu>>
+
+  verify_pnpm_napi_bundle:
+    parameters:
+      package:
+        type: string
+      directory:
+        type: string
+        default: "bit-${BIT_VERSION}"
+    steps:
+      - run:
+          name: verify @pnpm/<<parameters.package>> native binary
+          command: |
+            cd <<parameters.directory>>
+            PNPM_NAPI_PACKAGE="<<parameters.package>>" node \<<'NODE'
+            const fs = require('fs');
+            const path = require('path');
+
+            const packageName = process.env.PNPM_NAPI_PACKAGE;
+            const candidates = [
+              path.join(process.cwd(), 'node_modules', '@pnpm', packageName, 'pnpm-napi.node'),
+              path.join(process.cwd(), 'node_modules', '.pnpm', 'node_modules', '@pnpm', packageName, 'pnpm-napi.node'),
+            ];
+            const found = candidates.find((candidate) => fs.existsSync(candidate));
+            if (found) {
+              console.log(`Found @pnpm/${packageName} native binary at ${path.relative(process.cwd(), found)}`);
+              process.exit(0);
+            }
+
+            const installedPackages = [];
+            for (const baseDir of [
+              path.join(process.cwd(), 'node_modules', '@pnpm'),
+              path.join(process.cwd(), 'node_modules', '.pnpm', 'node_modules', '@pnpm'),
+            ]) {
+              if (!fs.existsSync(baseDir)) continue;
+              for (const entry of fs.readdirSync(baseDir)) {
+                if (entry.startsWith('napi.')) installedPackages.push(path.relative(process.cwd(), path.join(baseDir, entry)));
+              }
+            }
+
+            console.error(`Missing @pnpm/${packageName}/pnpm-napi.node in Bit CLI bundle`);
+            console.error(`Checked:\n${candidates.map((candidate) => `  - ${path.relative(process.cwd(), candidate)}`).join('\n')}`);
+            console.error(
+              installedPackages.length
+                ? `Installed @pnpm/napi platform packages:\n${installedPackages.map((pkg) => `  - ${pkg}`).join('\n')}`
+                : 'No @pnpm/napi platform packages were found'
+            );
+            process.exit(1);
+            NODE
+
+  # Bit configuration
+  bit_config:
+    parameters:
+      env:
+        default: 'hub-stg'
+        # default: 'hub'
+        type: string
+      token:
+        default: $BIT_CLOUD_PROD_TOKEN
+        type: string
+      bin_name:
+        default: bit
+        type: string
+    steps:
+      - run: '<<parameters.bin_name>> config set analytics_reporting false'
+      - run: '<<parameters.bin_name>> config set error_reporting false'
+      - run: '<<parameters.bin_name>> config set user.name CI'
+      - run: '<<parameters.bin_name>> config set user.email ci@bit.dev'
+      - run: '<<parameters.bin_name>> config set registry https://node-registry.bit.cloud'
+      # - run: '<<parameters.bin_name>> config set user.token <<parameters.token>>'
+      - run: '<<parameters.bin_name>> config set hub_domain <<parameters.env>>.bit.dev'
+      - run: '<<parameters.bin_name>> config set package-manager.cache /home/circleci/package-manager-cache'
+
+  # Optimize node_modules size for BVM distributions
+  optimize_node_modules:
+    parameters:
+      platform:
+        default: ''
+        type: string
+    steps:
+      - run:
+          name: optimize node_modules size<<# parameters.platform >> for <<parameters.platform>><</parameters.platform>>
+          command: >
+            cd bit-${BIT_VERSION} &&
+            node ../bit/scripts/cleanup-node-modules.js ./node_modules --keep-teambit-maps &&
+            echo "Node modules optimized successfully<<# parameters.platform >> for <<parameters.platform>><</parameters.platform>>"
+
+  # NPM setup
+  bit_global_for_npm:
+    steps:
+      - run:
+          name: 'create npm global dir'
+          command: 'mkdir -p /home/circleci/.npm-global/bin'
+      - run:
+          name: 'link bit to path'
+          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - run: which bit
+
+  set_bit_cloud_registry:
+    steps:
+      - run:
+          name: set bit cloud registry in npm config
+          command: npm config set @teambit:registry=https://node-registry.bit.cloud
+      - run:
+          name: set bit cloud registry in npm config
+          command: npm config set @bitdev:registry=https://node-registry.bit.cloud
+
+  # pnpm 12 is a native binary, so it is not installed from npm: `get-pnpm` is pnpm's own
+  # installer, which downloads the executable, verifies npm's signature over it, and hands off
+  # to `pnpm setup`. That installs into $PNPM_HOME/bin and puts it on the PATH through ~/.bashrc,
+  # which CircleCI steps never read, so the same entry goes on $BASH_ENV here. SHELL is what
+  # `pnpm setup` infers the profile to edit from; without it the installer errors after placing
+  # the binary. The version call is the check that the binary is where the PATH entry says.
+  setup_pnpm:
+    steps:
+      - run:
+          name: Install pnpm
+          command: |
+            export PNPM_HOME="$HOME/.local/share/pnpm"
+            SHELL=/bin/bash npx --yes get-pnpm@0.0.3 12.0.0-rc.7
+            "$PNPM_HOME/bin/pnpm" --version
+            echo "export PNPM_HOME=\"$PNPM_HOME\"" >> $BASH_ENV
+            echo 'export PATH="$PNPM_HOME/bin:$PATH"' >> $BASH_ENV
+
+  # BVM setup
+  install_bvm:
+    steps:
+      - run: npm config set prefix '~/.npm-global'
+      - run: npm install --global @teambit/bvm
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - run: bvm config set RELEASE_TYPE nightly
+
+  bvm_upgrade:
+    steps:
+      - run: bvm config set DEFAULT_LINK bbit
+      - run: bvm config set RELEASE_TYPE nightly
+      - run: bvm upgrade
+      - run: bvm link --verbose
+      - bit_config:
+          env: "hub"
+          bin_name: "bbit"
+      - run: bbit
+      - run: bbit -v
+      - save_cache:
+          key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
+          paths:
+            - /home/circleci/.bvm
+
+  # SSH & Git setup
+  update_ssh_agent:
+    steps:
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      - run: 'chmod 400 ~/.ssh/id_rsa'
+      - run: 'ssh-add ~/.ssh/id_rsa'
+
+  set_git_credentials:
+    steps:
+      - run:
+          name: 'set GitHub token'
+          command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      - add_ssh_keys:
+          fingerprints:
+            - 'SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev'
+      - run:
+          name: set git user.name and user.email
+          command: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
+      # - run:
+      #     name: 'replace git protocol from ssh to http' # to not get the authenticate error
+      #     command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
+      # - run: mkdir -p ~/.ssh
+      # - run: SCAN=$(ssh-keyscan github.com )
+      # - run: echo $SCAN >> ~/.ssh/known_hosts
+      - run: cd bit && git remote rm origin
+      # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
+      - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
+
+  # Windows setup
+  windows_set_node_version:
+    parameters:
+      version:
+        default: 22.22.0
+        type: string
+    steps:
+      - run: choco upgrade nvm -y
+      - run: nvm -v
+      - run: nvm install 22.22.0
+      - run: nvm use 22.22.0
+      - run: node -v
+
+  windows_add_bvm_to_path:
+    steps:
+      - run: New-Item $Profile.CurrentUserAllHosts -Force
+      - run: Add-Content -Path $Profile.CurrentUserAllHosts -Value '$env:PATH = "C:\Users\circleci\AppData\Local\.bvm;$env:PATH"'
+      - run: $Env:Path.Split(';')
+
+  # Version & Build setup
+  setup_bit_version:
+    steps:
+      - run:
+          name: print bit version
+          command: npm view @teambit/bit version
+      - run:
+          name: Setup bit version environment variables
+          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: create empty folder
+          command: mkdir bit-${BIT_VERSION}
+
+  compress_bit:
+    steps:
+      - run:
+          name: Compress Bit
+          command: >
+            tar -cvf bit-${BIT_VERSION}.tar.gz
+            --exclude=bit-${BIT_VERSION}/.npmrc
+            --exclude=bit-${BIT_VERSION}/package.json
+            --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
+            --exclude=bit-${BIT_VERSION}/pnpm-workspace.yaml
+            bit-${BIT_VERSION}
+
+  # Docker commands
+  docker_build_and_push:
+    parameters:
+      docker_build_base_image_arg_name:
+        default: 'BASE_IMAGE'
+        type: string
+      docker_build_base_image_arg_value:
+        default: 'node:22.22.0'
+        type: string
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_file_name:
+        default: 'Dockerfile-bit'
+        type: string
+      # I want this to be something like '-node-<<parameters.node_version>>' but I don't think we can access other params here
+      docker_tag_suffix:
+        default: ''
+        type: string
+      bit_version_arg_name:
+        default: 'BIT_VERSION'
+        type: string
+    steps:
+      - docker_build_internal:
+          image_name: "<<parameters.image_name>>"
+          docker_file_name: "<<parameters.docker_file_name>>"
+          docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
+          bit_version_arg_name: "<<parameters.bit_version_arg_name>>"
+          docker_build_base_image_arg_name: "<<parameters.docker_build_base_image_arg_name>>"
+          docker_build_base_image_arg_value: "<<parameters.docker_build_base_image_arg_value>>"
+      - docker_push:
+          image_name: "<<parameters.image_name>>"
+          docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
+
+  docker_build_internal:
+    parameters:
+      docker_build_base_image_arg_name:
+        default: 'BASE_IMAGE'
+        type: string
+      docker_build_base_image_arg_value:
+        default: 'node:22.22.0'
+        type: string
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_file_name:
+        default: 'Dockerfile-bit'
+        type: string
+      docker_tag_suffix:
+        default: ""
+        type: string
+      bit_version_arg_name:
+        default: 'BIT_VERSION'
+        type: string
+    steps:
+      - run: |
+          cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> \
+            --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> \
+            --build-arg <<parameters.bit_version_arg_name>>=`npm show @teambit/bit version` \
+            -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
+      - run: |
+          cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> \
+            --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> \
+            --build-arg <<parameters.bit_version_arg_name>>=`npm show @teambit/bit version` \
+            -t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
+
+  docker_push:
+    parameters:
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_tag_suffix:
+        default: ''
+        type: string
+    steps:
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit && docker push <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>>
+      - run: cd bit && docker push <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>>
+
+  # Common cache operations
+  restore_common_caches:
+    steps:
+      - restore_cache:
+          key: bitsrc-registry10
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
+
+  # Complete Bit environment setup
+  setup_bit_environment:
+    parameters:
+      env:
+        default: "hub"
+        type: string
+      token_env_var:
+        default: "BIT_CLOUD_PROD_TOKEN"
+        type: string
+    steps:
+      - bit_global_for_npm
+      - bit_config:
+          env: "<<parameters.env>>"
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_common_caches
+      - run: bit config set user.token ${<<parameters.token_env_var>>}
+
+  # Test results and artifacts storage
+  store_test_results_and_artifacts:
+    parameters:
+      test_results_path:
+        default: "junit"
+        type: string
+      artifacts_path:
+        default: "junit"
+        type: string
+      logs_path:
+        default: "~/Library/Caches/Bit/logs"
+        type: string
+    steps:
+      - store_test_results:
+          path: <<parameters.test_results_path>>
+      - store_artifacts:
+          path: <<parameters.artifacts_path>>
+      - store_artifacts:
+          path: <<parameters.logs_path>>
+
+  # Windows Bit environment setup
+  windows_setup_bit_environment:
+    steps:
+      - attach_workspace:
+          at: .
+      - windows_add_bvm_to_path
+      - windows_set_node_version
+      - restore_cache:
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
+      - run: bit -v
+      - run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      - restore_cache:
+          key: windows_bitsrc-ssh-key-v1
+      - restore_cache:
+          key: windows_bitsrc-registry-v1
+      - bit_config:
+          token: "fake-token"
+
+  # E2E test command
+  e2e_test_cmd:
+    parameters:
+      bit_bin:
+        type: string
+        default: ""
+    steps:
+      - attach_workspace:
+          at: ./
+      # - run:
+      #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
+      #     name: 'update npm to latest version'
+      #     command: 'npm i -g npm@latest'
+      - bit_global_for_npm
+      - bit_config
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry10
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      # - run: 'chmod 400 ~/.ssh/id_rsa'
+      # - run: 'ssh-add ~/.ssh/id_rsa'
+      - run: 'cd bit && mkdir junit'
+      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      - run:
+          name: set user agent for Bit processes in e2e tests
+          command: echo "user-agent=bit-e2e-circleci" >> ~/.npmrc
+      # Make sure when we run bit from e2e tests we run it from the global not from here
+      # - run: 'rm -rf bit/node_modules/.bin/bit'
+      - run:
+          name: 'Run e2e tests'
+          # Files are split across nodes by measured per-file wall-clock times (bin-packing), see
+          # scripts/split-e2e-tests.js. CircleCI's "split by timings" can't work here: it relies on
+          # per-testcase durations from junit, but most of our e2e time is spent in before/after hooks,
+          # which mocha attributes to no testcase, so the splitter sees ~13% of the real cost.
+          # The timings manifest is derived from actual CI node run times; refresh it occasionally
+          # with: node scripts/generate-e2e-timings.js
+          command: 'cd bit && node scripts/split-e2e-tests.js | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          no_output_timeout: '50m'
+          environment:
+            MOCHA_FILE: junit/e2e-test-results.xml
+          when: always
+      - store_test_results:
+          path: bit/junit
+      - store_artifacts:
+          path: bit/junit
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
+# ========================================
+# JOBS
+# ========================================
+
+jobs:
+  # ========== Basic Setup Jobs ==========
+  checkout_code:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      - persist_to_workspace:
+          root: /home/circleci
+          paths:
+            - bit
+
+  set_ssh_key:
+    <<: *defaults
+    working_directory: ~/.ssh
+    steps:
+      - run: 'echo "-----BEGIN RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa'
+      - run: 'echo ${testerBitsrcSSHPrivateKey} >> id_rsa'
+      - run: 'echo "-----END RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa'
+      - run: 'echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub'
+      - save_cache:
+          key: bitsrc-ssh-key3
+          paths:
+            - ~/.ssh/id_rsa
+            - ~/.ssh/id_rsa.pub
+
+  set_npm_registries:
+    <<: *defaults
+    steps:
+      # - run:
+      #     name: setting npmjs registry
+      #     command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      # - run: npm whoami
+      # prod registry
+      # - run: npm config set @bit:registry https://node.bit.dev
+      - run: npm config set @bit:registry https://node-registry.bit.cloud
+      # - run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      - run: echo "//node-registry.bit.cloud/:_authToken=$registryProdToken" >> ~/.npmrc
+      # - run: echo "always-auth=true" >> ~/.npmrc
+      # stage registry
+      # -
+      # run: 'npm config set @bit:registry https://node-stg.bit.dev'
+      # -
+      # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
+      - save_cache:
+          key: bitsrc-registry10
+          # key: bitsrc-registry-stg-v2
+          paths:
+            - ~/.npmrc
+
+  setup_harmony:
+    resource_class: large
+    <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_common_caches
+      - run: echo $BIT_FEATURES
+      - run: node -v
+      - run: npm -v
+      # - run:
+      #     name: 'install husky globally'
+      #     command: 'npm i -g husky'
+      - install_bvm
+      - bvm_upgrade
+      - run: cd bit && bbit init
+      - run:
+          name: bbit install
+          # the user-agent append labels registry requests from CI installs (the committed .npmrc
+          # says bit-repo-local). skip-worktree keeps the mutation out of any later commit made
+          # from this workspace (e.g. the version-bump commit of `bit ci merge`, which stages all
+          # tracked changes) — without it, a duplicate user-agent line lands on master every
+          # release and, being last in the file, overrides bit-repo-local for local installs too.
+          # the flag lives in .git/index, so it survives persist_to_workspace into later jobs.
+          command: >
+            cd bit &&
+            echo "user-agent=bit-repo-circleci" >> .npmrc &&
+            git update-index --skip-worktree .npmrc &&
+            bbit install
+      # `bbit install` compiles as part of the install, but that pass can fall back to the
+      # default TypeScript compiler for components whose env is still being imported - notably
+      # the node-babel-mocha ones (legacy.scope, legacy.consumer, scope.network, ...). tsc emits
+      # eager top-level requires where the env's babel config emits lazy thunks, so bit's own
+      # bootstrap then pulls in graphql/react-docgen/@babel/core and the filesystem-read budget
+      # blows up. compiling again once node_modules has settled rebuilds them with their real
+      # envs (measured: `bit --help` 2396 -> 976 file reads).
+      - run: cd bit && bbit compile
+      # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
+      # - run: cd bit && ls -l node_modules/@babel
+      # - run: cd bit && ls -l node_modules/@babel/cli/bin
+      # - run: cd bit && ls -l node_modules/.bin
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit
+            - .pnpm-store
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+      - store_artifacts:
+          path: bit/yarn.lock
+
+  # ========== Quality Assurance Jobs ==========
+  lint:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      - run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      - restore_cache:
+          keys:
+            - 'repo-{{ checksum ".circle-sha" }}'
+      - attach_workspace:
+          at: ./
+      - run:
+          name: 'run Oxlint'
+          command: 'cd bit && npm run lint-circle'
+      - store_test_results_and_artifacts:
+          test_results_path: bit/junit
+          artifacts_path: bit/junit
+
+  check_circular_dependencies:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry10
+      - run:
+          name: 'check circular dependencies'
+          command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
+
+  check_version_sync:
+    <<: *defaults
+    steps:
+      # Only needs a plain checkout, so it runs (and fails) in seconds without
+      # waiting for setup_harmony.
+      - checkout
+      - run:
+          name: 'check @teambit/harmony version synchronization'
+          command: './scripts/check-harmony-version-sync.sh'
+
+  generate_and_check_types:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: 'run TSC'
+          command: 'cd bit && npm run check-types'
+      - run:
+          name: 'make sure there is no "ramda" imported to Harmony'
+          command: 'cd bit && ./scripts/validate-no-ramda.sh'
+      - run:
+          name: 'make sure there is no import aspects from default export'
+          command: 'cd bit && ./scripts/validate-import-named-aspects.sh'
+      - run:
+          name: 'make sure the packages used in legacy are specified in package.json'
+          command: 'cd bit && node scripts/validate-pkg-exist-in-pkg-json.js'
+
+  # Verify the generated CLI-reference / core-aspects files are committed and up to date.
+  # These files (cli-reference.{mdx,json,docs.mdx}, the claude-skill docs, and
+  # core-aspects-ids.json) are component sources, so they belong in the PR rather than
+  # being regenerated and committed post-merge on master by bit_merge. This shifts that
+  # generation left: it regenerates the files and fails if the working tree differs,
+  # telling the author to run the generate-* scripts and commit the result. Mirrors the
+  # environment bit_merge already uses to run `bit cli generate`.
+  check_generated_reference:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config
+      - restore_common_caches
+      - run:
+          name: 'regenerate CLI-reference and core-aspects files'
+          command: |
+            cd bit
+            npm run generate-cli-reference
+            npm run generate-cli-reference-json
+            npm run generate-cli-reference-docs
+            npm run generate-cli-skill
+            npm run generate-core-aspects-ids
+      - run:
+          name: 'fail if any generated reference file is out of date'
+          command: |
+            cd bit
+            GENERATED="scopes/harmony/cli-reference/cli-reference.mdx \
+                       scopes/harmony/cli-reference/cli-reference.json \
+                       scopes/harmony/cli-reference/cli-reference.docs.mdx \
+                       contrib/claude-skill-bit-cli/SKILL.md \
+                       contrib/claude-skill-bit-cli/CLI_REFERENCE.md \
+                       scopes/harmony/testing/load-aspect/core-aspects-ids.json"
+            # cli-reference.docs.mdx embeds the running bit version in its frontmatter
+            # (cli.cmd.ts: "Bit version: ${getBitVersion()}"), which is a release-time
+            # value not knowable in a PR. Ignore hunks whose only change is that line so
+            # the check doesn't flap on every version bump.
+            DIFF=$(git diff -I'Bit version: [0-9]' -- $GENERATED)
+            if [ -z "$DIFF" ]; then
+              echo "✅ generated reference files are up to date"
+            else
+              echo "❌ generated reference files are out of date. Run locally and commit the result:"
+              echo "   npm run generate-cli-reference && npm run generate-cli-reference-json && npm run generate-cli-reference-docs && npm run generate-cli-skill && npm run generate-core-aspects-ids"
+              git --no-pager diff -I'Bit version: [0-9]' --stat -- $GENERATED
+              exit 1
+            fi
+
+  # ========== Documentation & Notifications ==========
+  generate_docs:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: 'generate docs'
+          command: 'cd bit && npm run doc-gen'
+      - run:
+          name: Setup generate doc build number environment variables
+          command: echo "$CIRCLE_BUILD_NUM" > DOC_GEN_BUILD_NUM.txt
+      - store_artifacts:
+          path: bit/dist/cli.md
+      - persist_to_workspace:
+          root: .
+          paths:
+            - DOC_GEN_BUILD_NUM.txt
+
+  # ========== Bit CI Jobs ==========
+  bit_pr:
+    # xlarge validated on a worst-case 98-component cascade (no OOM at 12GB heap, same wall time
+    # as 2xlarge). If this job dies with "Killed", revert to 2xlarge + max-old-space-size=30000.
+    resource_class: xlarge
+    <<: *defaults
+    environment:
+      # BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=12288
+    steps:
+      - attach_workspace:
+          at: ./
+      - setup_bit_environment
+      - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run:
+          name: 'bit ci pr'
+          # --skip-cleanup: this container is discarded right after, so don't waste time restoring
+          # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
+          # --skip-tasks PublishComponents: a PR build validates the pipeline, it doesn't need the
+          # snap-tagged versions on registry.npmjs.org. Publishing every changed component on every
+          # push shares one npm token across all open PRs and rate-limits it (429 on PUT); the
+          # packages are published for real on the export to main. Every other task still runs.
+          # To trade more tasks for speed on a given PR (no YAML change needed), add a
+          # `[skip-tasks: <names>]` token to the commit message, e.g.
+          # `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate]` - it merges with the flag below.
+          # No --keep-lane: the reusing flow serves components unchanged since an earlier export
+          # from the lane, with artifacts built from older commits of the branch. Capsules then mix
+          # generations of @teambit packages and cross-copy `instanceof` breaks in capsule spec
+          # runs - on a PR that snaps core components (so their specs actually run), bit_pr fails
+          # deterministically from the second push onward. The temp-lane flow rebuilds every run
+          # from one commit, trading the lane's persistent history on Bit Cloud for correctness.
+          command: 'cd bit && bit ci pr --build --skip-cleanup --skip-tasks PublishComponents'
+          no_output_timeout: '50m'
+          environment:
+            NODE_OPTIONS: --max-old-space-size=12288
+            # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
+            # this build is CPU-bound and dominated by one env, so concurrency only added contention.
+            # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
+  bit_merge:
+    # uncomment in case this job fails with "Killed".
+    resource_class: 2xlarge
+    # resource_class: xlarge
+    <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=30000
+    steps:
+      - attach_workspace:
+          at: ./
+      - setup_bit_environment
+      - update_ssh_agent
+      - set_git_credentials
+      - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run:
+          name: If no component has changed, exit the job
+          command: |
+            # Grepping stdout of `bit diff` is unsafe: unified-diff content of a modified
+            # source file can contain the "no modified components" sentinel string itself
+            # (e.g. when diff-cmd.ts is modified). Use structured JSON output instead.
+            # --name-only omits full diff bodies so this stays cheap on large merges;
+            # the top-level JSON array is empty iff there are no modified components.
+            if cd bit && bit diff --json --name-only | tr -d '[:space:]' | grep -q '^\[\]$'; then
+              if grep -q '"nextVersion": {' .bitmap; then
+                echo "No changes detected, but soft-tagged components found. Continuing workflow."
+              else
+                echo "No changes detected, halting job to prevent further workflow execution."
+                # step halt skips all remaining steps, including the notify_merge_queue step at the
+                # end of this job — so ping the merge queue here first (master settles the moment
+                # this job halts). Non-fatal; the queue's scheduled safety net covers a miss.
+                curl -sf -X POST \
+                  -H "Authorization: token $GH_RELEASE_GITHUB_API_TOKEN" \
+                  -H "Accept: application/vnd.github+json" \
+                  -H "Content-Type: application/json" \
+                  https://api.github.com/repos/teambit/bit/dispatches \
+                  -d '{"event_type":"merge-queue-reconcile"}' \
+                  || echo "merge-queue notify failed (non-fatal)"
+                circleci-agent step halt
+              fi
+            fi
+      - run: cd bit && npm run generate-cli-reference
+      - run: cd bit && npm run generate-cli-reference-json
+      - run: cd bit && npm run generate-cli-reference-docs
+      - run: cd bit && npm run generate-cli-skill
+      - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
+      - run: cd bit && npm run generate-core-aspects-ids
+      - run:
+          name: 'bit ci merge'
+          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 2 ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          no_output_timeout: '50m'
+          environment:
+            NODE_OPTIONS: --max-old-space-size=30000
+      # when: always on the inner step — success AND failure both settle master for the queue
+      - notify_merge_queue
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
+  # ========== Testing Jobs ==========
+  e2e_test:
+    <<: *defaults
+    # changing from medium to large, doesn't affect the performance
+    # resource_class: large
+    environment:
+      BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
+    parallelism: 40
+    steps:
+      - e2e_test_cmd
+
+  # makes sure the newly published version doesn't break bit
+  e2e_test_bbit:
+    <<: *defaults
+    environment:
+      BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
+      # gate for released-binary-only e2e tests (see e2e/harmony/released-bit-core-exports.e2e.ts)
+      E2E_RELEASED_BINARY: "true"
+    parallelism: 32
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - restore_common_caches
+      - install_bvm
+      - bvm_upgrade
+      # Fail fast if the released bundle ships any @teambit package whose exports.types points at
+      # source (.ts) instead of dist/*.d.ts — that breaks clients whose envs type-check it.
+      - run:
+          name: verify released bundle has no source-pointing exports.types
+          command: |
+            # the released bundle is identical across parallel nodes; scan once on node 0.
+            if [ "${CIRCLE_NODE_INDEX:-0}" != "0" ]; then
+              echo "skipping released-exports scan on node ${CIRCLE_NODE_INDEX}"; exit 0;
+            fi
+            BV=$(bbit --version | tr -d '[:space:]')
+            node bit/scripts/verify-released-exports.js "$HOME/.bvm/versions/$BV/bit-$BV/node_modules/@teambit"
+      - e2e_test_cmd:
+         bit_bin: "--bit_bin=bbit"
+
+  # setup job: creates cleaned bit bundle and persists to workspace (runs once)
+  setup_bundle_simulation:
+    <<: *defaults
+    environment:
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    steps:
+      - attach_workspace:
+          at: ./
+      - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
+      - run: mkdir bit-bundle-test
+      - install_bit_bundle:
+          directory: "bit-bundle-test"
+      - run:
+          name: apply cleanup script to bundled installation with UI deps removal
+          command: >
+            cd bit-bundle-test &&
+            node ../bit/scripts/cleanup-node-modules.js ./node_modules --remove-ui-deps --remove-esm
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit-bundle-test
+
+  # test job: uses cleaned bit bundle from workspace and runs e2e tests (parallelized)
+  e2e_test_bundle_simulation:
+    <<: *defaults
+    environment:
+      BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
+    parallelism: 32
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_common_caches
+      - run:
+          name: setup cleaned bit binary
+          command: >
+            mkdir -p /home/circleci/.npm-global/bin &&
+            cd bit-bundle-test &&
+            BIT_BIN=$(find node_modules -name "bit" -type f -path "*/bin/*" | head -1) &&
+            echo "Found bit binary at: $BIT_BIN" &&
+            chmod +x $(pwd)/$BIT_BIN &&
+            ln -sf $(pwd)/$BIT_BIN /home/circleci/.npm-global/bin/bit-cleaned &&
+            chmod +x /home/circleci/.npm-global/bin/bit-cleaned &&
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: verify cleaned binary works
+          command: source $BASH_ENV && bit-cleaned --version
+      - e2e_test_cmd:
+          bit_bin: "--bit_bin=bit-cleaned"
+
+  # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
+  # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
+  # e2e_timings_refresh workflow.
+  update_e2e_timings:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: regenerate e2e timings manifest
+          command: node scripts/generate-e2e-timings.js --jobs=12 --prior=manifest
+      - run:
+          name: open a PR if weights changed meaningfully
+          command: |
+            if git diff --quiet scripts/e2e-test-timings.json; then
+              echo "manifest unchanged, nothing to do"; exit 0
+            fi
+            SIGNIFICANT=$(node -e '
+              const { execSync } = require("child_process");
+              const cur = require("./scripts/e2e-test-timings.json");
+              const old = JSON.parse(execSync("git show HEAD:scripts/e2e-test-timings.json", { encoding: "utf8" }));
+              let count = 0;
+              for (const [file, sec] of Object.entries(cur)) {
+                const prev = old[file];
+                if (prev === undefined || (Math.abs(sec - prev) > 45 && Math.abs(sec - prev) / Math.max(prev, 1) > 0.3)) count += 1;
+              }
+              for (const file of Object.keys(old)) if (!(file in cur)) count += 1;
+              console.log(count);
+            ')
+            echo "significantly changed entries: $SIGNIFICANT"
+            if [ "$SIGNIFICANT" -lt 3 ]; then
+              echo "drift too small, skipping PR"; exit 0
+            fi
+            BRANCH="update-e2e-timings-$(date +%Y-%m-%d)"
+            git config user.email "ci@bit.dev"
+            git config user.name "CircleCI"
+            git checkout -b "$BRANCH"
+            git commit -am "ci(e2e): refresh e2e timings manifest"
+            git push "https://davidfirst:${GH_RELEASE_GITHUB_API_TOKEN}@github.com/teambit/bit.git" "$BRANCH"
+            curl -sf -X POST \
+              -H "Authorization: token ${GH_RELEASE_GITHUB_API_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/teambit/bit/pulls \
+              -d "{\"title\":\"ci(e2e): refresh e2e timings manifest\",\"head\":\"$BRANCH\",\"base\":\"master\",\"body\":\"Automated biweekly refresh of scripts/e2e-test-timings.json from the last 12 e2e runs ($SIGNIFICANT entries drifted meaningfully). Generated by the e2e_timings_refresh scheduled workflow.\"}"
+
+  # ========== Utility Jobs ==========
+  harmony_deploy_approval_job:
+    <<: *defaults
+    steps:
+      - run: 'echo "starting harmony deploy"'
+
+  # ========== Bundle Version Jobs ==========
+  bundle_version_linux:
+    <<: *defaults
+    environment:
+      # do not download chromium when installing puppeteer
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    steps:
+      - attach_workspace:
+            at: ./
+      - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
+      - install_bit_bundle
+      - verify_pnpm_napi_bundle:
+          package: "napi.linux-x64"
+      - optimize_node_modules
+      - run:
+          name: copy lockfile
+          command: mkdir lockfile && cp bit-${BIT_VERSION}/pnpm-lock.yaml lockfile
+      - compress_bit
+      - run:
+          name: move to linux folder
+          command: mkdir linux && mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: reset bundle directory for Linux arm64
+          command: rm -rf bit-${BIT_VERSION} && mkdir bit-${BIT_VERSION}
+      - install_bit_bundle:
+          cpu: "arm64"
+      - verify_pnpm_napi_bundle:
+          package: "napi.linux-arm64"
+      - optimize_node_modules:
+          platform: arm64
+      - compress_bit
+      - run:
+          name: move to linux-arm64 folder
+          command: mkdir linux-arm64 && mv bit-${BIT_VERSION}.tar.gz linux-arm64/bit-${BIT_VERSION}.tar.gz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - linux
+            - linux-arm64
+            - lockfile
+      - store_artifacts:
+          path: linux
+      - store_artifacts:
+          path: linux-arm64
+      - store_artifacts:
+          path: lockfile
+
+  bundle_version_macos:
+    <<: *defaults
+    environment:
+      # do not download chromium when installing puppeteer
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    steps:
+      - attach_workspace:
+            at: ./
+      - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
+      - install_bit_bundle:
+          os: "darwin"
+      - verify_pnpm_napi_bundle:
+          package: "napi.darwin-x64"
+      - optimize_node_modules
+      - compress_bit
+      - run:
+          name: move to macos folder
+          command: mkdir macos && mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: reset bundle directory for macOS arm64
+          command: rm -rf bit-${BIT_VERSION} && mkdir bit-${BIT_VERSION}
+      - install_bit_bundle:
+          os: "darwin"
+          cpu: "arm64"
+      - verify_pnpm_napi_bundle:
+          package: "napi.darwin-arm64"
+      - optimize_node_modules:
+          platform: arm64
+      - compress_bit
+      - run:
+          name: move to macos-arm64 folder
+          command: mkdir macos-arm64 && mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - macos
+            - macos-arm64
+      - store_artifacts:
+          path: macos
+      - store_artifacts:
+          path: macos-arm64
+
+  bundle_version_windows:
+    <<: *defaults
+    environment:
+      # do not download chromium when installing puppeteer
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    steps:
+      - attach_workspace:
+            at: ./
+      - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
+      - install_bit_bundle:
+          os: "win32"
+          prefer_symlinked_executables: "false"
+      - verify_pnpm_napi_bundle:
+          package: "napi.win32-x64"
+      - optimize_node_modules
+      - compress_bit
+      - run:
+          name: move to windows folder
+          command: mkdir windows && mv bit-${BIT_VERSION}.tar.gz windows/bit-${BIT_VERSION}.tar.gz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - windows
+      - store_artifacts:
+          path: windows
+
+  harmony_publish_to_gcloud:
+    docker:
+      - image: bitcli/node-gcloud-sdk
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Setup bit version environment variables
+          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: Configure gcloud auth
+          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      - run:
+          name: Upload Lockfile
+          command: gsutil cp lockfile/pnpm-lock.yaml gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.yaml && sha256sum lockfile/pnpm-lock.yaml > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.checksum.txt
+      - run:
+          name: Upload tar file (Linux)
+          command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && mv linux/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
+      - run:
+          name: Upload tar file (Linux-arm64)
+          command: gsutil cp linux-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-arm64.tar.gz && mv linux-arm64/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-arm64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-arm64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-arm64.checksum.txt
+      - run:
+          name: Upload tar file (Windows)
+          command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-win-x64.tar.gz && mv windows/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-win-x64.tar.gz && sha256sum bit-${BIT_VERSION}-win-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-win-x64.checksum.txt
+      - run:
+          name: Upload tar file (OSX)
+          command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-x64.tar.gz && mv macos/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-darwin-x64.tar.gz && sha256sum bit-${BIT_VERSION}-darwin-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-x64.checksum.txt
+      - run:
+          name: Upload tar file (OSX-arm64)
+          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.tar.gz && mv macos-arm64/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-darwin-arm64.tar.gz && sha256sum bit-${BIT_VERSION}-darwin-arm64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.checksum.txt
+      - run: cd bit && node scripts/update-bit-gcp-index.js
+      - run:
+          name: Update index.json
+          command: gsutil cp bit/index.json gs://bvm.bit.dev/bit/index.json
+      - run:
+          name: clear index.json cache
+          command: gsutil setmeta -h "Cache-Control:no-cache" gs://bvm.bit.dev/bit/index.json
+      - store_artifacts:
+          path: bit/index.json
+
+  set_release_stable_flag:
+    docker:
+      - image: bitcli/node-gcloud-sdk
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: Configure gcloud auth
+          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      - run:
+          name: Update stable flag in index.json
+          environment:
+            RELEASE_VERSION: "<< pipeline.parameters.release_version >>"
+            RELEASE_STABLE: "<< pipeline.parameters.release_stable >>"
+            RELEASE_TEST_MODE: "<< pipeline.parameters.release_test_mode >>"
+          command: node scripts/update-bit-stable-flag.js
+      - run:
+          name: Upload index.json
+          command: |
+            if [ "<< pipeline.parameters.release_test_mode >>" = "true" ]; then
+              TARGET="index-test.json"
+            else
+              TARGET="index.json"
+            fi
+            gsutil cp index.json "gs://bvm.bit.dev/bit/$TARGET"
+            gsutil setmeta -h "Cache-Control:no-cache" "gs://bvm.bit.dev/bit/$TARGET"
+      - store_artifacts:
+          path: index.json
+
+  # ========== Docker Jobs ==========
+  docker_build_node_22:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_base_image_arg_value: "node:22.22.0"
+          docker_tag_suffix: "-node-22.22.0"
+
+  docker_non_root_build_node_22:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_base_image_arg_value: "node:22.22.0"
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
+          docker_tag_suffix: "-node-22.22.0"
+
+  docker_build_alpine:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_base_image_arg_value: "node:22.22.0-alpine"
+          # image_name: "bitcli/bit-alpine"
+          docker_file_name: "Dockerfile-bit-alpine"
+          docker_tag_suffix: "-alpine-node-22.22.0"
+
+  server_docker_build_node_22:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.22.0"
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
+          docker_tag_suffix: "-node-22.22.0"
+
+  # ========== Windows Jobs ==========
+  windows_checkout_code:
+    <<: *windows_defaults
+    steps:
+      # - checkout
+      - run: git clone https://github.com/teambit/bit.git
+      - persist_to_workspace:
+          root: C:\Users\circleci\project
+          paths:
+            - bit
+
+  # TODO: make it powershell if you want to use it
+  windows_set_ssh_key:
+    <<: *windows_defaults
+    working_directory: C:\Users\circleci\.ssh
+    steps:
+      - run: 'echo "-----BEGIN RSA PRIVATE KEY-----" >> id_rsa'
+      - run: 'echo ${testerBitsrcSSHPrivateKey} >> id_rsa'
+      - run: 'echo "-----END RSA PRIVATE KEY-----" >> id_rsa'
+      - run: 'echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub'
+      - save_cache:
+          key: windows_bitsrc-ssh-key-v1
+          paths:
+            - id_rsa
+            - id_rsa.pub
+
+  windows_bvm_install:
+    <<: *windows_defaults
+    # environment:
+    #   Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
+    steps:
+      - attach_workspace:
+          at: .
+      - windows_add_bvm_to_path
+      - windows_set_node_version
+      - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
+      - run: Get-Content -Path .\version.txt
+      - restore_cache:
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
+      - run: 'npm i -g @teambit/bvm'
+      - run: bvm config set RELEASE_TYPE nightly
+      - run:
+          name: 'bvm upgrade'
+          command: 'bvm upgrade'
+          no_output_timeout: 60m
+      # - windows_add_bvm_to_path
+      - run: 'bit -v'
+      - run: bit -v | Out-File -FilePath .\version.txt
+      - run: Get-Content -Path .\version.txt
+      - save_cache:
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
+          paths:
+            - C:\Users\circleci\AppData\Local\.bvm
+      - persist_to_workspace:
+          root: .
+          paths:
+            - version.txt
+
+  windows_build_bvm:
+    <<: *windows_defaults
+    environment:
+      BITSRC_ENV: stg
+      SKIP_REGISTRY_TESTS: "true"
+      SKIP_BIT_DEV_TESTS: "true"
+      BIT_FEATURES: cloud-importer-v2
+    steps:
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - windows_setup_bit_environment
+      # -
+      #   restore_cache:
+      #     keys:
+      #       - 'builded-{{ checksum ".circle-sha" }}'
+      # -
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      #   run: 'chmod 400 ~/.ssh/id_rsa'
+      # -
+      #   run: 'ssh-add ~/.ssh/id_rsa'
+      - run: 'pwd'
+      - run: 'ls'
+      - run: 'ls bit\bit'
+      - run: 'cd bit\bit; bit install'
+      - run: 'cd bit\bit; bit compile'
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit
+
+  windows_e2e_test_bvm:
+    <<: *windows_defaults
+    environment:
+      BITSRC_ENV: stg
+      SKIP_REGISTRY_TESTS: "true"
+      SKIP_BIT_DEV_TESTS: "true"
+    parallelism: 25
+    steps:
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - windows_setup_bit_environment
+      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      # - run: 'npm i -g @teambit/bvm'
+      # - run: 'bvm list'
+      # - run: 'bvm link'
+      # - run: bit -v
+      # -
+      #   restore_cache:
+      #     keys:
+      #       - 'builded-{{ checksum ".circle-sha" }}'
+      # -
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      #   run: 'chmod 400 ~/.ssh/id_rsa'
+      # -
+      #   run: 'ssh-add ~/.ssh/id_rsa'
+      - run: 'cd bit\bit; mkdir junit'
+      - bit_config:
+          token: "fake-token"
+      - run:
+          name: 'write e2e files'
+          command: 'cd bit\bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings --timings-type=classname | Out-File -FilePath .\spec-files.txt'
+      - run: Get-Content -Path .\bit\bit\spec-files.txt
+      - run: 'cd bit\bit; cmd /c rmdir /s /q .\node_modules\@teambit\legacy; New-Item -Path node_modules\@teambit\legacy -ItemType SymbolicLink -Value .'
+      - run:
+          name: 'run e2e tests'
+          command: 'cd bit\bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
+          # command which support only - for debug purpose - this needed to be tested on windows (the glob might not work)
+          # command: cd bit; npm run e2e-test-circle --debug
+          environment:
+            MOCHA_FILE: junit\e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
+          when: always
+      - store_test_results:
+          path: bit\junit
+      - store_artifacts:
+          path: bit\junit
+      - store_artifacts:
+          path: C:\Users\circleci\AppData\Local\Bit\logs\debug.log
+
+  # # simple job just to print node version on windows
+  # # this is to check what version of node you get when you update the windows orb
+  # # as it's missing in their docs
+  # windows_print_node_version:
+    # <<: *windows_defaults
+    # steps:
+      # # - checkout
+      # - run: node -v
+      # - run: npm -v
+      # - run: yarn -v
+      # # - run: choco install nodejs --version 22.22.0
+      # # - run: node -v
+      # - run: cinst nodejs --version 22.22.0
+      # - run: node -v
+
+# ========================================
+# WORKFLOWS
+# ========================================
 
 workflows:
-  noop:
+  # Manual workflow: flip a published version's stable flag in index.json.
+  # Trigger from the CircleCI web app with run_set_stable=true, release_version=<version>, release_stable=<true|false>.
+  set_release_stable_flag:
+    when: << pipeline.parameters.run_set_stable >>
     jobs:
-      - noop
+      - set_release_stable_flag
+
+  # Main build and test workflow
+  build_and_test:
+    unless:
+      or:
+        - << pipeline.parameters.run_set_stable >>
+        - << pipeline.parameters.run_deploy >>
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - set_npm_registries
+      - setup_harmony:
+          # changing to xlarge doesn't make any change
+          requires:
+            - set_npm_registries
+            - checkout_code
+      - lint:
+          requires:
+            - setup_harmony
+      - check_circular_dependencies:
+          requires:
+            - setup_harmony
+      - check_version_sync
+      - generate_and_check_types:
+          requires:
+            - setup_harmony
+      - check_generated_reference:
+          requires:
+            - setup_harmony
+          filters:
+            branches:
+              ignore: master
+      - generate_docs:
+          <<: *semver_tags_only_filters
+          requires:
+            - setup_harmony
+      - e2e_test:
+          requires:
+            - setup_harmony
+          # Not on master pushes: nothing gates on it there — bit_merge requires only
+          # generate_and_check_types, and the merge queue's "settled" check watches bit_merge
+          # alone (.github/scripts/merge-queue.js). Every PR already ran the full suite to get
+          # merged, so the per-merge master run was informational only. A daily master canary
+          # still runs in the nightly workflow.
+          filters:
+            branches:
+              ignore: master
+      - setup_bundle_simulation:
+          filters:
+            branches:
+              only: /^optimize-node-modules.*|^cleanup-script.*|.*cleanup.*script.*/
+          requires:
+            - setup_harmony
+      - e2e_test_bundle_simulation:
+          filters:
+            branches:
+              only: /^optimize-node-modules.*|^cleanup-script.*|.*cleanup.*script.*/
+          requires:
+            - setup_bundle_simulation
+      - bit_pr:
+          requires:
+            - setup_harmony
+          filters:
+            branches:
+              ignore: master
+      - bit_merge:
+          requires:
+            - generate_and_check_types
+          filters:
+            branches:
+              only: master
+          serial-group: "bit-merge-operations"
+          post-steps:
+            - slack/notify:
+                event: fail
+                custom: |
+                  {
+                    "text": "🚨 MASTER BRANCH FAILURE 🚨",
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "⚠️ *bit_merge failed on master branch*\nThis needs immediate attention!\n<${CIRCLE_BUILD_URL}|View Failed Build>"
+                        }
+                      }
+                    ]
+                  }
+
+  # Nightly workflow
+  nightly:
+    triggers:
+      - schedule: # every day at 3AM UTC (= 11PM EST = 6AM IST)
+          cron: '0 3 * * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - checkout_code
+      - setup_harmony:
+          requires:
+            - checkout_code
+      # daily master canary — replaces the former per-master-push e2e_test run in
+      # build_and_test (see the filter comment there)
+      - e2e_test:
+          requires:
+            - setup_harmony
+      - bundle_version_linux:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - bundle_version_linux
+            - bundle_version_macos
+            - bundle_version_windows
+            - checkout_code # This is needed to generate index.json
+      - docker_build_node_22:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_build_alpine:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_22:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_22:
+          requires:
+            - docker_build_node_22
+      - e2e_test_bbit:
+          requires:
+            - setup_harmony
+            - harmony_publish_to_gcloud
+
+  # Biweekly refresh of the e2e timings manifest (1st and 15th of the month, 04:00 UTC).
+  # Opens a PR only when the measured per-file weights drifted meaningfully.
+  e2e_timings_refresh:
+    triggers:
+      - schedule:
+          cron: '0 4 1,15 * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - update_e2e_timings
+
+  # Windows nightly workflow
+  # windows-nightly:
+    # triggers:
+    #   - schedule: # every day at 5AM UTC (= 1AM EST = 8AM IST)
+    #       cron: '0 5 * * *'
+    #       filters:
+    #         branches:
+    #           only:
+    #             - master
+    # jobs:
+    #   - windows_checkout_code
+    #   - windows_set_ssh_key
+    #   - windows_bvm_install:
+    #       <<: *master_only_filter
+    #       requires:
+    #         - windows_checkout_code
+    #   - windows_build_bvm:
+    #       <<: *master_only_filter
+    #       requires:
+    #         - windows_bvm_install
+    #   - windows_e2e_test_bvm:
+    #       <<: *master_only_filter
+    #       requires:
+    #         - windows_checkout_code
+    #         - windows_set_ssh_key
+    #         - windows_bvm_install
+    #         - windows_build_bvm
+
+  # TODO: check if we can combine it with the regular nightly somehow
+  harmony_deploy:
+    unless:
+      or:
+        - << pipeline.parameters.run_set_stable >>
+        - << pipeline.parameters.run_deploy >>
+    jobs:
+      - harmony_deploy_approval_job:
+          <<: *master_only_filter
+          type: approval
+      - checkout_code:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+      - bundle_version_linux:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - checkout_code
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - checkout_code
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - checkout_code
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bundle_version_linux
+            - bundle_version_macos
+            - bundle_version_windows
+            - checkout_code # This is needed to generate index.json
+      - docker_build_node_22:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - docker_build_alpine:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_22:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_22:
+          requires:
+            - harmony_deploy_approval_job
+            - docker_build_node_22
+
+  # Manual deploy workflow: same jobs as harmony_deploy, without the approval gate.
+  # Trigger from the CircleCI web app (or API) on master with run_deploy=true.
+  # Useful when the latest master commit is `[skip ci]` (e.g. version bumps) and
+  # therefore has no auto-triggered pipeline to approve.
+  harmony_deploy_manual:
+    when: << pipeline.parameters.run_deploy >>
+    jobs:
+      - checkout_code:
+          <<: *master_only_filter
+      - bundle_version_linux:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - checkout_code
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - bundle_version_linux
+            - bundle_version_macos
+            - bundle_version_windows
+            - checkout_code # This is needed to generate index.json
+      - docker_build_node_22:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_build_alpine:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_22:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_22:
+          requires:
+            - docker_build_node_22
+
+  # ========================================
+  # DEBUG & TESTING WORKFLOWS (COMMENTED)
+  # ========================================
+
+  # Uncomment in case you want to run the windows tests
+  # build_and_test_windows:
+  #   jobs:
+  #     - windows_set_ssh_key
+  #     - windows_checkout_code
+  #     - windows_bvm_install
+  #     # - windows_bvm_install:
+  #         # requires:
+  #         #   - windows_checkout_code
+  #     - windows_build_bvm:
+  #         requires:
+  #           - windows_bvm_install
+  #           - windows_checkout_code
+  #     - windows_e2e_test_bvm:
+  #         requires:
+  #           - windows_checkout_code
+  #           - windows_set_ssh_key
+  #           - windows_bvm_install
+  #           - windows_build_bvm
+
+  # uncomment to print node version on windows default orb
+  # windows_print_node_version_workflow:
+  #   jobs:
+  #     - windows_print_node_version:
+  #         filters:
+  #           branches:
+  #             only: update-circle-node-versions
+
+  # uncomment to update esbuild arm64 cache
+  # get_arm64_workflow_packages:
+  #   jobs:
+  #     - get_darwin_arm64_packages:
+  #         filters:
+  #           branches:
+  #             only: circle-esbuild-cache
+
+  # uncomment and change the filter branch name to debug the bvm bundle jobs
+  # bvm_bundle_debug:
+  #   jobs:
+  #     - checkout_code:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #     - bundle_version_linux:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #         requires:
+  #           - checkout_code
+  #     - bundle_version_macos:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #         requires:
+  #           - checkout_code
+  #     - bundle_version_windows:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #         requires:
+  #           - checkout_code
+  #     - harmony_publish_to_gcloud:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #         requires:
+  #           - bundle_version_linux
+  #           - bundle_version_macos
+  #           - bundle_version_windows
+  #           - checkout_code

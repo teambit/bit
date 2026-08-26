@@ -6,9 +6,7 @@
 name: e2e-tests
 
 on:
-  push:
-    branches:
-      - gh-actions-e2e-experiment
+  pull_request:
   workflow_dispatch:
 
 env:
