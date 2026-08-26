@@ -256,10 +256,16 @@ export function allLaneEntries(lane: LaneSnapshot): LaneEntry[] {
   return [...lane.components, ...lane.updateDependents.map((comp) => ({ ...comp, hidden: true }))];
 }
 
-/** The lane's `id@head` set and its readme — what an archive decision is made on, and what must not move before it acts. */
+/**
+ * The lane's `id@head` set — each entry with its bucket (visible or hidden) and deletion mark — and its
+ * readme: what an archive decision is made on, and what must not move before it acts.
+ */
 export function laneFingerprint(lane: LaneSnapshot): string {
   const entries = allLaneEntries(lane)
-    .map((comp) => `${comp.id.toStringWithoutVersion()}@${comp.head}${comp.isDeleted ? ' (deleted)' : ''}`)
+    .map(
+      (comp) =>
+        `${comp.id.toStringWithoutVersion()}@${comp.head}${comp.isDeleted ? ' (deleted)' : ''}${comp.hidden ? ' (hidden)' : ''}`
+    )
     .sort();
   return [...entries, `readme:${lane.readme ?? ''}`].join('\n');
 }

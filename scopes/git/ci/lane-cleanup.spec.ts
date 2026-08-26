@@ -92,4 +92,16 @@ describe('LaneCleanup', () => {
     await run();
     expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
   });
+
+  it('leaves the lane open when an entry moved between the visible and hidden buckets before the archive', async () => {
+    const { run, calls } = cleanup(
+      [
+        lane({ 'acme.cards/ui/card': 'aaa' }, { 'acme.cards/ui/row': 'h1' }),
+        lane({ 'acme.cards/ui/card': 'aaa', 'acme.cards/ui/row': 'h1' }),
+      ],
+      { releasedHeadByThisRun: () => 'h1' }
+    );
+    await run();
+    expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
+  });
 });
