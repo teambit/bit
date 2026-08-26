@@ -115,8 +115,8 @@ export class ComponentsEjector {
   }
 
   async loadComponentsToEject() {
-    const { components } = await this.consumer.loadComponents(this.idsToEject);
-    this.componentsToEject = components;
+    const workspaceComponents = await this.workspace.getMany(this.idsToEject);
+    this.componentsToEject = workspaceComponents.map((workspaceComponent) => workspaceComponent.state._consumer);
   }
 
   async removeComponentsFromNodeModules() {
