@@ -9,7 +9,7 @@ import type { Logger } from '@teambit/logger';
 import type { LaneId } from '@teambit/lane-id';
 import type { Lane } from '@teambit/objects';
 import { SourceBranchDetector } from './source-branch-detector';
-import { laneArchiveDecision } from './lane-archive-guard';
+import { laneArchiveDecision, laneFingerprint, laneMovedSummary, readRemoteLane } from './lane-archive-guard';
 import type { LaneArchiveDeps } from './lane-archive-guard';
 
 export type LaneCleanupDeps = LaneArchiveDeps & {
@@ -85,6 +85,16 @@ export class LaneCleanup {
       );
     }
     if (!decision.archive) return 'kept';
+    if (decision.fingerprint) {
+      // Re-read right before the forced removal: a writer may have exported to the lane since the
+      // decision was made. The window between this read and the removal remains, but it no longer
+      // spans the object imports and history checks above.
+      const lane = await readRemoteLane(laneId, this.deps).catch(() => undefined);
+      if (lane && laneFingerprint(lane) !== decision.fingerprint) {
+        logger.console(formatWarningSummary(laneMovedSummary(laneId.toString())));
+        return 'kept';
+      }
+    }
     return this.deps.archiveLane(laneId.toString());
   }
 }

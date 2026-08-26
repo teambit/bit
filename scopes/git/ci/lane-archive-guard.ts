@@ -41,6 +41,8 @@ export type LaneArchiveDecision = {
   archive: boolean;
   /** what to tell the user; empty when nothing beyond the archive itself is worth saying */
   summary: string;
+  /** the lane the decision was made on (see `laneFingerprint`); absent when the lane is gone */
+  fingerprint?: string;
 };
 
 /** What reading the lane and its foreign components' main history needs from the workspace. */
@@ -179,6 +181,26 @@ async function laneHeadIsOnMain(
   return sameReleasedState(laneVersion, mainVersion, laneComponentIds);
 }
 
+/** The lane's `id@head` set — what an archive decision is made on, and what must not move before it acts. */
+export function laneFingerprint(lane: LaneData): string {
+  return lane.components
+    .map((comp) => `${comp.id.toStringWithoutVersion()}@${comp.head}`)
+    .sort()
+    .join('\n');
+}
+
+/**
+ * The remote lane, or `undefined` when its hosting scope no longer has it. Throws on any other
+ * failure to read it.
+ */
+export async function readRemoteLane(laneId: LaneId, deps: LaneArchiveDeps): Promise<LaneData | undefined> {
+  const lanes = await deps.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
+    if (e.toString().includes('was not found')) return [] as LaneData[];
+    throw e;
+  });
+  return lanes[0];
+}
+
 /**
  * For each component on the remote lane that belongs to another scope: is it released? Returns
  * `undefined` when the lane no longer exists on its hosting scope. Throws when the lane cannot be
@@ -186,16 +208,10 @@ async function laneHeadIsOnMain(
  */
 export async function foreignLaneComponentsReleaseState(
   laneId: LaneId,
+  lane: LaneData,
   defaultScope: string,
   deps: LaneArchiveDeps
-): Promise<ForeignLaneComponent[] | undefined> {
-  const lanes = await deps.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
-    if (e.toString().includes('was not found')) return [] as LaneData[];
-    throw e;
-  });
-  const lane = lanes[0];
-  if (!lane) return undefined;
-
+): Promise<ForeignLaneComponent[]> {
   const foreign = lane.components.filter((comp) => comp.id.scope !== defaultScope);
   if (!foreign.length) return [];
   const laneComponentIds = lane.components.map((comp) => comp.id.toStringWithoutVersion());
@@ -256,9 +272,11 @@ export async function laneArchiveDecision(
   defaultScope: string,
   deps: LaneArchiveDeps
 ): Promise<LaneArchiveDecision> {
+  let lane: LaneData | undefined;
   let foreign: ForeignLaneComponent[] | undefined;
   try {
-    foreign = await foreignLaneComponentsReleaseState(laneId, defaultScope, deps);
+    lane = await readRemoteLane(laneId, deps);
+    foreign = lane && (await foreignLaneComponentsReleaseState(laneId, lane, defaultScope, deps));
   } catch (e: any) {
     return {
       archive: false,
@@ -267,6 +285,17 @@ export async function laneArchiveDecision(
         `Leaving the lane open. ${manualArchiveHint(laneId.toString())}`,
     };
   }
-  if (!foreign) return { archive: true, summary: '' };
-  return decideLaneArchive(laneId.toString(), defaultScope, foreign);
+  if (!lane || !foreign) return { archive: true, summary: '' };
+  return { ...decideLaneArchive(laneId.toString(), defaultScope, foreign), fingerprint: laneFingerprint(lane) };
+}
+
+/**
+ * The lane moved between the decision and the archive: another writer exported to it. The
+ * decision is stale; archiving now could remove work nobody has looked at.
+ */
+export function laneMovedSummary(laneId: string): string {
+  return (
+    `Lane ${laneId} changed while the release was checking it, so it is left open; ` +
+    `the next release evaluates the new state. ${manualArchiveHint(laneId)}`
+  );
 }
