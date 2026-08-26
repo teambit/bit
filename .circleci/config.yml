@@ -722,6 +722,11 @@ jobs:
 
   check_circular_dependencies:
     <<: *defaults
+    # the dev-binary install below re-materializes the workspace component packages without
+    # their dists (pnpm v12 napi relinking), so its post-install step recompiles all ~320
+    # components in-process - that peaks well above the default medium (4GB) container and the
+    # compile gets OOM-killed ("Received killed signal").
+    resource_class: large
     steps:
       - attach_workspace:
           at: ./
