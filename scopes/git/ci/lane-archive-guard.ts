@@ -134,12 +134,11 @@ export function decideLaneArchive(
  * comparison covers what the release transfers and nothing the release itself rewrites:
  * - source files (path and content hash) and the main file;
  * - package dependencies (dependencies, dev, peer) with their ranges;
- * - component dependencies (dependencies, dev, peer) by id and version — except that a dependency
- *   which is itself on the lane is compared by id only, because the release re-versions it;
+ * - component dependencies (dependencies, dev, peer) by id and version — a dependency that is itself
+ *   on the lane is re-versioned by its release, so main must reference that component's main head;
  * - the binding prefix, the overrides and the package.json changes the component declares;
- * - every extension's `config`, keyed by the extension id without its version — an extension that is
- *   itself a component on the lane is re-versioned by the release too; not `data`, which the release
- *   recomputes (builder, dependencies).
+ * - every extension's `config` and version, with the same rule for an extension that is itself a
+ *   component on the lane; not `data`, which the release recomputes (builder, dependencies).
  * Anything else the lane changed (a dependency bump, an env change) leaves `main` different and the
  * component pending — a false "pending" costs a manual archive, a false "released" costs the work.
  */
@@ -161,8 +160,22 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(value) ?? 'undefined';
 }
 
-export function sameReleasedState(lane: Version, main: Version, laneComponentIds: string[]): boolean {
+export function sameReleasedState(
+  lane: Version,
+  main: Version,
+  laneComponentIds: string[],
+  mainHeadOf: ReadonlyMap<string, string | undefined>
+): boolean {
   const onLane = new Set(laneComponentIds);
+  // A component that is itself on the lane is re-versioned by its release. On the lane side its
+  // version is the lane snap; on the main side the released state references its main head — any
+  // other version is a stale main, not a release. Both sides normalize to one token when they hold
+  // the expected version, so only that pairing compares equal.
+  const versionToken = (id: string, ver: string | undefined, side: 'lane' | 'main') => {
+    if (!onLane.has(id)) return ver ?? '';
+    if (side === 'lane') return '<lane>';
+    return ver !== undefined && ver === mainHeadOf.get(id) ? '<lane>' : `stale:${ver}`;
+  };
   const files = (v: Version) =>
     v.files
       .map((f) => `${f.relativePath}:${f.file.toString()}`)
@@ -170,22 +183,28 @@ export function sameReleasedState(lane: Version, main: Version, laneComponentIds
       .join('\n');
   const packages = (v: Version) =>
     stableStringify([v.packageDependencies, v.devPackageDependencies, v.peerPackageDependencies]);
-  const components = (v: Version) =>
+  const components = (v: Version, side: 'lane' | 'main') =>
     [v.dependencies, v.devDependencies, v.peerDependencies]
       .map((deps) =>
         deps
           .get()
           .map((dep) => {
             const id = dep.id.toStringWithoutVersion();
-            return onLane.has(id) ? id : dep.id.toString();
+            return `${id}@${versionToken(id, dep.id.version, side)}`;
           })
           .sort()
           .join(',')
       )
       .join('|');
-  const configs = (v: Version) =>
+  const configs = (v: Version, side: 'lane' | 'main') =>
     stableStringify(
-      v.extensions.map((ext) => [extensionKey(ext), ext.config ?? {}] as const).sort(([a], [b]) => a.localeCompare(b))
+      v.extensions
+        .map((ext) => {
+          const id = extensionKey(ext);
+          const ver = ext.extensionId?.version ?? ext.stringId.split('@')[1];
+          return [id, versionToken(id, ver, side), ext.config ?? {}] as const;
+        })
+        .sort(([a], [b]) => a.localeCompare(b))
     );
   const rest = (v: Version) => stableStringify([v.bindingPrefix, v.overrides, v.packageJsonChangedProps]);
   return (
@@ -193,8 +212,8 @@ export function sameReleasedState(lane: Version, main: Version, laneComponentIds
     rest(lane) === rest(main) &&
     files(lane) === files(main) &&
     packages(lane) === packages(main) &&
-    components(lane) === components(main) &&
-    configs(lane) === configs(main)
+    components(lane, 'lane') === components(main, 'main') &&
+    configs(lane, 'lane') === configs(main, 'main')
   );
 }
 
@@ -207,12 +226,13 @@ async function laneHeadIsOnMain(
   laneHead: Ref,
   mainHead: Ref,
   laneComponentIds: string[],
+  mainHeadOf: ReadonlyMap<string, string | undefined>,
   objects: Repository
 ): Promise<boolean> {
   if (await hasVersionByRef(modelComponent, laneHead, objects, mainHead)) return true;
   const laneVersion = (await objects.load(laneHead, true)) as Version;
   const mainVersion = (await objects.load(mainHead, true)) as Version;
-  return sameReleasedState(laneVersion, mainVersion, laneComponentIds);
+  return sameReleasedState(laneVersion, mainVersion, laneComponentIds, mainHeadOf);
 }
 
 /**
@@ -275,7 +295,8 @@ export async function foreignLaneComponentsReleaseState(
   // afterwards, which reads as "not released".
   let objectsImported = true;
   try {
-    await deps.importMainObjects(others.map((comp) => comp.id.changeVersion(undefined)));
+    // every lane component's main is needed: the released state of one references the heads of others
+    await deps.importMainObjects(entries.map((comp) => comp.id.changeVersion(undefined)));
     await deps.importObjectsByHashes(
       laneId.scope,
       others.map((comp) => comp.head)
@@ -283,6 +304,21 @@ export async function foreignLaneComponentsReleaseState(
   } catch (e: any) {
     deps.warn(`Could not fetch the history of the lane's foreign components: ${e.message}`);
     objectsImported = false;
+  }
+
+  const mainHeadOf = new Map<string, string | undefined>();
+  if (objectsImported) {
+    await Promise.all(
+      entries.map(async (comp) => {
+        const id = comp.id.toStringWithoutVersion();
+        try {
+          const model = await deps.getModelComponent(comp.id.changeVersion(undefined));
+          mainHeadOf.set(id, model?.getHeadAsTagIfExist() ?? model?.getHead()?.toString());
+        } catch {
+          mainHeadOf.set(id, undefined); // unknown head: a reference to it can never read as released
+        }
+      })
+    );
   }
 
   const states = await Promise.all(
@@ -299,7 +335,14 @@ export async function foreignLaneComponentsReleaseState(
         }
         return entry(
           comp,
-          await laneHeadIsOnMain(modelComponent, Ref.from(comp.head), mainHead, laneComponentIds, deps.objects)
+          await laneHeadIsOnMain(
+            modelComponent,
+            Ref.from(comp.head),
+            mainHead,
+            laneComponentIds,
+            mainHeadOf,
+            deps.objects
+          )
         );
       } catch (e: any) {
         deps.warn(`Could not read the history of ${comp.id.toStringWithoutVersion()}: ${e.message}`);

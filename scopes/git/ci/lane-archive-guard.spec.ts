@@ -68,6 +68,7 @@ describe('laneArchiveDecision', () => {
       warn: () => {},
       ...overrides,
     } as Parameters<typeof laneArchiveDecision>[2]);
+  const snapshot = (components: any[], updateDependents: any[] = []) => ({ components, updateDependents } as any);
   const foreignEntry = {
     id: { scope: 'acme.payments', changeVersion: () => ({}), toStringWithoutVersion: () => 'acme.payments/ui/table' },
     head: 'abc',
@@ -100,7 +101,7 @@ describe('laneArchiveDecision', () => {
       laneId,
       'acme.cards',
       deps({
-        readLane: async () => ({ components: [foreignEntry], updateDependents: [] }),
+        readLane: async () => snapshot([foreignEntry]),
         importMainObjects: async () => Promise.reject(new Error('no route to acme.payments')),
         warn: (m) => warnings.push(m),
       })
@@ -117,7 +118,7 @@ describe('laneArchiveDecision', () => {
       laneId,
       'acme.cards',
       deps({
-        readLane: async () => ({ components: [foreignEntry], updateDependents: [] }),
+        readLane: async () => snapshot([foreignEntry]),
         isReleasedByThisRun: () => true,
       })
     );
@@ -129,7 +130,7 @@ describe('laneArchiveDecision', () => {
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({ readLane: async () => ({ components: [], updateDependents: [foreignEntry] }) })
+      deps({ readLane: async () => snapshot([], [foreignEntry]) })
     );
     expect(decision.archive).to.be.false;
     expect(decision.summary).to.include('not on their main yet: acme.payments/ui/table.');
@@ -142,7 +143,7 @@ describe('laneArchiveDecision', () => {
       laneId,
       'acme.cards',
       deps({
-        readLane: async () => ({ components: [deleted], updateDependents: [] }),
+        readLane: async () => snapshot([deleted]),
         getModelComponent: async () => model(false),
       })
     );
@@ -151,7 +152,7 @@ describe('laneArchiveDecision', () => {
       laneId,
       'acme.cards',
       deps({
-        readLane: async () => ({ components: [deleted], updateDependents: [] }),
+        readLane: async () => snapshot([deleted]),
         getModelComponent: async () => model(true),
       })
     );
@@ -162,7 +163,7 @@ describe('laneArchiveDecision', () => {
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({ readLane: async () => ({ components: [foreignEntry], updateDependents: [] }) })
+      deps({ readLane: async () => snapshot([foreignEntry]) })
     );
     expect(decision.archive).to.be.false;
     expect(decision.summary).to.include('not on their main yet: acme.payments/ui/table.');
@@ -194,7 +195,11 @@ describe('sameReleasedState', () => {
       stringId,
       extensionId: stringId.startsWith('@')
         ? undefined
-        : { toStringWithoutVersion: () => stringId.split('@')[0], toString: () => stringId },
+        : {
+            toStringWithoutVersion: () => stringId.split('@')[0],
+            toString: () => stringId,
+            version: stringId.split('@')[1],
+          },
       config: cfg,
       data: data[i]?.[1] ?? {},
     }));
@@ -230,11 +235,12 @@ describe('sameReleasedState', () => {
       deps: ['acme.cards/x@0.0.1'],
       config: [['teambit.envs/envs', { env: 'node' }]],
     });
-    expect(sameReleasedState(a, b, [])).to.be.true;
+    expect(sameReleasedState(a, b, [], new Map())).to.be.true;
   });
 
   it('is false when a file differs, is missing, or is extra', () => {
-    expect(sameReleasedState(version({ files: [['a.ts', '1']] }), version({ files: [['a.ts', '9']] }), [])).to.be.false;
+    expect(sameReleasedState(version({ files: [['a.ts', '1']] }), version({ files: [['a.ts', '9']] }), [], new Map()))
+      .to.be.false;
     expect(
       sameReleasedState(
         version({
@@ -262,10 +268,17 @@ describe('sameReleasedState', () => {
   });
 
   it('is false when only a package dependency, a component dependency version, or a config differs', () => {
-    expect(sameReleasedState(version({ packages: { lodash: '^4' } }), version({ packages: { lodash: '^5' } }), [])).to
-      .be.false;
-    expect(sameReleasedState(version({ deps: ['acme.cards/x@0.0.1'] }), version({ deps: ['acme.cards/x@0.0.2'] }), []))
-      .to.be.false;
+    expect(
+      sameReleasedState(version({ packages: { lodash: '^4' } }), version({ packages: { lodash: '^5' } }), [], new Map())
+    ).to.be.false;
+    expect(
+      sameReleasedState(
+        version({ deps: ['acme.cards/x@0.0.1'] }),
+        version({ deps: ['acme.cards/x@0.0.2'] }),
+        [],
+        new Map()
+      )
+    ).to.be.false;
     expect(
       sameReleasedState(
         version({ config: [['teambit.envs/envs', { env: 'node' }]] }),
@@ -277,15 +290,16 @@ describe('sameReleasedState', () => {
 
   it('is false when only the overrides or package.json changes differ', () => {
     const base = version({});
-    expect(sameReleasedState(base, { ...base, overrides: { dependencies: { x: '1' } } }, [])).to.be.false;
-    expect(sameReleasedState(base, { ...base, packageJsonChangedProps: { sideEffects: false } }, [])).to.be.false;
+    expect(sameReleasedState(base, { ...base, overrides: { dependencies: { x: '1' } } }, [], new Map())).to.be.false;
+    expect(sameReleasedState(base, { ...base, packageJsonChangedProps: { sideEffects: false } }, [], new Map())).to.be
+      .false;
   });
 
   it('keeps package-named extensions apart by their full name', () => {
     const a = version({ config: [['@scope/a', { x: 1 }]] });
     const b = version({ config: [['@scope/b', { x: 1 }]] });
-    expect(sameReleasedState(a, b, [])).to.be.false;
-    expect(sameReleasedState(a, version({ config: [['@scope/a', { x: 1 }]] }), [])).to.be.true;
+    expect(sameReleasedState(a, b, [], new Map())).to.be.false;
+    expect(sameReleasedState(a, version({ config: [['@scope/a', { x: 1 }]] }), [], new Map())).to.be.true;
   });
 
   it('is insensitive to key order in package dependencies and nested extension config', () => {
@@ -297,18 +311,27 @@ describe('sameReleasedState', () => {
       packages: { react: '^18', lodash: '^4' },
       config: [['teambit.envs/envs', { opts: { b: 2, a: 1 }, env: 'node' }]],
     });
-    expect(sameReleasedState(a, b, [])).to.be.true;
+    expect(sameReleasedState(a, b, [], new Map())).to.be.true;
   });
 
-  it('compares extension config by extension id, so an env re-versioned by the release still matches', () => {
+  it('accepts an on-lane extension only at its released head; an off-lane extension must match exactly', () => {
     const lane = version({ config: [['teambit.react/react@0.0.0-abc123', { compiler: 'swc' }]] });
     const released = version({ config: [['teambit.react/react@1.2.3', { compiler: 'swc' }]] });
-    expect(sameReleasedState(lane, released, [])).to.be.true;
-    expect(sameReleasedState(lane, version({ config: [['teambit.react/react@1.2.3', { compiler: 'tsc' }]] }), [])).to.be
-      .false;
+    const onLane = ['teambit.react/react'];
+    expect(sameReleasedState(lane, released, onLane, new Map([['teambit.react/react', '1.2.3']]))).to.be.true;
+    expect(sameReleasedState(lane, released, onLane, new Map([['teambit.react/react', '1.2.4']]))).to.be.false;
+    expect(sameReleasedState(lane, released, [], new Map())).to.be.false; // a lane-only env upgrade
+    expect(
+      sameReleasedState(
+        lane,
+        version({ config: [['teambit.react/react@1.2.3', { compiler: 'tsc' }]] }),
+        onLane,
+        new Map([['teambit.react/react', '1.2.3']])
+      )
+    ).to.be.false;
   });
 
-  it('tolerates the version drift of a dependency that is itself on the lane, and ignores extension data', () => {
+  it('accepts an on-lane dependency only at its released head, and ignores extension data', () => {
     const lane = version({
       deps: ['acme.cards/x@abc123'],
       config: [['teambit.deps/resolver', { policy: {} }]],
@@ -319,7 +342,10 @@ describe('sameReleasedState', () => {
       config: [['teambit.deps/resolver', { policy: {} }]],
       data: [['teambit.deps/resolver', { versions: 'main' }]],
     });
-    expect(sameReleasedState(lane, released, ['acme.cards/x'])).to.be.true;
-    expect(sameReleasedState(lane, released, [])).to.be.false;
+    const headIs = (v: string) => new Map([['acme.cards/x', v]]);
+    expect(sameReleasedState(lane, released, ['acme.cards/x'], headIs('0.0.9'))).to.be.true;
+    // main still references an older tag of x: a stale main, not the release of this lane head
+    expect(sameReleasedState(lane, released, ['acme.cards/x'], headIs('0.0.10'))).to.be.false;
+    expect(sameReleasedState(lane, released, [], new Map())).to.be.false;
   });
 });

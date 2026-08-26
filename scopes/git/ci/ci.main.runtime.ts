@@ -191,7 +191,7 @@ export class CiMain {
       SnappingMain,
       ExportMain,
       ImporterMain,
-      CheckoutMain,
+      CheckoutMain
     ],
     config: CiWorkspaceConfig,
     [gitHostProviderSlot]: [GitHostProviderSlot]
@@ -708,7 +708,9 @@ export class CiMain {
         syncedIds.push(laneComp.id);
         this.logger.console(
           chalk.blue(
-            `  ${laneComp.id.toStringWithoutVersion()}: applying main's config (${Object.keys(mergedConfig).join(', ')})`
+            `  ${laneComp.id.toStringWithoutVersion()}: applying main's config (${Object.keys(mergedConfig).join(
+              ', '
+            )})`
           )
         );
       } catch (e: any) {
@@ -1286,7 +1288,9 @@ export class CiMain {
             stillExists = await this.lanes.getLanes({ remote: laneId.scope, name: laneId.name });
           } catch (verifyErr: any) {
             throw new Error(
-              `failed to verify whether remote lane ${laneId.toString()} still exists after delete returned "not found": ${verifyErr?.message || verifyErr}`
+              `failed to verify whether remote lane ${laneId.toString()} still exists after delete returned "not found": ${
+                verifyErr?.message || verifyErr
+              }`
             );
           }
           if (stillExists.length) {
@@ -1474,7 +1478,9 @@ export class CiMain {
       const afterParents = version.parents.map((p) => p.toString().slice(0, 9)).join(',');
       this.logger.console(
         chalk.blue(
-          `Rebasing ${snap.id.toString()}@${snap.head.toString().slice(0, 9)}: parents [${beforeParents}] → [${afterParents}]`
+          `Rebasing ${snap.id.toString()}@${snap.head
+            .toString()
+            .slice(0, 9)}: parents [${beforeParents}] → [${afterParents}]`
         )
       );
       repo.add(version);
@@ -1697,7 +1703,15 @@ export class CiMain {
     if (hasTaggedComponents) {
       this.logger.console(chalk.blue('Exporting components'));
       const exportResult = await this.exporter.export();
-      releasedIds = ComponentIdList.fromArray(exportResult.componentsIds);
+      // released here = tagged by this run AND exported now; an export with no ids also carries
+      // components left export-pending by an earlier run, which this run did not release.
+      const taggedNow = ComponentIdList.fromArray([
+        ...tagResults.taggedComponents.map((c) => c.id),
+        ...tagResults.autoTaggedResults.map((r) => r.component.id),
+      ]);
+      releasedIds = ComponentIdList.fromArray(
+        exportResult.componentsIds.filter((id) => taggedNow.hasWithoutVersion(id))
+      );
 
       if (exportResult.componentsIds.length > 0) {
         this.logger.console(chalk.green(`Exported ${exportResult.componentsIds.length} component(s)`));
@@ -1894,7 +1908,9 @@ export class CiMain {
           // reason the push was rejected.
           this.logger.console(
             chalk.yellow(
-              `Failed to delete remote lane "${laneIdStr}" while recovering from hash mismatch: ${archiveErr?.message || archiveErr}. Rethrowing the original export error.`
+              `Failed to delete remote lane "${laneIdStr}" while recovering from hash mismatch: ${
+                archiveErr?.message || archiveErr
+              }. Rethrowing the original export error.`
             )
           );
           if (e && typeof e === 'object' && (e as any).cause == null) {
