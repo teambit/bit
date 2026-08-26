@@ -10,7 +10,7 @@ import { extract } from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { NOTHING_TO_TAG_MSG } from '@teambit/snapping';
 import type { Descriptor } from '@teambit/envs';
-import { ENV_VAR_FEATURE_TOGGLE } from '@teambit/harmony.modules.feature-toggle';
+import { ENV_VAR_FEATURE_TOGGLE, HARD_DELETE_FEATURE } from '@teambit/harmony.modules.feature-toggle';
 import { Extensions, NOTHING_TO_SNAP_MSG } from '@teambit/legacy.constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import type ScopesData from './e2e-scopes';
@@ -319,7 +319,9 @@ export default class CommandHelper {
     return this.runCmd(`bit delete ${id} --silent ${flags}`);
   }
   removeComponentFromRemote(id: string, flags = '') {
-    return this.runCmd(`bit delete ${id} --silent --hard ${flags}`);
+    // hard-delete is blocked in non-interactive sessions unless the feature is explicitly enabled
+    const features = [this.featuresToggle || [], HARD_DELETE_FEATURE].flat().join(',');
+    return this.runCmd(`bit delete ${id} --silent --hard ${flags}`, undefined, undefined, features);
   }
   softRemoveOnLane(id: string, flags = '') {
     return this.runCmd(`bit delete ${id} --silent --lane ${flags}`);

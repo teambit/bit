@@ -282,12 +282,7 @@ commands:
   install_bvm:
     steps:
       - run: npm config set prefix '~/.npm-global'
-      # pinned: bvm 3.1.0 installs bit with the pnpm v12 native engine, which mis-hoists the
-      # bundle (drops execa's sibling deps from @pnpm/network.git-utils's nested node_modules),
-      # so `bbit install` crashes on an ESM named-import of the CJS npm-run-path that resolution
-      # falls back to. Unpin once a fixed bvm ships (also bump the bvm cache-key prefix again -
-      # the broken layout is cached).
-      - run: npm install --global @teambit/bvm@3.0.4
+      - run: npm install --global @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
 

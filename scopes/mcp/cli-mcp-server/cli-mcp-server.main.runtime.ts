@@ -1437,6 +1437,18 @@ export class CliMcpServerMain {
           }
         }
 
+        // hard-delete permanently deletes components from the remote scope and can corrupt
+        // dependents — never allow it from an agent context, regardless of how the flag was passed
+        const hasHardFlag = flags.hard || args.some((arg: string) => arg === '--hard' || arg.startsWith('--hard='));
+        if (command === 'delete' && hasHardFlag) {
+          return this.formatAsCallToolResult(
+            `Error: "delete --hard" is not available through the MCP server. ` +
+              `It permanently deletes components from the remote scope with no way to recover them, and may corrupt components that depend on them. ` +
+              `If a permanent deletion is truly intended, ask the user to run the command themselves in a terminal. ` +
+              `For the common case, use "delete" without --hard (soft-delete, recoverable via "bit recover").`
+          );
+        }
+
         // Also check for the shorthand 'switch' command (which is an alias for 'lane switch')
         if (command === 'switch') {
           return this.formatAsCallToolResult(
