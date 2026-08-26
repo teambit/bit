@@ -99,7 +99,10 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
           resolve: (payload, { id }) => {
             const status = payload?.componentServerCompilation;
             if (!status?.env) return null;
-            if (id && status.env !== id) return null;
+            const affected = Array.isArray(status.affectedEnvs) ? status.affectedEnvs : [];
+            // an env deduplicated under another env's server publishes with that owner as
+            // status.env - subscribers filtering by the deduped env id match via affectedEnvs
+            if (id && status.env !== id && !affected.includes(id)) return null;
             return {
               env: status.env,
               affectedEnvs: Array.isArray(status.affectedEnvs) ? status.affectedEnvs : [],

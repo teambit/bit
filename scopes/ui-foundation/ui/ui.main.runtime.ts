@@ -368,7 +368,9 @@ export class UiMain {
     // forward to express, which routes to individual preview servers as they come online.
     // This decouples the main UI server startup from preview dev server creation/compilation.
     plugins.forEach((plugin) => {
-      Promise.resolve(plugin.initiate(options)).catch((err: any) => {
+      // the async wrapper routes synchronous throws from initiate() into the same
+      // catch instead of letting them abort the loop and the ui startup with it
+      (async () => plugin.initiate(options))().catch((err: any) => {
         this.logger.error(`Plugin initiation error: ${err?.message || err}`);
       });
     });

@@ -139,11 +139,17 @@ export class PreviewPreview {
   /**
    * render the preview.
    */
+  private renderSeq = 0;
+
   render = async (rootExt?: string) => {
+    // a pooled iframe can be re-pointed while a previous render is still awaiting modules;
+    // without a sequence guard the older render can commit last and win over the newer hash
+    const seq = ++this.renderSeq;
     // preview registration is asynchronous (link files initialize their modules through a dynamic
     // import), so rendering must wait for the active preview - and its includes - to have
     // registered. setup() resolves immediately once ready, so steady-state renders pay nothing.
     await this.setup();
+    if (seq !== this.renderSeq) return undefined;
     // fit content always.
     window.document.body.style.width = 'auto';
 
@@ -194,6 +200,7 @@ export class PreviewPreview {
     // and the GQL call to fetch aspects blocks rendering of every preview iframe.
     const componentAspects = undefined;
     const previewModule = await this.getPreviewModule(name, componentId);
+    if (seq !== this.renderSeq) return undefined;
     const render = preview.render(
       componentId,
       envId || '',
@@ -494,10 +501,8 @@ export class PreviewPreview {
       preview.rerenderOnPreviewModulesUpdated();
     });
 
-    window.addEventListener('hashchange', () => {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      preview.render();
-    });
+    // hash changes are handled by listenToHashChanges(), attached by the first render();
+    // a second listener here made every hash change render twice.
 
     return preview;
   }

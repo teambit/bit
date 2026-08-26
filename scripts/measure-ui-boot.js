@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 /**
  * Workspace UI boot-sequence measurement harness.
  *
@@ -128,7 +127,6 @@ async function waitForDevtools(port, timeoutMs = 20000) {
 function connect(wsUrl) {
   // `ws` ships with the repo's dependencies; requiring it lazily keeps `--help`-style usage working
   // in a checkout that has not installed yet.
-  // eslint-disable-next-line import/no-extraneous-dependencies, global-require
   const WebSocket = require('ws');
   const socket = new WebSocket(wsUrl, { perMessageDeflate: false, maxPayload: 256 * 1024 * 1024 });
   const pending = new Map();
@@ -185,7 +183,8 @@ function format(ms) {
 
 async function main() {
   const opts = parseArgs(process.argv);
-  if (!opts.chrome) throw new Error(`no chrome binary found, pass --chrome=<path>. tried:\n  ${CHROME_CANDIDATES.join('\n  ')}`);
+  if (!opts.chrome)
+    throw new Error(`no chrome binary found, pass --chrome=<path>. tried:\n  ${CHROME_CANDIDATES.join('\n  ')}`);
 
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bit-ui-boot-'));
   const port = 9222;

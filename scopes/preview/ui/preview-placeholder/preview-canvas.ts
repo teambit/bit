@@ -45,6 +45,9 @@ type PooledFrame = {
   booted: boolean;
   /** true once something has actually rendered, which is when it is safe to show */
   ready: boolean;
+  /** pending readiness-fallback timer; cancelled on reassignment so a timer armed for one
+   *  card can never reveal the frame while it shows another card's content */
+  revealTimer?: number;
 };
 
 const entries = new Map<string, CanvasEntry>();
@@ -256,7 +259,8 @@ function createFrame(serverUrl: string, entry: CanvasEntry): PooledFrame {
   // the preview paints an opaque background before it has rendered anything, so revealing on load
   // would replace the card's skeleton with a blank white box
   iframe.addEventListener('load', () => {
-    window.setTimeout(() => markReady(pooled), REVEAL_AFTER_LOAD_MS);
+    if (pooled.revealTimer) window.clearTimeout(pooled.revealTimer);
+    pooled.revealTimer = window.setTimeout(() => markReady(pooled), REVEAL_AFTER_LOAD_MS);
   });
 
   poolFor(serverUrl).push(pooled);
@@ -270,7 +274,8 @@ function assign(pooled: PooledFrame, entry: CanvasEntry) {
   pooled.wrapper.style.visibility = 'hidden';
   pooled.ready = false;
   booting += 1;
-  window.setTimeout(() => markReady(pooled), REVEAL_AFTER_LOAD_MS * 4);
+  if (pooled.revealTimer) window.clearTimeout(pooled.revealTimer);
+  pooled.revealTimer = window.setTimeout(() => markReady(pooled), REVEAL_AFTER_LOAD_MS * 4);
   pooled.iframe.setAttribute('title', `preview ${entry.id}`);
   const hash = previewHash(entry);
   try {
@@ -433,6 +438,32 @@ export function registerPreview(entry: CanvasEntry) {
 export function unregisterPreview(key: string) {
   entries.delete(key);
   renderedKeys.delete(key);
+  if (entries.size === 0) {
+    // the last card left (grid unmounted / route changed): dispose the pooled realms
+    // instead of keeping live iframes, their sockets, and global listeners around.
+    // assetsWarmed survives on purpose - the browser cache it describes is still warm.
+    for (const pool of pools.values()) {
+      for (const pooled of pool) {
+        if (pooled.revealTimer) window.clearTimeout(pooled.revealTimer);
+        pooled.wrapper.remove();
+      }
+    }
+    pools.clear();
+    booting = 0;
+    if (frame !== undefined) {
+      window.cancelAnimationFrame(frame);
+      frame = undefined;
+    }
+    if (listening) {
+      window.removeEventListener('scroll', schedule, { capture: true } as EventListenerOptions);
+      window.removeEventListener('resize', schedule);
+      listening = false;
+    }
+    host?.remove();
+    host = undefined;
+    scrollRoot = undefined;
+    return;
+  }
   schedule();
 }
 

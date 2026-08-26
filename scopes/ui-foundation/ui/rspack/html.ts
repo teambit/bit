@@ -29,13 +29,22 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
         var hadController = Boolean(navigator.serviceWorker.controller);
         void (async function() {
           try {
+            // Only touch what this app owns: localhost origins are shared across unrelated
+            // dev servers over time, so an unconditional sweep would clear their state too.
             var registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.map(function(reg) { return reg.unregister(); }));
+            await Promise.all(registrations.map(function(reg) {
+              var scriptUrl = (reg.active || reg.waiting || reg.installing || {}).scriptURL || '';
+              if (scriptUrl.indexOf('/service-worker.js') === -1) return undefined;
+              return reg.unregister();
+            }));
           } catch {}
           try {
             if ('caches' in window) {
               var cacheNames = await caches.keys();
-              await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
+              await Promise.all(cacheNames.map(function(name) {
+                if (name.indexOf('workbox-') !== 0) return undefined;
+                return caches.delete(name);
+              }));
             }
           } catch {}
           // Never auto-reload here; browser should stay stable and let runtime recover.
@@ -61,11 +70,20 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
 
         async function clearServiceWorkersAndCaches() {
           try {
+            // Scope to bit's own artifacts: unrelated apps served earlier on this
+            // localhost origin keep their service workers and caches.
             var registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.map(function(reg) { return reg.unregister(); }));
+            await Promise.all(registrations.map(function(reg) {
+              var scriptUrl = (reg.active || reg.waiting || reg.installing || {}).scriptURL || '';
+              if (scriptUrl.indexOf('/service-worker.js') === -1) return undefined;
+              return reg.unregister();
+            }));
             if ('caches' in window) {
               var cacheNames = await caches.keys();
-              await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
+              await Promise.all(cacheNames.map(function(name) {
+                if (name.indexOf('workbox-') !== 0) return undefined;
+                return caches.delete(name);
+              }));
             }
           } catch {}
         }
@@ -160,7 +178,6 @@ export function html(title: string, withDevTools?: boolean, options?: HtmlOption
       })();
       </script>
       `;
-
 
   // Static "boot shell" painted by the browser before the UI bundle is parsed.
   //

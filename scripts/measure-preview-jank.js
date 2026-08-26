@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 /**
  * Preview scrolling measurement harness.
  *
@@ -112,7 +111,6 @@ async function waitForDevtools(port, timeoutMs = 20000) {
 }
 
 function connect(wsUrl) {
-  // eslint-disable-next-line import/no-extraneous-dependencies, global-require
   const WebSocket = require('ws');
   const socket = new WebSocket(wsUrl, { perMessageDeflate: false, maxPayload: 512 * 1024 * 1024 });
   const pending = new Map();
@@ -163,7 +161,8 @@ async function sample(session, counters) {
 
 async function main() {
   const opts = parseArgs(process.argv);
-  if (!opts.chrome) throw new Error(`no chrome binary found, pass --chrome=<path>. tried:\n  ${CHROME_CANDIDATES.join('\n  ')}`);
+  if (!opts.chrome)
+    throw new Error(`no chrome binary found, pass --chrome=<path>. tried:\n  ${CHROME_CANDIDATES.join('\n  ')}`);
 
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bit-preview-jank-'));
   const port = 9222;
@@ -277,7 +276,9 @@ async function main() {
   }
 
   if (blockedPct > opts.budgetBlocked) {
-    console.error(`FAIL: main thread blocked ${blockedPct.toFixed(0)}% of the gesture, budget is ${opts.budgetBlocked}%\n`);
+    console.error(
+      `FAIL: main thread blocked ${blockedPct.toFixed(0)}% of the gesture, budget is ${opts.budgetBlocked}%\n`
+    );
     process.exit(1);
   }
   console.log('PASS\n');

@@ -364,7 +364,10 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
   // cached component lists converge quickly to current workspace reality.
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
-    if (!data?.workspace) return undefined;
+    // no cached workspace + no error just means the first load is in flight;
+    // a first-load network failure must still schedule retries or the page
+    // stays on its skeleton forever
+    if (!data?.workspace && !hasWorkspaceNetworkError) return undefined;
 
     if (!hasWorkspaceNetworkError) {
       clearRecoveryRetryTimer();
@@ -785,31 +788,49 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
       const heavyMap = new Map<string, any>();
       if (heavyComponents) {
         for (const comp of heavyComponents) {
-          heavyMap.set(`${comp.id.scope}/${comp.id.name}`, comp);
+          heavyMap.set(`${comp.id.scope}/${comp.id.name}@${comp.id.version || ''}`, comp);
         }
       }
       const statusMap = new Map<string, any>();
       if (statusComponents) {
         for (const comp of statusComponents) {
-          statusMap.set(`${comp.id.scope}/${comp.id.name}`, comp);
+          statusMap.set(`${comp.id.scope}/${comp.id.name}@${comp.id.version || ''}`, comp);
         }
       }
       const serverMap = new Map<string, any>();
       if (serverComponents) {
         for (const comp of serverComponents) {
-          serverMap.set(`${comp.id.scope}/${comp.id.name}`, comp?.server);
+          serverMap.set(`${comp.id.scope}/${comp.id.name}@${comp.id.version || ''}`, comp?.server);
         }
       }
 
-      // Merge: light base ← heavy fields ← status fields
+      // Merge: light base ← heavy fields ← status fields.
+      // The deferred queries are one-shot snapshots while the light model keeps
+      // receiving subscription updates - so they only FILL fields the light model
+      // doesn't have, never override ones it does (an older snapshot must not
+      // revert a live update). The server object merges field-wise for the same
+      // reason: the fallback query omits host/basePath.
+      const fillMissing = (base: any, extra: any) => {
+        if (!extra) return {};
+        const out: any = {};
+        for (const field of Object.keys(extra)) {
+          if (base[field] === undefined || base[field] === null) out[field] = extra[field];
+        }
+        return out;
+      };
       const merged = {
         ...data.workspace,
         components: data.workspace.components.map((comp: any) => {
-          const key = `${comp.id.scope}/${comp.id.name}`;
+          const key = `${comp.id.scope}/${comp.id.name}@${comp.id.version || ''}`;
           const heavy = heavyMap.get(key);
           const status = statusMap.get(key);
           const server = serverMap.get(key);
-          return { ...comp, ...heavy, ...status, ...(server ? { server } : {}) };
+          return {
+            ...comp,
+            ...fillMissing(comp, heavy),
+            ...fillMissing(comp, status),
+            ...(server ? { server: { ...comp.server, ...server } } : {}),
+          };
         }),
       };
       return Workspace.from(merged);

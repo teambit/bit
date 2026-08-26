@@ -36,6 +36,7 @@ export function useDevServerConnectionStatus() {
   const pendingOfflineReasonRef = useRef<ConnectionReason>('network');
   const ignoreOfflineUntilRef = useRef(0);
   const mainFailureCountRef = useRef(0);
+  const healthCheckGenerationRef = useRef(0);
   const previewPresenceKeysRef = useRef(new Set<string>());
   const previewReadyKeysRef = useRef(new Set<string>());
   const previewCompilingKeysRef = useRef(new Set<string>());
@@ -139,22 +140,35 @@ export function useDevServerConnectionStatus() {
 
       // Ignore transient transport blips (startup websocket churn, subscription reconnects).
       // We only transition to offline if a debounced, direct local health check still fails.
-      offlineTimerRef.current = window.setTimeout(async () => {
-        offlineTimerRef.current = undefined;
-        if (!window.navigator.onLine) {
-          applyOfflineNow('browser-offline');
-          return;
-        }
-        const ok = await pingDevServer();
-        if (ok) {
-          mainFailureCountRef.current = 0;
-          markOnline();
-          return;
-        }
-        mainFailureCountRef.current += 1;
-        if (mainFailureCountRef.current < 2) return;
-        applyOfflineNow(pendingOfflineReasonRef.current);
-      }, OFFLINE_DEBOUNCE_MS);
+      // The generation counter discards a ping that resolves after a newer check started
+      // (or after teardown bumped it) - a stale failure must not flip a recovered
+      // connection back offline.
+      const scheduleHealthCheck = (delay: number) => {
+        offlineTimerRef.current = window.setTimeout(async () => {
+          offlineTimerRef.current = undefined;
+          if (!window.navigator.onLine) {
+            applyOfflineNow('browser-offline');
+            return;
+          }
+          const generation = ++healthCheckGenerationRef.current;
+          const ok = await pingDevServer();
+          if (generation !== healthCheckGenerationRef.current) return;
+          if (ok) {
+            mainFailureCountRef.current = 0;
+            markOnline();
+            return;
+          }
+          mainFailureCountRef.current += 1;
+          if (mainFailureCountRef.current < 2) {
+            // confirm quickly instead of waiting for the next regular poll cycle -
+            // otherwise a real outage keeps showing "online" for many extra seconds
+            scheduleHealthCheck(OFFLINE_DEBOUNCE_MS);
+            return;
+          }
+          applyOfflineNow(pendingOfflineReasonRef.current);
+        }, delay);
+      };
+      scheduleHealthCheck(OFFLINE_DEBOUNCE_MS);
     },
     [applyOfflineNow, markOnline, pingDevServer]
   );
@@ -347,6 +361,7 @@ export function useDevServerConnectionStatus() {
       window.removeEventListener('online', onOnline);
       clearOfflineTimer();
       clearRecoveryTimer();
+      healthCheckGenerationRef.current += 1;
       clearPreviewOfflineTimer();
       clearPreviewBootTimer();
       clearPreviewOnlineSettleTimer();

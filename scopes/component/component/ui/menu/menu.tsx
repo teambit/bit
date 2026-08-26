@@ -339,7 +339,15 @@ export function defaultLoadVersions(
             const version = tag.version.version;
             return { version, tag: version } as DropdownComponentVersion;
           });
-      }, [component?.id?.toString(), component?.tags?.toArray?.()?.length]);
+      }, [
+        component?.id?.toString(),
+        // content-sensitive: cache-and-network can replace the tag list with a
+        // different set of the same length
+        component?.tags
+          ?.toArray?.()
+          ?.map((tag) => tag.version.version)
+          .join(),
+      ]);
 
       const snaps = useMemo(() => {
         return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));

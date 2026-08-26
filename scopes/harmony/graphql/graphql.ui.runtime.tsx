@@ -36,6 +36,16 @@ function sanitizeRestoredApolloCache(cacheData: NormalizedCacheObject) {
   let clearedPreviewUrl = 0;
   let clearedCompilingFlag = 0;
 
+  // Auth state must never survive a session boundary through the persisted cache:
+  // a stale getCurrentUser can show the previous account after logout. Evict it so
+  // the user lookup always revalidates over the network while the rest stays warm.
+  const rootQuery = cacheData.ROOT_QUERY as Record<string, any> | undefined;
+  if (rootQuery) {
+    for (const key of Object.keys(rootQuery)) {
+      if (key === 'getCurrentUser' || key.startsWith('getCurrentUser(')) delete rootQuery[key];
+    }
+  }
+
   for (const key of Object.keys(cacheData)) {
     const entry = cacheData[key] as Record<string, any> | undefined;
     if (!entry || typeof entry !== 'object') continue;
@@ -123,7 +133,7 @@ export class GraphqlUI {
         });
         const cacheData = cache.extract();
         const cacheEntries = Object.keys(cacheData).length;
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.log(`[apollo-cache] restored ${cacheEntries} entries in ${(performance.now() - t0).toFixed(0)}ms`);
 
         // Clear volatile preview-server state from restored cache.
@@ -135,7 +145,7 @@ export class GraphqlUI {
           const clearedTotal = clearedServerField + clearedPreviewUrl + clearedCompilingFlag;
           if (clearedTotal > 0) {
             cache.restore(cacheData);
-            // eslint-disable-next-line no-console
+            // oxlint-disable-next-line no-console
             console.log(
               `[apollo-cache] sanitized volatile fields (server=${clearedServerField}, previewUrl=${clearedPreviewUrl}, isCompiling=${clearedCompilingFlag})`
             );

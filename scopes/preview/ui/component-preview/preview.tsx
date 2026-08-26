@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 import type { IframeHTMLAttributes } from 'react';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import classNames from 'classnames';
 import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
@@ -264,8 +264,16 @@ export function ComponentPreview({
 
   const targetParams = viewport === null ? baseParams : paramsWithViewport;
   const url = toPreviewUrl(component, previewName, isScaling ? targetParams : baseParams, includeEnv);
-  const srcWithRetryNonce =
-    retryNonce > 0 ? `${url}${url.includes('?') ? '&' : '?'}bitPreviewRetry=${retryNonce}` : url;
+  // the retry nonce must live in the document query, before the '#': preview urls carry
+  // their params inside the hash, and a hash-only change is a fragment navigation that
+  // never re-fetches a document that failed to load - which is the one thing a retry is for
+  const srcWithRetryNonce = useMemo(() => {
+    if (retryNonce <= 0) return url;
+    const hashIndex = url.indexOf('#');
+    const base = hashIndex === -1 ? url : url.slice(0, hashIndex);
+    const fragment = hashIndex === -1 ? '' : url.slice(hashIndex);
+    return `${base}${base.includes('?') ? '&' : '?'}bitPreviewRetry=${retryNonce}${fragment}`;
+  }, [url, retryNonce]);
   const isServerCompiling = (component.server as { isCompiling?: boolean } | undefined)?.isCompiling === true;
 
   const clearNavSchedule = () => {

@@ -218,7 +218,12 @@ export function PreviewPlaceholder({
     if (!node) return;
     let isMounted = true;
     const hydratePreview = () => {
-      if (!isMounted) return;
+      if (!isMounted) {
+        // the slot was already taken on our behalf by the queue/direct path;
+        // an unmounted card must hand it back or the concurrency budget leaks away
+        releaseHydrationSlot();
+        return;
+      }
       warmedPreviews.add(previewKey);
       slotHeldRef.current = true;
       setCanHydratePreview(true);
@@ -277,6 +282,7 @@ export function PreviewPlaceholder({
     return () => {
       componentMountedRef.current = false;
       releaseSlotIfHeld();
+      autoWarmPreviews.delete(previewKey);
       unregisterLivePreview(previewKey);
     };
   }, [previewKey]);
@@ -289,6 +295,9 @@ export function PreviewPlaceholder({
   useEffect(() => {
     if (!batched || !previewKey || !serverUrl || !shouldShowPreview) return undefined;
 
+    // a re-registration (e.g. the dev server came back on a new url) starts unrendered;
+    // hasRendered() below restores the flag immediately when the canvas already painted it
+    setCanvasRendered(false);
     registerPreview({
       key: previewKey,
       id: previewKey,
@@ -380,7 +389,7 @@ export function PreviewPlaceholder({
   }
 
   return (
-    <div ref={intersectionRef}>
+    <div ref={intersectionRef} style={{ position: 'relative' }}>
       <ComponentComposition
         component={component}
         composition={selectedPreview}
