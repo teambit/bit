@@ -33,7 +33,7 @@ import type { Version, LaneComponent, Lane } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
 import type { LaneId } from '@teambit/lane-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { SourceBranchDetector } from './source-branch-detector';
+import { LaneCleanup } from './lane-cleanup';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
@@ -1723,8 +1723,21 @@ export class CiMain {
 
     this.logger.console(chalk.green('Merged PR'));
 
-    // Enhanced lane cleanup logic
-    await this.performLaneCleanup(currentLane, laneName, initialCommitSha);
+    // Archive the source lane, unless other scopes still have to release their slice of it.
+    await new LaneCleanup({
+      logger: this.logger,
+      defaultScope: this.workspace.defaultScope,
+      parseLaneId: (idStr) => this.lanes.parseLaneId(idStr),
+      convertBranchToLaneId: (branch) => this.convertBranchToLaneId(branch),
+      archiveLane: (laneId) => this.archiveLane(laneId),
+      getLanes: (opts) => this.lanes.getLanes(opts),
+      importMainObjects: (ids) => this.importer.importObjectsFromMainIfExist(ids, { cache: true }),
+      getModelComponent: (id) => this.workspace.scope.legacyScope.getModelComponentIfExist(id),
+      importObjectsByHashes: (scope, hashes) => this.importer.importObjectsByHashes(hashes, scope),
+      isTracked: (id) => this.workspace.listIds().hasWithoutVersion(id),
+      objects: this.workspace.scope.legacyScope.objects,
+      warn: (text) => this.logger.console(chalk.yellow(text)),
+    }).run(currentLane, laneName, initialCommitSha);
 
     return { code: 0, data: '' };
   }
@@ -1837,56 +1850,6 @@ export class CiMain {
       await this.workspace.bitMap.write('restore lane config');
       await this.workspace.clearCache();
       this.logger.console(chalk.blue('Restored config changes from lane'));
-    }
-  }
-
-  /**
-   * Performs lane cleanup by attempting to detect and delete the source lane
-   * after a successful merge, even when running on the main branch
-   */
-  private async performLaneCleanup(currentLane: any, explicitLaneName?: string, initialCommitSha?: string) {
-    this.logger.console('🗑️ Lane Cleanup');
-
-    // If we already have a current lane, use it
-    if (currentLane) {
-      this.logger.console(chalk.blue(`Found current lane: ${currentLane.name}`));
-      const laneId = currentLane.id();
-      await this.archiveLane(laneId.toString());
-      return;
-    }
-
-    // If no current lane but explicit lane name provided, try to delete it
-    if (explicitLaneName) {
-      this.logger.console(chalk.blue(`Using explicitly provided lane name: ${explicitLaneName}`));
-      try {
-        const laneId = await this.lanes.parseLaneId(explicitLaneName);
-        await this.archiveLane(laneId.toString());
-        return;
-      } catch (e: any) {
-        this.logger.console(chalk.yellow(`Failed to parse lane name '${explicitLaneName}': ${e.message}`));
-      }
-    }
-
-    // Try to auto-detect source branch/lane name using the dedicated detector
-    const sourceBranchDetector = new SourceBranchDetector(this.logger);
-    const sourceBranchName = await sourceBranchDetector.getSourceBranchName(initialCommitSha);
-    if (!sourceBranchName) {
-      this.logger.console(chalk.yellow('No current lane and unable to detect source branch - skipping lane cleanup'));
-      return;
-    }
-    try {
-      const laneIdStr = this.convertBranchToLaneId(sourceBranchName);
-
-      this.logger.console(
-        chalk.blue(`Attempting to delete lane based on source branch: ${sourceBranchName} -> ${laneIdStr}`)
-      );
-
-      const laneId = await this.lanes.parseLaneId(laneIdStr);
-      await this.archiveLane(laneId.toString());
-    } catch (e: any) {
-      this.logger.console(
-        chalk.yellow(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`)
-      );
     }
   }
 
