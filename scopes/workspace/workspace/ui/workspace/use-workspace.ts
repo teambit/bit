@@ -138,6 +138,7 @@ const wcComponentFields = gql`
       identifier
     }
     description
+    labels
     issuesCount
     status {
       isOutdated
