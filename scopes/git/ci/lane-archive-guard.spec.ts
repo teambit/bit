@@ -59,7 +59,7 @@ describe('laneArchiveDecision', () => {
   const noop = async () => {};
   const deps = (overrides: Partial<Parameters<typeof laneArchiveDecision>[2]>) =>
     ({
-      getLanes: async () => [],
+      readLane: async () => undefined,
       importMainObjects: noop,
       getModelComponent: async () => undefined,
       importObjectsByHashes: noop,
@@ -77,7 +77,7 @@ describe('laneArchiveDecision', () => {
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({ getLanes: async () => Promise.reject(new Error('lane acme.cards/feature was not found')) })
+      deps({ readLane: async () => Promise.reject(new Error('lane acme.cards/feature was not found')) })
     );
     expect(decision).to.deep.equal({ archive: true, summary: '' });
   });
@@ -86,7 +86,7 @@ describe('laneArchiveDecision', () => {
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({ getLanes: async () => Promise.reject(new Error('ECONNRESET')) })
+      deps({ readLane: async () => Promise.reject(new Error('ECONNRESET')) })
     );
     expect(decision.archive).to.be.false;
     expect(decision.summary).to.include('Could not read lane acme.cards/feature');
@@ -100,7 +100,7 @@ describe('laneArchiveDecision', () => {
       laneId,
       'acme.cards',
       deps({
-        getLanes: async () => [{ components: [foreignEntry] } as any],
+        readLane: async () => ({ components: [foreignEntry], updateDependents: [] }),
         importMainObjects: async () => Promise.reject(new Error('no route to acme.payments')),
         warn: (m) => warnings.push(m),
       })
@@ -116,7 +116,10 @@ describe('laneArchiveDecision', () => {
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({ getLanes: async () => [{ components: [foreignEntry] } as any], isReleasedByThisRun: () => true })
+      deps({
+        readLane: async () => ({ components: [foreignEntry], updateDependents: [] }),
+        isReleasedByThisRun: () => true,
+      })
     );
     expect(decision.archive).to.be.true;
     expect(decision.summary).to.include('All 1 component(s) from other scope(s) (acme.payments)');
@@ -126,17 +129,40 @@ describe('laneArchiveDecision', () => {
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({ getLanes: async () => [{ components: [], updateDependents: [foreignEntry] } as any] })
+      deps({ readLane: async () => ({ components: [], updateDependents: [foreignEntry] }) })
     );
     expect(decision.archive).to.be.false;
     expect(decision.summary).to.include('not on their main yet: acme.payments/ui/table.');
+  });
+
+  it('counts a foreign component the lane deletes as pending until its main is removed', async () => {
+    const deleted = { ...foreignEntry, isDeleted: true };
+    const model = (removed: boolean) => ({ getHead: () => ({}), isRemoved: async () => removed } as any);
+    const pending = await laneArchiveDecision(
+      laneId,
+      'acme.cards',
+      deps({
+        readLane: async () => ({ components: [deleted], updateDependents: [] }),
+        getModelComponent: async () => model(false),
+      })
+    );
+    expect(pending.archive).to.be.false;
+    const released = await laneArchiveDecision(
+      laneId,
+      'acme.cards',
+      deps({
+        readLane: async () => ({ components: [deleted], updateDependents: [] }),
+        getModelComponent: async () => model(true),
+      })
+    );
+    expect(released.archive).to.be.true;
   });
 
   it('treats a foreign component with no main yet as not released', async () => {
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({ getLanes: async () => [{ components: [foreignEntry] } as any] })
+      deps({ readLane: async () => ({ components: [foreignEntry], updateDependents: [] }) })
     );
     expect(decision.archive).to.be.false;
     expect(decision.summary).to.include('not on their main yet: acme.payments/ui/table.');
@@ -247,6 +273,12 @@ describe('sameReleasedState', () => {
         []
       )
     ).to.be.false;
+  });
+
+  it('is false when only the overrides or package.json changes differ', () => {
+    const base = version({});
+    expect(sameReleasedState(base, { ...base, overrides: { dependencies: { x: '1' } } }, [])).to.be.false;
+    expect(sameReleasedState(base, { ...base, packageJsonChangedProps: { sideEffects: false } }, [])).to.be.false;
   });
 
   it('keeps package-named extensions apart by their full name', () => {

@@ -1732,7 +1732,17 @@ export class CiMain {
       parseLaneId: (idStr) => this.lanes.parseLaneId(idStr),
       convertBranchToLaneId: (branch) => this.convertBranchToLaneId(branch),
       archiveLane: (laneId) => this.archiveLane(laneId),
-      getLanes: (opts) => this.lanes.getLanes(opts),
+      readLane: async (laneId) => {
+        // the lane object itself: `getLanes` drops deleted entries, which are lane work too
+        const lane = await this.lanes.importLaneObject(laneId, false);
+        return {
+          components: lane.components.map((c) => ({ id: c.id, head: c.head.toString(), isDeleted: c.isDeleted })),
+          updateDependents: (lane.updateDependents ?? []).map((id) => ({
+            id: id.changeVersion(undefined),
+            head: id.version as string,
+          })),
+        };
+      },
       // no cache: a model already present locally may predate another scope's release
       importMainObjects: (ids) => this.importer.importObjectsFromMainIfExist(ids),
       getModelComponent: (id) => this.workspace.scope.legacyScope.getModelComponentIfExist(id),

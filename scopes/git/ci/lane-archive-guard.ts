@@ -18,7 +18,6 @@
  */
 import type { ComponentID } from '@teambit/component-id';
 import type { LaneId } from '@teambit/lane-id';
-import type { LaneData } from '@teambit/legacy.scope';
 import type { ModelComponent, Repository, Version } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
 import { hasVersionByRef } from '@teambit/component.snap-distance';
@@ -30,7 +29,8 @@ export type ForeignLaneComponent = {
   scope: string;
   /**
    * `true` when this run tagged and exported the component, or the lane head is already on the
-   * component's main — in its history, or as the content of its head;
+   * component's main — in its history, or as the content of its head — or, for a component the lane
+   * deletes, when its main is already removed;
    * `false` when it is not (including a component that has no main yet);
    * `undefined` when the state could not be read.
    */
@@ -46,9 +46,20 @@ export type LaneArchiveDecision = {
 };
 
 /** What reading the lane and its foreign components' main history needs from the workspace. */
+/** One versioned entry on a lane. `isDeleted` marks a component the lane deletes on merge. */
+export type LaneEntry = { id: ComponentID; head: string; isDeleted?: boolean };
+
+/**
+ * A lane as read from its hosting scope for the archive decision: the listed components — deleted
+ * ones included, since a deletion is lane work the owning scope's release applies — and the hidden
+ * `updateDependents` cascade entries.
+ */
+export type LaneSnapshot = { components: LaneEntry[]; updateDependents: LaneEntry[] };
+
 export type LaneArchiveDeps = {
   /** the remote lane, from its hosting scope; rejects with "was not found" when the lane is gone */
-  getLanes(opts: { remote: string; name: string }): Promise<LaneData[]>;
+  /** the lane as its hosting scope holds it, deletions and hidden entries included; `undefined` when gone */
+  readLane(laneId: LaneId): Promise<LaneSnapshot | undefined>;
   /** fetch the main history of these components from their own scopes; tolerate a missing main */
   importMainObjects(ids: ComponentID[]): Promise<void>;
   getModelComponent(id: ComponentID): Promise<ModelComponent | undefined>;
@@ -125,6 +136,7 @@ export function decideLaneArchive(
  * - package dependencies (dependencies, dev, peer) with their ranges;
  * - component dependencies (dependencies, dev, peer) by id and version — except that a dependency
  *   which is itself on the lane is compared by id only, because the release re-versions it;
+ * - the binding prefix, the overrides and the package.json changes the component declares;
  * - every extension's `config`, keyed by the extension id without its version — an extension that is
  *   itself a component on the lane is re-versioned by the release too; not `data`, which the release
  *   recomputes (builder, dependencies).
@@ -175,8 +187,10 @@ export function sameReleasedState(lane: Version, main: Version, laneComponentIds
     stableStringify(
       v.extensions.map((ext) => [extensionKey(ext), ext.config ?? {}] as const).sort(([a], [b]) => a.localeCompare(b))
     );
+  const rest = (v: Version) => stableStringify([v.bindingPrefix, v.overrides, v.packageJsonChangedProps]);
   return (
     lane.mainFile === main.mainFile &&
+    rest(lane) === rest(main) &&
     files(lane) === files(main) &&
     packages(lane) === packages(main) &&
     components(lane) === components(main) &&
@@ -206,14 +220,14 @@ async function laneHeadIsOnMain(
  * cascade entries. The hidden entries are lane state too — they carry snaps, they can be foreign,
  * and a release must account for them — even though no `.bitmap` ever lists them.
  */
-export function allLaneEntries(lane: LaneData): LaneData['components'] {
-  return [...lane.components, ...(lane.updateDependents ?? [])];
+export function allLaneEntries(lane: LaneSnapshot): LaneEntry[] {
+  return [...lane.components, ...lane.updateDependents];
 }
 
 /** The lane's `id@head` set — what an archive decision is made on, and what must not move before it acts. */
-export function laneFingerprint(lane: LaneData): string {
+export function laneFingerprint(lane: LaneSnapshot): string {
   return allLaneEntries(lane)
-    .map((comp) => `${comp.id.toStringWithoutVersion()}@${comp.head}`)
+    .map((comp) => `${comp.id.toStringWithoutVersion()}@${comp.head}${comp.isDeleted ? ' (deleted)' : ''}`)
     .sort()
     .join('\n');
 }
@@ -222,12 +236,11 @@ export function laneFingerprint(lane: LaneData): string {
  * The remote lane, or `undefined` when its hosting scope no longer has it. Throws on any other
  * failure to read it.
  */
-export async function readRemoteLane(laneId: LaneId, deps: LaneArchiveDeps): Promise<LaneData | undefined> {
-  const lanes = await deps.getLanes({ remote: laneId.scope, name: laneId.name }).catch((e) => {
-    if (e.toString().includes('was not found')) return [] as LaneData[];
+export async function readRemoteLane(laneId: LaneId, deps: LaneArchiveDeps): Promise<LaneSnapshot | undefined> {
+  return deps.readLane(laneId).catch((e) => {
+    if (e.toString().includes('not found')) return undefined;
     throw e;
   });
-  return lanes[0];
 }
 
 /**
@@ -237,7 +250,7 @@ export async function readRemoteLane(laneId: LaneId, deps: LaneArchiveDeps): Pro
  */
 export async function foreignLaneComponentsReleaseState(
   laneId: LaneId,
-  lane: LaneData,
+  lane: LaneSnapshot,
   defaultScope: string,
   deps: LaneArchiveDeps
 ): Promise<ForeignLaneComponent[]> {
@@ -279,6 +292,11 @@ export async function foreignLaneComponentsReleaseState(
         const modelComponent = await deps.getModelComponent(comp.id.changeVersion(undefined));
         const mainHead = modelComponent?.getHead();
         if (!modelComponent || !mainHead) return entry(comp, false);
+        if (comp.isDeleted) {
+          // the lane deletes this component; released once its own main carries the deletion
+          const removed = await modelComponent.isRemoved(deps.objects);
+          return entry(comp, removed === null ? undefined : removed);
+        }
         return entry(
           comp,
           await laneHeadIsOnMain(modelComponent, Ref.from(comp.head), mainHead, laneComponentIds, deps.objects)
@@ -302,7 +320,7 @@ export async function laneArchiveDecision(
   defaultScope: string,
   deps: LaneArchiveDeps
 ): Promise<LaneArchiveDecision> {
-  let lane: LaneData | undefined;
+  let lane: LaneSnapshot | undefined;
   let foreign: ForeignLaneComponent[] | undefined;
   try {
     lane = await readRemoteLane(laneId, deps);

@@ -174,7 +174,8 @@ flag changes only the dependents, so you can combine it with the detection.
    of another scope is released only if its lane head is already
    on its own main — in main's history, or released onto main's head: the same sources, package
    and component dependencies and extension config (that is what a `bit ci merge` in that
-   scope's repository leaves behind). While such a component is pending, the lane is left open
+   scope's repository leaves behind); a component the lane deletes is released once its main is
+   removed. While such a component is pending, the lane is left open
    and the command names it; the last scope to release archives the lane. An open lane whose
    branch was merged stays converged; delete the branch only after the archive.
    To archive by hand: `bit lane remove --remote <scope>/<lane>`.
