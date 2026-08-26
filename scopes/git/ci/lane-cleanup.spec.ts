@@ -12,7 +12,7 @@ describe('LaneCleanup', () => {
       })),
     } as any);
 
-  function cleanup(lanes: any[][]) {
+  function cleanup(lanes: Array<any[] | Error>) {
     const calls: string[] = [];
     const reads = [...lanes];
     const deps: LaneCleanupDeps = {
@@ -24,7 +24,11 @@ describe('LaneCleanup', () => {
         calls.push(`archive:${id}`);
         return 'deleted';
       },
-      getLanes: async () => reads.shift() ?? lanes[lanes.length - 1],
+      getLanes: async () => {
+        const next = reads.shift() ?? lanes[lanes.length - 1];
+        if (next instanceof Error) throw next;
+        return next;
+      },
       importMainObjects: async () => {},
       getModelComponent: async () => undefined,
       importObjectsByHashes: async () => {},
@@ -47,5 +51,12 @@ describe('LaneCleanup', () => {
     await run();
     expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
     expect(calls.join('\n')).to.include('changed while the release was checking it');
+  });
+
+  it('leaves the lane open when it cannot be re-read before the archive', async () => {
+    const { run, calls } = cleanup([[lane({ 'acme.cards/ui/card': 'aaa' })], new Error('ECONNRESET')]);
+    await run();
+    expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
+    expect(calls.join('\n')).to.include('Could not re-read lane acme.cards/feature before archiving it');
   });
 });

@@ -9,7 +9,13 @@ import type { Logger } from '@teambit/logger';
 import type { LaneId } from '@teambit/lane-id';
 import type { Lane } from '@teambit/objects';
 import { SourceBranchDetector } from './source-branch-detector';
-import { laneArchiveDecision, laneFingerprint, laneMovedSummary, readRemoteLane } from './lane-archive-guard';
+import {
+  laneArchiveDecision,
+  laneFingerprint,
+  laneMovedSummary,
+  laneUnreadableBeforeArchiveSummary,
+  readRemoteLane,
+} from './lane-archive-guard';
 import type { LaneArchiveDeps } from './lane-archive-guard';
 
 export type LaneCleanupDeps = LaneArchiveDeps & {
@@ -47,7 +53,7 @@ export class LaneCleanup {
         await this.archiveIfFullyReleased(laneId);
         return;
       } catch (e: any) {
-        logger.console(chalk.yellow(`Failed to parse lane name '${explicitLaneName}': ${e.message}`));
+        logger.console(formatWarningSummary(`Failed to parse lane name '${explicitLaneName}': ${e.message}`));
       }
     }
 
@@ -55,7 +61,9 @@ export class LaneCleanup {
     const sourceBranchDetector = new SourceBranchDetector(logger);
     const sourceBranchName = await sourceBranchDetector.getSourceBranchName(initialCommitSha);
     if (!sourceBranchName) {
-      logger.console(chalk.yellow('No current lane and unable to detect source branch - skipping lane cleanup'));
+      logger.console(
+        formatWarningSummary('No current lane and unable to detect source branch - skipping lane cleanup')
+      );
       return;
     }
     try {
@@ -66,7 +74,9 @@ export class LaneCleanup {
       const laneId = await this.deps.parseLaneId(laneIdStr);
       await this.archiveIfFullyReleased(laneId);
     } catch (e: any) {
-      logger.console(chalk.yellow(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`));
+      logger.console(
+        formatWarningSummary(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`)
+      );
     }
   }
 
@@ -88,8 +98,16 @@ export class LaneCleanup {
     if (decision.fingerprint) {
       // Re-read right before the forced removal: a writer may have exported to the lane since the
       // decision was made. The window between this read and the removal remains, but it no longer
-      // spans the object imports and history checks above.
-      const lane = await readRemoteLane(laneId, this.deps).catch(() => undefined);
+      // spans the object imports and history checks above. A failed re-read keeps the lane open,
+      // like every other unreadable state; a lane that is gone falls through to archiveLane, which
+      // reports not-found as it always has.
+      let lane;
+      try {
+        lane = await readRemoteLane(laneId, this.deps);
+      } catch (e: any) {
+        logger.console(formatWarningSummary(laneUnreadableBeforeArchiveSummary(laneId.toString(), e.message)));
+        return 'kept';
+      }
       if (lane && laneFingerprint(lane) !== decision.fingerprint) {
         logger.console(formatWarningSummary(laneMovedSummary(laneId.toString())));
         return 'kept';

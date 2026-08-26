@@ -299,3 +299,11 @@ export function laneMovedSummary(laneId: string): string {
     `the next release evaluates the new state. ${manualArchiveHint(laneId)}`
   );
 }
+
+/** The lane could not be re-read right before the archive; without a current state, archiving is unsafe. */
+export function laneUnreadableBeforeArchiveSummary(laneId: string, error: string): string {
+  return (
+    `Could not re-read lane ${laneId} before archiving it: ${error}\n` +
+    `Leaving the lane open. ${manualArchiveHint(laneId)}`
+  );
+}
