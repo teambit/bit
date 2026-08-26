@@ -63,7 +63,7 @@ describe('laneArchiveDecision', () => {
       importMainObjects: noop,
       getModelComponent: async () => undefined,
       importObjectsByHashes: noop,
-      isTracked: () => false,
+      isReleasedByThisRun: () => false,
       objects: {} as any,
       warn: () => {},
       ...overrides,
@@ -110,13 +110,13 @@ describe('laneArchiveDecision', () => {
     expect(warnings.join('\n')).to.include('no route to acme.payments');
   });
 
-  it('counts a foreign component this workspace tracks as released by this run, and archives', async () => {
-    // the one-repository, many-scopes shape: the repo tracks components of several scopes and
-    // this very run tagged and exported all of them — nothing else to wait for.
+  it('counts a foreign component this run tagged and exported as released, and archives', async () => {
+    // the one-repository, many-scopes shape: the repo holds components of several scopes and this
+    // very run tagged and exported all of them — nothing else to wait for.
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({ getLanes: async () => [{ components: [foreignEntry] } as any], isTracked: () => true })
+      deps({ getLanes: async () => [{ components: [foreignEntry] } as any], isReleasedByThisRun: () => true })
     );
     expect(decision.archive).to.be.true;
     expect(decision.summary).to.include('All 1 component(s) from other scope(s) (acme.payments)');

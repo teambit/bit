@@ -7,9 +7,9 @@
  * other slices on a lane nobody can read any more, and every other repository's `bit ci sync`
  * then closes its mirror pull request as if the lane had been deleted.
  *
- * The rule: archive only when every component from another scope is released — either this
- * repository tracks it (so this very run tagged and exported it: the one-repository, many-scopes
- * shape of `bit ci merge`), or it is already on its own scope's main. "On main" is read two ways,
+ * The rule: archive only when every component from another scope is released — either this very
+ * run tagged and exported it (the one-repository, many-scopes shape of `bit ci merge`), or it is
+ * already on its own scope's main. "On main" is read two ways,
  * because a release reaches main two ways: the lane head is in main's history (a `bit lane merge`),
  * or main's head carries the same files as the lane head (`bit ci merge` checks the branch content
  * out and tags it, so the lane snaps never enter main's ancestry). The last repository to release
@@ -29,8 +29,8 @@ export type ForeignLaneComponent = {
   /** the scope the component belongs to (never this repository's `defaultScope`) */
   scope: string;
   /**
-   * `true` when this repository tracks the component (this run released it), or the lane head is
-   * already on the component's main — in its history, or as the content of its head;
+   * `true` when this run tagged and exported the component, or the lane head is already on the
+   * component's main — in its history, or as the content of its head;
    * `false` when it is not (including a component that has no main yet);
    * `undefined` when the state could not be read.
    */
@@ -52,8 +52,8 @@ export type LaneArchiveDeps = {
   getModelComponent(id: ComponentID): Promise<ModelComponent | undefined>;
   /** fetch these raw objects (lane heads) from the lane's hosting scope, if missing locally */
   importObjectsByHashes(scope: string, hashes: string[]): Promise<void>;
-  /** is the component in this workspace's `.bitmap`, i.e. did this run tag and export it */
-  isTracked(id: ComponentID): boolean;
+  /** did this run's tag and export include the component (by scope and name) */
+  isReleasedByThisRun(id: ComponentID): boolean;
   objects: Repository;
   warn(message: string): void;
 };
@@ -166,20 +166,21 @@ export async function foreignLaneComponentsReleaseState(
     scope: comp.id.scope as string,
     released,
   });
-  // A component this workspace tracks was tagged and exported by this very run.
-  const tracked = foreign.filter((comp) => deps.isTracked(comp.id.changeVersion(undefined)));
-  const untracked = foreign.filter((comp) => !deps.isTracked(comp.id.changeVersion(undefined)));
-  if (!untracked.length) return tracked.map((comp) => entry(comp, true));
+  // A component this run tagged and exported is released by definition. Being in `.bitmap` is not
+  // enough: the tag covers changed components only, and a mirror writes the defaultScope slice only.
+  const releasedHere = foreign.filter((comp) => deps.isReleasedByThisRun(comp.id.changeVersion(undefined)));
+  const others = foreign.filter((comp) => !deps.isReleasedByThisRun(comp.id.changeVersion(undefined)));
+  if (!others.length) return releasedHere.map((comp) => entry(comp, true));
 
-  // Each untracked component's main history comes from its own scope, and its lane head from the
+  // Each other component's main history comes from its own scope, and its lane head from the
   // lane's hosting scope. A component that has no main yet (created on the lane) is simply absent
   // afterwards, which reads as "not released".
   let objectsImported = true;
   try {
-    await deps.importMainObjects(untracked.map((comp) => comp.id.changeVersion(undefined)));
+    await deps.importMainObjects(others.map((comp) => comp.id.changeVersion(undefined)));
     await deps.importObjectsByHashes(
       laneId.scope,
-      untracked.map((comp) => comp.head)
+      others.map((comp) => comp.head)
     );
   } catch (e: any) {
     deps.warn(`Could not fetch the history of the lane's foreign components: ${e.message}`);
@@ -187,7 +188,7 @@ export async function foreignLaneComponentsReleaseState(
   }
 
   const states = await Promise.all(
-    untracked.map(async (comp): Promise<ForeignLaneComponent> => {
+    others.map(async (comp): Promise<ForeignLaneComponent> => {
       if (!objectsImported) return entry(comp, undefined);
       try {
         const modelComponent = await deps.getModelComponent(comp.id.changeVersion(undefined));
@@ -200,7 +201,7 @@ export async function foreignLaneComponentsReleaseState(
       }
     })
   );
-  return [...tracked.map((comp) => entry(comp, true)), ...states];
+  return [...releasedHere.map((comp) => entry(comp, true)), ...states];
 }
 
 /**

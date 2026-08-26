@@ -1692,10 +1692,12 @@ export class CiMain {
     }
 
     const hasTaggedComponents = tagResults?.taggedComponents && tagResults.taggedComponents.length > 0;
+    let releasedIds = new ComponentIdList();
 
     if (hasTaggedComponents) {
       this.logger.console(chalk.blue('Exporting components'));
       const exportResult = await this.exporter.export();
+      releasedIds = ComponentIdList.fromArray(exportResult.componentsIds);
 
       if (exportResult.componentsIds.length > 0) {
         this.logger.console(chalk.green(`Exported ${exportResult.componentsIds.length} component(s)`));
@@ -1735,7 +1737,7 @@ export class CiMain {
       importMainObjects: (ids) => this.importer.importObjectsFromMainIfExist(ids),
       getModelComponent: (id) => this.workspace.scope.legacyScope.getModelComponentIfExist(id),
       importObjectsByHashes: (scope, hashes) => this.importer.importObjectsByHashes(hashes, scope),
-      isTracked: (id) => this.workspace.listIds().hasWithoutVersion(id),
+      isReleasedByThisRun: (id) => releasedIds.hasWithoutVersion(id),
       objects: this.workspace.scope.legacyScope.objects,
       warn: (text) => this.logger.console(formatWarningSummary(text)),
     }).run(currentLane, laneName, initialCommitSha);
