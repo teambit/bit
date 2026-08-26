@@ -4,19 +4,27 @@ import { ComponentIdList } from '@teambit/component-id';
 import { isTag } from '@teambit/component-version';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { Dependency, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { Workspace } from './workspace';
 
-export async function getAutoTagPending(consumer: Consumer, changedComponents: ComponentIdList): Promise<Component[]> {
-  const autoTagInfo = await getAutoTagInfo(consumer, changedComponents);
+export async function getAutoTagPending(
+  workspace: Workspace,
+  changedComponents: ComponentIdList
+): Promise<Component[]> {
+  const autoTagInfo = await getAutoTagInfo(workspace, changedComponents);
   return autoTagInfo.map((a) => a.component);
 }
 
 export type AutoTagResult = { component: Component; triggeredBy: ComponentIdList };
 
-export async function getAutoTagInfo(consumer: Consumer, changedComponents: ComponentIdList): Promise<AutoTagResult[]> {
+export async function getAutoTagInfo(
+  workspace: Workspace,
+  changedComponents: ComponentIdList
+): Promise<AutoTagResult[]> {
   if (!changedComponents.length) return [];
-  const potentialComponents = potentialComponentsForAutoTagging(consumer, changedComponents);
+  const potentialComponents = potentialComponentsForAutoTagging(workspace.consumer, changedComponents);
   const idsToLoad = new ComponentIdList(...potentialComponents, ...changedComponents);
-  const { components } = await consumer.loadComponents(idsToLoad, false);
+  const workspaceComponents = await workspace.getMany(idsToLoad, undefined, false);
+  const components = workspaceComponents.map((workspaceComponent) => workspaceComponent.state._consumer);
   const graph = buildGraph(components);
 
   const autoTagResults: AutoTagResult[] = [];
