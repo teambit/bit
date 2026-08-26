@@ -334,9 +334,10 @@ export async function foreignLaneComponentsReleaseState(
         const mainHead = modelComponent?.getHead();
         if (!modelComponent || !mainHead) return entry(comp, false);
         if (comp.isDeleted) {
-          // the lane deletes this component; released once its own main carries the deletion
-          const removed = await modelComponent.isRemoved(deps.objects);
-          return entry(comp, removed === null ? undefined : removed);
+          // the lane deletes this component; released once its own main head carries the deletion.
+          // Read main's head Version itself — ModelComponent.isRemoved() may answer for a lane head.
+          const mainVersion = (await deps.objects.load(mainHead, true)) as Version;
+          return entry(comp, mainVersion.isRemoved());
         }
         return entry(
           comp,

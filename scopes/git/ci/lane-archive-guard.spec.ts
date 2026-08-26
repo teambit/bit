@@ -151,15 +151,17 @@ describe('laneArchiveDecision', () => {
     expect(decision.summary).to.include('not on their main yet: acme.payments/ui/table.');
   });
 
-  it('counts a foreign component the lane deletes as pending until its main is removed', async () => {
+  it('counts a foreign component the lane deletes as pending until its main head is removed', async () => {
     const deleted = { ...foreignEntry, isDeleted: true };
-    const model = (removed: boolean) => ({ getHead: () => ({}), isRemoved: async () => removed }) as any;
+    const model = { getHead: () => ({ toString: () => 'main-head' }), getHeadAsTagIfExist: () => '0.0.1' } as any;
+    const mainHeadRemoved = (removed: boolean) => ({ load: async () => ({ isRemoved: () => removed }) }) as any;
     const pending = await laneArchiveDecision(
       laneId,
       'acme.cards',
       deps({
         readLane: async () => snapshot([deleted]),
-        getModelComponent: async () => model(false),
+        getModelComponent: async () => model,
+        objects: mainHeadRemoved(false),
       })
     );
     expect(pending.archive).to.be.false;
@@ -168,7 +170,8 @@ describe('laneArchiveDecision', () => {
       'acme.cards',
       deps({
         readLane: async () => snapshot([deleted]),
-        getModelComponent: async () => model(true),
+        getModelComponent: async () => model,
+        objects: mainHeadRemoved(true),
       })
     );
     expect(released.archive).to.be.true;
