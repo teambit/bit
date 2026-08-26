@@ -7,7 +7,8 @@
  * other slices on a lane nobody can read any more, and every other repository's `bit ci sync`
  * then closes its mirror pull request as if the lane had been deleted.
  *
- * The rule: archive only when every component from another scope is released — either this very
+ * The rule: archive only when every component outside this release — another scope's, or a hidden
+ * dependent of this scope that no `.bitmap` lists — is released: either this very
  * run tagged and exported it (the one-repository, many-scopes shape of `bit ci merge`), or it is
  * already on its own scope's main. "On main" is read two ways,
  * because a release reaches main two ways: the lane head is in main's history (a `bit lane merge`),
@@ -47,7 +48,7 @@ export type LaneArchiveDecision = {
 
 /** What reading the lane and its foreign components' main history needs from the workspace. */
 /** One versioned entry on a lane. `isDeleted` marks a component the lane deletes on merge. */
-export type LaneEntry = { id: ComponentID; head: string; isDeleted?: boolean };
+export type LaneEntry = { id: ComponentID; head: string; isDeleted?: boolean; hidden?: boolean };
 
 /**
  * A lane as read from its hosting scope for the archive decision: the listed components — deleted
@@ -110,7 +111,7 @@ export function decideLaneArchive(
     return {
       archive: true,
       summary:
-        `All ${foreign.length} component(s) from other scope(s) (${scopesOf(foreign)}) ` +
+        `All ${foreign.length} component(s) outside this release (scope(s) ${scopesOf(foreign)}) ` +
         `are already on their main; the lane is fully released.`,
     };
   }
@@ -132,6 +133,9 @@ export function decideLaneArchive(
     `This repository releases the ${defaultScope} slice only. The repository of each remaining scope ` +
       `releases its own slice, and the last release archives the lane.`
   );
+  if ([...pending, ...unknown].some((c) => c.scope === defaultScope)) {
+    lines.push(`A hidden dependent of ${defaultScope} is released only by a run that tags a component it depends on.`);
+  }
   lines.push(manualArchiveHint(laneId));
   return { archive: false, summary: lines.join('\n') };
 }
@@ -249,7 +253,7 @@ async function laneHeadIsOnMain(
  * and a release must account for them — even though no `.bitmap` ever lists them.
  */
 export function allLaneEntries(lane: LaneSnapshot): LaneEntry[] {
-  return [...lane.components, ...lane.updateDependents];
+  return [...lane.components, ...lane.updateDependents.map((comp) => ({ ...comp, hidden: true }))];
 }
 
 /** The lane's `id@head` set and its readme — what an archive decision is made on, and what must not move before it acts. */
@@ -270,7 +274,8 @@ export async function readRemoteLane(laneId: LaneId, deps: LaneArchiveDeps): Pro
 }
 
 /**
- * For each component on the remote lane that belongs to another scope: is it released? Returns
+ * For each component on the remote lane outside this release — another scope's, or a hidden
+ * dependent of this scope: is it released? Returns
  * `undefined` when the lane no longer exists on its hosting scope. Throws when the lane cannot be
  * read for any other reason.
  */
@@ -281,7 +286,10 @@ export async function foreignLaneComponentsReleaseState(
   deps: LaneArchiveDeps
 ): Promise<ForeignLaneComponent[]> {
   const entries = allLaneEntries(lane);
-  const foreign = entries.filter((comp) => comp.id.scope !== defaultScope);
+  // What this release cannot vouch for: every component of another scope, and the hidden cascade
+  // entries of this scope — no `.bitmap` lists them, and the tag reaches one only when a component
+  // it depends on is tagged in the same run.
+  const foreign = entries.filter((comp) => comp.id.scope !== defaultScope || comp.hidden);
   if (!foreign.length) return [];
   const laneComponentIds = entries.map((comp) => comp.id.toStringWithoutVersion());
 
@@ -383,7 +391,7 @@ export async function laneArchiveDecision(
     return {
       archive: false,
       summary:
-        `Could not read lane ${laneId.toString()} to check for components of other scopes: ${e.message}\n` +
+        `Could not read lane ${laneId.toString()} to check for components outside this release: ${e.message}\n` +
         `Leaving the lane open. ${manualArchiveHint(laneId.toString())}`,
     };
   }

@@ -21,7 +21,7 @@ describe('decideLaneArchive', () => {
       foreign('acme.docs/ui/note', true, 'acme.docs'),
     ]);
     expect(decision.archive).to.be.true;
-    expect(decision.summary).to.include('All 2 component(s) from other scope(s) (acme.docs, acme.payments)');
+    expect(decision.summary).to.include('All 2 component(s) outside this release (scope(s) acme.docs, acme.payments)');
   });
 
   it('keeps the lane open while a foreign component is not on its main, naming it and the way out', () => {
@@ -138,7 +138,27 @@ describe('laneArchiveDecision', () => {
       deps({ readLane: async () => snapshot([foreignEntry]), releasedHeadByThisRun: () => foreignEntry.head })
     );
     expect(decision.archive).to.be.true;
-    expect(decision.summary).to.include('All 1 component(s) from other scope(s) (acme.payments)');
+    expect(decision.summary).to.include('All 1 component(s) outside this release (scope(s) acme.payments)');
+  });
+
+  it('checks a hidden dependent of this scope too, since no .bitmap lists it', async () => {
+    const ownHidden = {
+      id: { scope: 'acme.cards', toStringWithoutVersion: () => 'acme.cards/ui/row', changeVersion: () => ({}) },
+      head: 'h1',
+    };
+    const pending = await laneArchiveDecision(
+      laneId,
+      'acme.cards',
+      deps({ readLane: async () => snapshot([], [ownHidden]) })
+    );
+    expect(pending.archive).to.be.false;
+    expect(pending.summary).to.include('A hidden dependent of acme.cards is released only by a run');
+    const released = await laneArchiveDecision(
+      laneId,
+      'acme.cards',
+      deps({ readLane: async () => snapshot([], [ownHidden]), releasedHeadByThisRun: () => 'h1' })
+    );
+    expect(released.archive).to.be.true;
   });
 
   it('counts a foreign component hidden in updateDependents as lane work too', async () => {

@@ -15,7 +15,7 @@ describe('LaneCleanup', () => {
       readme,
     }) as any;
 
-  function cleanup(lanes: Array<any | Error>) {
+  function cleanup(lanes: Array<any | Error>, overrides: Partial<LaneCleanupDeps> = {}) {
     const calls: string[] = [];
     const reads = [...lanes];
     const deps: LaneCleanupDeps = {
@@ -38,6 +38,7 @@ describe('LaneCleanup', () => {
       releasedHeadByThisRun: () => undefined,
       objects: {} as any,
       warn: () => {},
+      ...overrides,
     };
     return { run: () => new LaneCleanup(deps).run(undefined, 'acme.cards/feature'), calls };
   }
@@ -65,10 +66,11 @@ describe('LaneCleanup', () => {
 
   it('leaves the lane open when only a hidden updateDependents entry moved before the archive', async () => {
     const own = { 'acme.cards/ui/card': 'aaa' };
-    const { run, calls } = cleanup([
-      lane(own, { 'acme.cards/ui/row': 'h1' }),
-      lane(own, { 'acme.cards/ui/row': 'h2' }),
-    ]);
+    // the hidden dependent was tagged by this run at h1; by the archive it has moved to h2
+    const { run, calls } = cleanup(
+      [lane(own, { 'acme.cards/ui/row': 'h1' }), lane(own, { 'acme.cards/ui/row': 'h2' })],
+      { releasedHeadByThisRun: () => 'h1' }
+    );
     await run();
     expect(calls.filter((c) => c.startsWith('archive:'))).to.be.empty;
     expect(calls.join('\n')).to.include('changed while the release was checking it');
