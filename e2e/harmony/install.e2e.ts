@@ -382,7 +382,10 @@ describe('comment preservation during install', function () {
    **/
   "teambit.dependencies/dependency-resolver": {
     "policy": {
-      "dependencies": {},
+      "dependencies": {
+        // this dependency must stay pinned
+        "is-odd": "1.0.0"
+      },
       "peerDependencies": {}
     },
     "linkCoreAspects": true,
@@ -415,5 +418,8 @@ describe('comment preservation during install', function () {
   it('should have added the lodash dependency to policy', () => {
     // Simply check if the lodash dependency is present in the text
     expect(workspaceConfigAfter).to.include('"lodash":');
+  });
+  it('should preserve a comment attached to a dependency inside the policy', () => {
+    expect(workspaceConfigAfter).to.include('// this dependency must stay pinned');
   });
 });
