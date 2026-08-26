@@ -115,30 +115,68 @@ export function decideLaneArchive(
   return { archive: false, summary: lines.join('\n') };
 }
 
-/** The same source files with the same content — what `bit ci merge` leaves on main after a release. */
-export function sameFiles(a: Version, b: Version): boolean {
-  const key = (v: Version) =>
+/**
+ * Is `main` the released form of `lane`? `bit ci merge` checks the branch out and tags, so the
+ * release carries the lane head's sources and declared dependencies, but not its lineage. The
+ * comparison covers what the release transfers and nothing the release itself rewrites:
+ * - source files (path and content hash) and the main file;
+ * - package dependencies (dependencies, dev, peer) with their ranges;
+ * - component dependencies (dependencies, dev, peer) by id and version — except that a dependency
+ *   which is itself on the lane is compared by id only, because the release re-versions it;
+ * - every extension's `config`; not `data`, which the release recomputes (builder, dependencies).
+ * Anything else the lane changed (a dependency bump, an env change) leaves `main` different and the
+ * component pending — a false "pending" costs a manual archive, a false "released" costs the work.
+ */
+export function sameReleasedState(lane: Version, main: Version, laneComponentIds: string[]): boolean {
+  const onLane = new Set(laneComponentIds);
+  const files = (v: Version) =>
     v.files
       .map((f) => `${f.relativePath}:${f.file.toString()}`)
       .sort()
       .join('\n');
-  return a.files.length === b.files.length && key(a) === key(b);
+  const packages = (v: Version) =>
+    JSON.stringify([v.packageDependencies, v.devPackageDependencies, v.peerPackageDependencies]);
+  const components = (v: Version) =>
+    [v.dependencies, v.devDependencies, v.peerDependencies]
+      .map((deps) =>
+        deps
+          .get()
+          .map((dep) => {
+            const id = dep.id.toStringWithoutVersion();
+            return onLane.has(id) ? id : dep.id.toString();
+          })
+          .sort()
+          .join(',')
+      )
+      .join('|');
+  const configs = (v: Version) =>
+    JSON.stringify(
+      v.extensions.map((ext) => [ext.stringId, ext.config ?? {}] as const).sort(([a], [b]) => a.localeCompare(b))
+    );
+  return (
+    lane.mainFile === main.mainFile &&
+    files(lane) === files(main) &&
+    packages(lane) === packages(main) &&
+    components(lane) === components(main) &&
+    configs(lane) === configs(main)
+  );
 }
 
 /**
- * Is the lane head already on the component's main? Either in main's history, or as the content
- * of main's head. Throws when an object it needs cannot be loaded.
+ * Is the lane head already on the component's main? Either in main's history, or released onto
+ * main's head. Throws when an object it needs cannot be loaded.
  */
 async function laneHeadIsOnMain(
   modelComponent: ModelComponent,
   laneHead: Ref,
   mainHead: Ref,
+  laneComponentIds: string[],
   objects: Repository
 ): Promise<boolean> {
   if (await hasVersionByRef(modelComponent, laneHead, objects, mainHead)) return true;
   const laneVersion = (await objects.load(laneHead, true)) as Version;
   const mainVersion = (await objects.load(mainHead, true)) as Version;
-  return sameFiles(laneVersion, mainVersion);
+  return sameReleasedState(laneVersion, mainVersion, laneComponentIds);
 }
 
 /**
@@ -160,6 +198,7 @@ export async function foreignLaneComponentsReleaseState(
 
   const foreign = lane.components.filter((comp) => comp.id.scope !== defaultScope);
   if (!foreign.length) return [];
+  const laneComponentIds = lane.components.map((comp) => comp.id.toStringWithoutVersion());
 
   const entry = (comp: (typeof foreign)[number], released: boolean | undefined): ForeignLaneComponent => ({
     id: comp.id.toStringWithoutVersion(),
@@ -194,7 +233,10 @@ export async function foreignLaneComponentsReleaseState(
         const modelComponent = await deps.getModelComponent(comp.id.changeVersion(undefined));
         const mainHead = modelComponent?.getHead();
         if (!modelComponent || !mainHead) return entry(comp, false);
-        return entry(comp, await laneHeadIsOnMain(modelComponent, Ref.from(comp.head), mainHead, deps.objects));
+        return entry(
+          comp,
+          await laneHeadIsOnMain(modelComponent, Ref.from(comp.head), mainHead, laneComponentIds, deps.objects)
+        );
       } catch (e: any) {
         deps.warn(`Could not read the history of ${comp.id.toStringWithoutVersion()}: ${e.message}`);
         return entry(comp, undefined);

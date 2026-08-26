@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { decideLaneArchive, laneArchiveDecision, sameFiles } from './lane-archive-guard';
+import { decideLaneArchive, laneArchiveDecision, sameReleasedState } from './lane-archive-guard';
 import type { ForeignLaneComponent } from './lane-archive-guard';
 
 describe('decideLaneArchive', () => {
@@ -133,44 +133,117 @@ describe('laneArchiveDecision', () => {
   });
 });
 
-describe('sameFiles', () => {
-  const version = (files: Array<[string, string]>) =>
-    ({ files: files.map(([relativePath, hash]) => ({ relativePath, file: { toString: () => hash } })) } as any);
+describe('sameReleasedState', () => {
+  type Spec = {
+    files?: Array<[string, string]>;
+    mainFile?: string;
+    packages?: Record<string, string>;
+    deps?: string[];
+    config?: Array<[string, Record<string, unknown>]>;
+    data?: Array<[string, Record<string, unknown>]>;
+  };
+  const version = ({
+    files = [['a.ts', '1']],
+    mainFile = 'a.ts',
+    packages = {},
+    deps = [],
+    config = [],
+    data = [],
+  }: Spec) => {
+    const componentId = (id: string) => {
+      const [name, ver] = id.split('@');
+      return { toString: () => id, toStringWithoutVersion: () => name, version: ver };
+    };
+    const extensions = config.map(([stringId, cfg], i) => ({ stringId, config: cfg, data: data[i]?.[1] ?? {} }));
+    return {
+      mainFile,
+      files: files.map(([relativePath, hash]) => ({ relativePath, file: { toString: () => hash } })),
+      packageDependencies: packages,
+      devPackageDependencies: {},
+      peerPackageDependencies: {},
+      dependencies: { get: () => deps.map((d) => ({ id: componentId(d) })) },
+      devDependencies: { get: () => [] },
+      peerDependencies: { get: () => [] },
+      extensions,
+    } as any;
+  };
 
-  it('is true for the same paths with the same content, in any order', () => {
-    expect(
-      sameFiles(
-        version([
-          ['a.ts', '1'],
-          ['b.ts', '2'],
-        ]),
-        version([
-          ['b.ts', '2'],
-          ['a.ts', '1'],
-        ])
-      )
-    ).to.be.true;
+  it('is true for the same sources, packages, dependencies and config, in any order', () => {
+    const a = version({
+      files: [
+        ['a.ts', '1'],
+        ['b.ts', '2'],
+      ],
+      packages: { lodash: '^4' },
+      deps: ['acme.cards/x@0.0.1'],
+      config: [['teambit.envs/envs', { env: 'node' }]],
+    });
+    const b = version({
+      files: [
+        ['b.ts', '2'],
+        ['a.ts', '1'],
+      ],
+      packages: { lodash: '^4' },
+      deps: ['acme.cards/x@0.0.1'],
+      config: [['teambit.envs/envs', { env: 'node' }]],
+    });
+    expect(sameReleasedState(a, b, [])).to.be.true;
   });
 
   it('is false when a file differs, is missing, or is extra', () => {
-    expect(sameFiles(version([['a.ts', '1']]), version([['a.ts', '9']]))).to.be.false;
+    expect(sameReleasedState(version({ files: [['a.ts', '1']] }), version({ files: [['a.ts', '9']] }), [])).to.be.false;
     expect(
-      sameFiles(
-        version([
-          ['a.ts', '1'],
-          ['b.ts', '2'],
-        ]),
-        version([['a.ts', '1']])
+      sameReleasedState(
+        version({
+          files: [
+            ['a.ts', '1'],
+            ['b.ts', '2'],
+          ],
+        }),
+        version({ files: [['a.ts', '1']] }),
+        []
       )
     ).to.be.false;
     expect(
-      sameFiles(
-        version([['a.ts', '1']]),
-        version([
-          ['a.ts', '1'],
-          ['b.ts', '2'],
-        ])
+      sameReleasedState(
+        version({ files: [['a.ts', '1']] }),
+        version({
+          files: [
+            ['a.ts', '1'],
+            ['b.ts', '2'],
+          ],
+        }),
+        []
       )
     ).to.be.false;
+  });
+
+  it('is false when only a package dependency, a component dependency version, or a config differs', () => {
+    expect(sameReleasedState(version({ packages: { lodash: '^4' } }), version({ packages: { lodash: '^5' } }), [])).to
+      .be.false;
+    expect(sameReleasedState(version({ deps: ['acme.cards/x@0.0.1'] }), version({ deps: ['acme.cards/x@0.0.2'] }), []))
+      .to.be.false;
+    expect(
+      sameReleasedState(
+        version({ config: [['teambit.envs/envs', { env: 'node' }]] }),
+        version({ config: [['teambit.envs/envs', { env: 'react' }]] }),
+        []
+      )
+    ).to.be.false;
+  });
+
+  it('tolerates the version drift of a dependency that is itself on the lane, and ignores extension data', () => {
+    const lane = version({
+      deps: ['acme.cards/x@abc123'],
+      config: [['teambit.deps/resolver', { policy: {} }]],
+      data: [['teambit.deps/resolver', { versions: 'lane' }]],
+    });
+    const released = version({
+      deps: ['acme.cards/x@0.0.9'],
+      config: [['teambit.deps/resolver', { policy: {} }]],
+      data: [['teambit.deps/resolver', { versions: 'main' }]],
+    });
+    expect(sameReleasedState(lane, released, ['acme.cards/x'])).to.be.true;
+    expect(sameReleasedState(lane, released, [])).to.be.false;
   });
 });
