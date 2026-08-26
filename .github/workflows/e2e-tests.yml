@@ -55,6 +55,7 @@ jobs:
           bbit config set error_reporting false
           bbit config set user.name CI
           bbit config set user.email ci@bit.dev
+          bbit config set registry https://node-registry.bit.cloud
           bbit config set package-manager.cache "$HOME/package-manager-cache"
 
       - name: restore package-manager cache
