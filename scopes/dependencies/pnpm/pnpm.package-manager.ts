@@ -15,17 +15,10 @@ import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
-import fs from 'fs';
 import { memoize, omit } from 'lodash';
-import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
-import type { PeerDependencyIssuesByProjects, ResolvedConfig } from '@pnpm/napi';
+import type * as NodeApi from '@pnpm/napi';
+import type { DependentNode, DependentsTree, PeerDependencyIssuesByProjects, ResolvedConfig } from '@pnpm/napi';
 import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
-import type * as LockfileFs from '@pnpm/lockfile.fs';
-import type { Modules } from '@pnpm/installing.modules-yaml';
-import type * as ModulesYaml from '@pnpm/installing.modules-yaml';
-import type { ImporterInfo } from '@pnpm/deps.inspection.tree-builder';
-import { buildDependentsTree } from '@pnpm/deps.inspection.tree-builder';
-import { renderDependentsTree } from '@pnpm/deps.inspection.list';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
@@ -54,24 +47,30 @@ export interface InstallResult {
 }
 
 type ReadConfigResult = Promise<{ config: ResolvedConfig; warnings: string[] }>;
-type LockfileFsModule = typeof LockfileFs;
-type ModulesYamlModule = typeof ModulesYaml;
-let pnpmEsmPromise: Promise<{ lockfileFs: LockfileFsModule; modulesYaml: ModulesYamlModule }> | undefined;
 
-function loadPnpmEsm(): Promise<{ lockfileFs: LockfileFsModule; modulesYaml: ModulesYamlModule }> {
-  pnpmEsmPromise ??= (async () => {
-    const { loadEsm } = require('./load-pnpm-esm.cjs') as {
-      loadEsm: () => Promise<{ lockfileFs: LockfileFsModule; modulesYaml: ModulesYamlModule }>;
-    };
-    const { lockfileFs, modulesYaml } = await loadEsm();
-    return { lockfileFs, modulesYaml };
-  })();
-  return pnpmEsmPromise;
+/**
+ * The `.modules.yaml` fields Bit reads. The engine returns the whole
+ * manifest; only these are consumed here.
+ */
+interface ModulesManifest {
+  injectedDeps?: Record<string, string[]>;
+}
+
+/** One importer entry of a lockfile, in the file's own shape. */
+type LockfileFileImporter = Record<string, Record<string, { specifier?: string; version?: string }> | undefined>;
+
+/**
+ * Required lazily so the native engine binary is not mapped into every
+ * `bit` process at startup (same convention as the `./lynx` require sites).
+ */
+function loadNodeApi(): typeof NodeApi {
+  // eslint-disable-next-line global-require, import/no-dynamic-require
+  return require('@pnpm/napi') as typeof NodeApi;
 }
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
-  readonly modulesManifestCache: Map<string, Modules> = new Map();
+  readonly modulesManifestCache: Map<string, ModulesManifest> = new Map();
   private username: string;
 
   private _readConfig = async (dir?: string): ReadConfigResult => {
@@ -115,17 +114,15 @@ export class PnpmPackageManager implements PackageManager {
       ...opts,
       resolve,
     });
-    const {
-      lockfileFs: { readWantedLockfile, writeLockfileFile, convertToLockfileFile: convertLockfileObjectToLockfileFile },
-    } = await loadPnpmEsm();
+    const nodeApi = loadNodeApi();
     // Merge the graph-derived subset into any existing wanted lockfile rather than
     // overwriting. Only the importers, packages, and snapshots referenced by the
     // imported components' subgraph are re-stated here; every other workspace dep's
     // locked version must be preserved so pnpm doesn't re-resolve it to a newer
     // registry version.
-    const existingLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: true });
+    const existingLockfile = await nodeApi.readLockfile<LockfileFile>({ dir: opts.rootDir });
     const mergedLockfile = existingLockfile
-      ? mergeGraphLockfileIntoExisting(convertLockfileObjectToLockfileFile(existingLockfile), graphLockfile)
+      ? mergeGraphLockfileIntoExisting(existingLockfile, graphLockfile)
       : graphLockfile;
     Object.assign(mergedLockfile, {
       bit: {
@@ -133,8 +130,8 @@ export class PnpmPackageManager implements PackageManager {
         restoredFromModel: true,
       },
     });
+    await nodeApi.writeLockfile({ dir: opts.rootDir, lockfile: mergedLockfile });
     const lockfilePath = join(opts.rootDir, 'pnpm-lock.yaml');
-    await writeLockfileFile(lockfilePath, mergedLockfile);
     this.logger.debug(`generated a lockfile from dependencies graph at ${lockfilePath}`);
     if (process.env.DEPS_GRAPH_LOG) {
       // eslint-disable-next-line no-console
@@ -248,7 +245,7 @@ export class PnpmPackageManager implements PackageManager {
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
-          process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
+          outputStream: process.env.BIT_CLI_SERVER_NO_TTY ? new ServerSendOutStream() : undefined,
           throttleProgress: installOptions.throttleProgress,
           hideProgressPrefix: installOptions.hideProgressPrefix,
           hideLifecycleOutput: installOptions.hideLifecycleOutput,
@@ -413,14 +410,14 @@ export class PnpmPackageManager implements PackageManager {
     return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
   }
 
-  async _readModulesManifest(lockfileDir: string): Promise<Modules | undefined> {
+  async _readModulesManifest(lockfileDir: string): Promise<ModulesManifest | undefined> {
     if (this.modulesManifestCache.has(lockfileDir)) {
       return this.modulesManifestCache.get(lockfileDir);
     }
-    const {
-      modulesYaml: { readModulesManifest },
-    } = await loadPnpmEsm();
-    const modulesManifest = await readModulesManifest(join(lockfileDir, 'node_modules'));
+    const nodeApi = loadNodeApi();
+    const modulesManifest = (await nodeApi.readModulesManifest(join(lockfileDir, 'node_modules'))) as
+      | ModulesManifest
+      | null;
     if (modulesManifest) {
       this.modulesManifestCache.set(lockfileDir, modulesManifest);
     }
@@ -457,45 +454,20 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async findUsages(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string> {
-    const {
-      lockfileFs: { readWantedLockfile },
-    } = await loadPnpmEsm();
-    const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
-    if (!lockfile) return '';
-    const importerIds = Object.keys(lockfile.importers ?? {}).filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`));
-    const projectPaths = importerIds.map((id) => join(opts.lockfileDir, id));
-    const importerInfoMap = new Map<string, ImporterInfo>();
-    for (const importerId of importerIds) {
-      const pkgJson = tryReadPackageJson(join(opts.lockfileDir, importerId));
-      importerInfoMap.set(importerId, {
-        name: pkgJson?.name ?? importerId,
-        version: pkgJson?.version ?? '',
-      });
-    }
-    const trees = await buildDependentsTree([depName], projectPaths, {
-      include: {
-        dependencies: true,
-        devDependencies: true,
-        optionalDependencies: true,
-      },
-      lockfileDir: opts.lockfileDir,
-      registries: {
-        default: 'https://registry.npmjs.org',
-      },
-      importerInfoMap,
-      lockfile,
-      nameFormatter({ manifest }) {
-        if ('componentId' in manifest) {
-          const { scope, name } = manifest.componentId as { scope: string; name: string };
-          return `${scope}/${name}`;
-        }
-        return manifest.name;
-      },
+    const nodeApi = loadNodeApi();
+    const trees = await nodeApi.getDependents({
+      dir: opts.lockfileDir,
+      packages: [depName],
+      // The generated importers under `.bit_roots` wire the workspace
+      // together; they are not somewhere a user's dependency comes from.
+      excludeProjectPatterns: [`*${BIT_ROOTS_DIR}/*`],
+      // The engine walks the lockfile, which knows package names. Ask it
+      // for the field that carries the component id so the tree can be
+      // rendered in Bit's terms instead.
+      manifestFields: ['componentId'],
     });
-    return renderDependentsTree(trees, {
-      depth: opts.depth ?? Infinity,
-      long: false,
-    });
+    applyComponentIdNames(trees);
+    return nodeApi.renderDependents(trees, { depth: opts.depth, long: false });
   }
 
   /**
@@ -503,40 +475,38 @@ export class PnpmPackageManager implements PackageManager {
    */
   async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<void> {
     await initLockfileDepsGraphConverter();
-    const {
-      lockfileFs: { readWantedLockfile, convertToLockfileFile: convertLockfileObjectToLockfileFile },
-    } = await loadPnpmEsm();
-    const originalLockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
-    if (!originalLockfile) {
+    const nodeApi = loadNodeApi();
+    const originalLockfile = await nodeApi.readLockfile<LockfileFile>({ dir: opts.rootDir });
+    if (!originalLockfile?.importers) {
       return;
     }
+    const originalImporters = originalLockfile.importers as Record<string, LockfileFileImporter>;
     for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
       const componentImporterId = (componentRelativeDir || '.') as ProjectId;
       let compRootDir: string | undefined;
-      if (componentRootDir && !originalLockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
+      if (componentRootDir && !originalImporters[componentRootDir] && componentRootDir.includes('@')) {
         compRootDir = componentRootDir.split('@')[0];
       } else {
         compRootDir = componentRootDir;
       }
-      if (!originalLockfile.importers[componentImporterId]) {
+      if (!originalImporters[componentImporterId]) {
         continue;
       }
-      const hasComponentRootImporter =
-        compRootDir != null && Boolean(originalLockfile.importers[compRootDir as ProjectId]);
+      const hasComponentRootImporter = compRootDir != null && Boolean(originalImporters[compRootDir]);
       const filterByImporterIds = [componentImporterId];
       if (hasComponentRootImporter && compRootDir !== componentImporterId) {
         filterByImporterIds.push(compRootDir as ProjectId);
       }
       // Only clone the importers that will be mutated, reuse the rest of the lockfile as-is
-      const clonedImporters: Record<string, any> = {};
+      const clonedImporters: Record<string, LockfileFileImporter> = {};
       for (const importerId of filterByImporterIds) {
-        if (originalLockfile.importers[importerId]) {
-          clonedImporters[importerId] = structuredClone(originalLockfile.importers[importerId]);
+        if (originalImporters[importerId]) {
+          clonedImporters[importerId] = structuredClone(originalImporters[importerId]);
         }
       }
       const lockfile = {
         ...originalLockfile,
-        importers: { ...originalLockfile.importers, ...clonedImporters },
+        importers: { ...originalImporters, ...clonedImporters },
       };
       for (const importerId of filterByImporterIds) {
         const importer = lockfile.importers[importerId];
@@ -554,31 +524,15 @@ export class PnpmPackageManager implements PackageManager {
               importer.dependencies?.[workspacePkgName] ??
               importer.devDependencies?.[workspacePkgName] ??
               importer.optionalDependencies?.[workspacePkgName];
-            if (typeof ref === 'string' && ref.startsWith('file:')) continue;
+            if (ref?.version?.startsWith('file:')) continue;
           }
-          for (const depType of [
-            'dependencies',
-            'devDependencies',
-            'optionalDependencies',
-            'specifiers',
-            'dependenciesMeta',
-          ]) {
+          for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies', 'dependenciesMeta']) {
             delete importer[depType]?.[workspacePkgName];
           }
         }
       }
       // Filters the lockfile so that it only includes packages related to the given component.
-      const partialLockfile = convertLockfileObjectToLockfileFile(
-        filterLockfileByImporters(lockfile, filterByImporterIds, {
-          include: {
-            dependencies: true,
-            devDependencies: true,
-            optionalDependencies: true,
-          },
-          failOnMissingDependencies: false,
-          skipped: new Set(),
-        })
-      );
+      const partialLockfile = nodeApi.filterLockfileByImporters<LockfileFile>(lockfile, filterByImporterIds);
       const graph = convertLockfileToGraph(partialLockfile, {
         ...opts,
         componentRootDir: hasComponentRootImporter ? compRootDir : undefined,
@@ -606,12 +560,22 @@ function isDefaultHoistPattern(hoistPattern: string[]): boolean {
   return hoistPattern.length === 1 && hoistPattern[0] === '*';
 }
 
-function tryReadPackageJson(pkgDir: string) {
-  try {
-    return JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'));
-  } catch {
-    return undefined;
-  }
+/**
+ * Rename every node the engine resolved to a Bit component after its
+ * component id, in place. The engine has no notion of one — it reports the
+ * package name from the lockfile — so it is asked for the `componentId`
+ * field of each node's manifest and Bit turns that into the display name,
+ * which the renderer then prefers over the package name.
+ */
+function applyComponentIdNames(trees: DependentsTree[]): void {
+  const rename = (node: DependentsTree | DependentNode) => {
+    const componentId = node.manifest?.componentId as { scope?: string; name?: string } | undefined;
+    if (componentId?.scope && componentId.name) {
+      node.displayName = `${componentId.scope}/${componentId.name}`;
+    }
+    node.dependents?.forEach(rename);
+  };
+  trees.forEach(rename);
 }
 
 // Merge a graph-derived lockfile into an existing wanted lockfile. The graph lockfile is

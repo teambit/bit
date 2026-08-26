@@ -34,6 +34,15 @@ export function isInteractiveTerminal(): boolean {
 }
 
 /**
+ * whether it's possible to prompt the user and get an answer: the session must be an interactive
+ * human terminal (see isInteractiveTerminal) and stdin must also be a TTY, otherwise a prompt
+ * would hang forever waiting for input that can never arrive.
+ */
+export function canPromptUser(): boolean {
+  return isInteractiveTerminal() && Boolean(process.stdin.isTTY);
+}
+
+/**
  * whether the output already fits within the current terminal, in which case there's no reason
  * to page it (avoids the "press q to exit" annoyance for short output, without relying on the
  * version-dependent `less -F` behavior which is broken by `-X` in modern less). accounts for line
