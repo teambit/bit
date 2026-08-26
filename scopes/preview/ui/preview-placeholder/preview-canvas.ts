@@ -62,6 +62,8 @@ let scrollingDown = true;
 let booting = 0;
 let frame: number | undefined;
 let listening = false;
+/** pending deferred pool-teardown, cancelled when a card registers again */
+let teardownTimer: number | undefined;
 
 /**
  * How far outside the viewport a card is still worth showing. Wide enough that a frame is assigned
@@ -428,11 +430,38 @@ function ensureListeners() {
 }
 
 export function registerPreview(entry: CanvasEntry) {
+  if (teardownTimer) {
+    window.clearTimeout(teardownTimer);
+    teardownTimer = undefined;
+  }
   ensureListeners();
   entries.set(entry.key, entry);
   // resolve the scroller from the first card we see, before any frame needs placing
   if (!host) ensureHost(entry.getNode?.());
   schedule();
+}
+
+function disposePools() {
+  for (const pool of pools.values()) {
+    for (const pooled of pool) {
+      if (pooled.revealTimer) window.clearTimeout(pooled.revealTimer);
+      pooled.wrapper.remove();
+    }
+  }
+  pools.clear();
+  booting = 0;
+  if (frame !== undefined) {
+    window.cancelAnimationFrame(frame);
+    frame = undefined;
+  }
+  if (listening) {
+    window.removeEventListener('scroll', schedule, { capture: true } as EventListenerOptions);
+    window.removeEventListener('resize', schedule);
+    listening = false;
+  }
+  host?.remove();
+  host = undefined;
+  scrollRoot = undefined;
 }
 
 export function unregisterPreview(key: string) {
@@ -441,27 +470,15 @@ export function unregisterPreview(key: string) {
   if (entries.size === 0) {
     // the last card left (grid unmounted / route changed): dispose the pooled realms
     // instead of keeping live iframes, their sockets, and global listeners around.
+    // Deferred, because cards also unregister transiently while remounting (their
+    // effect re-runs when the server url resolves) - an immediate teardown during
+    // that churn would destroy and re-boot the whole pool repeatedly.
     // assetsWarmed survives on purpose - the browser cache it describes is still warm.
-    for (const pool of pools.values()) {
-      for (const pooled of pool) {
-        if (pooled.revealTimer) window.clearTimeout(pooled.revealTimer);
-        pooled.wrapper.remove();
-      }
-    }
-    pools.clear();
-    booting = 0;
-    if (frame !== undefined) {
-      window.cancelAnimationFrame(frame);
-      frame = undefined;
-    }
-    if (listening) {
-      window.removeEventListener('scroll', schedule, { capture: true } as EventListenerOptions);
-      window.removeEventListener('resize', schedule);
-      listening = false;
-    }
-    host?.remove();
-    host = undefined;
-    scrollRoot = undefined;
+    if (teardownTimer) window.clearTimeout(teardownTimer);
+    teardownTimer = window.setTimeout(() => {
+      teardownTimer = undefined;
+      if (entries.size === 0) disposePools();
+    }, 1500);
     return;
   }
   schedule();
