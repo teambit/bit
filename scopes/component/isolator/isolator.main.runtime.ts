@@ -4,7 +4,7 @@ import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
-import { compact, flatten, isEqual, pick } from 'lodash';
+import { compact, flatten, isEqual, pick, uniqBy } from 'lodash';
 import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
@@ -793,6 +793,11 @@ export class IsolatorMain {
     cyclicMemberIds?: Set<string>
   ): Promise<CapsuleList> {
     this.logger.debug(`createCapsules, ${components.length} components`);
+    // the same component can be requested twice, e.g. an env of a scope's components that is also
+    // a component in that scope may be registered both with and without a version, resolving to the
+    // same id. two capsules on the same path then fail updateWithCurrentPackageJsonData ("found
+    // duplicate capsules").
+    components = uniqBy(components, (component) => component.id.toString());
 
     let longProcessLogger;
     if (opts.context?.aspects) {

@@ -415,9 +415,9 @@ export class PnpmPackageManager implements PackageManager {
       return this.modulesManifestCache.get(lockfileDir);
     }
     const nodeApi = loadNodeApi();
-    const modulesManifest = (await nodeApi.readModulesManifest(join(lockfileDir, 'node_modules'))) as
-      | ModulesManifest
-      | null;
+    const modulesManifest = (await nodeApi.readModulesManifest(
+      join(lockfileDir, 'node_modules')
+    )) as ModulesManifest | null;
     if (modulesManifest) {
       this.modulesManifestCache.set(lockfileDir, modulesManifest);
     }
