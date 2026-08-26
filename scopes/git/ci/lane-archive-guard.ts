@@ -58,7 +58,7 @@ export type LaneSnapshot = { components: LaneEntry[]; updateDependents: LaneEntr
 
 export type LaneArchiveDeps = {
   /** the remote lane, from its hosting scope; rejects with "was not found" when the lane is gone */
-  /** the lane as its hosting scope holds it, deletions and hidden entries included; `undefined` when gone */
+  /** the lane as its hosting scope holds it, deletions and hidden entries included; `undefined` only when the scope has no such lane */
   readLane(laneId: LaneId): Promise<LaneSnapshot | undefined>;
   /** fetch the main history of these components from their own scopes; tolerate a missing main */
   importMainObjects(ids: ComponentID[]): Promise<void>;
@@ -256,14 +256,12 @@ export function laneFingerprint(lane: LaneSnapshot): string {
 }
 
 /**
- * The remote lane, or `undefined` when its hosting scope no longer has it. Throws on any other
- * failure to read it.
+ * The remote lane, or `undefined` when its hosting scope no longer has it — a positive answer from
+ * the dependency (bit's own "no such lane"), never inferred from an error's text. Throws on any
+ * other failure to read it, and a lane that cannot be read is never archived.
  */
 export async function readRemoteLane(laneId: LaneId, deps: LaneArchiveDeps): Promise<LaneSnapshot | undefined> {
-  return deps.readLane(laneId).catch((e) => {
-    if (e.toString().includes('not found')) return undefined;
-    throw e;
-  });
+  return deps.readLane(laneId);
 }
 
 /**

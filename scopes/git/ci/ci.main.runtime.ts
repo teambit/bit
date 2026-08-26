@@ -34,6 +34,7 @@ import { Ref } from '@teambit/objects';
 import type { LaneId } from '@teambit/lane-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { LaneCleanup } from './lane-cleanup';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
@@ -1741,8 +1742,13 @@ export class CiMain {
       convertBranchToLaneId: (branch) => this.convertBranchToLaneId(branch),
       archiveLane: (laneId) => this.archiveLane(laneId),
       readLane: async (laneId) => {
-        // the lane object itself: `getLanes` drops deleted entries, which are lane work too
-        const lane = await this.lanes.importLaneObject(laneId, false);
+        // the lane object itself: `getLanes` drops deleted entries, which are lane work too.
+        // Only bit's own "no such lane" means the lane is gone; any other failure propagates.
+        const lane = await this.lanes.importLaneObject(laneId, false).catch((err) => {
+          if (err instanceof LaneNotFound) return undefined;
+          throw err;
+        });
+        if (!lane) return undefined;
         return {
           components: lane.components.map((c) => ({ id: c.id, head: c.head.toString(), isDeleted: c.isDeleted })),
           updateDependents: (lane.updateDependents ?? []).map((id) => ({

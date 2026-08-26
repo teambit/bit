@@ -75,12 +75,19 @@ describe('laneArchiveDecision', () => {
   };
 
   it('archives, silently, a lane the remote no longer has', async () => {
+    const decision = await laneArchiveDecision(laneId, 'acme.cards', deps({ readLane: async () => undefined }));
+    expect(decision).to.deep.equal({ archive: true, summary: '' });
+  });
+
+  it('keeps the lane open on a read error that merely mentions "not found"', async () => {
+    // an object-fetch or decoding failure is not proof that the lane is gone
     const decision = await laneArchiveDecision(
       laneId,
       'acme.cards',
-      deps({ readLane: async () => Promise.reject(new Error('lane acme.cards/feature was not found')) })
+      deps({ readLane: async () => Promise.reject(new Error('object abc123 not found')) })
     );
-    expect(decision).to.deep.equal({ archive: true, summary: '' });
+    expect(decision.archive).to.be.false;
+    expect(decision.summary).to.include('object abc123 not found');
   });
 
   it('keeps the lane open when the remote cannot be read for another reason', async () => {
