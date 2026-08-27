@@ -853,13 +853,13 @@ jobs:
 
   # ========== Bit CI Jobs ==========
   bit_pr:
-    # xlarge validated on a worst-case 98-component cascade (no OOM at 12GB heap, same wall time
-    # as 2xlarge). If this job dies with "Killed", revert to 2xlarge + max-old-space-size=30000.
-    resource_class: xlarge
+    # large (8GB) should suffice now that previews bundle with rspack (webpack was the memory
+    # hog). If this job dies with "Killed", revert to xlarge + max-old-space-size=12288.
+    resource_class: large
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=12288
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - attach_workspace:
           at: ./
