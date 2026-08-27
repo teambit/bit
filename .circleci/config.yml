@@ -963,6 +963,10 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # TEMPORARY - REVERT BEFORE MERGE. A/B control run for this PR: same branch, same test set,
+      # same packing, with the compile cache turned off, so the only variable is the cache itself.
+      # Compare the sum of the "Run e2e tests" step across the 40 nodes against the run without it.
+      BIT_NO_COMPILE_CACHE: "1"
     parallelism: 40
     steps:
       - e2e_test_cmd:
