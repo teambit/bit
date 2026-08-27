@@ -50,6 +50,13 @@ master_only_filter: &master_only_filter
     branches:
       only: master
 
+# The bundle branches, which can publish a pre-release build to bvm without going through a
+# release. Same pattern setup_esbuild_bundle is gated on.
+bundle_branch_filter: &bundle_branch_filter
+  filters:
+    branches:
+      only: /^bit-bundle.*/
+
 # ========================================
 # PIPELINE PARAMETERS
 # ========================================
@@ -72,6 +79,15 @@ parameters:
     type: enum
     enum: ["true", "false"]
     default: "false"
+  # Publishes the bundled CLI from a bit-bundle* branch to bvm as a pre-release, without
+  # publishing anything to the registry. Trigger from the CircleCI web app with both parameters
+  # set; bundle_version is the version bvm will serve, e.g. "2.2.18-bundle.1".
+  run_bundle_deploy:
+    type: boolean
+    default: false
+  bundle_version:
+    type: string
+    default: ""
 
 # ========================================
 # ORBS
@@ -1490,6 +1506,129 @@ jobs:
       - store_artifacts:
           path: windows
 
+  # ========== Bundle Branch Deploy (bvm pre-release) ==========
+  #
+  # Publishes the bundled CLI to bvm straight from a bit-bundle* branch, so it can be handed out
+  # for testing without a release: nothing is published to the registry and no @teambit/bit
+  # version is taken. See bundle-plan/24-installing-via-bvm.md.
+  #
+  # Deliberately NOT part of harmony_deploy - that workflow's jobs all assume the version is
+  # already on npm (`setup_bit_version` reads `npm view @teambit/bit version`, `install_bit_bundle`
+  # pnpm-adds it), which is exactly what is not true here. The version comes from the
+  # bundle_version pipeline parameter instead, and the artifact is built rather than downloaded.
+  bundle_deploy_build:
+    <<: *defaults
+    # a real `bit build` of the whole CLI, on top of the esbuild bundle's own build - see
+    # build_ui_prebundle, which is `large` for the narrower two-component version of this.
+    resource_class: xlarge
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: check the bundle_version parameter
+          command: |
+            if [ -z "<< pipeline.parameters.bundle_version >>" ]; then
+              echo "bundle_version is empty - trigger the pipeline with it set, e.g. 2.2.18-bundle.1"
+              exit 1
+            fi
+      - setup_bit_environment
+      - set_bit_cloud_registry
+      - setup_pnpm
+      - run:
+          name: bit install (dev binary)
+          # same reconciliation as build_ui_prebundle's own step, and for the same reason: the
+          # UI/preview pre-bundle below is built from *this branch's* source, which a bvm-linked
+          # release binary would not resolve to (bundle-plan §17i).
+          command: |
+            cd bit
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
+            node bin/bit.js install
+          no_output_timeout: '20m'
+          environment:
+            RAYON_NUM_THREADS: '4'
+      - run:
+          name: build the ui/preview pre-bundle
+          # BundleCliApp copies these artifacts into the shims, so they have to exist first -
+          # without them the packer refuses to build a tar (a bit that installs but cannot start).
+          command: |
+            cd bit
+            node bin/bit.js build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules \
+              --tasks "BundleUI,PreBundlePreview"
+          no_output_timeout: '30m'
+      - run:
+          name: build the cli bundle into the @teambit/bit capsule
+          command: |
+            cd bit
+            node bin/bit.js build teambit.harmony/bit --reuse-capsules --tasks "BundleCliApp"
+          no_output_timeout: '30m'
+      - run:
+          name: pack a tar per platform
+          # One job for all five, unlike harmony_deploy's three: those are split because each one
+          # installs bit's full ~5000-package tree, while this installs only the ~11 externals.
+          # They are all linux containers there too (bundle_version_macos/_windows are `*defaults`)
+          # - the cross-platform install is pnpm's, not the runner's, and the packer's @pnpm/napi
+          # check is the same guard verify_pnpm_napi_bundle provides.
+          command: |
+            cd bit
+            for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 win-x64; do
+              node scripts/pack-bundle-for-bvm.js \
+                --capsule-of teambit.harmony/bit \
+                --bit-bin "$PWD/bin/bit.js" \
+                --version "<< pipeline.parameters.bundle_version >>" \
+                --os "${target%-*}" \
+                --arch "${target##*-}" \
+                --out-dir /home/circleci/bit/bvm-tars
+            done
+            ls -la /home/circleci/bit/bvm-tars
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bvm-tars
+      - store_artifacts:
+          path: /home/circleci/bit/bvm-tars
+
+  bundle_publish_to_gcloud:
+    docker:
+      - image: bitcli/node-gcloud-sdk
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Configure gcloud auth
+          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      - run:
+          name: Upload the tar files and their checksums
+          # No pnpm-lock.yaml is uploaded, unlike harmony_publish_to_gcloud: that only exists to
+          # serve bvm's `package-manager` install method, which needs the version on the registry.
+          # These builds are installed with `--method tar`.
+          command: |
+            BUNDLE_VERSION="<< pipeline.parameters.bundle_version >>"
+            cd bvm-tars
+            for tar in bit-${BUNDLE_VERSION}-*.tar.gz; do
+              gsutil cp "${tar}" "gs://bvm.bit.dev/bit/versions/${BUNDLE_VERSION}/${tar}"
+              sha256sum "${tar}" > checksum.txt
+              gsutil cp checksum.txt "gs://bvm.bit.dev/bit/versions/${BUNDLE_VERSION}/${tar%.tar.gz}.checksum.txt"
+            done
+      - run:
+          name: Add the version to bvm's index.json under the dev release type
+          # `dev`, not `nightly`: it keeps the build invisible to everyone on the default (stable)
+          # and nightly channels. Only BVM_RELEASE_TYPE=dev sees it.
+          command: |
+            cd bit
+            node scripts/add-bvm-index-entry.js \
+              --version "<< pipeline.parameters.bundle_version >>" \
+              --release-type dev
+            gsutil cp index.json gs://bvm.bit.dev/bit/index.json
+            gsutil setmeta -h "Cache-Control:no-cache" gs://bvm.bit.dev/bit/index.json
+      - run:
+          name: How to install it
+          command: |
+            echo "BVM_RELEASE_TYPE=dev bvm install << pipeline.parameters.bundle_version >> --method tar"
+
   harmony_publish_to_gcloud:
     docker:
       - image: bitcli/node-gcloud-sdk
@@ -1775,6 +1914,7 @@ workflows:
       or:
         - << pipeline.parameters.run_set_stable >>
         - << pipeline.parameters.run_deploy >>
+        - << pipeline.parameters.run_bundle_deploy >>
     jobs:
       - checkout_code
       - set_ssh_key
@@ -1975,6 +2115,7 @@ workflows:
       or:
         - << pipeline.parameters.run_set_stable >>
         - << pipeline.parameters.run_deploy >>
+        - << pipeline.parameters.run_bundle_deploy >>
     jobs:
       - harmony_deploy_approval_job:
           <<: *master_only_filter
@@ -2138,3 +2279,31 @@ workflows:
   #           - bundle_version_macos
   #           - bundle_version_windows
   #           - checkout_code
+
+  # Publishes the bundled CLI from a bit-bundle* branch to bvm as a pre-release.
+  #
+  # Trigger from the CircleCI web app (Trigger Pipeline) on the branch, with:
+  #   run_bundle_deploy = true
+  #   bundle_version    = 2.2.18-bundle.1
+  #
+  # Nothing reaches the registry and no @teambit/bit version is taken. The build is listed under
+  # bvm's `dev` release type, so it stays invisible on stable and nightly; install it with
+  #   BVM_RELEASE_TYPE=dev bvm install <bundle_version> --method tar
+  # See bundle-plan/24-installing-via-bvm.md.
+  bundle_deploy:
+    when: << pipeline.parameters.run_bundle_deploy >>
+    jobs:
+      - checkout_code:
+          <<: *bundle_branch_filter
+      - setup_harmony:
+          <<: *bundle_branch_filter
+          requires:
+            - checkout_code
+      - bundle_deploy_build:
+          <<: *bundle_branch_filter
+          requires:
+            - setup_harmony
+      - bundle_publish_to_gcloud:
+          <<: *bundle_branch_filter
+          requires:
+            - bundle_deploy_build

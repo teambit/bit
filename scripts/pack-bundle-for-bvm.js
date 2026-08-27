@@ -74,6 +74,60 @@ function run(command, args, opts = {}) {
   return execFileSync(command, args, { stdio: 'inherit', ...opts });
 }
 
+/**
+ * Locate the capsule `bit build` wrote for a component. Capsule dir basenames are
+ * `<componentId with "/" -> "_">@<version>` - the same lookup `prebundle-cache.ts` does, and for
+ * the same reason: `bit build` writes nothing under the repo, so the capsule list is the only way
+ * to find its output.
+ *
+ * The bit binary must be the SAME one the build ran with; a bvm-linked release binary resolves
+ * core aspects to its own published packages rather than to this branch's source.
+ */
+function findCapsuleDir(bitBin, componentId) {
+  // the repo's dev binary is a .js file; it carries a shebang, but running it through node works
+  // whether or not the executable bit survived however the caller got hold of it.
+  const listArgs = ['capsule', 'list', '--json'];
+  const [command, args] = bitBin.endsWith('.js') ? [process.execPath, [bitBin, ...listArgs]] : [bitBin, listArgs];
+  let raw;
+  try {
+    raw = execFileSync(command, args, { maxBuffer: 32 * 1024 * 1024 }).toString();
+  } catch (err) {
+    fail(`"${bitBin} capsule list --json" failed: ${err.message}`);
+  }
+  let list;
+  try {
+    list = JSON.parse(raw);
+  } catch (err) {
+    fail(`could not parse "${bitBin} capsule list --json": ${err.message}`);
+  }
+  const prefix = `${componentId.replace(/\//g, '_')}@`;
+  const found = (list.capsules || []).find((capsulePath) => (capsulePath.split('/').pop() || '').startsWith(prefix));
+  if (!found) fail(`no capsule for "${componentId}" - run the build first (see --help output above)`);
+  return found;
+}
+
+/**
+ * Native addons are per-platform optional dependencies, so they are the one thing a cross-platform
+ * pack can get silently wrong: pnpm resolves the host's binary, or none at all, and the tar builds
+ * clean and then fails at runtime on the target. `@pnpm/napi` is the one CI already guards
+ * (`verify_pnpm_napi_bundle`) and the one bit cannot start without.
+ */
+function verifyNativeBinaries(innerDir, externals, pnpmOsName, targetArch) {
+  if (!externals['@pnpm/napi']) return;
+  const packageName = `napi.${pnpmOsName}-${targetArch}`;
+  const candidates = [
+    path.join(innerDir, 'node_modules', '@pnpm', packageName, 'pnpm-napi.node'),
+    path.join(innerDir, 'node_modules', '.pnpm', 'node_modules', '@pnpm', packageName, 'pnpm-napi.node'),
+  ];
+  if (!candidates.some((candidate) => fs.existsSync(candidate))) {
+    fail(
+      `@pnpm/${packageName}'s native binary is missing - the tar would install and then fail to run ` +
+        `on ${pnpmOsName}-${targetArch}. pnpm did not resolve the target platform's optional dependency.`
+    );
+  }
+  console.log(`[pack-for-bvm] verified @pnpm/${packageName}`);
+}
+
 function isValidSemver(version) {
   // the same shape bvm validates with; kept as a regex so the script has no dependencies
   return /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/.test(version);
@@ -81,6 +135,8 @@ function isValidSemver(version) {
 
 function main() {
   const capsule = take('--capsule');
+  const capsuleOf = take('--capsule-of');
+  const bitBin = take('--bit-bin', process.env.BIT_BIN || 'bit');
   const version = take('--version');
   const outDir = path.resolve(take('--out-dir', path.join(os.tmpdir(), 'bit-bvm-tar')));
   const targetOs = take('--os', BVM_OS[process.platform]);
@@ -89,13 +145,15 @@ function main() {
   const keepStaging = takeBool('--keep-staging');
 
   if (argv.length) fail(`unknown argument(s): ${argv.join(' ')}`);
-  if (!capsule) fail('missing --capsule <dir> (the built @teambit/bit capsule)');
+  if (!capsule && !capsuleOf) fail('missing --capsule <dir> or --capsule-of <component-id>');
+  if (capsule && capsuleOf) fail('--capsule and --capsule-of are mutually exclusive');
   if (!version) fail('missing --version <semver>');
   if (!isValidSemver(version)) fail(`--version "${version}" is not a valid semver`);
   if (!BVM_OS[PNPM_OS[targetOs]]) fail(`--os must be one of ${Object.values(BVM_OS).join(', ')}`);
   if (!['x64', 'arm64'].includes(targetArch)) fail('--arch must be x64 or arm64');
 
-  const capsuleDir = path.resolve(capsule);
+  const capsuleDir = capsule ? path.resolve(capsule) : findCapsuleDir(bitBin, capsuleOf);
+  if (capsuleOf) console.log(`[pack-for-bvm] capsule: ${capsuleDir}`);
   const manifestPath = path.join(capsuleDir, 'package.json');
   if (!fs.existsSync(manifestPath)) fail(`no package.json in ${capsuleDir} - is that the capsule?`);
 
@@ -142,6 +200,7 @@ function main() {
   const pnpmArgs = ['install', '--node-linker=hoisted', '--ignore-scripts', '--no-frozen-lockfile'];
   if (registry) pnpmArgs.push(`--registry=${registry}`);
   run('pnpm', pnpmArgs, { cwd: innerDir });
+  verifyNativeBinaries(innerDir, externals, PNPM_OS[targetOs], targetArch);
 
   // 2. pack the capsule exactly as it would be published, and unpack it next to the externals.
   const packDir = path.join(outDir, 'pack');

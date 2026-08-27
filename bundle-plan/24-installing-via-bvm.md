@@ -71,6 +71,35 @@ Verified that `npm pack` keeps `dist/core-aspects/node_modules/@teambit/*` (the 
 stripping the capsule's own root `node_modules`, and that the `.hash` gate files inside `artifacts/`
 survive both the pack and the tar.
 
+## From CI, with a button
+
+`bundle_deploy` in `.circleci/config.yml` does all of the above on a `bit-bundle*` branch. Trigger
+it from the CircleCI web app (Trigger Pipeline) with:
+
+```
+run_bundle_deploy = true
+bundle_version    = 2.2.18-bundle.1
+```
+
+It builds the UI/preview pre-bundle, then the CLI bundle into the `@teambit/bit` capsule, packs a
+tar per platform, uploads them with their checksums, and adds the `dev` index entry.
+
+It is deliberately a separate workflow rather than a branch filter on `harmony_deploy`, because
+every job in that one assumes the version is already on npm — `setup_bit_version` reads
+`npm view @teambit/bit version` and `install_bit_bundle` pnpm-adds it — which is exactly what is
+not true here. `run_bundle_deploy` is also added to the `unless` guard of `build_and_test` and
+`harmony_deploy`, so triggering a deploy does not also launch the full e2e matrix. Verified with
+`circleci config process`: with the parameter set only `bundle_deploy` is emitted, and with the
+defaults it is absent entirely.
+
+All five tars come from one linux container, unlike `harmony_deploy`'s three jobs. That is not a
+shortcut: `bundle_version_macos` and `bundle_version_windows` are `*defaults` too — the
+cross-platform install is pnpm's (`--os`/`--cpu` there, `supportedArchitectures` here), not the
+runner's. They are split only because each installs bit's full ~5000-package tree, where this
+installs the ~11 externals. The packer's `@pnpm/napi` check is the same guard
+`verify_pnpm_napi_bundle` provides, and it hard-fails rather than shipping a tar that installs and
+then cannot run.
+
 ## Versioning and who sees it
 
 A pre-release version — `<the real version>-bundle.1`, `.2`, … — keeps the builds ordered next to
