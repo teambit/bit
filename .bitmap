@@ -728,13 +728,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs"
     },
-    "envs/core-react-env": {
-        "name": "envs/core-react-env",
-        "scope": "teambit.harmony",
-        "version": "0.0.2",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/envs/core-react-env"
-    },
     "eslint": {
         "name": "eslint",
         "scope": "teambit.defender",
@@ -2215,7 +2208,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/highlighter-provider",
         "config": {
-            "teambit.react/internal/base-react-env@1.1.4": {}
+            "teambit.harmony/envs/core-react-env@0.0.2": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-react-env"
+            }
         }
     },
     "ui/hooks/scope-context": {
@@ -2251,7 +2247,13 @@
         "scope": "teambit.code",
         "version": "0.0.12",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-code-compare"
+        "rootDir": "components/ui/inline-code-compare",
+        "config": {
+            "teambit.harmony/envs/core-react-env@0.0.2": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-react-env"
+            }
+        }
     },
     "ui/inline-config-compare": {
         "name": "ui/inline-config-compare",
