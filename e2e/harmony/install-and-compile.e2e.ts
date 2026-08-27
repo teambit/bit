@@ -1,5 +1,3 @@
-/* eslint-disable spaced-comment */
-// import fs from 'fs';
 import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
@@ -8,8 +6,9 @@ import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
 describe('all custom envs are compiled during installation', function () {
+  this.timeout(0);
   let helper: Helper;
-  function prepare() {
+  before(() => {
     helper = new Helper();
     helper.scopeHelper.setWorkspaceWithRemoteScope();
 
@@ -67,33 +66,15 @@ export function comp() {
     helper.command.create('module', 'comp1', `--env ${helper.scopes.remoteWithoutOwner}/custom-env1`);
 
     helper.command.install('is-positive'); // installing the dependency of custom-env1
-  }
-  describe('using pnpm', function () {
-    this.timeout(0);
-    before(prepare);
-    it('should use the compiled custom env to build the component', () => {
-      expect(
-        path.join(helper.fixtures.scopes.localPath, 'node_modules', `@${helper.scopes.remote}/comp/dist/comp.mdx.js`)
-      ).to.be.a.path();
-    });
-    it('should install the dependencies dynamically added by the custom envs', () => {
-      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', 'is-negative')).to.be.a.path();
-      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', 'is-odd')).to.be.a.path();
-    });
   });
-  // skipped: yarn support is deprecated and planned for removal
-  describe.skip('using yarn', function () {
-    this.timeout(0);
-    before(prepare);
-    it('should use the compiled custom env to build the component', () => {
-      expect(
-        path.join(helper.fixtures.scopes.localPath, 'node_modules', `@${helper.scopes.remote}/comp/dist/comp.mdx.js`)
-      ).to.be.a.path();
-    });
-    it('should install the dependencies dynamically added by the custom envs', () => {
-      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', 'is-negative')).to.be.a.path();
-      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', 'is-odd')).to.be.a.path();
-    });
+  it('should use the compiled custom env to build the component', () => {
+    expect(
+      path.join(helper.fixtures.scopes.localPath, 'node_modules', `@${helper.scopes.remote}/comp/dist/comp.mdx.js`)
+    ).to.be.a.path();
+  });
+  it('should install the dependencies dynamically added by the custom envs', () => {
+    expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', 'is-negative')).to.be.a.path();
+    expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', 'is-odd')).to.be.a.path();
   });
 });
 
