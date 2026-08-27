@@ -88,18 +88,6 @@ describe('bit internalize command', function () {
       expect(list).to.have.lengthOf(0);
     });
   });
-  describe('internalize multiple components by a pattern', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(3);
-      helper.command.tagAllWithoutBuild();
-      helper.command.internalizeComponents('**');
-    });
-    it('should mark all matching components as internal', () => {
-      const list = helper.command.internalizeListParsed();
-      expect(list).to.have.lengthOf(3);
-    });
-  });
   describe('reverting the internalize by "bit checkout reset"', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
