@@ -754,8 +754,9 @@
     "capsuleSelfReference": true
   },
   "teambit.preview/preview": {
-    "bundlingStrategy": "component",
-    "maxChunkSize": 5
+    "bundlingStrategy": "component"
+    // "maxChunkSize": 5 — was a workaround for webpack OOM during preview bundling.
+    // the previews are bundled with rspack now; re-enable if memory issues return.
   },
   "teambit.generator/generator": {
     "aspects": [

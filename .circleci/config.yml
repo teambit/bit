@@ -855,6 +855,7 @@ jobs:
   bit_pr:
     # xlarge validated on a worst-case 98-component cascade (no OOM at 12GB heap, same wall time
     # as 2xlarge). If this job dies with "Killed", revert to 2xlarge + max-old-space-size=30000.
+    # large (8GB/6GB heap) was tried after the rspack preview migration and OOM'd within 8 minutes.
     resource_class: xlarge
     <<: *defaults
     environment:
