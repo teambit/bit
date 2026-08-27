@@ -1,0 +1,208 @@
+#!/usr/bin/env node
+/* eslint-disable no-console */
+/**
+ * Turn the built `@teambit/bit` capsule into a tar file that `bvm install` can consume, so a branch
+ * can be handed out without publishing anything to the registry.
+ *
+ *   node scripts/pack-bundle-for-bvm.js --capsule <dir> --version 2.2.18-bundle.1
+ *
+ * The capsule is the one `bit build` writes for `teambit.harmony/bit`. Since §9e the bundler emits
+ * the published package shape *in place*, so that capsule already is `@teambit/bit` as it would be
+ * published - bundle, shims, locators, UI/preview pre-bundle and a package.json whose dependencies
+ * are the externals alone. Nothing here rebuilds or rearranges it; it is packed, the externals are
+ * installed next to it, and the result is tarred in the layout bvm extracts into `~/.bvm/versions`:
+ *
+ *   bit-<version>/
+ *   └── node_modules/
+ *       ├── @teambit/bit/…      ← `npm pack` of the capsule
+ *       └── <externals>/…       ← `pnpm install`, hoisted
+ *
+ * That layout is the whole contract with bvm: it reads `bvm.node` and `bin` out of
+ * `node_modules/@teambit/bit/package.json` and links `node_modules/@teambit/bit/bin/bit`.
+ *
+ * Note that bvm's tar install runs no package manager of its own - whatever the tar holds is the
+ * installation. So the externals are installed *before* `@teambit/bit` is placed next to them: a
+ * pnpm run afterwards would prune it as extraneous, which is also why the staging `package.json`
+ * and lockfile are excluded from the tar (the same exclusions CI's `compress_bit` uses).
+ */
+const { execFileSync } = require('child_process');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const argv = process.argv.slice(2);
+
+const take = (flag, fallback) => {
+  const i = argv.indexOf(flag);
+  if (i === -1) return fallback;
+  const value = argv[i + 1];
+  argv.splice(i, 2);
+  return value;
+};
+const takeBool = (flag) => {
+  const i = argv.indexOf(flag);
+  if (i === -1) return false;
+  argv.splice(i, 1);
+  return true;
+};
+
+/** bvm's own os names, which are not node's - see `OS_TYPES` in `@teambit/bvm.list`. */
+const BVM_OS = { darwin: 'darwin', linux: 'linux', win32: 'win' };
+/** ...and pnpm's, which are node's. */
+const PNPM_OS = { darwin: 'darwin', linux: 'linux', win: 'win32' };
+
+/**
+ * The pre-bundled UI and preview browser assets. `bit start` serves these instead of running a
+ * bundler, so a tar without them produces a bit that installs and runs but cannot start. They are
+ * copied into the shims by the bundler, which is why they only exist after a build that ran
+ * `BundleUI` and `PreBundlePreview` before `BundleCliApp`.
+ */
+const REQUIRED_IN_CAPSULE = [
+  'bin/bit',
+  'dist/core-aspects/bundle/bit.app.js',
+  'dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/workspace',
+  'dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/scope',
+  'dist/core-aspects/node_modules/@teambit/preview/artifacts/ui-bundle',
+];
+
+function fail(message) {
+  console.error(`[pack-for-bvm] ${message}`);
+  process.exit(1);
+}
+
+function run(command, args, opts = {}) {
+  return execFileSync(command, args, { stdio: 'inherit', ...opts });
+}
+
+function isValidSemver(version) {
+  // the same shape bvm validates with; kept as a regex so the script has no dependencies
+  return /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/.test(version);
+}
+
+function main() {
+  const capsule = take('--capsule');
+  const version = take('--version');
+  const outDir = path.resolve(take('--out-dir', path.join(os.tmpdir(), 'bit-bvm-tar')));
+  const targetOs = take('--os', BVM_OS[process.platform]);
+  const targetArch = take('--arch', process.arch);
+  const registry = take('--registry');
+  const keepStaging = takeBool('--keep-staging');
+
+  if (argv.length) fail(`unknown argument(s): ${argv.join(' ')}`);
+  if (!capsule) fail('missing --capsule <dir> (the built @teambit/bit capsule)');
+  if (!version) fail('missing --version <semver>');
+  if (!isValidSemver(version)) fail(`--version "${version}" is not a valid semver`);
+  if (!BVM_OS[PNPM_OS[targetOs]]) fail(`--os must be one of ${Object.values(BVM_OS).join(', ')}`);
+  if (!['x64', 'arm64'].includes(targetArch)) fail('--arch must be x64 or arm64');
+
+  const capsuleDir = path.resolve(capsule);
+  const manifestPath = path.join(capsuleDir, 'package.json');
+  if (!fs.existsSync(manifestPath)) fail(`no package.json in ${capsuleDir} - is that the capsule?`);
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  if (manifest.name !== '@teambit/bit') fail(`${capsuleDir} is "${manifest.name}", expected "@teambit/bit"`);
+  if (!manifest.bvm || !manifest.bvm.node) fail('the capsule package.json has no "bvm.node" - bvm cannot pick a Node.js');
+
+  const missing = REQUIRED_IN_CAPSULE.filter((entry) => !fs.existsSync(path.join(capsuleDir, entry)));
+  if (missing.length) {
+    fail(
+      `the capsule is missing:\n  ${missing.join('\n  ')}\n` +
+        'build it with the UI/preview pre-bundle tasks before BundleCliApp, e.g.\n' +
+        '  bd build teambit.harmony/bit --tasks BundleUI,PreBundlePreview,BundleCliApp'
+    );
+  }
+
+  const externals = manifest.dependencies || {};
+  if (!Object.keys(externals).length) fail('the capsule package.json declares no dependencies - the externals are missing');
+
+  const stagingRoot = path.join(outDir, 'staging');
+  const innerDirName = `bit-${version}`;
+  const innerDir = path.join(stagingRoot, innerDirName);
+  fs.rmSync(stagingRoot, { recursive: true, force: true });
+  fs.mkdirSync(innerDir, { recursive: true });
+  fs.mkdirSync(outDir, { recursive: true });
+
+  console.log(`[pack-for-bvm] version ${version}, target ${targetOs}-${targetArch}`);
+  console.log(`[pack-for-bvm] externals: ${Object.keys(externals).join(', ')}`);
+
+  // 1. install the externals. this has to happen first: pnpm reconciles node_modules against the
+  //    manifest, so running it after @teambit/bit is in place would delete it again.
+  const stagingManifest = {
+    name: 'bit-bvm-distribution',
+    version: '0.0.0',
+    private: true,
+    dependencies: externals,
+    pnpm: {
+      // the target platform's native addons, which are optional deps picked by platform. without
+      // this, packing on a mac produces a tar that is missing linux's @pnpm/napi binary.
+      supportedArchitectures: { os: [PNPM_OS[targetOs]], cpu: [targetArch] },
+    },
+  };
+  fs.writeFileSync(path.join(innerDir, 'package.json'), `${JSON.stringify(stagingManifest, null, 2)}\n`);
+  const pnpmArgs = ['install', '--node-linker=hoisted', '--ignore-scripts', '--no-frozen-lockfile'];
+  if (registry) pnpmArgs.push(`--registry=${registry}`);
+  run('pnpm', pnpmArgs, { cwd: innerDir });
+
+  // 2. pack the capsule exactly as it would be published, and unpack it next to the externals.
+  const packDir = path.join(outDir, 'pack');
+  fs.rmSync(packDir, { recursive: true, force: true });
+  fs.mkdirSync(packDir, { recursive: true });
+  run('npm', ['pack', '--ignore-scripts', `--pack-destination=${packDir}`], { cwd: capsuleDir });
+  const [tarball] = fs.readdirSync(packDir).filter((entry) => entry.endsWith('.tgz'));
+  if (!tarball) fail('npm pack produced no tarball');
+
+  const bitPackageDir = path.join(innerDir, 'node_modules', '@teambit', 'bit');
+  fs.mkdirSync(bitPackageDir, { recursive: true });
+  // --strip-components drops npm's "package/" wrapper directory
+  run('tar', ['-xzf', path.join(packDir, tarball), '-C', bitPackageDir, '--strip-components=1']);
+
+  // 3. the version bvm installs and the version `bit --version` reports have to be the same one.
+  const packedManifestPath = path.join(bitPackageDir, 'package.json');
+  const packedManifest = JSON.parse(fs.readFileSync(packedManifestPath, 'utf8'));
+  packedManifest.version = version;
+  fs.writeFileSync(packedManifestPath, `${JSON.stringify(packedManifest, null, 2)}\n`);
+
+  // 4. everything the tar needs is now in place. verify before paying for the compression.
+  const unresolved = Object.keys(externals).filter(
+    (name) => !fs.existsSync(path.join(innerDir, 'node_modules', ...name.split('/')))
+  );
+  if (unresolved.length) fail(`externals not installed: ${unresolved.join(', ')}`);
+  const packedMissing = REQUIRED_IN_CAPSULE.filter((entry) => !fs.existsSync(path.join(bitPackageDir, entry)));
+  if (packedMissing.length) {
+    fail(`npm pack dropped:\n  ${packedMissing.join('\n  ')}\ncheck "files"/.npmignore in the capsule`);
+  }
+
+  // 5. the staging manifest and lockfile stay out of the tar, so nothing can later run a package
+  //    manager inside the installed version and prune it. same exclusions as CI's `compress_bit`.
+  ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.npmrc', 'node_modules/.modules.yaml'].forEach((entry) =>
+    fs.rmSync(path.join(innerDir, entry), { force: true })
+  );
+
+  const tarName = `bit-${version}-${targetOs}-${targetArch}.tar.gz`;
+  const tarPath = path.join(outDir, tarName);
+  fs.rmSync(tarPath, { force: true });
+  run('tar', ['-czf', tarPath, innerDirName], {
+    cwd: stagingRoot,
+    // macOS bsdtar otherwise writes an AppleDouble "._" file next to every entry
+    env: { ...process.env, COPYFILE_DISABLE: '1' },
+  });
+
+  if (!keepStaging) fs.rmSync(stagingRoot, { recursive: true, force: true });
+  fs.rmSync(packDir, { recursive: true, force: true });
+
+  const sizeMb = (fs.statSync(tarPath).size / 1024 / 1024).toFixed(1);
+  console.log(`\n[pack-for-bvm] ${tarPath} (${sizeMb} MB)`);
+  console.log(`\ntry it without uploading anything:\n  bvm install ${version} --file ${tarPath} --method tar\n`);
+  console.log(`then upload it:
+  gsutil cp ${tarPath} gs://bvm.bit.dev/bit/versions/${version}/${tarName}
+  shasum -a 256 ${tarPath} > checksum.txt
+  gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${version}/bit-${version}-${targetOs}-${targetArch}.checksum.txt
+
+and list it for the "dev" release type only:
+  node scripts/add-bvm-index-entry.js --version ${version} --release-type dev
+  gsutil cp index.json gs://bvm.bit.dev/bit/index.json
+  gsutil setmeta -h "Cache-Control:no-cache" gs://bvm.bit.dev/bit/index.json
+`);
+}
+
+main();

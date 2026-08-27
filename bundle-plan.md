@@ -101,6 +101,10 @@ Full detail in [01-goal-and-results.md](bundle-plan/01-goal-and-results.md).
 - [22 — `mcp-config-writer` inlined into the bundle instead of copied](bundle-plan/22-mcp-config-writer-inlined.md) (§18, 2026-08-11)
 - [23 — `BabelAspect` removed from core, and why `@babel/core` still can't leave externals](bundle-plan/23-babel-aspect-removed.md) (§19, 2026-08-12)
 
+**Shipping the branch**
+
+- [24 — Handing the branch out through bvm](bundle-plan/24-installing-via-bvm.md) (the tar layout bvm expects, `pack-bundle-for-bvm.js`, pre-release versioning and the `dev` release type)
+
 ## Section-number cross-reference
 
 The files above keep the original `§N` numbering from the single-file era (many cross-references in
