@@ -169,7 +169,9 @@ async function main() {
       .sort(([a], [b]) => a.localeCompare(b))
   );
   const total = Object.values(finalManifest).reduce((a, b) => a + b, 0);
-  console.error(`measured ${measuredFiles} files; manifest has ${Object.keys(finalManifest).length} (total ${Math.round(total / 60)} machine-minutes)`);
+  console.error(
+    `measured ${measuredFiles} files; manifest has ${Object.keys(finalManifest).length} (total ${Math.round(total / 60)} machine-minutes)`
+  );
   fs.writeFileSync(OUT_FILE, `${JSON.stringify(finalManifest, null, 2)}\n`);
   console.error(`wrote ${OUT_FILE}`);
 }

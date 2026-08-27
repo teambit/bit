@@ -526,9 +526,49 @@ commands:
       bit_bin:
         type: string
         default: ""
+      # comma-separated e2e directories to skip because they run on GitHub Actions instead
+      # (see .github/workflows/e2e-tests.yml). Pass "" to run the full suite.
+      exclude_dirs:
+        type: string
+        default: "e2e/commands,e2e/doctor,e2e/flows"
+      # when true, the job halts (successfully) if the PR diff contains only doc files
+      # (*.md / *.mdx). enabled only for the per-PR e2e_test job — the nightly/bbit/bundle
+      # jobs always run the full suite (on master the check is a no-op anyway).
+      skip_when_doc_only:
+        type: boolean
+        default: false
     steps:
       - attach_workspace:
           at: ./
+      - when:
+          condition: << parameters.skip_when_doc_only >>
+          steps:
+            - run:
+                name: 'halt when the diff is docs-only (*.md / *.mdx)'
+                # any uncertainty (master branch, missing merge-base, empty diff) falls back to
+                # running the full suite. doc files under e2e/ are treated as test changes, not
+                # docs, so they never trigger a skip.
+                command: |
+                  if [ "$CIRCLE_BRANCH" = "master" ]; then
+                    echo "on master - running the full suite"; exit 0
+                  fi
+                  cd bit
+                  if ! BASE=$(git merge-base HEAD origin/master 2>/dev/null); then
+                    echo "cannot determine merge-base with origin/master - running the full suite"; exit 0
+                  fi
+                  CHANGED_FILES=$(git diff --name-only "$BASE" HEAD)
+                  if [ -z "$CHANGED_FILES" ]; then
+                    echo "empty diff against merge-base - running the full suite"; exit 0
+                  fi
+                  NON_DOC_FILES=$(echo "$CHANGED_FILES" | grep -vE '\.(md|mdx)$' || true)
+                  E2E_DOC_FILES=$(echo "$CHANGED_FILES" | grep -E '^e2e/' | grep -E '\.(md|mdx)$' || true)
+                  if [ -z "$NON_DOC_FILES" ] && [ -z "$E2E_DOC_FILES" ]; then
+                    echo "diff against merge-base $BASE contains only doc files - skipping e2e:"
+                    echo "$CHANGED_FILES"
+                    circleci-agent step halt
+                  else
+                    echo "non-doc changes present - running the full suite"
+                  fi
       # - run:
       #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
       #     name: 'update npm to latest version'
@@ -560,7 +600,7 @@ commands:
           # which mocha attributes to no testcase, so the splitter sees ~13% of the real cost.
           # The timings manifest is derived from actual CI node run times; refresh it occasionally
           # with: node scripts/generate-e2e-timings.js
-          command: 'cd bit && node scripts/split-e2e-tests.js | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          command: 'cd bit && node scripts/split-e2e-tests.js --exclude-dir=<< parameters.exclude_dirs >> | xargs npm run mocha-circleci << parameters.bit_bin >>'
           no_output_timeout: '50m'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
@@ -925,7 +965,8 @@ jobs:
       BIT_FEATURES: cloud-importer-v2
     parallelism: 40
     steps:
-      - e2e_test_cmd
+      - e2e_test_cmd:
+          skip_when_doc_only: true
 
   # makes sure the newly published version doesn't break bit
   e2e_test_bbit:
@@ -954,8 +995,11 @@ jobs:
             fi
             BV=$(bbit --version | tr -d '[:space:]')
             node bit/scripts/verify-released-exports.js "$HOME/.bvm/versions/$BV/bit-$BV/node_modules/@teambit"
+      # the released binary is not covered by the GitHub Actions e2e workflow (it tests the
+      # repo binary), so this job keeps running the full suite, with no excluded directories.
       - e2e_test_cmd:
          bit_bin: "--bit_bin=bbit"
+         exclude_dirs: ""
 
   # setup job: creates cleaned bit bundle and persists to workspace (runs once)
   setup_bundle_simulation:
@@ -1006,8 +1050,11 @@ jobs:
       - run:
           name: verify cleaned binary works
           command: source $BASH_ENV && bit-cleaned --version
+      # the cleaned bundle is not covered by the GitHub Actions e2e workflow, so this job
+      # keeps running the full suite, with no excluded directories.
       - e2e_test_cmd:
           bit_bin: "--bit_bin=bit-cleaned"
+          exclude_dirs: ""
 
   # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
   # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
@@ -1495,8 +1542,12 @@ workflows:
           requires:
             - setup_harmony
       - e2e_test:
+          # gated on lint + type-check (~1.5 min extra latency): a push that fails either of
+          # them cannot merge anyway, so running the 40-node e2e suite for it is pure waste.
           requires:
             - setup_harmony
+            - lint
+            - generate_and_check_types
           # Not on master pushes: nothing gates on it there — bit_merge requires only
           # generate_and_check_types, and the merge queue's "settled" check watches bit_merge
           # alone (.github/scripts/merge-queue.js). Every PR already ran the full suite to get

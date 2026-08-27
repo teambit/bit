@@ -29,6 +29,7 @@ import {
   reportLoadFailure,
 } from '@teambit/harmony.modules.load-trace';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AsyncLocalStorage } from 'async_hooks';
 import type { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
@@ -110,6 +111,17 @@ export class WorkspaceComponentLoader {
   }>;
 
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
+
+  /**
+   * ids being loaded through the getMany pipeline within the current async call-chain, on behalf
+   * of a single `get` call. a re-entrant `get` of the same id from inside that pipeline (e.g. an
+   * onLoad subscriber asking for the component it's calculating) must use the direct flow,
+   * otherwise it recurses forever. an unrelated concurrent `get` of the same id is not part of
+   * the chain and awaits the in-flight load (singleLoadsInFlight) instead.
+   * see shouldDelegateToGetMany and loadOneThroughGetMany.
+   */
+  private singleLoadChainContext = new AsyncLocalStorage<Set<string>>();
+  private singleLoadsInFlight = new Map<string, Promise<Component | undefined>>();
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -849,8 +861,14 @@ export class WorkspaceComponentLoader {
       return fromCache;
     }
     span.setAttribute('componentsCache', 'miss');
-    let consumerComponent = legacyComponent;
     const inWs = await this.isInWsIncludeDeleted(id);
+    if (!legacyComponent && this.shouldDelegateToGetMany(id, inWs, useCache, storeInCache, loadOpts)) {
+      const fromGetMany = await this.loadOneThroughGetMany(id);
+      if (fromGetMany) return fromGetMany;
+      // the grouped pipeline didn't yield the component (e.g. an out-of-sync id changed during
+      // the load). fall through so the flow below reports the precise error for the requested id.
+    }
+    let consumerComponent = legacyComponent;
     if (inWs && !consumerComponent) {
       consumerComponent = await loadSpan('consumer-fs-load', { id: id.toString() }, () =>
         this.getConsumerComponent(id, loadOptsWithDefaults)
@@ -866,6 +884,67 @@ export class WorkspaceComponentLoader {
       this.saveInCache(component, loadOptsWithDefaults);
     }
     return component;
+  }
+
+  /**
+   * a cold single-component load resolves the component's env lazily in the middle of its own
+   * load, without the env-first group ordering of the getMany pipeline (see buildLoadGroups).
+   * when the env fails to load at that point, dependency policies silently fall back to defaults,
+   * producing a component with wrong dependency data (which then surfaces as phantom
+   * modifications in status/diff/merge). to keep one source of truth, a plain cache-miss load of
+   * a workspace component is delegated to the grouped pipeline.
+   */
+  private shouldDelegateToGetMany(
+    id: ComponentID,
+    inWs: boolean,
+    useCache: boolean,
+    storeInCache: boolean,
+    loadOpts?: ComponentLoadOptions
+  ): boolean {
+    if (!inWs) return false; // scope components load from the model, no dependency-policy calculation
+    if (!useCache || !storeInCache) return false; // getMany always uses and populates the cache
+    // any custom load-option means a caller-specific contract (partial load, docs/compositions
+    // flags, etc.). the getMany pipeline manages these options itself per load-stage, so only a
+    // plain full load can be delegated.
+    const isDefaultLoadOpts =
+      !loadOpts ||
+      Object.entries(loadOpts).every(
+        ([key, value]) =>
+          value === undefined || ((key === 'loadExtensions' || key === 'executeLoadSlot') && value === true)
+      );
+    if (!isDefaultLoadOpts) return false;
+    // re-entrance from within the pipeline of the same id (e.g. an onLoad subscriber asking for
+    // the component it's calculating) must use the direct flow, otherwise it recurses forever.
+    return !this.singleLoadChainContext.getStore()?.has(id.toString());
+  }
+
+  private async loadOneThroughGetMany(id: ComponentID): Promise<Component | undefined> {
+    const idStr = id.toString();
+    // an unrelated concurrent load of the same id joins the in-flight grouped load, rather than
+    // being mistaken for pipeline re-entrance and sent through the direct flow.
+    const inFlight = this.singleLoadsInFlight.get(idStr);
+    if (inFlight) return inFlight;
+    const chainIds = this.singleLoadChainContext.getStore() ?? new Set<string>();
+    // the promise is created inside run() so the whole load executes within the chain context.
+    // (assigned via `let` because some @types/node versions type `run` as returning void)
+    let loadPromise!: Promise<Component | undefined>;
+    this.singleLoadChainContext.run(new Set([...chainIds, idStr]), () => {
+      loadPromise = this.getMany([id]).then(({ components }) => {
+        if (components.length === 1) return components[0];
+        // the load may have fixed an out-of-sync .bitmap and changed the component-id in the
+        // process (e.g. a stale version was removed or bumped). in that case getMany filtered the
+        // component out because it no longer matches the requested id. look it up by its updated
+        // .bitmap id.
+        const updatedBitmapId = this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved.searchWithoutVersion(id);
+        if (updatedBitmapId && updatedBitmapId.version !== id.version) {
+          return this.getFromCache(updatedBitmapId, { loadExtensions: true, executeLoadSlot: true });
+        }
+        return undefined;
+      });
+    });
+    const withCleanup = loadPromise.finally(() => this.singleLoadsInFlight.delete(idStr));
+    this.singleLoadsInFlight.set(idStr, withCleanup);
+    return withCleanup;
   }
 
   async getIfExist(componentId: ComponentID) {

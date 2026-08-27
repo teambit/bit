@@ -168,7 +168,18 @@ flag changes only the dependents, so you can combine it with the detection.
    bit export
    ```
 
-3. **Archive the remote lane.** This step is house-keeping.
+3. **Archive the remote lane.** This step is house-keeping, with one condition. A lane can carry
+   components of several scopes. Every component this run tagged and exported is released (while
+   the lane still sits at the head it was tagged from), so a
+   repository that holds components of several scopes archives as before. Any other component
+   of another scope is released only if its lane head is already
+   on its own main — in main's history, or released onto main's head: the same sources, package
+   and component dependencies and extension config (that is what a `bit ci merge` in that
+   scope's repository leaves behind); a component the lane deletes is released once its main is
+   removed. While such a component is pending, the lane is left open
+   and the command names it; the last scope to release archives the lane. An open lane whose
+   branch was merged stays converged; delete the branch only after the archive.
+   To archive by hand: `bit lane remove --remote <scope>/<lane>`.
 4. **Commit the lock-file updates**
 
    ```bash
