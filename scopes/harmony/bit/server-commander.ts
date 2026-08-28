@@ -187,6 +187,14 @@ export class ServerCommander {
 
     if (res.ok) {
       const results = await res.json();
+      // bit-server always answers this route with a { data, exitCode } object. Anything else means
+      // the port file points at some other listener that happened to accept the POST, so fail safe
+      // rather than reporting a foreign response as the command's result: drop the port file and
+      // let the command run in-process.
+      if (!results || typeof results !== 'object') {
+        await this.deleteServerPortFile();
+        throw new ServerIsNotRunning(port);
+      }
       return results;
     }
 
