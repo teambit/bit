@@ -38,22 +38,44 @@ the published shape, so no special casing is needed.
 
 ## Producing it
 
-`scripts/pack-bundle-for-bvm.js` takes the capsule that `bit build` writes for
-`teambit.harmony/bit` and produces the tar:
+`scripts/pack-bundle-for-bvm.js` turns a built bundle distribution into the tar:
 
 ```bash
-bd build teambit.harmony/bit --tasks BundleUI,PreBundlePreview,BundleCliApp
-node scripts/pack-bundle-for-bvm.js --capsule <capsule-dir> --version 2.2.18-bundle.1
+bd build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules --tasks "BundleUI,PreBundlePreview"
+BIT_BIN=bd npm run bundle:prebundle-cache:save
+npm run bundle:prebundle-cache:restore
+npm run bundle:ensure -- --out-dir /tmp/bit-bundle
+node scripts/pack-bundle-for-bvm.js --capsule /tmp/bit-bundle --version 2.2.11-bundle.1
 ```
 
-Since §9e the bundler emits the published package shape **in place**, so the capsule already is
-`@teambit/bit` as it would be published. The script therefore does not rearrange anything:
+Only the UI/preview pre-bundle needs a real `bit build`; the CLI bundle is the bundler script, the
+same invocation `setup_esbuild_bundle` runs. Its `--out-dir` is already the published layout
+(`bin/bit`, `dist/core-aspects/bundle`, `dist/core-aspects/node_modules`), identical to what the
+in-place capsule build emits, so the packer takes either.
 
-1. installs the capsule's declared dependencies — the externals, and only the externals — with
+The two differ only in `package.json`: a capsule is `@teambit/bit` and carries `bvm.node`, while the
+script generates a stand-in `@teambit/bit-bundle-externals` manifest that holds the externals and
+the `bin`. The packer normalises that back - name, version, `bin`, and `bvm.node` read from
+`workspace.jsonc`, which is where the real published package.json gets it from too. Pass
+`--node-version` to override.
+
+> A `bit build teambit.harmony/bit --tasks BundleCliApp` **cannot** stand in for the script on a
+> fresh machine. `BundleCliAppTask` reads the capsule's own compiled `dist` (`readCoreAspectIds`
+> requires `<capsule>/dist/manifests.js`) and is appended to `core-aspect-env`'s pipeline precisely
+> so the compilers run ahead of it - see the comment on `BitCliAppEnv.build()`. Restricting to that
+> one task skips `TypescriptTask`/`BabelTask`, nothing writes that `dist`, and the task dies with
+> `MODULE_NOT_FOUND`. §9e's "~5 s with `--tasks BundleCliApp`" holds only when an earlier full build
+> already populated the capsule. Dropping `--tasks` and passing `--skip-tests` works, but it is a
+> full component compile of the CLI for an artifact the script produces in seconds.
+
+Since §9e the bundler emits the published package shape, so the distribution is already
+`@teambit/bit` as it would be published. The packer therefore does not rearrange anything:
+
+1. installs the distribution's declared dependencies — the externals, and only the externals — with
    `pnpm --node-linker=hoisted`, pinned to the target platform via `supportedArchitectures` so a
    mac can pack a linux tar (the native addons are per-platform optional deps);
-2. `npm pack`s the capsule and unpacks it into `node_modules/@teambit/bit`;
-3. rewrites that package.json's `version` to the version being handed out;
+2. `npm pack`s the distribution and unpacks it into `node_modules/@teambit/bit`;
+3. normalises that package.json — name, the version being handed out, `bin`, `bvm.node`;
 4. tars it.
 
 The externals are installed **before** `@teambit/bit` is dropped in, because pnpm reconciles

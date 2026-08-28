@@ -1,20 +1,21 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * Turn the built `@teambit/bit` capsule into a tar file that `bvm install` can consume, so a branch
- * can be handed out without publishing anything to the registry.
+ * Turn a built bundle distribution into a tar file that `bvm install` can consume, so a branch can
+ * be handed out without publishing anything to the registry.
  *
- *   node scripts/pack-bundle-for-bvm.js --capsule <dir> --version 2.2.18-bundle.1
+ *   node scripts/pack-bundle-for-bvm.js --capsule <dir> --version 2.2.11-bundle.1
  *
- * The capsule is the one `bit build` writes for `teambit.harmony/bit`. Since §9e the bundler emits
- * the published package shape *in place*, so that capsule already is `@teambit/bit` as it would be
- * published - bundle, shims, locators, UI/preview pre-bundle and a package.json whose dependencies
- * are the externals alone. Nothing here rebuilds or rearranges it; it is packed, the externals are
- * installed next to it, and the result is tarred in the layout bvm extracts into `~/.bvm/versions`:
+ * `<dir>` is either `npm run bundle --out-dir`'s output or the capsule `bit build` writes for
+ * `teambit.harmony/bit` - since §9e the bundler emits the published package shape either way, so
+ * both are already `@teambit/bit` as it would be published: bundle, shims, locators, UI/preview
+ * pre-bundle, and a package.json whose dependencies are the externals alone. Nothing here rebuilds
+ * or rearranges it; it is packed, the externals are installed next to it, and the result is tarred
+ * in the layout bvm extracts into `~/.bvm/versions`:
  *
  *   bit-<version>/
  *   └── node_modules/
- *       ├── @teambit/bit/…      ← `npm pack` of the capsule
+ *       ├── @teambit/bit/…      ← `npm pack` of the distribution
  *       └── <externals>/…       ← `pnpm install`, hoisted
  *
  * That layout is the whole contract with bvm: it reads `bvm.node` and `bin` out of
@@ -65,9 +66,51 @@ const REQUIRED_IN_CAPSULE = [
   'dist/core-aspects/node_modules/@teambit/preview/artifacts/ui-bundle',
 ];
 
+/**
+ * The two shapes this accepts. The capsule is `@teambit/bit` itself (the bundler builds the
+ * published shape in place, §9e). `npm run bundle --out-dir` emits the identical tree - same
+ * `bin/bit`, same `dist/core-aspects/{bundle,node_modules}` - but generates a stand-in manifest
+ * for the externals rather than the real package identity, which `normalise` below restores.
+ */
+const SOURCE_PACKAGE_NAMES = ['@teambit/bit', '@teambit/bit-bundle-externals'];
+
 function fail(message) {
   console.error(`[pack-for-bvm] ${message}`);
   process.exit(1);
+}
+
+/** depth-first search for `teambit.pkg/pkg`.packageJson.bvm.node, wherever the variant lives */
+function findBvmNode(node) {
+  if (!node || typeof node !== 'object') return undefined;
+  const pkg = node['teambit.pkg/pkg'];
+  const fromHere = pkg && pkg.packageJson && pkg.packageJson.bvm && pkg.packageJson.bvm.node;
+  if (fromHere) return fromHere;
+  for (const value of Object.values(node)) {
+    const found = findBvmNode(value);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/**
+ * The Node.js bvm runs the CLI with. bvm reads it from `bvm.node` in the installed
+ * `@teambit/bit/package.json` and refuses to link without it, so it has to be right.
+ */
+function resolveNodeVersion(manifest, explicit) {
+  if (explicit) return explicit;
+  if (manifest.bvm && manifest.bvm.node) return manifest.bvm.node;
+  // `npm run bundle`'s manifest has no identity fields; workspace.jsonc is where the real
+  // published package.json gets `bvm.node` from, so it is the same value the capsule would carry.
+  const workspacePath = path.join(path.resolve(__dirname, '..'), 'workspace.jsonc');
+  try {
+    // eslint-disable-next-line import/no-extraneous-dependencies, global-require
+    const { parse } = require('comment-json');
+    const fromWorkspace = findBvmNode(parse(fs.readFileSync(workspacePath, 'utf8')));
+    if (fromWorkspace) return fromWorkspace;
+  } catch (err) {
+    fail(`could not read bvm.node from ${workspacePath} (${err.message}) - pass --node-version`);
+  }
+  return fail(`no bvm.node in the manifest or ${workspacePath} - pass --node-version`);
 }
 
 function run(command, args, opts = {}) {
@@ -142,6 +185,7 @@ function main() {
   const targetOs = take('--os', BVM_OS[process.platform]);
   const targetArch = take('--arch', process.arch);
   const registry = take('--registry');
+  const explicitNodeVersion = take('--node-version');
   const keepStaging = takeBool('--keep-staging');
 
   if (argv.length) fail(`unknown argument(s): ${argv.join(' ')}`);
@@ -158,8 +202,10 @@ function main() {
   if (!fs.existsSync(manifestPath)) fail(`no package.json in ${capsuleDir} - is that the capsule?`);
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  if (manifest.name !== '@teambit/bit') fail(`${capsuleDir} is "${manifest.name}", expected "@teambit/bit"`);
-  if (!manifest.bvm || !manifest.bvm.node) fail('the capsule package.json has no "bvm.node" - bvm cannot pick a Node.js');
+  if (!SOURCE_PACKAGE_NAMES.includes(manifest.name)) {
+    fail(`${capsuleDir} is "${manifest.name}", expected one of ${SOURCE_PACKAGE_NAMES.join(', ')}`);
+  }
+  const nodeVersion = resolveNodeVersion(manifest, explicitNodeVersion);
 
   const missing = REQUIRED_IN_CAPSULE.filter((entry) => !fs.existsSync(path.join(capsuleDir, entry)));
   if (missing.length) {
@@ -215,11 +261,18 @@ function main() {
   // --strip-components drops npm's "package/" wrapper directory
   run('tar', ['-xzf', path.join(packDir, tarball), '-C', bitPackageDir, '--strip-components=1']);
 
-  // 3. the version bvm installs and the version `bit --version` reports have to be the same one.
+  // 3. normalise the manifest to the one bvm reads. For a capsule this only pins the version; for
+  //    `npm run bundle`'s out dir it also restores the identity fields that build does not emit
+  //    (it generates a stand-in "@teambit/bit-bundle-externals" manifest - see create-package-json).
   const packedManifestPath = path.join(bitPackageDir, 'package.json');
   const packedManifest = JSON.parse(fs.readFileSync(packedManifestPath, 'utf8'));
+  packedManifest.name = '@teambit/bit';
   packedManifest.version = version;
+  packedManifest.bin = packedManifest.bin || { bit: './bin/bit' };
+  packedManifest.bvm = { node: nodeVersion };
+  delete packedManifest.private;
   fs.writeFileSync(packedManifestPath, `${JSON.stringify(packedManifest, null, 2)}\n`);
+  console.log(`[pack-for-bvm] @teambit/bit@${version}, node ${nodeVersion}`);
 
   // 4. everything the tar needs is now in place. verify before paying for the compression.
   const unresolved = Object.keys(externals).filter(

@@ -1558,19 +1558,39 @@ jobs:
             RAYON_NUM_THREADS: '4'
       - run:
           name: build the ui/preview pre-bundle
-          # BundleCliApp copies these artifacts into the shims, so they have to exist first -
-          # without them the packer refuses to build a tar (a bit that installs but cannot start).
+          # `npm run bundle` does not produce this - it takes a real `bit build` of these two
+          # components, exactly as the build_ui_prebundle job does it. The bundler copies the
+          # resulting artifacts/ into the shims; without them `bit start` falls back to an rspack
+          # rebuild the default bundle deliberately cannot do, and the packer refuses to build a
+          # tar at all.
           command: |
             cd bit
             node bin/bit.js build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules \
               --tasks "BundleUI,PreBundlePreview"
+            BIT_BIN=bit npm run bundle:prebundle-cache:save
           no_output_timeout: '30m'
       - run:
-          name: build the cli bundle into the @teambit/bit capsule
+          name: put the pre-bundle where the bundler reads it
+          # the cache restores into node_modules/@teambit/{ui,preview}/artifacts, which is where a
+          # non-capsule bundle build looks for it (bundle-plan §17i).
           command: |
             cd bit
-            node bin/bit.js build teambit.harmony/bit --reuse-capsules --tasks "BundleCliApp"
+            npm run bundle:prebundle-cache:restore
+      - run:
+          name: build the cli bundle
+          # The bundler script, same invocation setup_esbuild_bundle uses. It emits the published
+          # layout directly - bin/bit plus dist/core-aspects/{bundle,node_modules} - so the packer
+          # consumes the out dir as-is. No `bit build` of teambit.harmony/bit is involved: that
+          # would be a full component compile of the CLI for an artifact this already produces.
+          command: |
+            cd bit
+            npm run bundle:ensure -- --out-dir /home/circleci/bit/esbuild-bundle
           no_output_timeout: '30m'
+      - run:
+          name: smoke test the bundle
+          command: |
+            node /home/circleci/bit/esbuild-bundle/bin/bit --version
+            node /home/circleci/bit/esbuild-bundle/bin/bit --help > /dev/null
       - run:
           name: pack a tar per platform
           # One job for all five, unlike harmony_deploy's three: those are split because each one
@@ -1582,8 +1602,7 @@ jobs:
             cd bit
             for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 win-x64; do
               node scripts/pack-bundle-for-bvm.js \
-                --capsule-of teambit.harmony/bit \
-                --bit-bin "$PWD/bin/bit.js" \
+                --capsule /home/circleci/bit/esbuild-bundle \
                 --version "${BUNDLE_VERSION}" \
                 --os "${target%-*}" \
                 --arch "${target##*-}" \
