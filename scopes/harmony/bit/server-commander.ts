@@ -115,7 +115,12 @@ export class ServerCommander {
     if (process.argv.includes(CMD_SERVER_PORT_DELETE)) return this.deletePortAndExit();
     if (process.argv.includes(CMD_SERVER_TOKEN)) return this.printServerTokenAndExit();
     printBitVersionIfAsked();
-    const port = await this.getExistingUsedPort();
+    // deliberately not validating the port here (see getExistingUsedPort): that costs two `lsof`
+    // subprocesses, ~320ms on every single command, to establish something the request itself
+    // already proves. Each server writes its token into its own scope dir, so a port file left
+    // behind pointing at another workspace's server gets a 401, and a dead port gets ECONNREFUSED
+    // — both handled below by dropping the stale file and falling back to running in-process.
+    const port = await this.getExistingPort();
     const url = `http://${resolveDialHost()}:${port}/api`;
     const shouldUsePTY = process.env.BIT_CLI_SERVER_PTY === 'true';
 
@@ -158,6 +163,14 @@ export class ServerCommander {
     if (res.ok) {
       const results = await res.json();
       return results;
+    }
+
+    // 401: the server on this port belongs to a different workspace, so it doesn't recognize our
+    // token. 404: whatever is listening there is not a bit server. Either way the port file is
+    // stale — drop it and let the caller fall back to running the command in-process.
+    if (res.status === 401 || res.status === 404) {
+      await this.deleteServerPortFile();
+      throw new ServerIsNotRunning(port);
     }
 
     let jsonResponse;
@@ -358,6 +371,14 @@ Please run the command "bit server-forever" first to start the server.`)
     }
   }
 
+  /**
+   * the port from the port file, proven to be served by a process whose cwd is this workspace.
+   *
+   * Only the `cli-server-port` command uses this. Its whole job is to answer "is there a usable
+   * server?" for external clients such as the VS Code extension, which expect no output when there
+   * isn't one — so it's worth two `lsof` subprocesses there. Running an actual command doesn't pay
+   * that: see the note in runCommandWithHttpServer.
+   */
   private async getExistingUsedPort(): Promise<number> {
     const port = await this.getExistingPort();
     const shouldSkipPortValidation = process.argv.includes(SKIP_PORT_VALIDATION_ARG);
