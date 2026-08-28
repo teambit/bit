@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { ExportSchema, ModuleSchema } from './schemas';
+import type { TypeRefSchema } from './schemas';
 import type { SchemaLocation } from './schema-node';
 import { SchemaNode } from './schema-node';
 import { TagName } from './schemas/docs/tag';
@@ -132,6 +133,37 @@ export class APISchema extends SchemaNode {
     };
 
     return sectionNameMap[constructorName] || constructorName;
+  }
+
+  /**
+   * every declaration of the component: the index module's, then the internal modules'.
+   */
+  listDeclarations(): SchemaNode[] {
+    return [this.module, ...this.internals].flatMap((module) => module.listDeclarations());
+  }
+
+  /**
+   * finds a declaration of this component by name, exported or internal.
+   */
+  findDeclaration(name: string): SchemaNode | undefined {
+    return this.listDeclarations().find((node) => node.name === name);
+  }
+
+  /**
+   * resolves a type reference to the declaration it points at. references to other components or to
+   * packages resolve to nothing: their declarations are not part of this schema.
+   */
+  resolveRef(ref: TypeRefSchema): SchemaNode | undefined {
+    if (!ref.isFromThisComponent()) return undefined;
+    return this.findDeclaration(ref.name);
+  }
+
+  /**
+   * the members an object-like type contributes, resolving references within this component.
+   * see `SchemaNode.getMembers()`.
+   */
+  getMembersOf(node: SchemaNode): SchemaNode[] {
+    return node.getMembers({ resolveRef: (ref) => this.resolveRef(ref) });
   }
 
   listSignatures() {

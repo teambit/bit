@@ -4,6 +4,7 @@ import {
   APISchema,
   DocSchema,
   ExportSchema,
+  ExpressionWithTypeArgumentsSchema,
   InterfaceSchema,
   KeywordTypeSchema,
   ModuleSchema,
@@ -59,7 +60,10 @@ describe('reactDocsFromSchema()', () => {
     const propsType = new TypeSchema(
       loc,
       'ButtonProps',
-      new TypeLiteralSchema(loc, [member('text', 'string', true, 'the button label'), member('onClick', 'function', false)]),
+      new TypeLiteralSchema(loc, [
+        member('text', 'string', true, 'the button label'),
+        member('onClick', 'function', false),
+      ]),
       'type ButtonProps'
     );
     const docs = reactDocsFromSchema(apiSchema([reactNode('Button', 'ButtonProps'), propsType]));
@@ -75,9 +79,13 @@ describe('reactDocsFromSchema()', () => {
   });
 
   it('resolves props from an interface', () => {
-    const propsType = new InterfaceSchema(loc, 'ButtonProps', 'interface ButtonProps', [], [
-      member('text', 'string', true),
-    ]);
+    const propsType = new InterfaceSchema(
+      loc,
+      'ButtonProps',
+      'interface ButtonProps',
+      [],
+      [member('text', 'string', true)]
+    );
     const docs = reactDocsFromSchema(apiSchema([reactNode('Button', 'ButtonProps'), propsType]));
 
     expect(docs?.properties.map((prop) => prop.name)).to.deep.equal(['text']);
@@ -158,6 +166,26 @@ describe('reactDocsFromSchema()', () => {
     expect(docs).to.not.be.undefined;
     expect(docs?.properties).to.deep.equal([]);
     expect(docs?.filePath).to.equal('index.ts');
+  });
+
+  it('includes the props an interface inherits through `extends`', () => {
+    const base = new InterfaceSchema(
+      loc,
+      'BaseProps',
+      'interface BaseProps',
+      [],
+      [member('className', 'string', true)]
+    );
+    const propsType = new InterfaceSchema(
+      loc,
+      'ButtonProps',
+      'interface ButtonProps extends BaseProps',
+      [new ExpressionWithTypeArgumentsSchema([], new TypeRefSchema(loc, 'BaseProps'), 'BaseProps', loc)],
+      [member('text', 'string', true)]
+    );
+    const docs = reactDocsFromSchema(apiSchema([reactNode('Button', 'ButtonProps'), propsType, base]));
+
+    expect(docs?.properties.map((prop) => prop.name)).to.deep.equal(['text', 'className']);
   });
 
   it('exposes the component doc comment as the abstract', () => {

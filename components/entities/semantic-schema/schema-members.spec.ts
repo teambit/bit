@@ -1,0 +1,184 @@
+import { expect } from 'chai';
+import { ComponentID } from '@teambit/component-id';
+import type { SchemaLocation, SchemaNode } from './schema-node';
+import { APISchema } from './api-schema';
+import {
+  ExportSchema,
+  ExpressionWithTypeArgumentsSchema,
+  InferenceTypeSchema,
+  InterfaceSchema,
+  KeywordTypeSchema,
+  ModuleSchema,
+  ParameterSchema,
+  ParenthesizedTypeSchema,
+  TypeIntersectionSchema,
+  TypeLiteralSchema,
+  TypeRefSchema,
+  TypeSchema,
+  VariableLikeSchema,
+} from './schemas';
+
+const loc: SchemaLocation = { filePath: 'index.ts', line: 0, character: 0 };
+const compId = ComponentID.fromString('org.scope/button');
+
+function member(name: string, type = 'string', isOptional = true): VariableLikeSchema {
+  return new VariableLikeSchema(loc, name, `${name}: ${type}`, new KeywordTypeSchema(loc, type), isOptional);
+}
+
+function iface(name: string, members: SchemaNode[], extendsNodes: ExpressionWithTypeArgumentsSchema[] = []) {
+  return new InterfaceSchema(loc, name, `interface ${name}`, extendsNodes, members);
+}
+
+function literal(...members: SchemaNode[]) {
+  return new TypeLiteralSchema(loc, members);
+}
+
+function extendsRef(name: string) {
+  return new ExpressionWithTypeArgumentsSchema([], new TypeRefSchema(loc, name), name, loc);
+}
+
+const names = (nodes: SchemaNode[]) => nodes.map((node) => node.name);
+
+describe('SchemaNode.getMembers()', () => {
+  it('returns the members of an interface', () => {
+    expect(names(iface('Props', [member('a'), member('b')]).getMembers())).to.deep.equal(['a', 'b']);
+  });
+
+  it('returns the members of a type literal', () => {
+    expect(names(literal(member('a')).getMembers())).to.deep.equal(['a']);
+  });
+
+  it('contributes nothing for a type that is not object-like', () => {
+    expect(new KeywordTypeSchema(loc, 'string').getMembers()).to.deep.equal([]);
+  });
+
+  it('combines the members of an intersection', () => {
+    const intersection = new TypeIntersectionSchema(loc, [literal(member('a')), iface('B', [member('b')])]);
+    expect(names(intersection.getMembers())).to.deep.equal(['a', 'b']);
+  });
+
+  it('follows a type alias and parentheses to the underlying type', () => {
+    const alias = new TypeSchema(loc, 'Props', new ParenthesizedTypeSchema(loc, literal(member('a'))), 'type Props');
+    expect(names(alias.getMembers())).to.deep.equal(['a']);
+  });
+
+  it('follows an export wrapper to the exported declaration', () => {
+    expect(names(new ExportSchema(loc, 'Props', iface('Props', [member('a')])).getMembers())).to.deep.equal(['a']);
+  });
+
+  it('resolves a reference through the context, and contributes nothing without one', () => {
+    const ref = new TypeRefSchema(loc, 'Props');
+    const target = iface('Props', [member('a')]);
+    expect(names(ref.getMembers({ resolveRef: () => target }))).to.deep.equal(['a']);
+    expect(ref.getMembers()).to.deep.equal([]);
+  });
+
+  it('includes the members an interface inherits, after its own', () => {
+    const base = iface('Base', [member('a')]);
+    const derived = iface('Props', [member('b')], [extendsRef('Base')]);
+    const resolveRef = (ref: TypeRefSchema) => (ref.name === 'Base' ? base : undefined);
+    expect(names(derived.getMembers({ resolveRef }))).to.deep.equal(['b', 'a']);
+  });
+
+  it('terminates on a self-referencing type', () => {
+    const self = new TypeRefSchema(loc, 'Props');
+    const alias = new TypeSchema(
+      loc,
+      'Props',
+      new TypeIntersectionSchema(loc, [self, literal(member('a'))]),
+      'type Props'
+    );
+    expect(names(alias.getMembers({ resolveRef: () => alias }))).to.deep.equal(['a']);
+  });
+});
+
+describe('ModuleSchema.listExports() / listDeclarations()', () => {
+  const namespace = new ModuleSchema(loc, [iface('Inner', [])], []);
+  namespace.namespace = 'ns';
+  const mod = new ModuleSchema(
+    loc,
+    [new ExportSchema(loc, 'Props', iface('Props', [])), namespace, iface('Other', [])],
+    [iface('Internal', [])]
+  );
+
+  it('lists exports with wrappers and nested namespaces unwrapped', () => {
+    expect(names(mod.listExports())).to.deep.equal(['Props', 'Inner', 'Other']);
+  });
+
+  it('lists internals after the exports', () => {
+    expect(names(mod.listDeclarations())).to.deep.equal(['Props', 'Inner', 'Other', 'Internal']);
+  });
+
+  it('does not mutate the module', () => {
+    mod.listExports();
+    expect(mod.exports).to.have.lengthOf(3);
+    expect(mod.exports[0]).to.be.instanceOf(ExportSchema);
+  });
+});
+
+describe('APISchema.getMembersOf()', () => {
+  function api(exports: SchemaNode[], internals: SchemaNode[] = [], internalModules: ModuleSchema[] = []) {
+    return new APISchema(loc, new ModuleSchema(loc, exports, internals), internalModules, compId);
+  }
+
+  it('resolves references to exported and internal declarations of the component', () => {
+    const schema = api(
+      [new ExportSchema(loc, 'Props', iface('Props', [member('a')]))],
+      [new TypeSchema(loc, 'FileInternal', literal(member('b')), 'type FileInternal')],
+      [new ModuleSchema(loc, [], [new TypeSchema(loc, 'ModuleInternal', literal(member('c')), 'type ModuleInternal')])]
+    );
+    const props = new TypeIntersectionSchema(loc, [
+      new TypeRefSchema(loc, 'Props'),
+      new TypeRefSchema(loc, 'FileInternal'),
+      new TypeRefSchema(loc, 'ModuleInternal'),
+    ]);
+    expect(names(schema.getMembersOf(props))).to.deep.equal(['a', 'b', 'c']);
+  });
+
+  it('resolves through an alias of a reference', () => {
+    const schema = api([
+      new TypeSchema(loc, 'Props', new TypeRefSchema(loc, 'Base'), 'type Props'),
+      iface('Base', [member('a')]),
+    ]);
+    expect(names(schema.getMembersOf(new TypeRefSchema(loc, 'Props')))).to.deep.equal(['a']);
+  });
+
+  it('does not resolve references to other components or packages, even with a matching name', () => {
+    const schema = api([iface('Props', [member('a')])]);
+    const fromComponent = new TypeRefSchema(loc, 'Props', ComponentID.fromString('org.scope/other'));
+    const fromPackage = new TypeRefSchema(loc, 'Props', undefined, 'react');
+    expect(schema.getMembersOf(fromComponent)).to.deep.equal([]);
+    expect(schema.getMembersOf(fromPackage)).to.deep.equal([]);
+  });
+
+  it('contributes nothing for an unknown reference', () => {
+    expect(api([]).getMembersOf(new TypeRefSchema(loc, 'Missing'))).to.deep.equal([]);
+  });
+});
+
+describe('ParameterSchema.getBindingDefaults()', () => {
+  it('collects default values from destructured bindings, whatever node describes them', () => {
+    const param = new ParameterSchema(loc, 'props', new TypeRefSchema(loc, 'Props'), false, undefined, undefined, [
+      new InferenceTypeSchema(loc, 'number', 'size', '32'),
+      new VariableLikeSchema(
+        loc,
+        'label',
+        'label: string',
+        new KeywordTypeSchema(loc, 'string'),
+        true,
+        undefined,
+        "'hi'"
+      ),
+      new InferenceTypeSchema(loc, 'string', 'other'),
+    ]);
+    expect([...param.getBindingDefaults()]).to.deep.equal([
+      ['size', '32'],
+      ['label', "'hi'"],
+    ]);
+  });
+
+  it('is empty for a parameter without bindings', () => {
+    const param = new ParameterSchema(loc, 'props', new TypeRefSchema(loc, 'Props'), false);
+    expect(param.getBindingDefaults().size).to.equal(0);
+  });
+});

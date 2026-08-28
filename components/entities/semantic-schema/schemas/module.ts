@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
-import type { ExportSchema } from './export';
+import { ExportSchema } from './export';
 
 export class ModuleSchema extends SchemaNode {
   // exports could either be re exports (export declarations) or nodes with export modifier
@@ -22,6 +22,27 @@ export class ModuleSchema extends SchemaNode {
 
   getNodes() {
     return [...this.exports, ...this.internals];
+  }
+
+  /**
+   * the declarations this module exports, with export wrappers and nested namespaces unwrapped.
+   * unlike `flatExportsRecursively()`, this doesn't mutate the module.
+   */
+  listExports(): SchemaNode[] {
+    return this.exports.flatMap((node) => ModuleSchema.unwrap(node));
+  }
+
+  /**
+   * every declaration in this module: the exports, then the internals.
+   */
+  listDeclarations(): SchemaNode[] {
+    return [...this.listExports(), ...this.internals.flatMap((node) => ModuleSchema.unwrap(node))];
+  }
+
+  private static unwrap(node: SchemaNode): SchemaNode[] {
+    if (ExportSchema.isExportSchema(node)) return ModuleSchema.unwrap(node.exportNode);
+    if (ModuleSchema.isModuleSchema(node)) return node.listExports();
+    return [node];
   }
 
   flatExportsRecursively() {

@@ -66,6 +66,10 @@ export class VariableLikeSchema extends SchemaNode {
     };
   }
 
+  static isVariableLikeSchema(node: SchemaNode): node is VariableLikeSchema {
+    return node.__schema === 'VariableLikeSchema';
+  }
+
   diff(other: SchemaNode): SchemaChangeFact[] {
     if (!(other instanceof VariableLikeSchema)) return super.diff(other);
     const facts: SchemaChangeFact[] = [];
