@@ -82,12 +82,18 @@ The externals are installed **before** `@teambit/bit` is dropped in, because pnp
 `node_modules` against the manifest and would prune it otherwise. For the same reason the staging
 `package.json` and lockfile are left out of the tar — the same exclusions CI's `compress_bit` uses.
 
-The script refuses to build a tar that would install but not run. It checks the capsule for
-`bin/bit`, `dist/core-aspects/bundle/bit.app.js` and the UI/preview pre-bundle
-(`@teambit/{ui,preview}/artifacts/ui-bundle/…`, §17), and re-checks them after packing. The
-pre-bundle is the one that is easy to lose: without it `bit start` falls back to rebuilding with
-rspack, which the default build deliberately cannot do. It only exists if `BundleUI` and
-`PreBundlePreview` ran before `BundleCliApp` — hence the task list above.
+The packer refuses to build a tar that would install but not run. It checks the distribution for
+`bin/bit`, `dist/core-aspects/bundle/bit.app.js` and the UI/preview pre-bundle, and re-checks them
+after packing. The pre-bundle is the one that is easy to lose: without it `bit start` falls back to
+rebuilding with rspack, which the default build deliberately cannot do.
+
+What it asserts on is each aspect's `artifacts/ui-bundle/.hash`, not the directory around it —
+that file is the gate `bit start` reads to decide a pre-bundle exists at all, so a tree without it
+is one bit would ignore anyway. Note the UI has **one** `.hash` covering both roots, mapping each
+root aspect id to its hash: the two roots are a single rspack compilation now (one entry each,
+`workspace.html`/`scope.html`), so the per-root `ui-bundle/{workspace,scope}/` directories §17's
+table describes no longer exist. On failure the packer prints what the artifacts trees actually
+hold, so a layout change reads as a layout change rather than as a missing build step.
 
 Verified that `npm pack` keeps `dist/core-aspects/node_modules/@teambit/*` (the shims) while
 stripping the capsule's own root `node_modules`, and that the `.hash` gate files inside `artifacts/`

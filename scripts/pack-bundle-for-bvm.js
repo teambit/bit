@@ -61,10 +61,28 @@ const PNPM_OS = { darwin: 'darwin', linux: 'linux', win: 'win32' };
 const REQUIRED_IN_CAPSULE = [
   'bin/bit',
   'dist/core-aspects/bundle/bit.app.js',
-  'dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/workspace',
-  'dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/scope',
-  'dist/core-aspects/node_modules/@teambit/preview/artifacts/ui-bundle',
+  // The `.hash` gate files, not the directories around them: `bit start` reads these to decide a
+  // pre-bundle exists at all, so a tree without them is one it ignores and tries to rebuild. Both
+  // tasks write `<artifacts>/ui-bundle/.hash` (BundleUiTask.generateHash, generateBundleHash).
+  // Note the UI's is a single file for both roots - the two are one rspack compilation now, so
+  // there are no per-root `ui-bundle/{workspace,scope}/` directories to look for.
+  'dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/.hash',
+  'dist/core-aspects/node_modules/@teambit/preview/artifacts/ui-bundle/.hash',
 ];
+
+/** what the artifacts trees actually hold, so a missing-artifact failure says more than "missing" */
+function describeArtifacts(rootDir) {
+  const lines = [];
+  for (const pkg of ['ui', 'preview']) {
+    const dir = path.join(rootDir, 'dist/core-aspects/node_modules/@teambit', pkg, 'artifacts/ui-bundle');
+    if (!fs.existsSync(dir)) {
+      lines.push(`  @teambit/${pkg}: no artifacts/ui-bundle at all`);
+      continue;
+    }
+    lines.push(`  @teambit/${pkg}: ${fs.readdirSync(dir).slice(0, 12).join(' ') || '(empty)'}`);
+  }
+  return lines.join('\n');
+}
 
 /**
  * The two shapes this accepts. The capsule is `@teambit/bit` itself (the bundler builds the
@@ -210,9 +228,12 @@ function main() {
   const missing = REQUIRED_IN_CAPSULE.filter((entry) => !fs.existsSync(path.join(capsuleDir, entry)));
   if (missing.length) {
     fail(
-      `the capsule is missing:\n  ${missing.join('\n  ')}\n` +
-        'build it with the UI/preview pre-bundle tasks before BundleCliApp, e.g.\n' +
-        '  bd build teambit.harmony/bit --tasks BundleUI,PreBundlePreview,BundleCliApp'
+      `${capsuleDir} is missing:\n  ${missing.join('\n  ')}\n` +
+        `what the artifacts trees hold:\n${describeArtifacts(capsuleDir)}\n` +
+        'the UI/preview pre-bundle has to exist before the bundle is built:\n' +
+        '  bit build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules --tasks "BundleUI,PreBundlePreview"\n' +
+        '  BIT_BIN=bd npm run bundle:prebundle-cache:save && npm run bundle:prebundle-cache:restore\n' +
+        '  npm run bundle:ensure -- --out-dir <dir>'
     );
   }
 
