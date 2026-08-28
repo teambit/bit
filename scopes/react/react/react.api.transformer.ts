@@ -90,7 +90,17 @@ export class ReactAPITransformer implements SchemaNodeTransformer {
 
   private reactBaseOf(node: ClassSchema): ExpressionWithTypeArgumentsSchema | undefined {
     if (!this.isReactFile(node)) return undefined;
-    return node.extendsNodes?.find((base) => REACT_BASE_CLASS.test(base.name));
+    return node.extendsNodes?.find((base) => REACT_BASE_CLASS.test(base.name) && this.isFromReact(base.expression));
+  }
+
+  /**
+   * the base must be React's — resolved to the `react` package, or not resolved at all. a base that resolved
+   * to another package, another component or a file of this one is some other `Component`.
+   */
+  private isFromReact(expression: SchemaNode) {
+    if (!TypeRefSchema.isTypeRefSchema(expression)) return true;
+    if (expression.packageName) return expression.packageName === 'react';
+    return !expression.componentId && !expression.internalFilePath;
   }
 
   private isReactFile(node: SchemaNode) {

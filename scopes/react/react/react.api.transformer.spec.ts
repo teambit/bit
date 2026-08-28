@@ -5,6 +5,7 @@ import {
   ExpressionWithTypeArgumentsSchema,
   TypeRefSchema,
 } from '@teambit/semantics.entities.semantic-schema';
+import { ComponentID } from '@teambit/component-id';
 import { ReactSchema } from './react.schema';
 import { ReactAPITransformer } from './react.api.transformer';
 
@@ -12,14 +13,14 @@ const inTsx: SchemaLocation = { filePath: 'button.tsx', line: 1, character: 1 };
 const inTs: SchemaLocation = { filePath: 'store.ts', line: 1, character: 1 };
 const inJs: SchemaLocation = { filePath: 'hero-button.js', line: 1, character: 1 };
 
-function classExtending(base: string, propsType: string | undefined, location: SchemaLocation) {
+function classExtending(
+  base: string,
+  propsType: string | undefined,
+  location: SchemaLocation,
+  baseRef: TypeRefSchema = new TypeRefSchema(location, base, undefined, 'react')
+) {
   const typeArgs = propsType ? [new TypeRefSchema(location, propsType)] : [];
-  const extendsNode = new ExpressionWithTypeArgumentsSchema(
-    typeArgs,
-    new TypeRefSchema(location, base, undefined, 'react'),
-    base,
-    location
-  );
+  const extendsNode = new ExpressionWithTypeArgumentsSchema(typeArgs, baseRef, base, location);
   return new ClassSchema('Button', [], location, `class Button extends ${base}`, undefined, undefined, [extendsNode]);
 }
 
@@ -47,5 +48,17 @@ describe('ReactAPITransformer', () => {
     expect(transformer.predicate(classExtending('EventEmitter', undefined, inTsx))).to.equal(false);
     expect(transformer.predicate(classExtending('React.Component', 'Props', inTs))).to.equal(false);
     expect(transformer.predicate(new ClassSchema('Store', [], inTsx, 'class Store'))).to.equal(false);
+  });
+
+  it("only accepts a Component base that is React's, or one the extractor could not resolve", () => {
+    const fromOtherPackage = new TypeRefSchema(inTsx, 'Some.Component', undefined, 'some');
+    const fromOtherComponent = new TypeRefSchema(inTsx, 'Component', ComponentID.fromString('org.scope/base'));
+    const fromThisFile = new TypeRefSchema(inTsx, 'Component', undefined, undefined, 'component.tsx');
+    const unresolved = new TypeRefSchema(inTsx, 'React.Component');
+
+    expect(transformer.predicate(classExtending('Some.Component', 'Props', inTsx, fromOtherPackage))).to.equal(false);
+    expect(transformer.predicate(classExtending('Component', 'Props', inTsx, fromOtherComponent))).to.equal(false);
+    expect(transformer.predicate(classExtending('Component', 'Props', inTsx, fromThisFile))).to.equal(false);
+    expect(transformer.predicate(classExtending('React.Component', 'Props', inTsx, unresolved))).to.equal(true);
   });
 });

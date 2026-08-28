@@ -70,7 +70,18 @@ describe('SchemaNode.getMembers()', () => {
       literal(member('id', 'string', false), member('a', 'string', true), member('b', 'string', false)),
     ]);
     const required = union.getMembers().map((m) => `${m.name}${(m as VariableLikeSchema).isOptional ? '?' : ''}`);
-    expect(required).to.deep.equal(['id', 'a?', 'id', 'a?', 'b?']);
+    expect(required).to.deep.equal(['id', 'a?', 'b?']);
+  });
+
+  it('unions the types the alternatives give one member', () => {
+    // `{ value: string } | { value: number }`
+    const union = new TypeUnionSchema(loc, [
+      literal(member('value', 'string', false)),
+      literal(member('value', 'number', false)),
+    ]);
+    const [value] = union.getMembers() as VariableLikeSchema[];
+    expect(value.type.toString()).to.equal('string | number');
+    expect(value.isOptional).to.equal(false);
   });
 
   it('lets a type shared by two branches contribute to each', () => {
@@ -81,7 +92,9 @@ describe('SchemaNode.getMembers()', () => {
       new TypeIntersectionSchema(loc, [shared, literal(member('b'))]),
     ]);
     const resolveRef = () => base;
-    expect(names(union.getMembers({ resolveRef }))).to.deep.equal(['id', 'a', 'id', 'b']);
+    const members = union.getMembers({ resolveRef }) as VariableLikeSchema[];
+    expect(names(members)).to.deep.equal(['id', 'a', 'b']);
+    expect(members[0].isOptional).to.equal(false);
   });
 
   it('follows a type alias and parentheses to the underlying type', () => {
