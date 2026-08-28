@@ -14,7 +14,7 @@ export type GetMembersContext = {
    */
   resolveRef?: (ref: TypeRefSchema) => SchemaNode | undefined;
   /**
-   * nodes already being expanded in this traversal. guards against self-referencing types.
+   * the nodes being expanded on the current path. guards against self-referencing types.
    */
   visited?: Set<SchemaNode>;
 };
@@ -115,11 +115,13 @@ export abstract class SchemaNode implements ISchemaNode {
   }
 
   /**
-   * the members of a child node, expanded at most once per traversal so self-referencing types terminate.
+   * the members of a child node. a node already being expanded on the current path contributes nothing,
+   * so self-referencing types terminate — while a type shared by two branches (say, a base of both
+   * alternatives of a union) still contributes to each.
    */
   protected static membersOf(node: SchemaNode | undefined, context: GetMembersContext): SchemaNode[] {
     if (!node) return [];
-    const visited = context.visited || new Set<SchemaNode>();
+    const visited = new Set(context.visited);
     if (visited.has(node)) return [];
     visited.add(node);
     return node.getMembers({ ...context, visited });

@@ -88,8 +88,11 @@ export class ParameterTransformer implements SchemaTransformer {
   ): Promise<SchemaNode[] | undefined> {
     if (param.name.kind !== SyntaxKind.ObjectBindingPattern) return undefined;
     return pMapSeries(param.name.elements, async (elem: BindingElement) => {
+      // `{ text: label = 'x' }` binds the prop `text` to the local `label`; the prop is what the props type declares.
+      const propertyName =
+        elem.propertyName && isIdentifier(elem.propertyName) ? elem.propertyName.getText() : elem.name.getText().trim();
       const existing = paramType.findNode?.((node) => {
-        return node.name === elem.name.getText().trim();
+        return node.name === propertyName;
       });
       const defaultValue = elem.initializer ? elem.initializer.getText() : undefined;
       if (existing && existing.__schema !== 'InferenceTypeSchema') {

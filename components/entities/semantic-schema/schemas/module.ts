@@ -39,6 +39,21 @@ export class ModuleSchema extends SchemaNode {
     return [...this.listExports(), ...this.internals.flatMap((node) => ModuleSchema.unwrap(node))];
   }
 
+  /**
+   * the declaration this module exports under `name` — its own name, or an alias such as
+   * `export { Props as ButtonProps }` or `export default Button`.
+   */
+  findExport(name: string): SchemaNode | undefined {
+    for (const node of this.exports) {
+      if (ExportSchema.isExportSchema(node)) {
+        if ((node.alias || node.name) === name) return ModuleSchema.unwrap(node)[0];
+      } else if (node.name === name) {
+        return node;
+      }
+    }
+    return undefined;
+  }
+
   private static unwrap(node: SchemaNode): SchemaNode[] {
     if (ExportSchema.isExportSchema(node)) return ModuleSchema.unwrap(node.exportNode);
     if (ModuleSchema.isModuleSchema(node)) return node.listExports();

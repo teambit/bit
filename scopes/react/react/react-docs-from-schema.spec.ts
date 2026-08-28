@@ -205,6 +205,31 @@ describe('reactDocsFromSchema()', () => {
     expect(docs?.properties.map((prop) => prop.name)).to.deep.equal(['text', 'variant', 'icon']);
   });
 
+  it('describes a component exported by reference, as `export default Button` is', () => {
+    const inButton: SchemaLocation = { filePath: 'button.tsx', line: 1, character: 1 };
+    const propsType = new TypeSchema(
+      loc,
+      'ButtonProps',
+      new TypeLiteralSchema(loc, [member('text', 'string', true)]),
+      'type ButtonProps'
+    );
+    const button = new ReactSchema(
+      inButton,
+      'Button',
+      new TypeRefSchema(loc, 'JSX.Element'),
+      new ParameterSchema(loc, 'props', new TypeRefSchema(loc, 'ButtonProps'), false)
+    );
+    const api = apiSchema(
+      [
+        new ExportSchema(loc, 'default', new TypeRefSchema(loc, 'Button', undefined, undefined, 'button.tsx')),
+        propsType,
+      ],
+      [button]
+    );
+
+    expect(reactDocsFromSchema(api)?.properties.map((prop) => prop.name)).to.deep.equal(['text']);
+  });
+
   it('describes a schema built by another copy of the semantic-schema package', () => {
     // such a schema carries the serialized fields but not this package's prototype methods, `toObject()` aside —
     // that is the contract between versions.

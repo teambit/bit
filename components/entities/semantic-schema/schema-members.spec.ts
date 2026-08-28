@@ -63,6 +63,27 @@ describe('SchemaNode.getMembers()', () => {
     expect(names(union.getMembers())).to.deep.equal(['a', 'shared', 'b']);
   });
 
+  it('only keeps a union member required when every alternative requires it', () => {
+    // `{ id: string; a: string } | { id: string; a?: string; b: string }`
+    const union = new TypeUnionSchema(loc, [
+      literal(member('id', 'string', false), member('a', 'string', false)),
+      literal(member('id', 'string', false), member('a', 'string', true), member('b', 'string', false)),
+    ]);
+    const required = union.getMembers().map((m) => `${m.name}${(m as VariableLikeSchema).isOptional ? '?' : ''}`);
+    expect(required).to.deep.equal(['id', 'a?', 'id', 'a?', 'b?']);
+  });
+
+  it('lets a type shared by two branches contribute to each', () => {
+    const base = iface('Base', [member('id', 'string', false)]);
+    const shared = new TypeRefSchema(loc, 'Base');
+    const union = new TypeUnionSchema(loc, [
+      new TypeIntersectionSchema(loc, [shared, literal(member('a'))]),
+      new TypeIntersectionSchema(loc, [shared, literal(member('b'))]),
+    ]);
+    const resolveRef = () => base;
+    expect(names(union.getMembers({ resolveRef }))).to.deep.equal(['id', 'a', 'id', 'b']);
+  });
+
   it('follows a type alias and parentheses to the underlying type', () => {
     const alias = new TypeSchema(loc, 'Props', new ParenthesizedTypeSchema(loc, literal(member('a'))), 'type Props');
     expect(names(alias.getMembers())).to.deep.equal(['a']);
@@ -159,6 +180,23 @@ describe('APISchema.getMembersOf()', () => {
 
   it('contributes nothing for an unknown reference', () => {
     expect(api([]).getMembersOf(new TypeRefSchema(loc, 'Missing'))).to.deep.equal([]);
+  });
+
+  it('resolves the name a declaration is exported under', () => {
+    // `export { Props as ButtonProps }`
+    const schema = api([new ExportSchema(loc, 'Props', iface('Props', [member('a')]), 'ButtonProps')]);
+    expect(names(schema.getMembersOf(new TypeRefSchema(loc, 'ButtonProps')))).to.deep.equal(['a']);
+  });
+
+  it('follows an exported reference to the local declaration it points at', () => {
+    // `const Button = ...; export default Button` — the export is a reference, the declaration is internal.
+    const inButton: SchemaLocation = { filePath: 'button.tsx', line: 1, character: 1 };
+    const button = new TypeSchema(inButton, 'Button', literal(member('a')), 'type Button');
+    const schema = api(
+      [new ExportSchema(loc, 'default', new TypeRefSchema(loc, 'Button', undefined, undefined, 'button.tsx'))],
+      [button]
+    );
+    expect(schema.listExportedDeclarations()).to.deep.equal([button]);
   });
 
   it('resolves a file-internal reference only within its file', () => {

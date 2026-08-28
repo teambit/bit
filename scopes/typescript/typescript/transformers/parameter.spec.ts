@@ -48,6 +48,16 @@ describe('ParameterTransformer.getObjectBindingNodes()', () => {
     expect((binding as VariableLikeSchema).type.toString()).to.equal('string');
   });
 
+  it('keys an aliased binding by the prop it destructures, not the local name', async () => {
+    const param = firstParameter(`function Button({ text: label = 'click' }: { text?: string }) {}`);
+    const propsType = new TypeLiteralSchema(loc, [member('text')]);
+
+    const [binding] = (await ParameterTransformer.getObjectBindingNodes(param, propsType, context)) || [];
+
+    expect(binding.name).to.equal('text');
+    expect((binding as VariableLikeSchema).defaultValue).to.equal(`'click'`);
+  });
+
   it('returns the member itself when the binding has no initializer', async () => {
     const param = firstParameter(`function Button({ text }: { text?: string }) {}`);
     const text = member('text');

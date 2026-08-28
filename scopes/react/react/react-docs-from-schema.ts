@@ -57,7 +57,7 @@ function toProperty(member: SchemaNode, defaults: Map<string, string>): ReactDoc
  */
 export function reactDocsFromSchema(schema: APISchema): ReactDocsFromSchema | undefined {
   const api = normalize(schema);
-  const reactNodes = api.module.listExports().filter(ReactSchema.isReactSchema);
+  const reactNodes = api.listExportedDeclarations().filter(ReactSchema.isReactSchema);
   if (!reactNodes.length) return undefined;
 
   const docsFor = (node: ReactSchema): ReactDocsFromSchema => {

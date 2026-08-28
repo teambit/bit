@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
-import { ExportSchema, ModuleSchema } from './schemas';
-import type { TypeRefSchema } from './schemas';
+import { ExportSchema, ModuleSchema, TypeRefSchema } from './schemas';
 import type { SchemaLocation } from './schema-node';
 import { SchemaNode } from './schema-node';
 import { TagName } from './schemas/docs/tag';
@@ -143,10 +142,24 @@ export class APISchema extends SchemaNode {
   }
 
   /**
-   * finds a declaration of this component by name, exported or internal.
+   * the declarations the component exports, following an exported reference to the local declaration
+   * it points at — `export default Button` exports a reference to `Button`.
    */
-  findDeclaration(name: string): SchemaNode | undefined {
-    return this.listDeclarations().find((node) => node.name === name);
+  listExportedDeclarations(): SchemaNode[] {
+    return this.module.listExports().map((node) => {
+      return (TypeRefSchema.isTypeRefSchema(node) && this.resolveRef(node)) || node;
+    });
+  }
+
+  /**
+   * finds a declaration of this component by name. with `filePath`, only a declaration internal to that
+   * file matches. without it, the name may also be one the component exports the declaration under
+   * (`export { Props as ButtonProps }`).
+   */
+  findDeclaration(name: string, filePath?: string): SchemaNode | undefined {
+    const candidates = this.listDeclarations().filter((node) => node.name === name);
+    if (filePath) return candidates.find((node) => node.location.filePath === filePath);
+    return candidates[0] || this.findExportedAs(name);
   }
 
   /**
@@ -157,9 +170,15 @@ export class APISchema extends SchemaNode {
    */
   resolveRef(ref: TypeRefSchema): SchemaNode | undefined {
     if (!ref.isFromThisComponent()) return undefined;
-    const candidates = this.listDeclarations().filter((node) => node.name === ref.name);
-    if (!ref.internalFilePath) return candidates[0];
-    return candidates.find((node) => node.location.filePath === ref.internalFilePath);
+    return this.findDeclaration(ref.name, ref.internalFilePath);
+  }
+
+  private findExportedAs(name: string): SchemaNode | undefined {
+    for (const module of [this.module, ...this.internals]) {
+      const found = module.findExport(name);
+      if (found) return found;
+    }
+    return undefined;
   }
 
   /**
