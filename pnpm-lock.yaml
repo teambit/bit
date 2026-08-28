@@ -1702,6 +1702,9 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
@@ -2157,8 +2160,8 @@ importers:
         version: 3.25.76
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/mdx.mdx-env':
         specifier: 3.1.1
         version: 3.1.1(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(@testing-library/react@14.3.1)(@types/node@22.10.5)(@types/react-syntax-highlighter@15.5.13)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(html-webpack-plugin@5.3.2)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(sass@1.63.6)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
@@ -2183,9 +2186,6 @@ importers:
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
 
   components/bit/get-bit-version:
     dependencies:
@@ -2431,8 +2431,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -2477,8 +2477,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -2511,8 +2511,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -2542,8 +2542,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -3906,8 +3906,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -4062,8 +4062,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
 
   components/ui/api-diff-view:
     dependencies:
@@ -4093,8 +4093,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -4136,8 +4136,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4179,8 +4179,8 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4294,8 +4294,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4343,8 +4343,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4431,8 +4431,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4486,8 +4486,8 @@ importers:
         version: 15.6.6(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4544,8 +4544,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4584,8 +4584,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -4615,8 +4615,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -4649,8 +4649,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4731,8 +4731,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4771,8 +4771,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -4814,8 +4814,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -4848,8 +4848,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -4891,8 +4891,8 @@ importers:
         version: 7.7.1
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4952,8 +4952,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -4989,8 +4989,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -5026,8 +5026,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -5072,8 +5072,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -5112,8 +5112,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -5188,8 +5188,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -5252,8 +5252,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -5331,8 +5331,8 @@ importers:
         version: 7.7.1
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -5368,8 +5368,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5402,8 +5402,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5445,8 +5445,8 @@ importers:
         version: 3.23.0
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -5479,8 +5479,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5513,8 +5513,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5544,8 +5544,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5578,8 +5578,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5606,8 +5606,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5637,8 +5637,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5668,8 +5668,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5699,8 +5699,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/diff':
         specifier: ^5.2.3
         version: 5.2.3
@@ -5730,8 +5730,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5758,8 +5758,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5825,8 +5825,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -5877,8 +5877,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -5923,8 +5923,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -5954,8 +5954,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5991,8 +5991,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -6022,8 +6022,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -6050,8 +6050,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -6084,8 +6084,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -6124,8 +6124,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -6155,8 +6155,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -6225,8 +6225,8 @@ importers:
         version: 7.7.1
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -6286,8 +6286,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -6353,8 +6353,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -6405,8 +6405,8 @@ importers:
         specifier: 4.1.7
         version: 4.1.7(react@19.2.7)
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -6451,8 +6451,8 @@ importers:
         version: 6.2.7
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -6485,8 +6485,8 @@ importers:
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -6525,8 +6525,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -6601,8 +6601,8 @@ importers:
         specifier: 4.1.7
         version: 4.1.7(react@19.2.7)
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -6653,8 +6653,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -7718,7 +7718,7 @@ importers:
         specifier: 1.72.0
         version: 1.72.0
 
-  node_modules/.bit_roots/teambit.harmony_envs_core-react-env@0.0.2:
+  node_modules/.bit_roots/teambit.harmony_envs_core-react-env@1.0.0:
     dependencies:
       '@mdx-js/react':
         specifier: 3.1.1
@@ -8132,8 +8132,8 @@ importers:
         specifier: workspace:*
         version: file:scopes/harmony/cli-reference(react@19.2.7)
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/harmony.modules.concurrency':
         specifier: workspace:*
         version: file:scopes/harmony/modules/concurrency
@@ -14400,8 +14400,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -14434,8 +14434,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -14477,8 +14477,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -17112,8 +17112,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -17138,6 +17138,9 @@ importers:
       '@teambit/base-ui.surfaces.split-pane.split-pane':
         specifier: 1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/compositions.ui.composition-live-controls':
         specifier: ~0.0.6
         version: 0.0.6(react@19.2.7)
@@ -17247,9 +17250,6 @@ importers:
         specifier: ^6.30.1
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.8
         version: 2.0.8(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
@@ -17291,8 +17291,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -17368,8 +17368,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -18577,6 +18577,9 @@ importers:
       '@teambit/base-ui.loaders.skeleton':
         specifier: 1.0.2
         version: 1.0.2(react@19.2.7)
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@teambit/design.ui.surfaces.status-message-card':
         specifier: 0.0.18
         version: 0.0.18(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
@@ -18623,9 +18626,6 @@ importers:
         specifier: ^6.30.1
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     devDependencies:
-      '@teambit/component-id':
-        specifier: ^1.2.4
-        version: 1.2.4
       '@teambit/docs.content.docs-overview':
         specifier: 1.96.8
         version: 1.96.8(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)
@@ -18667,8 +18667,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -18851,8 +18851,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -20909,6 +20909,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
+      '@teambit/ui-foundation.ui.is-browser':
+        specifier: ~0.0.500
+        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -20940,9 +20943,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.8
         version: 2.0.8(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@teambit/ui-foundation.ui.is-browser':
-        specifier: ~0.0.500
-        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -21018,8 +21018,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -22213,6 +22213,9 @@ importers:
       chalk:
         specifier: 4.1.2
         version: 4.1.2
+      cross-fetch:
+        specifier: 3.1.5
+        version: 3.1.5
       filenamify:
         specifier: 4.2.0
         version: 4.2.0
@@ -22231,6 +22234,9 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
+      lru-cache:
+        specifier: 10.4.3
+        version: 10.4.3
       mime:
         specifier: 2.5.2
         version: 2.5.2
@@ -22289,12 +22295,6 @@ importers:
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
-      lru-cache:
-        specifier: 10.4.3
-        version: 10.4.3
 
   scopes/preview/ui/component-preview:
     dependencies:
@@ -22333,8 +22333,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
@@ -22376,8 +22376,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -22702,6 +22702,9 @@ importers:
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
+      lodash.flatten:
+        specifier: 4.4.0
+        version: 4.4.0
       mini-css-extract-plugin:
         specifier: 2.2.2
         version: 2.2.2(webpack@5.109.2)
@@ -22820,9 +22823,6 @@ importers:
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
-      lodash.flatten:
-        specifier: 4.4.0
-        version: 4.4.0
 
   scopes/react/ui/compositions-app:
     dependencies:
@@ -22852,8 +22852,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -22889,8 +22889,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -22926,8 +22926,8 @@ importers:
         version: 3.1.4(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -22963,8 +22963,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -23003,8 +23003,8 @@ importers:
         version: 3.1.4(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -23046,8 +23046,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -23086,8 +23086,8 @@ importers:
         version: 3.1.4(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -23126,8 +23126,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
@@ -23160,8 +23160,8 @@ importers:
         version: 19.2.7(react@19.2.7)
     devDependencies:
       '@teambit/harmony.envs.core-react-env':
-        specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+        specifier: 1.0.0
+        version: 1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -33180,8 +33180,8 @@ packages:
   '@teambit/harmony.envs.core-aspect-env@2.0.8':
     resolution: {integrity: sha512-Sc6Km0qA9WUkzoMDYqx9Kk3POFNrPS1ZQnADwWaR0aUdzo9mZ+G0yjiMPT0ZSiuarsqDhzjPUBfH/baNS8+f6A==}
 
-  '@teambit/harmony.envs.core-react-env@0.0.2':
-    resolution: {integrity: sha512-HDaTKMSodbisvRqLDPGkdoblGZM5F8AOy7qJZs5gRIQ8xeewXj7L5m8ZwtwEMUVZlyYqQMWDbbEFkkxBUnY4HQ==}
+  '@teambit/harmony.envs.core-react-env@1.0.0':
+    resolution: {integrity: sha512-kC4ZBBHcRDbjLxolQG2h5dcgqh2/nlOt+WRtN4Ow4ZMCZnZu1dKIgFrZoH4Br0ii+BtFHGqRAO9uH5FGohBD8A==}
 
   '@teambit/harmony.modules.concurrency@0.0.12':
     resolution: {integrity: sha512-j8u/QH0wyXpoEvpATqspcBcf1wbJ70PR82c7Na/ZbOu8+9w2tQIHl+ME7kozcDMX2wSG3cM9TjhJcWS+goRxMg==}
@@ -61180,6 +61180,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@18.3.1)(react@18.3.1)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@18.3.1)(react@18.3.1)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
@@ -61249,6 +61250,7 @@ snapshots:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.hover-splitter': 1.0.1(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.surfaces.split-pane.split-pane': 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
       '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
@@ -65815,6 +65817,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@18.3.1)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/dom@10.4.1)(chai@4.3.0)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@18.3.1)
@@ -65848,6 +65851,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/dom@10.4.1)(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -65881,6 +65885,7 @@ snapshots:
   '@teambit/docs@file:scopes/docs/docs(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.loaders.skeleton': 1.0.2(react@19.2.7)
+      '@teambit/component-id': 1.2.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.component-meta': file:components/ui/component-meta(@testing-library/dom@10.4.1)(chai@5.2.1)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/compositions.panels.composition-gallery': file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -68835,7 +68840,7 @@ snapshots:
       - vue-template-compiler
       - webpack
 
-  '@teambit/harmony.envs.core-react-env@0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)':
+  '@teambit/harmony.envs.core-react-env@1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)':
     dependencies:
       '@babel/runtime': 7.20.0
       '@mdx-js/react': 3.1.1(@types/react@19.2.18)(react@19.2.7)
@@ -68844,6 +68849,7 @@ snapshots:
       '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.1.10)(react-refresh@0.10.0)
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.2.7)
       '@teambit/react.react-env': 2.0.3(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+      '@teambit/typescript.typescript-compiler': 5.0.3(react@19.2.7)
       '@testing-library/dom': 10.4.1
       '@testing-library/jest-dom': 6.5.0
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -68860,6 +68866,7 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
       sass: 1.72.0
       sass-loader: 16.0.8(@rspack/core@2.1.10)(sass-embedded@1.102.0)(sass@1.72.0)(webpack@5.109.2)
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@babel/traverse'
@@ -68905,7 +68912,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/harmony.envs.core-react-env@0.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)':
+  '@teambit/harmony.envs.core-react-env@1.0.0(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)':
     dependencies:
       '@babel/runtime': 7.20.0
       '@mdx-js/react': 3.1.1(@types/react@19.2.18)(react@19.2.7)
@@ -68914,6 +68921,7 @@ snapshots:
       '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.1.10)(react-refresh@0.10.0)
       '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.2.7)
       '@teambit/react.react-env': 2.0.3(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
+      '@teambit/typescript.typescript-compiler': 5.0.3(react@19.2.7)
       '@testing-library/dom': 10.4.1
       '@testing-library/jest-dom': 6.5.0
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -68930,6 +68938,7 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
       sass: 1.72.0
       sass-loader: 16.0.8(@rspack/core@2.1.10)(sass-embedded@1.102.0)(sass@1.72.0)(webpack@5.109.2)
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@babel/core'
       - '@babel/traverse'
@@ -74820,12 +74829,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -74885,12 +74896,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -74950,12 +74963,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 4.3.0
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -75015,12 +75030,14 @@ snapshots:
       camelcase: 6.2.0
       chai: 5.2.1
       chalk: 4.1.2
+      cross-fetch: 3.1.5
       filenamify: 4.2.0
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lru-cache: 10.4.3
       mime: 2.5.2
       normalize-path: 3.0.0
       object-hash: 2.1.1
@@ -75051,6 +75068,7 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(react@18.3.1)':
     dependencies:
       '@teambit/harmony': 0.4.12
+      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
@@ -75064,6 +75082,7 @@ snapshots:
   '@teambit/pubsub@file:scopes/harmony/pubsub(react@19.2.7)':
     dependencies:
       '@teambit/harmony': 0.4.12
+      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
@@ -77625,6 +77644,7 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss-flexbugs-fixes: 5.0.2(postcss@8.4.45)
@@ -77773,6 +77793,7 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss-flexbugs-fixes: 5.0.2(postcss@8.4.45)
@@ -77921,6 +77942,7 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss-flexbugs-fixes: 5.0.2(postcss@8.4.45)
@@ -78069,6 +78091,7 @@ snapshots:
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash: 4.17.21
       lodash.compact: 3.0.1
+      lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss-flexbugs-fixes: 5.0.2(postcss@8.4.45)
