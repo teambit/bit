@@ -1,5 +1,5 @@
-import type { APISchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import { VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, SchemaRegistry, Schemas, VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { compact, uniqBy } from 'lodash';
 import { ReactSchema } from './react.schema';
 
@@ -16,6 +16,22 @@ export type ReactDocsFromSchema = {
   filePath: string;
   properties: ReactDocsProperty[];
 };
+
+let schemaClassesRegistered = false;
+
+/**
+ * a schema may have been built by another copy of the semantic-schema package — an env's extractor graph,
+ * or an artifact hydrated elsewhere — whose nodes predate the members API. the serialized form is the
+ * contract between versions, so such a schema is re-hydrated through this package's classes.
+ */
+function normalize(api: APISchema): APISchema {
+  if (typeof api.getMembersOf === 'function') return api;
+  if (!schemaClassesRegistered) {
+    SchemaRegistry.registerGetSchemas(() => [...Object.values(Schemas), ReactSchema]);
+    schemaClassesRegistered = true;
+  }
+  return APISchema.fromObject(api.toObject());
+}
 
 function toProperty(member: SchemaNode, defaults: Map<string, string>): ReactDocsProperty | undefined {
   if (!member.name) return undefined;
@@ -39,7 +55,8 @@ function toProperty(member: SchemaNode, defaults: Map<string, string>): ReactDoc
  * only the first component that resolves any props is described, which is what the docs UI has always
  * rendered — it reads a single entry, not one per export.
  */
-export function reactDocsFromSchema(api: APISchema): ReactDocsFromSchema | undefined {
+export function reactDocsFromSchema(schema: APISchema): ReactDocsFromSchema | undefined {
+  const api = normalize(schema);
   const reactNodes = api.module.listExports().filter(ReactSchema.isReactSchema);
   if (!reactNodes.length) return undefined;
 

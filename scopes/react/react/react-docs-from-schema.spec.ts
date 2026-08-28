@@ -205,6 +205,27 @@ describe('reactDocsFromSchema()', () => {
     expect(docs?.properties.map((prop) => prop.name)).to.deep.equal(['text', 'variant', 'icon']);
   });
 
+  it('describes a schema built by another copy of the semantic-schema package', () => {
+    // such a schema carries the serialized fields but not this package's prototype methods, `toObject()` aside —
+    // that is the contract between versions.
+    const propsType = new TypeSchema(
+      loc,
+      'ButtonProps',
+      new TypeLiteralSchema(loc, [member('text', 'string', true, 'the button label')]),
+      'type ButtonProps'
+    );
+    const binding = new VariableLikeSchema(loc, 'text', 'text: string', new KeywordTypeSchema(loc, 'string'), true);
+    const api = apiSchema([reactNode('Button', 'ButtonProps', [binding]), propsType]);
+    const foreign = { ...api, toObject: () => api.toObject() } as unknown as APISchema;
+    expect((foreign as any).getMembersOf).to.be.undefined;
+
+    expect(reactDocsFromSchema(foreign)).to.deep.equal(reactDocsFromSchema(api));
+    expect(reactDocsFromSchema(foreign)?.properties[0]).to.deep.include({
+      name: 'text',
+      description: 'the button label',
+    });
+  });
+
   it('exposes the component doc comment as the abstract', () => {
     const node = new ReactSchema(
       loc,

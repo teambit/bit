@@ -6,6 +6,7 @@ import {
   ParameterSchema,
   TupleTypeSchema,
   TypeLiteralSchema,
+  VariableLikeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import type { SchemaTransformer } from '../schema-transformer';
@@ -90,12 +91,25 @@ export class ParameterTransformer implements SchemaTransformer {
       const existing = paramType.findNode?.((node) => {
         return node.name === elem.name.getText().trim();
       });
+      const defaultValue = elem.initializer ? elem.initializer.getText() : undefined;
       if (existing && existing.__schema !== 'InferenceTypeSchema') {
+        // the member of an inline props type describes the binding better than quick-info would, but it
+        // knows nothing of the binding's initializer — so carry that over, or the default is lost.
+        if (defaultValue !== undefined && VariableLikeSchema.isVariableLikeSchema(existing)) {
+          return new VariableLikeSchema(
+            existing.location,
+            existing.name,
+            existing.signature,
+            existing.type,
+            existing.isOptional,
+            existing.doc,
+            defaultValue
+          );
+        }
         return existing;
       }
       const info = await context.getQuickInfo(elem.name);
       const parsed = info ? parseTypeFromQuickInfo(info) : elem.getText();
-      const defaultValue = elem.initializer ? elem.initializer.getText() : undefined;
       const alias =
         elem.propertyName && isComputedPropertyName(elem.propertyName)
           ? elem.propertyName?.expression.getText()
