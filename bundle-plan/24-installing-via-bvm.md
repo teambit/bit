@@ -72,8 +72,8 @@ Since §9e the bundler emits the published package shape, so the distribution is
 `@teambit/bit` as it would be published. The packer therefore does not rearrange anything:
 
 1. installs the distribution's declared dependencies — the externals, and only the externals — with
-   `pnpm --node-linker=hoisted`, pinned to the target platform via `supportedArchitectures` so a
-   mac can pack a linux tar (the native addons are per-platform optional deps);
+   `pnpm --node-linker=hoisted`, pinned to the target platform via `--os`/`--cpu` so a mac can pack
+   a linux tar (the native addons are per-platform optional deps);
 2. `npm pack`s the distribution and unpacks it into `node_modules/@teambit/bit`;
 3. normalises that package.json — name, the version being handed out, `bin`, `bvm.node`;
 4. tars it.
@@ -131,11 +131,19 @@ defaults it is absent entirely.
 
 All five tars come from one linux container, unlike `harmony_deploy`'s three jobs. That is not a
 shortcut: `bundle_version_macos` and `bundle_version_windows` are `*defaults` too — the
-cross-platform install is pnpm's (`--os`/`--cpu` there, `supportedArchitectures` here), not the
+cross-platform install is pnpm's `--os`/`--cpu`, the same flags `install_bit_bundle` passes, not the
 runner's. They are split only because each installs bit's full ~5000-package tree, where this
 installs the ~11 externals. The packer's `@pnpm/napi` check is the same guard
 `verify_pnpm_napi_bundle` provides, and it hard-fails rather than shipping a tar that installs and
 then cannot run.
+
+Those two flags have to stay on the command line. Setting `pnpm.supportedArchitectures` in the
+staging `package.json` reads as equivalent and silently is not: pnpm 12 no longer takes settings
+from that field (`config.yml`'s `install_bit_bundle` carries the same note), so it warns *"The
+following keys were ignored"* and installs the **host** platform. On a linux runner that produces a
+correct linux-x64 tar and four tars that would install and then fail to run — caught here only
+because the `@pnpm/napi` check is a hard failure. Verified on pnpm 10.17.1 and 12.0.0-rc.7; note
+`pnpm install --help` documents the flags on `add` only, but `install` honours them on both.
 
 ## Versioning and who sees it
 

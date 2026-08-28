@@ -257,14 +257,17 @@ function main() {
     version: '0.0.0',
     private: true,
     dependencies: externals,
-    pnpm: {
-      // the target platform's native addons, which are optional deps picked by platform. without
-      // this, packing on a mac produces a tar that is missing linux's @pnpm/napi binary.
-      supportedArchitectures: { os: [PNPM_OS[targetOs]], cpu: [targetArch] },
-    },
   };
   fs.writeFileSync(path.join(innerDir, 'package.json'), `${JSON.stringify(stagingManifest, null, 2)}\n`);
+  // `--os`/`--cpu` pin the target platform's native addons, which are optional deps selected by
+  // platform - without them, packing on a mac produces a tar missing linux's @pnpm/napi binary.
+  // They are flags rather than a `pnpm.supportedArchitectures` field in the manifest above because
+  // pnpm 12 no longer reads its settings from package.json's "pnpm" field: it warns
+  // ("The following keys were ignored") and installs the *host* platform instead. Same reason
+  // `install_bit_bundle` in .circleci/config.yml passes them on the command line. Verified on both
+  // pnpm 10.17.1 and 12.0.0-rc.7, though `pnpm install --help` documents them on `add` only.
   const pnpmArgs = ['install', '--node-linker=hoisted', '--ignore-scripts', '--no-frozen-lockfile'];
+  pnpmArgs.push(`--os=${PNPM_OS[targetOs]}`, `--cpu=${targetArch}`);
   if (registry) pnpmArgs.push(`--registry=${registry}`);
   run('pnpm', pnpmArgs, { cwd: innerDir });
   verifyNativeBinaries(innerDir, externals, PNPM_OS[targetOs], targetArch);
