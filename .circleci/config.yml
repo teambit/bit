@@ -548,15 +548,23 @@ commands:
                 # any uncertainty (master branch, missing merge-base, empty diff) falls back to
                 # running the full suite. doc files under e2e/ are treated as test changes, not
                 # docs, so they never trigger a skip.
+                # git here must never touch the network interactively: on some branches the diff
+                # made git reach github over ssh and hang on the host-key prompt until the step's
+                # 10m no-output timeout killed the job. force non-interactive ssh and bound every
+                # git call, treating any failure as "run the full suite".
                 command: |
                   if [ "$CIRCLE_BRANCH" = "master" ]; then
                     echo "on master - running the full suite"; exit 0
                   fi
                   cd bit
-                  if ! BASE=$(git merge-base HEAD origin/master 2>/dev/null); then
+                  export GIT_TERMINAL_PROMPT=0
+                  export GIT_SSH_COMMAND='ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new'
+                  if ! BASE=$(timeout 60 git merge-base HEAD origin/master 2>/dev/null); then
                     echo "cannot determine merge-base with origin/master - running the full suite"; exit 0
                   fi
-                  CHANGED_FILES=$(git diff --name-only "$BASE" HEAD)
+                  if ! CHANGED_FILES=$(timeout 120 git diff --name-only "$BASE" HEAD 2>/dev/null); then
+                    echo "diff against merge-base failed - running the full suite"; exit 0
+                  fi
                   if [ -z "$CHANGED_FILES" ]; then
                     echo "empty diff against merge-base - running the full suite"; exit 0
                   fi
