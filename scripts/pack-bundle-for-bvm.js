@@ -296,6 +296,26 @@ function main() {
   packedManifest.bvm = { node: nodeVersion };
   delete packedManifest.private;
   fs.writeFileSync(packedManifestPath, `${JSON.stringify(packedManifest, null, 2)}\n`);
+
+  //    the manifest above is NOT the one `bit --version` reports. `getBitVersion()` does
+  //    `require.resolve('@teambit/bit')` from inside `bit.app.js`, which lives in
+  //    dist/core-aspects/bundle - so node's upward walk finds the *shim* in the sibling
+  //    dist/core-aspects/node_modules first and never reaches the manifest above. The shim carries
+  //    whatever version the build machine had installed (`generate-shim-packages` preserves the
+  //    original's), so without this the tar reports the base version and every -bundle.N build
+  //    looks identical from the CLI. Only `version` is restamped: `componentId` stays at the real
+  //    component version, which is what it identifies.
+  const shimManifestPath = path.join(
+    bitPackageDir,
+    'dist/core-aspects/node_modules/@teambit/bit/package.json'
+  );
+  if (!fs.existsSync(shimManifestPath)) {
+    fail(`the @teambit/bit bundle shim is missing at ${shimManifestPath} - "bit --version" would report the build machine's version`);
+  }
+  const shimManifest = JSON.parse(fs.readFileSync(shimManifestPath, 'utf8'));
+  shimManifest.version = version;
+  fs.writeFileSync(shimManifestPath, `${JSON.stringify(shimManifest, null, 2)}\n`);
+
   console.log(`[pack-for-bvm] @teambit/bit@${version}, node ${nodeVersion}`);
 
   // 4. everything the tar needs is now in place. verify before paying for the compression.

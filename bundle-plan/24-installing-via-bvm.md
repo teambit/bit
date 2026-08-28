@@ -76,7 +76,26 @@ Since §9e the bundler emits the published package shape, so the distribution is
    a linux tar (the native addons are per-platform optional deps);
 2. `npm pack`s the distribution and unpacks it into `node_modules/@teambit/bit`;
 3. normalises that package.json — name, the version being handed out, `bin`, `bvm.node`;
-4. tars it.
+4. restamps the `@teambit/bit` **shim**'s version to match (see below);
+5. tars it.
+
+### Which package.json `bit --version` actually reads
+
+Not the one bvm reads. `getBitVersion()` resolves `require.resolve('@teambit/bit')` from inside
+`bit.app.js`, which lives in `dist/core-aspects/bundle/`, so node's upward `node_modules` walk finds
+the **shim** in the sibling `dist/core-aspects/node_modules/@teambit/bit/` first and never reaches
+the outer manifest. The shim carries whatever version the build machine had installed
+(`generate-shim-packages` preserves the original's), so an un-restamped tar reports the base version
+and every `-bundle.N` build looks identical from the CLI. The packer restamps `version` there too;
+`componentId` is left alone, since that identifies the component, which really is the base version.
+
+One consequence to know before setting `engine`: a pre-release satisfies no ordinary semver range —
+`2.2.11-bundle.1` fails `^2.2.0`, `>=2.0.0`, `2.x` *and* `^2.2.11`, because a range only admits
+pre-releases when it names one on the same version tuple. `load-bit.ts`'s `verifyEngine` calls plain
+`satisfies(getBitVersion(), bitConfig.engine)`, so a workspace that sets `teambit.harmony/bit`'s
+`engine` will warn under a bundle build — and throw, if it also sets `engineStrict`. The field is
+opt-in and bit's own `workspace.jsonc` does not set it (the `engineStrict` there belongs to
+dependency-resolver and is about Node.js), so this bites only workspaces that pin it deliberately.
 
 The externals are installed **before** `@teambit/bit` is dropped in, because pnpm reconciles
 `node_modules` against the manifest and would prune it otherwise. For the same reason the staging
