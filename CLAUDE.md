@@ -30,6 +30,13 @@ Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/outpu
 
 ### Testing
 
+**IMPORTANT — prefer unit tests (`.spec.ts`) over e2e tests.** E2e tests are extremely expensive: they dominate CI time and are responsible for ~80% of our CircleCI credit spend. When adding test coverage:
+
+- Default to unit tests: `.spec.ts` files alongside the source, run with `bit test`.
+- Only write an e2e test when the scenario genuinely cannot be covered by a unit test — e.g. it requires a real workspace + remote scope and a flow spanning multiple bit commands (tag/export/import/lane flows).
+- Before creating a new e2e **file**, check if an existing e2e file already covers the area and add a `describe`/`it` there instead — each new file adds fixed setup overhead on CI.
+- Keep any e2e test minimal: fewest components, fewest commands, no redundant variations of the same flow.
+
 - `bit test` - Run unit tests for components/aspects
 - `bit test --debug` - Run unit tests in debug mode (prints workspace location, keeps workspaces)
 - `npm run e2e-test` - Run end-to-end tests (can take hours, usually run on CI)
@@ -45,7 +52,7 @@ Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/outpu
 - Running without `.only` will execute the ENTIRE test suite which takes hours
 - Example: Change `describe('my test', ...)` to `describe.only('my test', ...)`
 
-**Bug reproduction testing:** When asked to reproduce a bug, create an e2e test instead of creating test directories in the current workspace. You cannot create nested Bit workspaces. E2E test helpers provide workspace creation methods that use temporary directories and automatically clean up after tests.
+**Bug reproduction testing:** When asked to reproduce a bug, first try to reproduce it with a unit test (`.spec.ts`) at the level of the component that owns the logic. Only fall back to an e2e test when the bug spans multiple bit commands or requires a real workspace/remote-scope flow. Never create test directories in the current workspace — you cannot create nested Bit workspaces; the e2e test helpers provide workspace creation methods that use temporary directories and automatically clean up after tests.
 
 ### Linting and Formatting
 

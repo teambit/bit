@@ -1,9 +1,8 @@
 import { join } from 'path';
 import { promises as fs } from 'fs';
+import chalk from 'chalk';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
-import { initDefaultReporter } from '@pnpm/cli.default-reporter';
-import { streamParser } from '@pnpm/logger';
 import { TRUSTED_PACKAGE_NAMES } from '@pnpm/plugin-trusted-deps';
 import type {
   PackageManifest,
@@ -15,6 +14,7 @@ import type {
 } from '@pnpm/types';
 import * as nodeApi from '@pnpm/napi';
 import type { PeerDependencyIssuesByProjects } from '@pnpm/napi';
+import { type LockfileFile } from '@pnpm/lockfile.types';
 import type { Registries } from '@teambit/pkg.entities.registry';
 import toNerfDart from 'nerf-dart';
 import type {
@@ -25,8 +25,6 @@ import type {
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
-import type * as LockfileFs from '@pnpm/lockfile.fs';
-import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types';
 import type { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { isEqual } from 'lodash';
@@ -42,19 +40,6 @@ import { addNodeGypToPath } from './node-gyp-bin';
 const UNTRUSTED_PACKAGE_NAMES = ['es5-ext', 'less', 'protobufjs', 'ssh', 'core-js-pure', 'core-js'];
 
 const installsRunning: Record<string, Promise<any>> = {};
-type LockfileFsModule = typeof LockfileFs;
-let lockfileFsPromise: Promise<LockfileFsModule> | undefined;
-
-function loadLockfileFs(): Promise<LockfileFsModule> {
-  lockfileFsPromise ??= (async () => {
-    const { loadEsm } = require('./load-pnpm-esm.cjs') as {
-      loadEsm: () => Promise<{ lockfileFs: LockfileFsModule }>;
-    };
-    const { lockfileFs } = await loadEsm();
-    return lockfileFs;
-  })();
-  return lockfileFsPromise;
-}
 
 /**
  * Minimal structural signature of the `resolve` function returned by
@@ -136,16 +121,6 @@ function applyReadPackageHooks(
   return hooks.reduce<PackageManifest>((m, hook) => hook(m, workspaceDir) as PackageManifest, manifest);
 }
 
-/**
- * Feed a wire-compatible pnpm log event into the default reporter. The engine
- * emits bunyan-shaped events; the reporter subscribes to `streamParser` via
- * `.on('data', ...)`, so emitting a `data` event on the underlying stream
- * delivers the event straight to the reporter.
- */
-function emitLogEvent(event: Record<string, unknown>): void {
-  (streamParser as unknown as NodeJS.EventEmitter).emit('data', event);
-}
-
 export async function generateResolverAndFetcher({
   cacheDir,
   registries,
@@ -216,6 +191,13 @@ export async function getPeerDependencyIssues(
 
 export type RebuildFn = (opts: { pending?: boolean; skipIfHasSideEffectsCache?: boolean }) => Promise<void>;
 
+/**
+ * A stream the engine's rendered output can be written to. `columns` is
+ * how the frame is sized; a stream that is not a terminal has none, and
+ * the reporter falls back to pnpm's 80-column default.
+ */
+export type OutputStream = NodeJS.WritableStream & { columns?: number };
+
 export interface ReportOptions {
   appendOnly?: boolean;
   throttleProgress?: number;
@@ -223,7 +205,8 @@ export interface ReportOptions {
   hideProgressPrefix?: boolean;
   hideLifecycleOutput?: boolean;
   peerDependencyRules?: PeerDependencyRules;
-  process?: NodeJS.Process;
+  /** Defaults to `process.stdout`. */
+  outputStream?: OutputStream;
 }
 
 export async function install(
@@ -345,10 +328,6 @@ export async function install(
     return removeScriptsFromNeverBuiltPackages(resolvedManifest, scriptPolicies.neverBuildPackageNames);
   };
 
-  const onLog: nodeApi.LogListener = (event) => {
-    emitLogEvent(event);
-  };
-
   const installOptions: nodeApi.InstallOptions = {
     dir: rootDir,
     projects,
@@ -428,6 +407,9 @@ export async function install(
     // `depsRequiringBuild`, so the `bit:` lockfile block lists them even
     // though Bit allows the builds to run.
     returnListOfDepsRequiringBuild: true,
+    reporter: options.hidePackageManagerOutput
+      ? undefined
+      : toReporterOptions({ ...options.reportOptions, hideAddedPkgsProgress: options.lockfileOnly }),
   };
 
   let dependenciesChanged = false;
@@ -437,15 +419,9 @@ export async function install(
     // Dependency build scripts inherit this process's PATH. Set up inside the
     // guard, so a dry run neither writes the wrapper nor touches the env.
     addNodeGypToPath(logger);
-    let stopReporting: Function | undefined;
     let installPromise: Promise<nodeApi.InstallResult> | undefined;
     let restoreWantedLockfile: (() => Promise<void>) | undefined;
-    if (!options.hidePackageManagerOutput) {
-      stopReporting = initReporter({
-        ...options.reportOptions,
-        hideAddedPkgsProgress: options.lockfileOnly,
-      });
-    }
+    const onOutput = options.hidePackageManagerOutput ? undefined : reporterOutput(options.reportOptions);
     try {
       await installsRunning[rootDir];
       // The engine rewrites pnpm-lock.yaml from its typed model, which
@@ -455,7 +431,7 @@ export async function install(
       // install alongside `depsRequiringBuild`.
       const preInstallBitAttrs = await readBitLockfileAttrs(rootDir);
       restoreWantedLockfile = await removeWantedLockfileForUpdate(rootDir, options.updateAll);
-      installPromise = nodeApi.install(installOptions, onLog, readPackageHookForDeps);
+      installPromise = nodeApi.install(installOptions, undefined, readPackageHookForDeps, onOutput);
       installsRunning[rootDir] = installPromise;
       const installResult: nodeApi.InstallResult = await installPromise;
       resolvedStoreDir = installResult.storeDir;
@@ -477,7 +453,6 @@ export async function install(
       if (installPromise && installsRunning[rootDir] === installPromise) {
         delete installsRunning[rootDir];
       }
-      stopReporting?.();
     }
   }
   return {
@@ -487,18 +462,23 @@ export async function install(
     rebuild: async () => {
       // Reached without an install of its own after a dry run.
       addNodeGypToPath(logger);
-      let stopReporting: Function | undefined;
-      if (!options.hidePackageManagerOutput) {
-        stopReporting = initReporter({
-          appendOnly: true,
-          hideLifecycleOutput: true,
-        });
-      }
-      try {
-        await nodeApi.rebuild({ ...installOptions, storeDir: resolvedStoreDir }, onLog, undefined);
-      } finally {
-        stopReporting?.();
-      }
+      // Same output routing as the install: the CLI server's stream has to
+      // carry the rebuild's output too, not just the install's.
+      const rebuildReportOptions: ReportOptions = {
+        ...options.reportOptions,
+        appendOnly: true,
+        hideLifecycleOutput: true,
+      };
+      await nodeApi.rebuild(
+        {
+          ...installOptions,
+          storeDir: resolvedStoreDir,
+          reporter: options.hidePackageManagerOutput ? undefined : toReporterOptions(rebuildReportOptions),
+        },
+        undefined,
+        undefined,
+        options.hidePackageManagerOutput ? undefined : reporterOutput(rebuildReportOptions)
+      );
     },
     storeDir: resolvedStoreDir ?? '',
     depsRequiringBuild,
@@ -582,27 +562,52 @@ function removeScriptsFromNeverBuiltPackages(
   };
 }
 
-function initReporter(opts?: ReportOptions) {
-  return initDefaultReporter({
-    context: {
-      argv: [],
-      process: opts?.process,
-    },
-    reportingOptions: {
-      appendOnly: opts?.appendOnly ?? false,
-      throttleProgress: opts?.throttleProgress ?? 200,
-      hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
-      hideProgressPrefix: opts?.hideProgressPrefix,
-      hideLifecycleOutput: opts?.hideLifecycleOutput,
-      approveBuildsInstructionText:
-        'Update the "allowScripts" field under "teambit.dependencies/dependency-resolver" in workspace.jsonc. \nSet to true to allow, false to explicitly disallow. \nExample: allowScripts: { "esbuild": true, "core-js": false }. \nThis is a security-sensitive setting: enabling scripts may allow arbitrary code execution during install.',
-    },
-    streamParser: streamParser as any, // eslint-disable-line
-    // Linked in core aspects are excluded from the output to reduce noise.
-    // Other @teambit/ dependencies will be shown.
-    // Only those that are symlinked from outside the workspace will be hidden.
-    filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
-  });
+const APPROVE_BUILDS_INSTRUCTION_TEXT =
+  'Update the "allowScripts" field under "teambit.dependencies/dependency-resolver" in workspace.jsonc. \nSet to true to allow, false to explicitly disallow. \nExample: allowScripts: { "esbuild": true, "core-js": false }. \nThis is a security-sensitive setting: enabling scripts may allow arbitrary code execution during install.';
+
+/**
+ * How the engine should render pnpm's output. Every field maps onto the
+ * pnpm reporting option of the same name.
+ */
+function toReporterOptions(opts?: ReportOptions): nodeApi.ReporterOptions {
+  const stream = reporterOutputStream(opts);
+  return {
+    appendOnly: opts?.appendOnly ?? false,
+    throttleProgress: opts?.throttleProgress ?? 200,
+    hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
+    hideProgressPrefix: opts?.hideProgressPrefix,
+    hideLifecycleOutput: opts?.hideLifecycleOutput,
+    ignoredBuildsInstructionText: APPROVE_BUILDS_INSTRUCTION_TEXT,
+    // Core aspects Bit links in are excluded from the summary to reduce
+    // noise. Other @teambit/ dependencies still show; only the ones
+    // symlinked from outside the workspace are hidden.
+    hideLinkedPkgsDiff: ['@teambit/*'],
+    // pnpm's `outputMaxWidth`, floored: a terminal reporting one or two
+    // columns would otherwise ask the engine to wrap at zero.
+    width: stream.columns ? Math.max(stream.columns - 2, 1) : 80,
+    // chalk is the switch Bit already flips for its own output (the CLI
+    // server enables it per request and resets it afterwards), so the
+    // engine follows it rather than probing the terminal itself.
+    color: chalk.level > 0,
+  };
+}
+
+/**
+ * Where the engine's rendered output goes. It has to be written through
+ * the JS stream rather than by the engine itself: Bit monkey-patches
+ * `process.stdout.write` to mirror output to a tty, and the CLI server
+ * swaps in a stream that forwards to connected editors — a write from Rust
+ * would bypass both.
+ */
+function reporterOutput(opts?: ReportOptions): (chunk: string) => void {
+  const stream = reporterOutputStream(opts);
+  return (chunk) => {
+    stream.write(chunk);
+  };
+}
+
+function reporterOutputStream(opts?: ReportOptions): OutputStream {
+  return opts?.outputStream ?? process.stdout;
 }
 
 /**
@@ -830,8 +835,7 @@ export function mergeBitLockfileAttrs(
  */
 async function readBitLockfileAttrs(rootDir: string): Promise<Partial<BitLockfileAttributes> | undefined> {
   try {
-    const { readWantedLockfile } = await loadLockfileFs();
-    const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true })) as BitLockfile | null;
+    const lockfile = await nodeApi.readLockfile<BitLockfileFile>({ dir: rootDir });
     return lockfile?.bit;
   } catch {
     // A malformed lockfile fails the install itself later with a proper
@@ -847,19 +851,20 @@ async function readBitLockfileAttrs(rootDir: string): Promise<Partial<BitLockfil
  * survives the rewrite.
  */
 async function addBitAttributesToLockfile(rootDir: string, attrs: Partial<BitLockfileAttributes>) {
-  const { readWantedLockfile, writeWantedLockfile } = await loadLockfileFs();
-  const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true })) as BitLockfile;
+  const lockfile = await nodeApi.readLockfile<BitLockfileFile>({ dir: rootDir });
   if (lockfile == null) return;
   const merged = { ...lockfile.bit, ...attrs };
   if (isEqual(lockfile.bit, merged)) return;
   lockfile.bit = merged as BitLockfileAttributes;
-  await writeWantedLockfile(rootDir, lockfile);
+  await nodeApi.writeLockfile({ dir: rootDir, lockfile });
 }
 
-export interface BitLockfile extends LockfileObject {
-  bit?: BitLockfileAttributes;
-}
-
+/**
+ * A `pnpm-lock.yaml` as the engine reads and writes it, plus the `bit:`
+ * block Bit records beside pnpm's own keys. The engine preserves top-level
+ * keys it does not define, so reading, editing that block, and writing the
+ * file back leaves everything else untouched.
+ */
 export interface BitLockfileFile extends LockfileFile {
   bit?: BitLockfileAttributes;
 }

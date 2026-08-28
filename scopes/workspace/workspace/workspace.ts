@@ -418,7 +418,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getAutoTagInfo(changedComponents: ComponentIdList) {
-    return getAutoTagInfo(this.consumer, changedComponents);
+    return getAutoTagInfo(this, changedComponents);
   }
 
   async listAutoTagPendingComponentIds(): Promise<ComponentID[]> {
@@ -426,7 +426,7 @@ export class Workspace implements ComponentFactory {
     const modifiedComponents = (await this.modified()).map((c) => c.id);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    const autoTagPending = await getAutoTagPending(this.consumer, ComponentIdList.fromArray(modifiedComponents));
+    const autoTagPending = await getAutoTagPending(this, ComponentIdList.fromArray(modifiedComponents));
     const localOnly = this.listLocalOnly();
     const comps = autoTagPending
       .filter((autoTagComp) => !newComponents.has(autoTagComp.componentId))
@@ -869,14 +869,18 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   clearComponentCache(id: ComponentID) {
-    this.componentLoader.clearComponentCache(id);
-    this.componentStatusLoader.clearOneComponentCache(id);
-    this.consumer.clearOneComponentCache(id);
-    this._componentList = new ComponentsList(this);
+    this.clearComponentsCache([id]);
   }
 
   clearComponentsCache(ids: ComponentID[]) {
-    ids.forEach((id) => this.clearComponentCache(id));
+    if (!ids.length) return; // nothing to clear, avoid scanning the caches for nothing
+    const uniqueIds = uniqBy(ids, (id) => id.toString());
+    this.componentLoader.clearComponentsCache(uniqueIds);
+    uniqueIds.forEach((id) => {
+      this.componentStatusLoader.clearOneComponentCache(id);
+      this.consumer.clearOneComponentCache(id);
+    });
+    this._componentList = new ComponentsList(this);
   }
 
   async warmCache() {

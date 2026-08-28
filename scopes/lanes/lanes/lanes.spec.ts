@@ -16,6 +16,8 @@ import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
+import { ComponentID } from '@teambit/component-id';
+import { partitionSwitchIds } from './switch-lanes';
 import { LanesAspect } from './lanes.aspect';
 import type { LanesMain } from './lanes.main.runtime';
 import type { MergeLanesMain } from '@teambit/merge-lanes';
@@ -504,5 +506,42 @@ describe('GraphQL Aspect', function () {
       expect(schema).to.be.an('object');
       expect(schema).to.not.be.an('function');
     });
+  });
+});
+
+describe('partitionSwitchIds', () => {
+  const id = (idStr: string) => ComponentID.fromString(idStr);
+  const ours = id('acme.shop/comp1');
+  const oursOnMainOnly = id('acme.shop/comp2');
+  const foreign = id('other.scope/table');
+
+  it('without a restriction: every lane component is taken, main-only components come along', () => {
+    const { ids, laneBitIds } = partitionSwitchIds([ours, foreign], [ours, oursOnMainOnly]);
+    expect(ids.map((i) => i.toString())).to.have.members([
+      oursOnMainOnly.toString(),
+      ours.toString(),
+      foreign.toString(),
+    ]);
+    // on the lane but not in the workspace's main set
+    expect(laneBitIds.map((i) => i.toString())).to.deep.equal([foreign.toString()]);
+  });
+
+  it('a restricted-out lane component is not taken from the lane', () => {
+    const { ids, laneBitIds } = partitionSwitchIds([ours, foreign], [ours], ['acme.shop']);
+    expect(ids.map((i) => i.toString())).to.deep.equal([ours.toString()]);
+    expect(laneBitIds).to.deep.equal([]);
+  });
+
+  // The regression this guards: filtering only the lane side lets a restricted-out component
+  // reappear as "main-only", which checks it out at its main version and writes it after all.
+  it('a restricted-out lane component the workspace tracks is left untouched, not reverted to main', () => {
+    const { ids } = partitionSwitchIds([ours, foreign], [ours, foreign], ['acme.shop']);
+    expect(ids.map((i) => i.toString())).to.deep.equal([ours.toString()]);
+    expect(ids.map((i) => i.toString())).to.not.include(foreign.toString());
+  });
+
+  it('a main-only component that the lane never carried is still taken at its main version', () => {
+    const { ids } = partitionSwitchIds([ours], [ours, oursOnMainOnly], ['acme.shop']);
+    expect(ids.map((i) => i.toString())).to.have.members([oursOnMainOnly.toString(), ours.toString()]);
   });
 });
