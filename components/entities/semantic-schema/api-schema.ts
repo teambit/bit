@@ -151,11 +151,15 @@ export class APISchema extends SchemaNode {
 
   /**
    * resolves a type reference to the declaration it points at. references to other components or to
-   * packages resolve to nothing: their declarations are not part of this schema.
+   * packages resolve to nothing: their declarations are not part of this schema. a reference to a
+   * declaration internal to a file only resolves within that file, so same-named declarations in other
+   * files are never mistaken for it.
    */
   resolveRef(ref: TypeRefSchema): SchemaNode | undefined {
     if (!ref.isFromThisComponent()) return undefined;
-    return this.findDeclaration(ref.name);
+    const candidates = this.listDeclarations().filter((node) => node.name === ref.name);
+    if (!ref.internalFilePath) return candidates[0];
+    return candidates.find((node) => node.location.filePath === ref.internalFilePath);
   }
 
   /**

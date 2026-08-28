@@ -15,6 +15,7 @@ import {
   TypeLiteralSchema,
   TypeRefSchema,
   TypeSchema,
+  TypeUnionSchema,
   VariableLikeSchema,
 } from './schemas';
 
@@ -55,6 +56,11 @@ describe('SchemaNode.getMembers()', () => {
   it('combines the members of an intersection', () => {
     const intersection = new TypeIntersectionSchema(loc, [literal(member('a')), iface('B', [member('b')])]);
     expect(names(intersection.getMembers())).to.deep.equal(['a', 'b']);
+  });
+
+  it('lists the members of every alternative of a union', () => {
+    const union = new TypeUnionSchema(loc, [literal(member('a'), member('shared')), literal(member('b'))]);
+    expect(names(union.getMembers())).to.deep.equal(['a', 'shared', 'b']);
   });
 
   it('follows a type alias and parentheses to the underlying type', () => {
@@ -153,6 +159,23 @@ describe('APISchema.getMembersOf()', () => {
 
   it('contributes nothing for an unknown reference', () => {
     expect(api([]).getMembersOf(new TypeRefSchema(loc, 'Missing'))).to.deep.equal([]);
+  });
+
+  it('resolves a file-internal reference only within its file', () => {
+    const inButton: SchemaLocation = { filePath: 'button.tsx', line: 1, character: 1 };
+    const inCard: SchemaLocation = { filePath: 'card.tsx', line: 1, character: 1 };
+    const buttonProps = new TypeSchema(inButton, 'Props', literal(member('label')), 'type Props');
+    const cardProps = new TypeSchema(inCard, 'Props', literal(member('title')), 'type Props');
+    const schema = api(
+      [],
+      [],
+      [new ModuleSchema(inCard, [], [cardProps]), new ModuleSchema(inButton, [], [buttonProps])]
+    );
+
+    const toButton = new TypeRefSchema(loc, 'Props', undefined, undefined, 'button.tsx');
+    const toElsewhere = new TypeRefSchema(loc, 'Props', undefined, undefined, 'missing.tsx');
+    expect(names(schema.getMembersOf(toButton))).to.deep.equal(['label']);
+    expect(schema.getMembersOf(toElsewhere)).to.deep.equal([]);
   });
 });
 

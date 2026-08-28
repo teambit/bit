@@ -13,6 +13,7 @@ import {
   TypeLiteralSchema,
   TypeRefSchema,
   TypeSchema,
+  TypeUnionSchema,
   VariableLikeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import { ComponentID } from '@teambit/component-id';
@@ -186,6 +187,22 @@ describe('reactDocsFromSchema()', () => {
     const docs = reactDocsFromSchema(apiSchema([reactNode('Button', 'ButtonProps'), propsType, base]));
 
     expect(docs?.properties.map((prop) => prop.name)).to.deep.equal(['text', 'className']);
+  });
+
+  it('lists the props of every alternative of a union, each name once', () => {
+    // `type Props = { text?: string; variant?: string } | { icon?: string; variant?: string }`
+    const propsType = new TypeSchema(
+      loc,
+      'ButtonProps',
+      new TypeUnionSchema(loc, [
+        new TypeLiteralSchema(loc, [member('text', 'string', true), member('variant', 'string', true)]),
+        new TypeLiteralSchema(loc, [member('icon', 'string', true), member('variant', 'string', true)]),
+      ]),
+      'type ButtonProps'
+    );
+    const docs = reactDocsFromSchema(apiSchema([reactNode('Button', 'ButtonProps'), propsType]));
+
+    expect(docs?.properties.map((prop) => prop.name)).to.deep.equal(['text', 'variant', 'icon']);
   });
 
   it('exposes the component doc comment as the abstract', () => {
