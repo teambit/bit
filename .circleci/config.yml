@@ -1528,12 +1528,19 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
-          name: check the bundle_version parameter
+          name: resolve the version to publish
+          # An explicit bundle_version wins. Otherwise it is derived from this branch's own
+          # component version plus the next free counter in bvm's index - so forgetting the
+          # parameter is not an error, a re-run cannot overwrite an earlier build, and nobody has
+          # to remember which -bundle.N they are up to.
           command: |
-            if [ -z "<< pipeline.parameters.bundle_version >>" ]; then
-              echo "bundle_version is empty - trigger the pipeline with it set, e.g. 2.2.18-bundle.1"
-              exit 1
+            cd bit
+            VERSION="<< pipeline.parameters.bundle_version >>"
+            if [ -z "$VERSION" ]; then
+              VERSION=$(node scripts/next-bundle-version.js)
             fi
+            echo "publishing as ${VERSION}"
+            echo "export BUNDLE_VERSION=${VERSION}" >> "$BASH_ENV"
       - setup_bit_environment
       - set_bit_cloud_registry
       - setup_pnpm
@@ -1577,11 +1584,14 @@ jobs:
               node scripts/pack-bundle-for-bvm.js \
                 --capsule-of teambit.harmony/bit \
                 --bit-bin "$PWD/bin/bit.js" \
-                --version "<< pipeline.parameters.bundle_version >>" \
+                --version "${BUNDLE_VERSION}" \
                 --os "${target%-*}" \
                 --arch "${target##*-}" \
                 --out-dir /home/circleci/bit/bvm-tars
             done
+            # the publish job reads the version from here rather than the parameter, so the two
+            # jobs cannot disagree about what was built
+            echo "${BUNDLE_VERSION}" > /home/circleci/bit/bvm-tars/version.txt
             ls -la /home/circleci/bit/bvm-tars
       - persist_to_workspace:
           root: .
@@ -1606,7 +1616,8 @@ jobs:
           # serve bvm's `package-manager` install method, which needs the version on the registry.
           # These builds are installed with `--method tar`.
           command: |
-            BUNDLE_VERSION="<< pipeline.parameters.bundle_version >>"
+            BUNDLE_VERSION="$(cat bvm-tars/version.txt)"
+            echo "export BUNDLE_VERSION=${BUNDLE_VERSION}" >> "$BASH_ENV"
             cd bvm-tars
             for tar in bit-${BUNDLE_VERSION}-*.tar.gz; do
               gsutil cp "${tar}" "gs://bvm.bit.dev/bit/versions/${BUNDLE_VERSION}/${tar}"
@@ -1620,14 +1631,14 @@ jobs:
           command: |
             cd bit
             node scripts/add-bvm-index-entry.js \
-              --version "<< pipeline.parameters.bundle_version >>" \
+              --version "${BUNDLE_VERSION}" \
               --release-type dev
             gsutil cp index.json gs://bvm.bit.dev/bit/index.json
             gsutil setmeta -h "Cache-Control:no-cache" gs://bvm.bit.dev/bit/index.json
       - run:
           name: How to install it
           command: |
-            echo "BVM_RELEASE_TYPE=dev bvm install << pipeline.parameters.bundle_version >> --method tar"
+            echo "BVM_RELEASE_TYPE=dev bvm install ${BUNDLE_VERSION} --method tar"
 
   harmony_publish_to_gcloud:
     docker:

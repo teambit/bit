@@ -77,9 +77,18 @@ survive both the pack and the tar.
 it from the CircleCI web app (Trigger Pipeline) with:
 
 ```
-run_bundle_deploy = true
-bundle_version    = 2.2.18-bundle.1
+run_bundle_deploy = true          (boolean)
+bundle_version    = 2.2.11-bundle.1     (string, optional)
 ```
+
+`bundle_version` is optional. Left out, `scripts/next-bundle-version.js` derives it: the base is
+this branch's own `teambit.harmony/bit` version from `.bitmap`, and the counter is the next one
+free in bvm's live index. So the version tracks the branch as it merges master, a re-run cannot
+overwrite an earlier build, and there is no counter to remember. Pass it explicitly only to
+override.
+
+The resolved version is written to `bvm-tars/version.txt` and the publish job reads it from there
+rather than from the parameter, so the two jobs cannot disagree about what was built.
 
 It builds the UI/preview pre-bundle, then the CLI bundle into the `@teambit/bit` capsule, packs a
 tar per platform, uploads them with their checksums, and adds the `dev` index entry.
