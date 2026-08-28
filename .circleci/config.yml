@@ -605,18 +605,6 @@ commands:
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
-      # TEMPORARY - REVERT BEFORE MERGE. The controlled A/B showed the compile cache makes no
-      # difference to e2e wall time on CI (428.0 vs 431.8 machine-min) even though it is worth 21%
-      # locally. This tells us whether the cache is actually being populated here at all, which
-      # separates "not active on CI" (fixable) from "active but I/O-bound, so it doesn't pay".
-      - run:
-          name: 'TEMPORARY diagnostic - is the node compile cache populated?'
-          command: |
-            DIR="${NODE_COMPILE_CACHE:-${TMPDIR:-/tmp}/node-compile-cache}"
-            echo "compile cache dir: $DIR"
-            du -sh "$DIR" 2>/dev/null || echo "compile cache dir was NOT populated"
-            echo "entries: $(find "$DIR" -type f 2>/dev/null | wc -l)"
-          when: always
       - store_test_results:
           path: bit/junit
       - store_artifacts:
