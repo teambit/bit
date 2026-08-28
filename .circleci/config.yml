@@ -964,6 +964,12 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # An explicit compile-cache dir, out of /tmp which the suite itself churns (e2e workspaces
+      # live under BIT_TEMP_ROOT = /tmp/bit). Left on the default, the cache came out half-built on
+      # CI - 599 entries here vs 1,220 from a single `bit status` locally - and a controlled A/B
+      # showed no gain at all. The e2e helper spreads process.env into every spawned bit, so all
+      # ~13,700 invocations of a run share this one cache.
+      NODE_COMPILE_CACHE: /home/circleci/node-compile-cache
     parallelism: 40
     steps:
       - e2e_test_cmd:
