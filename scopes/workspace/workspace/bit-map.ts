@@ -48,7 +48,7 @@ export class BitMap {
   ): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
     const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
-    const currentConfig = (bitMapEntry.config ||= {})[aspectId];
+    const currentConfig = bitMapEntry.config?.[aspectId];
     if (isEqual(currentConfig, config)) {
       return false; // no changes
     }
@@ -63,9 +63,11 @@ export class BitMap {
     };
     const newConfig = getNewConfig();
     if (newConfig) {
-      bitMapEntry.config[aspectId] = newConfig;
-    } else {
+      (bitMapEntry.config ||= {})[aspectId] = newConfig;
+    } else if (bitMapEntry.config) {
       delete bitMapEntry.config[aspectId];
+      // avoid leaving an empty `config: {}` object in the .bitmap file
+      if (!Object.keys(bitMapEntry.config).length) delete bitMapEntry.config;
     }
     this.legacyBitMap.markAsChanged();
 
@@ -95,14 +97,16 @@ export class BitMap {
   removeComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
     const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
-    const currentConfig = (bitMapEntry.config ||= {})[aspectId];
+    const currentConfig = bitMapEntry.config?.[aspectId];
     if (currentConfig) {
-      delete bitMapEntry.config[aspectId];
+      delete bitMapEntry.config![aspectId];
+      // avoid leaving an empty `config: {}` object in the .bitmap file
+      if (!Object.keys(bitMapEntry.config!).length) delete bitMapEntry.config;
     } else {
       if (!markWithMinusIfNotExist) {
         return false; // no changes
       }
-      bitMapEntry.config[aspectId] = REMOVE_EXTENSION_SPECIAL_SIGN;
+      (bitMapEntry.config ||= {})[aspectId] = REMOVE_EXTENSION_SPECIAL_SIGN;
     }
 
     this.legacyBitMap.markAsChanged();
