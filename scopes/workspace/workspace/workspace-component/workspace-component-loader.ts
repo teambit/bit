@@ -554,6 +554,18 @@ export class WorkspaceComponentLoader {
       // env-data, as when their own env was not loaded yet, the env-data is calculated with a
       // fallback env.
       const isLegacyCoreEnv = this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion());
+      // when the component's own env is a legacy core env that is not loaded yet (it's an
+      // installed package, not a core aspect), the env-data above falls back to the default env
+      // and its type says nothing. the configured env id still tells what this component is:
+      // teambit.envs/env marks an env, teambit.harmony/aspect marks an aspect. the env may be
+      // configured either via the envs config ("bit env set") or as a direct extension entry
+      // (variants) - check both.
+      const configuredEnvIds = compact([
+        (envsData?.config?.env as string | undefined)?.split('@')[0],
+        ...component.state.aspects.entries.map((entry) => entry.id.toStringWithoutVersion()),
+      ]);
+      const configuredAsEnvEnv = configuredEnvIds.includes('teambit.envs/env');
+      const configuredAsAspectEnv = configuredEnvIds.includes('teambit.harmony/aspect');
       // a component with an env plugin file (*.bit-env.*) is an env by definition. the env-data
       // type can't be relied on when the env's own env was not loaded yet (e.g. a just-created
       // env whose env-of-env is not installed) - the env-data falls back to the default env.
@@ -565,12 +577,13 @@ export class WorkspaceComponentLoader {
           envsData?.data?.self ||
           envsData?.data?.type === 'env' ||
           isLegacyCoreEnv ||
+          configuredAsEnvEnv ||
           this.envs.hasEnvPluginFile(component))
       ) {
         aspectIds.push(idStr);
         this.componentLoadedSelfAsAspects.set(idStr, true);
       }
-      if (opts.loadAspects && envsData?.data?.type === 'aspect') {
+      if (opts.loadAspects && (envsData?.data?.type === 'aspect' || configuredAsAspectEnv)) {
         aspectIds.push(idStr);
         this.componentLoadedSelfAsAspects.set(idStr, true);
       }
