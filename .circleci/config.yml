@@ -970,10 +970,6 @@ jobs:
       # showed no gain at all. The e2e helper spreads process.env into every spawned bit, so all
       # ~13,700 invocations of a run share this one cache.
       NODE_COMPILE_CACHE: /home/circleci/node-compile-cache
-      # TEMPORARY - control arm for the setup-template A/B, REVERT BEFORE MERGE.
-      # Forces the real bit init / init --bare / remote add commands, so this run measures the
-      # same branch and test set without the templates.
-      BIT_E2E_NO_SETUP_TEMPLATE: "1"
     parallelism: 40
     steps:
       - e2e_test_cmd:
