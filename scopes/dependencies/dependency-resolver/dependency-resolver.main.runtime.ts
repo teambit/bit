@@ -109,6 +109,7 @@ export interface DependencyResolverComponentData {
 
 export interface DependencyResolverVariantConfig {
   policy: VariantPolicyConfigObject;
+  packageName?: string;
 }
 
 export type RootPolicyRegistry = SlotRegistry<WorkspacePolicy>;

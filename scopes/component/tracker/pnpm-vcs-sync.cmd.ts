@@ -13,6 +13,7 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { Extensions } from '@teambit/legacy.constants';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { Workspace } from '@teambit/workspace';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { TrackerAspect } from './tracker.aspect';
 
 export type WorkspaceTool = {
@@ -55,6 +56,7 @@ type PnpmVcsComponentConfig = {
 type StoredComponentConfig = {
   trackerConfig: Record<string, any>;
   pnpmVcs?: PnpmVcsComponentConfig;
+  dependencyResolverConfig?: Record<string, any>;
 };
 
 type SyncFlags = {
@@ -163,6 +165,7 @@ export async function syncPnpmWorkspace(
     storedConfigs.set(component.id.toStringWithoutVersion(), {
       trackerConfig,
       pnpmVcs: readPnpmVcsConfig(trackerConfig.pnpmVcs),
+      dependencyResolverConfig: component.state.aspects.get(DependencyResolverAspect.id)?.config,
     });
   });
   const existingRoot = bitMap.components.find((component) => !component.rootDir && component.useExplicitFiles);
@@ -234,6 +237,8 @@ export async function syncPnpmWorkspace(
     const stored = storedConfigs.get(componentMap.id.toStringWithoutVersion());
     const pnpmVcsConfig = projectConfigs.get(project.rootDir)!;
     addPnpmVcsConfig(workspace, componentMap, stored?.trackerConfig, pnpmVcsConfig);
+    const packageName = await readProjectPackageName(workspace.path, project);
+    addPackageNameConfig(workspace, componentMap, stored?.dependencyResolverConfig, packageName);
     if (stored?.pnpmVcs && !isEqual(stored.pnpmVcs.appliedProfile, workspaceProfile)) {
       updatedComponents.push(componentMap.id.toStringWithoutVersion());
     }
@@ -276,6 +281,24 @@ export async function syncPnpmWorkspace(
   };
 }
 
+async function readProjectPackageName(
+  workspacePath: string,
+  project: Pick<PnpmProjectInventoryItem, 'rootDir' | 'manifestFile'>
+): Promise<string> {
+  const manifestPath = path.join(workspacePath, project.rootDir, project.manifestFile);
+  let manifest: unknown;
+  try {
+    manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
+  } catch (error: any) {
+    throw new BitError(`unable to read pnpm project manifest ${manifestPath}: ${error.message}`);
+  }
+  const packageName = (manifest as { name?: unknown })?.name;
+  if (typeof packageName !== 'string' || !packageName) {
+    throw new BitError(`pnpm project ${project.rootDir} must declare a package name`);
+  }
+  return packageName;
+}
+
 function readPnpmVcsConfig(value: unknown): PnpmVcsComponentConfig | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const config = value as Partial<PnpmVcsComponentConfig>;
@@ -300,6 +323,20 @@ function addPnpmVcsConfig(
     ...storedTrackerConfig,
     ...(localTrackerConfig && localTrackerConfig !== '-' ? localTrackerConfig : undefined),
     pnpmVcs,
+  });
+}
+
+function addPackageNameConfig(
+  workspace: Workspace,
+  componentMap: ComponentMap,
+  storedConfig: Record<string, any> | undefined,
+  packageName: string
+): void {
+  const localConfig = componentMap.config?.[DependencyResolverAspect.id];
+  workspace.bitMap.addComponentConfig(componentMap.id, DependencyResolverAspect.id, {
+    ...storedConfig,
+    ...(localConfig && localConfig !== '-' ? localConfig : undefined),
+    packageName,
   });
 }
 

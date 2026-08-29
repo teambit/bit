@@ -1175,8 +1175,13 @@ export class WorkspaceComponentLoader {
       envsData.resolvedEnvJsonc = resolvedEnvJsonc;
     }
 
+    const dependencyResolverConfig = component.config.extensions.findExtension(DependencyResolverAspect.id)?.config;
+    const configuredPackageName = dependencyResolverConfig?.packageName;
     const depResolverData = {
-      packageName: this.dependencyResolver.calcPackageName(component),
+      packageName:
+        typeof configuredPackageName === 'string' && configuredPackageName
+          ? configuredPackageName
+          : this.dependencyResolver.calcPackageName(component),
       dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
       componentRangePrefix: this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(

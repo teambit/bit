@@ -7,7 +7,7 @@ import type { Scope } from '@teambit/legacy.scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BuildStatus, Extensions } from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
+import { CURRENT_SCHEMA, Dependency } from '@teambit/legacy.consumer-component';
 import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { NewerVersionFound } from '@teambit/legacy.consumer';
@@ -17,6 +17,7 @@ import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
+import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import type { BuilderMain, OnTagOpts } from '@teambit/builder';
 import type { ModelComponent, Log, Lane } from '@teambit/objects';
 import { DependenciesGraph } from '@teambit/objects';
@@ -72,6 +73,80 @@ export type VersionMakerParams = {
   updateDependentsOnLane?: boolean;
   setHeadAsParent?: boolean;
 } & BasicTagParams;
+
+export type GraphComponentDependency = {
+  id: ComponentID;
+  packageName: string;
+  lifecycle: 'runtime' | 'dev';
+  optional: boolean;
+};
+
+/**
+ * The package-manager graph keeps the authored package specifier while its
+ * package entry carries the Bit component identity. Convert only direct root
+ * edges here; transitive component edges belong to their owning components.
+ */
+export function componentDependenciesFromGraph(graph: DependenciesGraph): GraphComponentDependency[] {
+  const rootEdge = graph.findRootEdge();
+  if (!rootEdge) return [];
+  return compact(
+    rootEdge.neighbours.map((neighbour): GraphComponentDependency | undefined => {
+      if (!neighbour.name) return undefined;
+      const packageAttributes = graph.packages.get(neighbour.id);
+      const component = packageAttributes?.component;
+      const packageVersion = packageAttributes?.version;
+      if (!component?.scope || !component.name || !packageVersion) return undefined;
+      const snapVersion = packageVersion.startsWith(SNAP_VERSION_PREFIX)
+        ? packageVersion.slice(SNAP_VERSION_PREFIX.length)
+        : undefined;
+      const version = snapVersion && isSnapVersion(snapVersion) ? snapVersion : packageVersion;
+      return {
+        id: ComponentID.fromObject({ scope: component.scope, name: component.name, version }),
+        packageName: neighbour.name,
+        lifecycle: neighbour.lifecycle ?? 'runtime',
+        optional: Boolean(neighbour.optional),
+      };
+    })
+  );
+}
+
+function removeDependencyByPackageName(dependencies: Dependency[], packageName: string): void {
+  for (let index = dependencies.length - 1; index >= 0; index -= 1) {
+    if (dependencies[index].packageName === packageName) dependencies.splice(index, 1);
+  }
+}
+
+function promoteDependencyResolverData(component: ConsumerComponent, graphDependency: GraphComponentDependency): void {
+  const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
+  if (!entry) return;
+  const dependencies = Array.isArray(entry.data?.dependencies) ? entry.data.dependencies : [];
+  const existing = dependencies.find(
+    (dependency) =>
+      dependency.packageName === graphDependency.packageName || dependency.id === graphDependency.packageName
+  );
+  const promoted = {
+    id: graphDependency.id.toString(),
+    componentId: graphDependency.id.serialize(),
+    isExtension: false,
+    packageName: graphDependency.packageName,
+    version: graphDependency.id.version,
+    __type: COMPONENT_DEP_TYPE,
+    lifecycle: graphDependency.lifecycle,
+    source: existing?.source ?? 'auto',
+    hidden: existing?.hidden,
+    optional: graphDependency.optional,
+  };
+  entry.data = {
+    ...entry.data,
+    dependencies: [
+      ...dependencies.filter(
+        (dependency) =>
+          dependency.packageName !== graphDependency.packageName && dependency.id !== graphDependency.packageName
+      ),
+      promoted,
+    ],
+  };
+}
 
 /**
  * create a tag or a snap of the given components and save them in the local scope.
@@ -157,10 +232,11 @@ export class VersionMaker {
 
     const { rebuildDepsGraph, noLockDeps, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } =
       this.params;
-    await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
     if (!noLockDeps) {
       await this._addDependenciesGraphToComponents();
+      this._promoteGraphComponentDependencies();
     }
+    await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
     if (!build) this.emptyBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
@@ -285,8 +361,38 @@ export class VersionMaker {
       }
     }
     await this.dependencyResolver.addDependenciesGraph(components, options);
+    for (const consumerComponent of this.allComponentsToTag) {
+      const workspaceComponent = this._findWorkspaceCompByConsumerComp(consumerComponent);
+      const graph = workspaceComponent?.state._consumer.dependenciesGraph;
+      if (graph) consumerComponent.dependenciesGraph = graph;
+    }
     this.snapping.logger.clearStatusLine();
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
+  }
+
+  private _promoteGraphComponentDependencies(): void {
+    for (const component of this.allComponentsToTag) {
+      const graph = component.dependenciesGraph;
+      if (!graph) continue;
+      const graphDependencies = componentDependenciesFromGraph(graph);
+      for (const graphDependency of graphDependencies) {
+        if (component.id.isEqualWithoutVersion(graphDependency.id)) continue;
+        const target = graphDependency.lifecycle === 'dev' ? component.devDependencies : component.dependencies;
+        const other = graphDependency.lifecycle === 'dev' ? component.dependencies : component.devDependencies;
+        removeDependencyByPackageName(other.get(), graphDependency.packageName);
+        const existing = target.getByPackageName(graphDependency.packageName);
+        if (existing) {
+          existing.id = graphDependency.id;
+          existing.packageName = graphDependency.packageName;
+        } else {
+          target.add(new Dependency(graphDependency.id, [], graphDependency.packageName));
+        }
+        delete component.packageDependencies[graphDependency.packageName];
+        delete component.devPackageDependencies[graphDependency.packageName];
+        delete component.peerPackageDependencies[graphDependency.packageName];
+        promoteDependencyResolverData(component, graphDependency);
+      }
+    }
   }
 
   private _findWorkspaceCompByConsumerComp(consumerComponent: ConsumerComponent): Component | undefined {
