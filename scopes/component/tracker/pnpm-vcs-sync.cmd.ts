@@ -1,34 +1,60 @@
 import fs from 'fs-extra';
 import ignore from 'ignore';
 import path from 'path';
+import semver from 'semver';
+import isEqual from 'lodash/isEqual';
 import { glob } from 'glob';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { retrieveIgnoreList } from '@teambit/git.modules.ignore-file-reader';
 import type { BitMap, ComponentMap, ComponentMapFile } from '@teambit/legacy.bit-map';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { Extensions } from '@teambit/legacy.constants';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { Workspace } from '@teambit/workspace';
+import { TrackerAspect } from './tracker.aspect';
+
+export type WorkspaceTool = {
+  implementation: string;
+  version: string;
+};
+
+export type WorkspaceToolMap = Record<string, WorkspaceTool>;
 
 export type PnpmProjectInventoryItem = {
   rootDir: string;
   componentName: string;
   manifestFile: string;
+  requirements?: WorkspaceToolMap;
 };
 
 export type PnpmWorkspaceInventory = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   defaultScope: string;
   rootComponentName: string;
   rootMainFile: string;
+  workspaceProfile?: WorkspaceToolMap;
   projects: PnpmProjectInventoryItem[];
 };
 
 export type PnpmVcsSyncResult = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   rootComponent: string;
+  workspaceProfile: WorkspaceToolMap;
+  updatedComponents: string[];
   components: Array<{ id: string; rootDir: string; files: number }>;
+};
+
+type PnpmVcsComponentConfig = {
+  schemaVersion: 1;
+  requirements: WorkspaceToolMap;
+  appliedProfile: WorkspaceToolMap;
+};
+
+type StoredComponentConfig = {
+  trackerConfig: Record<string, any>;
+  pnpmVcs?: PnpmVcsComponentConfig;
 };
 
 type SyncFlags = {
@@ -70,7 +96,7 @@ async function readInventory(inventoryPath: string): Promise<PnpmWorkspaceInvent
     throw new BitError(`unable to read pnpm workspace inventory: ${error.message}`);
   }
   if (!isInventory(parsed)) {
-    throw new BitError('unsupported or invalid pnpm workspace inventory; expected schema version 1');
+    throw new BitError('unsupported or invalid pnpm workspace inventory; expected schema version 2');
   }
   return parsed;
 }
@@ -79,21 +105,33 @@ function isInventory(value: unknown): value is PnpmWorkspaceInventory {
   if (!value || typeof value !== 'object') return false;
   const inventory = value as Partial<PnpmWorkspaceInventory>;
   return (
-    inventory.schemaVersion === 1 &&
+    inventory.schemaVersion === 2 &&
     typeof inventory.defaultScope === 'string' &&
     typeof inventory.rootComponentName === 'string' &&
     Boolean(inventory.rootComponentName) &&
     typeof inventory.rootMainFile === 'string' &&
     Boolean(inventory.rootMainFile) &&
+    (inventory.workspaceProfile === undefined || isWorkspaceToolMap(inventory.workspaceProfile, true)) &&
     Array.isArray(inventory.projects) &&
     inventory.projects.every(
       (project) =>
         project &&
         typeof project.rootDir === 'string' &&
         typeof project.componentName === 'string' &&
-        typeof project.manifestFile === 'string'
+        typeof project.manifestFile === 'string' &&
+        (project.requirements === undefined || isWorkspaceToolMap(project.requirements, false))
     )
   );
+}
+
+function isWorkspaceToolMap(value: unknown, exact: boolean): value is WorkspaceToolMap {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  return Object.entries(value).every(([slot, tool]) => {
+    if (!slot || !tool || typeof tool !== 'object' || Array.isArray(tool)) return false;
+    const candidate = tool as Partial<WorkspaceTool>;
+    if (!candidate.implementation || !candidate.version) return false;
+    return exact ? Boolean(semver.valid(candidate.version)) : Boolean(semver.validRange(candidate.version));
+  });
 }
 
 export async function syncPnpmWorkspace(
@@ -116,6 +154,37 @@ export async function syncPnpmWorkspace(
     'component name'
   );
 
+  const bitMap = workspace.consumer.bitMap;
+  const workspaceComponents = await workspace.list();
+  const storedConfigs = new Map<string, StoredComponentConfig>();
+  workspaceComponents.forEach((component) => {
+    const trackerConfig = component.state.aspects.get(TrackerAspect.id)?.config;
+    if (!trackerConfig || typeof trackerConfig !== 'object') return;
+    storedConfigs.set(component.id.toStringWithoutVersion(), {
+      trackerConfig,
+      pnpmVcs: readPnpmVcsConfig(trackerConfig.pnpmVcs),
+    });
+  });
+  const existingRoot = bitMap.components.find((component) => !component.rootDir && component.useExplicitFiles);
+  const storedRootConfig = existingRoot
+    ? storedConfigs.get(existingRoot.id.toStringWithoutVersion())?.pnpmVcs
+    : undefined;
+  const workspaceProfile = inventory.workspaceProfile ?? storedRootConfig?.appliedProfile ?? {};
+  validateWorkspaceProfile(workspaceProfile);
+
+  const projectConfigs = new Map<string, PnpmVcsComponentConfig>();
+  projects.forEach((project) => {
+    const existing = bitMap.components.find((component) => component.rootDir === project.rootDir);
+    const stored = existing ? storedConfigs.get(existing.id.toStringWithoutVersion())?.pnpmVcs : undefined;
+    const requirements = project.requirements ?? stored?.requirements ?? requirementsForProfile(workspaceProfile);
+    validateWorkspaceRequirements(workspaceProfile, requirements, project.rootDir);
+    projectConfigs.set(project.rootDir, {
+      schemaVersion: 1,
+      requirements,
+      appliedProfile: workspaceProfile,
+    });
+  });
+
   const ignored = ignore().add([
     ...(await retrieveIgnoreList(workspace.path)),
     ...(workspace.consumer.config.ignoredFiles || []),
@@ -135,8 +204,8 @@ export async function syncPnpmWorkspace(
     .sort();
   const { rootsByDepth, filesByRoot, rootFiles } = assignFilesToProjects(allFiles, projects);
 
-  const bitMap = workspace.consumer.bitMap;
   const synced: PnpmVcsSyncResult['components'] = [];
+  const updatedComponents: string[] = [];
   const currentProjectRoots = new Set(projects.map((project) => project.rootDir));
   bitMap.components
     .filter(
@@ -162,6 +231,12 @@ export async function syncPnpmWorkspace(
       files,
       project.rootDir
     );
+    const stored = storedConfigs.get(componentMap.id.toStringWithoutVersion());
+    const pnpmVcsConfig = projectConfigs.get(project.rootDir)!;
+    addPnpmVcsConfig(workspace, componentMap, stored?.trackerConfig, pnpmVcsConfig);
+    if (stored?.pnpmVcs && !isEqual(stored.pnpmVcs.appliedProfile, workspaceProfile)) {
+      updatedComponents.push(componentMap.id.toStringWithoutVersion());
+    }
     synced.push({ id: componentMap.id.toStringWithoutVersion(), rootDir: project.rootDir, files: files.length });
   }
 
@@ -172,7 +247,6 @@ export async function syncPnpmWorkspace(
   // The root package name may change over time. Its component identity, like a
   // project's identity, is anchored to its ownership location rather than the
   // latest package.json name.
-  const existingRoot = bitMap.components.find((component) => !component.rootDir && component.useExplicitFiles);
   const rootComponent = addOrUpdateComponent(
     bitMap,
     existingRoot,
@@ -181,13 +255,143 @@ export async function syncPnpmWorkspace(
     rootMainFile,
     rootFiles
   );
+  addPnpmVcsConfig(
+    workspace,
+    rootComponent,
+    storedConfigs.get(rootComponent.id.toStringWithoutVersion())?.trackerConfig,
+    {
+      schemaVersion: 1,
+      requirements: requirementsForProfile(workspaceProfile),
+      appliedProfile: workspaceProfile,
+    }
+  );
   synced.push({ id: rootComponent.id.toStringWithoutVersion(), rootDir: '.', files: rootFiles.length });
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     rootComponent: rootComponent.id.toStringWithoutVersion(),
+    workspaceProfile,
+    updatedComponents,
     components: synced,
   };
+}
+
+function readPnpmVcsConfig(value: unknown): PnpmVcsComponentConfig | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const config = value as Partial<PnpmVcsComponentConfig>;
+  if (
+    config.schemaVersion !== 1 ||
+    !isWorkspaceToolMap(config.requirements, false) ||
+    !isWorkspaceToolMap(config.appliedProfile, true)
+  ) {
+    return undefined;
+  }
+  return config as PnpmVcsComponentConfig;
+}
+
+function addPnpmVcsConfig(
+  workspace: Workspace,
+  componentMap: ComponentMap,
+  storedTrackerConfig: Record<string, any> | undefined,
+  pnpmVcs: PnpmVcsComponentConfig
+): void {
+  const localTrackerConfig = componentMap.config?.[TrackerAspect.id];
+  workspace.bitMap.addComponentConfig(componentMap.id, TrackerAspect.id, {
+    ...storedTrackerConfig,
+    ...(localTrackerConfig && localTrackerConfig !== '-' ? localTrackerConfig : undefined),
+    pnpmVcs,
+  });
+}
+
+export function requirementsForProfile(profile: WorkspaceToolMap): WorkspaceToolMap {
+  return Object.fromEntries(Object.entries(profile).map(([slot, selection]) => [slot, { ...selection }]));
+}
+
+export function validateWorkspaceProfile(profile: WorkspaceToolMap): void {
+  for (const [slot, selection] of Object.entries(profile)) {
+    if (!slot || !selection.implementation || !semver.valid(selection.version)) {
+      throw new BitError(`invalid pnpm VCS workspace profile selection for ${slot || '<empty>'}`);
+    }
+  }
+}
+
+export function validateWorkspaceRequirements(
+  profile: WorkspaceToolMap,
+  requirements: WorkspaceToolMap,
+  component: string
+): void {
+  for (const [slot, requirement] of Object.entries(requirements)) {
+    const selection = profile[slot];
+    if (!selection) {
+      throw new BitError(
+        `pnpm VCS component ${component} requires ${slot} (${requirement.implementation} ${requirement.version}), but the workspace profile does not select ${slot}`
+      );
+    }
+    if (selection.implementation !== requirement.implementation) {
+      throw new BitError(
+        `pnpm VCS component ${component} requires ${slot} implementation ${requirement.implementation}, but the workspace selects ${selection.implementation}`
+      );
+    }
+    if (!semver.validRange(requirement.version) || !semver.satisfies(selection.version, requirement.version)) {
+      throw new BitError(
+        `pnpm VCS component ${component} requires ${slot} ${requirement.implementation}@${requirement.version}, but the workspace selects ${selection.implementation}@${selection.version}`
+      );
+    }
+  }
+}
+
+/**
+ * Enforce the profile before import writes, then persist the effective profile
+ * once the writer has attached a component map. Components created before the
+ * pnpm VCS protocol remain importable and the next inventory sync binds them
+ * to the exact profile.
+ */
+export async function applyWorkspaceProfileToImportedComponents(
+  workspace: Workspace,
+  components: ConsumerComponent[]
+): Promise<boolean> {
+  const rootMap = workspace.consumer.bitMap.components.find(
+    (component) => !component.rootDir && component.useExplicitFiles
+  );
+  if (!rootMap) return false;
+  const rootComponent = await workspace.get(rootMap.id);
+  const rootTrackerConfig = rootComponent.state.aspects.get(TrackerAspect.id)?.config;
+  const rootPnpmVcs = readPnpmVcsConfig(rootTrackerConfig?.pnpmVcs);
+  if (!rootPnpmVcs) return false;
+
+  const declared = components.flatMap((component) => {
+    const trackerEntry = component.extensions.findCoreExtension(TrackerAspect.id);
+    const pnpmVcs = readPnpmVcsConfig(trackerEntry?.config?.pnpmVcs);
+    if (!trackerEntry || !pnpmVcs) return [];
+    validateWorkspaceRequirements(
+      rootPnpmVcs.appliedProfile,
+      pnpmVcs.requirements,
+      component.id.toStringWithoutVersion()
+    );
+    return [{ component, trackerEntry, pnpmVcs }];
+  });
+
+  let persisted = false;
+  declared.forEach(({ component, trackerEntry, pnpmVcs }) => {
+    let effectiveTrackerEntry = trackerEntry;
+    let effectivePnpmVcs = pnpmVcs;
+    if (!isEqual(pnpmVcs.appliedProfile, rootPnpmVcs.appliedProfile)) {
+      component.extensions = component.extensions.clone();
+      const clonedTrackerEntry = component.extensions.findCoreExtension(TrackerAspect.id);
+      if (!clonedTrackerEntry) throw new Error(`unable to update pnpm VCS profile for ${component.id.toString()}`);
+      effectivePnpmVcs = { ...pnpmVcs, appliedProfile: rootPnpmVcs.appliedProfile };
+      clonedTrackerEntry.config = {
+        ...trackerEntry.config,
+        pnpmVcs: effectivePnpmVcs,
+      };
+      effectiveTrackerEntry = clonedTrackerEntry;
+    }
+    if (component.componentMap) {
+      addPnpmVcsConfig(workspace, component.componentMap, effectiveTrackerEntry.config, effectivePnpmVcs);
+      persisted = true;
+    }
+  });
+  return persisted;
 }
 
 function addOrUpdateComponent(

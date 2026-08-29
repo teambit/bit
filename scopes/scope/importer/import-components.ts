@@ -34,6 +34,7 @@ import type { ListerMain } from '@teambit/lister';
 import { NoIdMatchWildcard } from '@teambit/lister';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { applyWorkspaceProfileToImportedComponents } from '@teambit/tracker';
 
 const BEFORE_IMPORT_ACTION = 'importing components';
 
@@ -419,7 +420,13 @@ export default class ImportComponents {
       this._throwForDivergedHistory();
       await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
       const filteredComponents = await this._filterComponentsByFilters(components);
+      await applyWorkspaceProfileToImportedComponents(this.workspace, filteredComponents);
       componentWriterResults = await this._writeToFileSystem(filteredComponents);
+      const persistedPnpmVcsProfile = await applyWorkspaceProfileToImportedComponents(
+        this.workspace,
+        filteredComponents
+      );
+      if (persistedPnpmVcsProfile) await this.consumer.writeBitMap('import pnpm VCS profile');
       await this._saveLaneDataIfNeeded(filteredComponents);
       writtenComponents = filteredComponents;
     }

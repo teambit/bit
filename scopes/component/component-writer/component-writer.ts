@@ -132,13 +132,19 @@ export default class ComponentWriter {
       ? undefined
       : await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, bitId.fullName);
 
-    return this.bitMap.addComponent({
+    const componentMap = this.bitMap.addComponent({
       componentId: compId,
       files: filesForBitMap,
       defaultScope,
       mainFile: pathNormalizeToLinux(this.component.mainFile),
       rootDir,
     });
+    // Harmony normally ignores package.json because Bit generates it. A model
+    // component that explicitly contains package.json (such as a pnpm VCS
+    // component) owns that manifest as source, so directory scanning must not
+    // silently drop it after import.
+    if (filesForBitMap.some((file) => file.relativePath === 'package.json')) componentMap.useExplicitFiles = true;
+    return componentMap;
   }
 
   private async replaceSnapWithTagIfNeeded(): Promise<ComponentID> {
