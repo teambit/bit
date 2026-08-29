@@ -107,7 +107,7 @@ export class ComponentWriterMain {
         opts.mergeStrategy
       );
     }
-    if (this.workspace.externalPackageManagerIsUsed()) {
+    if (this.workspace.externalPackageManagerIsUsed() && !this.isPnpmVcsWorkspace()) {
       await this.installer.writeDependenciesToPackageJson();
     } else if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(
@@ -118,6 +118,14 @@ export class ComponentWriterMain {
       compilationError = await this.compileGracefully();
     }
     return { installationError, compilationError, workspaceConfigUpdateResult };
+  }
+
+  private isPnpmVcsWorkspace(): boolean {
+    const rootMap = this.consumer.bitMap.components.find(
+      (component) => !component.rootDir && component.useExplicitFiles
+    );
+    const trackerConfig = rootMap?.config?.['teambit.component/tracker'];
+    return Boolean(trackerConfig && trackerConfig !== '-' && trackerConfig.pnpmVcs?.schemaVersion === 1);
   }
 
   private async installPackagesGracefully(

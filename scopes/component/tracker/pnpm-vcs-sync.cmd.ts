@@ -13,7 +13,9 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { Extensions } from '@teambit/legacy.constants';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { Workspace } from '@teambit/workspace';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { snapToSemver } from '@teambit/component-package-version';
 import { TrackerAspect } from './tracker.aspect';
 
 export type WorkspaceTool = {
@@ -45,6 +47,17 @@ export type PnpmVcsSyncResult = {
   workspaceProfile: WorkspaceToolMap;
   updatedComponents: string[];
   components: Array<{ id: string; rootDir: string; files: number }>;
+};
+
+export type PnpmVcsImportPlan = {
+  schemaVersion: 1;
+  components: Array<{ id: string; rootDir: string; packageName: string }>;
+  catalogs: Array<{
+    catalogName: string;
+    packageName: string;
+    specifier: string;
+    componentId?: string;
+  }>;
 };
 
 type PnpmVcsComponentConfig = {
@@ -391,9 +404,9 @@ export async function applyWorkspaceProfileToImportedComponents(
     (component) => !component.rootDir && component.useExplicitFiles
   );
   if (!rootMap) return false;
-  const rootComponent = await workspace.get(rootMap.id);
-  const rootTrackerConfig = rootComponent.state.aspects.get(TrackerAspect.id)?.config;
-  const rootPnpmVcs = readPnpmVcsConfig(rootTrackerConfig?.pnpmVcs);
+  const rootTrackerConfig = rootMap.config?.[TrackerAspect.id];
+  const rootPnpmVcs =
+    rootTrackerConfig && rootTrackerConfig !== '-' ? readPnpmVcsConfig(rootTrackerConfig.pnpmVcs) : undefined;
   if (!rootPnpmVcs) return false;
 
   const declared = components.flatMap((component) => {
@@ -429,6 +442,114 @@ export async function applyWorkspaceProfileToImportedComponents(
     }
   });
   return persisted;
+}
+
+/**
+ * Describe the pnpm workspace edits needed after Bit has written imported
+ * components. The component model is authoritative for the exact dependency
+ * version; pnpm decides whether a package is local and may replace it with a
+ * workspace binding.
+ */
+export async function createPnpmVcsImportPlan(
+  workspace: Workspace,
+  dependencyResolver: DependencyResolverMain,
+  components: ConsumerComponent[]
+): Promise<PnpmVcsImportPlan | undefined> {
+  const rootMap = workspace.consumer.bitMap.components.find(
+    (component) => !component.rootDir && component.useExplicitFiles
+  );
+  if (!rootMap) return undefined;
+  const rootTrackerConfig = rootMap.config?.[TrackerAspect.id];
+  if (!rootTrackerConfig || rootTrackerConfig === '-' || !readPnpmVcsConfig(rootTrackerConfig.pnpmVcs)) {
+    return undefined;
+  }
+
+  const plannedComponents: PnpmVcsImportPlan['components'] = [];
+  const catalogBindings = new Map<string, PnpmVcsImportPlan['catalogs'][number]>();
+  for (const component of components) {
+    const packageName = packageNameFromLegacyComponent(component);
+    const componentMap =
+      component.componentMap || workspace.consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
+    if (!componentMap?.rootDir) {
+      throw new BitError(`unable to determine the workspace directory for imported component ${component.id}`);
+    }
+    plannedComponents.push({
+      id: component.id.toString(),
+      rootDir: pathNormalizeToLinux(componentMap.rootDir),
+      packageName,
+    });
+  }
+
+  for (const component of components) {
+    const packageJsonFile = component.files.find((file) => file.relative === 'package.json');
+    if (!packageJsonFile) continue;
+    let manifest: Record<string, unknown>;
+    try {
+      manifest = JSON.parse(packageJsonFile.contents.toString());
+    } catch (error: any) {
+      throw new BitError(`unable to read package.json of imported component ${component.id}: ${error.message}`);
+    }
+    const dependencies = dependencyResolver.getDependenciesFromLegacyComponent(component, { includeHidden: true });
+    for (const field of ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']) {
+      const entries = manifest[field];
+      if (!entries || typeof entries !== 'object' || Array.isArray(entries)) continue;
+      for (const [dependencyName, rawSpecifier] of Object.entries(entries)) {
+        if (typeof rawSpecifier !== 'string' || !rawSpecifier.startsWith('catalog:')) continue;
+        const catalogName = rawSpecifier.slice('catalog:'.length) || 'default';
+        const dependency = dependencies.findByPkgNameOrCompId(dependencyName);
+        if (!dependency) {
+          throw new BitError(
+            `component ${component.id} references ${dependencyName} through ${rawSpecifier}, but its component model has no matching dependency`
+          );
+        }
+        const binding = {
+          catalogName,
+          packageName: dependencyName,
+          specifier: snapToSemver(dependency.version),
+          componentId:
+            dependency.type === 'component'
+              ? dependencies
+                  .getComponentDependencies()
+                  .find((candidate) => candidate === dependency)
+                  ?.componentId.toString()
+              : undefined,
+        };
+        const key = `${catalogName}\0${dependencyName}`;
+        const existing = catalogBindings.get(key);
+        if (existing && (existing.specifier !== binding.specifier || existing.componentId !== binding.componentId)) {
+          throw new BitError(
+            `imported components require conflicting ${catalogName} catalog bindings for ${dependencyName}`
+          );
+        }
+        catalogBindings.set(key, binding);
+      }
+    }
+  }
+
+  return {
+    schemaVersion: 1,
+    components: plannedComponents.sort((left, right) => left.rootDir.localeCompare(right.rootDir)),
+    catalogs: Array.from(catalogBindings.values()).sort((left, right) =>
+      `${left.catalogName}\0${left.packageName}`.localeCompare(`${right.catalogName}\0${right.packageName}`)
+    ),
+  };
+}
+
+function packageNameFromLegacyComponent(component: ConsumerComponent): string {
+  const packageJsonFile = component.files.find((file) => file.relative === 'package.json');
+  if (!packageJsonFile) {
+    throw new BitError(`pnpm VCS component ${component.id} does not contain package.json`);
+  }
+  let name: unknown;
+  try {
+    name = JSON.parse(packageJsonFile.contents.toString())?.name;
+  } catch (error: any) {
+    throw new BitError(`unable to read package.json of imported component ${component.id}: ${error.message}`);
+  }
+  if (typeof name !== 'string' || !name) {
+    throw new BitError(`pnpm VCS component ${component.id} must declare a package name`);
+  }
+  return name;
 }
 
 function addOrUpdateComponent(

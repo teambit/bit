@@ -17027,6 +17027,9 @@ importers:
       react-router-dom:
         specifier: ^6.30.1
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+      semver:
+        specifier: 7.7.1
+        version: 7.7.1
       string-format:
         specifier: 0.5.0
         version: 0.5.0
@@ -17043,6 +17046,9 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      '@types/semver':
+        specifier: 7.5.8
+        version: 7.5.8
 
   scopes/compositions/aspect-docs/compositions:
     dependencies:
@@ -80361,6 +80367,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
@@ -80464,6 +80471,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
@@ -80567,6 +80575,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.testing.mock-components': file:scopes/component/testing/mock-components(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
@@ -81288,6 +81297,7 @@ snapshots:
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
+      '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/git.modules.ignore-file-reader': file:scopes/git/modules/ignore-file-reader
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency
@@ -81296,6 +81306,7 @@ snapshots:
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.consumer': file:components/legacy/consumer(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool
@@ -81315,6 +81326,7 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+      semver: 7.7.1
       string-format: 0.5.0
     transitivePeerDependencies:
       - domexception
@@ -81326,6 +81338,7 @@ snapshots:
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
+      '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/git.modules.ignore-file-reader': file:scopes/git/modules/ignore-file-reader
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency
@@ -81334,6 +81347,7 @@ snapshots:
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.consumer': file:components/legacy/consumer(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool
@@ -81353,6 +81367,7 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+      semver: 7.7.1
       string-format: 0.5.0
     transitivePeerDependencies:
       - domexception

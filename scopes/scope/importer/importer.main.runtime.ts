@@ -36,6 +36,8 @@ import type { ImportOptions, ImportResult } from './import-components';
 import ImportComponents from './import-components';
 import type { ListerMain } from '@teambit/lister';
 import { ListerAspect } from '@teambit/lister';
+import type { PnpmVcsImportPlan } from '@teambit/tracker';
+import { createPnpmVcsImportPlan, TrackerAspect } from '@teambit/tracker';
 
 export class ImporterMain {
   constructor(
@@ -48,6 +50,10 @@ export class ImporterMain {
     readonly logger: Logger,
     private lister: ListerMain
   ) {}
+
+  async getPnpmVcsImportPlan(components: ConsumerComponent[]): Promise<PnpmVcsImportPlan | undefined> {
+    return createPnpmVcsImportPlan(this.workspace, this.depResolver, components);
+  }
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[] = []): Promise<ImportResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -71,11 +77,19 @@ export class ImporterMain {
     const importComponents = this.createImportComponents(importOptions);
     const results = await importComponents.importComponents();
     Analytics.setExtraData('num_components', results.importedIds.length);
-    if (results.writtenComponents && results.writtenComponents.length) {
+    if (results.writtenComponents && results.writtenComponents.length && !this.isPnpmVcsWorkspace()) {
       await this.removeFromWorkspaceConfig(results.writtenComponents);
     }
     await consumer.onDestroy('import');
     return results;
+  }
+
+  private isPnpmVcsWorkspace(): boolean {
+    const rootMap = this.workspace.consumer.bitMap.components.find(
+      (component) => !component.rootDir && component.useExplicitFiles
+    );
+    const trackerConfig = rootMap?.config?.[TrackerAspect.id];
+    return Boolean(trackerConfig && trackerConfig !== '-' && trackerConfig.pnpmVcs?.schemaVersion === 1);
   }
 
   /**
