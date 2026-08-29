@@ -72,6 +72,7 @@ export type ImportOptions = {
   laneOnly?: boolean; // when on a lane, only import components that exist on the lane (preserves legacy behavior)
   owner?: boolean; // treat the id as an owner name and import all components from all scopes of that owner
   writeToEmptyDir?: boolean; // when the target dir is not empty, import into an available empty dir instead of failing
+  pnpmVcsRoot?: boolean; // bootstrap a validated pnpm VCS root component at the workspace root
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -394,6 +395,7 @@ export default class ImportComponents {
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
       writeToEmptyDir: this.options.writeToEmptyDir,
+      pnpmVcsRoot: this.options.pnpmVcsRoot,
       skipWritingToFs: this.options.trackOnly,
       reasonForBitmapChange: 'import',
       writeDeps: this.options.writeDeps,
@@ -1109,6 +1111,7 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
       writeToEmptyDir: this.options.writeToEmptyDir,
+      pnpmVcsRoot: this.options.pnpmVcsRoot,
       skipWritingToFs: this.options.trackOnly,
       shouldUpdateWorkspaceConfig: true,
       reasonForBitmapChange: 'import',

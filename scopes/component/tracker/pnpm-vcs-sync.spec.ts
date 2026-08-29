@@ -6,6 +6,7 @@ import { BitError } from '@teambit/bit-error';
 import {
   assignFilesToProjects,
   createPnpmVcsCatalogBindingsOnLoad,
+  createPnpmVcsWorkspaceTopology,
   requirementsForProfile,
   resolvePnpmVcsCatalogBindings,
   validateWorkspaceRequirements,
@@ -181,5 +182,22 @@ describe('pnpm VCS workspace ownership', () => {
     } finally {
       await fs.remove(workspaceDir);
     }
+  });
+
+  it('stores a normalized version-free workspace topology on the root component', () => {
+    expect(
+      createPnpmVcsWorkspaceTopology('acme.workspace/root', [
+        { id: 'acme.workspace/b', rootDir: 'packages/b', manifestFile: 'package.json', files: 2 },
+        { id: 'acme.workspace/root', rootDir: '.', files: 4 },
+        { id: 'acme.workspace/a', rootDir: 'packages/a', manifestFile: 'package.json', files: 2 },
+      ])
+    ).to.deep.equal({
+      schemaVersion: 1,
+      rootComponent: 'acme.workspace/root',
+      components: [
+        { rootDir: 'packages/a', componentId: 'acme.workspace/a', manifestFile: 'package.json' },
+        { rootDir: 'packages/b', componentId: 'acme.workspace/b', manifestFile: 'package.json' },
+      ],
+    });
   });
 });

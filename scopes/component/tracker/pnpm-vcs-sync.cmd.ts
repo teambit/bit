@@ -30,6 +30,7 @@ export type WorkspaceToolMap = Record<string, WorkspaceTool>;
 export type PnpmProjectInventoryItem = {
   rootDir: string;
   componentName: string;
+  componentId?: string;
   manifestFile: string;
   requirements?: WorkspaceToolMap;
 };
@@ -38,6 +39,7 @@ export type PnpmWorkspaceInventory = {
   schemaVersion: 2;
   defaultScope: string;
   rootComponentName: string;
+  rootComponentId?: string;
   rootMainFile: string;
   workspaceProfile?: WorkspaceToolMap;
   projects: PnpmProjectInventoryItem[];
@@ -48,7 +50,7 @@ export type PnpmVcsSyncResult = {
   rootComponent: string;
   workspaceProfile: WorkspaceToolMap;
   updatedComponents: string[];
-  components: Array<{ id: string; rootDir: string; files: number }>;
+  components: Array<{ id: string; rootDir: string; manifestFile?: string; files: number }>;
 };
 
 export type PnpmVcsImportPlan = {
@@ -77,6 +79,13 @@ type PnpmVcsComponentConfig = {
   schemaVersion: 1;
   requirements: WorkspaceToolMap;
   appliedProfile: WorkspaceToolMap;
+  workspace?: PnpmVcsWorkspaceTopology;
+};
+
+export type PnpmVcsWorkspaceTopology = {
+  schemaVersion: 1;
+  rootComponent: string;
+  components: Array<{ rootDir: string; componentId: string; manifestFile: string }>;
 };
 
 type StoredComponentConfig = {
@@ -137,6 +146,7 @@ function isInventory(value: unknown): value is PnpmWorkspaceInventory {
     typeof inventory.defaultScope === 'string' &&
     typeof inventory.rootComponentName === 'string' &&
     Boolean(inventory.rootComponentName) &&
+    (inventory.rootComponentId === undefined || typeof inventory.rootComponentId === 'string') &&
     typeof inventory.rootMainFile === 'string' &&
     Boolean(inventory.rootMainFile) &&
     (inventory.workspaceProfile === undefined || isWorkspaceToolMap(inventory.workspaceProfile, true)) &&
@@ -146,6 +156,7 @@ function isInventory(value: unknown): value is PnpmWorkspaceInventory {
         project &&
         typeof project.rootDir === 'string' &&
         typeof project.componentName === 'string' &&
+        (project.componentId === undefined || typeof project.componentId === 'string') &&
         typeof project.manifestFile === 'string' &&
         (project.requirements === undefined || isWorkspaceToolMap(project.requirements, false))
     )
@@ -181,6 +192,10 @@ export async function syncPnpmWorkspace(
     projects.map((project) => project.componentName),
     'component name'
   );
+  assertUnique(
+    projects.flatMap((project) => (project.componentId ? [project.componentId] : [])),
+    'component ID'
+  );
 
   const bitMap = workspace.consumer.bitMap;
   const workspaceComponents = await workspace.list();
@@ -195,6 +210,28 @@ export async function syncPnpmWorkspace(
     });
   });
   const existingRoot = bitMap.components.find((component) => !component.rootDir && component.useExplicitFiles);
+  const declaredRootId = inventory.rootComponentId
+    ? parseDurableComponentId(inventory.rootComponentId, 'root component')
+    : undefined;
+  if (
+    declaredRootId &&
+    projects.some(
+      (project) =>
+        project.componentId &&
+        parseDurableComponentId(project.componentId, `component at ${project.rootDir}`).isEqualWithoutVersion(
+          declaredRootId
+        )
+    )
+  ) {
+    throw new BitError(
+      `pnpm VCS root component ${declaredRootId.toStringWithoutVersion()} is also mapped to a project`
+    );
+  }
+  if (existingRoot && declaredRootId && !existingRoot.id.isEqualWithoutVersion(declaredRootId)) {
+    throw new BitError(
+      `pnpm workspace root is mapped to ${declaredRootId.toStringWithoutVersion()}, but .bitmap contains ${existingRoot.id.toStringWithoutVersion()}`
+    );
+  }
   const storedRootConfig = existingRoot
     ? storedConfigs.get(existingRoot.id.toStringWithoutVersion())?.pnpmVcs
     : undefined;
@@ -250,7 +287,20 @@ export async function syncPnpmWorkspace(
         `pnpm project ${project.rootDir} does not contain its manifest ${project.manifestFile} in the tracked file set`
       );
     }
-    const existing = bitMap.components.find((component) => component.rootDir === project.rootDir);
+    const declaredId = project.componentId
+      ? parseDurableComponentId(project.componentId, `component at ${project.rootDir}`)
+      : undefined;
+    const existingAtRoot = bitMap.components.find((component) => component.rootDir === project.rootDir);
+    if (existingAtRoot && declaredId && !existingAtRoot.id.isEqualWithoutVersion(declaredId)) {
+      throw new BitError(
+        `pnpm project ${project.rootDir} is mapped to ${declaredId.toStringWithoutVersion()}, but .bitmap contains ${existingAtRoot.id.toStringWithoutVersion()}`
+      );
+    }
+    const existing =
+      existingAtRoot ||
+      (declaredId ? bitMap.components.find((component) => component.id.isEqualWithoutVersion(declaredId)) : undefined);
+    const resolvedDeclaredId =
+      declaredId && !existing ? await resolveFromLocalScope(workspace, declaredId) : declaredId;
     const componentMap = addOrUpdateComponent(
       bitMap,
       existing,
@@ -258,7 +308,8 @@ export async function syncPnpmWorkspace(
       defaultScope,
       project.manifestFile,
       files,
-      project.rootDir
+      project.rootDir,
+      resolvedDeclaredId
     );
     const stored = storedConfigs.get(componentMap.id.toStringWithoutVersion());
     const pnpmVcsConfig = projectConfigs.get(project.rootDir)!;
@@ -268,7 +319,12 @@ export async function syncPnpmWorkspace(
     if (stored?.pnpmVcs && !isEqual(stored.pnpmVcs.appliedProfile, workspaceProfile)) {
       updatedComponents.push(componentMap.id.toStringWithoutVersion());
     }
-    synced.push({ id: componentMap.id.toStringWithoutVersion(), rootDir: project.rootDir, files: files.length });
+    synced.push({
+      id: componentMap.id.toStringWithoutVersion(),
+      rootDir: project.rootDir,
+      manifestFile: project.manifestFile,
+      files: files.length,
+    });
   }
 
   const rootMainFile = validateRelativePath(inventory.rootMainFile, 'root main file');
@@ -278,14 +334,19 @@ export async function syncPnpmWorkspace(
   // The root package name may change over time. Its component identity, like a
   // project's identity, is anchored to its ownership location rather than the
   // latest package.json name.
+  const resolvedRootId =
+    declaredRootId && !existingRoot ? await resolveFromLocalScope(workspace, declaredRootId) : declaredRootId;
   const rootComponent = addOrUpdateComponent(
     bitMap,
     existingRoot,
     inventory.rootComponentName,
     defaultScope,
     rootMainFile,
-    rootFiles
+    rootFiles,
+    undefined,
+    resolvedRootId
   );
+  const workspaceTopology = createPnpmVcsWorkspaceTopology(rootComponent.id.toStringWithoutVersion(), synced);
   addPnpmVcsConfig(
     workspace,
     rootComponent,
@@ -294,6 +355,7 @@ export async function syncPnpmWorkspace(
       schemaVersion: 1,
       requirements: requirementsForProfile(workspaceProfile),
       appliedProfile: workspaceProfile,
+      workspace: workspaceTopology,
     }
   );
   synced.push({ id: rootComponent.id.toStringWithoutVersion(), rootDir: '.', files: rootFiles.length });
@@ -304,6 +366,24 @@ export async function syncPnpmWorkspace(
     workspaceProfile,
     updatedComponents,
     components: synced,
+  };
+}
+
+export function createPnpmVcsWorkspaceTopology(
+  rootComponent: string,
+  components: PnpmVcsSyncResult['components']
+): PnpmVcsWorkspaceTopology {
+  return {
+    schemaVersion: 1,
+    rootComponent,
+    components: components
+      .filter(({ rootDir }) => rootDir !== '.')
+      .map(({ id, rootDir, manifestFile }) => ({
+        rootDir,
+        componentId: id,
+        manifestFile: manifestFile || 'package.json',
+      }))
+      .sort((left, right) => left.rootDir.localeCompare(right.rootDir)),
   };
 }
 
@@ -331,11 +411,54 @@ function readPnpmVcsConfig(value: unknown): PnpmVcsComponentConfig | undefined {
   if (
     config.schemaVersion !== 1 ||
     !isWorkspaceToolMap(config.requirements, false) ||
-    !isWorkspaceToolMap(config.appliedProfile, true)
+    !isWorkspaceToolMap(config.appliedProfile, true) ||
+    (config.workspace !== undefined && !isPnpmVcsWorkspaceTopology(config.workspace))
   ) {
     return undefined;
   }
   return config as PnpmVcsComponentConfig;
+}
+
+function isPnpmVcsWorkspaceTopology(value: unknown): value is PnpmVcsWorkspaceTopology {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const topology = value as Partial<PnpmVcsWorkspaceTopology>;
+  return (
+    topology.schemaVersion === 1 &&
+    typeof topology.rootComponent === 'string' &&
+    Boolean(topology.rootComponent) &&
+    Array.isArray(topology.components) &&
+    topology.components.every(
+      (component) =>
+        component &&
+        typeof component.rootDir === 'string' &&
+        Boolean(component.rootDir) &&
+        typeof component.componentId === 'string' &&
+        Boolean(component.componentId) &&
+        typeof component.manifestFile === 'string' &&
+        Boolean(component.manifestFile)
+    )
+  );
+}
+
+function parseDurableComponentId(value: string, label: string): ComponentID {
+  let id: ComponentID;
+  try {
+    id = ComponentID.fromString(value);
+  } catch (error: any) {
+    throw new BitError(`invalid durable pnpm VCS ${label} ID ${value}: ${error.message}`);
+  }
+  if (!id.hasScope() || id.version) {
+    throw new BitError(`durable pnpm VCS ${label} ID must have a scope and no version: ${value}`);
+  }
+  return id;
+}
+
+async function resolveFromLocalScope(workspace: Workspace, id: ComponentID): Promise<ComponentID> {
+  try {
+    return (await workspace.scope.get(id)).id;
+  } catch {
+    return id;
+  }
 }
 
 /**
@@ -679,9 +802,10 @@ function addOrUpdateComponent(
   defaultScope: string,
   mainFile: string,
   files: string[],
-  rootDir?: string
+  rootDir?: string,
+  declaredId?: ComponentID
 ): ComponentMap {
-  const componentId = existing?.id || ComponentID.fromObject({ name: componentName }, defaultScope);
+  const componentId = existing?.id || declaredId || ComponentID.fromObject({ name: componentName }, defaultScope);
   const componentFiles: ComponentMapFile[] = files.map((relativePath) => ({
     relativePath,
     name: path.basename(relativePath),
