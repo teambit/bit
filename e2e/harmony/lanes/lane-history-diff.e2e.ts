@@ -11,45 +11,9 @@ describe('lane history-diff', function () {
     helper.scopeHelper.destroy();
   });
 
-  describe('lane with two history entries', () => {
-    let historyEntries: any[];
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(2);
-      helper.command.createLane('dev');
-      helper.command.snapAllComponentsWithoutBuild('-m "first snap"');
-      helper.command.exportLane();
-
-      helper.fixtures.populateComponents(2, undefined, 'v2');
-      helper.command.snapAllComponentsWithoutBuild('-m "second snap"');
-      helper.command.exportLane();
-
-      historyEntries = helper.command.laneHistoryParsed();
-    });
-
-    it('with no args, should diff the latest entry against its predecessor', () => {
-      const output = helper.command.runCmd('bit lane history-diff');
-      expect(output).to.have.string('comp1');
-      expect(output).to.have.string('comp2');
-    });
-
-    it('with one arg (latest id), should diff that entry against its predecessor', () => {
-      const latestId = historyEntries[historyEntries.length - 1].id;
-      const output = helper.command.runCmd(`bit lane history-diff ${latestId}`);
-      expect(output).to.have.string('comp1');
-      expect(output).to.have.string('comp2');
-    });
-
-    it('with one arg (first id), should throw since it has no predecessor', () => {
-      const firstId = historyEntries[0].id;
-      expect(() => helper.command.runCmd(`bit lane history-diff ${firstId}`)).to.throw(
-        'is the first entry and has no predecessor'
-      );
-    });
-  });
-
   /**
-   * Verifies that `bit reset` removes lane-history entries for the reset snaps.
+   * Verifies that `bit reset` removes lane-history entries for the reset snaps, and that
+   * history-diff works over the resulting history in each of its argument forms.
    *
    * Flow: snap A → export → snap B → reset → snap C → export.
    * The reset deletes snap B's Version objects AND its lane-history entry (keyed by batchId).
@@ -101,6 +65,13 @@ describe('lane history-diff', function () {
       expect(output).to.have.string('comp1');
       expect(output).to.have.string('comp2');
       expect(output).to.not.have.string('Diff failed');
+    });
+
+    it('with one arg (first id): should throw since it has no predecessor', () => {
+      const firstId = historyEntries[0].id;
+      expect(() => helper.command.runCmd(`bit lane history-diff ${firstId}`)).to.throw(
+        'is the first entry and has no predecessor'
+      );
     });
   });
 });
