@@ -440,14 +440,14 @@ function isPnpmVcsWorkspaceTopology(value: unknown): value is PnpmVcsWorkspaceTo
   );
 }
 
-function parseDurableComponentId(value: string, label: string): ComponentID {
+export function parseDurableComponentId(value: string, label: string): ComponentID {
   let id: ComponentID;
   try {
     id = ComponentID.fromString(value);
   } catch (error: any) {
     throw new BitError(`invalid durable pnpm VCS ${label} ID ${value}: ${error.message}`);
   }
-  if (!id.hasScope() || id.version) {
+  if (!id.hasScope() || id.hasVersion()) {
     throw new BitError(`durable pnpm VCS ${label} ID must have a scope and no version: ${value}`);
   }
   return id;

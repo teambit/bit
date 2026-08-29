@@ -7,6 +7,7 @@ import {
   assignFilesToProjects,
   createPnpmVcsCatalogBindingsOnLoad,
   createPnpmVcsWorkspaceTopology,
+  parseDurableComponentId,
   requirementsForProfile,
   resolvePnpmVcsCatalogBindings,
   validateWorkspaceRequirements,
@@ -199,5 +200,18 @@ describe('pnpm VCS workspace ownership', () => {
         { rootDir: 'packages/b', componentId: 'acme.workspace/b', manifestFile: 'package.json' },
       ],
     });
+  });
+
+  it('accepts a scoped version-free durable component ID', () => {
+    expect(parseDurableComponentId('acme.workspace/root', 'root component').toStringWithoutVersion()).to.equal(
+      'acme.workspace/root'
+    );
+  });
+
+  it('rejects a versioned durable component ID', () => {
+    expect(() => parseDurableComponentId('acme.workspace/root@1.0.0', 'root component')).to.throw(
+      BitError,
+      'must have a scope and no version'
+    );
   });
 });
