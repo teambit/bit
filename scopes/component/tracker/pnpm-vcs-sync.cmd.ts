@@ -4,8 +4,10 @@ import path from 'path';
 import semver from 'semver';
 import isEqual from 'lodash/isEqual';
 import { glob } from 'glob';
+import { parse as parseYaml } from 'yaml';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
+import type { AspectData, Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
 import { retrieveIgnoreList } from '@teambit/git.modules.ignore-file-reader';
 import type { BitMap, ComponentMap, ComponentMapFile } from '@teambit/legacy.bit-map';
@@ -58,6 +60,17 @@ export type PnpmVcsImportPlan = {
     specifier: string;
     componentId?: string;
   }>;
+};
+
+export type PnpmVcsCatalogBinding = {
+  catalogName: string;
+  packageName: string;
+  specifier: string | null;
+};
+
+type PnpmVcsCatalogBindingsData = {
+  schemaVersion: 1;
+  bindings: PnpmVcsCatalogBinding[];
 };
 
 type PnpmVcsComponentConfig = {
@@ -323,6 +336,113 @@ function readPnpmVcsConfig(value: unknown): PnpmVcsComponentConfig | undefined {
     return undefined;
   }
   return config as PnpmVcsComponentConfig;
+}
+
+/**
+ * Calculate only the catalog entries referenced by this component. This data
+ * is persisted with the component version by the tracker on-load hook, making
+ * a root catalog edit visible as a change of each affected component without
+ * making every catalog consumer depend on the complete workspace catalog.
+ */
+export function resolvePnpmVcsCatalogBindings(
+  packageManifest: unknown,
+  workspaceManifest: unknown
+): PnpmVcsCatalogBinding[] {
+  const references = collectCatalogReferences(packageManifest);
+  const workspace = asRecord(workspaceManifest);
+  const defaultCatalog = asRecord(workspace.catalog);
+  const namedCatalogs = asRecord(workspace.catalogs);
+  const bindings = references.map(({ catalogName, packageName }) => {
+    const catalog =
+      catalogName === 'default'
+        ? Object.keys(defaultCatalog).length
+          ? defaultCatalog
+          : asRecord(namedCatalogs.default)
+        : asRecord(namedCatalogs[catalogName]);
+    const rawSpecifier = catalog[packageName];
+    return {
+      catalogName,
+      packageName,
+      specifier:
+        typeof rawSpecifier === 'string'
+          ? rawSpecifier
+          : rawSpecifier === undefined
+            ? null
+            : (JSON.stringify(rawSpecifier) ?? null),
+    };
+  });
+  return bindings.sort((left, right) =>
+    `${left.catalogName}\0${left.packageName}`.localeCompare(`${right.catalogName}\0${right.packageName}`)
+  );
+}
+
+function collectCatalogReferences(packageManifest: unknown): Array<{ catalogName: string; packageName: string }> {
+  const manifest = asRecord(packageManifest);
+  const references = new Map<string, { catalogName: string; packageName: string }>();
+  for (const field of ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']) {
+    for (const [packageName, rawSpecifier] of Object.entries(asRecord(manifest[field]))) {
+      if (typeof rawSpecifier !== 'string' || !rawSpecifier.startsWith('catalog:')) continue;
+      const catalogName = rawSpecifier.slice('catalog:'.length) || 'default';
+      references.set(`${catalogName}\0${packageName}`, { catalogName, packageName });
+    }
+  }
+  return Array.from(references.values());
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+export function createPnpmVcsCatalogBindingsOnLoad(
+  workspace: Workspace
+): (component: Component) => Promise<AspectData | undefined> {
+  const workspaceManifestPath = path.join(workspace.path, 'pnpm-workspace.yaml');
+  let cachedWorkspaceManifest: { signature: string; manifest: unknown } | undefined;
+
+  const readWorkspaceManifest = async (): Promise<unknown> => {
+    const stat = await fs.stat(workspaceManifestPath).catch((error: any) => {
+      throw new BitError(`unable to read pnpm workspace manifest ${workspaceManifestPath}: ${error.message}`);
+    });
+    const signature = `${stat.mtimeMs}:${stat.ctimeMs}:${stat.size}`;
+    if (cachedWorkspaceManifest?.signature === signature) return cachedWorkspaceManifest.manifest;
+    try {
+      const manifest = parseYaml(await fs.readFile(workspaceManifestPath, 'utf8'));
+      cachedWorkspaceManifest = { signature, manifest };
+      return manifest;
+    } catch (error: any) {
+      throw new BitError(`unable to parse pnpm workspace manifest ${workspaceManifestPath}: ${error.message}`);
+    }
+  };
+
+  return async (component: Component): Promise<AspectData | undefined> => {
+    const trackerEntry = component.state.aspects.get(TrackerAspect.id);
+    if (!readPnpmVcsConfig(trackerEntry?.config?.pnpmVcs)) return undefined;
+    const existingData = trackerEntry?.data?.pnpmVcsCatalogBindings;
+    const packageJsonFile = component.filesystem.files.find((file) => file.relative === 'package.json');
+    if (!packageJsonFile) {
+      return existingData === undefined
+        ? undefined
+        : { pnpmVcsCatalogBindings: { schemaVersion: 1, bindings: [] } satisfies PnpmVcsCatalogBindingsData };
+    }
+
+    let packageManifest: unknown;
+    try {
+      packageManifest = JSON.parse(packageJsonFile.contents.toString());
+    } catch (error: any) {
+      throw new BitError(`unable to parse package.json of pnpm VCS component ${component.id}: ${error.message}`);
+    }
+    const references = collectCatalogReferences(packageManifest);
+    if (!references.length && existingData === undefined) return undefined;
+    const bindings = references.length
+      ? resolvePnpmVcsCatalogBindings(packageManifest, await readWorkspaceManifest())
+      : [];
+    return {
+      pnpmVcsCatalogBindings: {
+        schemaVersion: 1,
+        bindings,
+      } satisfies PnpmVcsCatalogBindingsData,
+    };
+  };
 }
 
 function addPnpmVcsConfig(

@@ -17033,6 +17033,9 @@ importers:
       string-format:
         specifier: 0.5.0
         version: 0.5.0
+      yaml:
+        specifier: 1.10.2
+        version: 1.10.2
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.8
@@ -81328,6 +81331,7 @@ snapshots:
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
       semver: 7.7.1
       string-format: 0.5.0
+      yaml: 1.10.2
     transitivePeerDependencies:
       - domexception
       - encoding
@@ -81369,6 +81373,7 @@ snapshots:
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
       semver: 7.7.1
       string-format: 0.5.0
+      yaml: 1.10.2
     transitivePeerDependencies:
       - domexception
       - encoding
