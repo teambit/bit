@@ -4,7 +4,7 @@ import path from 'path';
 import semver from 'semver';
 import isEqual from 'lodash/isEqual';
 import { glob } from 'glob';
-import { parse as parseYaml } from 'yaml';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import type { AspectData, Component } from '@teambit/component';
@@ -94,20 +94,14 @@ type StoredComponentConfig = {
   dependencyResolverConfig?: Record<string, any>;
 };
 
-type SyncFlags = {
-  inventory: string;
-};
+type SyncFlags = Record<string, never>;
 
-export class PnpmVcsSyncCmd implements Command {
-  name = 'pnpm-vcs-sync';
-  description = 'synchronize pnpm workspace projects with Bit components';
-  group = 'advanced';
-  private = true;
+export class PnpmSyncCmd implements Command {
+  name = 'sync';
+  description = 'discover pnpm workspace projects and synchronize them with Bit components';
+  group = 'workspace-setup';
   loader = true;
-  options = [
-    ['', 'inventory <path>', 'path to a pnpm workspace inventory JSON file'],
-    ['j', 'json', 'return the synchronization result in JSON format'],
-  ] as CommandOptions;
+  options = [['j', 'json', 'return the synchronization result in JSON format']] as CommandOptions;
 
   constructor(private workspace: Workspace) {}
 
@@ -116,51 +110,313 @@ export class PnpmVcsSyncCmd implements Command {
     return `synchronized ${result.components.length} pnpm workspace components`;
   }
 
-  async json(_args: string[], { inventory: inventoryPath }: SyncFlags): Promise<PnpmVcsSyncResult> {
-    if (!inventoryPath) throw new BitError('pnpm-vcs-sync requires --inventory');
-    const inventory = await readInventory(inventoryPath);
+  async json(_args: string[], _flags: SyncFlags): Promise<PnpmVcsSyncResult> {
+    const inventory = await discoverPnpmWorkspace(this.workspace);
     const result = await syncPnpmWorkspace(this.workspace, inventory);
-    await this.workspace.consumer.onDestroy('pnpm-vcs-sync');
+    await persistPnpmWorkspaceIdentity(this.workspace.path, result);
+    await this.workspace.consumer.onDestroy('pnpm-sync');
     return result;
   }
 }
 
-async function readInventory(inventoryPath: string): Promise<PnpmWorkspaceInventory> {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(await fs.readFile(inventoryPath, 'utf8'));
-  } catch (error: any) {
-    throw new BitError(`unable to read pnpm workspace inventory: ${error.message}`);
+export class PnpmCmd implements Command {
+  name = 'pnpm [sub-command]';
+  description = 'adopt and maintain a raw pnpm workspace with Bit';
+  group = 'workspace-setup';
+  loader = true;
+  options = [['j', 'json', 'return the synchronization result in JSON format']] as CommandOptions;
+  commands: Command[] = [];
+
+  constructor(private syncCmd: PnpmSyncCmd) {}
+
+  report(args: string[], flags: SyncFlags): Promise<string> {
+    return this.syncCmd.report(args, flags);
   }
-  if (!isInventory(parsed)) {
-    throw new BitError('unsupported or invalid pnpm workspace inventory; expected schema version 2');
+
+  json(args: string[], flags: SyncFlags): Promise<PnpmVcsSyncResult> {
+    return this.syncCmd.json(args, flags);
   }
-  return parsed;
 }
 
-function isInventory(value: unknown): value is PnpmWorkspaceInventory {
-  if (!value || typeof value !== 'object') return false;
-  const inventory = value as Partial<PnpmWorkspaceInventory>;
-  return (
-    inventory.schemaVersion === 2 &&
-    typeof inventory.defaultScope === 'string' &&
-    typeof inventory.rootComponentName === 'string' &&
-    Boolean(inventory.rootComponentName) &&
-    (inventory.rootComponentId === undefined || typeof inventory.rootComponentId === 'string') &&
-    typeof inventory.rootMainFile === 'string' &&
-    Boolean(inventory.rootMainFile) &&
-    (inventory.workspaceProfile === undefined || isWorkspaceToolMap(inventory.workspaceProfile, true)) &&
-    Array.isArray(inventory.projects) &&
-    inventory.projects.every(
-      (project) =>
-        project &&
-        typeof project.rootDir === 'string' &&
-        typeof project.componentName === 'string' &&
-        (project.componentId === undefined || typeof project.componentId === 'string') &&
-        typeof project.manifestFile === 'string' &&
-        (project.requirements === undefined || isWorkspaceToolMap(project.requirements, false))
-    )
+type PnpmWorkspaceManifest = {
+  packages?: string[];
+  catalog?: Record<string, string>;
+  catalogs?: Record<string, Record<string, string>>;
+  vcs?: {
+    provider?: string;
+    schemaVersion?: number;
+    rootComponent?: string;
+    components?: Record<string, { componentId?: string; manifestFile?: string }>;
+  };
+};
+
+/**
+ * Reconcile the pnpm workspace after Bit writes imported components. Catalog
+ * references stay stable in package.json: a dependency resolves through the
+ * workspace when its component is present, and through the exact snapped
+ * package version when it is not.
+ */
+export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsImportPlan): Promise<void> {
+  const manifestPath = path.join(workspacePath, 'pnpm-workspace.yaml');
+  const manifest = await readPnpmWorkspaceManifest(manifestPath);
+  const packages = new Set(manifest.packages || []);
+  plan.components.forEach(({ rootDir }) => packages.add(rootDir));
+  manifest.packages = [...packages].sort();
+
+  const catalogBindings = new Map(
+    plan.catalogs.map(({ catalogName, packageName }) => [packageName, catalogName] as const)
   );
+  await Promise.all(
+    plan.components.map(async ({ rootDir }) => {
+      const packageManifestPath = path.join(workspacePath, rootDir, 'package.json');
+      const packageManifest = await readPackageManifest(packageManifestPath);
+      let changed = false;
+      for (const field of ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']) {
+        const dependencies = packageManifest[field as keyof PackageManifest] as Record<string, string> | undefined;
+        Object.entries(dependencies || {}).forEach(([packageName, specifier]) => {
+          if (!specifier.startsWith('workspace:')) return;
+          const catalogName = catalogBindings.get(packageName);
+          if (!catalogName) return;
+          dependencies![packageName] = catalogName === 'default' ? 'catalog:' : `catalog:${catalogName}`;
+          changed = true;
+        });
+      }
+      if (changed) await fs.writeJson(packageManifestPath, packageManifest, { spaces: 2 });
+    })
+  );
+
+  const manifestFiles = await discoverPnpmProjectManifests(workspacePath, manifest.packages);
+  const localPackageNames = new Set<string>();
+  await Promise.all(
+    manifestFiles.map(async (manifestFile) => {
+      const projectManifest = await readPackageManifest(path.join(workspacePath, manifestFile));
+      if (projectManifest.name) localPackageNames.add(projectManifest.name);
+    })
+  );
+
+  const importedPackageNames = new Set(plan.components.map(({ packageName }) => packageName));
+  const allCatalogs: Record<string, Record<string, string>> = {
+    ...manifest.catalogs,
+    default: { ...(Object.keys(manifest.catalog || {}).length ? manifest.catalog : manifest.catalogs?.default) },
+  };
+  Object.values(allCatalogs).forEach((catalog) => {
+    importedPackageNames.forEach((packageName) => {
+      if (catalog[packageName]) catalog[packageName] = 'workspace:*';
+    });
+  });
+  plan.catalogs.forEach(({ catalogName, packageName, specifier }) => {
+    const catalog = (allCatalogs[catalogName] ||= {});
+    const nextSpecifier = localPackageNames.has(packageName) ? 'workspace:*' : specifier;
+    catalog[packageName] = nextSpecifier;
+  });
+  manifest.catalog = allCatalogs.default;
+  const namedCatalogs = Object.fromEntries(
+    Object.entries(allCatalogs).filter(([catalogName]) => catalogName !== 'default')
+  );
+  if (Object.keys(namedCatalogs).length) manifest.catalogs = namedCatalogs;
+
+  if (manifest.vcs?.provider === 'bit' && manifest.vcs.schemaVersion === 1) {
+    manifest.vcs.components ||= {};
+    plan.components.forEach(({ id, rootDir }) => {
+      manifest.vcs!.components![rootDir] = {
+        componentId: id.replace(/@[^/]+$/, ''),
+        manifestFile: 'package.json',
+      };
+    });
+  }
+  await fs.writeFile(manifestPath, stringifyYaml(manifest));
+}
+
+type PackageManifest = {
+  name?: string;
+  engines?: { node?: string };
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  pnpm?: {
+    vcs?: {
+      profile?: WorkspaceToolMap;
+      requirements?: WorkspaceToolMap;
+    };
+  };
+};
+
+export async function discoverPnpmWorkspace(workspace: Workspace): Promise<PnpmWorkspaceInventory> {
+  const workspaceManifestPath = path.join(workspace.path, 'pnpm-workspace.yaml');
+  if (!(await fs.pathExists(workspaceManifestPath))) {
+    throw new BitError(`unable to find pnpm-workspace.yaml in ${workspace.path}`);
+  }
+  const workspaceManifest = await readPnpmWorkspaceManifest(workspaceManifestPath);
+  if (
+    workspaceManifest.vcs &&
+    (workspaceManifest.vcs.provider !== 'bit' || workspaceManifest.vcs.schemaVersion !== 1)
+  ) {
+    throw new BitError(
+      `unsupported pnpm workspace VCS ${workspaceManifest.vcs.provider}@${workspaceManifest.vcs.schemaVersion}`
+    );
+  }
+  const manifestFiles = await discoverPnpmProjectManifests(workspace.path, workspaceManifest.packages || []);
+  const projectManifests = await Promise.all(
+    manifestFiles.map(async (manifestFile) => ({
+      manifestFile,
+      rootDir: pathNormalizeToLinux(path.dirname(manifestFile)),
+      manifest: await readPackageManifest(path.join(workspace.path, manifestFile)),
+    }))
+  );
+  await migratePnpmWorkspaceDependencies(workspaceManifestPath, workspaceManifest, projectManifests);
+
+  const rootManifestPath = path.join(workspace.path, 'package.json');
+  const rootManifest = (await fs.pathExists(rootManifestPath))
+    ? await readPackageManifest(rootManifestPath)
+    : undefined;
+  const durableComponents = workspaceManifest.vcs?.components || {};
+  const projects = projectManifests.map(({ rootDir, manifest }) => {
+    const durable = durableComponents[rootDir];
+    const requirements = readPackageRequirements(manifest);
+    return {
+      rootDir,
+      componentName: sanitizePnpmComponentName(manifest.name || rootDir),
+      componentId: durable?.componentId,
+      manifestFile: durable?.manifestFile || 'package.json',
+      requirements: Object.keys(requirements).length ? requirements : undefined,
+    };
+  });
+  const rootName = sanitizePnpmComponentName(rootManifest?.name || path.basename(workspace.path));
+  return {
+    schemaVersion: 2,
+    defaultScope: workspace.defaultScope,
+    rootComponentName: `${rootName}-workspace`,
+    rootComponentId: workspaceManifest.vcs?.rootComponent,
+    rootMainFile: rootManifest ? 'package.json' : 'pnpm-workspace.yaml',
+    workspaceProfile: rootManifest?.pnpm?.vcs?.profile,
+    projects,
+  };
+}
+
+async function readPnpmWorkspaceManifest(manifestPath: string): Promise<PnpmWorkspaceManifest> {
+  try {
+    const manifest = parseYaml(await fs.readFile(manifestPath, 'utf8'));
+    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+      throw new Error('the document root must be a mapping');
+    }
+    return manifest as PnpmWorkspaceManifest;
+  } catch (error: any) {
+    throw new BitError(`unable to read ${manifestPath}: ${error.message}`);
+  }
+}
+
+async function discoverPnpmProjectManifests(workspacePath: string, patterns: string[]): Promise<string[]> {
+  const positive = patterns.filter((pattern) => !pattern.startsWith('!'));
+  const negative = patterns
+    .filter((pattern) => pattern.startsWith('!'))
+    .map((pattern) => `${pattern.slice(1).replace(/\/$/, '')}/package.json`);
+  const discovered = new Set<string>();
+  await Promise.all(
+    positive.map(async (pattern) => {
+      const manifestPattern = `${pattern.replace(/\/$/, '')}/package.json`;
+      const matches = await glob(manifestPattern, {
+        cwd: workspacePath,
+        nodir: true,
+        dot: true,
+        follow: false,
+        ignore: negative,
+      });
+      matches.forEach((match) => discovered.add(pathNormalizeToLinux(match)));
+    })
+  );
+  return [...discovered].filter((manifest) => manifest !== 'package.json').sort();
+}
+
+async function readPackageManifest(manifestPath: string): Promise<PackageManifest> {
+  try {
+    return JSON.parse(await fs.readFile(manifestPath, 'utf8'));
+  } catch (error: any) {
+    throw new BitError(`unable to read ${manifestPath}: ${error.message}`);
+  }
+}
+
+function readPackageRequirements(manifest: PackageManifest): WorkspaceToolMap {
+  const requirements = { ...manifest.pnpm?.vcs?.requirements };
+  if (manifest.engines?.node && !requirements.node) {
+    requirements.node = { implementation: 'node', version: manifest.engines.node };
+  }
+  return requirements;
+}
+
+function sanitizePnpmComponentName(name: string): string {
+  const normalized = name
+    .replace(/^@/, '')
+    .toLowerCase()
+    .split('/')
+    .map((part) => part.replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, ''))
+    .filter(Boolean)
+    .join('/');
+  if (!normalized) throw new BitError(`unable to derive a Bit component name from package name ${name}`);
+  return normalized;
+}
+
+async function migratePnpmWorkspaceDependencies(
+  workspaceManifestPath: string,
+  workspaceManifest: PnpmWorkspaceManifest,
+  projects: Array<{ manifestFile: string; manifest: PackageManifest }>
+): Promise<void> {
+  const workspaceNames = new Set(projects.map(({ manifest }) => manifest.name).filter(Boolean) as string[]);
+  const bindings = new Map<string, string>();
+  projects.forEach(({ manifest }) => {
+    ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'].forEach((field) => {
+      const dependencies = manifest[field as keyof PackageManifest] as Record<string, string> | undefined;
+      Object.entries(dependencies || {}).forEach(([name, specifier]) => {
+        if (!workspaceNames.has(name) || !specifier.startsWith('workspace:')) return;
+        const existing = bindings.get(name);
+        if (existing && existing !== specifier) {
+          throw new BitError(
+            `workspace package ${name} is referenced with both ${existing} and ${specifier}; a catalog requires one workspace-wide binding`
+          );
+        }
+        bindings.set(name, specifier);
+      });
+    });
+  });
+  if (!bindings.size) return;
+  await Promise.all(
+    projects.map(async ({ manifestFile, manifest }) => {
+      let changed = false;
+      ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'].forEach((field) => {
+        const dependencies = manifest[field as keyof PackageManifest] as Record<string, string> | undefined;
+        Object.entries(dependencies || {}).forEach(([name, specifier]) => {
+          if (bindings.has(name) && specifier.startsWith('workspace:')) {
+            dependencies![name] = 'catalog:';
+            changed = true;
+          }
+        });
+      });
+      if (changed) {
+        await fs.writeJson(path.join(path.dirname(workspaceManifestPath), manifestFile), manifest, { spaces: 2 });
+      }
+    })
+  );
+  workspaceManifest.catalog = { ...workspaceManifest.catalog, ...Object.fromEntries(bindings) };
+  await fs.writeFile(workspaceManifestPath, stringifyYaml(workspaceManifest));
+}
+
+async function persistPnpmWorkspaceIdentity(workspacePath: string, result: PnpmVcsSyncResult): Promise<void> {
+  const manifestPath = path.join(workspacePath, 'pnpm-workspace.yaml');
+  const manifest = await readPnpmWorkspaceManifest(manifestPath);
+  manifest.vcs = {
+    provider: 'bit',
+    schemaVersion: 1,
+    rootComponent: result.rootComponent,
+    components: Object.fromEntries(
+      result.components
+        .filter(({ rootDir }) => rootDir !== '.')
+        .map(({ rootDir, id, manifestFile }) => [
+          rootDir,
+          { componentId: id, manifestFile: manifestFile || 'package.json' },
+        ])
+    ),
+  };
+  await fs.writeFile(manifestPath, stringifyYaml(manifest));
 }
 
 function isWorkspaceToolMap(value: unknown, exact: boolean): value is WorkspaceToolMap {
@@ -390,7 +646,7 @@ export function createPnpmVcsWorkspaceTopology(
 async function readProjectPackageName(
   workspacePath: string,
   project: Pick<PnpmProjectInventoryItem, 'rootDir' | 'manifestFile'>
-): Promise<string> {
+): Promise<string | undefined> {
   const manifestPath = path.join(workspacePath, project.rootDir, project.manifestFile);
   let manifest: unknown;
   try {
@@ -399,10 +655,7 @@ async function readProjectPackageName(
     throw new BitError(`unable to read pnpm project manifest ${manifestPath}: ${error.message}`);
   }
   const packageName = (manifest as { name?: unknown })?.name;
-  if (typeof packageName !== 'string' || !packageName) {
-    throw new BitError(`pnpm project ${project.rootDir} must declare a package name`);
-  }
-  return packageName;
+  return typeof packageName === 'string' && packageName ? packageName : undefined;
 }
 
 function readPnpmVcsConfig(value: unknown): PnpmVcsComponentConfig | undefined {
@@ -586,7 +839,7 @@ function addPackageNameConfig(
   workspace: Workspace,
   componentMap: ComponentMap,
   storedConfig: Record<string, any> | undefined,
-  packageName: string
+  packageName: string | undefined
 ): void {
   const localConfig = componentMap.config?.[DependencyResolverAspect.id];
   workspace.bitMap.addComponentConfig(componentMap.id, DependencyResolverAspect.id, {
@@ -737,8 +990,15 @@ export async function createPnpmVcsImportPlan(
       const entries = manifest[field];
       if (!entries || typeof entries !== 'object' || Array.isArray(entries)) continue;
       for (const [dependencyName, rawSpecifier] of Object.entries(entries)) {
-        if (typeof rawSpecifier !== 'string' || !rawSpecifier.startsWith('catalog:')) continue;
-        const catalogName = rawSpecifier.slice('catalog:'.length) || 'default';
+        if (
+          typeof rawSpecifier !== 'string' ||
+          (!rawSpecifier.startsWith('catalog:') && !rawSpecifier.startsWith('workspace:'))
+        ) {
+          continue;
+        }
+        const catalogName = rawSpecifier.startsWith('catalog:')
+          ? rawSpecifier.slice('catalog:'.length) || 'default'
+          : 'default';
         const dependency = dependencies.findByPkgNameOrCompId(dependencyName);
         if (!dependency) {
           throw new BitError(

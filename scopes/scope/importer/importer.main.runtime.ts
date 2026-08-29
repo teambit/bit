@@ -37,7 +37,7 @@ import ImportComponents from './import-components';
 import type { ListerMain } from '@teambit/lister';
 import { ListerAspect } from '@teambit/lister';
 import type { PnpmVcsImportPlan } from '@teambit/tracker';
-import { createPnpmVcsImportPlan, TrackerAspect } from '@teambit/tracker';
+import { applyPnpmImportPlan, createPnpmVcsImportPlan, TrackerAspect } from '@teambit/tracker';
 
 export class ImporterMain {
   constructor(
@@ -77,8 +77,13 @@ export class ImporterMain {
     const importComponents = this.createImportComponents(importOptions);
     const results = await importComponents.importComponents();
     Analytics.setExtraData('num_components', results.importedIds.length);
-    if (results.writtenComponents && results.writtenComponents.length && !this.isPnpmVcsWorkspace()) {
-      await this.removeFromWorkspaceConfig(results.writtenComponents);
+    if (results.writtenComponents?.length) {
+      if (this.isPnpmVcsWorkspace()) {
+        const plan = await this.getPnpmVcsImportPlan(results.writtenComponents);
+        if (plan) await applyPnpmImportPlan(this.workspace.path, plan);
+      } else {
+        await this.removeFromWorkspaceConfig(results.writtenComponents);
+      }
     }
     await consumer.onDestroy('import');
     return results;

@@ -16,7 +16,7 @@ import { AddCmd } from './add-cmd';
 import type { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
 import AddComponents, { addMultipleFromResolvedTrackData } from './add-components';
 import { TrackerAspect } from './tracker.aspect';
-import { createPnpmVcsCatalogBindingsOnLoad, PnpmVcsSyncCmd } from './pnpm-vcs-sync.cmd';
+import { createPnpmVcsCatalogBindingsOnLoad, PnpmCmd, PnpmSyncCmd } from './pnpm-vcs-sync.cmd';
 
 export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };
 
@@ -218,7 +218,10 @@ if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bi
     const logger = loggerMain.createLogger(TrackerAspect.id);
     const trackerMain = new TrackerMain(workspace, logger);
     if (workspace) workspace.registerOnComponentLoad(createPnpmVcsCatalogBindingsOnLoad(workspace));
-    cli.register(new AddCmd(trackerMain), new PnpmVcsSyncCmd(workspace));
+    const pnpmSyncCmd = new PnpmSyncCmd(workspace);
+    const pnpmCmd = new PnpmCmd(pnpmSyncCmd);
+    pnpmCmd.commands = [pnpmSyncCmd];
+    cli.register(new AddCmd(trackerMain), pnpmCmd);
     return trackerMain;
   }
 }

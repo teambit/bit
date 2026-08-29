@@ -2,11 +2,14 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
+import { parse as parseYaml } from 'yaml';
 import { BitError } from '@teambit/bit-error';
 import {
+  applyPnpmImportPlan,
   assignFilesToProjects,
   createPnpmVcsCatalogBindingsOnLoad,
   createPnpmVcsWorkspaceTopology,
+  discoverPnpmWorkspace,
   parseDurableComponentId,
   requirementsForProfile,
   resolvePnpmVcsCatalogBindings,
@@ -14,6 +17,113 @@ import {
 } from './pnpm-vcs-sync.cmd';
 
 describe('pnpm VCS workspace ownership', () => {
+  it('discovers a raw pnpm workspace and migrates local workspace dependencies to catalogs', async () => {
+    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-native-pnpm-discovery-'));
+    try {
+      await fs.outputJson(path.join(workspaceDir, 'package.json'), {
+        name: '@acme/repository',
+        pnpm: {
+          vcs: {
+            profile: { node: { implementation: 'node', version: '22.18.0' } },
+          },
+        },
+      });
+      await fs.writeFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), 'packages:\n  - packages/*\n');
+      await fs.outputJson(path.join(workspaceDir, 'packages/math/package.json'), {
+        name: '@acme/math',
+        engines: { node: '>=20' },
+      });
+      await fs.outputJson(path.join(workspaceDir, 'packages/app/package.json'), {
+        name: '@acme/app',
+        dependencies: { '@acme/math': 'workspace:*' },
+      });
+
+      const inventory = await discoverPnpmWorkspace({ path: workspaceDir, defaultScope: 'acme.scope' } as any);
+
+      expect(inventory).to.include({
+        schemaVersion: 2,
+        defaultScope: 'acme.scope',
+        rootComponentName: 'acme/repository-workspace',
+        rootMainFile: 'package.json',
+      });
+      expect(inventory.projects.find(({ rootDir }) => rootDir === 'packages/math')).to.deep.include({
+        rootDir: 'packages/math',
+        componentName: 'acme/math',
+        manifestFile: 'package.json',
+        requirements: { node: { implementation: 'node', version: '>=20' } },
+      });
+      expect(await fs.readJson(path.join(workspaceDir, 'packages/app/package.json'))).to.have.nested.property(
+        'dependencies.@acme/math',
+        'catalog:'
+      );
+      expect(
+        parseYaml(await fs.readFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), 'utf8'))
+      ).to.have.nested.property('catalog.@acme/math', 'workspace:*');
+    } finally {
+      await fs.remove(workspaceDir);
+    }
+  });
+
+  it('applies selective Bit imports as exact catalog fallbacks and rebinds them when local', async () => {
+    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-native-pnpm-import-'));
+    try {
+      await fs.writeFile(
+        path.join(workspaceDir, 'pnpm-workspace.yaml'),
+        'packages: []\nvcs:\n  provider: bit\n  schemaVersion: 1\n  rootComponent: acme.scope/root\n  components: {}\n'
+      );
+      await fs.outputJson(path.join(workspaceDir, 'components/app/package.json'), {
+        name: '@acme/app',
+        dependencies: { '@acme/math': 'workspace:*' },
+      });
+
+      await applyPnpmImportPlan(workspaceDir, {
+        schemaVersion: 1,
+        components: [
+          {
+            id: 'acme.scope/app@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            rootDir: 'components/app',
+            packageName: '@acme/app',
+          },
+        ],
+        catalogs: [
+          {
+            catalogName: 'default',
+            packageName: '@acme/math',
+            specifier: '0.0.0-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+            componentId: 'acme.scope/math@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+          },
+        ],
+      });
+
+      expect(await fs.readJson(path.join(workspaceDir, 'components/app/package.json'))).to.have.nested.property(
+        'dependencies.@acme/math',
+        'catalog:'
+      );
+      let workspaceManifest = parseYaml(await fs.readFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), 'utf8'));
+      expect(workspaceManifest.catalog['@acme/math']).to.equal('0.0.0-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+      expect(workspaceManifest.vcs.components['components/app'].componentId).to.equal('acme.scope/app');
+
+      await fs.outputJson(path.join(workspaceDir, 'components/math/package.json'), { name: '@acme/math' });
+      await applyPnpmImportPlan(workspaceDir, {
+        schemaVersion: 1,
+        components: [
+          {
+            id: 'acme.scope/math@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+            rootDir: 'components/math',
+            packageName: '@acme/math',
+          },
+        ],
+        catalogs: [],
+      });
+
+      workspaceManifest = parseYaml(await fs.readFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), 'utf8'));
+      expect(workspaceManifest.catalog['@acme/math']).to.equal('workspace:*');
+      expect(workspaceManifest.packages).to.deep.equal(['components/app', 'components/math']);
+    } finally {
+      await fs.remove(workspaceDir);
+    }
+  });
+
   it('assigns project files to the deepest project and leaves unclaimed files to the root component', () => {
     const result = assignFilesToProjects(
       [
