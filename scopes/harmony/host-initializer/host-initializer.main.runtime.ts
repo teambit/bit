@@ -65,7 +65,7 @@ export class HostInitializerMain {
     workspaceConfigProps: WorkspaceExtensionProps = {},
     generator?: string,
     agent?: string,
-    options: { skipDefaultMcp?: boolean } = {}
+    options: { skipAgent?: boolean; skipDefaultMcp?: boolean } = {}
   ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string; mcpFileWritten?: string }> {
     const consumerInfo = await getWorkspaceInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
@@ -122,7 +122,9 @@ export class HostInitializerMain {
     let agentFileWritten: string | undefined;
     let mcpFileWritten: string | undefined;
     if (created) {
-      agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
+      if (!options.skipAgent) {
+        agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
+      }
       // Keep `.mcp.json` in sync with the agent template, which tells the
       // agent that the workspace ships a Cloud MCP config. Skipped only when
       // the caller (interactive init) knows the user explicitly opted out.

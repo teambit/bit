@@ -808,7 +808,7 @@ export class ApplyOverrides {
       // a component is imported but the package.json file is missing or never written
       // read the values from the model
       const packageJson = PackageJsonFile.createFromComponent(
-        this.component.componentMap.rootDir,
+        this.component.componentMap.rootDir || '',
         this.componentFromModel
       );
       return packageJson.packageJsonObject;

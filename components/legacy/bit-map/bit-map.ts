@@ -216,6 +216,7 @@ export class BitMap {
     const gitIgnore = await getGitIgnoreHarmony(this.projectRoot, this.ignoredFiles);
     await Promise.all(
       this.components.map(async (componentMap) => {
+        if (componentMap.useExplicitFiles) return;
         const rootDir = componentMap.rootDir;
         if (!rootDir) return;
         try {

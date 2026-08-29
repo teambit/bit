@@ -271,13 +271,16 @@ export class VersionMaker {
       rootComponentsPath: this.workspace.rootComponentsPath,
       componentIdByPkgName,
     };
-    const components: Array<{ component: Component; componentRelativeDir: string }> = [];
+    const components: Array<{ component: Component; componentRelativeDir: string; packageName?: string }> = [];
     for (const consumerComponent of this.allComponentsToTag) {
       const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
-      if (consumerComponent.componentMap?.rootDir && component) {
+      const componentMap = consumerComponent.componentMap;
+      const componentRelativeDir = componentMap?.rootDir || (componentMap?.useExplicitFiles ? '.' : undefined);
+      if (componentRelativeDir && component) {
         components.push({
           component,
-          componentRelativeDir: consumerComponent.componentMap.rootDir,
+          componentRelativeDir,
+          packageName: this._getDeclaredPackageName(component),
         });
       }
     }
@@ -298,6 +301,8 @@ export class VersionMaker {
       if (component) {
         const pkgName = this.dependencyResolver.getPackageName(component);
         componentIdByPkgName.set(pkgName, consumerComponent.id);
+        const declaredPackageName = this._getDeclaredPackageName(component);
+        if (declaredPackageName) componentIdByPkgName.set(declaredPackageName, consumerComponent.id);
       }
     });
     for (const workspaceComp of this.allWorkspaceComps) {
@@ -307,9 +312,22 @@ export class VersionMaker {
         )
       ) {
         componentIdByPkgName.set(this.dependencyResolver.getPackageName(workspaceComp), workspaceComp.id);
+        const declaredPackageName = this._getDeclaredPackageName(workspaceComp);
+        if (declaredPackageName) componentIdByPkgName.set(declaredPackageName, workspaceComp.id);
       }
     }
     return componentIdByPkgName;
+  }
+
+  private _getDeclaredPackageName(component: Component): string | undefined {
+    const packageJsonFile = component.state._consumer.files.find((file) => file.relative === 'package.json');
+    if (!packageJsonFile) return undefined;
+    try {
+      const packageJson = JSON.parse(packageJsonFile.contents.toString());
+      return typeof packageJson.name === 'string' && packageJson.name ? packageJson.name : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   private async triggerOnPreSnap(autoTagIds: ComponentIdList) {

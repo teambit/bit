@@ -16,6 +16,7 @@ import { AddCmd } from './add-cmd';
 import type { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
 import AddComponents, { addMultipleFromResolvedTrackData } from './add-components';
 import { TrackerAspect } from './tracker.aspect';
+import { PnpmVcsSyncCmd } from './pnpm-vcs-sync.cmd';
 
 export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };
 
@@ -216,7 +217,7 @@ if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bi
   static async provider([cli, workspace, loggerMain]: [CLIMain, Workspace, LoggerMain]) {
     const logger = loggerMain.createLogger(TrackerAspect.id);
     const trackerMain = new TrackerMain(workspace, logger);
-    cli.register(new AddCmd(trackerMain));
+    cli.register(new AddCmd(trackerMain), new PnpmVcsSyncCmd(workspace));
     return trackerMain;
   }
 }
