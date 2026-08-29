@@ -126,6 +126,7 @@ export type SwitchLaneOptions = {
   verbose?: boolean;
   override?: boolean;
   branch?: boolean;
+  pnpmVcsBootstrap?: boolean;
 };
 
 /** where the base was resolved from: `workspace` (already local) or `scope` (fetched from remote). */
@@ -798,6 +799,7 @@ please create a new lane instead, which will include all components of this lane
       skipDependencyInstallation = false,
       skipFetch = false,
       branch = false,
+      pnpmVcsBootstrap = false,
     }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
@@ -823,6 +825,7 @@ please create a new lane instead, which will include all components of this lane
       restrictToScopes,
       alias,
       skipFetch,
+      pnpmVcsBootstrap,
     };
     const checkoutProps = {
       mergeStrategy,

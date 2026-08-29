@@ -512,6 +512,11 @@ export default class ImportComponents {
 
   private async throwForComponentsFromAnotherLane(bitIds: ComponentID[]) {
     if (this.options.objectsOnly) return;
+    // A Git-free pnpm clone has to materialize the lane's root component before
+    // it can read the durable topology and switch the workspace to that lane.
+    // The CLI restricts this bootstrap mode to one validated component written
+    // at the workspace root; ordinary cross-lane component imports stay blocked.
+    if (this.options.pnpmVcsRoot) return;
     const currentLaneId = this.workspace.getCurrentLaneId();
     const currentRemoteLane = this.remoteLane?.toLaneId().isEqual(currentLaneId) ? this.remoteLane : undefined;
     const currentLane = await this.workspace.getCurrentLaneObject();

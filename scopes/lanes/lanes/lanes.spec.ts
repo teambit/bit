@@ -17,7 +17,7 @@ import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentID } from '@teambit/component-id';
-import { partitionSwitchIds } from './switch-lanes';
+import { isPnpmVcsBootstrapComponentSet, partitionSwitchIds } from './switch-lanes';
 import { LanesAspect } from './lanes.aspect';
 import type { LanesMain } from './lanes.main.runtime';
 import type { MergeLanesMain } from '@teambit/merge-lanes';
@@ -543,5 +543,41 @@ describe('partitionSwitchIds', () => {
   it('a main-only component that the lane never carried is still taken at its main version', () => {
     const { ids } = partitionSwitchIds([ours], [ours, oursOnMainOnly], ['acme.shop']);
     expect(ids.map((i) => i.toString())).to.have.members([oursOnMainOnly.toString(), ours.toString()]);
+  });
+});
+
+describe('pnpm VCS lane bootstrap validation', () => {
+  const root = {
+    rootDir: '',
+    useExplicitFiles: true,
+    config: {
+      'teambit.component/tracker': {
+        pnpmVcs: {
+          schemaVersion: 1,
+          workspace: { schemaVersion: 1 },
+        },
+      },
+    },
+  };
+
+  it('accepts only one validated root component', () => {
+    expect(isPnpmVcsBootstrapComponentSet([root])).to.be.true;
+    expect(isPnpmVcsBootstrapComponentSet([])).to.be.false;
+    expect(isPnpmVcsBootstrapComponentSet([root, root])).to.be.false;
+  });
+
+  it('rejects ordinary and incomplete component maps', () => {
+    expect(isPnpmVcsBootstrapComponentSet([{ ...root, rootDir: 'packages/app' }])).to.be.false;
+    expect(isPnpmVcsBootstrapComponentSet([{ ...root, useExplicitFiles: false }])).to.be.false;
+    expect(
+      isPnpmVcsBootstrapComponentSet([
+        {
+          ...root,
+          config: {
+            'teambit.component/tracker': { pnpmVcs: { schemaVersion: 1 } },
+          },
+        },
+      ])
+    ).to.be.false;
   });
 });
