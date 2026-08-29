@@ -17,6 +17,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { Workspace } from '@teambit/workspace';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { EnvsAspect } from '@teambit/envs';
 import { snapToSemver } from '@teambit/component-package-version';
 import { TrackerAspect } from './tracker.aspect';
 
@@ -33,6 +34,7 @@ export type PnpmProjectInventoryItem = {
   componentId?: string;
   manifestFile: string;
   requirements?: WorkspaceToolMap;
+  hasWorkspaceScripts?: boolean;
 };
 
 export type PnpmWorkspaceInventory = {
@@ -229,6 +231,7 @@ export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsIm
 
 type PackageManifest = {
   name?: string;
+  scripts?: Record<string, string>;
   engines?: { node?: string };
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -280,6 +283,7 @@ export async function discoverPnpmWorkspace(workspace: Workspace): Promise<PnpmW
       componentId: durable?.componentId,
       manifestFile: durable?.manifestFile || 'package.json',
       requirements: Object.keys(requirements).length ? requirements : undefined,
+      hasWorkspaceScripts: ['build', 'test', 'lint'].some((script) => Boolean(manifest.scripts?.[script])),
     };
   });
   const rootName = sanitizePnpmComponentName(rootManifest?.name || path.basename(workspace.path));
@@ -570,6 +574,7 @@ export async function syncPnpmWorkspace(
     const stored = storedConfigs.get(componentMap.id.toStringWithoutVersion());
     const pnpmVcsConfig = projectConfigs.get(project.rootDir)!;
     addPnpmVcsConfig(workspace, componentMap, stored?.trackerConfig, pnpmVcsConfig);
+    addPnpmWorkspaceEnvConfig(workspace, componentMap, Boolean(project.hasWorkspaceScripts));
     const packageName = await readProjectPackageName(workspace.path, project);
     addPackageNameConfig(workspace, componentMap, stored?.dependencyResolverConfig, packageName);
     if (stored?.pnpmVcs && !isEqual(stored.pnpmVcs.appliedProfile, workspaceProfile)) {
@@ -603,6 +608,20 @@ export async function syncPnpmWorkspace(
     resolvedRootId
   );
   const workspaceTopology = createPnpmVcsWorkspaceTopology(rootComponent.id.toStringWithoutVersion(), synced);
+  // Every project carries the repository manifest as well. Build contexts are
+  // grouped by environment, so the config-only root component is deliberately
+  // not in the projects' capsule graph. Keeping this small manifest on each
+  // project lets the workspace-script environment reconstruct the repository
+  // without making the root an artificial runtime dependency.
+  projects.forEach((project) => {
+    const componentMap = bitMap.components.find((component) => component.rootDir === project.rootDir);
+    if (!componentMap) return;
+    const stored = storedConfigs.get(componentMap.id.toStringWithoutVersion());
+    addPnpmVcsConfig(workspace, componentMap, stored?.trackerConfig, {
+      ...projectConfigs.get(project.rootDir)!,
+      workspace: workspaceTopology,
+    });
+  });
   addPnpmVcsConfig(
     workspace,
     rootComponent,
@@ -614,6 +633,7 @@ export async function syncPnpmWorkspace(
       workspace: workspaceTopology,
     }
   );
+  addPnpmWorkspaceEnvConfig(workspace, rootComponent, false);
   synced.push({ id: rootComponent.id.toStringWithoutVersion(), rootDir: '.', files: rootFiles.length });
 
   return {
@@ -846,6 +866,20 @@ function addPackageNameConfig(
     ...storedConfig,
     ...(localConfig && localConfig !== '-' ? localConfig : undefined),
     packageName,
+  });
+}
+
+function addPnpmWorkspaceEnvConfig(
+  workspace: Workspace,
+  componentMap: ComponentMap,
+  hasWorkspaceScripts: boolean
+): void {
+  const existing = componentMap.config?.[EnvsAspect.id];
+  const existingEnv = existing && existing !== '-' ? existing.env : undefined;
+  const adapterEnvs = new Set([TrackerAspect.id, 'teambit.harmony/empty-env']);
+  if (existingEnv && !adapterEnvs.has(existingEnv)) return;
+  workspace.bitMap.addComponentConfig(componentMap.id, EnvsAspect.id, {
+    env: hasWorkspaceScripts ? TrackerAspect.id : 'teambit.harmony/empty-env',
   });
 }
 

@@ -17006,6 +17006,9 @@ importers:
       chalk:
         specifier: 4.1.2
         version: 4.1.2
+      execa:
+        specifier: 2.1.0
+        version: 2.1.0
       firstline:
         specifier: 2.0.2
         version: 2.0.2
@@ -81358,6 +81361,7 @@ snapshots:
       array-difference: 0.0.2
       chai: 4.3.0
       chalk: 4.1.2
+      execa: 2.1.0
       firstline: 2.0.2
       fs-extra: 10.0.0
       glob: 13.0.0
@@ -81400,6 +81404,7 @@ snapshots:
       array-difference: 0.0.2
       chai: 5.2.1
       chalk: 4.1.2
+      execa: 2.1.0
       firstline: 2.0.2
       fs-extra: 10.0.0
       glob: 13.0.0

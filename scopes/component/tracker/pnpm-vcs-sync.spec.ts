@@ -32,6 +32,7 @@ describe('pnpm VCS workspace ownership', () => {
       await fs.outputJson(path.join(workspaceDir, 'packages/math/package.json'), {
         name: '@acme/math',
         engines: { node: '>=20' },
+        scripts: { build: 'tsc -p tsconfig.json' },
       });
       await fs.outputJson(path.join(workspaceDir, 'packages/app/package.json'), {
         name: '@acme/app',
@@ -51,7 +52,9 @@ describe('pnpm VCS workspace ownership', () => {
         componentName: 'acme/math',
         manifestFile: 'package.json',
         requirements: { node: { implementation: 'node', version: '>=20' } },
+        hasWorkspaceScripts: true,
       });
+      expect(inventory.projects.find(({ rootDir }) => rootDir === 'packages/app')?.hasWorkspaceScripts).to.equal(false);
       expect(await fs.readJson(path.join(workspaceDir, 'packages/app/package.json'))).to.have.nested.property(
         'dependencies.@acme/math',
         'catalog:'
