@@ -11,6 +11,7 @@ import { isSnap } from '@teambit/component-version';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { BitMap } from '@teambit/legacy.bit-map';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { ListScopeResult } from '@teambit/legacy.component-list';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { RemoveMain } from '@teambit/remove';
@@ -889,8 +890,15 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     }
     this.logger.setStatusLine(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
+    // an id that is not in the workspace should fail the export. (workspace.getMany below would
+    // have loaded it from the scope instead of throwing)
+    parsedIds.forEach((parsedId) => {
+      if (!consumer.bitMap.getComponentIdIfExist(parsedId, { ignoreVersion: true })) {
+        throw new MissingBitMapComponent(parsedId.toString());
+      }
+    });
     // load the components for fixing any out-of-sync issues.
-    await consumer.loadComponents(ComponentIdList.fromArray(parsedIds));
+    await this.workspace.getMany(parsedIds);
 
     return throwForLocalOnlyIfNeeded(ComponentIdList.fromArray(parsedIds));
   }

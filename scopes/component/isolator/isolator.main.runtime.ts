@@ -873,6 +873,11 @@ export class IsolatorMain {
     cyclicMemberIds?: Set<string>
   ): Promise<CapsuleList> {
     this.logger.debug(`createCapsules, ${components.length} components`);
+    // the same component can be requested twice, e.g. an env of a scope's components that is also
+    // a component in that scope may be registered both with and without a version, resolving to the
+    // same id. two capsules on the same path then fail updateWithCurrentPackageJsonData ("found
+    // duplicate capsules").
+    components = uniqBy(components, (component) => component.id.toString());
 
     let longProcessLogger;
     if (opts.context?.aspects) {

@@ -451,6 +451,26 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       graphSeeders = rest;
     }
     const graph = await this.getAspectsGraphWithoutCore(graphSeeders, this.isAspect.bind(this));
+    // aspects installed at the workspace root can also enter the graph as dependencies of other
+    // requested aspects, or as seeders that are not legacy envs themselves (e.g. a custom env
+    // installed as a package whose base is a legacy env). classify every root-installed
+    // non-workspace aspect as a resolution root too, so its dependencies - often legacy envs that
+    // exist only nested under the installed package - are resolved from the installed packages
+    // below, not from the workspace-root path that doesn't exist for them.
+    if (mergedOpts.resolveEnvsFromRoots) {
+      const knownLegacyEnvIds = new Set(
+        [...installedLegacyEnvs, ...nonInstalledLegacyEnvs].map((c) => c.id.toString())
+      );
+      await Promise.all(
+        graph.nodes.map(async (node) => {
+          const component = node.attr;
+          if (knownLegacyEnvIds.has(component.id.toString())) return;
+          if (await this.workspace.hasId(component.id)) return;
+          const packagePath = await this.workspace.getComponentPackagePath(component);
+          if (await fs.pathExists(packagePath)) installedLegacyEnvs.push(component);
+        })
+      );
+    }
     const aspectsComponentsInclCore = graph.nodes
       .map((node) => node.attr)
       .concat(groupedByIsPlugin.true || [])
@@ -521,7 +541,10 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       const legacyEnvIds = installedLegacyEnvs.map((c) => c.id.toString());
       const legacyRuntimeClosure = this.getGraphDescendants(graph, legacyEnvIds, ['runtime']);
       const otherSeederIds = graphSeeders.map((c) => c.id.toString()).filter((idStr) => !legacyEnvIds.includes(idStr));
-      const otherClosure = this.getGraphDescendants(graph, otherSeederIds);
+      // stop the traversal at legacy-env nodes: a dependency reachable from a regular seeder only
+      // through a legacy env belongs to the legacy env's closure and should be resolved from the
+      // installed packages, not isolated into a scope capsule.
+      const otherClosure = this.getGraphDescendants(graph, otherSeederIds, undefined, new Set(legacyEnvIds));
       otherSeederIds.forEach((idStr) => otherClosure.add(idStr));
       const fromScope: Component[] = [];
       const fromInstalled: Component[] = [];
@@ -968,7 +991,12 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
    * optionally traverse only edges of the given lifecycle types (e.g. ['runtime']).
    * iterative BFS to avoid stack overflow on big graphs.
    */
-  private getGraphDescendants(graph: Graph<Component, string>, sourceIds: string[], edgeTypes?: string[]): Set<string> {
+  private getGraphDescendants(
+    graph: Graph<Component, string>,
+    sourceIds: string[],
+    edgeTypes?: string[],
+    stopAtIds?: Set<string>
+  ): Set<string> {
     const visited = new Set<string>();
     const queue = [...sourceIds];
     let queueIndex = 0;
@@ -977,6 +1005,8 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       queueIndex += 1;
       if (visited.has(current)) continue;
       visited.add(current);
+      // a stop-node is included in the result but its own dependencies are not traversed
+      if (stopAtIds?.has(current) && !sourceIds.includes(current)) continue;
       graph.outEdges(current).forEach((edge) => {
         if (edgeTypes && !edgeTypes.includes(edge.attr)) return;
         queue.push(edge.targetId);
@@ -1177,6 +1207,14 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     // same as the env.jsonc case above - when not installed yet, loading fails gracefully and the
     // user gets a NonLoadedEnv issue suggesting to run bit install.
     if (this.envs.isLegacyCoreEnv(component.id.toStringWithoutVersion())) {
+      return true;
+    }
+    // an old-format extension env (no .aspect/.bit-env/env.jsonc file) that is installed at the
+    // workspace root should be loaded from there as well - its dependency chain (typically the
+    // legacy core envs it is built on) is nested under the installed package. isolating it into a
+    // scope capsule instead requires importing the objects of that chain, which may not be
+    // available (e.g. the component's scope doesn't host the legacy envs).
+    if (rootDirExist && this.envs.isEnv(component)) {
       return true;
     }
     return false;
