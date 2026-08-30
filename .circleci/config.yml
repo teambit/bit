@@ -318,6 +318,77 @@ commands:
           paths:
             - /home/circleci/.bvm
 
+  # Merges build_ui_prebundle's cached UI/preview artifacts into setup_esbuild_bundle's already-
+  # built bundle - a plain file copy, since the pre-bundle is static artifacts alongside
+  # bit.app.js rather than compiled into it, so no rebuild is needed. Shared between
+  # e2e_test_ui_prebundle and bundle_push_build, both of which combine the two upstream jobs'
+  # persisted workspace output this way.
+  inject_ui_prebundle:
+    steps:
+      - run:
+          name: inject the pre-bundle into the built esbuild bundle
+          command: |
+            UI_OUT=/home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/ui/artifacts
+            PREVIEW_OUT=/home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/preview/artifacts
+            mkdir -p "$UI_OUT" "$PREVIEW_OUT"
+            cp -r bit/.bundle-cache/ui-preview-prebundle/ui/artifacts/. "$UI_OUT"/
+            cp -r bit/.bundle-cache/ui-preview-prebundle/preview/artifacts/. "$PREVIEW_OUT"/
+            test -f "$UI_OUT/ui-bundle/.hash"
+            test -f "$PREVIEW_OUT/ui-bundle/.hash"
+
+  # Shared between bundle_deploy_build (manual, arbitrary bundle_version) and bundle_push_build
+  # (automatic, one per bit-bundle* push) - see bundle-plan/24-installing-via-bvm.md.
+  resolve_bundle_version:
+    parameters:
+      version_override:
+        type: string
+        default: ""
+    steps:
+      - run:
+          name: resolve the version to publish
+          # An explicit override wins. Otherwise it is derived from this branch's own component
+          # version plus the next free counter in bvm's index - so forgetting it is not an error, a
+          # re-run cannot overwrite an earlier build, and nobody has to remember which -bundle.N
+          # they are up to.
+          command: |
+            cd bit
+            VERSION="<< parameters.version_override >>"
+            if [ -z "$VERSION" ]; then
+              VERSION=$(node scripts/next-bundle-version.js)
+            fi
+            echo "publishing as ${VERSION}"
+            echo "export BUNDLE_VERSION=${VERSION}" >> "$BASH_ENV"
+
+  pack_bvm_tars:
+    steps:
+      - run:
+          name: pack a tar per platform
+          # One job for all five, unlike harmony_deploy's three: those are split because each one
+          # installs bit's full ~5000-package tree, while this installs only the ~11 externals.
+          # They are all linux containers there too - the cross-platform install is pnpm's, not the
+          # runner's, and the packer's @pnpm/napi check is the same guard verify_pnpm_napi_bundle
+          # provides.
+          command: |
+            cd bit
+            for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 win-x64; do
+              node scripts/pack-bundle-for-bvm.js \
+                --capsule /home/circleci/bit/esbuild-bundle \
+                --version "${BUNDLE_VERSION}" \
+                --os "${target%-*}" \
+                --arch "${target##*-}" \
+                --out-dir /home/circleci/bit/bvm-tars
+            done
+            # the publish job reads the version from here rather than the parameter, so the two
+            # jobs cannot disagree about what was built
+            echo "${BUNDLE_VERSION}" > /home/circleci/bit/bvm-tars/version.txt
+            ls -la /home/circleci/bit/bvm-tars
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bvm-tars
+      - store_artifacts:
+          path: /home/circleci/bit/bvm-tars
+
   # SSH & Git setup
   update_ssh_agent:
     steps:
@@ -1356,16 +1427,7 @@ jobs:
       - restore_common_caches
       - bit_global_for_npm
       - bit_config
-      - run:
-          name: inject the pre-bundle into the built esbuild bundle
-          command: |
-            UI_OUT=/home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/ui/artifacts
-            PREVIEW_OUT=/home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/preview/artifacts
-            mkdir -p "$UI_OUT" "$PREVIEW_OUT"
-            cp -r bit/.bundle-cache/ui-preview-prebundle/ui/artifacts/. "$UI_OUT"/
-            cp -r bit/.bundle-cache/ui-preview-prebundle/preview/artifacts/. "$PREVIEW_OUT"/
-            test -f "$UI_OUT/ui-bundle/.hash"
-            test -f "$PREVIEW_OUT/ui-bundle/.hash"
+      - inject_ui_prebundle
       - run:
           name: put the bundled bit on PATH as "bit-bundled"
           # the launcher resolves the bundle relative to its own realpath, so a symlink is enough.
@@ -1588,20 +1650,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run:
-          name: resolve the version to publish
-          # An explicit bundle_version wins. Otherwise it is derived from this branch's own
-          # component version plus the next free counter in bvm's index - so forgetting the
-          # parameter is not an error, a re-run cannot overwrite an earlier build, and nobody has
-          # to remember which -bundle.N they are up to.
-          command: |
-            cd bit
-            VERSION="<< pipeline.parameters.bundle_version >>"
-            if [ -z "$VERSION" ]; then
-              VERSION=$(node scripts/next-bundle-version.js)
-            fi
-            echo "publishing as ${VERSION}"
-            echo "export BUNDLE_VERSION=${VERSION}" >> "$BASH_ENV"
+      - resolve_bundle_version:
+          version_override: << pipeline.parameters.bundle_version >>
       - setup_bit_environment
       - set_bit_cloud_registry
       - setup_pnpm
@@ -1652,33 +1702,23 @@ jobs:
           command: |
             node /home/circleci/bit/esbuild-bundle/bin/bit --version
             node /home/circleci/bit/esbuild-bundle/bin/bit --help > /dev/null
-      - run:
-          name: pack a tar per platform
-          # One job for all five, unlike harmony_deploy's three: those are split because each one
-          # installs bit's full ~5000-package tree, while this installs only the ~11 externals.
-          # They are all linux containers there too (bundle_version_macos/_windows are `*defaults`)
-          # - the cross-platform install is pnpm's, not the runner's, and the packer's @pnpm/napi
-          # check is the same guard verify_pnpm_napi_bundle provides.
-          command: |
-            cd bit
-            for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 win-x64; do
-              node scripts/pack-bundle-for-bvm.js \
-                --capsule /home/circleci/bit/esbuild-bundle \
-                --version "${BUNDLE_VERSION}" \
-                --os "${target%-*}" \
-                --arch "${target##*-}" \
-                --out-dir /home/circleci/bit/bvm-tars
-            done
-            # the publish job reads the version from here rather than the parameter, so the two
-            # jobs cannot disagree about what was built
-            echo "${BUNDLE_VERSION}" > /home/circleci/bit/bvm-tars/version.txt
-            ls -la /home/circleci/bit/bvm-tars
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bvm-tars
-      - store_artifacts:
-          path: /home/circleci/bit/bvm-tars
+      - pack_bvm_tars
+
+  # Packs bvm tars straight from build_and_test's own setup_esbuild_bundle + build_ui_prebundle
+  # output, instead of bundle_deploy_build's from-scratch bit install + bit build: those two jobs
+  # already run on every bit-bundle* push and persist exactly what's needed (esbuild-bundle,
+  # bit/.bundle-cache), so this just merges and packs it - no separate bit install or bit build.
+  # One auto-published bvm dev build per push, no manual trigger - see
+  # bundle-plan/24-installing-via-bvm.md.
+  bundle_push_build:
+    <<: *defaults
+    resource_class: large
+    steps:
+      - attach_workspace:
+          at: ./
+      - inject_ui_prebundle
+      - resolve_bundle_version
+      - pack_bvm_tars
 
   bundle_publish_to_gcloud:
     docker:
@@ -2074,6 +2114,19 @@ workflows:
           requires:
             - setup_esbuild_bundle
             - build_ui_prebundle
+      # auto-publishes a bvm dev pre-release on every bit-bundle* push, reusing the two jobs'
+      # output above instead of rebuilding it - see bundle_push_build's own comment and
+      # bundle-plan/24-installing-via-bvm.md. The manual, arbitrary-version bundle_deploy workflow
+      # is unaffected.
+      - bundle_push_build:
+          <<: *bundle_branch_filter
+          requires:
+            - setup_esbuild_bundle
+            - build_ui_prebundle
+      - bundle_publish_to_gcloud:
+          <<: *bundle_branch_filter
+          requires:
+            - bundle_push_build
       - bit_pr:
           requires:
             - setup_harmony

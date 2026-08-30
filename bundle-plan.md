@@ -2,7 +2,14 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-08-19 (gave `e2e_test_ui_prebundle` the same `bit_global_for_npm`/`bit_config`
+> Last updated: 2026-08-30 (bvm dev pre-releases now publish automatically on every `bit-bundle*`
+> push — new `bundle_push_build`/`bundle_publish_to_gcloud` jobs in `build_and_test`, reusing
+> `setup_esbuild_bundle`/`build_ui_prebundle`'s persisted workspace output instead of rebuilding from
+> scratch. `resolve_bundle_version`/`pack_bvm_tars`/`inject_ui_prebundle` extracted as shared
+> `commands:` so the manual `bundle_deploy` workflow and this one share the packing logic. See
+> [24-installing-via-bvm.md](bundle-plan/24-installing-via-bvm.md) and the new
+> [25-pre-merge-cleanup.md](bundle-plan/25-pre-merge-cleanup.md).)
+> Previously, 2026-08-19 (gave `e2e_test_ui_prebundle` the same `bit_global_for_npm`/`bit_config`
 > setup `e2e_test_esbuild_bundle` gets via `e2e_test_cmd`, and bumped the `bit --help` timing
 > budget in `filesystem-read.e2e.ts` from 1500ms to 2500ms based on 10 real CI measurements
 > (1720-2270ms) — see [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-08-19 entries.)
@@ -104,6 +111,7 @@ Full detail in [01-goal-and-results.md](bundle-plan/01-goal-and-results.md).
 **Shipping the branch**
 
 - [24 — Handing the branch out through bvm](bundle-plan/24-installing-via-bvm.md) (the tar layout bvm expects, `pack-bundle-for-bvm.js`, pre-release versioning and the `dev` release type)
+- [25 — Cleanup before merging into master](bundle-plan/25-pre-merge-cleanup.md) (running checklist, distinct from the known-gaps list)
 
 ## Section-number cross-reference
 

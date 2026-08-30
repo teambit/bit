@@ -6,7 +6,7 @@ The goal is to let someone run the bundled bit without merging or releasing anyt
 publish, no `@teambit/bit` version taken, no effect on anyone who is not asking for it.
 
 bvm can already do this. It has two installation methods, and the `tar` one downloads an archive
-from GCS and extracts it — it runs no package manager of its own, so whatever the tar holds *is*
+from GCS and extracts it — it runs no package manager of its own, so whatever the tar holds _is_
 the installation. That makes the tar the entire deliverable.
 
 ## The layout bvm expects
@@ -90,7 +90,7 @@ and every `-bundle.N` build looks identical from the CLI. The packer restamps `v
 `componentId` is left alone, since that identifies the component, which really is the base version.
 
 One consequence to know before setting `engine`: a pre-release satisfies no ordinary semver range —
-`2.2.11-bundle.1` fails `^2.2.0`, `>=2.0.0`, `2.x` *and* `^2.2.11`, because a range only admits
+`2.2.11-bundle.1` fails `^2.2.0`, `>=2.0.0`, `2.x` _and_ `^2.2.11`, because a range only admits
 pre-releases when it names one on the same version tuple. `load-bit.ts`'s `verifyEngine` calls plain
 `satisfies(getBitVersion(), bitConfig.engine)`, so a workspace that sets `teambit.harmony/bit`'s
 `engine` will warn under a bundle build — and throw, if it also sets `engineStrict`. The field is
@@ -158,11 +158,44 @@ then cannot run.
 
 Those two flags have to stay on the command line. Setting `pnpm.supportedArchitectures` in the
 staging `package.json` reads as equivalent and silently is not: pnpm 12 no longer takes settings
-from that field (`config.yml`'s `install_bit_bundle` carries the same note), so it warns *"The
-following keys were ignored"* and installs the **host** platform. On a linux runner that produces a
+from that field (`config.yml`'s `install_bit_bundle` carries the same note), so it warns _"The
+following keys were ignored"_ and installs the **host** platform. On a linux runner that produces a
 correct linux-x64 tar and four tars that would install and then fail to run — caught here only
 because the `@pnpm/napi` check is a hard failure. Verified on pnpm 10.17.1 and 12.0.0-rc.7; note
 `pnpm install --help` documents the flags on `add` only, but `install` honours them on both.
+
+## From every push, automatically (2026-08-30)
+
+`bundle_deploy` needs a manual trigger. `build_and_test` also carries `bundle_push_build` and a
+second instance of `bundle_publish_to_gcloud`, filtered to `bit-bundle*` branches, that do the same
+thing on every push without one — `setup_esbuild_bundle` and `build_ui_prebundle` already run on
+every branch and persist exactly what packing needs (`esbuild-bundle`, `bit/.bundle-cache`), so
+`bundle_push_build` just merges and packs that instead of rebuilding it from scratch:
+
+1. `attach_workspace`
+2. inject `build_ui_prebundle`'s cached UI/preview artifacts into `setup_esbuild_bundle`'s bundle —
+   the same plain-copy step `e2e_test_ui_prebundle` uses to combine the two jobs' output, now shared
+   as the `inject_ui_prebundle` command
+3. resolve the version — always auto-derived (`next-bundle-version.js`, no override), via the
+   `resolve_bundle_version` command
+4. pack the five tars — the `pack_bvm_tars` command
+
+`resolve_bundle_version`, `pack_bvm_tars`, and `inject_ui_prebundle` are shared `commands:`, used by
+both this job and `bundle_deploy_build`, so the two paths cannot drift on how a tar is actually built
+— only on how they get to the point of having a capsule to pack (`bundle_deploy_build` still does a
+real `bit install` + `bit build` of its own, since the manual workflow runs standalone and has no
+upstream jobs to reuse).
+
+Because it reuses already-running jobs instead of adding its own `bit install`/`bit build`, the
+added cost per push is just the packing step: per a real CI run, packing all five platforms took
+about a minute total (`pack-bundle-for-bvm.js`'s `pnpm install --os/--cpu` per target, `npm pack`,
+tar). `bundle_publish_to_gcloud` is reused unchanged — it already reads the version from
+`bvm-tars/version.txt` rather than a parameter, so it doesn't care which job packed the tars.
+
+Every `bit-bundle*` push now mints a new `-bundle.N` and publishes it to bvm's `dev` index (see
+below) — there is no dedup against "nothing changed since the last push." See
+[25-pre-merge-cleanup.md](25-pre-merge-cleanup.md) for the open question of whether the manual
+`bundle_deploy` workflow is still worth keeping alongside this.
 
 ## Versioning and who sees it
 
