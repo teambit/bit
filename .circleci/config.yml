@@ -1242,8 +1242,6 @@ jobs:
   # Runs the full e2e suite against the bundled CLI from setup_esbuild_bundle.
   e2e_test_esbuild_bundle:
     <<: *defaults
-    # medium+ for the same OOM reason as e2e_test.
-    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
@@ -1277,6 +1275,7 @@ jobs:
             du -sh "$NODE_COMPILE_CACHE" 2>/dev/null || echo "compile cache dir was NOT populated"
       - e2e_test_cmd:
           bit_bin: "--bit_bin=bit-bundled"
+          skip_when_doc_only: true
 
   # Builds a real ui/preview pre-bundle from the dev binary (bundle-plan §17i) and caches it under
   # .bundle-cache/. Deliberately its own job, parallel to (not chained in front of)
