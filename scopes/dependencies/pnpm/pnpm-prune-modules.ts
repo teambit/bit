@@ -34,9 +34,7 @@ export async function pnpmPruneModules(rootDir: string): Promise<void> {
   // command's prune, whose process has nothing loaded from it, cleans it up.
   const loadedByThisProcess = loadedVirtualStoreDirNames(virtualStoreDir);
   await Promise.all(
-    extraneous
-      .filter((dir) => !loadedByThisProcess.has(dir))
-      .map((dir) => fs.remove(path.join(virtualStoreDir, dir)))
+    extraneous.filter((dir) => !loadedByThisProcess.has(dir)).map((dir) => fs.remove(path.join(virtualStoreDir, dir)))
   );
 }
 
