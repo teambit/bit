@@ -466,6 +466,21 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
           const component = node.attr;
           if (knownLegacyEnvIds.has(component.id.toString())) return;
           if (await this.workspace.hasId(component.id)) return;
+          // core aspects (aspect-loader, compiler, workspace, scope, ...) are always resolved from
+          // the core/bundle, never from an "installed package" - even though they legitimately
+          // satisfy isAspect() (they are themselves built with the aspect/env env). Letting one in
+          // here makes it a resolution *root* below (legacyEnvIds), which exempts it from the
+          // core-aspect traversal boundary meant to stop at exactly this kind of node - so its own
+          // internal "modules" helper packages (e.g. aspect-loader's
+          // `@teambit/compilation.modules.babel-compiler`) get swept in too and logged as bogus
+          // "failed resolving aspect" warnings.
+          if (coreAspectsIds.includes(component.id.toStringWithoutVersion())) return;
+          // graph.nodes includes plain dependency nodes too (e.g. an aspect's own internal
+          // "modules" helper packages), not just aspects/envs - only an actual aspect belongs in
+          // installedLegacyEnvs, otherwise it gets routed into resolveInstalledAspect() below and
+          // logs a bogus "failed resolving aspect" warning for a package that was never meant to
+          // be independently resolvable.
+          if (!(await this.isAspect(component.id))) return;
           const packagePath = await this.workspace.getComponentPackagePath(component);
           if (await fs.pathExists(packagePath)) installedLegacyEnvs.push(component);
         })
@@ -539,7 +554,19 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     // also reachable from other requested aspects.
     if (installedLegacyEnvs.length && componentsToResolveFromScope.length) {
       const legacyEnvIds = installedLegacyEnvs.map((c) => c.id.toString());
-      const legacyRuntimeClosure = this.getGraphDescendants(graph, legacyEnvIds, ['runtime']);
+      // stop at core-aspect nodes too: a legacy env's runtime deps (aspect-loader, compiler,
+      // workspace, ...) are themselves core aspects resolved from the bundle/core, not from the
+      // env's installed package. without this boundary the traversal keeps going past them into
+      // their own internal implementation deps (e.g. aspect-loader's
+      // `@teambit/compilation.modules.babel-compiler`) - packages that were never installed
+      // alongside the env and were never meant to be independently resolved, so they get routed
+      // into resolveInstalledAspect() below and log a bogus "failed resolving aspect" warning.
+      const coreAspectGraphIds = new Set(
+        graph.nodes
+          .filter((node) => coreAspectsIds.includes(node.attr.id.toStringWithoutVersion()))
+          .map((node) => node.attr.id.toString())
+      );
+      const legacyRuntimeClosure = this.getGraphDescendants(graph, legacyEnvIds, ['runtime'], coreAspectGraphIds);
       const otherSeederIds = graphSeeders.map((c) => c.id.toString()).filter((idStr) => !legacyEnvIds.includes(idStr));
       // stop the traversal at legacy-env nodes: a dependency reachable from a regular seeder only
       // through a legacy env belongs to the legacy env's closure and should be resolved from the
