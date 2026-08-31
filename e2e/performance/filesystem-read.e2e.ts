@@ -42,6 +42,15 @@ const MAX_LOGICAL_MODULES_STATUS = 1700;
 // most-duplicated packages and their install locations. Tighten alongside the logical threshold
 // once CI report lines establish per-environment baselines.
 const MAX_DUPLICATE_COPIES_STATUS = 350;
+// The bundled flavor's guard (see the `isBundled` branch in the "bit status" test). It counts raw
+// reads, not modules, because a bundled bit reads none of its own modules - so it is not comparable
+// to the two ceilings above and needs its own number. This is an explosion ceiling, not a baseline:
+// it is set well above what a bundle can plausibly need (the unbundled flavor reads ~1800 physical
+// files for the same command, and every one of them that got inlined is a read the bundle does not
+// do), so it catches the regression that matters - the bundle falling back to loading the
+// module-per-file tree - while staying quiet for normal drift. Tighten it to measured + headroom
+// once the report line below has accumulated CI baselines, the same way the guards above were.
+const MAX_READS_STATUS_BUNDLED = 2000;
 
 /**
  * as of now (2026/08/08) ~1,072 files are loaded during bit-bootstrap (recent additions: the
@@ -78,9 +87,11 @@ describe('Filesystem read count', function () {
         const numberOfReads = getNumberOfReads(output);
         expect(numberOfReads, 'no "#<num>" read lines found in the output').to.be.greaterThan(0);
         if (numberOfReads >= MAX_FILES_READ) {
-          throw new Error(
-            buildExceededError('bit-bootstrap', numberOfReads, MAX_FILES_READ, getNewlyLoadedFiles(output))
-          );
+          // the snapshot diff is meaningful only for a module-per-file installation; a bundled run
+          // reads none of the files the snapshot lists, so it would report every one of them as
+          // "removed" and none of them as the cause. report the bare count there.
+          const newFiles = isBundled(output) ? undefined : getNewlyLoadedFiles(output);
+          throw new Error(buildExceededError('bit-bootstrap', numberOfReads, MAX_FILES_READ, newFiles));
         }
       });
       it('should take reasonable time to run bit --help', () => {
@@ -119,6 +130,19 @@ describe('Filesystem read count', function () {
           BIT_DEBUG_READ_FILE: 'true',
         });
         const numberOfReads = getNumberOfReads(output);
+        if (isBundled(output)) {
+          // the module-level metrics do not exist for a bundled bit: its code is one file that is
+          // parsed before the instrumentation is installed, so there are no per-module reads to
+          // normalize, de-duplicate or diff against a snapshot. what stays measurable - and is what
+          // this guard is ultimately about - is how much I/O a command does, so the bundle is held
+          // to the total read count instead.
+          console.log(`bit status filesystem-read report (bundled): total reads ${numberOfReads}`);
+          expect(numberOfReads, 'no "#<num>" read lines found in the output').to.be.greaterThan(0);
+          if (numberOfReads >= MAX_READS_STATUS_BUNDLED) {
+            throw new Error(buildExceededError('bit status (bundled)', numberOfReads, MAX_READS_STATUS_BUNDLED));
+          }
+          return;
+        }
         const { linesFromBitInstallation } = getLinesFromBitInstallation(output);
         const physicalFiles = _.uniq(linesFromBitInstallation);
         const logicalModules = toLogicalModules(linesFromBitInstallation);
@@ -309,16 +333,46 @@ function getNewlyLoadedModules(logicalModules: string[], snapshotFile: string): 
   return _.difference(logicalModules, fromLastSnapshot.split('\n'));
 }
 
+/**
+ * the file that locates the installation the command ran from: every read the instrumentation
+ * prints is absolute, so stripping this suffix off its own read line leaves the directory that all
+ * the other installation reads sit under (`<installation>/node_modules/`, which holds `@teambit/bit`
+ * next to every other package bit loads).
+ *
+ * it is absent when bit runs from the esbuild bundle, and no other file can take its place there:
+ * the instrumentation patches `fs` from inside bit (see `consoleFileReadUsages` in run-bit.ts),
+ * while the bundled launcher `require`s the whole CLI - one file - before any of that code exists.
+ * so a bundled run never prints a read for bit's own modules, by construction. `isBundled()` below
+ * is what the callers use to tell that flavor apart.
+ */
+const INSTALLATION_ANCHOR = '@teambit/bit/dist/bootstrap.js';
+
+/**
+ * true when the output came from the esbuild CLI bundle rather than from a module-per-file
+ * installation. derived from the output itself rather than from the `--bit_bin` value: what makes
+ * the per-module metrics inapplicable is precisely that bit's own modules were never read from
+ * disk, and that is what this checks.
+ */
+function isBundled(cmdOutput: string): boolean {
+  return !findAnchorLine(cmdOutput);
+}
+
+function findAnchorLine(cmdOutput: string): string | undefined {
+  return getReadLines(cmdOutput).find((l) => l.endsWith(INSTALLATION_ANCHOR));
+}
+
+function getReadLines(cmdOutput: string): string[] {
+  const relevantLines = cmdOutput.split('\n').filter((line) => line.startsWith('#'));
+  return relevantLines.map((l) => l.replace(/#[0-9]+/, ''));
+}
+
 function getLinesFromBitInstallation(cmdOutput: string) {
-  const lines = cmdOutput.split('\n');
-  const relevantLines = lines.filter((line) => line.startsWith('#'));
-  const linesWithoutHash = relevantLines.map((l) => l.replace(/#[0-9]+/, ''));
-  const mustPresentFileCandidate = '@teambit/bit/dist/bootstrap.js';
-  const bitBootstrap = linesWithoutHash.find((l) => l.endsWith(mustPresentFileCandidate));
+  const linesWithoutHash = getReadLines(cmdOutput);
+  const bitBootstrap = findAnchorLine(cmdOutput);
   if (!bitBootstrap) {
-    throw new Error(`unable to find ${mustPresentFileCandidate} in the output`);
+    throw new Error(`unable to find ${INSTALLATION_ANCHOR} in the output`);
   }
-  const commonDir = bitBootstrap.replace(mustPresentFileCandidate, '');
+  const commonDir = bitBootstrap.replace(INSTALLATION_ANCHOR, '');
   const linesWithCommonDir = linesWithoutHash.filter((l) => l.startsWith(commonDir));
   const linesFromBitInstallation = linesWithCommonDir.map((l) => l.replace(commonDir, ''));
   const otherLines = linesWithoutHash.filter((l) => !l.startsWith(commonDir));
