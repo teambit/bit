@@ -545,14 +545,24 @@ commands:
           steps:
             - run:
                 name: 'halt when the diff is docs-only (*.md / *.mdx)'
-                # any uncertainty (master branch, missing merge-base, empty diff) falls back to
-                # running the full suite. doc files under e2e/ are treated as test changes, not
-                # docs, so they never trigger a skip.
+                # any uncertainty (master branch, unavailable origin/master, missing merge-base,
+                # empty diff) falls back to running the full suite. doc files under e2e/ are
+                # treated as test changes, not docs, so they never trigger a skip.
                 command: |
                   if [ "$CIRCLE_BRANCH" = "master" ]; then
                     echo "on master - running the full suite"; exit 0
                   fi
+                  # this step runs before the ssh-key/known-hosts caches are restored, so any git
+                  # command that reaches for the remote blocks on interactive host-key verification
+                  # until the 10m no-output timeout. that timeout skips the setup steps which put
+                  # bit on the PATH, and "Run e2e tests" (when: always) then fails on every node
+                  # with "bit: not found". keep git strictly offline here: resolve origin/master
+                  # from local refs only, and make ssh fail fast if anything still reaches out.
+                  export GIT_SSH_COMMAND='ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new'
                   cd bit
+                  if ! git rev-parse --verify --quiet origin/master >/dev/null 2>&1; then
+                    echo "origin/master is not a local ref - running the full suite"; exit 0
+                  fi
                   if ! BASE=$(git merge-base HEAD origin/master 2>/dev/null); then
                     echo "cannot determine merge-base with origin/master - running the full suite"; exit 0
                   fi
