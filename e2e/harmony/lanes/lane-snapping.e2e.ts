@@ -55,7 +55,7 @@ describe('bit lane snapping and tagging', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.createLane();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       output = helper.general.runWithTryCatch('bit tag bar/foo');
     });
@@ -75,14 +75,14 @@ describe('bit lane snapping and tagging', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane();
       helper.fixtures.populateComponents();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
 
       helper.fs.outputFile('comp3/index.js', `module.exports = () => 'comp3 v2';`);
 
       const statusOutput = helper.command.runCmd('bit status');
       expect(statusOutput).to.have.string('components pending auto-tag');
 
-      snapOutput = helper.command.snapComponent('comp3');
+      snapOutput = helper.command.snapComponentWithoutBuild('comp3');
       comp3Head = helper.command.getHeadOfLane('dev', 'comp3');
       comp2Head = helper.command.getHeadOfLane('dev', 'comp2');
       comp1Head = helper.command.getHeadOfLane('dev', 'comp1');
@@ -129,13 +129,21 @@ describe('bit lane snapping and tagging', function () {
 
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
+    let resetOutput: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
       afterFirstSnap = helper.scopeHelper.cloneWorkspace();
-      helper.command.resetAll();
+      resetOutput = helper.command.resetAll();
+    });
+    it('should report the component as reset', () => {
+      expect(resetOutput).to.have.string('1 component(s) reset successfully');
+    });
+    it('bit status should show the component as new', () => {
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(1);
     });
     it('bit lane show should not show the component as belong to the lane anymore', () => {
       const lane = helper.command.showOneLaneParsed('dev');
@@ -175,24 +183,6 @@ describe('bit lane snapping and tagging', function () {
       it('should not throw an error', () => {
         expect(() => helper.command.reset('comp1')).to.not.throw();
       });
-    });
-  });
-
-  describe('untag on a lane', () => {
-    let output;
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.command.createLane();
-      helper.fixtures.populateComponents(1);
-      helper.command.snapAllComponentsWithoutBuild();
-      output = helper.command.resetAll();
-    });
-    it('should untag successfully', () => {
-      expect(output).to.have.string('1 component(s) reset successfully');
-    });
-    it('should change the component to be new', () => {
-      const status = helper.command.statusJson();
-      expect(status.newComponents).to.have.lengthOf(1);
     });
   });
 
