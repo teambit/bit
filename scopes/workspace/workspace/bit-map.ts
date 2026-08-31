@@ -64,10 +64,13 @@ export class BitMap {
     const newConfig = getNewConfig();
     if (newConfig) {
       (bitMapEntry.config ||= {})[aspectId] = newConfig;
-    } else if (bitMapEntry.config) {
-      delete bitMapEntry.config[aspectId];
+    } else {
+      if (!currentConfig) {
+        return false; // the aspect is not configured, so there is nothing to delete
+      }
+      delete bitMapEntry.config![aspectId];
       // avoid leaving an empty `config: {}` object in the .bitmap file
-      if (!Object.keys(bitMapEntry.config).length) delete bitMapEntry.config;
+      if (!Object.keys(bitMapEntry.config!).length) delete bitMapEntry.config;
     }
     this.legacyBitMap.markAsChanged();
 

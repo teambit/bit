@@ -15,11 +15,14 @@ const otherAspectId = 'teambit.pkg/pkg';
 function bitMapWithEntry(config?: Record<string, any>) {
   const entry = {} as ComponentMap;
   if (config) entry.config = config;
+  const markedAsChanged = { count: 0 };
   const legacyBitMap = {
     getComponent: () => entry,
-    markAsChanged: () => {},
+    markAsChanged: () => {
+      markedAsChanged.count += 1;
+    },
   } as unknown as LegacyBitMap;
-  return { bitMap: new BitMap(legacyBitMap, {} as Consumer), entry };
+  return { bitMap: new BitMap(legacyBitMap, {} as Consumer), entry, markedAsChanged };
 }
 
 describe('BitMap', () => {
@@ -62,6 +65,21 @@ describe('BitMap', () => {
       const { bitMap, entry } = bitMapWithEntry({ [envId]: {} });
       expect(bitMap.addComponentConfig(compId, envId, null as any)).to.be.true;
       expect(entry).to.not.have.property('config');
+    });
+
+    it('should report no change when nullifying an aspect while the entry has no config', () => {
+      const { bitMap, entry, markedAsChanged } = bitMapWithEntry();
+      expect(bitMap.addComponentConfig(compId, envId, null as any)).to.be.false;
+      expect(entry).to.not.have.property('config');
+      // nothing was mutated, so the .bitmap must not be marked as changed
+      expect(markedAsChanged.count).to.equal(0);
+    });
+
+    it('should report no change when nullifying an aspect that is not configured', () => {
+      const { bitMap, entry, markedAsChanged } = bitMapWithEntry({ [otherAspectId]: { some: 'config' } });
+      expect(bitMap.addComponentConfig(compId, envId, null as any)).to.be.false;
+      expect(entry.config).to.deep.equal({ [otherAspectId]: { some: 'config' } });
+      expect(markedAsChanged.count).to.equal(0);
     });
   });
 });
