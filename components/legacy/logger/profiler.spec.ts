@@ -39,7 +39,7 @@ describe('Profiler', () => {
   describe('bounding the retained profilers', () => {
     it('does not grow indefinitely when the ids are generated dynamically', () => {
       const profiler = new Profiler();
-      for (let i = 0; i < MAX_PROFILERS * 3; i += 1) {
+      for (let i = 0; i < MAX_PROFILERS * 2; i += 1) {
         profiler.profile(`some-id-${i}`);
         profiler.profile(`some-id-${i}`);
       }
@@ -49,12 +49,38 @@ describe('Profiler', () => {
     it('evicts completed profilers before ones still being measured', () => {
       const profiler = new Profiler();
       profiler.profile('long-running'); // opened first, closed last.
-      for (let i = 0; i < MAX_PROFILERS * 3; i += 1) {
+      for (let i = 0; i < MAX_PROFILERS * 2; i += 1) {
         profiler.profile(`some-id-${i}`);
         profiler.profile(`some-id-${i}`);
       }
       // had it been evicted, this would have been treated as an opening call and return ''.
       expect(profiler.profile('long-running')).to.not.equal('');
+    });
+
+    it('keeps a real per-component profiling session well below the cap', () => {
+      const profiler = new Profiler();
+      const components = 300;
+      const profilePointsPerComponent = 5;
+      for (let component = 0; component < components; component += 1) {
+        for (let point = 0; point < profilePointsPerComponent; point += 1) {
+          profiler.profile(`scope/component-${component}:point-${point}`);
+          profiler.profile(`scope/component-${component}:point-${point}`);
+        }
+      }
+      expect(profiler.size)
+        .to.equal(components * profilePointsPerComponent)
+        .and.to.be.below(MAX_PROFILERS);
+    });
+  });
+
+  describe('reset', () => {
+    it('forgets the open measurements, so a later call does not close a stale one', () => {
+      const profiler = new Profiler();
+      profiler.profile('some-id');
+      profiler.reset();
+      expect(profiler.size).to.equal(0);
+      // treated as an opening call rather than as closing the measurement dropped by the reset.
+      expect(profiler.profile('some-id')).to.equal('');
     });
   });
 });

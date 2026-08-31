@@ -312,18 +312,27 @@ class BitLogger implements IBitLogger {
   }
 
   switchToConsoleLogger(level?: Level) {
-    this.logger = pinoLoggerConsole;
-    this.logger.level = level || DEFAULT_LEVEL;
+    this.switchTo(pinoLoggerConsole, level);
   }
 
   switchToSSELogger(level?: Level) {
-    this.logger = pinoSSELogger;
-    this.logger.level = level || DEFAULT_LEVEL;
+    this.switchTo(pinoSSELogger, level);
   }
 
   switchToLogger(logger: PinoLogger, level?: Level) {
+    this.switchTo(logger, level);
+  }
+
+  /**
+   * `profile` is a paired-call API that skips its work when the level is off, so a measurement that
+   * was opened while the level was on would stay open across the switch. the next call with that id
+   * would then close it and report the time of everything that happened in between. the daemon
+   * switches the logger around every CLI request, so drop the open measurements when it happens.
+   */
+  private switchTo(logger: PinoLogger, level?: Level) {
     this.logger = logger;
     this.logger.level = level || DEFAULT_LEVEL;
+    this.profiler.reset();
   }
 }
 
