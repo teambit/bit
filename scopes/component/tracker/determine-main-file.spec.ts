@@ -1,5 +1,8 @@
+import * as path from 'path';
 import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
+import { DEFAULT_INDEX_EXTS, DEFAULT_INDEX_NAME } from '@teambit/legacy.constants';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { MissingMainFile } from '@teambit/legacy.bit-map';
 import determineMainFile from './determine-main-file';
 import type { AddedComponent } from './add-components';
@@ -13,13 +16,40 @@ const createAddedComponent = (overrides: Partial<AddedComponent> = {}): AddedCom
   ...overrides,
 });
 
+/**
+ * the thrown error carries the component-id, the expected main-file pattern and the file list,
+ * all assembled separately from the exception type - so assert on them rather than on the class
+ * alone, otherwise a regression in any of those details still passes.
+ */
+const expectToThrowMissingMainFile = (
+  addedComponent: AddedComponent,
+  expectedMainFile: string,
+  expectedFiles: string[]
+) => {
+  let error: MissingMainFile | undefined;
+  try {
+    determineMainFile(addedComponent, null);
+  } catch (err: any) {
+    error = err;
+  }
+  expect(error).to.be.an.instanceOf(MissingMainFile);
+  expect(error?.componentId).to.equal('my-scope/bar/foo');
+  expect(error?.mainFile).to.equal(expectedMainFile);
+  expect(error?.files).to.deep.equal(expectedFiles.map((file) => path.normalize(file)));
+  expect(error?.message).to.have.string('does not contain a main file');
+  expect(error?.message).to.have.string('my-scope/bar/foo');
+};
+
+// the pattern reported when no strategy matched, e.g. "index.[js, ts, ...]"
+const indexMainFilePattern = `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
+
 describe('determineMainFile', () => {
   describe('user did not specify a main file', () => {
-    it('should throw MissingMainFile when no file matches any strategy', () => {
+    it('should throw MissingMainFile with the component details when no file matches any strategy', () => {
       const addedComponent = createAddedComponent({
         files: [{ relativePath: 'bar/foo1.js' }, { relativePath: 'bar/foo2.js' }],
       });
-      expect(() => determineMainFile(addedComponent, null)).to.throw(MissingMainFile);
+      expectToThrowMissingMainFile(addedComponent, indexMainFilePattern, ['bar/foo1.js', 'bar/foo2.js']);
     });
     it('should use the only file when the component has a single file', () => {
       const addedComponent = createAddedComponent({
@@ -62,8 +92,8 @@ describe('determineMainFile', () => {
       const addedComponent = createAddedComponent({
         files: [{ relativePath: 'bar/foo1.js' }, { relativePath: 'bar/foo2.js' }],
       });
-      const existingComponentMap = { mainFile: 'foo2.js', rootDir: 'bar' };
-      // @ts-ignore only the mainFile and rootDir props are needed
+      // only mainFile and rootDir are read by the strategy, so a partial map is enough here
+      const existingComponentMap = { mainFile: 'foo2.js', rootDir: 'bar' } as ComponentMap;
       expect(determineMainFile(addedComponent, existingComponentMap)).to.equal('foo2.js');
     });
   });
@@ -75,12 +105,13 @@ describe('determineMainFile', () => {
       });
       expect(determineMainFile(addedComponent, null)).to.equal('bar/foo2.js');
     });
-    it('should throw MissingMainFile when the specified main file is not in the files', () => {
+    it('should throw MissingMainFile with the component details when the specified main file is not in the files', () => {
       const addedComponent = createAddedComponent({
         files: [{ relativePath: 'bar/foo1.js' }, { relativePath: 'bar/foo2.js' }],
         mainFile: 'non-exist.js',
       });
-      expect(() => determineMainFile(addedComponent, null)).to.throw(MissingMainFile);
+      // the user's value is reported as-is here, not the index pattern
+      expectToThrowMissingMainFile(addedComponent, 'non-exist.js', ['bar/foo1.js', 'bar/foo2.js']);
     });
   });
 });

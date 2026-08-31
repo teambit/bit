@@ -13,7 +13,8 @@ describe('lane history-diff', function () {
 
   /**
    * Verifies that `bit reset` removes lane-history entries for the reset snaps, and that
-   * history-diff works over the resulting history in each of its argument forms.
+   * history-diff works over the resulting history in its no-arg and single-arg forms (the
+   * two-arg `fromId toId` form takes a different branch and is not covered here).
    *
    * Flow: snap A → export → snap B → reset → snap C → export.
    * The reset deletes snap B's Version objects AND its lane-history entry (keyed by batchId).

@@ -481,10 +481,15 @@ describe('bit import', function () {
         expect(output).to.have.string('--dependencies');
       });
       it('should error when --dependencies-depth is not a positive integer', () => {
-        const output = helper.general.runWithTryCatch(
+        // 0 hits the `< 1` check, "abc" hits the separate Number.isInteger() check
+        const zeroOutput = helper.general.runWithTryCatch(
           `bit import ${helper.scopes.remote}/comp1 --dependencies --dependencies-depth 0`
         );
-        expect(output).to.have.string('positive integer');
+        expect(zeroOutput).to.have.string('positive integer');
+        const nonIntOutput = helper.general.runWithTryCatch(
+          `bit import ${helper.scopes.remote}/comp1 --dependencies --dependencies-depth abc`
+        );
+        expect(nonIntOutput).to.have.string('positive integer');
       });
     });
   });
