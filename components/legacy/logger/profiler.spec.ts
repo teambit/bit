@@ -36,7 +36,7 @@ describe('Profiler', () => {
     });
   });
 
-  describe('bounding the retained profilers', () => {
+  describe('bounding the retained measurements', () => {
     it('does not grow indefinitely when the ids are generated dynamically', () => {
       const profiler = new Profiler();
       for (let i = 0; i < MAX_PROFILERS * 2; i += 1) {
@@ -46,14 +46,22 @@ describe('Profiler', () => {
       expect(profiler.size).to.equal(MAX_PROFILERS);
     });
 
-    it('evicts completed profilers before ones still being measured', () => {
+    it('does not grow indefinitely when the closing calls never come', () => {
+      const profiler = new Profiler();
+      for (let i = 0; i < MAX_PROFILERS * 2; i += 1) {
+        profiler.profile(`some-id-${i}`); // opened and abandoned.
+      }
+      expect(profiler.size).to.equal(MAX_PROFILERS);
+    });
+
+    it('never drops a measurement that is still running to make room for a completed one', () => {
       const profiler = new Profiler();
       profiler.profile('long-running'); // opened first, closed last.
       for (let i = 0; i < MAX_PROFILERS * 2; i += 1) {
         profiler.profile(`some-id-${i}`);
         profiler.profile(`some-id-${i}`);
       }
-      // had it been evicted, this would have been treated as an opening call and return ''.
+      // had it been dropped, this would have been treated as an opening call and return ''.
       expect(profiler.profile('long-running')).to.not.equal('');
     });
 
@@ -73,14 +81,22 @@ describe('Profiler', () => {
     });
   });
 
-  describe('reset', () => {
-    it('forgets the open measurements, so a later call does not close a stale one', () => {
+  describe('discard', () => {
+    it('forgets a running measurement, so a later call does not close it', () => {
       const profiler = new Profiler();
       profiler.profile('some-id');
-      profiler.reset();
+      profiler.discard('some-id');
       expect(profiler.size).to.equal(0);
-      // treated as an opening call rather than as closing the measurement dropped by the reset.
+      // treated as an opening call rather than as closing the discarded measurement.
       expect(profiler.profile('some-id')).to.equal('');
+    });
+
+    it('leaves the measurements of the other ids alone', () => {
+      const profiler = new Profiler();
+      profiler.profile('a');
+      profiler.profile('b');
+      profiler.discard('a');
+      expect(profiler.profile('b')).to.not.equal('');
     });
   });
 });

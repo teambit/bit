@@ -1,76 +1,70 @@
 /**
- * the profilers map lives as long as the process does, which for a daemon (`bit cli`) is forever.
+ * the profiler maps live as long as the process does, which for a daemon (`bit cli`) is forever.
  * callers are free to profile with a dynamically generated id (e.g. `getMany-${callId}`), so without
- * a cap the map would keep growing for the entire lifetime of the process.
+ * a cap they would keep growing for the entire lifetime of the process.
  * the cap is only there to turn an unbounded growth into a bounded one, so it's kept well above what
  * a real profiling session needs - a large workspace profiled per component (a few profile points on
  * each of a few thousand components) stays far below it. an entry costs ~250 bytes, so the worst
- * case is a couple of MB.
+ * case is a couple of MB. it applies to each of the two maps below separately.
  */
 export const MAX_PROFILERS = 10000;
 
-/**
- * the number of the oldest profilers to look at when searching for one to evict. keeps the eviction
- * O(1) even when the oldest profilers are all still being measured.
- */
-const EVICTION_SCAN_LIMIT = 50;
+type OpenProfiler = { start: number; total: number };
 
 export class Profiler {
-  private profilers = new Map<string, { current?: number; total?: number }>();
+  /**
+   * measurements that got their opening call and wait for the closing one. they're kept apart from
+   * the completed ones so that making room for a new measurement never drops a measurement that is
+   * still running.
+   */
+  private open = new Map<string, OpenProfiler>();
+  /**
+   * the total time of the measurements that completed, per id. kept only to be able to show the
+   * "total repeating" of an id that gets profiled more than once.
+   */
+  private completedTotals = new Map<string, number>();
 
   /**
-   * the number of profilers currently retained. never exceeds `MAX_PROFILERS`.
+   * the number of the retained measurements.
    */
   get size(): number {
-    return this.profilers.size;
+    return this.open.size + this.completedTotals.size;
   }
 
   profile(id: string): string {
-    const existingProfiler = this.profilers.get(id);
+    const openProfiler = this.open.get(id);
     const now = Date.now();
-    if (existingProfiler?.current) {
-      const sinceLastCall = now - existingProfiler.current;
-      const total = existingProfiler.total ? existingProfiler.total + sinceLastCall : sinceLastCall;
-      existingProfiler.total = total;
-      delete existingProfiler.current;
+    if (openProfiler) {
+      const sinceLastCall = now - openProfiler.start;
+      const total = openProfiler.total + sinceLastCall;
+      this.open.delete(id);
+      this.setBounded(this.completedTotals, id, total);
       return `${sinceLastCall}ms. (total repeating ${total}ms)`;
     }
-    if (existingProfiler) {
-      existingProfiler.current = now;
-      return '';
-    }
-    this.evictIfNeeded();
-    this.profilers.set(id, { current: now });
+    const totalSoFar = this.completedTotals.get(id) || 0;
+    this.completedTotals.delete(id);
+    this.setBounded(this.open, id, { start: now, total: totalSoFar });
     return '';
   }
 
   /**
-   * forget all the measurements. the caller decides whether a measurement that is still open can
-   * still produce a meaningful result - see the callers of `switchTo` in the logger.
+   * forget a measurement that waits for its closing call, when that call is known to never come.
+   * without it, a later call with the same id closes this measurement and reports the time of
+   * everything that happened in between.
    */
-  reset() {
-    this.profilers.clear();
+  discard(id: string) {
+    this.open.delete(id);
   }
 
   /**
-   * make room for a new profiler by dropping the oldest one. prefer a completed profiler - it's kept
-   * around only for the "total repeating" data, whereas one with `current` is still being measured.
-   * (a profiler whose closing call never came - an early return or a throw in between - is left with
-   * `current` set forever, so eventually those get evicted as well.)
+   * add an entry to a bounded map, dropping the oldest one to make room. a `Map` keeps the insertion
+   * order, thus the first key it gives is the oldest.
    */
-  private evictIfNeeded() {
-    if (this.profilers.size < MAX_PROFILERS) return;
-    let oldestId: string | undefined;
-    let scanned = 0;
-    for (const [id, profiler] of this.profilers) {
-      if (oldestId === undefined) oldestId = id;
-      if (!profiler.current) {
-        this.profilers.delete(id);
-        return;
-      }
-      scanned += 1;
-      if (scanned >= EVICTION_SCAN_LIMIT) break;
+  private setBounded<T>(map: Map<string, T>, id: string, value: T) {
+    if (map.size >= MAX_PROFILERS) {
+      const oldestId = map.keys().next().value;
+      if (oldestId !== undefined) map.delete(oldestId);
     }
-    if (oldestId !== undefined) this.profilers.delete(oldestId);
+    map.set(id, value);
   }
 }

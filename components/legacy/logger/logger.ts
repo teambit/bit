@@ -211,7 +211,13 @@ class BitLogger implements IBitLogger {
     // profiling keeps state per id and formats a message. when the line is going to be discarded
     // anyway, skip it altogether - otherwise turning the level off removes only the printing, not
     // the cost of the profiling itself.
-    if (!shouldWriteToConsole && !this.logger.isLevelEnabled(level)) return;
+    // the level can change between the two calls of a measurement (the daemon switches the logger
+    // around every CLI request), so also drop the measurement this call would have closed. only the
+    // measurement of this id is dropped, to not touch the ones of a request that runs in parallel.
+    if (!shouldWriteToConsole && !this.logger.isLevelEnabled(level)) {
+      this.profiler.discard(id);
+      return;
+    }
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
@@ -312,27 +318,18 @@ class BitLogger implements IBitLogger {
   }
 
   switchToConsoleLogger(level?: Level) {
-    this.switchTo(pinoLoggerConsole, level);
+    this.logger = pinoLoggerConsole;
+    this.logger.level = level || DEFAULT_LEVEL;
   }
 
   switchToSSELogger(level?: Level) {
-    this.switchTo(pinoSSELogger, level);
+    this.logger = pinoSSELogger;
+    this.logger.level = level || DEFAULT_LEVEL;
   }
 
   switchToLogger(logger: PinoLogger, level?: Level) {
-    this.switchTo(logger, level);
-  }
-
-  /**
-   * `profile` is a paired-call API that skips its work when the level is off, so a measurement that
-   * was opened while the level was on would stay open across the switch. the next call with that id
-   * would then close it and report the time of everything that happened in between. the daemon
-   * switches the logger around every CLI request, so drop the open measurements when it happens.
-   */
-  private switchTo(logger: PinoLogger, level?: Level) {
     this.logger = logger;
     this.logger.level = level || DEFAULT_LEVEL;
-    this.profiler.reset();
   }
 }
 
