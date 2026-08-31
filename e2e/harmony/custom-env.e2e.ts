@@ -369,6 +369,11 @@ describe('custom env', function () {
       it('bit status should show the RemovedEnv issue', () => {
         helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedEnv.name);
       });
+      it('bit envs should show the env as deleted', () => {
+        const envsOutput = helper.command.envs();
+        expect(envsOutput).to.have.string('(deleted)');
+        expect(envsOutput).to.have.string(envName);
+      });
       it('replacing the env should fix the issue', () => {
         helper.command.replaceEnv(envId, `${envId}@0.0.2`);
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedEnv.name);
