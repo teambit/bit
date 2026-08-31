@@ -1,4 +1,5 @@
 @import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+@import '@teambit/base-ui.layout.breakpoints/_breakpoints.scss';
 
 .emptyContainer {
   height: 100vh;
@@ -39,6 +40,14 @@
   display: flex;
   align-items: center;
   height: 100%;
+
+  // Let a long component path clip instead of pushing the menu actions off-screen.
+  @media screen and (max-width: $br-md) {
+    flex: 1 1 0;
+    height: 46px;
+    min-width: 0;
+    overflow: hidden;
+  }
 }
 
 .breadcrumb {

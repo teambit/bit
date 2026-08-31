@@ -171,4 +171,164 @@ describe('GitHubClient', () => {
     const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl: fakeFetch });
     expect(await client.findPrByBranch('lane-x')).to.equal(undefined);
   });
+
+  describe('upsertComment', () => {
+    // named `upsertComment`, matching `GitHostProvider.upsertComment` exactly — see the method's
+    // own doc comment for why a differently-named method would be a silent-no-op trap.
+    function fakeFetchOver(existingComments: Array<{ id: number; body: string }>) {
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        const method = init?.method ?? 'GET';
+        if (method === 'GET') {
+          return new Response(JSON.stringify(existingComments), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } });
+      }) as typeof fetch;
+      return { calls, fetchImpl };
+    }
+
+    it('posts a new comment when no marked comment exists', async () => {
+      const { calls, fetchImpl } = fakeFetchOver([]);
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nbody');
+      const posts = calls.filter((c) => c.init?.method === 'POST');
+      expect(posts).to.have.lengthOf(1);
+      expect(posts[0].url).to.equal('https://api.github.com/repos/acme/shop/issues/7/comments');
+    });
+
+    it('patches the marked comment in place, and never posts a second one', async () => {
+      const { calls, fetchImpl } = fakeFetchOver([
+        { id: 42, body: 'unrelated comment' },
+        { id: 99, body: '<!-- marker -->\nold report' },
+      ]);
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nnew report');
+      const patches = calls.filter((c) => c.init?.method === 'PATCH');
+      expect(patches).to.have.lengthOf(1);
+      expect(patches[0].url).to.equal('https://api.github.com/repos/acme/shop/issues/comments/99');
+      expect(JSON.parse(patches[0].init.body)).to.deep.equal({ body: '<!-- marker -->\nnew report' });
+      expect(calls.some((c) => c.init?.method === 'POST')).to.equal(false);
+    });
+
+    it('skips silently when createIfAbsent is false and no marked comment exists', async () => {
+      const { calls, fetchImpl } = fakeFetchOver([]);
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertComment(7, '<!-- marker -->', 'cleared', { createIfAbsent: false });
+      expect(calls.some((c) => c.init?.method === 'POST' || c.init?.method === 'PATCH')).to.equal(false);
+    });
+
+    it('lists at per_page=100 and follows Link-header pagination to find a comment past page 1', async () => {
+      // GitHub defaults to per_page=30; a naive single-page list would miss this comment and post a
+      // duplicate report on every push instead of updating it.
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        const method = init?.method ?? 'GET';
+        if (method === 'GET' && !String(url).includes('page=2')) {
+          return new Response(JSON.stringify([{ id: 1, body: 'unrelated' }]), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              link: '<https://api.github.com/repos/acme/shop/issues/7/comments?per_page=100&page=2>; rel="next"',
+            },
+          });
+        }
+        if (method === 'GET') {
+          return new Response(JSON.stringify([{ id: 99, body: '<!-- marker -->\nold report' }]), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } });
+      }) as typeof fetch;
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nnew report');
+
+      const gets = calls.filter((c) => (c.init?.method ?? 'GET') === 'GET');
+      expect(gets).to.have.lengthOf(2);
+      expect(gets[0].url).to.include('per_page=100');
+      expect(gets[1].url).to.equal('https://api.github.com/repos/acme/shop/issues/7/comments?per_page=100&page=2');
+      const patches = calls.filter((c) => c.init?.method === 'PATCH');
+      expect(patches).to.have.lengthOf(1);
+      expect(patches[0].url).to.equal('https://api.github.com/repos/acme/shop/issues/comments/99');
+      // the found-on-page-2 comment was updated, not duplicated
+      expect(calls.some((c) => c.init?.method === 'POST')).to.equal(false);
+    });
+
+    it('refuses to follow a Link header that leaves api.github.com — the token stays home', async () => {
+      // The next-page URL is response data, and requestRaw attaches the bearer token to whatever URL
+      // it is handed — an off-host "next" link must read as "last page", never as a request target.
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        const method = init?.method ?? 'GET';
+        if (method === 'GET') {
+          return new Response(JSON.stringify([{ id: 1, body: 'unrelated' }]), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              link: '<https://evil.test/repos/acme/shop/issues/7/comments?page=2>; rel="next"',
+            },
+          });
+        }
+        return new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } });
+      }) as typeof fetch;
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nbody');
+
+      expect(calls.some((c) => c.url.includes('evil.test'))).to.equal(false);
+      const gets = calls.filter((c) => (c.init?.method ?? 'GET') === 'GET');
+      expect(gets, 'the off-host link is the last page, not a loop').to.have.lengthOf(1);
+    });
+
+    it('stops paginating as soon as the marked comment is seen', async () => {
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        const method = init?.method ?? 'GET';
+        if (method === 'GET') {
+          return new Response(JSON.stringify([{ id: 99, body: '<!-- marker -->\nold report' }]), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              link: '<https://api.github.com/repos/acme/shop/issues/7/comments?per_page=100&page=2>; rel="next"',
+            },
+          });
+        }
+        return new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } });
+      }) as typeof fetch;
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nnew report');
+
+      const gets = calls.filter((c) => (c.init?.method ?? 'GET') === 'GET');
+      expect(gets, 'the match on page 1 makes page 2 pointless').to.have.lengthOf(1);
+      expect(calls.filter((c) => c.init?.method === 'PATCH')).to.have.lengthOf(1);
+    });
+
+    it('exhausting the page budget throws instead of posting a duplicate', async () => {
+      // "Ran out of budget" must not read as "absent": a POST here would add a duplicate report on
+      // every later push. The throw surfaces through the caller's existing warn-and-skip path.
+      const calls: Array<{ url: string; init: any }> = [];
+      const fetchImpl = (async (url: any, init: any) => {
+        calls.push({ url: String(url), init });
+        return new Response(JSON.stringify([{ id: 1, body: 'unrelated' }]), {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            link: '<https://api.github.com/repos/acme/shop/issues/7/comments?per_page=100&page=2>; rel="next"',
+          },
+        });
+      }) as typeof fetch;
+      const client = new GitHubClient({ token: 'tok', repo: 'acme/shop', fetchImpl });
+      let thrown: Error | undefined;
+      await client.upsertComment(7, '<!-- marker -->', '<!-- marker -->\nbody').catch((e) => (thrown = e));
+
+      expect(thrown, 'the budget exhaustion is an error, not an absence').to.be.an('error');
+      expect(calls.some((c) => c.init?.method === 'POST')).to.equal(false);
+    });
+  });
 });

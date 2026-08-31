@@ -1,6 +1,6 @@
 import type { RuntimeDefinition, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { CLIAspect, type CLIMain, MainRuntime } from '@teambit/cli';
+import { CLIAspect, type CLIMain, MainRuntime, formatWarningSummary } from '@teambit/cli';
 import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
@@ -33,7 +33,8 @@ import type { Version, LaneComponent, Lane } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
 import type { LaneId } from '@teambit/lane-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { SourceBranchDetector } from './source-branch-detector';
+import { LaneCleanup } from './lane-cleanup';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
@@ -51,7 +52,7 @@ import type { GitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider } from './sync/github-client';
 import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
 import { isValidGitBranchName } from './sync/sync-config';
-import { NO_CHANGES_TO_SNAP } from './sync/sync-state';
+import { NO_CHANGES_TO_SNAP, statusReportsUnsyncedWork } from './sync/sync-state';
 
 /**
  * Registered git hosts (GitHub ships built-in; others register from their own aspect).
@@ -521,21 +522,12 @@ export class CiMain {
 
   /**
    * Whether the workspace has anything the current lane doesn't reflect, per `bit status`. Read-only:
-   * adoption uses this instead of a probe snap, which writes even under dryRun. Every signal a later
-   * snap/export would push counts — including soft removals, hidden pending exports, and merge state.
+   * the sync probes use this instead of a probe snap, which writes even under dryRun. Every signal a
+   * later snap/export would push counts — soft removals, hidden pending exports, merge state, and
+   * unloadable components (unknown must not read as converged; see `statusReportsUnsyncedWork`).
    */
   async hasUnsyncedWorkChanges(): Promise<boolean> {
-    const status = await this.status.status({ lanes: true });
-    const divergence = [
-      status.newComponents,
-      status.modifiedComponents,
-      status.stagedComponents,
-      status.locallySoftRemoved,
-      status.pendingUpdateDependents,
-      status.mergePendingComponents,
-      status.componentsDuringMergeState,
-    ];
-    return divergence.some((components) => components.length > 0);
+    return statusReportsUnsyncedWork(await this.status.status({ lanes: true }));
   }
 
   /** `bit ci sync` — reconcile Bit lanes and the main scope with git branches and PRs (see `SyncOrchestrator`). */
@@ -1701,10 +1693,20 @@ export class CiMain {
     }
 
     const hasTaggedComponents = tagResults?.taggedComponents && tagResults.taggedComponents.length > 0;
+    const releasedHeads = new Map<string, string | undefined>();
 
     if (hasTaggedComponents) {
       this.logger.console(chalk.blue('Exporting components'));
       const exportResult = await this.exporter.export();
+      // released here = tagged by this run AND exported now, remembered with the lane head each was
+      // tagged from (its pre-tag version); an export with no ids also carries components left
+      // export-pending by an earlier run, which this run did not release.
+      const exported = ComponentIdList.fromArray(exportResult.componentsIds);
+      [...tagResults.taggedComponents, ...tagResults.autoTaggedResults.map((res) => res.component)].forEach((comp) => {
+        if (exported.hasWithoutVersion(comp.id)) {
+          releasedHeads.set(comp.id.toStringWithoutVersion(), comp.previouslyUsedVersion);
+        }
+      });
 
       if (exportResult.componentsIds.length > 0) {
         this.logger.console(chalk.green(`Exported ${exportResult.componentsIds.length} component(s)`));
@@ -1732,8 +1734,40 @@ export class CiMain {
 
     this.logger.console(chalk.green('Merged PR'));
 
-    // Enhanced lane cleanup logic
-    await this.performLaneCleanup(currentLane, laneName, initialCommitSha);
+    // Archive the source lane, unless other scopes still have to release their slice of it.
+    await new LaneCleanup({
+      logger: this.logger,
+      defaultScope: this.workspace.defaultScope,
+      parseLaneId: (idStr) => this.lanes.parseLaneId(idStr),
+      convertBranchToLaneId: (branch) => this.convertBranchToLaneId(branch),
+      archiveLane: (laneId) => this.archiveLane(laneId),
+      readLane: async (laneId) => {
+        // the lane object itself: `getLanes` drops deleted entries, which are lane work too.
+        // Only bit's own "no such lane" means the lane is gone; any other failure propagates.
+        const lane = await this.lanes.importLaneObject(laneId, false).catch((err) => {
+          if (err instanceof LaneNotFound) return undefined;
+          throw err;
+        });
+        if (!lane) return undefined;
+        return {
+          components: lane.components.map((c) => ({ id: c.id, head: c.head.toString(), isDeleted: c.isDeleted })),
+          updateDependents: (lane.updateDependents ?? []).map((id) => ({
+            id: id.changeVersion(undefined),
+            head: id.version as string,
+          })),
+          readme: lane.readmeComponent
+            ? `${lane.readmeComponent.id.toStringWithoutVersion()}@${lane.readmeComponent.head?.toString() ?? ''}`
+            : undefined,
+        };
+      },
+      // no cache: a model already present locally may predate another scope's release
+      importMainObjects: (ids) => this.importer.importObjectsFromMainIfExist(ids),
+      getModelComponent: (id) => this.workspace.scope.legacyScope.getModelComponentIfExist(id),
+      importObjectsByHashes: (scope, hashes) => this.importer.importObjectsByHashes(hashes, scope),
+      releasedHeadByThisRun: (id) => releasedHeads.get(id.toStringWithoutVersion()),
+      objects: this.workspace.scope.legacyScope.objects,
+      warn: (text) => this.logger.console(formatWarningSummary(text)),
+    }).run(currentLane, laneName, initialCommitSha);
 
     return { code: 0, data: '' };
   }
@@ -1846,56 +1880,6 @@ export class CiMain {
       await this.workspace.bitMap.write('restore lane config');
       await this.workspace.clearCache();
       this.logger.console(chalk.blue('Restored config changes from lane'));
-    }
-  }
-
-  /**
-   * Performs lane cleanup by attempting to detect and delete the source lane
-   * after a successful merge, even when running on the main branch
-   */
-  private async performLaneCleanup(currentLane: any, explicitLaneName?: string, initialCommitSha?: string) {
-    this.logger.console('🗑️ Lane Cleanup');
-
-    // If we already have a current lane, use it
-    if (currentLane) {
-      this.logger.console(chalk.blue(`Found current lane: ${currentLane.name}`));
-      const laneId = currentLane.id();
-      await this.archiveLane(laneId.toString());
-      return;
-    }
-
-    // If no current lane but explicit lane name provided, try to delete it
-    if (explicitLaneName) {
-      this.logger.console(chalk.blue(`Using explicitly provided lane name: ${explicitLaneName}`));
-      try {
-        const laneId = await this.lanes.parseLaneId(explicitLaneName);
-        await this.archiveLane(laneId.toString());
-        return;
-      } catch (e: any) {
-        this.logger.console(chalk.yellow(`Failed to parse lane name '${explicitLaneName}': ${e.message}`));
-      }
-    }
-
-    // Try to auto-detect source branch/lane name using the dedicated detector
-    const sourceBranchDetector = new SourceBranchDetector(this.logger);
-    const sourceBranchName = await sourceBranchDetector.getSourceBranchName(initialCommitSha);
-    if (!sourceBranchName) {
-      this.logger.console(chalk.yellow('No current lane and unable to detect source branch - skipping lane cleanup'));
-      return;
-    }
-    try {
-      const laneIdStr = this.convertBranchToLaneId(sourceBranchName);
-
-      this.logger.console(
-        chalk.blue(`Attempting to delete lane based on source branch: ${sourceBranchName} -> ${laneIdStr}`)
-      );
-
-      const laneId = await this.lanes.parseLaneId(laneIdStr);
-      await this.archiveLane(laneId.toString());
-    } catch (e: any) {
-      this.logger.console(
-        chalk.yellow(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`)
-      );
     }
   }
 

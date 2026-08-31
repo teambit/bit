@@ -104,7 +104,10 @@ commands:
             || echo "merge-queue notify failed (non-fatal)"
           when: always
 
-  # Bundle installation with hoisting and overrides (Linux/macOS)
+  # Bundle installation with hoisting and overrides.
+  # pnpm no longer reads its settings from .npmrc or from package.json's "pnpm" field, so every
+  # setting below is written with `pnpm config set`, which routes each one to its own home:
+  # pnpm settings to pnpm-workspace.yaml, npm-compatible ones (registry) to .npmrc.
   install_bit_bundle:
     parameters:
       os:
@@ -113,63 +116,44 @@ commands:
       cpu:
         type: string
         default: "x64"
+      # The bundle is always built on Linux, so bin entries are symlinks unless this is turned off.
+      # Windows bundles need real executables.
+      prefer_symlinked_executables:
+        type: string
+        default: "true"
       directory:
         type: string
         default: "bit-${BIT_VERSION}"
     steps:
       - run:
           name: install bit bundle for <<parameters.os>> <<parameters.cpu>>
-          command: >
-            cd <<parameters.directory>> &&
-            pnpm init &&
-            echo "node-linker=hoisted" >> .npmrc &&
-            echo "package-import-method=copy" >> .npmrc &&
-            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            echo "user-agent=bvm-bundle-circleci" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.12" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/util.lex-comparator']='3.0.2'" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/config.nerf-dart']='1.0.1'" &&
-            pnpm add @teambit/bit --os=<<parameters.os>> --cpu=<<parameters.cpu>>
-
-  # Bundle installation for Windows (with Windows-specific configs)
-  install_bit_bundle_windows:
-    parameters:
-      cpu:
-        type: string
-        default: "x64"
-      directory:
-        type: string
-        default: "bit-${BIT_VERSION}"
-    steps:
-      - run:
-          name: install bit bundle for Windows <<parameters.cpu>>
-          command: >
-            cd <<parameters.directory>> &&
-            pnpm init &&
-            echo "node-linker=hoisted" >> .npmrc &&
-            echo "package-import-method=copy" >> .npmrc &&
-            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            echo "user-agent=bvm-bundle-circleci" >> .npmrc &&
-            echo "prefer-symlinked-executables=false" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.12" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.postcss@8" --values "^8.4.19" &&
-            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.ajv@6" --values "^6.12.6" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@teambit/semantics.entities.semantic-schema']='^0.0.99'" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/util.lex-comparator']='3.0.2'" &&
-            pnpm dlx json -I -f package.json -e "this.pnpm.overrides['@pnpm/config.nerf-dart']='1.0.1'" &&
-            pnpm add @teambit/bit --os=win32 --cpu=<<parameters.cpu>>
+          command: |
+            cd <<parameters.directory>>
+            pnpm init
+            pnpm config set --location=project registry https://node-registry.bit.cloud
+            pnpm config set --location=project nodeLinker hoisted
+            pnpm config set --location=project packageImportMethod copy
+            pnpm config set --location=project userAgent bvm-bundle-circleci
+            pnpm config set --location=project preferSymlinkedExecutables <<parameters.prefer_symlinked_executables>>
+            # dependency build scripts have never run for the bundle; pnpm fails an install that
+            # skips one unless the skip is spelled out, and the set of packages that ask to build
+            # changes with every dependency bump.
+            pnpm config set --location=project strictDepBuilds false
+            pnpm config set --location=project --json overrides '{
+              "uri-js": "npm:uri-js-replace",
+              "cross-spawn@7": "^7.0.5",
+              "lodash@4": "4.17.21",
+              "trim@0": "0.0.3",
+              "@teambit/harmony": "0.4.12",
+              "postcss@8": "^8.4.19",
+              "ajv@6": "^6.12.6",
+              "@teambit/semantics.entities.semantic-schema": "^0.0.99",
+              "@pnpm/util.lex-comparator": "3.0.2",
+              "@pnpm/config.nerf-dart": "1.0.1"
+            }'
+            # Pin the release selected by setup_bit_version. Without the version, pnpm 12's default
+            # 24-hour minimum release age can select an older Bit release instead of the latest one.
+            pnpm add "@teambit/bit@${BIT_VERSION}" --os=<<parameters.os>> --cpu=<<parameters.cpu>>
 
   verify_pnpm_napi_bundle:
     parameters:
@@ -277,14 +261,22 @@ commands:
           name: set bit cloud registry in npm config
           command: npm config set @bitdev:registry=https://node-registry.bit.cloud
 
+  # pnpm 12 is a native binary, so it is not installed from npm: `get-pnpm` is pnpm's own
+  # installer, which downloads the executable, verifies npm's signature over it, and hands off
+  # to `pnpm setup`. That installs into $PNPM_HOME/bin and puts it on the PATH through ~/.bashrc,
+  # which CircleCI steps never read, so the same entry goes on $BASH_ENV here. SHELL is what
+  # `pnpm setup` infers the profile to edit from; without it the installer errors after placing
+  # the binary. The version call is the check that the binary is where the PATH entry says.
   setup_pnpm:
     steps:
       - run:
           name: Install pnpm
-          command: >
-            npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@10.14.0 &&
-            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+          command: |
+            export PNPM_HOME="$HOME/.local/share/pnpm"
+            SHELL=/bin/bash npx --yes get-pnpm@0.0.3 12.0.0-rc.7
+            "$PNPM_HOME/bin/pnpm" --version
+            echo "export PNPM_HOME=\"$PNPM_HOME\"" >> $BASH_ENV
+            echo 'export PATH="$PNPM_HOME/bin:$PATH"' >> $BASH_ENV
 
   # BVM setup
   install_bvm:
@@ -306,7 +298,7 @@ commands:
       - run: bbit
       - run: bbit -v
       - save_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
 
@@ -468,7 +460,7 @@ commands:
           key: bitsrc-registry10
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
 
   # Complete Bit environment setup
   setup_bit_environment:
@@ -534,9 +526,49 @@ commands:
       bit_bin:
         type: string
         default: ""
+      # comma-separated e2e directories to skip because they run on GitHub Actions instead
+      # (see .github/workflows/e2e-tests.yml). Pass "" to run the full suite.
+      exclude_dirs:
+        type: string
+        default: "e2e/commands,e2e/doctor,e2e/flows"
+      # when true, the job halts (successfully) if the PR diff contains only doc files
+      # (*.md / *.mdx). enabled only for the per-PR e2e_test job — the nightly/bbit/bundle
+      # jobs always run the full suite (on master the check is a no-op anyway).
+      skip_when_doc_only:
+        type: boolean
+        default: false
     steps:
       - attach_workspace:
           at: ./
+      - when:
+          condition: << parameters.skip_when_doc_only >>
+          steps:
+            - run:
+                name: 'halt when the diff is docs-only (*.md / *.mdx)'
+                # any uncertainty (master branch, missing merge-base, empty diff) falls back to
+                # running the full suite. doc files under e2e/ are treated as test changes, not
+                # docs, so they never trigger a skip.
+                command: |
+                  if [ "$CIRCLE_BRANCH" = "master" ]; then
+                    echo "on master - running the full suite"; exit 0
+                  fi
+                  cd bit
+                  if ! BASE=$(git merge-base HEAD origin/master 2>/dev/null); then
+                    echo "cannot determine merge-base with origin/master - running the full suite"; exit 0
+                  fi
+                  CHANGED_FILES=$(git diff --name-only "$BASE" HEAD)
+                  if [ -z "$CHANGED_FILES" ]; then
+                    echo "empty diff against merge-base - running the full suite"; exit 0
+                  fi
+                  NON_DOC_FILES=$(echo "$CHANGED_FILES" | grep -vE '\.(md|mdx)$' || true)
+                  E2E_DOC_FILES=$(echo "$CHANGED_FILES" | grep -E '^e2e/' | grep -E '\.(md|mdx)$' || true)
+                  if [ -z "$NON_DOC_FILES" ] && [ -z "$E2E_DOC_FILES" ]; then
+                    echo "diff against merge-base $BASE contains only doc files - skipping e2e:"
+                    echo "$CHANGED_FILES"
+                    circleci-agent step halt
+                  else
+                    echo "non-doc changes present - running the full suite"
+                  fi
       # - run:
       #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
       #     name: 'update npm to latest version'
@@ -549,7 +581,7 @@ commands:
           key: bitsrc-registry10
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
       # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       # - run: 'chmod 400 ~/.ssh/id_rsa'
       # - run: 'ssh-add ~/.ssh/id_rsa'
@@ -568,7 +600,7 @@ commands:
           # which mocha attributes to no testcase, so the splitter sees ~13% of the real cost.
           # The timings manifest is derived from actual CI node run times; refresh it occasionally
           # with: node scripts/generate-e2e-timings.js
-          command: 'cd bit && node scripts/split-e2e-tests.js | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          command: 'cd bit && node scripts/split-e2e-tests.js --exclude-dir=<< parameters.exclude_dirs >> | xargs npm run mocha-circleci << parameters.bit_bin >>'
           no_output_timeout: '50m'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
@@ -758,27 +790,6 @@ jobs:
           name: 'check @teambit/harmony version synchronization'
           command: './scripts/check-harmony-version-sync.sh'
 
-  # Runs the same reconcile script the merge-queue GitHub workflow runs — see the
-  # merge_queue_reconcile workflow below for why it also lives here.
-  merge_queue_reconcile:
-    <<: *defaults
-    steps:
-      - checkout
-      - run:
-          name: 'reconcile the merge queue'
-          # no CIRCLE_TOKEN needed: the project is public, so the script's CircleCI reads work
-          # unauthenticated (it uses the token only when one is present in the environment).
-          # A hung API call would otherwise let a run outlive the 10m schedule interval — the
-          # tight no_output_timeout bounds it (the script normally finishes in seconds).
-          no_output_timeout: 5m
-          command: |
-            if [ -z "$GH_RELEASE_GITHUB_API_TOKEN" ]; then
-              echo "The GH_RELEASE_GITHUB_API_TOKEN project env var is not set — the reconcile"
-              echo "script needs it as GITHUB_TOKEN (statuses+issues write)."
-              exit 1
-            fi
-            GITHUB_TOKEN=$GH_RELEASE_GITHUB_API_TOKEN node .github/scripts/merge-queue.js
-
   generate_and_check_types:
     <<: *defaults
     steps:
@@ -868,6 +879,7 @@ jobs:
   bit_pr:
     # xlarge validated on a worst-case 98-component cascade (no OOM at 12GB heap, same wall time
     # as 2xlarge). If this job dies with "Killed", revert to 2xlarge + max-old-space-size=30000.
+    # large (8GB/6GB heap) was tried after the rspack preview migration and OOM'd within 8 minutes.
     resource_class: xlarge
     <<: *defaults
     environment:
@@ -884,16 +896,20 @@ jobs:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
           # the workspace to main (which re-checks-out main's HEAD and re-imports every component).
-          # NOTE: PR builds run the FULL pipeline by default. To trade specific tasks for speed on a
-          # given PR (no YAML change needed), add a `[skip-tasks: <names>]` token to the commit
-          # message, e.g. `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate,PublishComponents]`.
+          # --skip-tasks PublishComponents: a PR build validates the pipeline, it doesn't need the
+          # snap-tagged versions on registry.npmjs.org. Publishing every changed component on every
+          # push shares one npm token across all open PRs and rate-limits it (429 on PUT); the
+          # packages are published for real on the export to main. Every other task still runs.
+          # To trade more tasks for speed on a given PR (no YAML change needed), add a
+          # `[skip-tasks: <names>]` token to the commit message, e.g.
+          # `[skip-tasks: ExtractSchema,GeneratePreview,GenerateEnvTemplate]` - it merges with the flag below.
           # No --keep-lane: the reusing flow serves components unchanged since an earlier export
           # from the lane, with artifacts built from older commits of the branch. Capsules then mix
           # generations of @teambit packages and cross-copy `instanceof` breaks in capsule spec
           # runs - on a PR that snaps core components (so their specs actually run), bit_pr fails
           # deterministically from the second push onward. The temp-lane flow rebuilds every run
           # from one commit, trading the lane's persistent history on Bit Cloud for correctness.
-          command: 'cd bit && bit ci pr --build --skip-cleanup'
+          command: 'cd bit && bit ci pr --build --skip-cleanup --skip-tasks PublishComponents'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
@@ -955,7 +971,7 @@ jobs:
       - run:
           name: 'bit ci merge'
           command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
-          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 3 ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 2 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
@@ -972,9 +988,16 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # An explicit compile-cache dir, out of /tmp which the suite itself churns (e2e workspaces
+      # live under BIT_TEMP_ROOT = /tmp/bit). Left on the default, the cache came out half-built on
+      # CI - 599 entries here vs 1,220 from a single `bit status` locally - and a controlled A/B
+      # showed no gain at all. The e2e helper spreads process.env into every spawned bit, so all
+      # ~13,700 invocations of a run share this one cache.
+      NODE_COMPILE_CACHE: /home/circleci/node-compile-cache
     parallelism: 40
     steps:
-      - e2e_test_cmd
+      - e2e_test_cmd:
+          skip_when_doc_only: true
 
   # makes sure the newly published version doesn't break bit
   e2e_test_bbit:
@@ -1003,8 +1026,11 @@ jobs:
             fi
             BV=$(bbit --version | tr -d '[:space:]')
             node bit/scripts/verify-released-exports.js "$HOME/.bvm/versions/$BV/bit-$BV/node_modules/@teambit"
+      # the released binary is not covered by the GitHub Actions e2e workflow (it tests the
+      # repo binary), so this job keeps running the full suite, with no excluded directories.
       - e2e_test_cmd:
          bit_bin: "--bit_bin=bbit"
+         exclude_dirs: ""
 
   # setup job: creates cleaned bit bundle and persists to workspace (runs once)
   setup_bundle_simulation:
@@ -1055,8 +1081,11 @@ jobs:
       - run:
           name: verify cleaned binary works
           command: source $BASH_ENV && bit-cleaned --version
+      # the cleaned bundle is not covered by the GitHub Actions e2e workflow, so this job
+      # keeps running the full suite, with no excluded directories.
       - e2e_test_cmd:
           bit_bin: "--bit_bin=bit-cleaned"
+          exclude_dirs: ""
 
   # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
   # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
@@ -1212,7 +1241,9 @@ jobs:
       - set_bit_cloud_registry
       - setup_bit_version
       - setup_pnpm
-      - install_bit_bundle_windows
+      - install_bit_bundle:
+          os: "win32"
+          prefer_symlinked_executables: "false"
       - verify_pnpm_napi_bundle:
           package: "napi.win32-x64"
       - optimize_node_modules
@@ -1542,8 +1573,20 @@ workflows:
           requires:
             - setup_harmony
       - e2e_test:
+          # gated on lint + type-check (~1.5 min extra latency): a push that fails either of
+          # them cannot merge anyway, so running the 40-node e2e suite for it is pure waste.
           requires:
             - setup_harmony
+            - lint
+            - generate_and_check_types
+          # Not on master pushes: nothing gates on it there — bit_merge requires only
+          # generate_and_check_types, and the merge queue's "settled" check watches bit_merge
+          # alone (.github/scripts/merge-queue.js). Every PR already ran the full suite to get
+          # merged, so the per-merge master run was informational only. A daily master canary
+          # still runs in the nightly workflow.
+          filters:
+            branches:
+              ignore: master
       - setup_bundle_simulation:
           filters:
             branches:
@@ -1600,6 +1643,11 @@ workflows:
       - setup_harmony:
           requires:
             - checkout_code
+      # daily master canary — replaces the former per-master-push e2e_test run in
+      # build_and_test (see the filter comment there)
+      - e2e_test:
+          requires:
+            - setup_harmony
       - bundle_version_linux:
           <<: *master_only_filter
           requires:
@@ -1648,30 +1696,6 @@ workflows:
                 - master
     jobs:
       - update_e2e_timings
-
-  # Independent heartbeat for the merge queue. The GitHub Actions side of the queue is
-  # event-driven, but its only time-based fallback is the Actions cron — which GitHub throttles
-  # far beyond its 5m spec (20-40m silent gaps), and which vanishes entirely when Actions itself
-  # is down (2026-08-06 outage: the queue froze and only admins could bypass the gate). CircleCI
-  # is independent infrastructure that kept working through that outage, so this schedule runs the
-  # very same reconcile script from here. The script is stateless and idempotent — concurrent runs
-  # with the Actions-side reconciles are harmless. It can also be run from any laptop as a
-  # break-glass: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
-  merge_queue_heartbeat:
-    triggers:
-      - schedule:
-          # CircleCI's config-level cron rejects step syntax (*/10) — list the minutes explicitly
-          cron: '4,14,24,34,44,54 * * * *'
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - merge_queue_reconcile:
-          # serialize heartbeat runs against each other (same mechanism bit_merge uses) so a
-          # slow run can't overlap the next tick; overlap with the Actions-side reconciles
-          # remains possible and harmless — the script is stateless and idempotent
-          serial-group: 'merge-queue-reconcile'
 
   # Windows nightly workflow
   # windows-nightly:

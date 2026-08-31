@@ -29,6 +29,8 @@ import type { ComponentStatus, ComponentStatusBase } from './checkout-version';
 import { applyVersion, throwForFailures } from './checkout-version';
 import { RevertCmd } from './revert-cmd';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
@@ -57,6 +59,7 @@ export type CheckoutProps = {
   allowAddingComponentsFromScope?: boolean; // in case the id doesn't exist in .bitmap, add it from the scope (relevant for switch)
   includeLocallyDeleted?: boolean; // include components that were deleted locally. currently enabled for "bit checkout reset" only.
   includeNewFromScope?: boolean; // import components from the defaultScope that don't exist in the workspace
+  restrictToScopes?: string[]; // add lane components missing from the workspace only when they belong to these scopes ("bit ci sync" mirrors only a lane's own-scope slice)
 };
 
 export type ComponentStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -159,6 +162,10 @@ export class CheckoutMain {
     let newFromLaneAdded = false;
     if (checkoutProps.head) {
       newFromLane = await this.getNewComponentsFromLane(checkoutProps.ids || []);
+      const { restrictToScopes } = checkoutProps;
+      if (restrictToScopes?.length) {
+        newFromLane = newFromLane.filter((id) => restrictToScopes.includes(id.scope));
+      }
       if (!checkoutProps.workspaceOnly) {
         const compsNewFromLane = await Promise.all(
           newFromLane.map((id) => consumer.loadComponentFromModelImportIfNeeded(id))
@@ -467,11 +474,13 @@ export class CheckoutMain {
     let existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
     const getComponent = async () => {
       try {
-        const results = await consumer.loadComponents(ComponentIdList.fromArray([id]));
-        if (results.components[0]) return results.components[0];
-        if (checkoutProps.includeLocallyDeleted && results.removedComponents[0]) {
-          return results.removedComponents[0];
-        }
+        // an id that is not in the .bitmap must fail here. (workspace.get below would have
+        // returned the component from the scope instead of throwing)
+        if (!existingBitMapId) throw new MissingBitMapComponent(id.toString());
+        const workspaceComp = await this.workspace.get(id);
+        const legacyComp: ConsumerComponent = workspaceComp.state._consumer;
+        if (!legacyComp.isRemoved()) return legacyComp;
+        if (checkoutProps.includeLocallyDeleted) return legacyComp;
       } catch (err) {
         if (checkoutProps.allowAddingComponentsFromScope && !existingBitMapId) return undefined;
         throw err;
