@@ -10,11 +10,17 @@
    (2026-08-19, see gap 11 below) — the core preview pre-bundle from `build_ui_prebundle`
    (gap 9) is what's missing in that failure, not something env-specific; `e2e_test_esbuild_bundle`
    itself still runs with no pre-bundle at all, so this class of failure is still live there.
-2. **41 `require.resolve` calls remain unresolved in the output.** esbuild warns
-   _"X should be marked as external for use with require.resolve"_ for `@svgr/webpack`,
-   `babel-loader`, `expose-loader`, the `*-browserify` polyfills, `@rspack/dev-server/client/*`, etc.
-   All sit inside webpack/rspack config builders — code that produces a config for bundling _someone
-   else's_ browser code. They throw only if that path executes. Silent landmines; see §11.
+2. ~~**41 `require.resolve` calls remain unresolved in the output.**~~ **Warnings silenced
+   2026-09-01** — esbuild warned _"X should be marked as external for use with require.resolve"_ for
+   `@svgr/webpack`, `babel-loader`, `expose-loader`, the `*-browserify` polyfills,
+   `@rspack/dev-server/client/*`, `jest`, `espree`, etc. All sit inside webpack/rspack config builders
+   (or dev-only tooling) — code that produces a config for bundling _someone else's_ browser code, or
+   is only reachable behind `--ui-bundling`. Rather than externalizing them (which would reintroduce
+   the 231 MB → 1.3 GB blowup D10/D15 deliberately avoided, for packages that are otherwise inert
+   unless that gated rebuild path executes), `run-esbuild.ts` now sets
+   `logOverride: { 'require-resolve-not-external': 'silent' }`. The underlying `require.resolve()`
+   calls are unchanged — they still throw if that gated path ever executes without the package
+   installed — this only removes the noise from CI output. See D16.
 3. **`bit install` inside a bundled workspace requires the externals installed** — `@pnpm/napi` in
    particular. Without `bundle/npm install` you get `--help`, `init`, `status`, `list` but not
    `create`/`install`.

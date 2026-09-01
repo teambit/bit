@@ -2,7 +2,12 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-08-30 (bvm dev pre-releases now publish automatically on every `bit-bundle*`
+> Last updated: 2026-09-01 (silenced the 41 `require-resolve-not-external` esbuild warnings via
+> `logOverride` instead of externalizing the packages they name — they're the already-gated
+> `--ui-bundling` group plus dev-only tooling. See
+> [14-known-gaps.md gap 2](bundle-plan/14-known-gaps.md) and
+> [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-09-01 entry.)
+> Previously, 2026-08-30 (bvm dev pre-releases now publish automatically on every `bit-bundle*`
 > push — new `bundle_push_build`/`bundle_publish_to_gcloud` jobs in `build_and_test`, reusing
 > `setup_esbuild_bundle`/`build_ui_prebundle`'s persisted workspace output instead of rebuilding from
 > scratch. `resolve_bundle_version`/`pack_bvm_tars`/`inject_ui_prebundle` extracted as shared

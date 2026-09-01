@@ -86,6 +86,16 @@ export function runEsbuild({
     sourcemap: sourcemap ? 'linked' : false,
     logLevel: 'warning',
     logLimit: 0,
+    logOverride: {
+      // these fire for every `require.resolve('pkg')` esbuild inlines instead of leaving as a real
+      // runtime lookup - overwhelmingly webpack/rspack config builders (react, sass-loader,
+      // postcss-loader, the `*-browserify` polyfills, ...) that only run on the UI-rebuild fallback
+      // path, which is already gated behind `--ui-bundling` and off by default (externals.ts,
+      // bundle-plan.md §8.3/§10 gap 2, D10/D15). Adding them as externals would reintroduce the same
+      // 231 MB -> 1.3 GB blowup that decision deliberately avoided, for warnings that are otherwise
+      // inert unless that gated path executes.
+      'require-resolve-not-external': 'silent',
+    },
     mainFields: ['main', 'module'],
     external: externals,
     define: {

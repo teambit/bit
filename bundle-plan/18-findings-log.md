@@ -1232,3 +1232,17 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   `bit --help` budget from 2500ms (this morning's stopgap bump) to the original 1500ms - now passes
   with ~40% margin. Note for the future: mocha's per-test `run_time` for this test (1.84s) covers
   BOTH spawns (warm-up + timed); the real measurement is the console.log line in the node's output.
+- **2026-09-01** — silenced the 41 `require-resolve-not-external` esbuild warnings (raised while
+  investigating a CircleCI `BundleCliApp` log full of them, `envs/bit-cli-app-env@e12bbf34...`) rather
+  than externalizing the packages they name (`react`, `react-dom`, `sass`/`sass-loader`,
+  `postcss-loader`, `resolve-url-loader`, the `*-browserify`/`process`/`buffer` polyfills,
+  `@rspack/dev-server/client/*`, `@mdx-js/loader`, several `@teambit/*` UI packages, plus dev-only
+  `jest`/`espree`/`html-webpack-plugin`). Cross-checked against `externals.ts`: every named package is
+  either already in `UI_BUNDLING_EXTERNALS` (the `--ui-bundling`, off-by-default rebuild-fallback
+  group, §8.3) or dev-only tooling reachable only from those same config builders — i.e. exactly gap 2
+  from §10, already understood as "silent landmines" that throw only if that gated path executes.
+  Added `logOverride: { 'require-resolve-not-external': 'silent' }` to `run-esbuild.ts`'s esbuild
+  options (`scopes/harmony/modules/cli-bundler/run-esbuild.ts`). Verified with a real
+  `bit compile modules/cli-bundler` + `npm run bundle`: build summary went from listing all 41
+  warnings to `"warnings": 0`, `"errors": 0` unchanged, bundle size unaffected (59.33 MB, same as
+  before) since nothing was added to externals. See D16.

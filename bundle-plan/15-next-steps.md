@@ -7,8 +7,10 @@
 1. Fix `bit start` — but not by growing the externals list (§8.3). The promising direction is to have
    the UI/preview rspack config resolve its aliases from the _pre-bundled UI artefact_ or from the
    user's workspace, rather than `require.resolve`-ing each package out of bit's own installation.
-2. Turn the 41 remaining `require-resolve-not-external` warnings into an explicit decision list:
-   external, copied asset, worker entry, or confirmed-dead now that core envs are gone.
+2. ~~Turn the 41 remaining `require-resolve-not-external` warnings into an explicit decision list:
+   external, copied asset, worker entry, or confirmed-dead now that core envs are gone.~~ Silenced
+   instead, 2026-09-01 — see §10 gap 2 / D16. A per-package classification would still be useful if
+   CI ever needs to catch a _new_, unexpected `require.resolve` warning, but isn't blocking.
 3. Run the e2e suite against the bundled binary (`npm run e2e-test --bit_bin=…`) — the fastest way to
    find whatever is left.
 
