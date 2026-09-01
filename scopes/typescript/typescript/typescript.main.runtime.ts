@@ -180,6 +180,17 @@ export class TypescriptMain {
     return this.tsServer;
   }
 
+  /**
+   * kill the tsserver process this aspect started and forget the client, so the next consumer
+   * starts a fresh one instead of being handed a client whose process is gone. without dropping the
+   * reference, `getTsserverClient()` keeps returning the dead client after any `killTsServer()`.
+   */
+  killTsserverClient() {
+    this.tsServer?.killTsServer();
+    // @ts-ignore the field is only meaningful while a server is running
+    this.tsServer = undefined;
+  }
+
   registerSchemaTransformer(transformers: () => SchemaTransformer[]) {
     this.schemaTransformerSlot.register(transformers);
     return this;
@@ -468,6 +479,11 @@ export class TypescriptMain {
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
     cli.register(checkTypesCmd);
+
+    // serve components whose env provides no schema extractor (e.g. the default empty-env)
+    schema.registerFallbackExtractorFactory((tsserverPath, contextPath, schemaTransformers, apiTransformers) =>
+      tsMain.createSchemaExtractor(undefined, tsserverPath, contextPath, schemaTransformers, apiTransformers)
+    );
 
     return tsMain;
   }

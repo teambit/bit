@@ -2,21 +2,26 @@
  * Regenerates scripts/e2e-test-timings.json — the per-file wall-clock estimates used by
  * scripts/split-e2e-tests.js to balance e2e files across CircleCI parallel nodes.
  *
- * How it works: mocha's junit reports don't attribute before/after-hook time (where ~85% of our
- * e2e wall-clock goes) to any testcase, but each <testsuite> carries a `timestamp` and a `file`
- * attribute. Within a node, files run sequentially, so the gap between the first suite timestamp
- * of one file and the first suite timestamp of the next file IS that file's full wall time,
- * hooks included (the last file on a node is closed by the <testsuites> root timestamp + total
- * time). This measures every file directly — no equation solving, no cross-file attribution
- * ambiguity. Per-file times are aggregated as the median across the sampled jobs.
+ * How it works: mocha's junit reports don't capture before/after-hook time (where ~85% of our
+ * e2e wall-clock goes), so per-file durations can't be read from any report directly. Instead,
+ * this script derives them from data CircleCI does have:
+ *   1. For each recent completed `e2e_test` job, every successful parallel node's total run time,
+ *      and the exact list of files that ran on it (printed in the node's mocha command line).
+ *   2. Each node is one equation: node_wall_time = fixed_overhead + sum(duration of its files).
+ *      File-to-node assignments vary across jobs/branches, so collecting many jobs yields an
+ *      overdetermined system, solved here with non-negative least squares (coordinate descent),
+ *      lightly regularized toward a hook-count-based prior for files the data can't separate.
  *
- * Usage: node scripts/generate-e2e-timings.js [--jobs=N]
- *   --jobs=N   how many recent successful e2e_test jobs to sample (default 6). Times are stable
- *              run-to-run (spread typically <90s), so a small window of recent runs is enough
- *              and keeps estimates current after suite or product changes.
- * Files with no junit observation (brand-new tests) keep their existing manifest entry if any;
- * otherwise the splitter assigns them the manifest median at pack time.
- * No auth token needed — the project and its artifacts are public on CircleCI.
+ * Usage: node scripts/generate-e2e-timings.js [--jobs=N] [--prior=hooks|manifest] [--branch=NAME]
+ *   --jobs=N           how many recent completed e2e_test jobs to learn from (default 30)
+ *   --branch=NAME      learn only from pipelines of this branch. use when a branch changes the
+ *                      cost profile of many suites (weights averaged with other branches' runs
+ *                      would under-predict them, unbalancing the split on that branch).
+ *   --prior=manifest   regularize toward the existing manifest instead of hook counts.
+ *                      Preferred for routine refreshes (e.g. the scheduled CI job): combined with
+ *                      a small --jobs window it updates weights from recent runs only, so stale
+ *                      observations of files that were since split/renamed don't poison the solve.
+ * No auth token needed — the project is public on CircleCI.
  */
 
 const fs = require('fs');
@@ -29,8 +34,11 @@ const cliFlag = (name, def) => {
   const match = process.argv.find((arg) => arg.startsWith(`--${name}=`));
   return match ? match.split('=')[1] : def;
 };
-const MAX_JOBS = parseInt(cliFlag('jobs', '6'), 10);
-const MIN_FILE_SECONDS = 15;
+const MAX_JOBS = parseInt(cliFlag('jobs', '30'), 10);
+const PRIOR_MODE = cliFlag('prior', 'hooks');
+const BRANCH = cliFlag('branch', '');
+const RIDGE_LAMBDA = 1; // weight of the prior relative to one node observation
+const ITERATIONS = 300;
 
 async function getJson(url) {
   const res = await fetch(url);
@@ -38,17 +46,14 @@ async function getJson(url) {
   return res.json();
 }
 
-async function getText(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
-  return res.text();
-}
-
 async function findRecentE2eJobs() {
   const jobs = [];
   let pageToken;
   for (let page = 0; page < 4 && jobs.length < MAX_JOBS; page += 1) {
-    const url = `https://circleci.com/api/v2/project/${PROJECT}/pipeline${pageToken ? `?page-token=${pageToken}` : ''}`;
+    const params = [BRANCH ? `branch=${encodeURIComponent(BRANCH)}` : '', pageToken ? `page-token=${pageToken}` : '']
+      .filter(Boolean)
+      .join('&');
+    const url = `https://circleci.com/api/v2/project/${PROJECT}/pipeline${params ? `?${params}` : ''}`;
     const data = await getJson(url);
     pageToken = data.next_page_token;
     for (const pipeline of data.items) {
@@ -56,7 +61,11 @@ async function findRecentE2eJobs() {
       const workflows = (await getJson(`https://circleci.com/api/v2/pipeline/${pipeline.id}/workflow`)).items;
       for (const workflow of workflows.filter((w) => w.name === 'build_and_test')) {
         const wfJobs = (await getJson(`https://circleci.com/api/v2/workflow/${workflow.id}/job`)).items;
-        const e2eJob = wfJobs.find((j) => j.name === 'e2e_test' && j.status === 'success' && j.job_number);
+        // failed jobs are usable too: fetchNodeObservations only reads nodes that succeeded,
+        // so a job where a single node flaked still contributes 39 valid equations
+        const e2eJob = wfJobs.find(
+          (j) => j.name === 'e2e_test' && (j.status === 'success' || j.status === 'failed') && j.job_number
+        );
         if (e2eJob) jobs.push(e2eJob.job_number);
       }
     }
@@ -65,114 +74,125 @@ async function findRecentE2eJobs() {
   return jobs;
 }
 
-function parseAttrs(tag) {
-  const attrs = {};
-  for (const m of tag.matchAll(/([\w-]+)="([^"]*)"/g)) attrs[m[1]] = m[2];
-  return attrs;
-}
-
-/** returns {relativeFilePath: seconds} for one node's junit XML */
-function perFileTimesFromJunit(xml) {
-  const rootTag = xml.match(/<testsuites\b[^>]*>/);
-  if (!rootTag) return {};
-  const totalSeconds = parseFloat(parseAttrs(rootTag[0]).time || '0');
-  let rootStart = null;
-  const suiteStarts = []; // [{start: Date, file: relative path}]
-  for (const m of xml.matchAll(/<testsuite\b[^>]*>/g)) {
-    const attrs = parseAttrs(m[0]);
-    if (!attrs.timestamp) continue;
-    const start = new Date(`${attrs.timestamp}Z`);
-    if (attrs.name === 'Root Suite') {
-      rootStart = start;
-      continue;
-    }
-    if (!attrs.file) continue;
-    const rel = attrs.file.replace(/^.*?\/bit\/bit\//, '');
-    suiteStarts.push({ start, file: rel });
-  }
-  if (!suiteStarts.length || !rootStart) return {};
-  suiteStarts.sort((a, b) => a.start - b.start);
-  // first suite timestamp per file, preserving execution order
-  const fileStarts = [];
-  const seen = new Set();
-  for (const { start, file } of suiteStarts) {
-    if (seen.has(file)) continue;
-    seen.add(file);
-    fileStarts.push({ start, file });
-  }
-  const nodeEnd = new Date(rootStart.getTime() + totalSeconds * 1000);
-  const times = {};
-  fileStarts.forEach(({ start, file }, i) => {
-    const end = i + 1 < fileStarts.length ? fileStarts[i + 1].start : nodeEnd;
-    const seconds = (end - start) / 1000;
-    if (seconds > 0) times[file] = seconds;
-  });
-  return times;
-}
-
-async function collectJobObservations(jobNumber, observations) {
-  const artifacts = await getJson(`https://circleci.com/api/v1.1/project/github/teambit/bit/${jobNumber}/artifacts`);
-  const junitArtifacts = artifacts.filter((a) => a.path && a.path.includes('junit'));
-  let nodes = 0;
-  for (const artifact of junitArtifacts) {
+/** returns [{wall: seconds, files: [relative paths]}] - one entry per parallel node */
+async function fetchNodeObservations(jobNumber) {
+  const detail = await getJson(`https://circleci.com/api/v1.1/project/github/teambit/bit/${jobNumber}`);
+  const step = (detail.steps || []).find((s) => s.name === 'Run e2e tests');
+  if (!step) return [];
+  const nodes = [];
+  for (const action of step.actions) {
+    if (action.status !== 'success' || !action.output_url) continue;
     try {
-      const times = perFileTimesFromJunit(await getText(artifact.url));
-      if (!Object.keys(times).length) continue;
-      nodes += 1;
-      for (const [file, seconds] of Object.entries(times)) {
-        (observations[file] ??= []).push(seconds);
-      }
+      const output = await getJson(action.output_url);
+      const message = output[0].message.slice(0, 10000);
+      const files = [
+        ...new Set([...message.matchAll(/\/home\/circleci\/bit\/bit\/(e2e\/\S+?\.e2e\S*?\.ts)/g)].map((m) => m[1])),
+      ];
+      if (files.length) nodes.push({ wall: action.run_time_millis / 1000, files });
     } catch {
-      // a node whose artifact expired or failed to parse just contributes no observation
+      // a node whose output expired or failed to parse just contributes no equation
     }
   }
   return nodes;
 }
 
-function median(values) {
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.floor(sorted.length / 2)];
+/** prior estimate per file from hook counts: hooks dominate e2e cost, ~12s per before-hook */
+function hookPrior(file) {
+  try {
+    const src = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8');
+    const hooks = (src.match(/\bbefore(Each)?\s*\(/g) || []).length;
+    return 20 + 12 * hooks;
+  } catch {
+    return 60; // file no longer exists locally; keep a neutral prior
+  }
+}
+
+const existingManifest = (() => {
+  if (PRIOR_MODE !== 'manifest') return {};
+  try {
+    return JSON.parse(fs.readFileSync(OUT_FILE, 'utf8'));
+  } catch {
+    console.error('warning: --prior=manifest but no existing manifest found, falling back to hook counts');
+    return {};
+  }
+})();
+
+function buildPrior(file) {
+  return existingManifest[file] ?? hookPrior(file);
+}
+
+function solve(observations, files) {
+  const fileIndex = new Map(files.map((f, i) => [f, i]));
+  const prior = files.map(buildPrior);
+  const estimate = [...prior];
+  let fixed = 60;
+  const obs = observations.map((o) => ({ idxs: o.files.map((f) => fileIndex.get(f)), wall: o.wall }));
+  const occurrences = files.map(() => []);
+  obs.forEach((o, oi) => o.idxs.forEach((i) => occurrences[i].push(oi)));
+
+  for (let iter = 0; iter < ITERATIONS; iter += 1) {
+    const fileSums = obs.map((o) => o.idxs.reduce((sum, i) => sum + estimate[i], 0));
+    fixed = Math.max(0, obs.reduce((acc, o, oi) => acc + o.wall - fileSums[oi], 0) / obs.length);
+    const residuals = obs.map((o, oi) => o.wall - fixed - fileSums[oi]);
+    for (let i = 0; i < files.length; i += 1) {
+      if (!occurrences[i].length) continue;
+      const numerator =
+        occurrences[i].reduce((sum, oi) => sum + residuals[oi] + estimate[i], 0) + RIDGE_LAMBDA * prior[i];
+      const updated = Math.max(0, numerator / (occurrences[i].length + RIDGE_LAMBDA));
+      const delta = updated - estimate[i];
+      if (delta) {
+        occurrences[i].forEach((oi) => {
+          residuals[oi] -= delta;
+        });
+        estimate[i] = updated;
+      }
+    }
+  }
+
+  const errors = obs.map((o) => {
+    const predicted = fixed + o.idxs.reduce((sum, i) => sum + estimate[i], 0);
+    return Math.abs(predicted - o.wall) / o.wall;
+  });
+  const meanError = errors.reduce((a, b) => a + b, 0) / errors.length;
+  return { estimate, fixed, meanError };
 }
 
 async function main() {
-  console.error('finding recent successful e2e_test jobs...');
+  console.error('finding recent completed e2e_test jobs...');
   const jobNumbers = await findRecentE2eJobs();
-  console.error(`collecting junit timings from ${jobNumbers.length} jobs...`);
-  const observations = {};
+  console.error(`collecting node data from ${jobNumbers.length} jobs...`);
+  const observations = [];
   for (const jobNumber of jobNumbers) {
-    const nodes = await collectJobObservations(jobNumber, observations);
-    console.error(`  job ${jobNumber}: ${nodes} nodes with junit data`);
+    const nodes = await fetchNodeObservations(jobNumber);
+    observations.push(...nodes);
+    console.error(`  job ${jobNumber}: ${nodes.length} nodes`);
   }
-  const measuredFiles = Object.keys(observations).length;
-  if (measuredFiles < 100) {
-    throw new Error(`only ${measuredFiles} files measured - junit artifacts may be missing or expired`);
+  // with a manifest prior the solve is regularized, so even a single job's worth of nodes is
+  // usable (the prior fills what the observations can't separate) - common with --branch on a
+  // branch that has few green runs
+  const minObservations = PRIOR_MODE === 'manifest' ? 30 : 50;
+  if (observations.length < minObservations) {
+    throw new Error(`only ${observations.length} node observations collected - not enough to solve reliably`);
   }
-
-  const existingManifest = (() => {
-    try {
-      return JSON.parse(fs.readFileSync(OUT_FILE, 'utf8'));
-    } catch {
-      return {};
-    }
-  })();
-
-  // start from the existing manifest (covers brand-new files with no junit data yet),
-  // overwrite with measured medians, and drop files that no longer exist locally.
-  const manifest = {};
-  for (const [file, seconds] of Object.entries(existingManifest)) manifest[file] = seconds;
-  for (const [file, samples] of Object.entries(observations)) {
-    manifest[file] = Math.max(MIN_FILE_SECONDS, Math.round(median(samples)));
-  }
-  const finalManifest = Object.fromEntries(
-    Object.entries(manifest)
-      .filter(([file]) => fs.existsSync(path.join(REPO_ROOT, file)))
-      .sort(([a], [b]) => a.localeCompare(b))
-  );
-  const total = Object.values(finalManifest).reduce((a, b) => a + b, 0);
+  const files = [...new Set(observations.flatMap((o) => o.files))].sort();
+  console.error(`solving for ${files.length} files from ${observations.length} node observations...`);
+  const { estimate, fixed, meanError } = solve(observations, files);
   console.error(
-    `measured ${measuredFiles} files; manifest has ${Object.keys(finalManifest).length} (total ${Math.round(total / 60)} machine-minutes)`
+    `fixed per-node overhead: ${Math.round(fixed)}s, mean node prediction error: ${(meanError * 100).toFixed(1)}%`
   );
-  fs.writeFileSync(OUT_FILE, `${JSON.stringify(finalManifest, null, 2)}\n`);
+  if (meanError > 0.15) {
+    console.error('warning: prediction error is high; estimates may be stale or assignments lacked diversity');
+  }
+
+  // floor at 15s: the solver can collapse under-identified files to 0, which makes the
+  // bin-packer treat them as free and pile dozens of them onto one node.
+  // Files that no longer exist locally (deleted/renamed since the observed runs) are dropped.
+  const manifest = Object.fromEntries(
+    files
+      .filter((f) => fs.existsSync(path.join(REPO_ROOT, f)))
+      .map((f) => [f, Math.max(15, Math.round(estimate[files.indexOf(f)]))])
+  );
+  fs.writeFileSync(OUT_FILE, `${JSON.stringify(manifest, null, 2)}\n`);
   console.error(`wrote ${OUT_FILE}`);
 }
 

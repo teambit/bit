@@ -46,25 +46,18 @@ chai.use(chaiFs);
         npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
         await npmCiRegistry.init();
         npmCiRegistry.setRegistry();
-        helper.env.setCustomNewEnv(
-          undefined,
-          undefined,
-          {
-            policy: {
-              dev: [
-                {
-                  name: '@pnpm.e2e/foo',
-                  version: '100.0.0',
-                  hidden: true,
-                  force: true,
-                },
-              ],
-            },
+        helper.env.setPolicyOnlyEnv({
+          policy: {
+            dev: [
+              {
+                name: '@pnpm.e2e/foo',
+                version: '100.0.0',
+                hidden: true,
+                force: true,
+              },
+            ],
           },
-          false,
-          'custom-env/env',
-          'custom-env/env'
-        );
+        });
         helper.fs.createFile('comp1', 'comp1.js', 'require("@pnpm.e2e/bar"); // eslint-disable-line');
         helper.command.addComponent('comp1');
         helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env`, {});

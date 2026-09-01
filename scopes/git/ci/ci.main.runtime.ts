@@ -26,6 +26,7 @@ import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { CiSyncCmd } from './commands/sync.cmd';
 import { git } from './git';
+import { attachEnvVersionToLaneConfig } from './attach-env-version-to-lane-config';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentID } from '@teambit/component-id';
 import { compact, isEqual } from 'lodash';
@@ -40,6 +41,7 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
+import { reportToString } from './report-to-string';
 import { adoptAndRetrySwitch, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
 
 export type CiSwitchLaneOptions = SwitchLaneOptions & {
@@ -579,7 +581,8 @@ export class CiMain {
     const componentsToSync = compact(
       await Promise.all(
         currentLane.components.map(async (laneComp) => {
-          if (!workspaceIds.hasWithoutVersion(laneComp.id)) return undefined; // not tracked = not snappable
+          // not tracked here = not snappable, and a staged unmerged entry for it breaks the snap
+          if (!workspaceIds.hasWithoutVersion(laneComp.id)) return undefined;
           try {
             const modelComponent = await legacyScope.getModelComponentIfExist(laneComp.id);
             const mainHead = modelComponent?.head; // the component's head on main
@@ -1853,6 +1856,7 @@ export class CiMain {
 
         const laneConfig = laneVersion.extensions.toConfigObject();
         if (!laneConfig || Object.keys(laneConfig).length === 0) return;
+        attachEnvVersionToLaneConfig(laneConfig, laneVersion);
 
         // Get main Version for comparison
         let mainConfig: Record<string, any> = {};
@@ -1975,10 +1979,6 @@ export class CiMain {
     this.logger.console(chalk.blue('No specific version bump detected, using default patch'));
     return releaseType;
   }
-}
-
-function reportToString(result: string | { data: string }): string {
-  return typeof result === 'string' ? result : result.data;
 }
 
 CiAspect.addRuntime(CiMain);
