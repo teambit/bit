@@ -10,7 +10,6 @@ import { Repository } from '@teambit/objects';
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import type { WorkspaceExtensionProps } from '@teambit/config';
 import { WorkspaceConfig } from '@teambit/config';
-import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime, formatSuccessSummary, formatHint, formatTitle } from '@teambit/cli';
@@ -26,6 +25,8 @@ export interface InteractiveConfig {
   externalPackageManager: boolean;
   defaultDirectory: string;
   mcpEditor?: string;
+  /** Relative path of the agent instructions file written in the interactive flow. */
+  agentFileWritten?: string;
 }
 
 /**
@@ -63,8 +64,9 @@ export class HostInitializerMain {
     force = false,
     workspaceConfigProps: WorkspaceExtensionProps = {},
     generator?: string,
-    agent?: string
-  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string }> {
+    agent?: string,
+    options: { skipDefaultMcp?: boolean } = {}
+  ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string; mcpFileWritten?: string }> {
     const consumerInfo = await getWorkspaceInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
     // that he's already in a workspace.
@@ -118,10 +120,37 @@ export class HostInitializerMain {
     const writtenConsumer = await consumer.write();
     const created = !consumerInfo?.path;
     let agentFileWritten: string | undefined;
+    let mcpFileWritten: string | undefined;
     if (created) {
       agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
+      // Keep `.mcp.json` in sync with the agent template, which tells the
+      // agent that the workspace ships a Cloud MCP config. Skipped only when
+      // the caller (interactive init) knows the user explicitly opted out.
+      if (!options.skipDefaultMcp) {
+        mcpFileWritten = await HostInitializerMain.writeDefaultMcpConfig(consumerPath);
+      }
     }
-    return { created, consumer: writtenConsumer, agentFileWritten };
+    return { created, consumer: writtenConsumer, agentFileWritten, mcpFileWritten };
+  }
+
+  /**
+   * Write a baseline `.mcp.json` at the workspace root containing the
+   * Bit Cloud MCP server entry. This file is picked up automatically by
+   * Claude Code and Visual Studio 2026; other agents (Cursor, Windsurf,
+   * Copilot, Codex) need their own per-tool config, which the interactive
+   * init flow writes when the user picks one of them.
+   *
+   * Idempotent — `setupCloudMcp` merges into any existing `.mcp.json`,
+   * preserving other server entries.
+   */
+  static async writeDefaultMcpConfig(projectPath: string): Promise<string | undefined> {
+    try {
+      await McpConfigWriter.setupCloudMcp('claude-code', projectPath);
+      return '.mcp.json';
+    } catch {
+      // Never fail init because of MCP file writing.
+      return undefined;
+    }
   }
 
   /**
@@ -132,6 +161,59 @@ export class HostInitializerMain {
     cursor: '.cursor/rules/bit.mdc',
     copilot: '.github/copilot-instructions.md',
   };
+
+  /**
+   * Read the AGENTS.md template that ships with this aspect, picking the
+   * Git-integrated variant when the workspace has a `.git` directory.
+   * The Git variant tells the agent to use Git branches and to leave
+   * `bit snap`/`bit export` to CI — the Bit-lanes workflow only applies
+   * to non-Git workspaces.
+   */
+  private static async loadAgentsTemplate(projectPath: string): Promise<string> {
+    const isGit = await HostInitializerMain.hasGitDirectory(projectPath);
+    const templateName = isGit ? 'agents-template-git.md' : 'agents-template.md';
+    return fs.readFile(path.join(__dirname, templateName), 'utf8');
+  }
+
+  /**
+   * Write Cloud-MCP-compatible agent instructions for the selected editor.
+   * Body is the universal AGENTS.md template — not the CLI-MCP rules — so
+   * it doesn't reference tools that exist only on the local stdio server.
+   * Claude Code targets `.claude/rules/bit.md` (auto-loaded per its memory
+   * docs, no manual @-import needed). Cursor/Copilot reuse the existing
+   * per-editor rules paths with the Cloud content. Codex/Windsurf fall back
+   * to `AGENTS.md`.
+   */
+  static async writeMcpAgentRules(editor: string, projectPath: string): Promise<string | undefined> {
+    const content = await HostInitializerMain.loadAgentsTemplate(projectPath);
+    const editorLower = editor.toLowerCase();
+
+    if (editorLower === 'claude-code') {
+      const rel = path.join('.claude', 'rules', 'bit.md');
+      const abs = path.join(projectPath, rel);
+      await fs.ensureDir(path.dirname(abs));
+      await fs.writeFile(abs, content);
+      return rel;
+    }
+
+    // McpConfigWriter rules-file key for the small subset of Cloud editors
+    // whose existing rules paths already auto-load (Cursor via alwaysApply
+    // frontmatter, GitHub Copilot via applyTo).
+    const rulesEditor = { cursor: 'cursor', copilot: 'vscode' }[editorLower];
+    if (rulesEditor) {
+      const absPath = await McpConfigWriter.writeRulesFile(rulesEditor, {
+        isGlobal: false,
+        workspaceDir: projectPath,
+        content,
+      });
+      return path.relative(projectPath, absPath);
+    }
+
+    // Codex / Windsurf — write AGENTS.md. skipGitCheck=true bypasses the
+    // git-presence guard in writeAgentInstructions, since the interactive
+    // flow only runs in git repos.
+    return HostInitializerMain.writeAgentInstructions(projectPath, undefined, true);
+  }
 
   /**
    * All known agent instruction file paths. Used to detect whether a workspace
@@ -175,11 +257,7 @@ export class HostInitializerMain {
       const targetFile = agent ? HostInitializerMain.AGENT_FILE_MAP[agent] : 'AGENTS.md';
       const targetPath = path.join(projectPath, targetFile);
 
-      // Read the shared template content.
-      const templatePath = path.join(__dirname, 'agents-template.md');
-      const content = await fs.readFile(templatePath, 'utf8');
-
-      // Some formats require frontmatter.
+      const content = await HostInitializerMain.loadAgentsTemplate(projectPath);
       const finalContent = HostInitializerMain.wrapWithFrontmatter(targetFile, content);
 
       await fs.ensureDir(path.dirname(targetPath));
@@ -212,16 +290,12 @@ export class HostInitializerMain {
   }
 
   /**
-   * Check if the directory contains a .git folder
+   * Check whether the directory is inside a Git workspace.
+   * Accepts both `.git` as a directory (standard checkout) and `.git` as a
+   * file (Git worktrees and submodules store a `gitdir:` pointer file there).
    */
   static async hasGitDirectory(projectPath: string): Promise<boolean> {
-    try {
-      const gitPath = path.join(projectPath, '.git');
-      const stat = await fs.stat(gitPath);
-      return stat.isDirectory();
-    } catch {
-      return false;
-    }
+    return fs.pathExists(path.join(projectPath, '.git'));
   }
 
   /**
@@ -286,14 +360,16 @@ export class HostInitializerMain {
   }
 
   /**
-   * Prompt user for MCP server configuration
+   * Prompt user for Cloud MCP configuration. Bit Cloud hosts an HTTP MCP
+   * server at https://mcp.bit.cloud/mcp — agents connect to it directly,
+   * no local `bit` process needed. See https://bit.cloud/docs/connect.
    */
   static async promptForMcpServer(): Promise<string | null> {
     try {
       const setupMcp = (await prompt({
         type: 'toggle',
         name: 'setupMcp',
-        message: 'Would you like to set up the MCP server for AI-powered development?',
+        message: 'Would you like to connect Bit Cloud MCP to an AI coding agent?',
         enabled: 'Yes',
         disabled: 'No',
         cancel: promptCancel,
@@ -304,20 +380,19 @@ export class HostInitializerMain {
       }
 
       const editorChoices = [
-        { name: 'vscode', message: 'VS Code' },
+        { name: 'claude-code', message: 'Claude Code' },
+        { name: 'codex', message: 'Codex' },
         { name: 'cursor', message: 'Cursor' },
         { name: 'windsurf', message: 'Windsurf' },
-        { name: 'roo', message: 'Roo Code' },
-        { name: 'cline', message: 'Cline' },
-        { name: 'claude-code', message: 'Claude Code' },
+        { name: 'copilot', message: 'GitHub Copilot' },
       ];
 
       const editorResponse = (await prompt({
         type: 'select',
         name: 'editor',
-        message: 'Which editor would you like to configure?',
+        message: 'Which agent would you like to configure?',
         choices: editorChoices,
-        initial: 0, // Default to VS Code
+        initial: 0,
         cancel: promptCancel,
       } as any)) as { editor: string };
 
@@ -361,40 +436,45 @@ node_modules
   }
 
   /**
-   * Set up MCP server configuration for the selected editor
+   * Write Bit Cloud MCP configuration for the selected agent.
+   * Cloud MCP is an HTTP server hosted by Bit, so no rules/instructions
+   * file is written — agents discover capabilities from the server itself.
    */
   static async setupMcpServer(editor: string, projectPath: string): Promise<void> {
-    // Set up MCP server configuration
-    const setupOptions: SetupOptions = {
-      isGlobal: false,
-      workspaceDir: projectPath,
-      consumerProject: false,
-    };
-
-    await McpConfigWriter.setupEditor(editor, setupOptions);
-
-    // Write rules file for the editor
-    const rulesOptions: RulesOptions = {
-      isGlobal: false,
-      workspaceDir: projectPath,
-      consumerProject: false,
-    };
-
-    await McpConfigWriter.writeRulesFile(editor, rulesOptions);
+    await McpConfigWriter.setupCloudMcp(editor, projectPath);
   }
 
   /**
-   * Run interactive mode for Git repositories
+   * Per-agent hint to verify the Cloud MCP connection and trigger the
+   * OAuth authentication flow. The MCP server requires auth via the
+   * `mcp:connect` scope — the agent surfaces the OAuth URL on first use.
+   */
+  static getMcpVerifyHint(editor: string): string {
+    switch (editor.toLowerCase()) {
+      case 'claude-code':
+        return `Run ${chalk.cyan('/mcp')} in Claude Code to verify the connection and authenticate`;
+      case 'cursor':
+        return `Open ${chalk.cyan('Cursor Settings → MCP')} to verify the connection and authenticate`;
+      case 'windsurf':
+        return `Open ${chalk.cyan('Windsurf Settings → MCP')} to verify the connection and authenticate`;
+      case 'copilot':
+        return `Run ${chalk.cyan('MCP: List Servers')} from the VS Code command palette to verify the connection`;
+      case 'codex':
+        return `Restart Codex to load the MCP server; it will prompt for authentication on first use`;
+      default:
+        return `Open your agent's MCP settings to verify the connection`;
+    }
+  }
+
+  /**
+   * Run interactive mode for Git repositories.
+   * The caller (InitCmd) is responsible for invoking setupMcpServer
+   * when `mcpEditor` is returned, so the user sees a status line.
    */
   static async runInteractiveMode(projectPath: string): Promise<InteractiveConfig> {
     const selectedEnv = await HostInitializerMain.promptForEnvironment();
     const useExternalPackageManager = await HostInitializerMain.promptForPackageManager();
     const mcpEditor = await HostInitializerMain.promptForMcpServer();
-
-    // Set up MCP server if user selected an editor
-    if (mcpEditor) {
-      await HostInitializerMain.setupMcpServer(mcpEditor, projectPath);
-    }
 
     await HostInitializerMain.updateGitignore(projectPath);
 
@@ -415,7 +495,8 @@ node_modules
     resetHard: boolean,
     resetScope: boolean,
     interactiveConfig: InteractiveConfig | null,
-    agentFileWritten?: string
+    agentFileWritten?: string,
+    mcpFileWritten?: string
   ): string {
     let initMessage = formatSuccessSummary('initialized a bit workspace.');
 
@@ -427,6 +508,12 @@ node_modules
     if (agentFileWritten) {
       initMessage += formatHint(
         `\n  Created ${chalk.cyan(agentFileWritten)} — instructions for AI agents working in this workspace`
+      );
+    }
+
+    if (mcpFileWritten) {
+      initMessage += formatHint(
+        `\n  Created ${chalk.cyan(mcpFileWritten)} — Bit Cloud MCP for AI agents (picked up by Claude Code, Visual Studio)`
       );
     }
 
@@ -442,7 +529,10 @@ node_modules
       }
 
       if (interactiveConfig.mcpEditor) {
-        initMessage += `\n  MCP server configured for: ${chalk.cyan(interactiveConfig.mcpEditor)}`;
+        const displayName = McpConfigWriter.getEditorDisplayName(interactiveConfig.mcpEditor);
+        initMessage += `\n  Bit Cloud MCP connected to: ${chalk.cyan(displayName)}`;
+        const verifyHint = HostInitializerMain.getMcpVerifyHint(interactiveConfig.mcpEditor);
+        if (verifyHint) initMessage += formatHint(`\n  ${verifyHint}`);
       }
 
       if (interactiveConfig.externalPackageManager) {

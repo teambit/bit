@@ -3,6 +3,8 @@ import esmLoader from '@teambit/node.utils.esm-loader';
 // import findRoot from 'find-root';
 import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
+import { reportLoadFailure } from '@teambit/harmony.modules.load-trace';
+import { recordLoadedEsmFile } from './record-loaded-esm-file';
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/cli';
@@ -490,6 +492,9 @@ export class AspectLoaderMain {
       this.logger.console(error);
       throw new CannotLoadExtension(idStr, error);
     }
+    // the failure is swallowed (best-effort loading). record it on the active load-trace so the
+    // component loader surfaces it as a component issue, visible in "bit status".
+    reportLoadFailure({ failedId: idStr, phase: 'require-aspects', error: errorMsg });
     this.logger.error(msg, error);
     this.printWarningIfFirstTime(idStr, msg, this.logger.isLoaderStarted);
   }
@@ -531,7 +536,10 @@ export class AspectLoaderMain {
   }
 
   async loadEsm(path: string) {
-    return esmLoader(path);
+    const module = await esmLoader(path);
+    // only a load that succeeded leaves something in memory that needs its files kept around
+    recordLoadedEsmFile(path);
+    return module;
   }
 
   getPluginsFromDefs(component: Component, componentPath: string, defs: PluginDefinition[]): Plugins {

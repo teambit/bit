@@ -117,6 +117,40 @@ describe('ExtensionDataList', () => {
       expect(filteredAsObject).to.not.have.property('my-scope/ext4');
     });
   });
+  describe('extensionsBitIds order normalization (regression for false-positive "modified" status)', () => {
+    // a component was wrongly reported as modified by "bit status" while "bit diff" showed no diff, because the
+    // order of `extensionDependencies` (derived from `extensionsBitIds`) differed between the stored model
+    // Version and the recomputed filesystem Version. that order is serialized into Version.id()/calculateHash(),
+    // so a mere reorder (e.g. the env aspect moving position) flipped the hash. the modified-check now sorts the
+    // extensions by id first, which must yield a deterministic extensionsBitIds order regardless of input order.
+    const buildList = (ids: string[]) =>
+      ExtensionDataList.fromArray(ids.map((id) => new ExtensionDataEntry(undefined, ComponentID.fromString(id))));
+    let fromModelOrder: string[];
+    let fromFsOrder: string[];
+    before(() => {
+      const idsInModelOrder = [
+        'teambit.dot-cloud/osv-scanner@0.0.2',
+        'teambit.dot-cloud/trivy-scanner@0.0.2',
+        'teambit.dot-symphony/envs/aspect@0.0.9',
+        'teambit.dot-cloud/bit-cloud@0.0.1',
+      ];
+      const idsInFsOrder = [
+        'teambit.dot-symphony/envs/aspect@0.0.9',
+        'teambit.dot-cloud/osv-scanner@0.0.2',
+        'teambit.dot-cloud/trivy-scanner@0.0.2',
+        'teambit.dot-cloud/bit-cloud@0.0.1',
+      ];
+      fromModelOrder = buildList(idsInModelOrder)
+        .sortById()
+        .extensionsBitIds.map((id) => id.toString());
+      fromFsOrder = buildList(idsInFsOrder)
+        .sortById()
+        .extensionsBitIds.map((id) => id.toString());
+    });
+    it('should produce the same extensionsBitIds order after sortById, regardless of input order', () => {
+      expect(fromFsOrder).to.deep.equal(fromModelOrder);
+    });
+  });
   describe('to config array', () => {
     let configArr;
     before(() => {

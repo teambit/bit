@@ -1,11 +1,11 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import packageNameValidate from 'validate-npm-package-name';
 import type { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
 import type { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import type { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
+import { extractPackageName, isValidPackageName } from './package-name-utils';
 
 type InstallCmdOptions = {
   type: WorkspaceDependencyLifecycleType;
@@ -60,7 +60,7 @@ automatically imports components, compiles components, links to node_modules, an
     ['', 'skip-compile', 'do not compile components'],
     ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
     ['a', 'add-missing-deps', 'install all missing dependencies'],
-    ['', 'skip-unavailable', 'when adding missing dependencies, skip those that are not found in the regisry'],
+    ['', 'skip-unavailable', 'when adding missing dependencies, skip those that are not found in the registry'],
     ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
       '',
@@ -69,8 +69,16 @@ automatically imports components, compiles components, links to node_modules, an
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
     ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
-    ['', 'allow-scripts [pkgNames]', 'a comma separated list of package names that are allowed to run installation scripts'],
-    ['', 'disallow-scripts [pkgNames]', 'a comma separated list of package names that are NOT allowed to run installation scripts'],
+    [
+      '',
+      'allow-scripts [pkgNames]',
+      'a comma separated list of package names that are allowed to run installation scripts',
+    ],
+    [
+      '',
+      'disallow-scripts [pkgNames]',
+      'a comma separated list of package names that are NOT allowed to run installation scripts',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -98,7 +106,7 @@ automatically imports components, compiles components, links to node_modules, an
     const validPackages = await Promise.all(
       packages.map(async (pkg) => {
         const pkgName = extractPackageName(pkg);
-        if (packageNameValidate(pkgName).validForNewPackages) {
+        if (isValidPackageName(pkgName)) {
           return pkg;
         }
         // if this is a component-id, find the package name and use it instead.
@@ -168,7 +176,7 @@ automatically imports components, compiles components, links to node_modules, an
     return allowScripts;
   }
 
-  private * _parseCommaSeparatedPkgList(pkgList: string): IterableIterator<string> {
+  private *_parseCommaSeparatedPkgList(pkgList: string): IterableIterator<string> {
     for (const pkgName of pkgList.split(',')) {
       const trimmed = pkgName.trim();
       if (trimmed) {
@@ -213,30 +221,4 @@ export function getAnotherInstallRequiredOutput(recurringInstall = false, oldNon
 
   const msg = `${firstPart}${suggestRecurringInstall}\n${envsStr}\n${docsLink}`;
   return chalk.yellow(msg);
-}
-
-function extractPackageName(packageString: string): string {
-  if (!packageString) return '';
-
-  // Handle https and git protocols. We don't allow "file" protocol here. It won't work for the consumer.
-  const allowedPrefixes = ['https://', 'git:', 'git+ssh://', 'git+https://'];
-  if (allowedPrefixes.some((prefix) => packageString.startsWith(prefix))) {
-    return packageString;
-  }
-
-  // If it's a scoped package
-  if (packageString.startsWith('@')) {
-    // Find the second '@' (first is for scope, second is for version/tag)
-    const atIndex = packageString.indexOf('@', 1);
-    if (atIndex === -1) return packageString;
-    const possibleVersion = packageString.slice(atIndex + 1);
-    // If the part after the second '@' contains a slash, it's not a version/tag
-    if (possibleVersion.includes('/')) return packageString;
-    return packageString.slice(0, atIndex);
-  }
-
-  // For unscoped packages, split at the last '@'
-  const lastAtIndex = packageString.lastIndexOf('@');
-  if (lastAtIndex <= 0) return packageString;
-  return packageString.slice(0, lastAtIndex);
 }

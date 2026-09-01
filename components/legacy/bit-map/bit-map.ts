@@ -112,7 +112,7 @@ export class BitMap {
         throw new BitError(
           `unable to add "${id.toString()}", its rootDir ${rootDir} is inside ${
             existingComponentMap.rootDir
-          } which used by another component "${existingComponentMap.id.toString()}"`
+          } which is used by another component "${existingComponentMap.id.toString()}"`
         );
       }
       if (isParentDir(rootDir, existingComponentMap.rootDir)) {

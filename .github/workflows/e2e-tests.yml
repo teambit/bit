@@ -1,0 +1,112 @@
+# Offloads e2e tests from CircleCI to GitHub Actions (free for public repos).
+# Runs the E2E_DIRS directories (excluded from the CircleCI split via --exclude-dir,
+# see .circleci/config.yml), sharded across parallel jobs with the same timings-based
+# bin-packing used on CircleCI (scripts/split-e2e-tests.js).
+# The setup mirrors .circleci/config.yml: setup_harmony (bvm -> bbit install/compile)
+# followed by e2e_test_cmd (link repo bin/bit.js as the global `bit`, run mocha).
+name: e2e-tests
+
+on:
+  pull_request:
+    # mirrors the doc-only skip of the CircleCI e2e_test job (skip_when_doc_only):
+    # doc-only PRs skip e2e, but doc files under e2e/ are test fixtures, not docs,
+    # so they still trigger the workflow (last matching pattern wins).
+    paths:
+      - '**'
+      - '!**.md'
+      - '!**.mdx'
+      - 'e2e/**'
+  workflow_dispatch:
+
+env:
+  BITSRC_ENV: stg
+  BIT_FEATURES: cloud-importer-v2
+  E2E_DIRS: e2e/commands,e2e/doctor,e2e/flows
+  E2E_SHARDS_TOTAL: 4
+  # Keep node's compile cache out of /tmp, which the suite churns (e2e workspaces live under
+  # BIT_TEMP_ROOT = /tmp/bit). See the same setting on the CircleCI e2e_test job: left on the
+  # default the cache is half-built and buys nothing; pinned it cut that job ~10%.
+  NODE_COMPILE_CACHE: /home/runner/node-compile-cache
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+
+      - name: install bvm and latest bit (bbit)
+        run: |
+          npm install --global @teambit/bvm
+          bvm config set RELEASE_TYPE nightly
+          bvm config set DEFAULT_LINK bbit
+          bvm upgrade
+          bvm link --verbose
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: configure bbit
+        run: |
+          bbit -v
+          bbit config set analytics_reporting false
+          bbit config set error_reporting false
+          bbit config set user.name CI
+          bbit config set user.email ci@bit.dev
+          bbit config set registry https://node-registry.bit.cloud
+          bbit config set package-manager.cache "$HOME/package-manager-cache"
+
+      - name: restore package-manager cache
+        uses: actions/cache@v4
+        with:
+          path: ~/package-manager-cache
+          key: pm-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pm-cache-${{ runner.os }}-
+
+      - name: install dependencies (bbit install)
+        run: |
+          bbit init
+          bbit install
+
+      - name: compile (bbit compile)
+        run: bbit compile
+
+      - name: link the repo bit binary for the e2e tests
+        run: |
+          mkdir -p "$HOME/.npm-global/bin"
+          ln -sf "$GITHUB_WORKSPACE/bin/bit.js" "$HOME/.npm-global/bin/bit"
+          echo "$HOME/.npm-global/bin" >> "$GITHUB_PATH"
+
+      - name: configure git and npm for the e2e tests
+        run: |
+          which bit
+          git config --global user.name "CI"
+          git config --global user.email "ci@bit.dev"
+          echo "user-agent=bit-e2e-github-actions" >> ~/.npmrc
+
+      - name: run e2e tests (shard ${{ matrix.shard }} of ${{ env.E2E_SHARDS_TOTAL }})
+        run: |
+          mkdir -p junit
+          node scripts/split-e2e-tests.js --dir="$E2E_DIRS" | xargs npm run mocha-circleci
+        env:
+          # split-e2e-tests.js reads the CircleCI env names; map the matrix shard onto them.
+          CIRCLE_NODE_TOTAL: ${{ env.E2E_SHARDS_TOTAL }}
+          CIRCLE_NODE_INDEX: ${{ matrix.shard }}
+          MOCHA_FILE: junit/e2e-test-results.xml
+
+      - name: upload test results and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-shard-${{ matrix.shard }}
+          path: |
+            junit
+            ~/Library/Caches/Bit/logs
+          if-no-files-found: ignore

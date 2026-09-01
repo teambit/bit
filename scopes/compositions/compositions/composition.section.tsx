@@ -1,11 +1,13 @@
 import type { Section } from '@teambit/component';
 import React from 'react';
+import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { Compositions } from './compositions';
 import type {
   CompositionsUI,
   CompositionsMenuSlot,
   EmptyStateSlot,
   UsePreviewSandboxSlot,
+  UsePreviewPropsSlot,
 } from './compositions.ui.runtime';
 
 type Options = { menuBarWidgetSlot: CompositionsMenuSlot };
@@ -18,12 +20,16 @@ export class CompositionsSection implements Section {
     private compositions: CompositionsUI,
     private options: Options,
     private emptyStateSlot: EmptyStateSlot,
-    private usePreviewSandboxSlot: UsePreviewSandboxSlot
+    private usePreviewSandboxSlot: UsePreviewSandboxSlot,
+    private usePreviewPropsSlot: UsePreviewPropsSlot,
+    private pinned = false
   ) {}
 
   navigationLink = {
     href: '~compositions',
-    children: 'Preview',
+    children: this.pinned ? <MenuWidgetIcon icon="preview" tooltipContent="Preview" /> : 'Preview',
+    displayName: 'Preview',
+    hideInMinimalMode: !this.pinned,
   };
 
   route = {
@@ -33,10 +39,11 @@ export class CompositionsSection implements Section {
         menuBarWidgets={this.options.menuBarWidgetSlot}
         emptyState={this.emptyStateSlot}
         usePreviewSandboxSlot={this.usePreviewSandboxSlot}
+        usePreviewPropsSlot={this.usePreviewPropsSlot}
         enableLiveControls
       />
     ),
   };
 
-  order = 20;
+  order = this.pinned ? 10 : 20;
 }

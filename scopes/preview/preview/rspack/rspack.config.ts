@@ -1,5 +1,6 @@
 import { rspack, type Configuration } from '@rspack/core';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
+import { excludeNodeModulesJs } from '@teambit/webpack.modules.exclude-node-modules-js';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 import { RspackManifestPlugin } from 'rspack-manifest-plugin';
 import { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
@@ -69,6 +70,9 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
         'react/jsx-runtime': require.resolve('react/jsx-runtime'),
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
+        // dedupe to a single copy — multiple versions in the pnpm store break the module namespace
+        // when bundled (matches the alias in the react env webpack + ui-foundation rspack configs).
+        '@teambit/lanes.entities.lane-diff': require.resolve('@teambit/lanes.entities.lane-diff'),
       },
       fallback: {
         module: false,
@@ -120,7 +124,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
         },
         {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
-          exclude: /node_modules/,
+          exclude: excludeNodeModulesJs,
           use: {
             loader: 'builtin:swc-loader',
             options: {

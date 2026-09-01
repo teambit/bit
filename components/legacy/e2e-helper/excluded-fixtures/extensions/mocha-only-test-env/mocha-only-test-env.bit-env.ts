@@ -4,7 +4,11 @@ import { Pipeline } from '@teambit/builder';
 
 const presets = [
   require.resolve('@babel/preset-typescript'),
-  require.resolve('@babel/preset-env')
+  // force CommonJS output: the mocha tester loads spec files through @babel/register (a CommonJS
+  // require hook), so ESM imports must be down-leveled to require(). since @babel/preset-env v8 the
+  // default "modules: auto" preserves ESM, which makes Node treat the spec as ESM and fail to
+  // resolve extension-less relative imports (e.g. "./foo").
+  [require.resolve('@babel/preset-env'), { modules: 'commonjs' }]
 ];
 
 export class MochaOnlyTestEnv {

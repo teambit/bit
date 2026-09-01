@@ -14,6 +14,29 @@ import { useCtxTooltipInstance } from './shared-instance';
 import './tippy.module.scss';
 
 const THEME = 'teambit';
+
+const FORWARD_REF = Symbol.for('react.forward_ref');
+const MEMO = Symbol.for('react.memo');
+
+/**
+ * Whether a node can receive the ref Tippy attaches to its single child to anchor the tooltip. Host
+ * elements (`type` is a string), class components, and `forwardRef`/`memo(forwardRef)` components can;
+ * a plain function component (e.g. `Icon`) cannot — passing one to Tippy triggers React's "Function
+ * components cannot be given refs" warning and leaves the tooltip unanchored. Such children (and
+ * strings / fragments / arrays) get wrapped in a `<span>` below so Tippy refs the span instead.
+ */
+function acceptsRef(node: ReactNode): boolean {
+  if (!React.isValidElement(node)) return false;
+  const type = node.type as any;
+  if (typeof type === 'string') return true;
+  if (type?.prototype?.isReactComponent) return true;
+  if (type?.$$typeof === FORWARD_REF) return true;
+  if (type?.$$typeof === MEMO) {
+    const inner = type.type;
+    return typeof inner === 'string' || inner?.$$typeof === FORWARD_REF || !!inner?.prototype?.isReactComponent;
+  }
+  return false;
+}
 const popperOptions = {
   modifiers: [
     {
@@ -43,8 +66,9 @@ export function Tooltip({ children, breakline, singleton, visibleOnMobile, class
 
   const singletonInstance = singleton || ctxInstance;
 
-  // children should accept a ref
-  const child: any = typeof children === 'string' ? <span>{children}</span> : children;
+  // Tippy attaches a ref to its single child; wrap anything that can't take one (strings, plain
+  // function components like `Icon`, fragments/arrays) in a <span> so the ref lands on a real DOM node.
+  const child: any = acceptsRef(children) ? children : <span>{children}</span>;
 
   return (
     <Tippy

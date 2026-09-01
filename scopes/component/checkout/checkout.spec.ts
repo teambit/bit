@@ -1,3 +1,4 @@
+/// <reference types="chai-fs" />
 import { expect, use } from 'chai';
 import fs from 'fs-extra';
 import type { Harmony } from '@teambit/harmony';

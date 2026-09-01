@@ -185,7 +185,7 @@ see also 'bit deps unset'`;
   async report([pattern, packages]: [string, string[]], removeDepsFlags: RemoveDependenciesFlags) {
     const results = await this.deps.removeDependency(pattern, packages, removeDepsFlags);
     if (!results.length) {
-      return formatHint('the specified component-pattern do not use the entered packages. nothing to remove');
+      return formatHint('the specified component-pattern does not use the entered packages. nothing to remove');
     }
 
     const sections = results.map(({ id, removedPackages }) => {
@@ -223,7 +223,7 @@ see also "bit deps remove"`;
   async report([pattern, packages]: [string, string[]], removeDepsFlags: RemoveDependenciesFlags) {
     const results = await this.deps.removeDependency(pattern, packages, removeDepsFlags, true);
     if (!results.length) {
-      return formatHint('the specified component-pattern do not use the entered packages. nothing to unset');
+      return formatHint('the specified component-pattern does not use the entered packages. nothing to unset');
     }
 
     const sections = results.map(({ id, removedPackages }) => {

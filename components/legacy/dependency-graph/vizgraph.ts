@@ -7,6 +7,9 @@ import { Digraph, Subgraph, Node, Edge, toDot } from 'ts-graphviz';
 // @ts-ignore
 // eslint-disable-next-line import/no-unresolved
 import { toFile } from 'ts-graphviz/adapter';
+// @ts-ignore
+// eslint-disable-next-line import/no-unresolved
+import type { Format } from 'ts-graphviz/adapter';
 import { instance } from '@viz-js/viz';
 import type { Graph as ClearGraph } from '@teambit/graph.cleargraph';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
@@ -206,7 +209,7 @@ export class VisualDependencyGraph {
    */
   async image(imagePath: string = this.getTmpFilename()): Promise<string> {
     await checkGraphvizInstalled();
-    const type: string = path.extname(imagePath).replace('.', '') || 'png';
+    const type = (path.extname(imagePath).replace('.', '') || 'png') as Format;
 
     const dot = this.dot();
     await toFile(dot, imagePath, { format: type });

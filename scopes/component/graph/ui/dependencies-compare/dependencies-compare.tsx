@@ -26,7 +26,7 @@ function ComponentNodeContainer(props: NodeProps) {
 
 export function DependenciesCompare() {
   const nodeTypes: NodeTypes = React.useMemo(() => ({ ComponentNode: ComponentNodeContainer }), []);
-  const graphRef = useRef<ReactFlowInstance>();
+  const graphRef = useRef<ReactFlowInstance | undefined>(undefined);
   const componentCompare = useComponentCompare();
 
   const baseId = componentCompare?.base?.model.id;

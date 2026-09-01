@@ -14,7 +14,7 @@ export type OverlayStyle = {
 const GAP = 4;
 
 export function useOverlay(
-  anchorRef: React.RefObject<HTMLElement>,
+  anchorRef: React.RefObject<HTMLElement | null>,
   open: boolean,
   gap: number = GAP,
   extraStyle?: React.CSSProperties

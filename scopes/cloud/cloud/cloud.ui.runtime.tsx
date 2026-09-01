@@ -121,7 +121,7 @@ export class CloudUI {
                     label: 'Bit Community Slack',
                     link: 'https://join.slack.com/t/bit-dev-community/shared_invite/zt-29pmawrp1-ehfEzYbQyuAC3CNA_jYPvA',
                   },
-                ],
+                ] as any,
               }}
             />
           );
@@ -160,7 +160,7 @@ export class CloudUI {
                     icon: currentName === 'dark' ? 'checkmark' : '',
                     onClick: () => setIfDifferent(dark),
                   },
-                ],
+                ] as any,
               }}
             />
           );

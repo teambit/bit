@@ -1,7 +1,6 @@
 /* eslint no-console: 0 */
 import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock, prepare } from '@pnpm/registry-mock';
 import type { ChildProcess } from 'child_process';
-import { fetch } from '@pnpm/fetch';
 import fs from 'fs-extra';
 import execa from 'execa';
 import * as path from 'path';
@@ -50,6 +49,16 @@ export class NpmCiRegistry {
   }
 
   /**
+   * set the default registry in the workspace config (workspace.jsonc) rather than the global bit
+   * config, so running the tests locally doesn't leak the local Verdaccio registry into other
+   * workspaces.
+   * note: must be re-applied after `reInitWorkspace()`, which wipes the workspace dir (workspace.jsonc).
+   */
+  setRegistry() {
+    this.helper.command.setConfig('registry', this.getRegistryUrl(), '--local-track');
+  }
+
+  /**
    * makes sure to kill the server process, otherwise, the tests will continue forever and never exit
    */
   destroy() {
@@ -69,6 +78,7 @@ export class NpmCiRegistry {
           resolved = true;
           let fetchResults;
           try {
+            const { fetch } = await import('@pnpm/network.fetch');
             fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}/is-odd`, {
               retry: {
                 minTimeout: 1000,

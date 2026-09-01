@@ -31,7 +31,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard does not match any component', () => {
         it('should not tag any component', () => {
           const output = helper.general.runWithTryCatch('bit tag "none/*"');
-          expect(output).to.have.string('unable to find any matching for "none/*" pattern');
+          expect(output).to.have.string('unable to find any component matching the "none/*" pattern');
         });
       });
       describe('when wildcard match some of the components', () => {
@@ -59,7 +59,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
           const removeFunc = () => helper.command.removeComponent('none/*');
-          expect(removeFunc).to.throw('unable to find any matching');
+          expect(removeFunc).to.throw('unable to find any component matching');
         });
       });
       describe('when wildcard match some of the components', () => {
@@ -194,7 +194,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying that no components found', () => {
           const output = helper.general.runWithTryCatch('bit reset "none/*"');
-          expect(output).to.have.string('unable to find any matching');
+          expect(output).to.have.string('unable to find any component matching');
         });
       });
       describe('when wildcard match some of the components', () => {

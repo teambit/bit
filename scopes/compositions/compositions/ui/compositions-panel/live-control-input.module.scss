@@ -53,13 +53,12 @@
 }
 
 .toggleControl {
-  width: 42px;
-  max-width: 42px;
-  min-width: 42px;
-}
-
-.toggleControl > * {
-  width: 100%;
+  // Let the Toggle keep its native dimensions. The component sizes its
+  // knob travel in `em`, so stretching the wrapper width without scaling
+  // the font-size leaves the knob short of the right edge in the "on"
+  // state.
+  display: inline-flex;
+  flex: 0 0 auto;
 }
 
 .rangeWrapper {

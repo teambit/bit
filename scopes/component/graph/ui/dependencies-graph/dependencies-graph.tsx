@@ -51,7 +51,7 @@ export function DependenciesGraph({
   ...rest
 }: DependenciesGraphProps) {
   const nodeTypes: NodeTypes = React.useMemo(() => ({ ComponentNode: ComponentNodeContainer }), []);
-  const graphRef = useRef<ReactFlowInstance>();
+  const graphRef = useRef<ReactFlowInstance | undefined>(undefined);
   const elements = calcElements(graph, { rootNode });
   const [nodes, setNodes] = useNodesState(elements.nodes);
 

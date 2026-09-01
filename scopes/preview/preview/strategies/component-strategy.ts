@@ -382,8 +382,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   private getComponentOutputPath(capsule: Capsule, context: ComputeTargetsContext) {
     const capsulePath = resolve(`${capsule.path}`);
-    const compiler: Compiler = context.env.getCompiler();
-    const distDir = compiler.getDistDir?.() || 'dist';
+    const compiler: Compiler | undefined = context.env.getCompiler?.();
+    const distDir = compiler?.getDistDir?.() || 'dist';
     return join(capsulePath, distDir);
   }
 

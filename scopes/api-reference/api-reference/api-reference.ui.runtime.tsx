@@ -87,8 +87,9 @@ export class APIReferenceUI {
     // register all default schema classes
     apiReferenceUI.registerSchemaClasses(() => Object.values(Schemas));
 
-    // register API compare tab in component compare
-    const apiCompareSection = new APICompareSection();
+    // register API compare tab in component compare. insights are resolved lazily —
+    // aspects can register them on componentCompareUI after this provider runs.
+    const apiCompareSection = new APICompareSection(() => componentCompareUI.getApiDiffInsights());
     componentCompareUI.registerNavigation(apiCompareSection);
     componentCompareUI.registerRoutes([apiCompareSection.route]);
 

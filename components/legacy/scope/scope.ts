@@ -27,7 +27,7 @@ import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-co
 import type { Consumer } from '@teambit/legacy.consumer';
 import { UnexpectedPackageName } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
-import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { isValidPath, type PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import { ScopeComponentsImporter } from './component-ops/scope-components-importer';
 import type { ComponentVersion } from './component-version';
@@ -639,8 +639,25 @@ once done, to continue working, please run "bit cc"`
     return ComponentID.fromString(id);
   }
 
+  /**
+   * Build the on-disk path for a pending export's directory.
+   *
+   * `clientId` is request-supplied (push-options header for /scope/put, or
+   * options.clientId for /scope/action) and must be a single opaque
+   * segment, not a path. `isValidPath` blocks the traversal shapes (`..`/`.`,
+   * absolute, backslash, NUL, etc.); the additional `/` check enforces the
+   * single-segment invariant since `isValidPath` legitimately allows `/`
+   * for nested relative file paths in its other callers.
+   */
+  private getPendingDirPath(clientId: string): PathOsBasedAbsolute {
+    if (!isValidPath(clientId) || clientId.includes('/')) {
+      throw new BitError(`invalid clientId: ${JSON.stringify(clientId)}`);
+    }
+    return pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+  }
+
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {
-    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    const pendingDir = this.getPendingDirPath(clientId);
     if (fs.pathExistsSync(pendingDir)) {
       throw new ClientIdInUse(clientId);
     }
@@ -649,12 +666,12 @@ once done, to continue working, please run "bit cc"`
 
   async readObjectsFromPendingDir(clientId: string): Promise<ObjectList> {
     // @todo: implement the wait() mechanism.
-    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    const pendingDir = this.getPendingDirPath(clientId);
     return this.objects.readObjectsFromPendingDir(pendingDir);
   }
 
   async removePendingDir(clientId: string) {
-    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    const pendingDir = this.getPendingDirPath(clientId);
     try {
       await fs.remove(pendingDir); // no error is thrown if not exists
     } catch (err: any) {

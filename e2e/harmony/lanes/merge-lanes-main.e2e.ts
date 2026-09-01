@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
@@ -209,6 +210,154 @@ describe('merge lanes - main lane operations', function () {
       const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`);
       const depsResolver = obj.extensions.find((e) => e.name === 'teambit.dependencies/dependency-resolver');
       expect(depsResolver.data.packageName).to.equal(`@${helper.scopes.remote}/comp1`);
+    });
+  });
+
+  describe('merging main into a lane when main has advanced since the lane forked', () => {
+    let headComp1OnLane: string;
+    let comp1Tag2: string;
+    let comp1Tag3: string;
+    let comp1Head: string;
+    let comp2Tag2: string;
+    let comp2Tag3: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild(); // 0.0.1 - the fork point of the lane
+      helper.command.export();
+      helper.command.createLane('dev');
+      // only comp1 is on the lane. comp2 stays a main component in the workspace
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+      headComp1OnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      const laneWs = helper.scopeHelper.cloneWorkspace();
+
+      // main advances by a few versions the lane never saw
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
+      comp1Tag2 = helper.command.getHead('comp1');
+      comp2Tag2 = helper.command.getHead('comp2');
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.3
+      comp1Tag3 = helper.command.getHead('comp1');
+      comp2Tag3 = helper.command.getHead('comp2');
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.4
+      comp1Head = helper.command.getHead('comp1');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedWorkspace(laneWs);
+      helper.command.mergeLane('main', '-x');
+    });
+    it('should merge main into the lane and snap the lane component', () => {
+      const head = helper.command.getHeadOfLane('dev', 'comp1');
+      expect(head).to.not.equal(headComp1OnLane);
+    });
+    it('should import the head of main', () => {
+      expect(() => helper.command.catObject(comp1Head)).to.not.throw();
+    });
+    it('should not import the main-history gap between the common-snap and the head of main', () => {
+      // 0.0.2 and 0.0.3 are between the fork point (0.0.1) and the head of main (0.0.4). they are
+      // not needed locally: lane scopes are lean - export skips main-history objects - and the
+      // VersionHistory covers the divergence calculation
+      expect(() => helper.command.catObject(comp1Tag2)).to.throw();
+      expect(() => helper.command.catObject(comp1Tag3)).to.throw();
+    });
+    it('should not import the history of workspace components that are not on the lane', () => {
+      expect(() => helper.command.catObject(comp2Tag2)).to.throw();
+      expect(() => helper.command.catObject(comp2Tag3)).to.throw();
+    });
+    it('should still update non-lane components to the head of main in the .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp2.version).to.equal('0.0.4');
+    });
+    it('should export the lane successfully after the merge', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
+
+  describe('bit merge on main when the remote main has advanced by multiple snaps (diverged)', () => {
+    let gapSnap: string;
+    let remoteHead: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const wsBeforeDiverge = helper.scopeHelper.cloneWorkspace();
+
+      // remote main advances by two snaps the local never saw
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      gapSnap = helper.command.getHead('comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      remoteHead = helper.command.getHead('comp1');
+      helper.command.export();
+
+      // diverge locally and merge the incoming changes
+      helper.scopeHelper.getClonedWorkspace(wsBeforeDiverge);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.importComponent('comp1 --objects');
+      helper.command.merge('comp1 --auto-merge-resolve theirs');
+    });
+    it('should generate a snap-merge snap with two parents, the local and the remote', () => {
+      const lastVersion = helper.command.catComponent(`comp1@latest`);
+      expect(lastVersion.parents).to.have.lengthOf(2);
+      expect(lastVersion.parents).to.include(remoteHead);
+    });
+    it('should not import the gap between the common-snap and the remote head', () => {
+      // the gap snap is main-history. it already exists on the remote, so it is never pushed from
+      // here and is not needed for the three-way merge (which needs only the common-snap and the head)
+      expect(() => helper.command.catObject(gapSnap)).to.throw();
+    });
+    it('should export the merge-snap successfully', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+    it('bit log should show the full history including the gap snap', () => {
+      const log = helper.command.logParsed('comp1');
+      const hashes = log.map((logEntry) => logEntry.hash);
+      expect(hashes).to.include(gapSnap);
+      expect(hashes).to.include(remoteHead);
+    });
+  });
+
+  describe('merging main into a lane when main added a new package dependency', () => {
+    let mergeOutput: string;
+    // enough distance between the top of the file (changed on main) and the bottom
+    // (changed on the lane) for the merge to auto-resolve without conflicts
+    const filler = Array.from({ length: 10 }, (_, index) => `// filler line ${index}`).join('\n');
+    const baseFile = `${filler}\nmodule.exports = () => 'comp1';\n`;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', baseFile);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.fs.outputFile('comp1/index.js', `${baseFile}// lane-only change\n`);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      // create a lockfile that does not include is-positive
+      helper.command.install();
+      // precondition: the lane workspace must know nothing about is-positive, otherwise the
+      // merge below won't exercise the install-new-deps path this test is about
+      expect(helper.fs.readFile('pnpm-lock.yaml')).to.not.have.string('is-positive');
+      expect(path.join(helper.scopes.localPath, 'node_modules/is-positive')).to.not.be.a.path();
+      const laneWs = helper.scopeHelper.cloneWorkspace();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.install('is-positive@3.1.0');
+      helper.fs.outputFile('comp1/index.js', `const isPositive = require('is-positive');\n${baseFile}`);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      // back to the lane workspace, whose lockfile knows nothing about is-positive
+      helper.scopeHelper.getClonedWorkspace(laneWs);
+      mergeOutput = helper.command.mergeLaneWithoutBuild('main');
+    });
+    it('should install the dependency added on main and complete the auto-snap', () => {
+      expect(mergeOutput).to.not.have.string('snap error');
+      expect(mergeOutput).to.not.have.string('missing packages');
+      // "Total Snapped: 1" is interrupted by ANSI styling, match the section title instead
+      expect(mergeOutput).to.have.string('merge-snapped components (1)');
+    });
+    it('should have the new dependency in node_modules', () => {
+      expect(path.join(helper.scopes.localPath, 'node_modules/is-positive')).to.be.a.directory();
     });
   });
 });

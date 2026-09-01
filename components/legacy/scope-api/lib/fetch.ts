@@ -1,7 +1,9 @@
 import type { Readable } from 'stream';
 import Queue from 'p-queue';
+import { omit } from 'lodash';
 import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
+import { isHash } from '@teambit/component-version';
 import { LaneId } from '@teambit/lane-id';
 import { LATEST_BIT_VERSION } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
@@ -120,11 +122,13 @@ fetchOptions`,
     fetchOptions
   );
   const dateNow = new Date().toISOString().split('.')[0];
+  // Strip authorization/cookie before storing — this metadata gets serialized into trace logs.
+  const redactedHeaders = headers ? omit(headers, ['authorization', 'cookie']) : headers;
   openConnectionsMetadata[currentFetch] = {
     started: dateNow,
     ids,
     fetchOptions,
-    headers,
+    headers: redactedHeaders,
   };
   logger.trace(
     `DEBUG-CONNECTIONS: Date now: ${dateNow}. Connections:\n${JSON.stringify(openConnectionsMetadata, null, 2)}`
@@ -338,6 +342,12 @@ async function fetchByType(
       break;
     }
     case 'object': {
+      // ids here are raw object hashes from the client. validate before constructing Refs because
+      // Ref.hash is later joined into a filesystem path (Repository.objectPath) and a malformed
+      // hash containing path-traversal segments would escape the objects dir on fs.readFile.
+      for (const id of ids) {
+        if (!isHash(id)) throw new Error(`invalid object ref: ${JSON.stringify(id)}`);
+      }
       const refs = ids.map((id) => new Ref(id));
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       objectsReadableGenerator.pushObjects(refs, scope);

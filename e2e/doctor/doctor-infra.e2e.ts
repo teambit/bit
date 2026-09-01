@@ -132,6 +132,32 @@ describe('bit doctor infra', function () {
     });
   });
 
+  describe('archive should exclude previously created doctor-results archives', () => {
+    let secondArchiveEntries: string[];
+    const firstArchiveName = 'doctor-results-1000000000000.tar';
+    const secondArchiveName = 'doctor-results-2000000000000.tar';
+    before(async () => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1);
+      const firstPath = path.join(helper.scopes.localPath, firstArchiveName);
+      helper.command.runCmd(`bit doctor --archive ${firstPath}`);
+      const secondPath = path.join(helper.scopes.localPath, secondArchiveName);
+      helper.command.runCmd(`bit doctor --archive ${secondPath}`);
+      secondArchiveEntries = await getTarEntries(secondPath);
+    });
+    it('should create the first archive on disk', () => {
+      expect(path.join(helper.scopes.localPath, firstArchiveName)).to.be.a.file().and.not.empty;
+    });
+    it('should archive workspace files (sanity check)', () => {
+      const workspaceFiles = secondArchiveEntries.filter((e) => e.includes('workspace.jsonc'));
+      expect(workspaceFiles).to.have.lengthOf.at.least(1);
+    });
+    it('should not include the previously created doctor-results archive', () => {
+      const matched = secondArchiveEntries.filter((e) => /(^|\/)doctor-results-\d+\.tar(\.gz)?$/.test(e));
+      expect(matched).to.have.lengthOf(0);
+    });
+  });
+
   describe('list all checks', () => {
     let output;
     let parsedOutput;

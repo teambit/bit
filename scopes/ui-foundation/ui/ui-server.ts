@@ -14,6 +14,7 @@ import type { Configuration as WdsConfiguration } from '@rspack/dev-server';
 import { RspackDevServer } from '@rspack/dev-server';
 import type { ComponentServer } from '@teambit/bundler';
 import { createSsrMiddleware } from './ssr-middleware';
+import { getUiRootEntryName, getUiRootHtmlFilename } from './bundle-ui.task';
 import type { StartPlugin } from './start-plugin';
 import type { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
@@ -47,6 +48,12 @@ export class UIServer {
   private _app: Express;
   private _server: Server;
   private _proxyRoutes = new Set<string>();
+  /**
+   * component dev servers that emitted their "started" event before this UI server
+   * finished `start()` (and thus before `_app`/`_server` were assigned). They are
+   * queued here and registered once the express app is ready. See `addComponentServerProxy`.
+   */
+  private _pendingProxyServers: ComponentServer[] = [];
 
   constructor(
     private graphql: GraphqlMain,
@@ -100,6 +107,16 @@ export class UIServer {
   }
 
   addComponentServerProxy(server: ComponentServer): void {
+    // `_app`/`_server` are only assigned during start() (in configureProxy). A component
+    // dev server can emit its "started" event before that happens, in which case
+    // `this._app.use(...)` below would throw "Cannot read properties of undefined (reading 'use')"
+    // and the env's /preview and /_hmr proxy routes would never be registered (blank previews).
+    // Defer registration until the app is ready; start() flushes the queue.
+    if (!this._app || !this._server) {
+      if (!this._pendingProxyServers.includes(server)) this._pendingProxyServers.push(server);
+      return;
+    }
+
     const envId = server.context.envRuntime.id;
     const previewRoute = `/preview/${envId}`;
     const hmrRoute = `/_hmr/${envId}`;
@@ -210,6 +227,16 @@ export class UIServer {
     }
   }
 
+  /**
+   * register component dev servers that started before `_app`/`_server` were ready.
+   */
+  private flushPendingProxyServers() {
+    if (!this._pendingProxyServers.length) return;
+    const pending = this._pendingProxyServers;
+    this._pendingProxyServers = [];
+    pending.forEach((server) => this.addComponentServerProxy(server));
+  }
+
   private async configureProxy(app: Express, server: Server) {
     const proxyServer = httpProxy.createProxyServer();
     proxyServer.on('error', (e) => {
@@ -253,15 +280,20 @@ export class UIServer {
     this.logger.debug(`UiServer, start from ${root}`);
     const server = await this.graphql.createServer({ app });
     await this.configureProxy(app, server);
+    // `_app`/`_server` are now assigned — register any component dev servers that
+    // started before we were ready (otherwise their preview/hmr routes are lost).
+    this.flushPendingProxyServers();
     app.use(express.static(root, { index: false }));
     const port = await Port.getPortFromRange(portRange || [3100, 3200]);
     await this.setupServerSideRendering({ root, port, app });
-    app.use(fallback('index.html', { root }));
+    // the bundle covers every UI root in one compilation, so there is no single `index.html` - each
+    // root gets its own document naming only the chunks that root's entry needs.
+    app.use(fallback(getUiRootHtmlFilename(this.uiRootExtension), { root }));
     server.listen(port);
     this._port = port;
 
-    // important: we use the string of the following message for the http.e2e.ts. if you change the message,
-    // please make sure you change the `HTTP_SERVER_READY_MSG` const.
+    // important: the e2e HttpHelper waits on this exact string to know the server is up (it builds
+    // it per UI root, in `readyMessageFor`). if you change the message, change that too.
     const readyMessage = `UI server of ${this.uiRootExtension} is listening to port ${port}`;
     this.logger.info(readyMessage);
     this.setReady();
@@ -274,6 +306,8 @@ export class UIServer {
       root,
       port,
       title: this.uiRoot.name,
+      // which entry of the (multi-entry) bundle this root's assets belong to
+      entryName: getUiRootEntryName(this.uiRootExtension),
       logger: this.logger,
     });
 

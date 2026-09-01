@@ -358,9 +358,9 @@ export class LaneCheckoutCmd implements Command {
 export class LaneRevertCmd implements Command {
   name = 'revert <history-id>';
   description = 'revert to a previous history of the current lane. see also "bit lane checkout"';
-  extendedDescription = `revert is similar to "lane checkout", but it keeps the versions and only change the files.
+  extendedDescription = `revert is similar to "lane checkout", but it keeps the versions and only changes the files.
 choose one or the other based on your needs.
-if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert".
+if you want to continue working on this lane and need the changes from the history to be the head, then use "lane revert".
 if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.`;
   arguments = [
     { name: 'history-id', description: 'the history-id to checkout to. run "bit lane history" to list the ids' },
@@ -476,7 +476,10 @@ export class LaneHistoryCmd implements Command {
       const { historyItem } = data;
       const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
-      return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
+      const updateDependentsBlock = historyItem.updateDependents?.length
+        ? `\n\nupdateDependents:\n${historyItem.updateDependents.join('\n')}`
+        : '';
+      return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}${updateDependentsBlock}`;
     }
 
     const { history, sortedIds } = data;
@@ -500,6 +503,7 @@ export class LaneHistoryCmd implements Command {
         username: historyItem.log.username,
         message: historyItem.log.message,
         components: historyItem.components,
+        ...(historyItem.updateDependents?.length && { updateDependents: historyItem.updateDependents }),
       };
     }
 
@@ -512,6 +516,7 @@ export class LaneHistoryCmd implements Command {
         username: item.log.username,
         message: item.log.message,
         components: item.components,
+        ...(item.updateDependents?.length && { updateDependents: item.updateDependents }),
       };
     });
   }

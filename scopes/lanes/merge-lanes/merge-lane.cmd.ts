@@ -22,7 +22,7 @@ when the components are not diverged in history, and the current lane is behind 
 simply update the components and the heads according to the merge candidate.
 to opt-out, use "--no-snap", the components will be written as the merge candidate, and will be left as modified.
 
-in case a component in both ends don't share history (no snap is found in common), the merge will require "--resolve-unrelated" flag.
+in case a component on both ends doesn't share history (no snap is found in common), the merge will require "--resolve-unrelated" flag.
 this flag keeps the history of one end and saves a reference to the other end. the decision of which end to keep is determined by the following:
 1. if the component exists on main, then the history linked to main will be kept.
 in this case, the strategy of "--resolve-unrelated" only determines which source-code to keep. it's not about the history.
@@ -77,7 +77,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     ],
     ['', 'verbose', 'display detailed information about components that were legitimately unmerged'],
     ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
-    ['', 'skip-fetch', 'use the local state of target-lane if exits locally, without updating it from the remote'],
+    ['', 'skip-fetch', 'use the local state of target-lane if exists locally, without updating it from the remote'],
     [
       '',
       'include-deps',

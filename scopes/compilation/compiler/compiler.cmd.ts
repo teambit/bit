@@ -81,15 +81,27 @@ automatically triggered by "bit watch", "bit start", or IDE extensions, but can 
   }
 
   private getSummaryLine(componentsStatus: BuildResult[]) {
-    const numberOfComponents = componentsStatus.length;
-    const numberOfFailingComponents = this.failedComponents(componentsStatus).length;
-    const numberOfSuccessfulComponents = componentsStatus.filter((component) => !component.errors.length).length;
+    // a component whose env provides no compiler went through neither a success nor a failure, so
+    // it is kept out of the ratio and named separately - the ratio alone would report doing
+    // nothing as having compiled everything.
+    const skipped = componentsStatus.filter((component) => component.skipped);
+    const attempted = componentsStatus.filter((component) => !component.skipped);
+    const numberOfFailingComponents = this.failedComponents(attempted).length;
+    const numberOfSuccessfulComponents = attempted.length - numberOfFailingComponents;
+    const skippedSuffix = skipped.length ? ` ${skipped.length} component(s) skipped, no compiler.` : '';
 
     if (numberOfFailingComponents) {
-      return formatWarningSummary(`${numberOfFailingComponents}/${numberOfComponents} components failed to compile.`);
+      return formatWarningSummary(
+        `${numberOfFailingComponents}/${attempted.length} components failed to compile.${skippedSuffix}`
+      );
+    }
+    if (!attempted.length && skipped.length) {
+      return formatWarningSummary(
+        `nothing was compiled. ${skipped.length} component(s) have an env that provides no compiler.`
+      );
     }
     return formatSuccessSummary(
-      `${numberOfSuccessfulComponents}/${numberOfComponents} components compiled successfully.`
+      `${numberOfSuccessfulComponents}/${attempted.length} components compiled successfully.${skippedSuffix}`
     );
   }
 }

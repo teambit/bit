@@ -57,6 +57,8 @@ export type StatusResult = {
   forkedLaneId?: LaneId;
   workspaceIssues: string[];
   localOnly: ComponentID[];
+  /** hidden lane.updateDependents with local snaps pending export — mirrors `bit export`'s "exported updates" section. */
+  pendingUpdateDependents: ComponentID[];
 };
 
 export type MiniStatusResults = {
@@ -99,12 +101,26 @@ export class StatusMain {
       loadOpts
     )) as ConsumerComponent[];
     const modifiedComponents = await this.workspace.modified(loadOpts);
-    const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
+    // split pending-export entries into visible "staged components" (workspace-tracked) vs
+    // hidden "pending update-dependents" — the latter have no .bitmap counterpart and mirror
+    // `bit export`'s "exported updates" section.
+    const allPendingForExport: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
+    const hiddenIds = new Set((laneObj?.updateDependents || []).map((id) => id.toStringWithoutVersion()));
+    const stagedComponents: ModelComponent[] = [];
+    const pendingUpdateDependents: ComponentID[] = [];
+    for (const mc of allPendingForExport) {
+      const id = mc.toComponentId();
+      if (hiddenIds.has(id.toStringWithoutVersion())) pendingUpdateDependents.push(id);
+      else stagedComponents.push(mc);
+    }
     await this.addRemovedStagedIfNeeded(stagedComponents);
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
       const id = stagedComp.toComponentId();
       const fromWorkspace = this.workspace.getIdIfExist(id);
-      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects, fromWorkspace);
+      // Passing `laneObj` enables the lean-lane filter so main-origin snaps merged into the
+      // lane don't appear as staged. `bit export` passes the same lane and pushes the same
+      // set — status, export, and reset stay consistent on lean-lane scopes.
+      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects, fromWorkspace, laneObj);
       return {
         id,
         versions,
@@ -178,6 +194,7 @@ export class StatusMain {
       forkedLaneId,
       workspaceIssues: workspaceIssues.map((err) => err.message),
       localOnly,
+      pendingUpdateDependents: ComponentID.sortIds(pendingUpdateDependents),
     };
   }
 

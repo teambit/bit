@@ -41,6 +41,7 @@ type ImportFlags = {
   saveInLane?: boolean;
   dependencies?: boolean;
   dependenciesHead?: boolean;
+  dependenciesDepth?: string;
   dependents?: boolean;
   dependentsDryRun?: boolean;
   dependentsVia?: string;
@@ -53,6 +54,7 @@ type ImportFlags = {
   writeDeps?: 'package.json' | 'workspace.jsonc';
   laneOnly?: boolean;
   owner?: boolean;
+  writeToEmptyDir?: boolean;
 };
 
 export class ImportCmd implements Command {
@@ -97,6 +99,11 @@ without arguments, fetches all workspace components' latest versions from their 
     ['', 'dependencies-head', 'same as --dependencies, except it imports the dependencies with their head version'],
     [
       '',
+      'dependencies-depth <n>',
+      'limit how many levels deep to traverse with --dependencies/--dependencies-head (1=direct deps only). default: traverse all levels',
+    ],
+    [
+      '',
       'dependents',
       'import components found while traversing from the imported components upwards to the workspace components',
     ],
@@ -113,7 +120,7 @@ without arguments, fetches all workspace components' latest versions from their 
     [
       '',
       'dependents-dry-run',
-      'DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
+      'DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and waits for confirmation before importing them',
     ],
     ['', 'silent', 'no prompt for --dependents/--dependents-via flags'],
     [
@@ -134,7 +141,7 @@ without arguments, fetches all workspace components' latest versions from their 
     [
       '',
       'fetch-deps',
-      'fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data',
+      "fetch dependencies (bit components) objects to the local scope, but don't add to the workspace. Useful to resolve errors about missing dependency data",
     ],
     [
       '',
@@ -153,6 +160,11 @@ without arguments, fetches all workspace components' latest versions from their 
       'when using wildcards on a lane, only import components that exist on the lane (never from main)',
     ],
     ['', 'owner', 'treat the argument as an owner name and import all components from all scopes of that owner'],
+    [
+      '',
+      'write-to-empty-dir',
+      'when the target directory is not empty, import into an available empty directory (e.g. "foo" => "foo_1") instead of failing',
+    ],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
@@ -260,6 +272,7 @@ without arguments, fetches all workspace components' latest versions from their 
       saveInLane = false,
       dependencies = false,
       dependenciesHead = false,
+      dependenciesDepth,
       dependents = false,
       dependentsDryRun = false,
       silent,
@@ -272,6 +285,7 @@ without arguments, fetches all workspace components' latest versions from their 
       writeDeps,
       laneOnly = false,
       owner = false,
+      writeToEmptyDir = false,
     }: ImportFlags
   ): Promise<ImportResult> {
     if (dependentsDryRun) {
@@ -282,6 +296,12 @@ without arguments, fetches all workspace components' latest versions from their 
     }
     if (override && merge) {
       throw new BitError('--override and --merge cannot be used together');
+    }
+    if (writeToEmptyDir) {
+      // --override deletes the occupied dir to write in place, and --path targets one specific directory; both
+      // contradict --write-to-empty-dir, which relocates elsewhere when the target dir is occupied.
+      if (override) throw new BitError('--override and --write-to-empty-dir cannot be used together');
+      if (path) throw new BitError('--path and --write-to-empty-dir cannot be used together');
     }
     if (!ids.length && dependencies) {
       throw new BitError('you have to specify ids to use "--dependencies" flag');
@@ -300,6 +320,16 @@ without arguments, fetches all workspace components' latest versions from their 
     }
     if (owner && ids.length !== 1) {
       throw new BitError('--owner flag requires exactly one argument (the owner name)');
+    }
+    let dependenciesDepthNum: number | undefined;
+    if (dependenciesDepth !== undefined) {
+      if (!dependencies && !dependenciesHead) {
+        throw new BitError('"--dependencies-depth" flag requires "--dependencies" or "--dependencies-head"');
+      }
+      dependenciesDepthNum = Number(dependenciesDepth);
+      if (!Number.isInteger(dependenciesDepthNum) || dependenciesDepthNum < 1) {
+        throw new BitError(`"--dependencies-depth" must be a positive integer, got "${dependenciesDepth}"`);
+      }
     }
     let mergeStrategy;
     if (merge && typeof merge === 'string') {
@@ -327,6 +357,7 @@ without arguments, fetches all workspace components' latest versions from their 
       saveInLane,
       importDependenciesDirectly: dependencies,
       importHeadDependenciesDirectly: dependenciesHead,
+      dependenciesDepth: dependenciesDepthNum,
       importDependents: dependents,
       dependentsVia,
       dependentsAll,
@@ -338,6 +369,7 @@ without arguments, fetches all workspace components' latest versions from their 
       writeDeps,
       laneOnly,
       owner,
+      writeToEmptyDir,
     };
     return this.importer.import(importOptions, this._packageManagerArgs);
   }

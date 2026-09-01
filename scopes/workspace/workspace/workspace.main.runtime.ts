@@ -41,7 +41,7 @@ import type { WorkspaceExtConfig } from './types';
 import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
-import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
+import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd, CapsulePruneCmd } from './capsule.cmd';
 import { EnvsSetCmd } from './envs-subcommands/envs-set.cmd';
 import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
 import { PatternCommand } from './pattern.cmd';
@@ -49,6 +49,7 @@ import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { ScopeTrust, ScopeTrustCmd } from './scope-trust';
 import { UseCmd } from './use.cmd';
+import { DebugLoadCmd } from './debug-load.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
 import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
@@ -167,7 +168,7 @@ export class WorkspaceMain {
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const consumer = await getConsumer(bitConfig.cwd);
     if (!consumer) {
-      const capsuleCmd = getCapsulesCommands(isolator, scope, undefined);
+      const capsuleCmd = getCapsulesCommands(isolator, scope, configStore, undefined);
       cli.register(capsuleCmd);
       return undefined;
     }
@@ -274,12 +275,13 @@ export class WorkspaceMain {
       return workspace.setComponentPathsRegExps();
     });
     graphql.register(() => getWorkspaceSchema(workspace, graphql));
-    const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
+    const capsuleCmd = getCapsulesCommands(isolator, scope, configStore, workspace);
     const commands: CommandList = [
       new EjectConfCmd(workspace),
       capsuleCmd,
       new UseCmd(workspace),
       new UnuseCmd(workspace),
+      new DebugLoadCmd(workspace),
     ];
 
     commands.push(new PatternCommand(workspace));
@@ -346,12 +348,18 @@ export class WorkspaceMain {
   static defineRuntime = 'browser';
 }
 
-function getCapsulesCommands(isolator: IsolatorMain, scope: ScopeMain, workspace?: Workspace) {
-  const capsuleCmd = new CapsuleCmd(isolator, workspace, scope);
+function getCapsulesCommands(
+  isolator: IsolatorMain,
+  scope: ScopeMain,
+  configStore: ConfigStoreMain,
+  workspace?: Workspace
+) {
+  const capsuleCmd = new CapsuleCmd(isolator, workspace, scope, configStore);
   capsuleCmd.commands = [
-    new CapsuleListCmd(isolator, workspace, scope),
+    new CapsuleListCmd(isolator, workspace, scope, configStore),
     new CapsuleCreateCmd(workspace, scope, isolator),
     new CapsuleDeleteCmd(isolator, scope, workspace),
+    new CapsulePruneCmd(isolator, configStore),
   ];
   return capsuleCmd;
 }

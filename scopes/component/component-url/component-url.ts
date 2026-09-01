@@ -3,21 +3,28 @@ import { affix } from '@teambit/base-ui.utils.string.affix';
 import type { ComponentID } from '@teambit/component-id';
 import { baseUrl } from './constants';
 
-/** stringifies a component id to a url */
-export const ComponentUrl = {
-  toUrl,
-  toPathname,
-  toQuery,
-};
-
-export type toUrlOptions = {
+export type ToUrlOptions = {
   includeVersion?: boolean;
   useLocationOrigin?: boolean;
 };
 
-export type toQueryOptions = toUrlOptions;
+export type ToQueryOptions = ToUrlOptions;
 
-function toUrl(id: ComponentID, options: toUrlOptions = {}) {
+const semverRegex = /[\^~]/;
+
+function toPathname(id: ComponentID) {
+  return id.toString({ ignoreVersion: true }).replace('.', '/');
+}
+
+function toQuery(id: ComponentID, { includeVersion = true }: ToQueryOptions = {}) {
+  const version = includeVersion && id.version !== 'latest' ? id.version?.replace(semverRegex, '') : undefined;
+
+  return {
+    version,
+  };
+}
+
+function toUrl(id: ComponentID, options: ToUrlOptions = {}) {
   const query = queryString.stringify(toQuery(id, options));
   const { useLocationOrigin } = options;
   const domain = useLocationOrigin ? window.location.origin : baseUrl;
@@ -25,15 +32,9 @@ function toUrl(id: ComponentID, options: toUrlOptions = {}) {
   return `${domain}/${toPathname(id)}${affix('?', query)}`;
 }
 
-function toPathname(id: ComponentID) {
-  return id.toString({ ignoreVersion: true }).replace('.', '/');
-}
-
-const semverRegex = /[\^~]/;
-function toQuery(id: ComponentID, { includeVersion = true }: toQueryOptions = {}) {
-  const version = includeVersion && id.version !== 'latest' ? id.version?.replace(semverRegex, '') : undefined;
-
-  return {
-    version,
-  };
-}
+/** stringifies a component id to a url */
+export const ComponentUrl = {
+  toUrl,
+  toPathname,
+  toQuery,
+};

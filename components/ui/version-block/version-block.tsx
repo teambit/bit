@@ -2,6 +2,7 @@
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { VersionLabel } from '@teambit/component.ui.version-label';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { Link as BaseLink, useLocation } from '@teambit/base-react.navigation.link';
 import classNames from 'classnames';
 import type { HTMLAttributes } from 'react';
@@ -56,7 +57,7 @@ export function VersionBlock({
   allExpanded = false,
   ...rest
 }: VersionBlockProps) {
-  const { username, displayName, email, profileImage, message, tag, hash, date } = snap;
+  const { username, displayName, email, profileImage, message, tag, hash, date, deprecated } = snap;
   const { lanesModel } = useLanes();
   const currentLaneUrl = lanesModel?.isViewingNonDefaultLane()
     ? `${LanesModel.getLaneUrl(lanesModel.viewedLane!.id)}${LanesModel.baseLaneComponentRoute}`
@@ -115,6 +116,7 @@ export function VersionBlock({
               <span className={styles.snapHash}>{displayVersion}</span>
             </Tooltip>
             <span className={styles.collapsedAuthor}>{authorDisplay}</span>
+            {deprecated && <DeprecatedBadge />}
             <ChevronIcon collapsed className={styles.expandHint} />
           </div>
         </div>
@@ -151,6 +153,7 @@ export function VersionBlock({
                   {displayVersion}
                 </Link>
               </Tooltip>
+              {deprecated && <DeprecatedBadge />}
               <ChevronIcon className={styles.collapseHint} />
             </div>
             <div className={styles.metaRow}>
@@ -210,6 +213,7 @@ export function VersionBlock({
             </Tooltip>
             {isLatest && <VersionLabel status="latest" />}
             {isCurrent && <VersionLabel status="current" />}
+            {deprecated && <DeprecatedBadge />}
           </div>
           <div className={styles.metaRow}>
             <UserAvatar account={author} size={20} fontSize={8} />
@@ -239,6 +243,17 @@ export function VersionBlock({
         </div>
       </div>
     </div>
+  );
+}
+
+function DeprecatedBadge() {
+  return (
+    <Tooltip placement="bottom" content="This version is deprecated">
+      <div className={styles.deprecatedBadge}>
+        <Icon of="note-deprecated" className={styles.deprecatedBadgeIcon} />
+        <span>Deprecated</span>
+      </div>
+    </Tooltip>
   );
 }
 

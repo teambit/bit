@@ -243,11 +243,15 @@ export class DoctorMain {
     if (fileName === '.') {
       return this._getDefaultFileName();
     }
-    let finalFileName = fileName;
-    if (getExt(fileName) !== 'tar' && getExt(fileName) !== 'tar.gz') {
-      finalFileName = `${this.getWithoutExt(finalFileName)}.tar`;
+    if (fileName.endsWith('.tar') || fileName.endsWith('.tar.gz')) {
+      return fileName;
     }
-    return finalFileName;
+    // `--archive` takes a path, not a bare name, so the extension has to be stripped off the last
+    // segment only. Stripping it off the whole path turns a dot anywhere in a parent directory into
+    // the "extension" - `/tmp/my.dir/report` would be archived as `/tmp/my.tar`.
+    const dirName = path.dirname(fileName);
+    const baseName = `${this.getWithoutExt(path.basename(fileName))}.tar`;
+    return dirName === '.' ? baseName : path.join(dirName, baseName);
   }
 
   private _getDefaultFileName() {
@@ -305,8 +309,11 @@ export class DoctorMain {
       return packExamineResults(pack);
     }
 
+    const doctorResultsRegex = /^doctor-results-\d+\.tar(\.gz)?$/;
     const ignore = (fileName: string) => {
-      if (fileName === '.DS_Store') return true;
+      const baseName = path.basename(fileName);
+      if (baseName === '.DS_Store') return true;
+      if (doctorResultsRegex.test(baseName)) return true;
       if (
         !includeNodeModules &&
         (fileName.startsWith(`node_modules${path.sep}`) || fileName.includes(`${path.sep}node_modules${path.sep}`))

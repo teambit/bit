@@ -53,9 +53,9 @@ describe('merge lanes - diverge functionality', function () {
         status = helper.command.statusJson();
         afterMergeToMain = helper.scopeHelper.cloneWorkspace();
       });
-      it('bit status should show two staging versions, the merge-snap and the one of the original lane because it is new to this lane', () => {
+      it('bit status should show one staging version (the merge-snap)', () => {
         const stagedVersions = status.stagedComponents.find((c) => c.id === `${helper.scopes.remote}/comp2`);
-        expect(stagedVersions.versions).to.have.lengthOf(2);
+        expect(stagedVersions.versions).to.have.lengthOf(1);
         expect(stagedVersions.versions).to.include(helper.command.getHeadOfLane('dev', 'comp2'));
       });
       it('bit status should not show the components in pending-merge', () => {

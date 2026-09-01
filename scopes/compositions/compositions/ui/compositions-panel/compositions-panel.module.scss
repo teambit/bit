@@ -121,6 +121,19 @@
   text-decoration: none;
 }
 
+.iconButton {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+}
+
+.actionIconActive {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff !important;
+}
+
 // ─── Legacy compat ──────────────────────────────────────────────────────
 .liveControlsSkeleton {
   padding: 12px 16px;

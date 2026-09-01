@@ -97,7 +97,7 @@ export class VersionHistoryGraphCmd implements Command {
     [
       'l',
       'layout <name>',
-      'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
+      'Graphviz layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
     ['', 'limit <number>', 'limit the number of nodes in the graph (starting from the heads)'],
   ] as CommandOptions;

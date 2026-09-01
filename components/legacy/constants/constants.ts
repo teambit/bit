@@ -361,6 +361,13 @@ export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
 export const CFG_ISOLATED_SCOPE_CAPSULES = 'isolated_scope_capsules';
 
 /**
+ * Opt in to pnpm's global virtual store for every workspace on this machine (capsules always
+ * keep the project-local layout). A workspace can still override it through
+ * `teambit.dependencies/dependency-resolver`.
+ */
+export const CFG_ENABLE_GLOBAL_VIRTUAL_STORE = 'enable_global_virtual_store';
+
+/**
  * Name of the directory where the capsules for building components are stored
  * This is used for the components capsules for bit build / tag / snap / sign
  * This directory is relative to the capsules root directory
@@ -392,6 +399,19 @@ export const CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS = 'default_resolve_envs_from_ro
 export const CFG_USE_DATED_CAPSULES = 'use_dated_capsules';
 
 export const CFG_CACHE_LOCK_ONLY_CAPSULES = 'cache_lock_only_capsules';
+
+/**
+ * Age threshold (in days) for aspect-version and scope capsule pruning. Capsules whose
+ * last-used marker is older than this are considered stale and removed. Workspace capsules
+ * are deleted regardless of age.
+ */
+export const CFG_CAPSULES_MAX_AGE_DAYS = 'capsules_max_age_days';
+
+/**
+ * Whether the lazy auto-prune trigger runs in the background once per ~24h.
+ * Set to "false" to disable.
+ */
+export const CFG_CAPSULES_AUTO_PRUNE = 'capsules_auto_prune';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
@@ -545,6 +565,7 @@ export enum Extensions {
   renaming = 'teambit.component/renaming',
   lanes = 'teambit.lanes/lanes',
   remove = 'teambit.component/remove',
+  internalize = 'teambit.component/internalize',
   workspace = 'teambit.workspace/workspace',
   typescript = 'teambit.typescript/typescript',
   aspect = 'teambit.harmony/aspect',

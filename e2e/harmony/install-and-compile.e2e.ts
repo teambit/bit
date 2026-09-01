@@ -81,7 +81,8 @@ export function comp() {
       expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', 'is-odd')).to.be.a.path();
     });
   });
-  describe('using yarn', function () {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('using yarn', function () {
     this.timeout(0);
     before(prepare);
     it('should use the compiled custom env to build the component', () => {

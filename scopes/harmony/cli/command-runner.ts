@@ -4,6 +4,7 @@ import { loader } from '@teambit/legacy.loader';
 import { handleErrorAndExit } from './handle-errors';
 import { TOKEN_FLAG_NAME, CACHE_ROOT } from '@teambit/legacy.constants';
 import globalFlags from './global-flags';
+import { shouldUsePager, writeToPager } from './pager';
 import { Analytics } from '@teambit/legacy.analytics';
 import type { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
@@ -51,20 +52,29 @@ export class CommandRunner {
   }
 
   private bootstrapCommand() {
+    // Redact --token before anything is logged or sent to analytics. The raw token
+    // is the user's bit.cloud credential; debug logs are persisted to disk and
+    // routinely shared in support tickets / issues.
+    const redactedFlags = this.getRedactedFlagsForReporting();
     try {
-      Analytics.init(this.commandName, this.flags, this.args);
+      Analytics.init(this.commandName, redactedFlags, this.args);
     } catch (err: any) {
       // ignoring the error, we don't want to fail the app if analytics failed.
       logger.error('failed to initialize analytics', err);
     }
     logger.info(`[*] started a new command: "${this.commandName}" with the following data:`, {
       args: this.args,
-      flags: this.flags,
+      flags: redactedFlags,
     });
     const token = this.flags[TOKEN_FLAG_NAME];
     if (token) {
       globalFlags.token = token.toString();
     }
+  }
+
+  private getRedactedFlagsForReporting(): Flags {
+    if (this.flags[TOKEN_FLAG_NAME] == null) return this.flags;
+    return { ...this.flags, [TOKEN_FLAG_NAME]: '<redacted>' };
   }
 
   private async invokeOnCommandStart() {
@@ -133,6 +143,11 @@ export class CommandRunner {
   }
 
   private async writeAndExit(data: string, exitCode: number) {
+    if (shouldUsePager(this.command, this.flags, data)) {
+      const paged = await writeToPager(data, Boolean(this.flags.pager));
+      // if the pager couldn't launch, fall through to a direct write so output is never lost.
+      if (paged) return logger.exitAfterFlush(exitCode, this.commandName, data);
+    }
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.commandName, data));
   }

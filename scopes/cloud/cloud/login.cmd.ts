@@ -26,7 +26,7 @@ supports custom cloud domains, CI/machine authentication, and manual token refre
       'machine-name <name>',
       'specify machine-name to pair with the token (useful for CI to avoid accidentally revoking the token)',
     ],
-    ['', 'suppress-browser-launch', 'DEPRECATE. use --no-browser instead'],
+    ['', 'suppress-browser-launch', 'DEPRECATED. use --no-browser instead'],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;

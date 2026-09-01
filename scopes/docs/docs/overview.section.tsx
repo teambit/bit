@@ -3,7 +3,7 @@ import type { Section } from '@teambit/component';
 import type { APIReferenceUI } from '@teambit/api-reference';
 import type { TitleBadgeSlot, OverviewOptionsSlot } from './overview';
 import { Overview } from './overview';
-import type { DocsUI, UsePreviewSandboxSlot } from './docs.ui.runtime';
+import type { DocsUI, UsePreviewSandboxSlot, UsePreviewPropsSlot } from './docs.ui.runtime';
 
 export class OverviewSection implements Section {
   constructor(
@@ -14,7 +14,8 @@ export class OverviewSection implements Section {
     private overviewOptionsSlot: OverviewOptionsSlot,
     private docs: DocsUI,
     private apiRef: APIReferenceUI,
-    private usePreviewSandboxSlot: UsePreviewSandboxSlot
+    private usePreviewSandboxSlot: UsePreviewSandboxSlot,
+    private usePreviewPropsSlot: UsePreviewPropsSlot
   ) {}
 
   navigationLink = {
@@ -32,6 +33,7 @@ export class OverviewSection implements Section {
         getEmptyState={this.docs.getEmptyState.bind(this.docs)}
         TaggedAPI={this.apiRef.TaggedAPIPage}
         usePreviewSandboxSlot={this.usePreviewSandboxSlot}
+        usePreviewPropsSlot={this.usePreviewPropsSlot}
       />
     ),
   };

@@ -340,7 +340,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
     const componentHadHead = component.hasHead();
-    const laneItem = lane?.getComponent(component.toComponentId());
+    const compId = component.toComponentId();
+    const visibleLaneItem = lane?.getComponent(compId);
+    const hiddenLaneItem = lane?.getUpdateDependentAsLaneComponent(compId);
+    const laneItemHead: Ref | undefined = visibleLaneItem?.head || hiddenLaneItem?.head;
+    const isHiddenLaneEntry = !visibleLaneItem && Boolean(hiddenLaneItem);
 
     let allVersionsObjects: Version[] | undefined;
 
@@ -352,7 +356,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         }
       }
 
-      const head = component.head || laneItem?.head;
+      // when on a lane, walk the LANE's parent chain — the prior snap lives in its parent graph,
+      // not in main's. Falling back to `component.head` (main head) loses the lane history when
+      // the component was tagged on main and then imported to the lane (cascade-on-snap).
+      const head = laneItemHead || component.head;
       if (!head) {
         return undefined;
       }
@@ -368,20 +375,29 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       const newHead = await getNewHead();
       component.setHead(newHead);
     }
-    if (laneItem && refWasDeleted(laneItem.head)) {
+    const removeFromLane = () => {
+      if (isHiddenLaneEntry) lane?.removeComponentFromUpdateDependentsIfExist(compId);
+      else lane?.removeComponent(compId);
+    };
+    if (laneItemHead && refWasDeleted(laneItemHead)) {
       const newHead = await getNewHead();
       if (newHead) {
-        laneItem.head = newHead;
+        if (isHiddenLaneEntry) {
+          lane?.addComponentToUpdateDependents(compId.changeVersion(newHead.toString()));
+        } else if (visibleLaneItem) {
+          visibleLaneItem.head = newHead;
+          if (lane) lane.hasChanged = true;
+        }
         const divergeData = component.getDivergeData();
         if (!component.laneHeadRemote && divergeData.commonSnapBeforeDiverge === newHead) {
           // if the component doesn't exist on the remote lane and this reset removed all local snaps, remove the
           // component from the lane. otherwise, the component stays on the lane but it's not staged so the export
           // fails on the remote saying the component doesn't exist (in case the remote-lane and component-lane are
           // not the same scope).
-          lane?.removeComponent(component.toComponentId());
+          removeFromLane();
         }
       } else {
-        if (lane?.isNew && this.scope.isExported(component.toComponentId()) && component.scope) {
+        if (lane?.isNew && this.scope.isExported(compId) && component.scope) {
           // the fact that the component has a scope-name means it was exported.
           throw new Error(`fatal: unable to find a new head for "${component.id()}".
 this is because the lane ${lane.name} is new so the remote doesn't have previous snaps of this component.
@@ -390,7 +406,7 @@ probably this component landed here as part of a merge from another lane.
 it's impossible to leave the component in the .bitmap with a scope-name and without any version.
 please either remove the component (bit remove) or remove the lane.`);
         }
-        lane?.removeComponent(component.toComponentId());
+        removeFromLane();
       }
       component.laneHeadLocal = newHead;
       objectRepo.add(lane);
@@ -636,15 +652,32 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
       return modelComponent;
     };
 
-    const mergeLaneComponent = async (component: LaneComponent) => {
+    const addToBucket = (c: LaneComponent, isHidden: boolean) => {
+      if (!existingLane) return;
+      if (isHidden) {
+        existingLane.removeComponent(c.id);
+        existingLane.addComponentToUpdateDependents(c.id.changeVersion(c.head.toString()));
+      } else {
+        existingLane.removeComponentFromUpdateDependentsIfExist(c.id);
+        existingLane.addComponent(c);
+      }
+    };
+
+    const mergeLaneComponent = async (component: LaneComponent, isHidden: boolean) => {
       const modelComponent = await getModelComponent(component.id);
-      const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
+      const existingComponent = isHidden
+        ? existingLane?.getUpdateDependentAsLaneComponent(component.id)
+        : existingLane?.components.find((c) => c.id.isEqual(component.id));
       if (!existingComponent) {
         if (isExport) {
-          if (existingLane) {
-            existingLane.addComponent(component);
-            existingLane.removeComponentFromUpdateDependentsIfExist(component.id);
+          if (isHidden && !lane.shouldOverrideUpdateDependents()) {
+            // Stale local hidden entry that the origin has already dropped (via Cloud UI
+            // `removeUpdateDependents`). Workspace cascades only update existing entries, so a
+            // hidden incoming entry with no match on origin must be a stale leftover — refuse to
+            // resurrect it. Legitimate adds from `_snap --update-dependents` set the wire flag.
+            return;
           }
+          addToBucket(component, isHidden);
           if (!sentVersionHashes?.includes(component.head.toString())) {
             // during export, the remote might got a lane when some components were not sent from the client. ignore them.
             return;
@@ -666,7 +699,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
           startFrom: component.head,
           versionParentsFromObjects: subsetOfVersionParents,
         });
-        if (existingLane) existingLane.addComponent(component);
+        addToBucket(component, isHidden);
         mergeResults.push({ mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) });
         return;
       }
@@ -709,7 +742,7 @@ possible causes:
       }
       if (divergeResults.isTargetAhead()) {
         if (!existingLane) throw new Error(`mergeLane, existingLane must be set if target is ahead`);
-        existingLane.addComponent(component);
+        addToBucket(component, isHidden);
         mergeResults.push({
           mergedComponent: modelComponent,
           mergedVersions: divergeResults.snapsOnTargetOnly.map((h) => h.toString()),
@@ -720,40 +753,51 @@ possible causes:
       mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
     };
 
-    await pMap(
-      lane.components,
-      async (component) => {
-        await mergeLaneComponent(component);
-      },
-      { concurrency: concurrentComponentsLimit() }
-    );
+    // Both visible and hidden entries flow through the same per-component diverge check, so
+    // they share guarantees: same-head no-op, target-ahead accept, local-ahead no-op,
+    // diverge → reject on export / silent-keep-local on import.
+    const allEntries: Array<{ component: LaneComponent; isHidden: boolean }> = [
+      ...lane.components.map((component) => ({ component, isHidden: false })),
+      ...(lane.updateDependents || []).map((id) => ({
+        component: { id: id.changeVersion(undefined), head: Ref.from(id.version as string) },
+        isHidden: true,
+      })),
+    ];
+    await pMap(allEntries, ({ component, isHidden }) => mergeLaneComponent(component, isHidden), {
+      concurrency: concurrentComponentsLimit(),
+    });
+    // Reconcile origin-side removals of hidden entries (Cloud UI `removeUpdateDependents`). The
+    // per-component loop only iterates incoming entries, so entries the origin dropped would
+    // otherwise linger locally. Match by component-id, not version, so a local pending cascade
+    // (same id, newer hash) survives — only entries whose id is absent from incoming are pruned.
+    if (isImport && existingLane?.updateDependents?.length) {
+      const incomingIds = new Set((lane.updateDependents || []).map((id) => id.toStringWithoutVersion()));
+      const kept = existingLane.updateDependents.filter((id) => incomingIds.has(id.toStringWithoutVersion()));
+      if (kept.length !== existingLane.updateDependents.length) {
+        existingLane.updateDependents = kept.length ? kept : undefined;
+        existingLane.hasChanged = true;
+      }
+    }
     // downgrade the schema if the incoming lane has a lower schema because it's possible that components are deleted
     // in the incoming lane but because it has an old schema, it doesn't have the "isDeleted" prop. leaving the schema
     // of current lane as 1.0.0 will mistakenly think that the component is not deleted.
     if (existingLane?.hasChanged && existingLane.includeDeletedData() && !lane.includeDeletedData()) {
       existingLane.setSchemaToNotSupportDeletedData();
     }
-    // merging updateDependents is tricky. the end user should never change it, only get it as is from the remote.
-    // this prop gets updated with snap-from-scope with --update-dependents flag. and a graphql query should remove entries
-    // from there. other than these 2 places, it should never change. so when a user imports it, always override.
-    // if it is being exported, the remote should override it only when it comes from the snap-from-scope command, to
-    // indicate this, the lane should have the overrideUpdateDependents prop set to true.
-    if (isImport && existingLane) {
-      existingLane.updateDependents = lane.updateDependents;
-    }
-    if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {
-      await Promise.all(
-        (lane.updateDependents || []).map(async (id) => {
-          const existing = existingLane.updateDependents?.find((existingId) => existingId.isEqualWithoutVersion(id));
-          if (!existing || existing.version !== id.version) {
-            const mergedComponent = await getModelComponent(id);
-            mergeResults.push({ mergedComponent, mergedVersions: [id.version] });
-          }
-        })
-      );
-      existingLane.updateDependents = lane.updateDependents;
+
+    const mergeLane = existingLane || lane;
+
+    // The `overrideUpdateDependents` flag is a per-push signal — set by `_snap --update-dependents`
+    // to mark legitimate hidden additions, consumed here on export. Without clearing it on the
+    // saved lane, the next consumer's import would inherit the flag via wire-format serialization
+    // and any subsequent workspace export would re-trigger the "allow hidden adds" branch on
+    // origin, resurrecting entries the Cloud UI dropped. Clearing here means future cascades from
+    // workspaces flow through the per-component-merge path with no chance of resurrection, while
+    // legitimate `_snap` pushes re-set the flag for the duration of their own push.
+    if (mergeLane.shouldOverrideUpdateDependents()) {
+      mergeLane.setOverrideUpdateDependents(false);
     }
 
-    return { mergeResults, mergeErrors, mergeLane: existingLane || lane };
+    return { mergeResults, mergeErrors, mergeLane };
   }
 }

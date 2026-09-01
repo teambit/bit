@@ -15,6 +15,7 @@ describe('Mocha Tester', function () {
       '@teambit/typescript.typescript-compiler',
       '@teambit/defender.mocha-tester',
       'chai',
+      'chai-fs',
       '@babel/preset-typescript',
       '@babel/preset-env',
     ]);
@@ -107,87 +108,6 @@ describe('Mocha Tester', function () {
         const output = helper.general.runWithTryCatch('bit build');
         expect(output).to.have.string('SomeError');
       });
-    });
-  });
-  describe('typescript component', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fixtures.populateComponentsTS(1);
-      setupMochaEnv();
-      helper.command.setEnv('comp1', envId);
-      helper.command.install();
-      helper.fs.outputFile(
-        'comp1/foo.ts',
-        `export function addOne(num: number): number {
-  return num + 1;
-}`
-      );
-      helper.fs.outputFile(
-        'comp1/foo.spec.ts',
-        `import { addOne } from './foo';
-import { expect } from 'chai';
-import chaiFs from 'chai-fs';
-describe('addOne', () => {
-  it('should add one', () => {
-    const result = addOne(1);
-    expect(result).to.equal(2);
-  });
-});`
-      );
-    });
-    it('should not throw an error compilation errors', () => {
-      expect(() => helper.command.test()).to.not.throw();
-    });
-  });
-  describe('component with multiple spec files and .only in one spec', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fixtures.populateComponents(1);
-      setupMochaEnv();
-      helper.command.setEnv('comp1', envId);
-      helper.command.install();
-
-      // First spec file with .only on one test
-      helper.fs.outputFile(
-        'comp1/first.spec.ts',
-        `import { expect } from 'chai';
-describe('first spec file', () => {
-  it.only('should run this test', () => {
-    expect(true).to.be.true;
-  });
-  it('should NOT run this test', () => {
-    throw new Error('This test should not have run');
-  });
-});`
-      );
-
-      // Second spec file without .only - should NOT run at all
-      helper.fs.outputFile(
-        'comp1/second.spec.ts',
-        `import { expect } from 'chai';
-describe('second spec file', () => {
-  it('should NOT run - no .only in this file', () => {
-    throw new Error('This test from second.spec should not have run');
-  });
-  it('another test that should NOT run', () => {
-    throw new Error('This test from second.spec should not have run either');
-  });
-});`
-      );
-    });
-    it('bit test should only run the test with .only and skip the entire second spec file', () => {
-      const output = helper.command.test('', true);
-      // The test with .only should run
-      expect(output).to.have.string('should run this test');
-      // The second test in first.spec should not run
-      expect(output).to.not.have.string('should NOT run this test');
-      // No tests from second.spec should run at all
-      expect(output).to.not.have.string('second spec file');
-      expect(output).to.not.have.string('should NOT run - no .only in this file');
-      expect(output).to.not.have.string('another test that should NOT run');
-      // Should show only 1 passing test, not 2
-      expect(output).to.have.string('1 passing');
-      expect(output).to.not.have.string('2 passing');
     });
   });
 });

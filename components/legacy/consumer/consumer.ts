@@ -55,6 +55,14 @@ type ConsumerProps = {
 const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
 const BITMAP_HISTORY_METADATA_FILE_NAME = 'bitmap-history-metadata.txt';
 
+function isDirectory(dirPath: string): boolean {
+  try {
+    return fs.statSync(dirPath).isDirectory();
+  } catch {
+    return false; // path doesn't exist (or isn't accessible)
+  }
+}
+
 export default class Consumer {
   projectPath: PathOsBasedAbsolute;
   created: boolean;
@@ -260,11 +268,25 @@ export default class Consumer {
     return consumerComp;
   }
 
+  /**
+   * @deprecated load components via the workspace aspect instead: `workspace.get()` (then
+   * `component.state._consumer` when the legacy ConsumerComponent is needed).
+   * loading directly through the consumer skips the env-first grouped load pipeline of the
+   * workspace aspect (see workspace-component-loader.buildLoadGroups), so when the component's env
+   * is not loaded yet, dependency policies may silently fall back to defaults, producing a
+   * component with wrong dependency data (phantom "modified" status, wrong diff, etc.).
+   * the remaining callers are the workspace-component-loader bridge itself and legacy code that
+   * has no access to the workspace aspect.
+   */
   async loadComponent(id: ComponentID, loadOpts?: ComponentLoadOptions): Promise<Component> {
     const { components } = await this.loadComponents(ComponentIdList.fromArray([id]), true, loadOpts);
     return components[0];
   }
 
+  /**
+   * @deprecated load components via the workspace aspect instead: `workspace.getMany()`.
+   * see the deprecation note on `loadComponent` above for the reasoning.
+   */
   async loadComponents(
     ids: ComponentIdList,
     throwOnFailure = true,
@@ -353,6 +375,13 @@ export default class Consumer {
       componentFromModel.devPackageDependencies = sortObjectByKeys(componentFromModel.devPackageDependencies);
       componentFromModel.peerPackageDependencies = sortObjectByKeys(componentFromModel.peerPackageDependencies);
       sortOverrides(componentFromModel.overrides);
+      // normalize the order of the extensions. `Version.id()` (used for the hash comparison) serializes
+      // `extensionDependencies` - a getter derived from the order of `extensions` (extensionsBitIds). unlike the
+      // `extensions` config field, which id() already sorts via sortById(), this derived list is not normalized.
+      // so a mere reordering of extensions (e.g. the env aspect moving position) would otherwise make the
+      // component appear modified while "bit diff" shows no diff (it compares deps by identity, ignoring order).
+      version.extensions = version.extensions.sortById();
+      componentFromModel.extensions = componentFromModel.extensions.sortById();
     }
     function sortOverrides(overrides) {
       if (!overrides) return;
@@ -416,7 +445,10 @@ export default class Consumer {
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
     const gitDirPath = path.join(projectPath, DOT_GIT_DIR);
     let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
-    if (!noGit && fs.existsSync(gitDirPath) && !fs.existsSync(resolvedScopePath)) {
+    // only a real ".git" directory hosts the embedded scope at ".git/bit". in a git worktree or
+    // submodule ".git" is a pointer FILE, so fall back to a standalone ".bit" inside the workspace
+    // (same as a non-git workspace) instead of composing an invalid ".git/bit" path.
+    if (!noGit && isDirectory(gitDirPath) && !fs.existsSync(resolvedScopePath)) {
       resolvedScopePath = path.join(gitDirPath, BIT_GIT_DIR);
     }
     return resolvedScopePath;

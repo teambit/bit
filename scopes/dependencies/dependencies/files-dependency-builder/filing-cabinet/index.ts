@@ -28,6 +28,9 @@ const defaultLookups = {
   '.sass': lookupStyling,
   '.styl': stylusLookup,
   '.less': lookupStyling,
+  // md/mdx docs import components/packages, resolved the same way ts imports are
+  '.md': lookupTypeScript,
+  '.mdx': lookupTypeScript,
 };
 
 type Options = {

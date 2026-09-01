@@ -12,6 +12,7 @@ type Options = {
   build?: boolean;
   strict?: boolean;
   increment?: ReleaseType;
+  autoTagIncrement?: ReleaseType;
   patch?: boolean;
   minor?: boolean;
   major?: boolean;
@@ -47,6 +48,13 @@ export class CiMergeCmd implements Command {
     ['', 'minor', 'syntactic sugar for "--increment minor"'],
     ['', 'major', 'syntactic sugar for "--increment major"'],
     ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`'],
+    [
+      '',
+      'auto-tag-increment <level>',
+      `the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease].
+by default, dependents are bumped by a patch, unless --increment is one of [prepatch, prerelease, preminor, premajor], which they follow.
+note that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level`,
+    ],
     [
       '',
       'increment-by <number>',
@@ -90,9 +98,11 @@ export class CiMergeCmd implements Command {
       throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
     }
 
-    const { releaseType, preReleaseId } = validateOptions(options);
+    const { releaseType, autoTagReleaseType, preReleaseId } = validateOptions(options);
 
-    // Check if user explicitly provided any version bump flags
+    // Check if user explicitly provided any version bump flags.
+    // --auto-tag-increment is deliberately excluded: it only affects dependents, so it shouldn't
+    // disable the commit-message auto-detection that determines the modified components' bump.
     const explicitVersionBump = Boolean(
       options.increment || options.patch || options.minor || options.major || options.preRelease
     );
@@ -102,6 +112,7 @@ export class CiMergeCmd implements Command {
       build: options.build,
       strict: options.strict,
       releaseType,
+      autoTagReleaseType,
       preReleaseId,
       incrementBy: options.incrementBy,
       explicitVersionBump,

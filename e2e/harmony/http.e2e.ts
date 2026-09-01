@@ -57,8 +57,8 @@ import { HttpHelper } from '../http-helper';
         `lane "${helper.scopes.remote}/non-exist" was not found`
       );
     });
-    after(() => {
-      httpHelper.killHttp();
+    after(async () => {
+      await httpHelper.killHttp();
     });
   });
   describe('export with deleted components', () => {
@@ -92,8 +92,8 @@ import { HttpHelper } from '../http-helper';
       expect(list).to.have.lengthOf(1);
       expect(list[0].id).to.not.have.string('comp2');
     });
-    after(() => {
-      httpHelper.killHttp();
+    after(async () => {
+      await httpHelper.killHttp();
     });
   });
   describe('export', () => {
@@ -110,8 +110,8 @@ import { HttpHelper } from '../http-helper';
       exportOutput = helper.command.export();
       scopeAfterExport = helper.scopeHelper.cloneWorkspace();
     });
-    after(() => {
-      httpHelper.killHttp();
+    after(async () => {
+      await httpHelper.killHttp();
     });
     it('should export successfully', () => {
       expect(exportOutput).to.have.string('exported components (3)');
@@ -196,8 +196,8 @@ import { HttpHelper } from '../http-helper';
       expect(idsStr).to.not.include('beta/vitest-4/examples/hello-world');
     });
 
-    after(() => {
-      httpHelper.killHttp();
+    after(async () => {
+      await httpHelper.killHttp();
     });
   });
 });

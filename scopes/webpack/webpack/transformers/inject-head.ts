@@ -13,6 +13,9 @@ export type HeadInjectionOptions = {
  * since, the html plugin is configured via the webpack aspect, expose it from here ensure the same instance
  * @param options
  * @returns
+ * @deprecated the webpack aspect no longer builds the base config for react/node/aspect envs, so
+ * this is no longer guaranteed to share an `html-webpack-plugin` instance with the bundler that
+ * actually built the config (`@teambit/webpack.webpack-bundler`). Kept only for backward-compatible imports.
  */
 export function GenerateHeadInjectionTransformer(options: HeadInjectionOptions): WebpackConfigTransformer {
   return (config) => {

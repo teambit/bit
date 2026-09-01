@@ -8,12 +8,17 @@ import { flatten } from 'lodash';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import type { ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
-import { ComponentPreview, SandboxPermissionsAggregator } from '@teambit/preview.ui.component-preview';
-// import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
+import {
+  ComponentPreview,
+  PreviewPropsAggregator,
+  SandboxPermissionsAggregator,
+} from '@teambit/preview.ui.component-preview';
+import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import type { UsePreviewSandboxSlot } from '@teambit/compositions';
+import type { UsePreviewPropsSlot } from '../docs.ui.runtime';
 import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
@@ -47,6 +52,12 @@ export type OverviewProps = {
   getEmptyState?: () => ComponentType | undefined;
   TaggedAPI?: React.ComponentType<{ componentId: string }>;
   usePreviewSandboxSlot?: UsePreviewSandboxSlot;
+  /**
+   * per-component resolvers for iframe attributes on the overview preview (`allow`,
+   * `referrerPolicy`, ...). Each resolver gets the current `ComponentModel`; results merge
+   * with later registrations winning.
+   */
+  usePreviewPropsSlot?: UsePreviewPropsSlot;
 };
 
 export function Overview({
@@ -56,6 +67,7 @@ export function Overview({
   getEmptyState,
   TaggedAPI,
   usePreviewSandboxSlot,
+  usePreviewPropsSlot,
 }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
@@ -71,6 +83,7 @@ export function Overview({
   const { isMinimal } = useWorkspaceMode();
   const [isLoading, setLoading] = useState(defaultLoadingState);
   const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
+  const previewPropsHooks = usePreviewPropsSlot?.values() ?? [];
   const [sandboxValue, setSandboxValue] = useState('');
   const iframeQueryParams = `onlyOverview=${component.preview?.onlyOverview || 'false'}&skipIncludes=${
     component.preview?.skipIncludes || component.preview?.onlyOverview
@@ -110,7 +123,6 @@ export function Overview({
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}
           displayName={component.displayName}
-          version={component.version}
           abstract={component.description}
           labels={component.labels}
           packageName={component.packageName}
@@ -127,51 +139,79 @@ export function Overview({
               <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
-          {!isMinimal && !renderCompositionsFirst ? (
-            <>
-              <ComponentPreview
-                onLoad={onPreviewLoad}
-                previewName="overview"
-                pubsub={true}
-                queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-                viewport={null}
-                fullContentHeight
-                disableScroll={true}
-                sandbox={sandboxValue}
-                {...rest}
-                component={component}
-                style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-              />
-              {component.preview?.onlyOverview && !isLoading && (
-                <CompositionGallery component={component} sandbox={sandboxValue} />
-              )}
-            </>
-          ) : (
-            <>
-              {component.preview?.onlyOverview && !isLoading && (
-                <CompositionGallery component={component} sandbox={sandboxValue} />
-              )}
-              <ComponentPreview
-                onLoad={onPreviewLoad}
-                previewName="overview"
-                pubsub={true}
-                queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-                viewport={null}
-                fullContentHeight
-                disableScroll={true}
-                sandbox={sandboxValue}
-                {...rest}
-                component={component}
-                style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-              />
-            </>
-          )}
+          <PreviewPropsAggregator hooks={previewPropsHooks} component={component}>
+            {(previewAttrs) =>
+              !isMinimal && !renderCompositionsFirst ? (
+                <>
+                  <ComponentPreview
+                    {...previewAttrs}
+                    onLoad={onPreviewLoad}
+                    previewName="overview"
+                    pubsub={true}
+                    queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+                    viewport={null}
+                    fullContentHeight
+                    disableScroll={true}
+                    sandbox={sandboxValue}
+                    {...rest}
+                    component={component}
+                    style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+                  />
+                  {component.preview?.onlyOverview && !isLoading && (
+                    <CompositionGallery component={component} sandbox={sandboxValue} />
+                  )}
+                </>
+              ) : (
+                <>
+                  {component.preview?.onlyOverview && !isLoading && (
+                    <CompositionGallery component={component} sandbox={sandboxValue} />
+                  )}
+                  <ComponentPreview
+                    {...previewAttrs}
+                    onLoad={onPreviewLoad}
+                    previewName="overview"
+                    pubsub={true}
+                    queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+                    viewport={null}
+                    fullContentHeight
+                    disableScroll={true}
+                    propagateError={isMinimal}
+                    sandbox={sandboxValue}
+                    {...rest}
+                    component={component}
+                    style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+                  />
+                </>
+              )
+            }
+          </PreviewPropsAggregator>
+
           {component.preview?.onlyOverview && !isLoading && TaggedAPI && (
             <TaggedAPI componentId={component.id.toString()} />
           )}
         </div>
       )}
-      {buildFailed && EmptyState && <EmptyState />}
+      {buildFailed &&
+        (EmptyState ? (
+          <EmptyState />
+        ) : (
+          <div className={styles.buildFailed}>
+            <BuildStatusMessage buildStatus={component.buildStatus} />
+          </div>
+        ))}
     </div>
   );
+}
+
+// default overview content when the preview can't be shown (e.g. the build failed or is still
+// pending). a registered empty state takes precedence over this.
+function BuildStatusMessage({ buildStatus }: { buildStatus?: string }) {
+  if (buildStatus?.toLowerCase() === 'pending') {
+    return (
+      <StatusMessageCard status="PROCESSING" title="component preview pending">
+        this might take some time
+      </StatusMessageCard>
+    );
+  }
+  return <StatusMessageCard status="FAILURE" title="failed to get component preview" />;
 }

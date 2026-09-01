@@ -5,9 +5,8 @@ import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync, readFileSync } from 'fs';
 import type { Aspect, Extension } from '@teambit/harmony';
 import { Harmony } from '@teambit/harmony';
-// TODO: expose this types from harmony (once we have a way to expose it only for node)
-import type { ConfigOptions } from '@teambit/harmony/dist/harmony-config';
-import { Config } from '@teambit/harmony/dist/harmony-config';
+import type { ConfigOptions } from '@teambit/harmony/harmony-config';
+import { Config } from '@teambit/harmony/harmony-config';
 import { ComponentID } from '@teambit/component';
 import { CLIAspect } from '@teambit/cli';
 import { NodeAspect } from '@teambit/node';

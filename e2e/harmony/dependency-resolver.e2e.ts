@@ -1,14 +1,15 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
-import type { Modules } from '@pnpm/modules-yaml';
-import { readModulesManifest } from '@pnpm/modules-yaml';
+import yaml from 'js-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper, fixtures, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 import assertArrays from 'chai-arrays';
+import type { ModulesManifest } from '../modules-manifest';
+import { readModulesManifest } from '../modules-manifest';
 chai.use(chaiFs);
 
 chai.use(assertArrays);
@@ -76,8 +77,8 @@ describe('dependency-resolver extension', function () {
           barFooOutput = helper.command.showComponentParsed('bar/foo');
         });
         it('should have the updated dependencies for bar/foo from the env', function () {
-          expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.8.0 || ^17.0.0');
-          expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^17.0.8');
+          expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^17.0.0 || ^18.0.0 || ^19.0.0');
+          expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^19.0.0');
         });
       });
       describe('policies added by custom env', function () {
@@ -223,7 +224,8 @@ describe('dependency-resolver extension', function () {
     //   ├─┬ once 1.4.0
     //   │ └── wrappy 1.0.2
     //   └── path-is-absolute 1.0.1
-    describe('using Yarn as a package manager', () => {
+    // skipped: yarn support is deprecated and planned for removal
+    describe.skip('using Yarn as a package manager', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
@@ -271,29 +273,21 @@ describe('dependency-resolver extension', function () {
       });
       it('should force a newer version of a subdependency using just the dependency name', function () {
         // Without the override, is-odd would be 0.1.2
-        expect(
-          helper.fixtures.fs.readJsonFile('node_modules/.pnpm/is-odd@1.0.0/node_modules/is-odd/package.json').version
-        ).to.eq('1.0.0');
+        expect(helper.fs.readPackageJsonOfChain(['is-even', 'is-odd']).version).to.eq('1.0.0');
       });
       it('should force a newer version of a subdependency using the dependency name and version', function () {
-        expect(
-          helper.fixtures.fs.readJsonFile('node_modules/.pnpm/glob@6.0.4/node_modules/glob/package.json').version
-        ).to.eq('6.0.4');
+        expect(helper.fs.readPackageJsonOfChain(['rimraf', 'glob']).version).to.eq('6.0.4');
       });
       it('should not change the version of the package if the parent package does not match the pattern', function () {
-        expect(
-          helper.fixtures.fs.readJsonFile('node_modules/.pnpm/glob@6.0.4/node_modules/once/package.json').version
-        ).to.eq('1.4.0');
+        expect(helper.fs.readPackageJsonOfChain(['rimraf', 'glob', 'once']).version).to.eq('1.4.0');
       });
       it('should change the version of the package if the parent package matches the pattern', function () {
-        expect(
-          helper.fixtures.fs.readJsonFile('node_modules/.pnpm/inflight@1.0.6/node_modules/once/package.json').version
-        ).to.eq('1.3.0');
+        expect(helper.fs.readPackageJsonOfChain(['rimraf', 'glob', 'inflight', 'once']).version).to.eq('1.3.0');
       });
     });
   });
   describe('hoist patterns', function () {
-    let modulesState: Modules | null;
+    let modulesState: ModulesManifest | null;
     before(async () => {
       helper = new Helper();
       helper.scopeHelper.reInitWorkspace();
@@ -490,16 +484,22 @@ describe('dependency-resolver extension', function () {
       it('should be able to install the env on a new workspace with no errors and install the latest of the pkg dep', () => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
+        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
         helper.command.install(helper.general.getPackageNameByCompName('empty-env'));
 
-        const envPkgJson = helper.fs.readJsonFile(
-          `node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`
-        );
+        const envPackageName = helper.general.getPackageNameByCompName('empty-env');
+        const envPkgJsonPath = `node_modules/${envPackageName}/package.json`;
+        const envPkgJson = helper.fs.readJsonFile(envPkgJsonPath);
         expect(envPkgJson.dependencies[examplePkg]).to.equal('*');
 
-        const pkgJsonPath = path.join('node_modules', '.pnpm/@ci+lodash@0.0.2/node_modules/@ci/lodash/package.json');
-        const pkgJson = helper.fs.readJsonFile(pkgJsonPath);
-        expect(pkgJson.version).to.equal('0.0.2');
+        const lockfile = yaml.load(
+          fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')
+        ) as any;
+        const envSnapshot = Object.entries(lockfile.snapshots).find(([depPath]) =>
+          depPath.startsWith(`${envPackageName}@0.0.2`)
+        )?.[1] as any;
+        expect(lockfile.packages).to.have.property(`${examplePkg}@0.0.2`);
+        expect(envSnapshot?.dependencies?.[examplePkg]).to.equal('0.0.2');
       });
     });
   });

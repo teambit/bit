@@ -1,5 +1,7 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime, formatItem } from '@teambit/cli';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import path from 'path';
 import type { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
@@ -7,6 +9,7 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
+import { logger as legacyLogger } from '@teambit/legacy.logger';
 import type { PathOsBasedRelative, PathOsBasedAbsolute, PathLinuxRelative } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { AddCmd } from './add-cmd';
@@ -15,6 +18,12 @@ import AddComponents, { addMultipleFromResolvedTrackData } from './add-component
 import { TrackerAspect } from './tracker.aspect';
 
 export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };
+
+/**
+ * upper bound for the best-effort remote collision check. it's only an early warning, so it's
+ * better to skip it than to make the user wait on an unresponsive remote.
+ */
+const REMOTE_COLLISION_CHECK_TIMEOUT_MS = 5000;
 
 /**
  * this is for "bit add", where some data, such as "componentName" are not necessarily known
@@ -89,7 +98,71 @@ export class TrackerMain {
     const addResults = await addComponents.add();
     await this.workspace.consumer.onDestroy('add');
 
+    await this.warnAboutRemoteIdCollisions(addResults.addedComponents.map((added) => added.id));
+
     return addResults;
+  }
+
+  /**
+   * best-effort early warning: if any of the just-added/created components share an id with a
+   * component that already exists on the remote scope, let the user know now — before they invest
+   * work and hit a wall at export. fully non-blocking: the remote check swallows offline / no-access
+   * / scope-not-found errors, is bounded by a timeout so a stalled remote can't delay the command,
+   * and the whole method is wrapped so it can never fail an add/create.
+   */
+  async warnAboutRemoteIdCollisions(ids: ComponentID[]): Promise<void> {
+    // `shouldWriteToConsole` (not `isJsonFormat`) is the signal that reflects the CLI "--json" flag.
+    if (!ids.length || !legacyLogger.shouldWriteToConsole) return;
+    // only brand-new components can "collide" with the remote. skip already-exported ones (e.g. a
+    // re-tracked imported/exported component), where remote existence is expected, not a conflict.
+    const newIds = ids.filter((id) => !this.workspace.isExported(id));
+    if (!newIds.length) return;
+    try {
+      const idsOnRemote = await this.getIdsExistingOnRemote(newIds);
+      if (!idsOnRemote.length) return;
+      const list = idsOnRemote.map((id) => formatItem(id.toStringWithoutVersion())).join('\n');
+      const example = idsOnRemote[0];
+      this.logger
+        .consoleWarning(`the following newly added component(s) already exist on the remote scope with the same id:
+${list}
+if you meant to work on the existing component, remove your local one and run "bit import ${example.toStringWithoutVersion()}".
+if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bit rename ${example.fullName} <new-name>" (or "bit rename ${example.fullName} ${example.fullName} --scope <other-scope>" to change only the scope).`);
+    } catch (err) {
+      // never let an early-warning break "bit add" / "bit create", but keep it diagnosable.
+      this.logger.debug(`warnAboutRemoteIdCollisions: skipping the remote-collision check, got an error: ${err}`);
+    }
+  }
+
+  /**
+   * the remote calls have no request-level timeout of their own (and http retries for up to a
+   * minute), so a stalled remote would otherwise keep "bit add"/"bit create" waiting. race the
+   * checks against a timeout and simply skip the warning if the remote is too slow to answer.
+   */
+  private async getIdsExistingOnRemote(ids: ComponentID[]): Promise<ComponentID[]> {
+    const checkAll = (async () => {
+      // resolve the remotes once (it reads the global-remotes file from disk) and reuse for all ids.
+      const remotes = await this.workspace.scope.getRemoteScopes();
+      const results = await pMapPool(
+        ids,
+        async (id) => ((await this.workspace.scope.isComponentExistsOnRemote(id, remotes)) ? id : undefined),
+        // `remote.show()` is network I/O, so bound it by the fetch limit (not the component limit).
+        { concurrency: concurrentFetchLimit() }
+      );
+      return results.filter((id): id is ComponentID => Boolean(id));
+    })();
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const skipIfTooSlow = new Promise<ComponentID[]>((resolve) => {
+      timer = setTimeout(() => resolve([]), REMOTE_COLLISION_CHECK_TIMEOUT_MS);
+      timer.unref(); // this timer should never keep the process alive on its own
+    });
+
+    try {
+      return await Promise.race([checkAll, skipIfTooSlow]);
+    } finally {
+      // clear the timer when the check wins the race, so no callback stays scheduled.
+      if (timer) clearTimeout(timer);
+    }
   }
 
   async addEnvToConfig(env: string, config: { [aspectName: string]: any }) {

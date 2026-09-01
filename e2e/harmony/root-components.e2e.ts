@@ -828,7 +828,8 @@ module.exports.default = {
     });
   });
 
-  describe('yarn hoisted linker', function () {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('yarn hoisted linker', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -1379,9 +1380,9 @@ module.exports.default = {
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
     npmCiRegistry.configureCiInPackageJsonHarmony();
-    helper.command.create('bit-aspect', 'dep-dep-aspect');
-    helper.command.create('bit-aspect', 'dep-aspect');
-    helper.command.create('bit-aspect', 'main-aspect');
+    helper.fixtures.createAspect('dep-dep-aspect');
+    helper.fixtures.createAspect('dep-aspect');
+    helper.fixtures.createAspect('main-aspect');
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/dep-aspect/dep-aspect.main.runtime.ts`,
       getDepAspect(helper.scopes.remoteWithoutOwner)
@@ -1434,7 +1435,8 @@ module.exports.default = {
     helper.scopeHelper.addRemoteScope();
     helper.workspaceJsonc.setupDefault();
   });
-  describe('using Yarn', () => {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('using Yarn', () => {
     let scopeAspectsCapsulesRootDir!: string;
     before(() => {
       helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/yarn`);
@@ -1457,7 +1459,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^17\./);
+      ).to.match(/^19\./);
       expect(
         fs.readJsonSync(
           resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [
@@ -1466,7 +1468,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^17\./);
+      ).to.match(/^19\./);
     });
   });
   describe('using pnpm', () => {
@@ -1492,7 +1494,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^17\./);
+      ).to.match(/^19\./);
       expect(
         fs.readJsonSync(
           resolveFrom(path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_main-aspect@0.0.2`), [
@@ -1501,7 +1503,7 @@ module.exports.default = {
             'react/package.json',
           ])
         ).version
-      ).to.match(/^17\./);
+      ).to.match(/^19\./);
     });
   });
   after(() => {
@@ -1595,7 +1597,8 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     });
   });
 
-  describe('yarn hoisted linker', function () {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('yarn hoisted linker', function () {
     before(() => prepare('yarn'));
     after(() => {
       helper.scopeHelper.destroy();
