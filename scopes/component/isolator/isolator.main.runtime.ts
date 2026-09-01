@@ -73,6 +73,7 @@ import type { CapsuleKind, PruneCapsulesOptions, PruneCapsulesReport } from './c
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
+import { removeHiddenPeerDependencies } from './remove-hidden-peer-dependencies';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 
@@ -1552,6 +1553,10 @@ export class IsolatorMain {
       const compParent = this.getCompForArtifacts(component, populateArtifactsFromComps);
       this.mergePkgJsonFromLastBuild(compParent, packageJson);
     }
+    removeHiddenPeerDependencies(
+      packageJson.packageJsonObject,
+      this.dependencyResolver.getHiddenPeerDependencies(component)
+    );
     dataToPersist.addFile(packageJson.toVinylFile());
     const artifacts = await this.getArtifacts(component, legacyScope, populateArtifactsFromComps);
     dataToPersist.addManyFiles(artifacts);
@@ -1639,26 +1644,8 @@ export class IsolatorMain {
     addDependencies(packageJson);
     const currentVersion = getComponentPackageVersion(component);
     packageJson.addOrUpdateProperty('version', currentVersion);
-    this.removeHiddenPeerDependencies(packageJson, component);
 
     return packageJson;
-  }
-
-  /**
-   * Remove peers that are marked as hidden in env.jsonc/policies for capsules only.
-   * This keeps these peers in workspace installs, while omitting them from capsule package.json.
-   */
-  private removeHiddenPeerDependencies(packageJson: PackageJsonFile, component: Component) {
-    if (Object.keys(packageJson.packageJsonObject.peerDependencies ?? {}).length === 0) {
-      return;
-    }
-    const hiddenPeers = this.dependencyResolver.getHiddenPeerDependencies(component);
-    hiddenPeers.forEach((dep) => {
-      const peerName = dep.getPackageName?.();
-      if (peerName) {
-        delete packageJson.packageJsonObject.peerDependencies[peerName];
-      }
-    });
   }
 
   /**
