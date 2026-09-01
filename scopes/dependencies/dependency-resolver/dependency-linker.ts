@@ -13,7 +13,12 @@ import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import { BitError } from '@teambit/bit-error';
 import type { EnvsMain } from '@teambit/envs';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
+import {
+  getCoreAspectName,
+  getCoreAspectPackageName,
+  getAspectDir,
+  resolvePackageFromBitInstallation,
+} from '@teambit/aspect-loader';
 import {
   MainAspectNotLinkable,
   RootDirNotDefined,
@@ -867,7 +872,11 @@ export class DependencyLinker {
 
   private _getPkgPathFromCurrentBitDir(packageName: string): string | undefined {
     if (!this._currentBitDir) return undefined;
-    return path.join(this._currentBitDir, 'node_modules', packageName);
+    // not `join(dir, 'node_modules', pkg)`: a bundled bit keeps only `@teambit/bit` there, so that
+    // path does not exist and the link this produces - `@teambit/harmony` above all, which every
+    // installed aspect package requires - would dangle. the workspace then fails to load those
+    // aspects with "Cannot find module '@teambit/harmony'".
+    return resolvePackageFromBitInstallation(this._currentBitDir, packageName);
   }
 
   private linkNonCorePackages(rootDir: string, packageName: string): LinkDetail {
