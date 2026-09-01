@@ -4,9 +4,11 @@ type HiddenPeers = {
 
 export function removeHiddenPeerDependencies(packageJson: Record<string, any>, hiddenPeers: HiddenPeers) {
   const peerDependencies = packageJson.peerDependencies;
-  if (!peerDependencies) return;
+  const peerDependenciesMeta = packageJson.peerDependenciesMeta;
   hiddenPeers.forEach((dependency) => {
     const packageName = dependency.getPackageName?.();
-    if (packageName) delete peerDependencies[packageName];
+    if (!packageName) return;
+    if (peerDependencies) delete peerDependencies[packageName];
+    if (peerDependenciesMeta) delete peerDependenciesMeta[packageName];
   });
 }
