@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { uniq } from 'lodash';
 import yesno from 'yesno';
 import type { Command, CommandOptions } from '@teambit/cli';
 import {
@@ -33,7 +34,9 @@ the validation step, or when the export was abandoned and is now blocking others
 during the persist step, some scopes are already updated - deleting the rest would leave them with
 dependencies that were never exported, so run without "--delete" to persist the remaining scopes instead.
 the command checks which scopes still hold the pending objects and asks for confirmation before deleting.
-pass all the scopes that were used for the export, the export error lists them`;
+pass all the scopes that were used for the export, the export error lists them.
+only run it once the export is over: the check and the deletion are separate requests, so an export that
+persists a scope in between can still leave the scopes inconsistent`;
   alias = '';
   options = [
     ['', 'delete', 'discard the pending objects of this export-id instead of persisting them'],
@@ -57,7 +60,10 @@ pass all the scopes that were used for the export, the export error lists them`;
 ${exportedIds.join('\n')}`;
   }
 
-  private async deletePendingObjects(exportId: string, remotes: string[], force: boolean): Promise<string> {
+  private async deletePendingObjects(exportId: string, remoteNames: string[], force: boolean): Promise<string> {
+    // a repeated scope would be probed and deleted twice in parallel, and would count twice in every
+    // total below - including the all-probes-failed check, which compares against unique scope names
+    const remotes = uniq(remoteNames);
     const probe = await probePendingExport(this.scope.legacyScope, exportId, remotes);
     const probeFailed = Object.keys(probe.failed);
     if (probeFailed.length === remotes.length) {
@@ -153,7 +159,25 @@ ${this.failedLines(failed).join('\n')}`);
     else summary = formatSuccessSummary(clearedMsg);
     const untouched = probe.absent.length + result.absent.length;
     const hint = untouched ? formatHint(`(${untouched} scope(s) had nothing pending and were left untouched)`) : '';
-    return joinSections([this.formatFailedSection(failed), summary, hint]);
+    return joinSections([this.formatRaceSection(probe, result), this.formatFailedSection(failed), summary, hint]);
+  }
+
+  /**
+   * the probe is a snapshot, not a reservation, so a scope can persist the export in the gap between
+   * the check and the deletion. that leaves the same partial persist the probe exists to prevent, and
+   * the only trace of it is a scope that held the objects during the probe but not during the
+   * deletion. it can't be prevented from here - it needs the two operations to exclude each other on
+   * the server - so at least report it instead of counting it as an ordinary no-op.
+   */
+  private formatRaceSection(probe: PendingDirScopes, result: PendingDirScopes): string {
+    const changedMidway = probe.present.filter((scopeName) => result.absent.includes(scopeName));
+    return formatSection(
+      `${warnSymbol} scopes that changed while this command ran`,
+      `these scopes held the pending objects during the check but not during the deletion.
+something else persisted or removed them in between, so this export may now be
+partially persisted. verify it before relying on the result above.`,
+      changedMidway.map((scopeName) => formatItem(scopeName, warnSymbol))
+    );
   }
 
   private formatFailedSection(failed: { [scopeName: string]: string }): string {
