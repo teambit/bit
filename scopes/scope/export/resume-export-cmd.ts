@@ -76,20 +76,18 @@ ${probeFailed.map((scopeName) => `${scopeName} - ${probe.failed[scopeName]}`).jo
           : formatSuccessSummary(nothingFound),
       ]);
     }
-    if (!force) await this.confirmDeletion(exportId, probe, scopesToClear);
+    // print what the probe found in both modes. "--force" skips the prompt, not the findings
+    this.logger.console(this.formatProbeResult(exportId, probe, scopesToClear));
+    if (!force) await this.confirmDeletion(exportId, scopesToClear);
     const result = await deletePendingExport(this.scope.legacyScope, exportId, scopesToClear);
     return this.formatDeleteResult(exportId, result, probe);
   }
 
   /**
-   * the whole point of the probe: show what was found before destroying it, loudest when the split
-   * between "present" and "absent" suggests this export is already partially persisted.
+   * the whole point of the probe: show what was found before destroying it, loudest when a scope
+   * reports "absent" and so this export may be partially persisted already.
    */
-  private async confirmDeletion(
-    exportId: string,
-    probe: ProbePendingExportResult,
-    scopesToClear: string[]
-  ): Promise<void> {
+  private formatProbeResult(exportId: string, probe: ProbePendingExportResult, scopesToClear: string[]): string {
     const sections: string[] = [
       formatSection(
         'pending objects to delete',
@@ -97,7 +95,9 @@ ${probeFailed.map((scopeName) => `${scopeName} - ${probe.failed[scopeName]}`).jo
         scopesToClear.map((scopeName) => formatItem(scopeName))
       ),
     ];
-    if (probe.present.length && probe.absent.length) {
+    // any "absent" scope is a possible partial persist, whether the rest answered "present" or are
+    // unknown old servers. unknown scopes get deleted too, so the warning matters just as much there.
+    if (probe.absent.length) {
       sections.push(
         formatSection(
           `${warnSymbol} scopes that no longer hold these objects`,
@@ -116,8 +116,10 @@ dependencies that were never exported. run without "--delete" to persist instead
       );
     }
     sections.push(this.formatFailedSection(probe.failed));
-    // stops the loader too, so it doesn't fight the prompt over the terminal
-    this.logger.console(joinSections(sections));
+    return joinSections(sections);
+  }
+
+  private async confirmDeletion(exportId: string, scopesToClear: string[]): Promise<void> {
     if (!canPromptUser()) {
       throw new BitError(`unable to prompt for confirmation in a non-interactive terminal.
 review the list above and re-run with "--force" to delete`);
@@ -143,7 +145,11 @@ review the list above and re-run with "--force" to delete`);
     result: DeletePendingExportResult,
     probe: ProbePendingExportResult
   ): string {
-    const { removed, notFound, unknown, failed } = result;
+    const { removed, notFound, unknown } = result;
+    // a scope whose probe failed was never attempted, so it may still be holding the objects and
+    // blocking the queue. it belongs in the final report just as much as a failed deletion does,
+    // and with "--force" this is the only place the user gets to see it.
+    const failed = { ...probe.failed, ...result.failed };
     const failedScopes = Object.keys(failed);
     if (!removed.length && !notFound.length && !unknown.length) {
       // every scope failed. "notFound" counts as an answer, so this list is never empty here
@@ -167,8 +173,8 @@ ${failedScopes.map((scopeName) => `${scopeName} - ${failed[scopeName]}`).join('\
 
   private formatFailedSection(failed: { [scopeName: string]: string }): string {
     return formatSection(
-      'failed scopes',
-      '(these scopes could not be reached)',
+      `${errorSymbol} failed scopes`,
+      '(these scopes could not be reached, nothing was deleted from them)',
       Object.keys(failed).map((scopeName) => formatItem(`${scopeName} - ${failed[scopeName]}`, errorSymbol))
     );
   }
