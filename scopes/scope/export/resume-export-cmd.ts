@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { prompt } from 'enquirer';
+import yesno from 'yesno';
 import type { Command, CommandOptions } from '@teambit/cli';
 import {
   canPromptUser,
@@ -15,7 +15,7 @@ import {
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
-import type { DeletePendingExportResult, ProbePendingExportResult } from './export-scope-components';
+import type { PendingDirScopes } from './export-scope-components';
 import { deletePendingExport, probePendingExport, resumeExport } from './export-scope-components';
 
 export type ResumeExportOptions = { delete?: boolean; force?: boolean };
@@ -62,7 +62,7 @@ ${exportedIds.join('\n')}`;
     const probeFailed = Object.keys(probe.failed);
     if (probeFailed.length === remotes.length) {
       throw new BitError(`failed reaching all the given scopes:
-${probeFailed.map((scopeName) => `${scopeName} - ${probe.failed[scopeName]}`).join('\n')}`);
+${this.failedLines(probe.failed).join('\n')}`);
     }
     // a scope that reports "absent" has nothing for us to delete, so leave it out of the request entirely.
     const scopesToClear = [...probe.present, ...probe.unknown];
@@ -87,7 +87,7 @@ ${probeFailed.map((scopeName) => `${scopeName} - ${probe.failed[scopeName]}`).jo
    * the whole point of the probe: show what was found before destroying it, loudest when a scope
    * reports "absent" and so this export may be partially persisted already.
    */
-  private formatProbeResult(exportId: string, probe: ProbePendingExportResult, scopesToClear: string[]): string {
+  private formatProbeResult(exportId: string, probe: PendingDirScopes, scopesToClear: string[]): string {
     const sections: string[] = [
       formatSection(
         'pending objects to delete',
@@ -124,58 +124,47 @@ dependencies that were never exported. run without "--delete" to persist instead
       throw new BitError(`unable to prompt for confirmation in a non-interactive terminal.
 review the list above and re-run with "--force" to delete`);
     }
-    let confirmed = false;
-    try {
-      ({ confirmed } = await prompt<{ confirmed: boolean }>({
-        type: 'confirm',
-        name: 'confirmed',
-        initial: false,
-        message: `delete the pending objects of "${exportId}" from ${scopesToClear.length} scope(s)? this cannot be undone`,
-      }));
-    } catch (err: any) {
-      // enquirer throws an empty string when the prompt is canceled with Ctrl+C. see
-      // https://github.com/enquirer/enquirer/issues/225
-      if (err) throw err;
-    }
-    if (!confirmed) throw new BitError('aborted, nothing was deleted');
+    const ok = await yesno({
+      question: `deleting the pending objects of "${exportId}" from ${scopesToClear.length} scope(s) cannot be undone.
+${chalk.bold('Would you like to proceed? [yes(y)/no(n)]')}`,
+    });
+    if (!ok) throw new BitError('aborted, nothing was deleted');
   }
 
-  private formatDeleteResult(
-    exportId: string,
-    result: DeletePendingExportResult,
-    probe: ProbePendingExportResult
-  ): string {
-    const { removed, notFound, unknown } = result;
+  private formatDeleteResult(exportId: string, result: PendingDirScopes, probe: PendingDirScopes): string {
     // a scope whose probe failed was never attempted, so it may still be holding the objects and
     // blocking the queue. it belongs in the final report just as much as a failed deletion does,
     // and with "--force" this is the only place the user gets to see it.
     const failed = { ...probe.failed, ...result.failed };
     const failedScopes = Object.keys(failed);
-    if (!removed.length && !notFound.length && !unknown.length) {
-      // every scope failed. "notFound" counts as an answer, so this list is never empty here
+    // "present" here means the remote had the objects and removed them, "unknown" that it removed
+    // without reporting. either way they're cleared. "absent" means there was nothing to remove
+    const cleared = result.present.length + result.unknown.length;
+    if (!cleared && !result.absent.length) {
+      // every scope failed. "absent" counts as an answer, so this list is never empty here
       throw new BitError(`failed removing the pending objects of "${exportId}" from all the given scopes:
-${failedScopes.map((scopeName) => `${scopeName} - ${failed[scopeName]}`).join('\n')}`);
+${this.failedLines(failed).join('\n')}`);
     }
-    const cleared = removed.length + unknown.length;
     const clearedMsg = `deleted the pending objects of "${exportId}" from ${cleared} scope(s)`;
     let summary: string;
     if (failedScopes.length) summary = formatWarningSummary(`${clearedMsg}, ${failedScopes.length} failed`);
     // the scopes persisted between the probe and the deletion, so there was nothing left to delete
     else if (!cleared) summary = formatSuccessSummary(`nothing was pending anymore, no objects were deleted`);
     else summary = formatSuccessSummary(clearedMsg);
-    const skipped = probe.absent.length + notFound.length;
-    const hints = [
-      unknown.length ? formatHint(`(${unknown.length} scope(s) don't report what they removed)`) : '',
-      skipped ? formatHint(`(${skipped} scope(s) had nothing pending and were left untouched)`) : '',
-    ];
-    return joinSections([this.formatFailedSection(failed), summary, ...hints]);
+    const untouched = probe.absent.length + result.absent.length;
+    const hint = untouched ? formatHint(`(${untouched} scope(s) had nothing pending and were left untouched)`) : '';
+    return joinSections([this.formatFailedSection(failed), summary, hint]);
   }
 
   private formatFailedSection(failed: { [scopeName: string]: string }): string {
     return formatSection(
       `${errorSymbol} failed scopes`,
       '(these scopes could not be reached, nothing was deleted from them)',
-      Object.keys(failed).map((scopeName) => formatItem(`${scopeName} - ${failed[scopeName]}`, errorSymbol))
+      this.failedLines(failed).map((line) => formatItem(line, errorSymbol))
     );
+  }
+
+  private failedLines(failed: { [scopeName: string]: string }): string[] {
+    return Object.entries(failed).map(([scopeName, message]) => `${scopeName} - ${message}`);
   }
 }

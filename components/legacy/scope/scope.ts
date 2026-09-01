@@ -681,7 +681,7 @@ once done, to continue working, please run "bit cc"`
 
   async removePendingDir(clientId: string): Promise<{ existed: boolean }> {
     const pendingDir = this.getPendingDirPath(clientId);
-    const existed = await fs.pathExists(pendingDir);
+    const existed = await this.hasPendingDir(clientId);
     try {
       await fs.remove(pendingDir); // no error is thrown if not exists
     } catch (err: any) {

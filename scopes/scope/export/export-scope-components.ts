@@ -20,7 +20,7 @@ import type { PendingDirStatusResult, RemovePendingDirResult } from '@teambit/sc
 import { ExportPersist, ExportValidate, RemovePendingDir, PendingDirStatus } from '@teambit/scope.remote-actions';
 import { loader } from '@teambit/legacy.loader';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { concurrentComponentsLimit, concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 
 /**
  * ** Legacy and "bit sign" Only **
@@ -384,15 +384,78 @@ export async function removePendingDirs(pushedRemotes: Remote[], clientId: strin
   await Promise.all(pushedRemotes.map((remote) => remote.action(RemovePendingDir.name, { clientId })));
 }
 
-export type ProbePendingExportResult = {
-  /** still holds the pending objects of this export-id */
+export type PendingDirScopes = {
+  /**
+   * holds the pending objects of this export-id. for a deletion: it held them, and they are now gone
+   */
   present: string[];
-  /** doesn't hold them - either it persisted them already, or it never took part in this export */
+  /**
+   * doesn't hold them - it persisted them already, or it never took part in this export. for a
+   * deletion: there was nothing to remove
+   */
   absent: string[];
-  /** runs a server older than the PendingDirStatus action, so it can't tell us either way */
+  /**
+   * runs a server too old to report either way. for a deletion: the removal itself succeeded, but the
+   * remote didn't say whether anything was there
+   */
   unknown: string[];
   failed: { [scopeName: string]: string };
 };
+
+type PendingDirQuestion = {
+  actionName: string;
+  /** pulls the yes/no answer out of the remote's response. anything but a boolean means "unknown" */
+  readAnswer: (result: any) => unknown;
+  /** an older server rejects an action name it doesn't have. treat that as "unknown", not a failure */
+  tolerateActionNotFound?: boolean;
+};
+
+/**
+ * ask every given scope one yes/no question about the pending-dir of an export-id, and sort the
+ * scopes by their answer. both the probe and the deletion are this same fan-out, so they share it -
+ * in particular the compatibility rule, which must not drift between them: a server that doesn't
+ * report the flag is not saying "false", it is saying nothing.
+ *
+ * one unreachable or unauthorized scope shouldn't stop the rest, so errors are collected per scope
+ * instead of aborting on the first one.
+ */
+async function askRemotesAboutPendingDir(
+  scope: Scope,
+  exportId: string,
+  remotes: string[],
+  question: PendingDirQuestion
+): Promise<PendingDirScopes> {
+  const scopeRemotes: Remotes = await getScopeRemotes(scope);
+  const answers: PendingDirScopes = { present: [], absent: [], unknown: [], failed: {} };
+  await pMapPool(
+    remotes,
+    async (remoteName) => {
+      try {
+        const remote = await scopeRemotes.resolve(remoteName);
+        const result = await remote.action<{ clientId: string }, unknown>(question.actionName, { clientId: exportId });
+        const answer = question.readAnswer(result);
+        if (typeof answer !== 'boolean') answers.unknown.push(remoteName);
+        else if (answer) answers.present.push(remoteName);
+        else answers.absent.push(remoteName);
+      } catch (err: any) {
+        if (question.tolerateActionNotFound && err instanceof ActionNotFound) {
+          logger.debug(`askRemotesAboutPendingDir, the remote ${remoteName} doesn't support ${question.actionName}`);
+          answers.unknown.push(remoteName);
+          return;
+        }
+        logger.errorAndAddBreadCrumb(
+          'askRemotesAboutPendingDir',
+          `${question.actionName} failed on the remote ${remoteName} for the export-id "${exportId}"`,
+          {},
+          err
+        );
+        answers.failed[remoteName] = err.message;
+      }
+    },
+    { concurrency: concurrentFetchLimit() }
+  );
+  return answers;
+}
 
 /**
  * ask each scope whether it still holds the pending objects of the given export-id, without touching
@@ -404,97 +467,29 @@ export type ProbePendingExportResult = {
  * "absent" alone is not proof of that - the scope may simply have had no part in the export - so this
  * only classifies, it doesn't decide. the caller presents the split and lets a human judge.
  */
-export async function probePendingExport(
-  scope: Scope,
-  exportId: string,
-  remotes: string[]
-): Promise<ProbePendingExportResult> {
-  const scopeRemotes: Remotes = await getScopeRemotes(scope);
-  const present: string[] = [];
-  const absent: string[] = [];
-  const unknown: string[] = [];
-  const failed: { [scopeName: string]: string } = {};
-  await Promise.all(
-    remotes.map(async (remoteName) => {
-      try {
-        const remote = await scopeRemotes.resolve(remoteName);
-        const result = await remote.action<{ clientId: string }, PendingDirStatusResult>(PendingDirStatus.name, {
-          clientId: exportId,
-        });
-        // a server that doesn't report "exists" is not saying "false". only a boolean is an answer.
-        if (typeof result?.exists !== 'boolean') unknown.push(remoteName);
-        else if (result.exists) present.push(remoteName);
-        else absent.push(remoteName);
-      } catch (err: any) {
-        if (err instanceof ActionNotFound) {
-          // an older server. it can't answer the probe, but it can still delete, so this is not a failure.
-          logger.debug(`probePendingExport, the remote ${remoteName} doesn't support ${PendingDirStatus.name}`);
-          unknown.push(remoteName);
-          return;
-        }
-        logger.errorAndAddBreadCrumb(
-          'probePendingExport',
-          `failed getting the pending-dir status of "${exportId}" from the remote ${remoteName}`,
-          {},
-          err
-        );
-        failed[remoteName] = err.message;
-      }
-    })
-  );
-  return { present, absent, unknown, failed };
+export async function probePendingExport(scope: Scope, exportId: string, remotes: string[]): Promise<PendingDirScopes> {
+  return askRemotesAboutPendingDir(scope, exportId, remotes, {
+    actionName: PendingDirStatus.name,
+    readAnswer: (result: PendingDirStatusResult) => result?.exists,
+    // an older server has no such action. it can't answer the probe, but it can still delete
+    tolerateActionNotFound: true,
+  });
 }
-
-export type DeletePendingExportResult = {
-  /** the remote confirmed it had the pending objects and they're now gone */
-  removed: string[];
-  /** the remote confirmed there was nothing pending for this export-id */
-  notFound: string[];
-  /** the remote is too old to report what it did. the removal itself succeeded */
-  unknown: string[];
-  failed: { [scopeName: string]: string };
-};
 
 /**
  * the opposite of `resumeExport`. instead of completing a stuck export, throw its objects away, which
  * frees the export-queue of these scopes (see `ExportValidate.waitIfNeeded`, where a stale pending-dir
  * blocks everyone else with a server-is-busy error).
  *
- * destructive and unrecoverable - run `probePendingExport` first. removing a pending-dir that doesn't
- * exist is a no-op on the remote, and one unreachable/unauthorized scope shouldn't prevent clearing the
- * others, so the errors are collected per scope instead of aborting on the first one.
+ * destructive and unrecoverable - run `probePendingExport` first.
  */
 export async function deletePendingExport(
   scope: Scope,
   exportId: string,
   remotes: string[]
-): Promise<DeletePendingExportResult> {
-  const scopeRemotes: Remotes = await getScopeRemotes(scope);
-  const removed: string[] = [];
-  const notFound: string[] = [];
-  const unknown: string[] = [];
-  const failed: { [scopeName: string]: string } = {};
-  await Promise.all(
-    remotes.map(async (remoteName) => {
-      try {
-        const remote = await scopeRemotes.resolve(remoteName);
-        const result = await remote.action<{ clientId: string }, RemovePendingDirResult>(RemovePendingDir.name, {
-          clientId: exportId,
-        });
-        // an older server returns `{}` here, which says nothing about what was actually removed.
-        if (typeof result?.existed !== 'boolean') unknown.push(remoteName);
-        else if (result.existed) removed.push(remoteName);
-        else notFound.push(remoteName);
-      } catch (err: any) {
-        logger.errorAndAddBreadCrumb(
-          'deletePendingExport',
-          `failed removing the pending-dir of "${exportId}" from the remote ${remoteName}`,
-          {},
-          err
-        );
-        failed[remoteName] = err.message;
-      }
-    })
-  );
-  return { removed, notFound, unknown, failed };
+): Promise<PendingDirScopes> {
+  return askRemotesAboutPendingDir(scope, exportId, remotes, {
+    actionName: RemovePendingDir.name,
+    readAnswer: (result: RemovePendingDirResult) => result?.existed,
+  });
 }

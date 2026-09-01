@@ -17,10 +17,7 @@ export {
   validateRemotes,
   resumeExport,
   removePendingDirs,
-  deletePendingExport,
-  probePendingExport,
   mergeObjects,
 } from './export-scope-components';
-export type { DeletePendingExportResult, ProbePendingExportResult } from './export-scope-components';
 export { readLastExport, writeLastExport } from './last-export';
 export type { LastExportData } from './last-export';
