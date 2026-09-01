@@ -26478,6 +26478,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -35386,6 +35389,7 @@ packages:
     resolution: {directory: scopes/workspace/workspace, type: directory}
     peerDependencies:
       '@apollo/client': ^3.12.0
+      chai: 5.2.1
       react: 19.2.7
       react-router-dom: ^6.30.1
 
@@ -85572,6 +85576,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       chalk: 4.1.2
       classnames: 2.5.1
       comment-json: 4.2.5
@@ -85596,7 +85601,6 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
-      - chai
       - domexception
       - encoding
       - graphql
@@ -85677,6 +85681,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       chalk: 4.1.2
       classnames: 2.5.1
       comment-json: 4.2.5
@@ -85701,7 +85706,6 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
-      - chai
       - domexception
       - encoding
       - graphql
@@ -85782,6 +85786,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       chalk: 4.1.2
       classnames: 2.5.1
       comment-json: 4.2.5
@@ -85806,7 +85811,6 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
-      - chai
       - domexception
       - encoding
       - graphql
