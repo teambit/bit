@@ -947,7 +947,7 @@ jobs:
       - run:
           name: 'bit ci merge'
           # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
-          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 4 ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 5 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
