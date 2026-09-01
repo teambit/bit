@@ -74107,6 +74107,7 @@ snapshots:
       '@teambit/dependencies.aspect-docs.pnpm': file:scopes/dependencies/aspect-docs/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
       '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/pkg.entities.registry': 0.0.4
@@ -74145,6 +74146,7 @@ snapshots:
       '@teambit/dependencies.aspect-docs.pnpm': file:scopes/dependencies/aspect-docs/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
       '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/pkg.entities.registry': 0.0.4
@@ -74183,6 +74185,7 @@ snapshots:
       '@teambit/dependencies.aspect-docs.pnpm': file:scopes/dependencies/aspect-docs/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
       '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/pkg.entities.registry': 0.0.4
