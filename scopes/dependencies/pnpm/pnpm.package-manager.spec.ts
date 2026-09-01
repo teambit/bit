@@ -24,10 +24,46 @@ describe('PnpmPackageManager.getNetworkConfig', () => {
   });
 });
 
+describe('PnpmPackageManager.install', () => {
+  it('rethrows dependency graph conversion errors when strict restoration is requested', async () => {
+    const packageManager = createPackageManager({});
+    const restoreError = new Error('failed to restore lockfile');
+    packageManager.dependenciesGraphToLockfile = async () => {
+      throw restoreError;
+    };
+
+    let thrown: unknown;
+    try {
+      await packageManager.install(
+        {
+          rootDir: '/tmp/workspace',
+          manifests: {},
+          componentDirectoryMap: {} as any,
+        },
+        {
+          dependenciesGraph: {} as any,
+          rootComponents: true,
+          failOnDependenciesGraphError: true,
+        }
+      );
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).to.equal(restoreError);
+  });
+});
+
 function createPackageManager(config: Partial<ResolvedConfig>) {
   const packageManager = new PnpmPackageManager(
-    {} as any,
-    {} as any,
+    {
+      getRegistries: async () => undefined,
+      getProxyConfig: async () => undefined,
+      getNetworkConfig: async () => undefined,
+    } as any,
+    {
+      error: () => {},
+    } as any,
     {
       getCurrentUser: async () => ({ username: 'test-user' }),
     } as any

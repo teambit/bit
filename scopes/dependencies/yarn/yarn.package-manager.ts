@@ -44,6 +44,7 @@ import { createRootComponentsDir } from './create-root-components-dir';
 
 export class YarnPackageManager implements PackageManager {
   readonly name = 'yarn';
+  readonly supportsDependencyGraphRestoration = false;
 
   constructor(
     private depResolver: DependencyResolverMain,

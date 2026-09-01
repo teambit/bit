@@ -69,6 +69,7 @@ function loadNodeApi(): typeof NodeApi {
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
+  readonly supportsDependencyGraphRestoration = true;
   readonly modulesManifestCache: Map<string, ModulesManifest> = new Map();
   private username: string;
 
@@ -164,8 +165,8 @@ export class PnpmPackageManager implements PackageManager {
           cacheDir: config.cacheDir,
         });
       } catch (error) {
-        // If the lockfile could not be created for some reason, it will be created later during installation.
         this.logger.error((error as Error).message);
+        if (installOptions.failOnDependenciesGraphError) throw error;
       }
     }
 

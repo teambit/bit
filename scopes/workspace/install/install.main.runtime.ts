@@ -5,7 +5,7 @@ import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspac
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import type { CLIMain, CommandList } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, MainRuntime, formatWarningSummary } from '@teambit/cli';
 import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Workspace } from '@teambit/workspace';
@@ -43,6 +43,7 @@ import type {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
   DependencyInstaller,
+  PackageManager,
   PackageManagerInstallOptions,
   WorkspacePolicyEntry,
   LinkingOptions,
@@ -72,7 +73,11 @@ import { BundlerAspect } from '@teambit/bundler';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
-import { DependencyTypeNotSupportedInPolicy, UnpublishedComponentDependency } from './exceptions';
+import {
+  DependencyTypeNotSupportedInPolicy,
+  RestoreNotSupportedByPackageManager,
+  UnpublishedComponentDependency,
+} from './exceptions';
 import type { UnpublishedSnapDependency } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -362,6 +367,7 @@ export class InstallMain {
       await this.dependencyResolver.persistConfig('update allowScripts configuration');
     }
     const pm = this.dependencyResolver.getPackageManager();
+    this.ensurePackageManagerSupportsRestore(options, pm);
     this.logger.console(
       `installing dependencies in workspace using ${pm?.name} (${chalk.cyan(
         this.dependencyResolver.packageManagerName
@@ -405,6 +411,7 @@ export class InstallMain {
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
       dedupePeers: this.dependencyResolver.config.dedupePeers,
       dependenciesGraph,
+      failOnDependenciesGraphError: options?.restoreFromDependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       allowScripts: this.dependencyResolver.getAllowedScripts(),
@@ -545,6 +552,15 @@ export class InstallMain {
     return nonLoadedEnvs.length > 0;
   }
 
+  private ensurePackageManagerSupportsRestore(
+    options: ModulesInstallOptions | undefined,
+    packageManager: PackageManager | undefined
+  ) {
+    if (options?.restoreFromDependenciesGraph && !packageManager?.supportsDependencyGraphRestoration) {
+      throw new RestoreNotSupportedByPackageManager(packageManager?.name ?? this.dependencyResolver.packageManagerName);
+    }
+  }
+
   private async resolveDependenciesGraph(
     options: ModulesInstallOptions | undefined,
     context: { hasRootComponents: boolean }
@@ -553,7 +569,7 @@ export class InstallMain {
     if (!options?.restoreFromDependenciesGraph) return undefined;
     if (!context.hasRootComponents) {
       this.logger.console(
-        chalk.yellow(
+        formatWarningSummary(
           '--restore requires "rootComponents: true" in the dependency-resolver config; falling back to a regular install.'
         )
       );
@@ -564,7 +580,7 @@ export class InstallMain {
     });
     if (!graph) {
       this.logger.console(
-        chalk.yellow(
+        formatWarningSummary(
           '--restore was requested but no workspace component has a stored dependency graph. Falling back to a regular install.'
         )
       );
