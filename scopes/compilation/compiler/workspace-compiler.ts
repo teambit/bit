@@ -54,7 +54,7 @@ export type CompileOptions = {
    * start` to avoid webpack "EINTR" error.
    */
   deleteDistDir?: boolean;
-  initiator: CompilationInitiator; // describes where the compilation is coming from
+  initiator?: CompilationInitiator; // describes where the compilation is coming from
   // should we create links in node_modules for the compiled components (default = true)
   // this will link the source files, and create the package.json
   linkComponents?: boolean;
@@ -266,7 +266,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
   private async compileOneFile(
     file: AbstractVinyl,
-    initiator: CompilationInitiator,
+    initiator: CompilationInitiator | undefined,
     distDirs: string[]
   ): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
@@ -299,7 +299,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFiles(initiator: CompilationInitiator, distDirs: string[]): Promise<void> {
+  private async compileAllFiles(initiator: CompilationInitiator | undefined, distDirs: string[]): Promise<void> {
     const filesToCompile: AbstractVinyl[] = [];
     for (const base of distDirs) {
       this.component.filesystem.files.forEach((file: AbstractVinyl) => {
@@ -381,7 +381,13 @@ export class WorkspaceCompiler {
   async onAspectLoadFail(err: Error & { code?: string }, component: Component): Promise<boolean> {
     if (
       ((err.code &&
-        (err.code === 'MODULE_NOT_FOUND' || err.code === 'ERR_MODULE_NOT_FOUND' || err.code === 'ERR_REQUIRE_ESM')) ||
+        (err.code === 'MODULE_NOT_FOUND' ||
+          err.code === 'ERR_MODULE_NOT_FOUND' ||
+          err.code === 'ERR_REQUIRE_ESM' ||
+          // node refuses to load .ts files from node_modules. happens when the loaded instance
+          // has only the component sources (e.g. re-created by the package manager mid-install)
+          // and compiling the component fixes it, same as a missing-module failure
+          err.code === 'ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING')) ||
         err.message.includes('import.meta') ||
         err.message.includes('exports is not defined')) &&
       this.workspace
@@ -393,6 +399,20 @@ export class WorkspaceCompiler {
       if (shouldCompile) {
         const id = component.id;
         const idStr = id.toString();
+
+        // compiling can only fix a workspace component whose dists are missing or stale. when the
+        // failed aspect is not in the workspace (e.g. an env that used to be a core aspect,
+        // resolved to its pinned version but not installed yet), the cascade below imports the
+        // env's full dependency closure from the remote and recompiles a large part of the
+        // workspace into every injected node_modules copy - minutes of work that cannot
+        // materialize the missing package. skip it and let the regular missing-aspect handling
+        // report it (a NonLoadedEnv issue with a "bit install" remediation).
+        if (!this.workspace.hasId(id, { ignoreVersion: true })) {
+          this.logger.debug(
+            `onAspectLoadFail: skipping compilation of ${idStr} - not a workspace component, compiling cannot fix its missing module`
+          );
+          return false;
+        }
 
         // Prevent infinite loop when there's a circular dependency between an env and a component.
         // If we're already processing this component, don't re-enter.
@@ -491,8 +511,13 @@ export class WorkspaceCompiler {
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
-    // In case the aspect failed to load, we want to compile it without try to re-load it again
-    if (options.initiator === CompilationInitiator.AspectLoadFail) {
+    // In case the aspect failed to load, we want to compile it without try to re-load it again.
+    // `options.initiator &&` short-circuits the CompilationInitiator.AspectLoadFail read: `===`
+    // evaluates both operands regardless of the LHS, so an unguarded comparison here reaches the
+    // same unsafe lazy getter as the direct reads already guarded elsewhere - this line is exactly
+    // where the "second" bit_pr install-crash fix (bundle-plan.md §14, 2026-08-12) turned out to
+    // still be reachable from, disproving that a mere `undefined` initiator was enough on its own.
+    if (options.initiator !== undefined && options.initiator === CompilationInitiator.AspectLoadFail) {
       componentLoadOptions.loadSeedersAsAspects = false;
     }
     let components = await this.workspace.getMany(componentIds, componentLoadOptions);
@@ -702,7 +727,9 @@ export class WorkspaceCompiler {
     const envsOfEnvsWithoutCoreCompIds = envsOfEnvsCompIds.filter((id) => !this.envs.isCoreEnv(id));
     let depsOfEnvsOfEnvsCompIds: string[] = [];
     if (graph) {
-      const subGraph = graph.successorsSubgraph(envsOfEnvsWithoutCoreCompIds, {
+      // envs installed as packages (e.g. legacy core envs) are not part of the workspace graph
+      const envsOfEnvsOnGraph = envsOfEnvsWithoutCoreCompIds.filter((id) => graph.hasNode(id));
+      const subGraph = graph.successorsSubgraph(envsOfEnvsOnGraph, {
         nodeFilter: (node) => this.workspace.hasId(node.attr),
       });
       depsOfEnvsOfEnvsCompIds = subGraph.nodes.map((n) => n.id);
@@ -722,7 +749,7 @@ export class WorkspaceCompiler {
     if (graph) {
       const otherEnvsIds = (groupedByEnvsOfEnvs.otherEnvs || []).map((c) => c.id.toString());
       if (otherEnvsIds.length) {
-        const otherEnvsWithoutCoreIds = otherEnvsIds.filter((id) => !this.envs.isCoreEnv(id));
+        const otherEnvsWithoutCoreIds = otherEnvsIds.filter((id) => !this.envs.isCoreEnv(id) && graph.hasNode(id));
         const subGraph = graph.successorsSubgraph(otherEnvsWithoutCoreIds, {
           nodeFilter: (node) => this.workspace.hasId(node.attr),
         });

@@ -50,6 +50,13 @@ master_only_filter: &master_only_filter
     branches:
       only: master
 
+# The bundle branches, which can publish a pre-release build to bvm without going through a
+# release. Same pattern setup_esbuild_bundle is gated on.
+bundle_branch_filter: &bundle_branch_filter
+  filters:
+    branches:
+      only: /^bit-bundle.*/
+
 # ========================================
 # PIPELINE PARAMETERS
 # ========================================
@@ -72,6 +79,15 @@ parameters:
     type: enum
     enum: ["true", "false"]
     default: "false"
+  # Publishes the bundled CLI from a bit-bundle* branch to bvm as a pre-release, without
+  # publishing anything to the registry. Trigger from the CircleCI web app with both parameters
+  # set; bundle_version is the version bvm will serve, e.g. "2.2.18-bundle.1".
+  run_bundle_deploy:
+    type: boolean
+    default: false
+  bundle_version:
+    type: string
+    default: ""
 
 # ========================================
 # ORBS
@@ -301,6 +317,77 @@ commands:
           key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
+
+  # Merges build_ui_prebundle's cached UI/preview artifacts into setup_esbuild_bundle's already-
+  # built bundle - a plain file copy, since the pre-bundle is static artifacts alongside
+  # bit.app.js rather than compiled into it, so no rebuild is needed. Shared between
+  # e2e_test_ui_prebundle and bundle_push_build, both of which combine the two upstream jobs'
+  # persisted workspace output this way.
+  inject_ui_prebundle:
+    steps:
+      - run:
+          name: inject the pre-bundle into the built esbuild bundle
+          command: |
+            UI_OUT=/home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/ui/artifacts
+            PREVIEW_OUT=/home/circleci/bit/esbuild-bundle/dist/core-aspects/node_modules/@teambit/preview/artifacts
+            mkdir -p "$UI_OUT" "$PREVIEW_OUT"
+            cp -r bit/.bundle-cache/ui-preview-prebundle/ui/artifacts/. "$UI_OUT"/
+            cp -r bit/.bundle-cache/ui-preview-prebundle/preview/artifacts/. "$PREVIEW_OUT"/
+            test -f "$UI_OUT/ui-bundle/.hash"
+            test -f "$PREVIEW_OUT/ui-bundle/.hash"
+
+  # Shared between bundle_deploy_build (manual, arbitrary bundle_version) and bundle_push_build
+  # (automatic, one per bit-bundle* push) - see bundle-plan/24-installing-via-bvm.md.
+  resolve_bundle_version:
+    parameters:
+      version_override:
+        type: string
+        default: ""
+    steps:
+      - run:
+          name: resolve the version to publish
+          # An explicit override wins. Otherwise it is derived from this branch's own component
+          # version plus the next free counter in bvm's index - so forgetting it is not an error, a
+          # re-run cannot overwrite an earlier build, and nobody has to remember which -bundle.N
+          # they are up to.
+          command: |
+            cd bit
+            VERSION="<< parameters.version_override >>"
+            if [ -z "$VERSION" ]; then
+              VERSION=$(node scripts/next-bundle-version.js)
+            fi
+            echo "publishing as ${VERSION}"
+            echo "export BUNDLE_VERSION=${VERSION}" >> "$BASH_ENV"
+
+  pack_bvm_tars:
+    steps:
+      - run:
+          name: pack a tar per platform
+          # One job for all five, unlike harmony_deploy's three: those are split because each one
+          # installs bit's full ~5000-package tree, while this installs only the ~11 externals.
+          # They are all linux containers there too - the cross-platform install is pnpm's, not the
+          # runner's, and the packer's @pnpm/napi check is the same guard verify_pnpm_napi_bundle
+          # provides.
+          command: |
+            cd bit
+            for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 win-x64; do
+              node scripts/pack-bundle-for-bvm.js \
+                --capsule /home/circleci/bit/esbuild-bundle \
+                --version "${BUNDLE_VERSION}" \
+                --os "${target%-*}" \
+                --arch "${target##*-}" \
+                --out-dir /home/circleci/bit/bvm-tars
+            done
+            # the publish job reads the version from here rather than the parameter, so the two
+            # jobs cannot disagree about what was built
+            echo "${BUNDLE_VERSION}" > /home/circleci/bit/bvm-tars/version.txt
+            ls -la /home/circleci/bit/bvm-tars
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bvm-tars
+      - store_artifacts:
+          path: /home/circleci/bit/bvm-tars
 
   # SSH & Git setup
   update_ssh_agent:
@@ -548,15 +635,23 @@ commands:
                 # any uncertainty (master branch, missing merge-base, empty diff) falls back to
                 # running the full suite. doc files under e2e/ are treated as test changes, not
                 # docs, so they never trigger a skip.
+                # git here must never touch the network interactively: on some branches the diff
+                # made git reach github over ssh and hang on the host-key prompt until the step's
+                # 10m no-output timeout killed the job. force non-interactive ssh and bound every
+                # git call, treating any failure as "run the full suite".
                 command: |
                   if [ "$CIRCLE_BRANCH" = "master" ]; then
                     echo "on master - running the full suite"; exit 0
                   fi
                   cd bit
-                  if ! BASE=$(git merge-base HEAD origin/master 2>/dev/null); then
+                  export GIT_TERMINAL_PROMPT=0
+                  export GIT_SSH_COMMAND='ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new'
+                  if ! BASE=$(timeout 60 git merge-base HEAD origin/master 2>/dev/null); then
                     echo "cannot determine merge-base with origin/master - running the full suite"; exit 0
                   fi
-                  CHANGED_FILES=$(git diff --name-only "$BASE" HEAD)
+                  if ! CHANGED_FILES=$(timeout 120 git diff --name-only "$BASE" HEAD 2>/dev/null); then
+                    echo "diff against merge-base failed - running the full suite"; exit 0
+                  fi
                   if [ -z "$CHANGED_FILES" ]; then
                     echo "empty diff against merge-base - running the full suite"; exit 0
                   fi
@@ -604,6 +699,13 @@ commands:
           no_output_timeout: '50m'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
+            # The native pnpm engine parallelises extraction over rayon, and rust sizes its pools
+            # from the HOST's cpu count inside docker (~36) rather than this container's 2. Cap
+            # them, so the suites that install an env package - thousands of packages - don't add
+            # a host-sized thread pool on top and get OOM-killed (a bare `Killed` out of
+            # `bit install`). Inherited by the bit processes the tests spawn.
+            # NOTE: PNPM_MAX_WORKERS, which used to live here, is not read by pnpm v12 at all.
+            RAYON_NUM_THREADS: '2'
           when: always
       - store_test_results:
           path: bit/junit
@@ -697,8 +799,19 @@ jobs:
           command: >
             cd bit &&
             echo "user-agent=bit-repo-circleci" >> .npmrc &&
+            bbit config set package-manager.cache /home/circleci/bit/.bit-cache &&
             git update-index --skip-worktree .npmrc &&
             bbit install
+          # package-manager.cache pins the package cache (pnpm store) INSIDE the persisted
+          # workspace - bit passes cacheRootDir programmatically so npmrc store-dir is ignored,
+          # and the default (~/Library/Caches/Bit) is outside persist_to_workspace's root. with
+          # it persisted, downstream jobs (bit_pr's dev install) reuse the packages instead of
+          # re-downloading the whole universe (which the native pnpm engine's fetch cannot
+          # survive memory-wise).
+          environment:
+            # see the "bit install (dev binary)" step of bit_pr - the pnpm engine's rayon pools are
+            # sized from the HOST's cpu count inside docker; cap them to this class's actual cpus.
+            RAYON_NUM_THREADS: '4'
       # `bbit install` compiles as part of the install, but that pass can fall back to the
       # default TypeScript compiler for components whose env is still being imported - notably
       # the node-babel-mocha ones (legacy.scope, legacy.consumer, scope.network, ...). tsc emits
@@ -716,6 +829,7 @@ jobs:
           paths:
             - bit
             - .pnpm-store
+            - .bit-cache
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
@@ -743,18 +857,51 @@ jobs:
 
   check_circular_dependencies:
     <<: *defaults
+    # the dev-binary install below re-materializes the workspace component packages without
+    # their dists (pnpm v12 napi relinking), so its post-install step recompiles all ~320
+    # components in-process - that peaks well above the default medium (4GB) container and the
+    # compile gets OOM-killed ("Received killed signal").
+    resource_class: large
     steps:
       - attach_workspace:
           at: ./
       - bit_global_for_npm
-      - bit_config
+      # was defaulting to the 'hub-stg' (staging) hub_domain via a bare bit_config call - every
+      # other bit-executing job (bit_pr, bit_merge) goes through setup_bit_environment, which
+      # defaults to production 'hub'. kept on prod for consistency, but this turned out NOT to be
+      # the cause of the hangs below - confirmed by reproducing the same stall against prod too.
+      - bit_config:
+          env: 'hub'
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
+      # the workspace attached from setup_harmony was installed by the released (bvm) binary,
+      # which filters the legacy core-env packages (@teambit/node etc.) out of the install
+      # manifest. the repo binary loads those envs as regular packages, and a missing one used
+      # to send every aspect-load failure into the compiler's recompile cascade (importing the
+      # env's full closure from the remote and rewriting all dists) - the root cause of this
+      # job's 5-minute hangs, see scripts/circular-deps-check/CI-HANG-INVESTIGATION.md. the dev
+      # binary's install pins those envs into the policy, so the check runs with its envs loaded.
       - run:
-          name: 'check circular dependencies'
+          name: 'bit install (dev binary)'
+          command: 'cd bit && bit install'
+          no_output_timeout: 30m
+          environment:
+            # the pnpm engine's rayon pools are sized from the HOST's cpu count inside docker;
+            # cap them to this class's actual cpus (see the same step in bit_pr).
+            RAYON_NUM_THREADS: '4'
+      - run:
+          name: 'check circular dependencies (repo bit)'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
+          # the script normally finishes in seconds; bound it well under the platform's default
+          # 10m no-output kill so a stall fails with a clear message instead of a silent timeout.
+          no_output_timeout: 6m
+      # bit writes debug-level logs to debug.log by default (independent of BIT_LOG, which would
+      # print to stdout and corrupt the JSON this check parses) - persist it so a future hang or
+      # failure has the network/scope-import trail to look at, same as the other bit-running jobs.
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   check_version_sync:
     <<: *defaults
@@ -853,14 +1000,14 @@ jobs:
 
   # ========== Bit CI Jobs ==========
   bit_pr:
-    # xlarge validated on a worst-case 98-component cascade (no OOM at 12GB heap, same wall time
-    # as 2xlarge). If this job dies with "Killed", revert to 2xlarge + max-old-space-size=30000.
-    # large (8GB/6GB heap) was tried after the rspack preview migration and OOM'd within 8 minutes.
-    resource_class: xlarge
+    # back on 2xlarge: on this branch the lane build got OOM-killed at 16GB during the react env's
+    # Preview webpack bundling (cgroup pinned at 13-16GB), as the xlarge comment predicted.
+    # (master runs xlarge; keep 2xlarge while this branch installs the legacy envs' closure.)
+    resource_class: 2xlarge
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=12288
+      NODE_OPTIONS: --max-old-space-size=30000
     steps:
       - attach_workspace:
           at: ./
@@ -868,6 +1015,41 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run:
+          name: bit install (dev binary)
+          # the released bbit (used by setup_harmony) still treats the legacy core envs
+          # (node/react/aspect/env/mdx/readme) as core aspects and filters their packages out of
+          # the install manifest. the dev binary treats them as regular envs and needs their
+          # packages in node_modules to load them - without them workspace-status verification
+          # fails. reconcile here (2xlarge) rather than in setup_harmony.
+          # RAYON_NUM_THREADS: the native pnpm engine extracts over rayon, and rust sizes its
+          # pools from the HOST's cpu count inside docker (~36), not the resource class's - a
+          # host-sized pool makes the fetch phase of this install (it downloads the legacy envs'
+          # full closure) run out of memory on any container size. best-effort: a pool the engine
+          # builds with an explicit thread count of its own won't read the variable.
+          # becomes a cheap no-op once a stable release without those core envs is out.
+          command: |
+            cd bit
+            # reuse the package cache populated by setup_harmony's bbit install (persisted at the
+            # workspace root). without it the dev install fetches everything from scratch and
+            # the native pnpm engine's fetch phase retains the downloads in memory until it gets
+            # OOM-killed - reuse keeps the fetch down to the closure packages only.
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
+            echo "=== persisted cache ==="; du -sh /home/circleci/bit/.bit-cache 2>/dev/null || echo "no persisted cache at /home/circleci/bit/.bit-cache"
+            (while true; do
+              CUR=$(cat /sys/fs/cgroup/memory.current 2>/dev/null || cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null || echo 0)
+              MAX=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo 0)
+              echo "CGROUP-MEM: $((CUR/1048576))MB / $((MAX/1048576))MB"
+              sleep 15
+            done) &
+            SAMPLER=$!
+            node bin/bit.js install
+            STATUS=$?
+            kill $SAMPLER 2>/dev/null || true
+            exit $STATUS
+          no_output_timeout: '30m'
+          environment:
+            RAYON_NUM_THREADS: '6'
       - run:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
@@ -885,10 +1067,30 @@ jobs:
           # runs - on a PR that snaps core components (so their specs actually run), bit_pr fails
           # deterministically from the second push onward. The temp-lane flow rebuilds every run
           # from one commit, trading the lane's persistent history on Bit Cloud for correctness.
-          command: 'cd bit && bit ci pr --build --skip-cleanup --skip-tasks PublishComponents'
+          # the sampler prints the container's memory every 15s (same one the install step uses), so
+          # a "Received killed signal" comes with the usage curve that led to it instead of just the
+          # node heap numbers the build logs itself - the heap has been well under its cap each time.
+          command: |
+            cd bit
+            (while true; do
+              CUR=$(cat /sys/fs/cgroup/memory.current 2>/dev/null || cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null || echo 0)
+              MAX=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo 0)
+              echo "CGROUP-MEM: $((CUR/1048576))MB / $((MAX/1048576))MB"
+              sleep 15
+            done) &
+            SAMPLER=$!
+            bit ci pr --build --skip-cleanup --skip-tasks PublishComponents
+            STATUS=$?
+            kill $SAMPLER 2>/dev/null || true
+            exit $STATUS
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=12288
+            # Caps the rayon pools inside the native toolchain (rspack's minifier, the pnpm engine).
+            # Rust sizes them from the HOST's cpu count inside docker - ~36 threads, each with its
+            # own working set, on an 8-cpu container. (PNPM_MAX_WORKERS, which this file used to
+            # set, is not read by pnpm v12 at all.)
+            RAYON_NUM_THREADS: '6'
             # NOTE: parallel builds (BIT_BUILD_CONCURRENCY>1) were measured here and did NOT help —
             # this build is CPU-bound and dominated by one env, so concurrency only added contention.
             # See tasks-parallel-scheduler.ts header for the numbers. Left serial on purpose.
@@ -938,6 +1140,18 @@ jobs:
                 circleci-agent step halt
               fi
             fi
+      - run:
+          name: bit install (dev binary)
+          # same reconcile as in bit_pr: the released bbit filters the legacy-core-env packages
+          # out of the manifest; the dev binary needs them installed to load those envs.
+          # RAYON_NUM_THREADS and package-manager.cache: see the bit_pr step of the same name.
+          command: |
+            cd bit
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
+            node bin/bit.js install
+          no_output_timeout: '30m'
+          environment:
+            RAYON_NUM_THREADS: '6'
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -959,8 +1173,6 @@ jobs:
   # ========== Testing Jobs ==========
   e2e_test:
     <<: *defaults
-    # changing from medium to large, doesn't affect the performance
-    # resource_class: large
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
@@ -1062,6 +1274,189 @@ jobs:
       - e2e_test_cmd:
           bit_bin: "--bit_bin=bit-cleaned"
           exclude_dirs: ""
+
+  # ========== esbuild CLI bundle ==========
+  # Builds the bundled CLI once and persists it, so all e2e nodes share a single build instead of
+  # each of them producing (and installing the externals for) their own.
+  setup_esbuild_bundle:
+    <<: *defaults
+    resource_class: large
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+      PNPM_MAX_WORKERS: "4"
+    steps:
+      - attach_workspace:
+          at: ./
+      # no bvm and no compile step: `bit install` compiles by default (which is why setup_harmony
+      # has `bbit compile` commented out), so the attached workspace already has every component's
+      # dist/ - the only input the bundler needs. Building the bundle itself is plain node + npm.
+      - run:
+          name: build the esbuild bundle
+          # bundle:ensure builds only when its stamp differs and then installs the externals; on a
+          # fresh CI machine that is always a full build, which is what we want here.
+          command: cd bit && npm run bundle:ensure -- --out-dir /home/circleci/bit/esbuild-bundle
+          no_output_timeout: '30m'
+      - run:
+          name: smoke test the bundle
+          command: |
+            node /home/circleci/bit/esbuild-bundle/bin/bit --version
+            node /home/circleci/bit/esbuild-bundle/bin/bit --help > /dev/null
+      - persist_to_workspace:
+          root: .
+          paths:
+            - esbuild-bundle
+      - store_artifacts:
+          path: /home/circleci/bit/esbuild-bundle/dist/core-aspects/bundle/metafile.json
+      - store_artifacts:
+          path: /home/circleci/bit/esbuild-bundle/bundle-stamp.json
+
+  # Runs the full e2e suite against the bundled CLI from setup_esbuild_bundle.
+  e2e_test_esbuild_bundle:
+    <<: *defaults
+    environment:
+      BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
+      # an explicit compile-cache dir, out of /tmp which the suite itself churns. the e2e helper
+      # spreads process.env into every spawned bit, so all of them share this cache - without it
+      # each invocation re-parses the 67MB bundle (the ~2s `bit --help` this job used to measure).
+      NODE_COMPILE_CACHE: /home/circleci/node-compile-cache
+    parallelism: 40
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_common_caches
+      - run:
+          name: put the bundled bit on PATH as "bit-bundled"
+          # the launcher resolves the bundle relative to its own realpath, so a symlink is enough.
+          command: |
+            mkdir -p /home/circleci/.npm-global/bin
+            BIT_BUNDLED=/home/circleci/bit/esbuild-bundle/bin/bit
+            chmod +x "$BIT_BUNDLED"
+            ln -sf "$BIT_BUNDLED" /home/circleci/.npm-global/bin/bit-bundled
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: verify the bundled binary works and warm the compile cache
+          # the two timed runs double as the cache diagnostic: the second must be visibly faster,
+          # and the listing proves the cache dir is actually populated on this machine.
+          command: |
+            source $BASH_ENV
+            bit-bundled --version
+            time bit-bundled --help > /dev/null
+            time bit-bundled --help > /dev/null
+            du -sh "$NODE_COMPILE_CACHE" 2>/dev/null || echo "compile cache dir was NOT populated"
+      - e2e_test_cmd:
+          bit_bin: "--bit_bin=bit-bundled"
+          skip_when_doc_only: true
+
+  # Builds a real ui/preview pre-bundle from the dev binary (bundle-plan §17i) and caches it under
+  # .bundle-cache/. Deliberately its own job, parallel to (not chained in front of)
+  # setup_esbuild_bundle: producing this is a real `bit build`, minutes on top of the esbuild
+  # bundle's own build, and it would otherwise delay every node of e2e_test_esbuild_bundle's
+  # 40-way sweep just to serve two spec files. e2e_test_ui_prebundle combines this job's output
+  # with setup_esbuild_bundle's once both are ready, so neither job blocks the other.
+  build_ui_prebundle:
+    <<: *defaults
+    resource_class: large
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+    steps:
+      - attach_workspace:
+          at: ./
+      - setup_bit_environment
+      - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run:
+          name: bit install (dev binary)
+          # same reconciliation as bit_pr's own "bit install (dev binary)" step, and for the same
+          # reason (see its comment there): setup_harmony's release-bit install filters the legacy
+          # core envs' packages out of node_modules, but the dev binary - needed here since
+          # teambit.ui-foundation/ui and teambit.preview/preview are core aspects that a bvm-linked
+          # release binary would resolve to its own published packages for, not this branch's
+          # modified source (bundle-plan §17i) - treats them as regular envs and needs them present.
+          command: |
+            cd bit
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
+            node bin/bit.js install
+          no_output_timeout: '20m'
+          environment:
+            RAYON_NUM_THREADS: '4'
+      - run:
+          name: build the ui/preview pre-bundle and cache it
+          # a narrow build - these 2 components and their envs, not bit_pr's full temp-lane
+          # pipeline - so lighter than bit_pr's 2xlarge, but untested at CI scale: bump
+          # resource_class above if this OOMs.
+          command: |
+            cd bit
+            node bin/bit.js build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules \
+              --tasks "BundleUI,PreBundlePreview"
+            BIT_BIN=bit npm run bundle:prebundle-cache:save
+          no_output_timeout: '15m'
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit/.bundle-cache
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
+  # Injects build_ui_prebundle's fresh pre-bundle into setup_esbuild_bundle's already-built bundle
+  # - a plain file copy, since the pre-bundle is static artifacts alongside bit.app.js rather than
+  # compiled into it, so no rebuild is needed - then runs, against the result in `prebuilt` mode:
+  # the UI-bundling sanity suites (ui-start.e2e.ts/ui-ssr.e2e.ts, gated behind BIT_E2E_UI_MODE, see
+  # bundle-plan/11-e2e-suite.md) and any other spec file whose own gate checks for the same thing
+  # (custom-env-operations-2.e2e.ts's "preview/bundler but no compiler" describe block, added
+  # 2026-08-19 - bundle-plan §10 gap 11 - needs the *core* preview pre-bundle to build a
+  # workspace-local env's preview under the bundle at all; add further files here the same way).
+  # Requires both upstream jobs but runs independently of e2e_test_esbuild_bundle, so a slow or
+  # failing pre-bundle build never delays or fails the main e2e signal - only this job's own,
+  # narrower one.
+  # Runs `restore_common_caches`/`bit_global_for_npm`/`bit_config` before touching the bundle -
+  # the same global-config setup `e2e_test_esbuild_bundle` gets via `e2e_test_cmd` (registry,
+  # hub_domain, package-manager.cache, etc., all set through the repo's own `bit.js`, not the
+  # bundle under test). Without it this job's `bit install`/`bit build` calls run against
+  # whatever config CircleCI's stock image happens to have, unlike every other e2e job.
+  e2e_test_ui_prebundle:
+    <<: *defaults
+    resource_class: medium
+    environment:
+      # see e2e_test_esbuild_bundle - same cache, same reason.
+      NODE_COMPILE_CACHE: /home/circleci/node-compile-cache
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_common_caches
+      - bit_global_for_npm
+      - bit_config
+      - inject_ui_prebundle
+      - run:
+          name: put the bundled bit on PATH as "bit-bundled"
+          # the launcher resolves the bundle relative to its own realpath, so a symlink is enough.
+          command: |
+            mkdir -p /home/circleci/.npm-global/bin
+            BIT_BUNDLED=/home/circleci/bit/esbuild-bundle/bin/bit
+            chmod +x "$BIT_BUNDLED"
+            ln -sf "$BIT_BUNDLED" /home/circleci/.npm-global/bin/bit-bundled
+            echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: verify the bundled binary works and warm the compile cache
+          command: |
+            source $BASH_ENV
+            bit-bundled --version
+            time bit-bundled --help > /dev/null
+            time bit-bundled --help > /dev/null
+            du -sh "$NODE_COMPILE_CACHE" 2>/dev/null || echo "compile cache dir was NOT populated"
+      - run:
+          name: run the prebuilt-mode e2e suites against the real bundle
+          command: |
+            cd bit
+            npx registry-mock prepare
+            BIT_E2E_UI_MODE=prebuilt npm_config_bit_bin=bit-bundled NODE_OPTIONS=--no-warnings \
+              npx mocha --require ./babel-register \
+              e2e/harmony/ui-start.e2e.ts e2e/harmony/ui-ssr.e2e.ts \
+              e2e/harmony/custom-env-operations-2.e2e.ts
+          no_output_timeout: '10m'
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   # Regenerates the e2e timings manifest (scripts/e2e-test-timings.json) from recent CI runs
   # and opens a PR when the weights drifted meaningfully. Scheduled biweekly by the
@@ -1233,6 +1628,137 @@ jobs:
             - windows
       - store_artifacts:
           path: windows
+
+  # ========== Bundle Branch Deploy (bvm pre-release) ==========
+  #
+  # Publishes the bundled CLI to bvm straight from a bit-bundle* branch, so it can be handed out
+  # for testing without a release: nothing is published to the registry and no @teambit/bit
+  # version is taken. See bundle-plan/24-installing-via-bvm.md.
+  #
+  # Deliberately NOT part of harmony_deploy - that workflow's jobs all assume the version is
+  # already on npm (`setup_bit_version` reads `npm view @teambit/bit version`, `install_bit_bundle`
+  # pnpm-adds it), which is exactly what is not true here. The version comes from the
+  # bundle_version pipeline parameter instead, and the artifact is built rather than downloaded.
+  bundle_deploy_build:
+    <<: *defaults
+    # a real `bit build` of the whole CLI, on top of the esbuild bundle's own build - see
+    # build_ui_prebundle, which is `large` for the narrower two-component version of this.
+    resource_class: xlarge
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    steps:
+      - attach_workspace:
+          at: ./
+      - resolve_bundle_version:
+          version_override: << pipeline.parameters.bundle_version >>
+      - setup_bit_environment
+      - set_bit_cloud_registry
+      - setup_pnpm
+      - run:
+          name: bit install (dev binary)
+          # same reconciliation as build_ui_prebundle's own step, and for the same reason: the
+          # UI/preview pre-bundle below is built from *this branch's* source, which a bvm-linked
+          # release binary would not resolve to (bundle-plan §17i).
+          command: |
+            cd bit
+            node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
+            node bin/bit.js install
+          no_output_timeout: '20m'
+          environment:
+            RAYON_NUM_THREADS: '4'
+      - run:
+          name: build the ui/preview pre-bundle
+          # `npm run bundle` does not produce this - it takes a real `bit build` of these two
+          # components, exactly as the build_ui_prebundle job does it. The bundler copies the
+          # resulting artifacts/ into the shims; without them `bit start` falls back to an rspack
+          # rebuild the default bundle deliberately cannot do, and the packer refuses to build a
+          # tar at all.
+          command: |
+            cd bit
+            node bin/bit.js build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules \
+              --tasks "BundleUI,PreBundlePreview"
+            BIT_BIN=bit npm run bundle:prebundle-cache:save
+          no_output_timeout: '30m'
+      - run:
+          name: put the pre-bundle where the bundler reads it
+          # the cache restores into node_modules/@teambit/{ui,preview}/artifacts, which is where a
+          # non-capsule bundle build looks for it (bundle-plan §17i).
+          command: |
+            cd bit
+            npm run bundle:prebundle-cache:restore
+      - run:
+          name: build the cli bundle
+          # The bundler script, same invocation setup_esbuild_bundle uses. It emits the published
+          # layout directly - bin/bit plus dist/core-aspects/{bundle,node_modules} - so the packer
+          # consumes the out dir as-is. No `bit build` of teambit.harmony/bit is involved: that
+          # would be a full component compile of the CLI for an artifact this already produces.
+          command: |
+            cd bit
+            npm run bundle:ensure -- --out-dir /home/circleci/bit/esbuild-bundle
+          no_output_timeout: '30m'
+      - run:
+          name: smoke test the bundle
+          command: |
+            node /home/circleci/bit/esbuild-bundle/bin/bit --version
+            node /home/circleci/bit/esbuild-bundle/bin/bit --help > /dev/null
+      - pack_bvm_tars
+
+  # Packs bvm tars straight from build_and_test's own setup_esbuild_bundle + build_ui_prebundle
+  # output, instead of bundle_deploy_build's from-scratch bit install + bit build: those two jobs
+  # already run on every bit-bundle* push and persist exactly what's needed (esbuild-bundle,
+  # bit/.bundle-cache), so this just merges and packs it - no separate bit install or bit build.
+  # One auto-published bvm dev build per push, no manual trigger - see
+  # bundle-plan/24-installing-via-bvm.md.
+  bundle_push_build:
+    <<: *defaults
+    resource_class: large
+    steps:
+      - attach_workspace:
+          at: ./
+      - inject_ui_prebundle
+      - resolve_bundle_version
+      - pack_bvm_tars
+
+  bundle_publish_to_gcloud:
+    docker:
+      - image: bitcli/node-gcloud-sdk
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Configure gcloud auth
+          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      - run:
+          name: Upload the tar files and their checksums
+          # No pnpm-lock.yaml is uploaded, unlike harmony_publish_to_gcloud: that only exists to
+          # serve bvm's `package-manager` install method, which needs the version on the registry.
+          # These builds are installed with `--method tar`.
+          command: |
+            BUNDLE_VERSION="$(cat bvm-tars/version.txt)"
+            echo "export BUNDLE_VERSION=${BUNDLE_VERSION}" >> "$BASH_ENV"
+            cd bvm-tars
+            for tar in bit-${BUNDLE_VERSION}-*.tar.gz; do
+              gsutil cp "${tar}" "gs://bvm.bit.dev/bit/versions/${BUNDLE_VERSION}/${tar}"
+              sha256sum "${tar}" > checksum.txt
+              gsutil cp checksum.txt "gs://bvm.bit.dev/bit/versions/${BUNDLE_VERSION}/${tar%.tar.gz}.checksum.txt"
+            done
+      - run:
+          name: Add the version to bvm's index.json under the dev release type
+          # `dev`, not `nightly`: it keeps the build invisible to everyone on the default (stable)
+          # and nightly channels. Only BVM_RELEASE_TYPE=dev sees it.
+          command: |
+            cd bit
+            node scripts/add-bvm-index-entry.js \
+              --version "${BUNDLE_VERSION}" \
+              --release-type dev
+            gsutil cp index.json gs://bvm.bit.dev/bit/index.json
+            gsutil setmeta -h "Cache-Control:no-cache" gs://bvm.bit.dev/bit/index.json
+      - run:
+          name: How to install it
+          command: |
+            echo "BVM_RELEASE_TYPE=dev bvm install ${BUNDLE_VERSION} --method tar"
 
   harmony_publish_to_gcloud:
     docker:
@@ -1519,6 +2045,7 @@ workflows:
       or:
         - << pipeline.parameters.run_set_stable >>
         - << pipeline.parameters.run_deploy >>
+        - << pipeline.parameters.run_bundle_deploy >>
     jobs:
       - checkout_code
       - set_ssh_key
@@ -1548,21 +2075,15 @@ workflows:
           <<: *semver_tags_only_filters
           requires:
             - setup_harmony
-      - e2e_test:
-          # gated on lint + type-check (~1.5 min extra latency): a push that fails either of
-          # them cannot merge anyway, so running the 40-node e2e suite for it is pure waste.
-          requires:
-            - setup_harmony
-            - lint
-            - generate_and_check_types
-          # Not on master pushes: nothing gates on it there — bit_merge requires only
-          # generate_and_check_types, and the merge queue's "settled" check watches bit_merge
-          # alone (.github/scripts/merge-queue.js). Every PR already ran the full suite to get
-          # merged, so the per-merge master run was informational only. A daily master canary
-          # still runs in the nightly workflow.
-          filters:
-            branches:
-              ignore: master
+      # temporarily disabled to focus CI cycles on the esbuild-bundle jobs below - it's green, not
+      # what's being iterated on right now. re-enable by uncommenting (upstream also skips it on
+      # master pushes now, hence the filter).
+      # - e2e_test:
+      #     requires:
+      #       - setup_harmony
+      #     filters:
+      #       branches:
+      #         ignore: master
       - setup_bundle_simulation:
           filters:
             branches:
@@ -1575,6 +2096,37 @@ workflows:
               only: /^optimize-node-modules.*|^cleanup-script.*|.*cleanup.*script.*/
           requires:
             - setup_bundle_simulation
+      # the esbuild CLI bundle - runs on every branch (ungated 2026-08-19; was gated to bit-bundle*
+      # branches only while unproven, which would have stopped running entirely once that work
+      # merged to master instead of continuing there).
+      - setup_esbuild_bundle:
+          requires:
+            - setup_harmony
+      - e2e_test_esbuild_bundle:
+          requires:
+            - setup_esbuild_bundle
+      # parallel to setup_esbuild_bundle/e2e_test_esbuild_bundle, not chained in front of them -
+      # see build_ui_prebundle's own comment for why.
+      - build_ui_prebundle:
+          requires:
+            - setup_harmony
+      - e2e_test_ui_prebundle:
+          requires:
+            - setup_esbuild_bundle
+            - build_ui_prebundle
+      # auto-publishes a bvm dev pre-release on every bit-bundle* push, reusing the two jobs'
+      # output above instead of rebuilding it - see bundle_push_build's own comment and
+      # bundle-plan/24-installing-via-bvm.md. The manual, arbitrary-version bundle_deploy workflow
+      # is unaffected.
+      - bundle_push_build:
+          <<: *bundle_branch_filter
+          requires:
+            - setup_esbuild_bundle
+            - build_ui_prebundle
+      - bundle_publish_to_gcloud:
+          <<: *bundle_branch_filter
+          requires:
+            - bundle_push_build
       - bit_pr:
           requires:
             - setup_harmony
@@ -1707,6 +2259,7 @@ workflows:
       or:
         - << pipeline.parameters.run_set_stable >>
         - << pipeline.parameters.run_deploy >>
+        - << pipeline.parameters.run_bundle_deploy >>
     jobs:
       - harmony_deploy_approval_job:
           <<: *master_only_filter
@@ -1870,3 +2423,31 @@ workflows:
   #           - bundle_version_macos
   #           - bundle_version_windows
   #           - checkout_code
+
+  # Publishes the bundled CLI from a bit-bundle* branch to bvm as a pre-release.
+  #
+  # Trigger from the CircleCI web app (Trigger Pipeline) on the branch, with:
+  #   run_bundle_deploy = true
+  #   bundle_version    = 2.2.18-bundle.1
+  #
+  # Nothing reaches the registry and no @teambit/bit version is taken. The build is listed under
+  # bvm's `dev` release type, so it stays invisible on stable and nightly; install it with
+  #   BVM_RELEASE_TYPE=dev bvm install <bundle_version> --method tar
+  # See bundle-plan/24-installing-via-bvm.md.
+  bundle_deploy:
+    when: << pipeline.parameters.run_bundle_deploy >>
+    jobs:
+      - checkout_code:
+          <<: *bundle_branch_filter
+      - setup_harmony:
+          <<: *bundle_branch_filter
+          requires:
+            - checkout_code
+      - bundle_deploy_build:
+          <<: *bundle_branch_filter
+          requires:
+            - setup_harmony
+      - bundle_publish_to_gcloud:
+          <<: *bundle_branch_filter
+          requires:
+            - bundle_deploy_build

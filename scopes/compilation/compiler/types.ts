@@ -24,7 +24,7 @@ export type TranspileComponentParams = {
   component: Component;
   componentDir: string; // absolute path of the component's root directory
   outputDir: string; // absolute path of the component's output directory
-  initiator: CompilationInitiator; // origin of the compilation's request
+  initiator?: CompilationInitiator; // origin of the compilation's request
 };
 
 export type TypeGeneratorCompParams = { component: Component; packageDir: string };

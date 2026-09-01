@@ -44,13 +44,6 @@
         "mainFile": "find-duplications.ts",
         "rootDir": "scopes/toolbox/array/duplications-finder"
     },
-    "aspect": {
-        "name": "aspect",
-        "scope": "teambit.harmony",
-        "version": "1.0.1144",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/aspect"
-    },
     "aspect-docs/babel": {
         "name": "aspect-docs/babel",
         "scope": "teambit.compilation",
@@ -198,13 +191,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect-loader"
     },
-    "babel": {
-        "name": "babel",
-        "scope": "teambit.compilation",
-        "version": "1.0.1144",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/babel"
-    },
     "babel/bit-react-transformer": {
         "name": "babel/bit-react-transformer",
         "scope": "teambit.react",
@@ -217,7 +203,13 @@
         "scope": "teambit.harmony",
         "version": "2.2.25",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit"
+        "rootDir": "scopes/harmony/bit",
+        "config": {
+            "teambit.harmony/envs/bit-cli-app-env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/bit-cli-app-env"
+            }
+        }
     },
     "bit-map": {
         "name": "bit-map",
@@ -618,19 +610,26 @@
         "mainFile": "index.ts",
         "rootDir": "components/entities/semantic-schema-diff"
     },
-    "env": {
-        "name": "env",
-        "scope": "teambit.envs",
-        "version": "1.0.1144",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/envs/env"
-    },
     "envs": {
         "name": "envs",
         "scope": "teambit.envs",
         "version": "1.0.1144",
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs"
+    },
+    "envs/bit-cli-app-env": {
+        "name": "envs/bit-cli-app-env",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/envs/bit-cli-app-env",
+        "config": {
+            "teambit.envs/env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.envs/env"
+            }
+        }
     },
     "eslint": {
         "name": "eslint",
@@ -954,13 +953,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/mcp/mcp-config-writer"
     },
-    "mdx": {
-        "name": "mdx",
-        "scope": "teambit.mdx",
-        "version": "1.0.1145",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/mdx"
-    },
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
@@ -974,13 +966,6 @@
         "version": "1.0.1148",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/merging"
-    },
-    "mocha": {
-        "name": "mocha",
-        "scope": "teambit.defender",
-        "version": "1.0.897",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/defender/mocha"
     },
     "model/composition-id": {
         "name": "model/composition-id",
@@ -1023,6 +1008,20 @@
         "version": "0.0.153",
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/modules/babel-compiler"
+    },
+    "modules/cli-bundler": {
+        "name": "modules/cli-bundler",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/cli-bundler",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@2.0.4": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "modules/component-package-name": {
         "name": "modules/component-package-name",
@@ -1304,13 +1303,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/new-component-helper"
     },
-    "node": {
-        "name": "node",
-        "scope": "teambit.harmony",
-        "version": "1.0.1144",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/node"
-    },
     "notifications": {
         "name": "notifications",
         "scope": "teambit.ui-foundation",
@@ -1430,26 +1422,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/pubsub"
     },
-    "react": {
-        "name": "react",
-        "scope": "teambit.react",
-        "version": "1.0.1144",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/react"
-    },
     "react-router": {
         "name": "react-router",
         "scope": "teambit.ui-foundation",
         "version": "1.0.1144",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
-    },
-    "readme": {
-        "name": "readme",
-        "scope": "teambit.mdx",
-        "version": "1.0.1145",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/readme"
     },
     "refactoring": {
         "name": "refactoring",

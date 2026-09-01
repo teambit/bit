@@ -1,0 +1,95 @@
+---
+description: Bundles the Bit CLI and its ~106 core aspects into a single esbuild artefact.
+labels: ['bundle', 'esbuild', 'cli', 'build-task']
+---
+
+Produces the bundled Bit distribution: one esbuild output plus the shim packages that keep every core
+aspect importable as `@teambit/<name>`. It turns ~1.2 GB / 141k files into ~231 MB / ~7.3k files.
+
+## Who calls it
+
+Two callers share one implementation, `bundleCli()`, so the artefact CI publishes and the one a
+developer builds locally cannot drift:
+
+- **`npm run bundle`** — a thin arg parser in `@teambit/bit`, for local iteration.
+- **`BundleCliAppTask`** — the build task of `teambit.harmony/envs/bit-cli-app-env`, the env of
+  `@teambit/bit`, which produces what actually ships.
+
+Everything environment-specific is a parameter. `coreAspectIds` is an **input** rather than something
+this component discovers, because the list lives in `@teambit/bit`'s `manifests.ts` and importing it
+would make the bundler depend on the component it bundles. `packagesRoot` — where compiled
+`@teambit/*` packages are read from — is likewise explicit: the repo root locally, a capsule during a
+build.
+
+## The shape of a run
+
+`bundle-cli.ts` is the orchestrator and reads top-to-bottom as the pipeline:
+
+- discover the aspects
+- generate an entry that imports them all
+- run esbuild
+- build the workers
+- emit the shims, locators, ESM bridges, launcher and package.json
+- copy runtime assets
+- optionally build a single executable
+
+## Modules
+
+### Resolution and discovery
+
+| file                     | purpose                                                                                                                                                                                                                                                                                                                                |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `resolve-package-dir.ts` | Finds a package directory by walking the `node_modules` chain the way node does, returning the **realpath**. Everything else in the bundler goes through it. Assuming `<root>/node_modules/<pkg>` silently breaks under capsules (which hoist to a shared root) and under pnpm (where the symlink hides a package's own dependencies). |
+| `core-aspects-info.ts`   | Turns aspect ids into what the entry needs: package name, export name, and the deep specifiers of the `*.aspect` and `*.main.runtime` files. Those basenames cannot be derived from the id — `teambit.envs/envs` lives in `environments.main.runtime.ts` — so they are located on disk, in `dist/` first and the top level second.     |
+
+### Building
+
+| file                | purpose                                                                                                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `generate-entry.ts` | Writes the synthetic entry: one barrel importing every aspect and re-exporting it under a stable name, plus the SEA variant. Generated under `node_modules/.bit-bundle` so nothing reaches git, tsc or the linter. |
+| `run-esbuild.ts`    | The single esbuild invocation for the CLI, wiring up the four plugins.                                                                                                                                             |
+| `externals.ts`      | What stays **out** of the bundle and is installed as a real package next to it. The bar is deliberately high — native addons and things loaded by path at runtime.                                                 |
+| `build-workers.ts`  | Each worker is its own self-contained bundle; it runs in a child process that knows nothing about the CLI bundle, so code cannot be shared with it.                                                                |
+| `worker-entries.ts` | The declared list of those workers.                                                                                                                                                                                |
+| `build-sea.ts`      | Optional Node Single Executable build.                                                                                                                                                                             |
+
+### Emitting the distribution
+
+| file                        | purpose                                                                                                                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config.ts`                 | The published layout and the paths derived from it. **Read the file header before changing any path** — it records why the shims live under a nested `node_modules` and every rejected alternative. |
+| `generate-shim-packages.ts` | The per-aspect shim packages (which re-export their slice of the bundle), the locators `DependencyLinker.linkCoreAspect` needs, and the copied `.d.ts` trees that keep a user's workspace typed.    |
+| `generate-esm-bridges.ts`   | `dist/esm.mjs` per shim, because node cannot synthesise named exports for a shim whose body is a single dynamic `require`.                                                                          |
+| `generate-bin.ts`           | The `bin/bit` launcher bvm and `npm i -g` invoke.                                                                                                                                                   |
+| `create-package-json.ts`    | Declares the externals as ordinary dependencies so a package manager installs them into the install root.                                                                                           |
+| `generate-npmrc.ts`         | `legacy-peer-deps`, deliberately — see the file for why re-resolving a curated slice with npm's strict algorithm re-litigates a settled decision.                                                   |
+| `copy-assets.ts`            | Files that something reads as _files_ at runtime rather than importing — typescript's `lib/*.d.ts`, the `workspace.jsonc` scaffold, template markdown.                                              |
+
+### Plugins
+
+| file                              | purpose                                                                                                                                                                                                                                                               |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `teambit-dist-resolver-plugin.ts` | The important one. Normalises every bit component to its compiled `dist`, because the same module otherwise resolves to three different files depending on how it was imported — and a bundler would then hold two copies of one aspect, with two runtime registries. |
+| `worker-entry-plugin.ts`          | Rewrites `require.resolve('./jest.worker')` to the standalone worker bundle's path.                                                                                                                                                                                   |
+| `ignore-assets-plugin.ts`         | Resolves stylesheets and mdx — reachable transitively from the main runtime — to an empty module instead of failing the build.                                                                                                                                        |
+| `time-plugin.ts`                  | Reports how long each esbuild run took, labelled per invocation.                                                                                                                                                                                                      |
+
+### Supporting the e2e runners
+
+`ensure-bundle.ts` answers "is the bundle at this out-dir still the bundle these sources produce?".
+It stamps the out dir (bit version, node/platform/arch, newest `dist` mtime across all workspace
+components, the bundler's own sources, the externals list) and **builds if and only if the stamp
+differs**. That serves CI, where the suite is split across many machines and each must build once and
+reuse, and local runs, where a stale artefact would silently test the wrong code.
+
+## Things that will bite
+
+- **Resolution is not path-joining.** Capsules hoist most dependencies to a shared root and pnpm links
+  into a store slot. Use `resolvePackageDir`.
+- **`exports` maps do not extension-probe.** `<pkg>/dist/x.main.runtime` does not resolve;
+  `<pkg>/dist/x.main.runtime.js` does. At the top level the opposite holds, since `"./*": "./*.ts"`
+  appends the extension itself.
+- **A missing main runtime is legitimate** for a UI-only aspect, so a resolution bug that loses them
+  looks exactly like a normal build. Watch the reported counts, not just the exit code.
+- **Externals are not in the bundle.** One with no resolvable version is dropped from the package.json
+  and becomes a runtime `Cannot find module`, so the bundler warns loudly about it.
