@@ -1289,6 +1289,7 @@ automatically imports components, compiles components, links to node_modules, an
 | `--recurring-install`           |                  | automatically run install again if there are non loaded old envs in your workspace                     |
 | `--no-optional [noOptional]`    |                  | do not install optional dependencies (works with pnpm only)                                            |
 | `--lockfile-only`               |                  | dependencies are not written to node_modules. Only the lockfile is updated                             |
+| `--restore`                     |                  | reconstruct the lockfile from each workspace component's stored dependency graph before installing     |
 | `--allow-scripts [pkgNames]`    |                  | a comma separated list of package names that are allowed to run installation scripts                   |
 | `--disallow-scripts [pkgNames]` |                  | a comma separated list of package names that are NOT allowed to run installation scripts               |
 

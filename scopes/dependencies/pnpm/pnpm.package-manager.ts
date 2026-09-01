@@ -12,7 +12,6 @@ import type {
   CalcDepsGraphOptions,
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
-import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
 import { memoize, omit } from 'lodash';
@@ -70,6 +69,7 @@ function loadNodeApi(): typeof NodeApi {
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
+  readonly supportsDependencyGraphRestoration = true;
   readonly modulesManifestCache: Map<string, ModulesManifest> = new Map();
   private username: string;
 
@@ -153,7 +153,6 @@ export class PnpmPackageManager implements PackageManager {
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     if (
       installOptions.dependenciesGraph &&
-      isFeatureEnabled(DEPS_GRAPH) &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
     ) {
       try {
@@ -166,8 +165,8 @@ export class PnpmPackageManager implements PackageManager {
           cacheDir: config.cacheDir,
         });
       } catch (error) {
-        // If the lockfile could not be created for some reason, it will be created later during installation.
         this.logger.error((error as Error).message);
+        if (installOptions.failOnDependenciesGraphError) throw error;
       }
     }
 
