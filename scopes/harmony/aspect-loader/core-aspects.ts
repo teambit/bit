@@ -41,28 +41,37 @@ function resolveFromCurrDir(packageName: string, aspectName: string): string | u
   }
 }
 /**
- * where the core aspects sit inside a bundled distribution, relative to its root. the bundle
- * installs only `@teambit/bit` at the root and keeps every other core aspect as a shim package
- * nested under it - see `scopes/harmony/modules/cli-bundler/config.ts`, which explains why the
- * nesting is what makes a bare `require('@teambit/<aspect>')` resolve to the shim.
+ * where a bundled distribution keeps the packages it ships, relative to its root. it installs only
+ * `@teambit/bit` at that root and nests every other `@teambit/*` as a shim package inside it - see
+ * `scopes/harmony/modules/cli-bundler/config.ts`, which explains why the nesting is what makes a
+ * bare `require('@teambit/<name>')` resolve to the shim.
  */
 const BUNDLED_SHIMS_DIR = join('node_modules', '@teambit', 'bit', 'dist', 'core-aspects', 'node_modules');
+
+/**
+ * resolve a package that ships inside a bit installation, whichever layout that installation has:
+ * `<dir>/node_modules/<pkg>` for the module-per-file distribution, the nested shim for a bundled
+ * one. this is what makes a bundled bit installed by bvm usable at all - the path below it is the
+ * only one that exists there, and callers that got the non-existing one instead either threw
+ * ("unable to find <aspect> in <path>", on the first aspect the CLI needed) or linked a workspace
+ * to a directory that isn't there.
+ *
+ * when neither layout has the package, the module-per-file path is returned anyway - that is what
+ * callers used to get unconditionally, and several of them answer a missing directory with a
+ * fallback of their own, so handing them `undefined` would turn that into a throw.
+ */
+export function resolvePackageFromBitInstallation(bitDir: string, packageName: string): string {
+  const fromRoot = resolve(bitDir, 'node_modules', packageName);
+  if (existsSync(fromRoot)) return fromRoot;
+  const fromShims = resolve(bitDir, BUNDLED_SHIMS_DIR, packageName);
+  if (existsSync(fromShims)) return fromShims;
+  return fromRoot;
+}
 
 function resolveFromBvmDir(packageName: string): string | undefined {
   const currentBitDir = findCurrentBvmDir();
   if (!currentBitDir) return undefined;
-  const fromRoot = resolve(currentBitDir, 'node_modules', packageName);
-  if (existsSync(fromRoot)) return fromRoot;
-  // a bundled bit installed by bvm has nothing but `@teambit/bit` at that root, so the path above
-  // does not exist and this resolver - which runs first whenever bit runs from ~/.bvm - used to
-  // hand back a directory that isn't there. `getAspectDir` then threw "unable to find <aspect> in
-  // <path>" on the very first aspect it needed, and the bundled CLI could not start at all.
-  const fromShims = resolve(currentBitDir, BUNDLED_SHIMS_DIR, packageName);
-  if (existsSync(fromShims)) return fromShims;
-  // neither layout has it: keep returning the root path, as before. callers that guard with
-  // existsSync stay on the path they have always taken, instead of getting a new throw from the
-  // resolution below them.
-  return fromRoot;
+  return resolvePackageFromBitInstallation(currentBitDir, packageName);
 }
 
 function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[], isCore = true): string {

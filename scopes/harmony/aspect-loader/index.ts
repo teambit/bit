@@ -16,6 +16,7 @@ export {
   getCoreAspectName,
   getAspectDirFromBvm,
   getAspectArtifactDir,
+  resolvePackageFromBitInstallation,
 } from './core-aspects';
 export type { PluginDefinition } from './plugin-definition';
 export { AspectDefinition, filterCoreAspectDefs } from './aspect-definition';
