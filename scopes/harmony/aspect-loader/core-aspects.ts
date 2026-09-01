@@ -40,12 +40,29 @@ function resolveFromCurrDir(packageName: string, aspectName: string): string | u
     return undefined;
   }
 }
+/**
+ * where the core aspects sit inside a bundled distribution, relative to its root. the bundle
+ * installs only `@teambit/bit` at the root and keeps every other core aspect as a shim package
+ * nested under it - see `scopes/harmony/modules/cli-bundler/config.ts`, which explains why the
+ * nesting is what makes a bare `require('@teambit/<aspect>')` resolve to the shim.
+ */
+const BUNDLED_SHIMS_DIR = join('node_modules', '@teambit', 'bit', 'dist', 'core-aspects', 'node_modules');
+
 function resolveFromBvmDir(packageName: string): string | undefined {
   const currentBitDir = findCurrentBvmDir();
-  if (currentBitDir) {
-    return resolve(currentBitDir, 'node_modules', packageName);
-  }
-  return undefined;
+  if (!currentBitDir) return undefined;
+  const fromRoot = resolve(currentBitDir, 'node_modules', packageName);
+  if (existsSync(fromRoot)) return fromRoot;
+  // a bundled bit installed by bvm has nothing but `@teambit/bit` at that root, so the path above
+  // does not exist and this resolver - which runs first whenever bit runs from ~/.bvm - used to
+  // hand back a directory that isn't there. `getAspectDir` then threw "unable to find <aspect> in
+  // <path>" on the very first aspect it needed, and the bundled CLI could not start at all.
+  const fromShims = resolve(currentBitDir, BUNDLED_SHIMS_DIR, packageName);
+  if (existsSync(fromShims)) return fromShims;
+  // neither layout has it: keep returning the root path, as before. callers that guard with
+  // existsSync stay on the path they have always taken, instead of getting a new throw from the
+  // resolution below them.
+  return fromRoot;
 }
 
 function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[], isCore = true): string {
