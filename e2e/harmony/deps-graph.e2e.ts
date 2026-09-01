@@ -363,4 +363,118 @@ export default new ${className}();
       expect(lockfileAfterSecondImport.packages).to.not.have.property('@pnpm.e2e/foo@100.1.0');
     });
   });
+  describe('bit install --restore rebuilds the lockfile from workspace component graphs', function () {
+    let randomStr: string;
+    let lockfileAfterRestore: any;
+    before(async () => {
+      randomStr = generateRandomStr(4);
+      const name = `@ci/${randomStr}.{name}`;
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      npmCiRegistry.setRegistry();
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        { policy: { peers: [] } },
+        false,
+        'custom-env/env',
+        'custom-env/env'
+      );
+      helper.fs.createFile('comp1', 'comp1.js', 'require("@pnpm.e2e/foo"); // eslint-disable-line');
+      helper.command.addComponent('comp1');
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env`, {});
+      helper.fs.createFile('comp2', 'comp2.js', 'require("@pnpm.e2e/bar"); // eslint-disable-line');
+      helper.command.addComponent('comp2');
+      helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-env/env`, {});
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/bar', version: '100.0.0', distTag: 'latest' });
+      helper.command.install('--add-missing-deps');
+      helper.command.tagAllComponents('--skip-tests');
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.command.import(`${helper.scopes.remote}/comp1@latest ${helper.scopes.remote}/comp2@latest`);
+
+      await addDistTag({ package: '@pnpm.e2e/foo', version: '100.1.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/bar', version: '100.1.0', distTag: 'latest' });
+      helper.fs.deletePath('pnpm-lock.yaml');
+      helper.fs.deletePath('node_modules');
+      helper.command.runCmd('bit install --restore');
+      lockfileAfterRestore = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
+    });
+    it('should mark the regenerated lockfile as restoredFromModel', () => {
+      expect(lockfileAfterRestore.bit.restoredFromModel).to.eq(true);
+    });
+    it('should keep both components locked to the versions stored in their graphs', () => {
+      expect(lockfileAfterRestore.packages).to.have.property('@pnpm.e2e/foo@100.0.0');
+      expect(lockfileAfterRestore.packages).to.have.property('@pnpm.e2e/bar@100.0.0');
+      expect(lockfileAfterRestore.packages).to.not.have.property('@pnpm.e2e/foo@100.1.0');
+      expect(lockfileAfterRestore.packages).to.not.have.property('@pnpm.e2e/bar@100.1.0');
+    });
+  });
+  describe('bit install --restore works when the DEPS_GRAPH feature toggle is disabled', function () {
+    let randomStr: string;
+    let lockfileAfterRestore: any;
+    before(async () => {
+      randomStr = generateRandomStr(4);
+      const name = `@ci/${randomStr}.{name}`;
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      npmCiRegistry.setRegistry();
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        { policy: { peers: [] } },
+        false,
+        'custom-env/env',
+        'custom-env/env'
+      );
+      helper.fs.createFile('comp1', 'comp1.js', 'require("@pnpm.e2e/foo"); // eslint-disable-line');
+      helper.command.addComponent('comp1');
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env`, {});
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
+      helper.command.install('--add-missing-deps');
+      helper.command.tagAllComponents('--skip-tests');
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setRegistry();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+
+      helper.command.resetFeatures();
+      try {
+        helper.command.import(`${helper.scopes.remote}/comp1@latest`);
+        await addDistTag({ package: '@pnpm.e2e/foo', version: '100.1.0', distTag: 'latest' });
+        helper.fs.deletePath('pnpm-lock.yaml');
+        helper.fs.deletePath('node_modules');
+        helper.command.runCmd('bit install --restore');
+        lockfileAfterRestore = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
+      } finally {
+        helper.command.setFeatures(DEPS_GRAPH);
+      }
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
+    });
+    it('should still restore the lockfile from the stored graph', () => {
+      expect(lockfileAfterRestore.bit.restoredFromModel).to.eq(true);
+      expect(lockfileAfterRestore.packages).to.have.property('@pnpm.e2e/foo@100.0.0');
+      expect(lockfileAfterRestore.packages).to.not.have.property('@pnpm.e2e/foo@100.1.0');
+    });
+  });
 });
