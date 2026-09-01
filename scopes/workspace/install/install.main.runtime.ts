@@ -34,6 +34,7 @@ import type { CodemodResult, NodeModulesLinksResult } from '@teambit/workspace.m
 import { linkToNodeModulesWithCodemod } from '@teambit/workspace.modules.node-modules-linker';
 import type { EnvJsonc, EnvsMain } from '@teambit/envs';
 import { EnvsAspect, getPinnedLegacyCoreEnvVersion, getLegacyCoreEnvPackageName } from '@teambit/envs';
+import { findLegacyCoreEnvInChain } from './legacy-core-env-chain';
 import type { IpcEventsMain } from '@teambit/ipc-events';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -934,14 +935,24 @@ export class InstallMain {
    */
   private async addUsedLegacyCoreEnvsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<void> {
     const usedEnvIds = await this._getAllUsedEnvIds();
-    usedEnvIds.forEach((envId) => {
-      if (envId.hasVersion()) return;
-      const envIdStr = envId.toString();
-      if (!this.envs.isLegacyCoreEnv(envIdStr)) return;
-      const version = getPinnedLegacyCoreEnvVersion(envIdStr);
-      if (!version) return;
+    const legacyCoreEnvIds = new Set<string>();
+    await pMapSeries(usedEnvIds, async (envId) => {
       // if the env exists in the workspace, it is loaded from the workspace, no need to install it
       if (this.workspace.hasId(envId, { ignoreVersion: true })) return;
+      if (!envId.hasVersion() && this.envs.isLegacyCoreEnv(envId.toString())) {
+        legacyCoreEnvIds.add(envId.toStringWithoutVersion());
+        return;
+      }
+      const baseLegacyCoreEnvId = await findLegacyCoreEnvInChain(envId.toString(), {
+        getEnvOf: (envIdStr) => this._getEnvOfEnv(envIdStr),
+        isLegacyCoreEnv: (envIdStr) => this.envs.isLegacyCoreEnv(envIdStr),
+        isInWorkspace: (envIdStr) => this.workspace.hasId(ComponentID.fromString(envIdStr), { ignoreVersion: true }),
+      });
+      if (baseLegacyCoreEnvId) legacyCoreEnvIds.add(baseLegacyCoreEnvId);
+    });
+    legacyCoreEnvIds.forEach((envIdStr) => {
+      const version = getPinnedLegacyCoreEnvVersion(envIdStr);
+      if (!version) return;
       rootPolicy.add(
         {
           dependencyId: getLegacyCoreEnvPackageName(envIdStr),
@@ -954,6 +965,24 @@ export class InstallMain {
         { skipIfExisting: true }
       );
     });
+  }
+
+  /**
+   * the env each published env in the chain was tagged with, read from its model. best-effort:
+   * when the objects are not reachable (an unavailable scope, no network) the chain simply ends
+   * here - enriching the policy must never be a reason to fail an install, and a base env that
+   * stays missing surfaces later as a load failure with a "bit install" remediation.
+   */
+  private async _getEnvOfEnv(envIdStr: string): Promise<string | undefined> {
+    try {
+      const envId = await this.workspace.resolveComponentId(envIdStr);
+      const [envComponent] = await this.workspace.importAndGetMany([envId], `to get the env of ${envIdStr}`);
+      if (!envComponent) return undefined;
+      return (await this.envs.calculateEnvId(envComponent)).toString();
+    } catch (err: any) {
+      this.logger.debug(`unable to read the env of ${envIdStr}: ${err.message}`);
+      return undefined;
+    }
   }
 
   private async addConfiguredGeneratorEnvsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<void> {
