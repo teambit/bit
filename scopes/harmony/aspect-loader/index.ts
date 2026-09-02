@@ -13,6 +13,7 @@ export {
   getAspectDir,
   getAspectDistDir,
   getCoreAspectPackageName,
+  getNonCorePackageName,
   getCoreAspectName,
   getAspectDirFromBvm,
   resolvePackageFromBitInstallation,
