@@ -23222,6 +23222,9 @@ importers:
       react-router-dom:
         specifier: ^6.30.1
         version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+      yesno:
+        specifier: 0.4.0
+        version: 0.4.0
     devDependencies:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.0.8
@@ -68104,6 +68107,7 @@ snapshots:
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
+      yesno: 0.4.0
     transitivePeerDependencies:
       - domexception
       - encoding
@@ -68147,6 +68151,7 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+      yesno: 0.4.0
     transitivePeerDependencies:
       - domexception
       - encoding
