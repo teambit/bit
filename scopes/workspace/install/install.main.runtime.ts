@@ -39,7 +39,7 @@ import {
   getLegacyCoreEnvPackageName,
   getLegacyCoreEnvsIds,
 } from '@teambit/envs';
-import { findRequiredPackages } from './find-required-packages';
+import { findPhantomPackages } from './find-required-packages';
 import type { IpcEventsMain } from '@teambit/ipc-events';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -1019,23 +1019,34 @@ export class InstallMain {
    * all - the model of an env has the env it was *tagged* with, a different thing than the env it
    * composes. an aspect that is not installed yet is read on the next install, once it is (the
    * install prints a "run bit install again" suggestion for exactly this state).
+   *
+   * only the requires the package.json does not declare count. an aspect published back then may
+   * well declare the core env it requires (`@teambit/aspect` declares `@teambit/react`), and then
+   * the package manager installs it on its own - nothing is missing, and adding it here would only
+   * force another install cycle, one that pnpm's hoisted linker refuses ("Broken lockfile: missing
+   * snapshot") when the package is already in the lockfile as a transitive dependency.
    */
   private async getPhantomLegacyCoreEnvsOfInstalledAspects(): Promise<string[]> {
     const envIdByPackageName = new Map(getLegacyCoreEnvsIds().map((id) => [getLegacyCoreEnvPackageName(id), id]));
     const legacyCoreEnvPackages = [...envIdByPackageName.keys()];
     const requiredPackages = new Set<string>();
     (await this.getInstalledAspectsPackageNames()).forEach((packageName) => {
-      const distDir = path.join(this.workspace.path, 'node_modules', packageName, 'dist');
+      const packageDir = path.join(this.workspace.path, 'node_modules', packageName);
+      const distDir = path.join(packageDir, 'dist');
       let sources: string[];
+      let packageJson: Record<string, any>;
       try {
         sources = fs
           .readdirSync(distDir)
           .filter((fileName) => fileName.endsWith('.js'))
           .map((fileName) => fs.readFileSync(path.join(distDir, fileName), 'utf-8'));
+        packageJson = fs.readJsonSync(path.join(packageDir, 'package.json'));
       } catch {
         return; // not installed (yet), or not a package with a dist
       }
-      findRequiredPackages(sources, legacyCoreEnvPackages).forEach((required) => requiredPackages.add(required));
+      findPhantomPackages(sources, legacyCoreEnvPackages, packageJson).forEach((required) =>
+        requiredPackages.add(required)
+      );
     });
     return [...requiredPackages].map((packageName) => envIdByPackageName.get(packageName) as string);
   }
