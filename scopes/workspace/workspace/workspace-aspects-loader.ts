@@ -343,10 +343,21 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError, 'workspace.loadAspects loading scope aspects');
     }
     const requireableComponents = this.aspectDefsToRequireableComponents(aspectsDefs);
+    // the directory each aspect is required from - what a package it requires without declaring it
+    // (a phantom dependency of an aspect published before the core envs were removed) is resolvable
+    // from as well.
+    const dirByComponentId = new Map<string, string>(
+      compact(
+        aspectsDefs.map((aspectDef) =>
+          aspectDef.component ? ([aspectDef.component.id.toString(), aspectDef.aspectPath] as [string, string]) : null
+        )
+      )
+    );
     const manifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
       requireableComponents,
       throwOnError,
-      runSubscribers
+      runSubscribers,
+      dirByComponentId
     );
     await this.aspectLoader.loadExtensionsByManifests(
       manifests,
