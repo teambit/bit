@@ -207,10 +207,21 @@ class BitLogger implements IBitLogger {
    * [2020-12-04 16:24:46.110 -0500] INFO	 (31641): loadingComponent: 18ms. (total repeating 32ms)
    */
   profile(id: string, console?: boolean, level: Level = 'info') {
+    const shouldWriteToConsole = console || this.shouldConsoleProfiler;
+    // profiling keeps state per id and formats a message. when the line is going to be discarded
+    // anyway, skip it altogether - otherwise turning the level off removes only the printing, not
+    // the cost of the profiling itself.
+    // the level can change between the two calls of a measurement (the daemon switches the logger
+    // around every CLI request), so also drop the measurement this call would have closed. only the
+    // measurement of this id is dropped, to not touch the ones of a request that runs in parallel.
+    if (!shouldWriteToConsole && !this.logger.isLevelEnabled(level)) {
+      this.profiler.discard(id);
+      return;
+    }
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
-    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this[level](fullMsg);
+    shouldWriteToConsole ? this.console(fullMsg) : this[level](fullMsg);
   }
 
   registerOnBeforeExitFn(fn: Function) {
