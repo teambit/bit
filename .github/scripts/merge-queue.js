@@ -497,55 +497,79 @@ async function ensureDashboardLabel() {
   }
 }
 
-async function findDashboardIssuesViaRest() {
+// Only an exact match may be PATCHed: the issues endpoint returns PRs too, and the label alone
+// doesn't prove an item is the dashboard — overwriting anything else's body would corrupt it.
+// A renamed dashboard is therefore not found and a fresh one gets created (close the old one);
+// that failure mode is deliberate, corruption is not an acceptable one.
+function isDashboardIssue(issue) {
+  return (
+    !issue.pull_request &&
+    issue.state === 'open' &&
+    issue.title === DASHBOARD_TITLE &&
+    issue.labels.some((label) => label.name === DASHBOARD_LABEL)
+  );
+}
+
+async function findDashboardNumbersViaRest() {
   const issues = await githubRequest(
     'GET',
     `/repos/${OWNER}/${REPO}/issues?labels=${DASHBOARD_LABEL}&state=open&per_page=100`
   );
-  // Only an exact match may be PATCHed: the issues endpoint returns PRs too, and the label alone
-  // doesn't prove an item is the dashboard — overwriting anything else's body would corrupt it.
-  // A renamed dashboard is therefore not found and a fresh one gets created (close the old one);
-  // that failure mode is deliberate, corruption is not an acceptable one.
-  return issues.filter((issue) => !issue.pull_request && issue.title === DASHBOARD_TITLE);
+  return issues.filter((issue) => !issue.pull_request && issue.title === DASHBOARD_TITLE).map((issue) => issue.number);
 }
 
-// second, independent read path for the same question. GraphQL's issues connection never contains
-// PRs, so only the title guard is needed here.
-async function findDashboardIssuesViaGraphql() {
+// second, independent read path for the same question — candidate numbers only, the authoritative
+// issue objects come from the by-number reads in findDashboardIssues. GraphQL's issues connection
+// never contains PRs, so only the title guard is needed here.
+async function findDashboardNumbersViaGraphql() {
   const query = `{
     repository(owner: "${OWNER}", name: "${REPO}") {
       issues(first: 100, states: OPEN, labels: ["${DASHBOARD_LABEL}"]) {
-        nodes { number title url body }
+        nodes { number title }
       }
     }
   }`;
   const data = await githubGraphql(query);
-  return data.repository.issues.nodes
-    .filter((issue) => issue.title === DASHBOARD_TITLE)
-    .map((issue) => ({ number: issue.number, title: issue.title, html_url: issue.url, body: issue.body }));
+  return data.repository.issues.nodes.filter((issue) => issue.title === DASHBOARD_TITLE).map((issue) => issue.number);
 }
 
 // Returns every open dashboard, oldest first. Oldest wins: the dashboard URL is the "Details" link
 // on every gate status, so the canonical issue has to stay put across runs (and across a duplicate
 // slipping in) instead of hopping to whatever was created last.
 //
-// A miss is the one lookup result that leads to creating a second dashboard, and the REST issues
-// listing is index-backed and occasionally stale — on 2026-09-01 it returned the dashboard at
-// 13:56 and omitted it (open, labeled, never renamed) at 14:00, forking one dashboard into two. So
-// a miss is confirmed on the other path before anything is created; a duplicate that still slips
-// through is closed by the next run rather than lingering with a frozen queue table in it.
+// Both listings are index-backed and occasionally stale, and that staleness is what forked the
+// dashboard in the first place: on 2026-09-01 the REST listing returned the dashboard at 13:56 and
+// omitted it (open, labeled, never renamed) at 14:00, so the run created a second one. Hence:
+// - both paths are queried every run and their candidates unioned, because a PARTIAL miss is as
+//   damaging as an empty one — a listing that drops the oldest but keeps a newer duplicate would
+//   crown the duplicate, move every gate's "Details" link, and hide the original from the cleanup
+//   that is supposed to heal the fork;
+// - every candidate is then re-read by number, a direct record lookup rather than an index query,
+//   which catches staleness in the other direction too: a duplicate an earlier run already closed
+//   would otherwise be closed — and commented on — again on every subsequent run.
+// Both paths missing the dashboard at once can still fork it; closeDuplicateDashboards heals that.
 async function findDashboardIssues() {
-  const dashboards = await findDashboardIssuesViaRest();
-  if (dashboards.length) return dashboards.sort((a, b) => a.number - b.number);
-  const confirmation = await findDashboardIssuesViaGraphql();
-  if (confirmation.length) {
-    console.log(
-      `dashboard lookup: the REST listing came back empty but GraphQL found #${confirmation
-        .map((issue) => issue.number)
-        .join(', #')} — treating the listing as stale and not creating a duplicate`
-    );
+  const candidateNumbers = new Set(await findDashboardNumbersViaRest());
+  for (const number of await findDashboardNumbersViaGraphql()) {
+    if (candidateNumbers.has(number)) continue;
+    console.log(`dashboard lookup: #${number} is missing from the REST listing but present in GraphQL — using it`);
+    candidateNumbers.add(number);
   }
-  return confirmation.sort((a, b) => a.number - b.number);
+
+  const dashboards = [];
+  for (const number of [...candidateNumbers].sort((a, b) => a - b)) {
+    let issue;
+    try {
+      issue = await githubRequest('GET', `/repos/${OWNER}/${REPO}/issues/${number}`);
+    } catch (error) {
+      if (error.status !== 404) throw error;
+      console.log(`dashboard lookup: ignoring #${number} — it no longer exists`);
+      continue;
+    }
+    if (isDashboardIssue(issue)) dashboards.push(issue);
+    else console.log(`dashboard lookup: ignoring #${number} — a direct read says it is not an open dashboard`);
+  }
+  return dashboards;
 }
 
 async function closeDuplicateDashboards(duplicates, canonicalIssue) {
