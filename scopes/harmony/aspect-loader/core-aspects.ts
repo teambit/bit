@@ -76,17 +76,30 @@ function resolveFromBvmDir(packageName: string): string | undefined {
 
 function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[], isCore = true): string {
   const aspectName = getCoreAspectName(id);
-  const packageName = isCore ? getCoreAspectPackageName(id) : getNonCorePackageName(id);
+  // a non-core aspect is resolved by the package name a component gets when it is published
+  // ("@teambit/react.react"). an env that *used* to be a core aspect is not core anymore, yet every
+  // published version of it carries the core-aspects package name ("@teambit/react") - it was core
+  // when they were published. fall back to it, so such an env resolves under either convention.
+  const packageNames = isCore
+    ? [getCoreAspectPackageName(id)]
+    : [getNonCorePackageName(id), getCoreAspectPackageName(id)];
 
-  if (pathsToResolveAspects && pathsToResolveAspects.length) {
-    const fromPaths = resolveFromPaths(packageName, aspectName, pathsToResolveAspects);
-    return fromPaths;
-  }
-  const isRunFromBvmDir = isRunFromBvm();
-  const resolvers = isRunFromBvmDir ? [resolveFromBvmDir, resolveFromCurrDir] : [resolveFromCurrDir, resolveFromBvmDir];
-  for (const resolver of resolvers) {
-    const currResolved = resolver(packageName, aspectName);
-    if (currResolved) return currResolved;
+  for (const packageName of packageNames) {
+    if (pathsToResolveAspects && pathsToResolveAspects.length) {
+      try {
+        return resolveFromPaths(packageName, aspectName, pathsToResolveAspects);
+      } catch {
+        continue;
+      }
+    }
+    const isRunFromBvmDir = isRunFromBvm();
+    const resolvers = isRunFromBvmDir
+      ? [resolveFromBvmDir, resolveFromCurrDir]
+      : [resolveFromCurrDir, resolveFromBvmDir];
+    for (const resolver of resolvers) {
+      const currResolved = resolver(packageName, aspectName);
+      if (currResolved) return currResolved;
+    }
   }
   throw new Error(`unable to find ${aspectName}`);
 }
@@ -190,10 +203,13 @@ export function getCoreAspectPackageName(id: string): string {
  * id for example: 'org.frontend/ui/button'
  * convert it to package-name, for example: '@org/frontend.ui.button'
  */
-function getNonCorePackageName(id: string): string {
+export function getNonCorePackageName(id: string): string {
   const [scope, ...name] = id.split('/');
   const aspectName = name.join('.');
-  return `@${scope.replace('.', '/')}.${aspectName}`;
+  // a scope that has an owner ("teambit.react") splits into the npm scope and the first segment of
+  // the name ("@teambit/react.<name>"); a scope without one is the npm scope on its own.
+  const scopePrefix = scope.includes('.') ? `@${scope.replace('.', '/')}.` : `@${scope}/`;
+  return `${scopePrefix}${aspectName}`;
 }
 
 export async function getAspectDef(aspectName: string, runtime?: string) {

@@ -1,7 +1,7 @@
 import { join, resolve, extname } from 'path';
 import esmLoader from '@teambit/node.utils.esm-loader';
 // import findRoot from 'find-root';
-import { readdirSync, existsSync } from 'fs-extra';
+import { readdirSync, existsSync, realpathSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { reportLoadFailure } from '@teambit/harmony.modules.load-trace';
 import { recordLoadedEsmFile } from './record-loaded-esm-file';
@@ -475,7 +475,14 @@ export class AspectLoaderMain {
   async getManifestsFromRequireableExtensions(
     requireableExtensions: RequireableComponent[],
     throwOnError = false,
-    runSubscribers = true
+    runSubscribers = true,
+    /**
+     * the directory each component is required from, by its id. a capsule-based caller doesn't
+     * need it (the capsule holds the directory), a workspace-based one does. it is used to resolve
+     * packages the aspect requires without declaring them - see
+     * `requirePhantomLegacyCoreEnvRuntimes`.
+     */
+    dirByComponentId?: Map<string, string>
   ): Promise<Array<ExtensionManifest | Aspect>> {
     const manifestsP = mapSeries(requireableExtensions, async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
@@ -503,9 +510,98 @@ export class AspectLoaderMain {
       return undefined;
     });
     const manifests = await manifestsP;
+    const manifestsWithDir = compact(
+      requireableExtensions.map((requireableExtension, index): [ExtensionManifest | Aspect, string] | undefined => {
+        const manifest = manifests[index];
+        const dirPath =
+          dirByComponentId?.get(requireableExtension.component.id.toString()) || requireableExtension.capsule?.path;
+        return manifest && dirPath ? [manifest, dirPath] : undefined;
+      })
+    );
+    this.requirePhantomLegacyCoreEnvRuntimes(manifestsWithDir);
 
     // Remove empty manifests as a result of loading issue
     return compact(manifests);
+  }
+
+  /**
+   * an aspect published before the core envs were removed requires them without declaring them as
+   * dependencies - e.g. an env built on the aspect env requires `@teambit/aspect`. back then they
+   * were core aspects, provided by the bit installation itself, so they are phantom requires of the
+   * published package.
+   *
+   * because they are not dependencies, they never enter the aspects-graph, so nothing requires
+   * their runtime file. harmony runs an extension only when it has a runtime for the active one,
+   * leaving such an aspect with a `null` instance - which it then injects into the provider of
+   * every aspect depending on it ("Cannot read properties of null (reading 'aspectEnv')").
+   *
+   * the manifests here were just required, so their declared dependencies are the very objects
+   * harmony is about to inject. requiring the runtime file of each phantom one - resolved from the
+   * package that requires it, the only place it is guaranteed to be resolvable from - registers the
+   * runtime on that same object, and harmony runs it like any other aspect.
+   */
+  private requirePhantomLegacyCoreEnvRuntimes(
+    manifestsWithDir: Array<[manifest: ExtensionManifest | Aspect, dirPath: string]>
+  ): void {
+    const queue = [...manifestsWithDir];
+    // a phantom env has phantom requires of its own (the aspect env requires the react env), so the
+    // dependencies of everything loaded here are walked as well. the same package is visited once,
+    // yet the same id is visited for each package copy that requires it - two copies are two module
+    // instances, and only the one harmony ends up with in its graph matters.
+    const visited = new Set<string>();
+    while (queue.length) {
+      const [manifest, dirPath] = queue.shift() as [ExtensionManifest | Aspect, string];
+      this.getManifestDependencies(manifest).forEach((dependency) => {
+        const dependencyId: string | undefined = dependency?.id;
+        if (!dependencyId) return;
+        const idWithoutVersion = dependencyId.split('@')[0];
+        if (!this.envs.isLegacyCoreEnv(idWithoutVersion)) return;
+        const dependencyDir = this.resolvePackageDirFrom(getCoreAspectPackageName(idWithoutVersion), dirPath);
+        if (!dependencyDir) {
+          this.logger.debug(
+            `requirePhantomLegacyCoreEnvRuntimes, unable to resolve ${idWithoutVersion} from ${dirPath}`
+          );
+          return;
+        }
+        if (visited.has(dependencyDir)) return;
+        visited.add(dependencyDir);
+        if (!dependency.getRuntime?.(MainRuntime)) this.requireRuntimeFile(dependencyDir, idWithoutVersion);
+        queue.push([dependency, dependencyDir]);
+      });
+    }
+  }
+
+  private getManifestDependencies(manifest: ExtensionManifest | Aspect): any[] {
+    // an aspect keeps them on its runtime definition, a plain manifest on itself
+    if (this.isAspect(manifest)) return (manifest as Aspect).getRuntime(MainRuntime)?.dependencies || [];
+    return (manifest as ExtensionManifest).dependencies || [];
+  }
+
+  private resolvePackageDirFrom(packageName: string, fromDir: string): string | undefined {
+    try {
+      // from the real path, not the link: an installed package is a link into the store, and node
+      // resolves a phantom dependency through the store layout the link points at, never through
+      // the linked-to location (where only the declared dependencies are reachable).
+      const realFromDir = realpathSync(fromDir);
+      // the package main is "<pkg>/dist/index.js", so two levels up is the package directory
+      const dirPath = join(require.resolve(packageName, { paths: [realFromDir] }), '../..');
+      return existsSync(join(dirPath, DEFAULT_DIST_DIRNAME)) ? dirPath : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private requireRuntimeFile(dirPath: string, id: string): void {
+    try {
+      const runtimeFile = this.findRuntime(dirPath, MainRuntime.name);
+      if (!runtimeFile) return;
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      require(join(dirPath, DEFAULT_DIST_DIRNAME, runtimeFile));
+    } catch (err: any) {
+      // best effort. when it can't be required, the aspect stays unloaded exactly as it was before
+      // and the failure is reported by whoever depends on it.
+      this.logger.debug(`requirePhantomLegacyCoreEnvRuntimes, unable to require ${id} from ${dirPath}: ${err.message}`);
+    }
   }
 
   handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
