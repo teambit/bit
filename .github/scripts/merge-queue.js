@@ -30,7 +30,9 @@
  *   A FAILED `bit_merge` still counts as settled on purpose: Slack already alerts on it, and a
  *   queued PR may be the fix — blocking the queue would deadlock.
  * - Visibility: the gate status description shows each PR's position/reason, and a pinned
- *   "Merge Queue Dashboard" issue (label: merge-queue) is kept up to date.
+ *   "Merge Queue Dashboard" issue (label: merge-queue) is kept up to date. The oldest open one is
+ *   canonical — its URL is the "Details" link on every gate status — and duplicates (a stale issue
+ *   listing can fork the dashboard) are closed automatically.
  *
  * The loop is stateless and idempotent: every run re-derives the queue from the GitHub + CircleCI
  * APIs, so a skipped or crashed run costs nothing. It normally runs from the GitHub Actions
@@ -495,7 +497,7 @@ async function ensureDashboardLabel() {
   }
 }
 
-async function findDashboardIssue() {
+async function findDashboardIssuesViaRest() {
   const issues = await githubRequest(
     'GET',
     `/repos/${OWNER}/${REPO}/issues?labels=${DASHBOARD_LABEL}&state=open&per_page=100`
@@ -504,7 +506,62 @@ async function findDashboardIssue() {
   // doesn't prove an item is the dashboard — overwriting anything else's body would corrupt it.
   // A renamed dashboard is therefore not found and a fresh one gets created (close the old one);
   // that failure mode is deliberate, corruption is not an acceptable one.
-  return issues.find((issue) => !issue.pull_request && issue.title === DASHBOARD_TITLE);
+  return issues.filter((issue) => !issue.pull_request && issue.title === DASHBOARD_TITLE);
+}
+
+// second, independent read path for the same question. GraphQL's issues connection never contains
+// PRs, so only the title guard is needed here.
+async function findDashboardIssuesViaGraphql() {
+  const query = `{
+    repository(owner: "${OWNER}", name: "${REPO}") {
+      issues(first: 100, states: OPEN, labels: ["${DASHBOARD_LABEL}"]) {
+        nodes { number title url body }
+      }
+    }
+  }`;
+  const data = await githubGraphql(query);
+  return data.repository.issues.nodes
+    .filter((issue) => issue.title === DASHBOARD_TITLE)
+    .map((issue) => ({ number: issue.number, title: issue.title, html_url: issue.url, body: issue.body }));
+}
+
+// Returns every open dashboard, oldest first. Oldest wins: the dashboard URL is the "Details" link
+// on every gate status, so the canonical issue has to stay put across runs (and across a duplicate
+// slipping in) instead of hopping to whatever was created last.
+//
+// A miss is the one lookup result that leads to creating a second dashboard, and the REST issues
+// listing is index-backed and occasionally stale — on 2026-09-01 it returned the dashboard at
+// 13:56 and omitted it (open, labeled, never renamed) at 14:00, forking one dashboard into two. So
+// a miss is confirmed on the other path before anything is created; a duplicate that still slips
+// through is closed by the next run rather than lingering with a frozen queue table in it.
+async function findDashboardIssues() {
+  const dashboards = await findDashboardIssuesViaRest();
+  if (dashboards.length) return dashboards.sort((a, b) => a.number - b.number);
+  const confirmation = await findDashboardIssuesViaGraphql();
+  if (confirmation.length) {
+    console.log(
+      `dashboard lookup: the REST listing came back empty but GraphQL found #${confirmation
+        .map((issue) => issue.number)
+        .join(', #')} — treating the listing as stale and not creating a duplicate`
+    );
+  }
+  return confirmation.sort((a, b) => a.number - b.number);
+}
+
+async function closeDuplicateDashboards(duplicates, canonicalIssue) {
+  for (const duplicate of duplicates) {
+    console.log(
+      `closing duplicate dashboard issue #${duplicate.number} (superseded by #${canonicalIssue.number})${dryRun ? ' (skipped: dry run)' : ''}`
+    );
+    if (dryRun) continue;
+    await githubRequest('POST', `/repos/${OWNER}/${REPO}/issues/${duplicate.number}/comments`, {
+      body: `Duplicate merge-queue dashboard, superseded by #${canonicalIssue.number} — closing automatically. The live queue is at ${canonicalIssue.html_url}.`,
+    });
+    await githubRequest('PATCH', `/repos/${OWNER}/${REPO}/issues/${duplicate.number}`, {
+      state: 'closed',
+      state_reason: 'not_planned',
+    });
+  }
 }
 
 async function updateDashboard({ masterState, entries, winner, updateCandidate, dashboardIssue }) {
@@ -569,7 +626,8 @@ async function main() {
   // looked up before the status posts so the gate's "Details" link can point at the dashboard.
   // On the first run ever it doesn't exist yet — statuses go out without a link and self-heal
   // next cycle (the targetUrl comparison in postGateStatus re-posts them).
-  const dashboardIssue = await findDashboardIssue();
+  const dashboardIssues = await findDashboardIssues();
+  const dashboardIssue = dashboardIssues[0];
   const dashboardUrl = dashboardIssue?.html_url;
   const gateStatusFailures = [];
 
@@ -678,6 +736,15 @@ async function main() {
   }
 
   await updateDashboard({ masterState, entries, winner, updateCandidate, dashboardIssue });
+  if (dashboardIssue && dashboardIssues.length > 1) {
+    try {
+      await closeDuplicateDashboards(dashboardIssues.slice(1), dashboardIssue);
+    } catch (error) {
+      // cosmetic cleanup — a stale second dashboard is confusing, not dangerous, and the next run
+      // retries it. Never fail a reconcile (or skip the gate-status report below) over it.
+      console.log(`failed to close duplicate dashboard issues: ${error.message}`);
+    }
+  }
   if (gateStatusFailures.length) {
     console.log(
       `reconcile finished with gate-status failures on: ${gateStatusFailures.map((n) => `#${n}`).join(', ')}`
