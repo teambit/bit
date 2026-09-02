@@ -33,8 +33,13 @@ import { type DependenciesGraph } from '@teambit/objects';
 import type { CodemodResult, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { linkToNodeModulesWithCodemod } from '@teambit/workspace.modules.node-modules-linker';
 import type { EnvJsonc, EnvsMain } from '@teambit/envs';
-import { EnvsAspect, getPinnedLegacyCoreEnvVersion, getLegacyCoreEnvPackageName } from '@teambit/envs';
-import { findLegacyCoreEnvInChain } from './legacy-core-env-chain';
+import {
+  EnvsAspect,
+  getPinnedLegacyCoreEnvVersion,
+  getLegacyCoreEnvPackageName,
+  getLegacyCoreEnvsIds,
+} from '@teambit/envs';
+import { findRequiredPackages } from './find-required-packages';
 import type { IpcEventsMain } from '@teambit/ipc-events';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -66,7 +71,7 @@ import type { IssuesMain } from '@teambit/issues';
 import { IssuesAspect } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
 import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
-import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, getNonCorePackageName } from '@teambit/aspect-loader';
 import hash from 'object-hash';
 import type { BundlerMain } from '@teambit/bundler';
 import { BundlerAspect } from '@teambit/bundler';
@@ -81,6 +86,9 @@ import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
+
+/** how many times a single install may re-run the package manager before it gives up converging */
+const MAX_INSTALL_CYCLES = 5;
 
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
@@ -476,6 +484,19 @@ export class InstallMain {
         await restoreCoreAspectLinks();
       }
       this.workspace.inInstallAfterPmContext = true;
+      // an aspect published before the core envs were removed reveals what it requires of them only
+      // through its installed package, so in a workspace that did not have it installed yet - a
+      // fresh clone above all - the requires become visible only now, installed by this very cycle.
+      // add them and install once more, otherwise the aspect stays unloadable until the user
+      // happens to run another install.
+      if (
+        installCycle < MAX_INSTALL_CYCLES - 1 &&
+        (await this.addPhantomLegacyCoreEnvsToWorkspacePolicy(mergedRootPolicy))
+      ) {
+        current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
+        installCycle += 1;
+        continue;
+      }
       // the install that switches a workspace onto the global virtual store runs with bootstrap's
       // pre-aspect bridge gate still reflecting the old layout, yet this same process goes on to
       // reload envs and compile from store slots. Re-apply the bridge (idempotent) now that the
@@ -530,7 +551,10 @@ export class InstallMain {
       await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
       current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
       installCycle += 1;
-    } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
+    } while (
+      (!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) &&
+      installCycle < MAX_INSTALL_CYCLES
+    );
     // the core aspects are compiled by now, so drop the links added above and let the envs resolve
     // them from the workspace again.
     await this.syncCoreAspectLinksForEnvs(compDirMap);
@@ -936,26 +960,30 @@ export class InstallMain {
   private async addUsedLegacyCoreEnvsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<void> {
     const usedEnvIds = await this._getAllUsedEnvIds();
     const legacyCoreEnvIds = new Set<string>();
-    await pMapSeries(usedEnvIds, async (envId) => {
+    usedEnvIds.forEach((envId) => {
       // if the env exists in the workspace, it is loaded from the workspace, no need to install it
       if (this.workspace.hasId(envId, { ignoreVersion: true })) return;
-      if (!envId.hasVersion() && this.envs.isLegacyCoreEnv(envId.toString())) {
-        legacyCoreEnvIds.add(envId.toStringWithoutVersion());
-        return;
-      }
-      const baseLegacyCoreEnvId = await findLegacyCoreEnvInChain(envId.toString(), {
-        getEnvOf: (envIdStr) => this._getEnvOfEnv(envIdStr),
-        isLegacyCoreEnv: (envIdStr) => this.envs.isLegacyCoreEnv(envIdStr),
-        isInWorkspace: (envIdStr) => this.workspace.hasId(ComponentID.fromString(envIdStr), { ignoreVersion: true }),
-      });
-      if (baseLegacyCoreEnvId) legacyCoreEnvIds.add(baseLegacyCoreEnvId);
+      if (!this.envs.isLegacyCoreEnv(envId.toStringWithoutVersion())) return;
+      // configured with a version, it is a regular external env - the dependency machinery
+      // installs it as the env of the component. only the versionless form (how components
+      // tagged before the removal have it in their model) needs the pinned version here.
+      if (!envId.hasVersion()) legacyCoreEnvIds.add(envId.toStringWithoutVersion());
     });
-    legacyCoreEnvIds.forEach((envIdStr) => {
+    this.addLegacyCoreEnvsToPolicy(rootPolicy, [...legacyCoreEnvIds]);
+    await this.addPhantomLegacyCoreEnvsToWorkspacePolicy(rootPolicy);
+  }
+
+  private addLegacyCoreEnvsToPolicy(rootPolicy: WorkspacePolicy, envIds: string[]): boolean {
+    let added = false;
+    envIds.forEach((envIdStr) => {
       const version = getPinnedLegacyCoreEnvVersion(envIdStr);
       if (!version) return;
+      const dependencyId = getLegacyCoreEnvPackageName(envIdStr);
+      if (rootPolicy.find(dependencyId)) return;
+      added = true;
       rootPolicy.add(
         {
-          dependencyId: getLegacyCoreEnvPackageName(envIdStr),
+          dependencyId,
           value: {
             version,
           },
@@ -965,24 +993,77 @@ export class InstallMain {
         { skipIfExisting: true }
       );
     });
+    return added;
   }
 
   /**
-   * the env each published env in the chain was tagged with, read from its model. best-effort:
-   * when the objects are not reachable (an unavailable scope, no network) the chain simply ends
-   * here - enriching the policy must never be a reason to fail an install, and a base env that
-   * stays missing surfaces later as a load failure with a "bit install" remediation.
+   * add the legacy core envs that installed aspects require without declaring them (see
+   * `getPhantomLegacyCoreEnvsOfInstalledAspects`). returns whether the policy changed, which the
+   * install flow answers with another install cycle: the requires become visible only once the
+   * aspect requiring them is installed, which may be the very install that is running.
    */
-  private async _getEnvOfEnv(envIdStr: string): Promise<string | undefined> {
-    try {
-      const envId = await this.workspace.resolveComponentId(envIdStr);
-      const [envComponent] = await this.workspace.importAndGetMany([envId], `to get the env of ${envIdStr}`);
-      if (!envComponent) return undefined;
-      return (await this.envs.calculateEnvId(envComponent)).toString();
-    } catch (err: any) {
-      this.logger.debug(`unable to read the env of ${envIdStr}: ${err.message}`);
-      return undefined;
-    }
+  private async addPhantomLegacyCoreEnvsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<boolean> {
+    const phantomEnvIds = await this.getPhantomLegacyCoreEnvsOfInstalledAspects();
+    return this.addLegacyCoreEnvsToPolicy(rootPolicy, phantomEnvIds);
+  }
+
+  /**
+   * an aspect published before the core envs were removed requires them without declaring them as
+   * dependencies - an env built on the aspect env requires `@teambit/aspect`, an aspect with a
+   * react UI requires `@teambit/react`. back then they were core aspects, provided by the bit
+   * installation itself, so they are phantom requires of the published package: nothing in the
+   * install flow knows to install them, and the aspect fails to load - with a missing module, or
+   * with the `null` harmony injects for an aspect that has no runtime.
+   *
+   * the requires are visible in the installed package, which is the only place they are recorded at
+   * all - the model of an env has the env it was *tagged* with, a different thing than the env it
+   * composes. an aspect that is not installed yet is read on the next install, once it is (the
+   * install prints a "run bit install again" suggestion for exactly this state).
+   */
+  private async getPhantomLegacyCoreEnvsOfInstalledAspects(): Promise<string[]> {
+    const envIdByPackageName = new Map(getLegacyCoreEnvsIds().map((id) => [getLegacyCoreEnvPackageName(id), id]));
+    const legacyCoreEnvPackages = [...envIdByPackageName.keys()];
+    const requiredPackages = new Set<string>();
+    (await this.getInstalledAspectsPackageNames()).forEach((packageName) => {
+      const distDir = path.join(this.workspace.path, 'node_modules', packageName, 'dist');
+      let sources: string[];
+      try {
+        sources = fs
+          .readdirSync(distDir)
+          .filter((fileName) => fileName.endsWith('.js'))
+          .map((fileName) => fs.readFileSync(path.join(distDir, fileName), 'utf-8'));
+      } catch {
+        return; // not installed (yet), or not a package with a dist
+      }
+      findRequiredPackages(sources, legacyCoreEnvPackages).forEach((required) => requiredPackages.add(required));
+    });
+    return [...requiredPackages].map((packageName) => envIdByPackageName.get(packageName) as string);
+  }
+
+  /**
+   * the package name of every aspect the workspace loads from an installed package - the envs of
+   * its components and the aspects configured on them.
+   */
+  private async getInstalledAspectsPackageNames(): Promise<string[]> {
+    const components = await this.workspace.list();
+    const usedEnvIds = await this._getAllUsedEnvIds();
+    const aspectIds = components.flatMap((component) => component.state.aspects.ids);
+    const allIds = [...usedEnvIds.map((envId) => envId.toString()), ...aspectIds];
+    const packageNames = uniq(allIds).map((idStr) => {
+      const idWithoutVersion = idStr.split('@')[0];
+      if (this.aspectLoader.isCoreAspect(idWithoutVersion)) return undefined;
+      const componentId = ComponentID.fromString(idStr);
+      // loaded from the workspace, whatever it requires is resolved from the workspace
+      if (this.workspace.hasId(componentId, { ignoreVersion: true })) return undefined;
+      // an env that used to be a core aspect is published under the core-aspects package name. for
+      // the rest, the conversion is naive (no component is loaded), so an aspect with a custom
+      // package name resolves to a path that doesn't exist - it is left to fail to load with its
+      // "bit install" remediation.
+      return this.envs.isLegacyCoreEnv(idWithoutVersion)
+        ? getLegacyCoreEnvPackageName(idWithoutVersion)
+        : getNonCorePackageName(idWithoutVersion);
+    });
+    return uniq(compact(packageNames));
   }
 
   private async addConfiguredGeneratorEnvsToWorkspacePolicy(rootPolicy: WorkspacePolicy): Promise<void> {
