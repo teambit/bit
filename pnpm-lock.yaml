@@ -3409,9 +3409,15 @@ importers:
       '@teambit/node.envs.node-babel-mocha':
         specifier: 2.0.5
         version: 2.0.5(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
 
   components/legacy/scope:
     dependencies:
@@ -74107,7 +74113,6 @@ snapshots:
       '@teambit/dependencies.aspect-docs.pnpm': file:scopes/dependencies/aspect-docs/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
       '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
-      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/pkg.entities.registry': 0.0.4
@@ -74146,7 +74151,6 @@ snapshots:
       '@teambit/dependencies.aspect-docs.pnpm': file:scopes/dependencies/aspect-docs/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
       '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
-      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/pkg.entities.registry': 0.0.4
@@ -74185,7 +74189,6 @@ snapshots:
       '@teambit/dependencies.aspect-docs.pnpm': file:scopes/dependencies/aspect-docs/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
       '@teambit/dependencies.pnpm.dep-path': 1.0.1
       '@teambit/harmony': 0.4.12
-      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/pkg.entities.registry': 0.0.4
