@@ -147,10 +147,12 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
+    this.logger.profile('install.pnpm.readConfig');
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
+    this.logger.profile('install.pnpm.readConfig');
     if (
       installOptions.dependenciesGraph &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
@@ -196,65 +198,77 @@ export class PnpmPackageManager implements PackageManager {
     // packages this process already loaded modules from must stay requireable even if this install
     // re-keys them to a new peer hash - see preserve-loaded-virtual-store-dirs.ts
     const loadedVirtualStoreDirs = snapshotLoadedVirtualStoreDirs(rootDir);
-    const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
-      rootDir,
-      manifests,
-      config.storeDir,
-      config.cacheDir,
-      registries,
-      proxyConfig,
-      networkConfig,
-      {
-        autoInstallPeers: installOptions.autoInstallPeers ?? true,
-        dedupePeers: installOptions.dedupePeers ?? true,
-        enableModulesDir: installOptions.enableModulesDir,
-        engineStrict: installOptions.engineStrict ?? config.engineStrict,
-        excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
-        lockfileOnly: installOptions.lockfileOnly,
-        minimumReleaseAge: installOptions.minimumReleaseAge,
-        minimumReleaseAgeExclude: installOptions.minimumReleaseAgeExclude,
-        neverBuiltDependencies: installOptions.neverBuiltDependencies,
-        allowScripts: installOptions.allowScripts,
-        dangerouslyAllowAllScripts: installOptions.dangerouslyAllowAllScripts,
-        nodeLinker: installOptions.nodeLinker,
-        nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
-        includeOptionalDeps: installOptions.includeOptionalDeps,
-        ignorePackageManifest: installOptions.ignorePackageManifest,
-        dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
-        dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
-        overrides: installOptions.overrides,
-        hoistPattern,
-        publicHoistPattern: config.shamefullyHoist
-          ? ['*']
-          : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
-        hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
-        hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
-        packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
-        enableGlobalVirtualStore: installOptions.enableGlobalVirtualStore,
-        globalVirtualStoreDir: installOptions.globalVirtualStoreDir,
-        patchedDependencies: installOptions.patchedDependencies,
-        packageExtensions: installOptions.packageExtensions,
-        preferOffline: installOptions.preferOffline,
-        rootComponents: installOptions.rootComponents,
-        rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
-        sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
-        sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
-        pnpmHomeDir: config.pnpmHomeDir,
-        updateAll: installOptions.updateAll,
-        hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
-        reportOptions: {
-          appendOnly: installOptions.optimizeReportForNonTerminal,
-          outputStream: process.env.BIT_CLI_SERVER_NO_TTY ? new ServerSendOutStream() : undefined,
-          throttleProgress: installOptions.throttleProgress,
-          hideProgressPrefix: installOptions.hideProgressPrefix,
-          hideLifecycleOutput: installOptions.hideLifecycleOutput,
-          peerDependencyRules: installOptions.peerDependencyRules,
+    this.logger.profile('install.pnpm.core');
+    let installResult: {
+      dependenciesChanged: boolean;
+      rebuild: RebuildFn;
+      storeDir: string;
+      depsRequiringBuild?: DepPath[];
+    };
+    try {
+      installResult = await install(
+        rootDir,
+        manifests,
+        config.storeDir,
+        config.cacheDir,
+        registries,
+        proxyConfig,
+        networkConfig,
+        {
+          autoInstallPeers: installOptions.autoInstallPeers ?? true,
+          dedupePeers: installOptions.dedupePeers ?? true,
+          enableModulesDir: installOptions.enableModulesDir,
+          engineStrict: installOptions.engineStrict ?? config.engineStrict,
+          excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
+          lockfileOnly: installOptions.lockfileOnly,
+          minimumReleaseAge: installOptions.minimumReleaseAge,
+          minimumReleaseAgeExclude: installOptions.minimumReleaseAgeExclude,
+          neverBuiltDependencies: installOptions.neverBuiltDependencies,
+          allowScripts: installOptions.allowScripts,
+          dangerouslyAllowAllScripts: installOptions.dangerouslyAllowAllScripts,
+          nodeLinker: installOptions.nodeLinker,
+          nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
+          includeOptionalDeps: installOptions.includeOptionalDeps,
+          ignorePackageManifest: installOptions.ignorePackageManifest,
+          dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
+          dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
+          overrides: installOptions.overrides,
+          hoistPattern,
+          publicHoistPattern: config.shamefullyHoist
+            ? ['*']
+            : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
+          hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
+          hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
+          packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+          enableGlobalVirtualStore: installOptions.enableGlobalVirtualStore,
+          globalVirtualStoreDir: installOptions.globalVirtualStoreDir,
+          patchedDependencies: installOptions.patchedDependencies,
+          packageExtensions: installOptions.packageExtensions,
+          preferOffline: installOptions.preferOffline,
+          rootComponents: installOptions.rootComponents,
+          rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
+          sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
+          sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
+          pnpmHomeDir: config.pnpmHomeDir,
+          updateAll: installOptions.updateAll,
+          hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
+          reportOptions: {
+            appendOnly: installOptions.optimizeReportForNonTerminal,
+            outputStream: process.env.BIT_CLI_SERVER_NO_TTY ? new ServerSendOutStream() : undefined,
+            throttleProgress: installOptions.throttleProgress,
+            hideProgressPrefix: installOptions.hideProgressPrefix,
+            hideLifecycleOutput: installOptions.hideLifecycleOutput,
+            peerDependencyRules: installOptions.peerDependencyRules,
+          },
+          returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
+          forcedHarmonyVersion: installOptions.forcedHarmonyVersion,
         },
-        returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
-        forcedHarmonyVersion: installOptions.forcedHarmonyVersion,
-      },
-      this.logger
-    );
+        this.logger
+      );
+    } finally {
+      this.logger.profile('install.pnpm.core');
+    }
+    const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = installResult;
     if (!installOptions.hidePackageManagerOutput) {
       this.logger.on();
       // Make a divider row to improve output

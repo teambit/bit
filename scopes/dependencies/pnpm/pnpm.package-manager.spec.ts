@@ -63,6 +63,7 @@ function createPackageManager(config: Partial<ResolvedConfig>) {
     } as any,
     {
       error: () => {},
+      profile: () => {},
     } as any,
     {
       getCurrentUser: async () => ({ username: 'test-user' }),

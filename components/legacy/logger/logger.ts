@@ -221,7 +221,10 @@ class BitLogger implements IBitLogger {
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
-    shouldWriteToConsole ? this.console(fullMsg) : this[level](fullMsg);
+    // always record it in the log file, and also print it to the screen when requested. (previously
+    // these were mutually exclusive, so enabling console output silently dropped the debug.log entry)
+    this[level](fullMsg);
+    if (shouldWriteToConsole) this.console(fullMsg);
   }
 
   registerOnBeforeExitFn(fn: Function) {
