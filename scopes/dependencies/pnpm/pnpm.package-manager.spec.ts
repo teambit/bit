@@ -64,6 +64,7 @@ function createPackageManager(config: Partial<ResolvedConfig>) {
     {
       error: () => {},
       profile: () => {},
+      profileAsync: async (_id: string, fn: () => Promise<unknown>) => fn(),
     } as any,
     {
       getCurrentUser: async () => ({ username: 'test-user' }),
