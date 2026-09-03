@@ -147,12 +147,21 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
-    this.logger.profile('install.pnpm.readConfig');
-    const registries = await this.depResolver.getRegistries();
-    const proxyConfig = await this.depResolver.getProxyConfig();
-    const networkConfig = await this.depResolver.getNetworkConfig();
-    const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    this.logger.profile('install.pnpm.readConfig');
+    const { registries, proxyConfig, networkConfig, config } = await this.logger.profileAsync(
+      'install.pnpm.readConfig',
+      async () => {
+        const readRegistries = await this.depResolver.getRegistries();
+        const readProxyConfig = await this.depResolver.getProxyConfig();
+        const readNetworkConfig = await this.depResolver.getNetworkConfig();
+        const { config: readConfigResult } = await this.readConfig(installOptions.packageManagerConfigRootDir);
+        return {
+          registries: readRegistries,
+          proxyConfig: readProxyConfig,
+          networkConfig: readNetworkConfig,
+          config: readConfigResult,
+        };
+      }
+    );
     if (
       installOptions.dependenciesGraph &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
@@ -198,15 +207,13 @@ export class PnpmPackageManager implements PackageManager {
     // packages this process already loaded modules from must stay requireable even if this install
     // re-keys them to a new peer hash - see preserve-loaded-virtual-store-dirs.ts
     const loadedVirtualStoreDirs = snapshotLoadedVirtualStoreDirs(rootDir);
-    this.logger.profile('install.pnpm.core');
-    let installResult: {
+    const installResult = await this.logger.profileAsync<{
       dependenciesChanged: boolean;
       rebuild: RebuildFn;
       storeDir: string;
       depsRequiringBuild?: DepPath[];
-    };
-    try {
-      installResult = await install(
+    }>('install.pnpm.core', () =>
+      install(
         rootDir,
         manifests,
         config.storeDir,
@@ -264,10 +271,8 @@ export class PnpmPackageManager implements PackageManager {
           forcedHarmonyVersion: installOptions.forcedHarmonyVersion,
         },
         this.logger
-      );
-    } finally {
-      this.logger.profile('install.pnpm.core');
-    }
+      )
+    );
     const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = installResult;
     if (!installOptions.hidePackageManagerOutput) {
       this.logger.on();

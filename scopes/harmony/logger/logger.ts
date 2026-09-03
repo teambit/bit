@@ -151,6 +151,20 @@ export class Logger implements IBitLogger {
   }
 
   /**
+   * profile the given async function. opens the timer before invoking it and always closes it in
+   * a `finally`, so a rejection doesn't leave the measurement open - which would otherwise cause
+   * the next call using this id to (wrongly) close it and report a duration spanning both calls.
+   */
+  async profileAsync<T>(id: string, fn: () => Promise<T>, console?: boolean): Promise<T> {
+    this.profile(id, console);
+    try {
+      return await fn();
+    } finally {
+      this.profile(id, console);
+    }
+  }
+
+  /**
    * print to the screen with a red `✖` prefix. if message is empty, print the last logged message.
    */
   consoleFailure(message?: string) {

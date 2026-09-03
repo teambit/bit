@@ -363,6 +363,14 @@ export class InstallMain {
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
     this.logger.profile('install.total');
+    try {
+      return await this._installModulesProfiled(options);
+    } finally {
+      this.logger.profile('install.total');
+    }
+  }
+
+  private async _installModulesProfiled(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
     if (options?.allowScripts) {
       this.dependencyResolver.updateAllowedScripts(options.allowScripts);
       await this.dependencyResolver.persistConfig('update allowScripts configuration');
@@ -394,25 +402,24 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
-    this.logger.profile('install.calculateLinks');
-    const { linkedRootDeps } = await this.calculateLinks(linkOpts);
-    this.logger.profile('install.calculateLinks');
-    this.logger.profile('install.getComponentManifests');
-    // eslint-disable-next-line prefer-const
-    let { mergedRootPolicy, componentsAndManifests: current } = await this._getComponentsManifestsAndRootPolicy(
-      installer,
-      {
-        ...calcManifestsOpts,
-        addMissingDeps: options?.addMissingDeps,
-        skipUnavailable: options?.skipUnavailable,
-        linkedRootDeps,
-      }
+    const { linkedRootDeps } = await this.logger.profileAsync('install.calculateLinks', () =>
+      this.calculateLinks(linkOpts)
     );
-    this.logger.profile('install.getComponentManifests');
+    // eslint-disable-next-line prefer-const
+    let { mergedRootPolicy, componentsAndManifests: current } = await this.logger.profileAsync(
+      'install.getComponentManifests',
+      () =>
+        this._getComponentsManifestsAndRootPolicy(installer, {
+          ...calcManifestsOpts,
+          addMissingDeps: options?.addMissingDeps,
+          skipUnavailable: options?.skipUnavailable,
+          linkedRootDeps,
+        })
+    );
 
-    this.logger.profile('install.resolveDependenciesGraph');
-    const dependenciesGraph = await this.resolveDependenciesGraph(options, { hasRootComponents });
-    this.logger.profile('install.resolveDependenciesGraph');
+    const dependenciesGraph = await this.logger.profileAsync('install.resolveDependenciesGraph', () =>
+      this.resolveDependenciesGraph(options, { hasRootComponents })
+    );
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
@@ -452,30 +459,28 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      let installResult: { dependenciesChanged: boolean };
-      this.logger.profile('install.packageManagerInstall');
-      try {
-        installResult = await installer.installComponents(
-          this.workspace.path,
-          current.manifests,
-          mergedRootPolicy,
-          current.componentDirectoryMap,
-          {
-            linkedDependencies,
-            installTeambitBit: false,
-            forcedHarmonyVersion,
-          },
-          pmInstallOptions
-        );
-      } catch (err: any) {
-        // when the package manager can't find a version, the culprit is usually a component dependency that
-        // resolves to a snap which was never published (e.g. a hidden lane update-dependent whose Ripple build
-        // failed or hasn't completed). replace the cryptic "No matching version found" with an actionable
-        // message. re-throws the original error otherwise.
-        throw this.enrichUnpublishedSnapDepError(err, current.componentDirectoryMap.components);
-      } finally {
-        this.logger.profile('install.packageManagerInstall');
-      }
+      const installResult = await this.logger.profileAsync('install.packageManagerInstall', async () => {
+        try {
+          return await installer.installComponents(
+            this.workspace.path,
+            current.manifests,
+            mergedRootPolicy,
+            current.componentDirectoryMap,
+            {
+              linkedDependencies,
+              installTeambitBit: false,
+              forcedHarmonyVersion,
+            },
+            pmInstallOptions
+          );
+        } catch (err: any) {
+          // when the package manager can't find a version, the culprit is usually a component dependency that
+          // resolves to a snap which was never published (e.g. a hidden lane update-dependent whose Ripple build
+          // failed or hasn't completed). replace the cryptic "No matching version found" with an actionable
+          // message. re-throws the original error otherwise.
+          throw this.enrichUnpublishedSnapDepError(err, current.componentDirectoryMap.components);
+        }
+      });
       const { dependenciesChanged } = installResult;
       this.workspace.inInstallAfterPmContext = true;
       // the install that switches a workspace onto the global virtual store runs with bootstrap's
@@ -486,19 +491,13 @@ export class InstallMain {
         ensureHoistedDependencyResolution(this.workspace.path);
       }
       let cacheCleared = false;
-      this.logger.profile('install.linkCodemods');
-      await this.linkCodemods(compDirMap);
-      this.logger.profile('install.linkCodemods');
-      this.logger.profile('install.syncCoreAspectLinksForEnvs');
-      await this.syncCoreAspectLinksForEnvs(compDirMap);
-      this.logger.profile('install.syncCoreAspectLinksForEnvs');
+      await this.logger.profileAsync('install.linkCodemods', () => this.linkCodemods(compDirMap));
+      await this.logger.profileAsync('install.syncCoreAspectLinksForEnvs', () =>
+        this.syncCoreAspectLinksForEnvs(compDirMap)
+      );
       const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
-      this.logger.profile('install.reloadMovedEnvs');
-      await this.reloadMovedEnvs();
-      this.logger.profile('install.reloadMovedEnvs');
-      this.logger.profile('install.reloadNonLoadedEnvs');
-      await this.reloadNonLoadedEnvs();
-      this.logger.profile('install.reloadNonLoadedEnvs');
+      await this.logger.profileAsync('install.reloadMovedEnvs', () => this.reloadMovedEnvs());
+      await this.logger.profileAsync('install.reloadNonLoadedEnvs', () => this.reloadNonLoadedEnvs());
 
       const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
       if (options?.compile ?? true) {
@@ -510,14 +509,12 @@ export class InstallMain {
           // incorrectly in case the env was not loaded correctly before the installation.
           // We don't want to clear the failed to load envs because we want to show the warning at the end
           // await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
-          this.logger.profile('install.clearCache');
-          await this.workspace.clearCache();
-          this.logger.profile('install.clearCache');
+          await this.logger.profileAsync('install.clearCache', () => this.workspace.clearCache());
           cacheCleared = true;
         }
-        this.logger.profile('install.compile');
-        await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
-        this.logger.profile('install.compile');
+        await this.logger.profileAsync('install.compile', () =>
+          this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install })
+        );
 
         // Right now we don't need to load extensions/execute load slot at this point
         // await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install }, undefined, {
@@ -527,9 +524,9 @@ export class InstallMain {
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       if (options?.writeConfigFiles ?? true) {
-        this.logger.profile('install.writeConfigFiles');
-        await this.tryWriteConfigFiles(!cacheCleared && shouldClearCacheOnInstall);
-        this.logger.profile('install.writeConfigFiles');
+        await this.logger.profileAsync('install.writeConfigFiles', () =>
+          this.tryWriteConfigFiles(!cacheCleared && shouldClearCacheOnInstall)
+        );
       }
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
@@ -542,13 +539,13 @@ export class InstallMain {
         // We need to clear cache before creating the new component manifests.
         // this.workspace.consumer.componentLoader.clearComponentsCache();
         // We don't want to clear the failed to load envs because we want to show the warning at the end
-        this.logger.profile('install.clearCache');
-        await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
-        this.logger.profile('install.clearCache');
+        await this.logger.profileAsync('install.clearCache', () =>
+          this.workspace.clearCache({ skipClearFailedToLoadEnvs: true })
+        );
       }
-      this.logger.profile('install.getComponentManifests');
-      current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
-      this.logger.profile('install.getComponentManifests');
+      current = await this.logger.profileAsync('install.getComponentManifests', () =>
+        this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts)
+      );
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
     // the core aspects are compiled by now, so drop the links added above and let the envs resolve
@@ -557,19 +554,16 @@ export class InstallMain {
     if (!options?.lockfileOnly && !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
-      this.logger.profile('install.pruneModules');
-      try {
-        await installer.pruneModules(this.workspace.path);
-        // Ignoring the error here as it's not critical and we don't want to fail the install process
-      } catch (err: any) {
-        this.logger.error(`failed running pnpm prune with error`, err);
-      } finally {
-        this.logger.profile('install.pruneModules');
-      }
+      await this.logger.profileAsync('install.pruneModules', async () => {
+        try {
+          await installer.pruneModules(this.workspace.path);
+          // Ignoring the error here as it's not critical and we don't want to fail the install process
+        } catch (err: any) {
+          this.logger.error(`failed running pnpm prune with error`, err);
+        }
+      });
       // After pruning we need reload moved envs, as during the pruning the old location might be deleted
-      this.logger.profile('install.reloadMovedEnvs');
-      await this.reloadMovedEnvs();
-      this.logger.profile('install.reloadMovedEnvs');
+      await this.logger.profileAsync('install.reloadMovedEnvs', () => this.reloadMovedEnvs());
     }
     // this is now commented out because we assume we don't need it anymore.
     // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
@@ -577,7 +571,6 @@ export class InstallMain {
     // disregard the dependencies-cache.
     // await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
-    this.logger.profile('install.total');
     return current.componentDirectoryMap;
   }
 
