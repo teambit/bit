@@ -18,8 +18,6 @@
     "strictPropertyInitialization": false,
     "strict": true,
     "moduleResolution": "node",
-    // "node" is node10, which TS6 reports as the TS5107 deprecation error.
-    "ignoreDeprecations": "6.0",
     "noImplicitAny": false,
     "rootDir": ".",
     "removeComments": true,
