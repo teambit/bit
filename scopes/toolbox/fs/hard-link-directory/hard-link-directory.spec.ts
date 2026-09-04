@@ -130,3 +130,150 @@ describe('hardLinkDirectory()', () => {
     expect(fs.readdirSync(dest2Dir)).to.deep.equal([]);
   });
 });
+
+function findQuarantined(parentDir: string, originalName: string): string | undefined {
+  const quarantineDir = fs.readdirSync(parentDir).find((entry) => entry.startsWith(`${originalName}.bit-stray-`));
+  if (!quarantineDir) return undefined;
+  const quarantined = path.join(parentDir, quarantineDir, originalName);
+  try {
+    fs.lstatSync(quarantined);
+    return quarantined;
+  } catch {
+    return undefined;
+  }
+}
+
+it('recover when an ancestor of the destination subdirectory is a regular file', async () => {
+  const tempDir = globalBitTempDir();
+  const srcDir = path.join(tempDir, 'source');
+  const destDir = path.join(tempDir, 'dest');
+
+  fs.mkdirpSync(srcDir);
+  fs.mkdirpSync(path.join(srcDir, '@scope', 'pkg'));
+  fs.writeFileSync(path.join(srcDir, '@scope/pkg/file.txt'), 'Hello World');
+
+  // Simulate a corrupted node_modules layout: '@scope' exists as a regular file
+  // where a directory is expected. This is the shape of the ENOTDIR mkdir failure
+  // seen during 'bit install' post-install linking into '.bit_roots'.
+  fs.mkdirpSync(destDir);
+  fs.writeFileSync(path.join(destDir, '@scope'), 'stray file');
+
+  await hardLinkDirectory(srcDir, [destDir]);
+
+  expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).to.equal('Hello World');
+  // The stray entry must be preserved (renamed, not deleted) so the user can recover it.
+  const quarantined = findQuarantined(destDir, '@scope');
+  expect(quarantined).to.not.equal(undefined);
+  expect(fs.readFileSync(quarantined!, 'utf8')).to.equal('stray file');
+});
+
+it('recover when the exact destination subdirectory exists as a regular file', async () => {
+  const tempDir = globalBitTempDir();
+  const srcDir = path.join(tempDir, 'source');
+  const destDir = path.join(tempDir, 'dest');
+
+  fs.mkdirpSync(srcDir);
+  fs.mkdirpSync(path.join(srcDir, 'subdir'));
+  fs.writeFileSync(path.join(srcDir, 'subdir/file.txt'), 'Hello World');
+
+  fs.mkdirpSync(destDir);
+  fs.writeFileSync(path.join(destDir, 'subdir'), 'stray file');
+
+  await hardLinkDirectory(srcDir, [destDir]);
+
+  expect(fs.readFileSync(path.join(destDir, 'subdir/file.txt'), 'utf8')).to.equal('Hello World');
+  const quarantined = findQuarantined(destDir, 'subdir');
+  expect(quarantined).to.not.equal(undefined);
+  expect(fs.readFileSync(quarantined!, 'utf8')).to.equal('stray file');
+});
+
+it('recover when an ancestor of the destination subdirectory is a dangling symlink', async () => {
+  const tempDir = globalBitTempDir();
+  const srcDir = path.join(tempDir, 'source');
+  const destDir = path.join(tempDir, 'dest');
+
+  fs.mkdirpSync(srcDir);
+  fs.mkdirpSync(path.join(srcDir, '@scope', 'pkg'));
+  fs.writeFileSync(path.join(srcDir, '@scope/pkg/file.txt'), 'Hello World');
+
+  fs.mkdirpSync(destDir);
+  // Dangling symlink at '@scope' — points to a non-existent target. lstat reports it
+  // as a symlink (not a directory), so mkdir(@scope/pkg) fails with ENOENT through it.
+  const offender = path.join(destDir, '@scope');
+  fs.symlinkSync(path.join(tempDir, 'does-not-exist'), offender, 'junction');
+  const originalTarget = fs.readlinkSync(offender);
+
+  await hardLinkDirectory(srcDir, [destDir]);
+
+  expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).to.equal('Hello World');
+  // The dangling symlink itself must be preserved as a symlink at the quarantined name.
+  const quarantined = findQuarantined(destDir, '@scope');
+  expect(quarantined).to.not.equal(undefined);
+  expect(fs.lstatSync(quarantined!).isSymbolicLink()).to.equal(true);
+  expect(fs.readlinkSync(quarantined!)).to.equal(originalTarget);
+});
+
+it('does not overwrite an existing quarantine file', async () => {
+  const tempDir = globalBitTempDir();
+  const srcDir = path.join(tempDir, 'source');
+  const destDir = path.join(tempDir, 'dest');
+  const offender = path.join(destDir, 'subdir');
+  const timestamp = 123456789;
+  const existingQuarantine = `${offender}.bit-stray-${timestamp}`;
+
+  fs.mkdirpSync(path.join(srcDir, 'subdir'));
+  fs.writeFileSync(path.join(srcDir, 'subdir/file.txt'), 'Hello World');
+  fs.mkdirpSync(destDir);
+  fs.writeFileSync(offender, 'new stray file');
+  fs.writeFileSync(existingQuarantine, 'previous stray file');
+
+  const originalDateNow = Date.now;
+  Date.now = () => timestamp;
+  try {
+    await hardLinkDirectory(srcDir, [destDir]);
+  } finally {
+    Date.now = originalDateNow;
+  }
+
+  expect(fs.readFileSync(existingQuarantine, 'utf8')).to.equal('previous stray file');
+  expect(fs.readFileSync(path.join(`${existingQuarantine}-1`, 'subdir'), 'utf8')).to.equal('new stray file');
+  expect(fs.readFileSync(path.join(destDir, 'subdir/file.txt'), 'utf8')).to.equal('Hello World');
+});
+
+it('recovers when concurrent calls encounter the same non-directory entry', async () => {
+  const tempDir = globalBitTempDir();
+  const srcDir = path.join(tempDir, 'source');
+  const destDir = path.join(tempDir, 'dest');
+  const offender = path.join(destDir, 'subdir');
+
+  fs.mkdirpSync(path.join(srcDir, 'subdir'));
+  fs.writeFileSync(path.join(srcDir, 'subdir/file.txt'), 'Hello World');
+  fs.mkdirpSync(destDir);
+  fs.writeFileSync(offender, 'stray file');
+
+  const originalRename = fs.rename;
+  let offenderRenames = 0;
+  let releaseRenames!: () => void;
+  const bothRenamesStarted = new Promise<void>((resolve) => {
+    releaseRenames = resolve;
+  });
+  (fs as any).rename = async (src: string, dest: string) => {
+    if (src !== offender) return originalRename(src, dest);
+    offenderRenames += 1;
+    if (offenderRenames === 2) releaseRenames();
+    await bothRenamesStarted;
+    return originalRename(src, dest);
+  };
+
+  try {
+    await Promise.all([hardLinkDirectory(srcDir, [destDir]), hardLinkDirectory(srcDir, [destDir])]);
+  } finally {
+    (fs as any).rename = originalRename;
+  }
+
+  expect(offenderRenames).to.equal(2);
+  expect(fs.readFileSync(path.join(destDir, 'subdir/file.txt'), 'utf8')).to.equal('Hello World');
+  const quarantineDirs = fs.readdirSync(destDir).filter((entry) => entry.startsWith('subdir.bit-stray-'));
+  expect(quarantineDirs).to.have.lengthOf(1);
+  expect(fs.readFileSync(path.join(destDir, quarantineDirs[0], 'subdir'), 'utf8')).to.equal('stray file');
+});
