@@ -14,6 +14,7 @@ import { NewerVersionFound } from '@teambit/legacy.consumer';
 import type { Component } from '@teambit/component';
 import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
@@ -23,8 +24,11 @@ import { DependenciesGraph } from '@teambit/objects';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
+import type { VersionCandidate } from './published-versions';
+import { createIsVersionPublished, skipPublishedVersions } from './published-versions';
 import type { DependencyResolverMain, ComponentRangePrefix } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependency-resolver';
+import type { Registries } from '@teambit/pkg.entities.registry';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
 import type { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -55,6 +59,10 @@ export type BasicTagParams = BasicTagSnapParams & {
   versionsFile?: string;
   unmodified?: boolean;
   ignoreIssues?: string;
+  /**
+   * when the computed version is already in the registry, tag the next version that isn't.
+   */
+  skipPublishedVersions?: boolean;
 };
 
 export type VersionMakerParams = {
@@ -72,6 +80,18 @@ export type VersionMakerParams = {
   updateDependentsOnLane?: boolean;
   setHeadAsParent?: boolean;
 } & BasicTagParams;
+
+/**
+ * whether the component is published to an external registry (npm), rather than to bit's own one.
+ * mirrors `Publisher.shouldPublish` in @teambit/pkg - the gate that decides whether the publish
+ * task runs at all - including its `avoidPublishToNPM` opt-out.
+ */
+function isPublishedToExternalRegistry(component: ConsumerComponent): boolean {
+  const pkgExt = component.extensions.findExtension(Extensions.pkg);
+  if (!pkgExt) return false; // by default components are published to bit's registry
+  if (pkgExt.config?.avoidPublishToNPM) return false;
+  return Boolean(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
+}
 
 /**
  * create a tag or a snap of the given components and save them in the local scope.
@@ -498,7 +518,7 @@ export class VersionMaker {
     const isPreReleaseLike = releaseType
       ? ['prerelease', 'premajor', 'preminor', 'prepatch'].includes(releaseType)
       : false;
-    await Promise.all(
+    const computedVersions = await Promise.all(
       this.allComponentsToTag.map(async (componentToTag) => {
         const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
         const modelComponent = await this.legacyScope.sources.findOrAddComponent(componentToTag);
@@ -547,10 +567,58 @@ export class VersionMaker {
             : versionByEnteredId ||
                 modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
         };
-        const newVersion = getNewVersion();
-        componentToTag.setNewVersion(newVersion);
+        return { componentToTag, modelComponent, version: getNewVersion() };
       })
     );
+    const versionsToSkip = await this.getVersionsPublishedToRegistry(computedVersions);
+    computedVersions.forEach(({ componentToTag, version }) => {
+      componentToTag.setNewVersion(versionsToSkip.get(componentToTag.id.toStringWithoutVersion()) || version);
+    });
+  }
+
+  /**
+   * a version that is already in the registry can't be published again, so tagging it only fails
+   * later on, during the publish task. see `published-versions.ts` for how the registry gets ahead
+   * of the scope in the first place, and why a probe is enough to detect it.
+   *
+   * @returns the version to tag instead, by component id, for the components that collided.
+   */
+  private async getVersionsPublishedToRegistry(
+    computedVersions: { componentToTag: ConsumerComponent; modelComponent: ModelComponent; version: string }[]
+  ): Promise<Map<string, string>> {
+    // on a soft-tag the "version" is a release-type (e.g. "patch"), there is nothing to look up yet.
+    if (!this.params.skipPublishedVersions || this.params.soft) return new Map();
+    // only an external registry can get ahead of the scope: a component published to bit's own
+    // registry gets there during the export itself, so the export failing leaves nothing behind.
+    // by default nothing is published externally, which makes this a no-op for most workspaces.
+    const publishedExternally = computedVersions.filter(({ componentToTag }) =>
+      isPublishedToExternalRegistry(componentToTag)
+    );
+    if (!publishedExternally.length) return new Map();
+    let registries: Registries;
+    try {
+      registries = await this.dependencyResolver.getRegistries();
+    } catch (err: any) {
+      // skipping published versions is a safety net for a stuck release, never a reason to fail one.
+      this.snapping.logger.consoleWarning(
+        `unable to check the registry for published versions, tagging without it. error: ${err.message}`
+      );
+      return new Map();
+    }
+    const candidates: VersionCandidate[] = publishedExternally.map(({ componentToTag, modelComponent, version }) => ({
+      id: componentToTag.id.toStringWithoutVersion(),
+      packageName: componentIdToPackageName(componentToTag),
+      version,
+      isTakenLocally: (ver) => Boolean(modelComponent.versions[ver]),
+    }));
+    return skipPublishedVersions({
+      candidates,
+      isPublished: createIsVersionPublished(registries, this.snapping.logger),
+      onSkip: (candidate, versionToTag) =>
+        this.snapping.logger.console(
+          `${candidate.id}: ${candidate.packageName}@${candidate.version} is already in the registry, tagging ${versionToTag} instead`
+        ),
+    });
   }
 
   private setCurrentSchema() {
