@@ -13,6 +13,7 @@ import type { Consumer } from '@teambit/legacy.consumer';
 import { NewerVersionFound } from '@teambit/legacy.consumer';
 import type { Component } from '@teambit/component';
 import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
+import { formatItem, formatSection, formatWarningSummary } from '@teambit/cli';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
@@ -619,8 +620,8 @@ export class VersionMaker {
       registries = await this.dependencyResolver.getRegistries();
     } catch (err: any) {
       // skipping published versions is a safety net for a stuck release, never a reason to fail one.
-      this.snapping.logger.consoleWarning(
-        `unable to check the registry for published versions, tagging without it. error: ${err.message}`
+      this.snapping.logger.console(
+        formatWarningSummary(`unable to check the registry for published versions, tagging without it: ${err.message}`)
       );
       return new Map();
     }
@@ -631,14 +632,26 @@ export class VersionMaker {
       registryUrl: getPublishRegistry(componentToTag),
       isTakenLocally: (ver) => Boolean(modelComponent.versions[ver]),
     }));
-    return skipPublishedVersions({
+    const versionsToSkip = await skipPublishedVersions({
       candidates,
       isPublished: createIsVersionPublished(registries, this.snapping.logger),
-      onSkip: (candidate, versionToTag) =>
-        this.snapping.logger.console(
-          `${candidate.id}: ${candidate.packageName}@${candidate.version} is already in the registry, tagging ${versionToTag} instead`
-        ),
     });
+    // one section rather than a line per component: a run that got stuck can collide on all of them
+    const items = candidates
+      .filter((candidate) => versionsToSkip.has(candidate.id))
+      .map((candidate) =>
+        formatItem(`${candidate.packageName}@${candidate.version} → ${versionsToSkip.get(candidate.id)}`)
+      );
+    if (items.length) {
+      this.snapping.logger.console(
+        formatSection(
+          'Versions already in the registry',
+          'an earlier run published these versions, tagging the next free one instead',
+          items
+        )
+      );
+    }
+    return versionsToSkip;
   }
 
   private setCurrentSchema() {

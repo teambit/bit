@@ -102,12 +102,10 @@ export async function skipPublishedVersions({
   candidates,
   isPublished,
   concurrency = REGISTRY_CHECK_CONCURRENCY,
-  onSkip,
 }: {
   candidates: VersionCandidate[];
   isPublished: IsVersionPublished;
   concurrency?: number;
-  onSkip?: (candidate: VersionCandidate, versionToTag: string) => void;
 }): Promise<Map<string, string>> {
   const skipped = new Map<string, string>();
   if (!candidates.length) return skipped;
@@ -123,7 +121,6 @@ export async function skipPublishedVersions({
       });
       if (versionToTag === candidate.version) return;
       skipped.set(candidate.id, versionToTag);
-      onSkip?.(candidate, versionToTag);
     },
     { concurrency }
   );
