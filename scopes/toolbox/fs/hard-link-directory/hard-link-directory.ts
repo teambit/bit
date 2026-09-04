@@ -2,7 +2,10 @@ import path from 'path';
 import fs from 'fs-extra';
 import symlinkDir from 'symlink-dir';
 import resolveLinkTarget from 'resolve-link-target';
-import { logger, printWarning } from '@teambit/legacy.logger';
+import { formatWarningSummary } from '@teambit/cli';
+import { getConfig } from '@teambit/config-store';
+import { CFG_NO_WARNINGS } from '@teambit/legacy.constants';
+import { logger } from '@teambit/legacy.logger';
 
 /**
  * Hard link all files from a directory to several target directories.
@@ -138,54 +141,48 @@ async function ensureDir(dir: string) {
       `non-directory entry at ${offender} blocked link target ${dir}; ` +
       `moved aside to ${quarantined} so the install could continue. inspect or delete it manually if it isn't expected.`;
     logger.warn(msg);
-    printWarning(msg);
+    printRecoveryWarning(msg);
   }
   throw mkdirError;
 }
 
 /**
- * Move `offender` to a sibling path that won't collide with anything bit creates.
- * On the rare chance the suffixed name already exists (e.g. a previous recovery in the
+ * Reserve a unique sibling directory, then atomically move `offender` into it. The empty,
+ * exclusively created directory makes the rename no-clobber without recreating files or
+ * symlinks, so Windows junction types and all other entry metadata remain intact.
+ * On the rare chance the directory name already exists (e.g. a previous recovery in the
  * same millisecond, or a leftover from a prior failed run), keep bumping a counter.
  * Returns undefined when another worker already moved the offender.
  */
 async function quarantineStrayEntry(offender: string): Promise<string | undefined> {
   const base = `${offender}.bit-stray-${Date.now()}`;
-  let candidate = base;
+  let quarantineDir = base;
   for (let i = 1; ; i++) {
     try {
-      await moveNonDirectoryEntryNoReplace(offender, candidate);
-      return candidate;
+      await fs.mkdir(quarantineDir, { mode: 0o700 });
     } catch (err) {
-      const code = errnoCode(err);
-      if (code === 'ENOENT') return undefined;
-      if (code !== 'EEXIST') throw err;
-      candidate = `${base}-${i}`;
+      if (errnoCode(err) !== 'EEXIST') throw err;
+      quarantineDir = `${base}-${i}`;
+      continue;
+    }
+
+    const quarantined = path.join(quarantineDir, path.basename(offender));
+    try {
+      await fs.rename(offender, quarantined);
+      return quarantined;
+    } catch (err) {
+      // Only remove the directory if it is still empty. Never recursively remove it: after a
+      // successful rename it contains user data, even if an unusual filesystem reports an error.
+      await fs.rmdir(quarantineDir).catch(() => undefined);
+      if (errnoCode(err) === 'ENOENT') return undefined;
+      throw err;
     }
   }
 }
 
-/**
- * Move a file or symlink without replacing an existing destination. Hard-linking a file and
- * recreating a symlink are atomic no-clobber operations, unlike rename on POSIX.
- */
-async function moveNonDirectoryEntryNoReplace(src: string, dest: string) {
-  const stat = await fs.lstat(src);
-  if (stat.isSymbolicLink()) {
-    const target = await fs.readlink(src);
-    await fs.symlink(target, dest);
-  } else {
-    await fs.link(src, dest);
-  }
-
-  try {
-    await fs.unlink(src);
-  } catch (err) {
-    // A concurrent worker may have removed src after we created dest. Remove our duplicate,
-    // then let the caller retry directory creation.
-    await fs.unlink(dest).catch(() => undefined);
-    throw err;
-  }
+function printRecoveryWarning(msg: string) {
+  if (getConfig(CFG_NO_WARNINGS) === 'true' || !logger.shouldWriteToConsole) return;
+  logger.console(formatWarningSummary(msg), 'warn');
 }
 
 /**
