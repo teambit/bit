@@ -35,6 +35,15 @@ describe('BitMap', function () {
     it('should remove the "id" property', () => {
       expect(componentMap).to.not.have.property('id');
     });
+    it('should persist files when an external inventory owns the file mapping', () => {
+      const explicitBitMap = new BitMap(__dirname, '', '17.0.0');
+      const explicitComponent = explicitBitMap.addComponent(addComponentParamsFixture);
+      explicitComponent.useExplicitFiles = true;
+
+      const serialized = explicitBitMap.toObjects()['is-string'];
+      expect(serialized.useExplicitFiles).to.equal(true);
+      expect(serialized.files).to.deep.equal(addComponentParamsFixture.files);
+    });
     it('should sort the components alphabetically', async () => {
       const exampleComponent = { ...addComponentParamsFixture };
       exampleComponent.defaultScope = '';

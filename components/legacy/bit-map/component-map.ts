@@ -60,6 +60,7 @@ export type ComponentMapData = {
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
   config?: Config;
+  useExplicitFiles?: boolean;
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -91,6 +92,13 @@ export class ComponentMap {
   scope?: string | null; // empty string if new/staged. (undefined if legacy).
   version?: string; // empty string if new. (undefined if legacy).
   noFilesError?: Error; // set if during finding the files an error was found
+  /**
+   * Keep the files in .bitmap instead of deriving them from rootDir.
+   *
+   * This is needed when multiple components intentionally share a directory
+   * tree and an external inventory owns the file-to-component mapping.
+   */
+  useExplicitFiles?: boolean;
   config?: { [aspectId: string]: Record<string, any> | '-' };
   constructor({
     id,
@@ -104,6 +112,7 @@ export class ComponentMap {
     isAvailableOnCurrentLane,
     nextVersion,
     config,
+    useExplicitFiles,
   }: ComponentMapData) {
     this.id = id;
     this.files = files;
@@ -116,6 +125,7 @@ export class ComponentMap {
     this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
     this.nextVersion = nextVersion;
     this.config = config;
+    this.useExplicitFiles = useExplicitFiles;
   }
 
   static fromJson(componentMapObj: ComponentMapData): ComponentMap {
@@ -127,7 +137,7 @@ export class ComponentMap {
       name: this.name,
       scope: this.scope,
       version: this.version,
-      files: null,
+      files: this.useExplicitFiles ? this.files : null,
       defaultScope: this.defaultScope,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
@@ -138,6 +148,7 @@ export class ComponentMap {
       nextVersion: this.nextVersion,
       localOnly: this.localOnly || null, // if false, change to null so it won't be written
       config: this.configToObject(),
+      useExplicitFiles: this.useExplicitFiles || null,
     };
 
     res = pickBy(res, (value) => !isNil(value));
@@ -266,6 +277,7 @@ export class ComponentMap {
    * updated list of the files
    */
   async trackDirectoryChangesHarmony(consumerPath: PathOsBasedAbsolute, ignoredFiles?: string[]): Promise<void> {
+    if (this.useExplicitFiles) return;
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;

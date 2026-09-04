@@ -29,6 +29,7 @@ export type SwitchProps = {
   remoteLane?: Lane;
   localTrackedLane?: string;
   alias?: string;
+  pnpmVcsBootstrap?: boolean;
 };
 
 /**
@@ -52,6 +53,26 @@ export function partitionSwitchIds(
   return { ids: [...idsOnMainOnly, ...restricted], laneBitIds: idsOnLaneOnly };
 }
 
+type PnpmVcsBootstrapComponentMap = {
+  rootDir?: string;
+  useExplicitFiles?: boolean;
+  config?: Record<string, any>;
+};
+
+export function isPnpmVcsBootstrapComponentSet(components: PnpmVcsBootstrapComponentMap[]): boolean {
+  const rootMap = components.length === 1 ? components[0] : undefined;
+  const trackerConfig = rootMap?.config?.['teambit.component/tracker'];
+  return Boolean(
+    rootMap &&
+      !rootMap.rootDir &&
+      rootMap.useExplicitFiles &&
+      trackerConfig &&
+      trackerConfig !== '-' &&
+      trackerConfig.pnpmVcs?.schemaVersion === 1 &&
+      trackerConfig.pnpmVcs?.workspace?.schemaVersion === 1
+  );
+}
+
 export class LaneSwitcher {
   private consumer: Consumer;
   private laneIdToSwitchTo: LaneId; // populated by `this.populateSwitchProps()`
@@ -69,7 +90,11 @@ export class LaneSwitcher {
   async switch(): Promise<ApplyVersionResults> {
     this.logger.setStatusLine(`switching lanes`);
     if (this.workspace.isOnMain()) {
-      await throwForStagedComponents(this.workspace);
+      if (this.switchProps.pnpmVcsBootstrap) {
+        this.validatePnpmVcsBootstrapWorkspace();
+      } else {
+        await throwForStagedComponents(this.workspace);
+      }
     }
     await this.populateSwitchProps();
     const bitMapIds = this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
@@ -93,6 +118,15 @@ export class LaneSwitcher {
     await this.consumer.onDestroy('lane-switch');
 
     return results;
+  }
+
+  private validatePnpmVcsBootstrapWorkspace() {
+    const components = this.consumer.bitMap.getAllComponents();
+    if (!isPnpmVcsBootstrapComponentSet(components)) {
+      throw new BitError(
+        '--pnpm-vcs-bootstrap can only switch a workspace containing one validated pnpm VCS root component'
+      );
+    }
   }
 
   private async populateSwitchProps() {

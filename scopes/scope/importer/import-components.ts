@@ -34,6 +34,7 @@ import type { ListerMain } from '@teambit/lister';
 import { NoIdMatchWildcard } from '@teambit/lister';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { applyWorkspaceProfileToImportedComponents } from '@teambit/tracker';
 
 const BEFORE_IMPORT_ACTION = 'importing components';
 
@@ -71,6 +72,7 @@ export type ImportOptions = {
   laneOnly?: boolean; // when on a lane, only import components that exist on the lane (preserves legacy behavior)
   owner?: boolean; // treat the id as an owner name and import all components from all scopes of that owner
   writeToEmptyDir?: boolean; // when the target dir is not empty, import into an available empty dir instead of failing
+  pnpmVcsRoot?: boolean; // bootstrap a validated pnpm VCS root component at the workspace root
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -393,6 +395,7 @@ export default class ImportComponents {
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
       writeToEmptyDir: this.options.writeToEmptyDir,
+      pnpmVcsRoot: this.options.pnpmVcsRoot,
       skipWritingToFs: this.options.trackOnly,
       reasonForBitmapChange: 'import',
       writeDeps: this.options.writeDeps,
@@ -419,7 +422,13 @@ export default class ImportComponents {
       this._throwForDivergedHistory();
       await this.throwForComponentsFromAnotherLane(components.map((c) => c.id));
       const filteredComponents = await this._filterComponentsByFilters(components);
+      await applyWorkspaceProfileToImportedComponents(this.workspace, filteredComponents);
       componentWriterResults = await this._writeToFileSystem(filteredComponents);
+      const persistedPnpmVcsProfile = await applyWorkspaceProfileToImportedComponents(
+        this.workspace,
+        filteredComponents
+      );
+      if (persistedPnpmVcsProfile) await this.consumer.writeBitMap('import pnpm VCS profile');
       await this._saveLaneDataIfNeeded(filteredComponents);
       writtenComponents = filteredComponents;
     }
@@ -503,6 +512,11 @@ export default class ImportComponents {
 
   private async throwForComponentsFromAnotherLane(bitIds: ComponentID[]) {
     if (this.options.objectsOnly) return;
+    // A Git-free pnpm clone has to materialize the lane's root component before
+    // it can read the durable topology and switch the workspace to that lane.
+    // The CLI restricts this bootstrap mode to one validated component written
+    // at the workspace root; ordinary cross-lane component imports stay blocked.
+    if (this.options.pnpmVcsRoot) return;
     const currentLaneId = this.workspace.getCurrentLaneId();
     const currentRemoteLane = this.remoteLane?.toLaneId().isEqual(currentLaneId) ? this.remoteLane : undefined;
     const currentLane = await this.workspace.getCurrentLaneObject();
@@ -1102,6 +1116,7 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       verbose: this.options.verbose,
       throwForExistingDir: !this.options.override,
       writeToEmptyDir: this.options.writeToEmptyDir,
+      pnpmVcsRoot: this.options.pnpmVcsRoot,
       skipWritingToFs: this.options.trackOnly,
       shouldUpdateWorkspaceConfig: true,
       reasonForBitmapChange: 'import',

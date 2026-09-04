@@ -66,6 +66,8 @@ supports various reset options to recover from corrupted state or restart from s
     ['', 'external-package-manager', 'enable external package manager mode (npm/yarn/pnpm)'],
     ['', 'skip-interactive', 'skip interactive mode for Git repositories'],
     ['', 'agent [type]', 'create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)'],
+    ['', 'no-agent', 'do not create AI agent instructions'],
+    ['', 'no-mcp', 'do not create a default Bit Cloud MCP configuration'],
   ] as CommandOptions;
 
   constructor(
@@ -147,6 +149,8 @@ supports various reset options to recover from corrupted state or restart from s
       defaultScope,
       externalPackageManager,
       agent,
+      noAgent,
+      noMcp,
     } = flags;
 
     if (path) path = pathlib.resolve(path);
@@ -205,7 +209,7 @@ supports various reset options to recover from corrupted state or restart from s
       workspaceExtensionProps,
       interactiveConfig?.generator || generator,
       agentType,
-      { skipDefaultMcp: userOptedOutOfMcp }
+      { skipAgent: Boolean(noAgent), skipDefaultMcp: Boolean(noMcp) || userOptedOutOfMcp }
     );
 
     return HostInitializerMain.generateInitMessage(

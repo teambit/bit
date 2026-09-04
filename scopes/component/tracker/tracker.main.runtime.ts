@@ -4,11 +4,14 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import path from 'path';
 import type { ComponentID } from '@teambit/component-id';
+import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { logger as legacyLogger } from '@teambit/legacy.logger';
 import type { PathOsBasedRelative, PathOsBasedAbsolute, PathLinuxRelative } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
@@ -16,6 +19,9 @@ import { AddCmd } from './add-cmd';
 import type { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
 import AddComponents, { addMultipleFromResolvedTrackData } from './add-components';
 import { TrackerAspect } from './tracker.aspect';
+import { createPnpmVcsCatalogBindingsOnLoad, PnpmCmd, PnpmSyncCmd } from './pnpm-vcs-sync.cmd';
+import { PnpmWorkspaceScriptsCompiler, PnpmWorkspaceScriptsEnv } from './pnpm-workspace-scripts.env';
+import { PnpmWorkspaceScriptTask } from './pnpm-workspace-scripts.task';
 
 export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };
 
@@ -211,12 +217,27 @@ if this is a new, unrelated component, rename yours to avoid the clash, e.g. "bi
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, LoggerAspect, EnvsAspect, ScopeAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, loggerMain]: [CLIMain, Workspace, LoggerMain]) {
+  static async provider([cli, workspace, loggerMain, envs, scope]: [
+    CLIMain,
+    Workspace,
+    LoggerMain,
+    EnvsMain,
+    ScopeMain,
+  ]) {
     const logger = loggerMain.createLogger(TrackerAspect.id);
     const trackerMain = new TrackerMain(workspace, logger);
-    cli.register(new AddCmd(trackerMain));
+    const buildTask = new PnpmWorkspaceScriptTask(TrackerAspect.id, 'build', logger, scope);
+    const testTask = new PnpmWorkspaceScriptTask(TrackerAspect.id, 'test', logger, scope);
+    const lintTask = new PnpmWorkspaceScriptTask(TrackerAspect.id, 'lint', logger, scope);
+    const compiler = new PnpmWorkspaceScriptsCompiler(workspace, buildTask, logger);
+    envs.registerEnv(new PnpmWorkspaceScriptsEnv(compiler, [buildTask, testTask, lintTask]));
+    if (workspace) workspace.registerOnComponentLoad(createPnpmVcsCatalogBindingsOnLoad(workspace));
+    const pnpmSyncCmd = new PnpmSyncCmd(workspace);
+    const pnpmCmd = new PnpmCmd(pnpmSyncCmd);
+    pnpmCmd.commands = [pnpmSyncCmd];
+    cli.register(new AddCmd(trackerMain), pnpmCmd);
     return trackerMain;
   }
 }

@@ -55,6 +55,7 @@ type ImportFlags = {
   laneOnly?: boolean;
   owner?: boolean;
   writeToEmptyDir?: boolean;
+  pnpmVcsRoot?: boolean;
 };
 
 export class ImportCmd implements Command {
@@ -165,6 +166,7 @@ without arguments, fetches all workspace components' latest versions from their 
       'write-to-empty-dir',
       'when the target directory is not empty, import into an available empty directory (e.g. "foo" => "foo_1") instead of failing',
     ],
+    ['', 'pnpm-vcs-root', 'bootstrap a pnpm VCS root component at the workspace root'],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
@@ -252,9 +254,13 @@ without arguments, fetches all workspace components' latest versions from their 
   }
 
   async json([ids]: [string[]], importFlags: ImportFlags) {
-    const { importDetails, installationError, missingIds } = await this.getImportResults(ids, importFlags);
+    const { importDetails, installationError, missingIds, writtenComponents } = await this.getImportResults(
+      ids,
+      importFlags
+    );
+    const pnpmVcs = writtenComponents?.length ? await this.importer.getPnpmVcsImportPlan(writtenComponents) : undefined;
 
-    return { importDetails, installationError, missingIds };
+    return { importDetails, installationError, missingIds, pnpmVcs };
   }
 
   private async getImportResults(
@@ -286,6 +292,7 @@ without arguments, fetches all workspace components' latest versions from their 
       laneOnly = false,
       owner = false,
       writeToEmptyDir = false,
+      pnpmVcsRoot = false,
     }: ImportFlags
   ): Promise<ImportResult> {
     if (dependentsDryRun) {
@@ -297,12 +304,8 @@ without arguments, fetches all workspace components' latest versions from their 
     if (override && merge) {
       throw new BitError('--override and --merge cannot be used together');
     }
-    if (writeToEmptyDir) {
-      // --override deletes the occupied dir to write in place, and --path targets one specific directory; both
-      // contradict --write-to-empty-dir, which relocates elsewhere when the target dir is occupied.
-      if (override) throw new BitError('--override and --write-to-empty-dir cannot be used together');
-      if (path) throw new BitError('--path and --write-to-empty-dir cannot be used together');
-    }
+    validateWriteToEmptyDirFlags(writeToEmptyDir, override, path);
+    validatePnpmVcsRootFlags(pnpmVcsRoot, ids, path);
     if (!ids.length && dependencies) {
       throw new BitError('you have to specify ids to use "--dependencies" flag');
     }
@@ -370,9 +373,24 @@ without arguments, fetches all workspace components' latest versions from their 
       laneOnly,
       owner,
       writeToEmptyDir,
+      pnpmVcsRoot,
     };
     return this.importer.import(importOptions, this._packageManagerArgs);
   }
+}
+
+function validatePnpmVcsRootFlags(pnpmVcsRoot: boolean, ids: string[], writePath?: string): void {
+  if (pnpmVcsRoot && (ids.length !== 1 || writePath !== '.')) {
+    throw new BitError('"--pnpm-vcs-root" requires exactly one component and "--path ."');
+  }
+}
+
+function validateWriteToEmptyDirFlags(writeToEmptyDir: boolean, override: boolean, writePath?: string): void {
+  if (!writeToEmptyDir) return;
+  // --override deletes the occupied dir to write in place, and --path targets one specific directory; both
+  // contradict --write-to-empty-dir, which relocates elsewhere when the target dir is occupied.
+  if (override) throw new BitError('--override and --write-to-empty-dir cannot be used together');
+  if (writePath) throw new BitError('--path and --write-to-empty-dir cannot be used together');
 }
 
 function formatMissingComponents(missing?: string[]) {

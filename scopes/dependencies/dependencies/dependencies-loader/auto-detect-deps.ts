@@ -18,6 +18,7 @@ import type { ResolvedPackageData } from '../resolve-pkg-data';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import type { DependencyResolverMain, DependencyDetector } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { getDependencyTree } from '../files-dependency-builder';
 import type { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import type { DevFilesMain } from '@teambit/dev-files';
@@ -67,6 +68,7 @@ export class AutoDetectDeps {
   processedFiles: string[];
   debugDependenciesData: DebugDependencies;
   autoDetectConfigMerge: Record<string, any>;
+  private workspaceComponentIdByPackageName?: Map<string, ComponentID>;
   constructor(
     private component: Component,
     private workspace: Workspace,
@@ -127,7 +129,7 @@ export class AutoDetectDeps {
     cacheResolvedDependencies: Record<string, any>,
     cacheProjectAst: Record<string, any> | undefined
   ): Promise<{ dependenciesData: DependenciesData; debugDependenciesData: DebugDependencies }> {
-    const componentDir = path.join(this.consumerPath, this.componentMap.rootDir);
+    const componentDir = path.join(this.consumerPath, this.componentMap.rootDir || '');
     const allFiles = this.componentMap.getAllFilesPaths();
     const envDetectors = await this.getEnvDetectors();
     // find the dependencies (internal files and packages) through automatic dependency resolution
@@ -226,7 +228,7 @@ export class AutoDetectDeps {
     destination: string | null | undefined;
   } {
     let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
-    const rootDir = this.componentMap.rootDir;
+    const rootDir = this.componentMap.rootDir || '';
     // The depFileRelative is relative to rootDir, change it to be relative to current consumer.
     // We can't use path.resolve(rootDir, fileDep) because this might not work when running
     // bit commands not from root, because resolve take by default the process.cwd
@@ -483,6 +485,19 @@ export class AutoDetectDeps {
         }
       }
     }
+    for (const [packageName, versionRange] of Object.entries(packages)) {
+      const componentId = this.getWorkspaceComponentIdsByPackageName().get(packageName);
+      if (!componentId || componentId.isEqualWithoutVersion(this.componentId)) continue;
+      this._pushToDependenciesIfNotExist(new Dependency(componentId, [], packageName, versionRange), {
+        fileType,
+        depDebug: {
+          id: componentId,
+          packageName,
+          versionResolvedFrom: 'BitMap',
+        },
+      });
+      delete packages[packageName];
+    }
     const packageNames = Object.keys(packages).concat(this.tree[originFile].missing?.packages ?? []);
     this._addTypesPackagesForTypeScript(packageNames, originFile);
     if (!packages || isEmpty(packages)) return;
@@ -491,6 +506,31 @@ export class AutoDetectDeps {
     } else {
       Object.assign(this.allPackagesDependencies.packageDependencies, packages);
     }
+  }
+
+  private getWorkspaceComponentIdsByPackageName(): Map<string, ComponentID> {
+    if (this.workspaceComponentIdByPackageName) return this.workspaceComponentIdByPackageName;
+    const result = new Map<string, ComponentID>();
+    for (const componentMap of this.consumer.bitMap.components) {
+      const config = componentMap.config?.[DependencyResolverAspect.id];
+      const configuredPackageName = config && config !== '-' ? config.packageName : undefined;
+      if (typeof configuredPackageName === 'string' && configuredPackageName) {
+        result.set(configuredPackageName, componentMap.id);
+        continue;
+      }
+      if (!componentMap.useExplicitFiles || !componentMap.files?.some((file) => file.relativePath === 'package.json')) {
+        continue;
+      }
+      const manifestPath = path.join(this.consumerPath, componentMap.rootDir || '', 'package.json');
+      try {
+        const packageName = fs.readJsonSync(manifestPath).name;
+        if (typeof packageName === 'string' && packageName) result.set(packageName, componentMap.id);
+      } catch {
+        // A missing or malformed manifest is reported by component loading.
+      }
+    }
+    this.workspaceComponentIdByPackageName = result;
+    return result;
   }
 
   private processMissing(originFile: PathLinuxRelative, fileType: FileType) {
@@ -503,7 +543,7 @@ export class AutoDetectDeps {
         if (!hasExtension) return true;
         // the missing file has extension, e.g. "index.js". It's possible that this file doesn't exist in the source
         // but will be available in the dists. so if found same filename without the extension, we assume it's fine.
-        const rootDirAbs = this.consumer.toAbsolutePath(this.componentMap.rootDir);
+        const rootDirAbs = this.consumer.toAbsolutePath(this.componentMap.rootDir || '');
         const filePathAbs = path.resolve(rootDirAbs, file);
         const relativeToCompDir = path.relative(rootDirAbs, filePathAbs);
         const relativeToCompDirWithoutExt = removeFileExtension(relativeToCompDir);
