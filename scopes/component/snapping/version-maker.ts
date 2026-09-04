@@ -94,6 +94,25 @@ function isPublishedToExternalRegistry(component: ConsumerComponent): boolean {
 }
 
 /**
+ * the registry `npm publish` will use for this component, when it is not the default one for the
+ * package's scope. follows npm's own precedence: the `--registry` argument beats `publishConfig`,
+ * which beats the scope's registry from the npmrc. undefined means "whatever the scope resolves to".
+ */
+function getPublishRegistry(component: ConsumerComponent): string | undefined {
+  const pkgExt = component.extensions.findExtension(Extensions.pkg);
+  if (!pkgExt) return undefined;
+  // same normalization the publisher applies to these args, they may hold several flags per entry
+  const publishArgs: string[] = Array.isArray(pkgExt.config?.packageManagerPublishArgs)
+    ? pkgExt.config.packageManagerPublishArgs.flatMap((arg: string) => arg.split(' '))
+    : [];
+  const registryFlagIndex = publishArgs.indexOf('--registry');
+  if (registryFlagIndex !== -1 && publishArgs[registryFlagIndex + 1]) return publishArgs[registryFlagIndex + 1];
+  const inlineRegistryFlag = publishArgs.find((arg) => arg.startsWith('--registry='));
+  if (inlineRegistryFlag) return inlineRegistryFlag.slice('--registry='.length);
+  return pkgExt.config?.packageJson?.publishConfig?.registry;
+}
+
+/**
  * create a tag or a snap of the given components and save them in the local scope.
  */
 export class VersionMaker {
@@ -609,6 +628,7 @@ export class VersionMaker {
       id: componentToTag.id.toStringWithoutVersion(),
       packageName: componentIdToPackageName(componentToTag),
       version,
+      registryUrl: getPublishRegistry(componentToTag),
       isTakenLocally: (ver) => Boolean(modelComponent.versions[ver]),
     }));
     return skipPublishedVersions({

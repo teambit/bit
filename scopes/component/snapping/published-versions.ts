@@ -1,5 +1,5 @@
 import { SemVer } from 'semver';
-import fetch from 'node-fetch';
+import { getFetcherWithAgent } from '@teambit/scope.network';
 import { BitError } from '@teambit/bit-error';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { Registries, Registry } from '@teambit/pkg.entities.registry';
@@ -17,7 +17,7 @@ import type { Registries, Registry } from '@teambit/pkg.entities.registry';
  * actually collide.
  */
 
-export type IsVersionPublished = (packageName: string, version: string) => Promise<boolean>;
+export type IsVersionPublished = (packageName: string, version: string, registryUrl?: string) => Promise<boolean>;
 
 /**
  * a collision means a previous run published this component and then failed, so the number of
@@ -42,6 +42,11 @@ export type VersionCandidate = {
   id: string;
   packageName: string;
   version: string;
+  /**
+   * the registry `npm publish` will target for this component, when it is not the one configured
+   * for the package's scope. asking any other registry would say "free" about a taken version.
+   */
+  registryUrl?: string;
   isTakenLocally?: (version: string) => boolean;
 };
 
@@ -64,19 +69,21 @@ export function getNextVersion(version: string): string {
 export async function findVersionNotPublished({
   packageName,
   version,
+  registryUrl,
   isPublished,
   isTakenLocally,
   maxToSkip = MAX_PUBLISHED_VERSIONS_TO_SKIP,
 }: {
   packageName: string;
   version: string;
+  registryUrl?: string;
   isPublished: IsVersionPublished;
   isTakenLocally?: (version: string) => boolean;
   maxToSkip?: number;
 }): Promise<string> {
   let candidate = version;
   for (let skipped = 0; skipped <= maxToSkip; skipped += 1) {
-    const isTaken = isTakenLocally?.(candidate) || (await isPublished(packageName, candidate));
+    const isTaken = isTakenLocally?.(candidate) || (await isPublished(packageName, candidate, registryUrl));
     if (!isTaken) return candidate;
     candidate = getNextVersion(candidate);
   }
@@ -110,6 +117,7 @@ export async function skipPublishedVersions({
       const versionToTag = await findVersionNotPublished({
         packageName: candidate.packageName,
         version: candidate.version,
+        registryUrl: candidate.registryUrl,
         isPublished,
         isTakenLocally: candidate.isTakenLocally,
       });
@@ -127,18 +135,33 @@ export async function skipPublishedVersions({
  * a component that publishes on every snap is tens of megabytes (over 20MB for some of bit's own
  * components), while this endpoint answers the same question in a few kilobytes - or 29 bytes for
  * the "not published" answer, which is the common one.
+ *
+ * the request goes through the same agent bit uses elsewhere, so a configured proxy, CA, client
+ * certificate and strict-ssl setting all apply. without them the request would fail, and a failure
+ * reads here as "not published" - it would quietly defeat the check rather than report anything.
  */
 export function createIsVersionPublished(
   registries: Registries,
   logger: { debug: (message: string) => void }
 ): IsVersionPublished {
-  return async (packageName: string, version: string) => {
-    const registry = getRegistryForPackage(registries, packageName);
+  // one fetcher per registry: building it reads bit's global config, no need to redo that per request
+  const fetcherPerRegistry = new Map<string, Promise<Fetcher>>();
+  const getFetcher = (uri: string): Promise<Fetcher> => {
+    const existing = fetcherPerRegistry.get(uri);
+    if (existing) return existing;
+    const fetcher = getFetcherWithAgent(uri);
+    fetcherPerRegistry.set(uri, fetcher);
+    return fetcher;
+  };
+
+  return async (packageName: string, version: string, registryUrl?: string) => {
+    const registry = getRegistryForPackage(registries, packageName, registryUrl);
     const url = `${registry.uri.replace(/\/+$/, '')}/${packageName.replace('/', '%2f')}/${encodeURIComponent(version)}`;
     try {
-      const response = await fetch(url, {
+      const fetcher = await getFetcher(registry.uri);
+      const response = await fetcher(url, {
         headers: registry.authHeaderValue ? { authorization: registry.authHeaderValue } : {},
-        timeout: REGISTRY_REQUEST_TIMEOUT,
+        signal: AbortSignal.timeout(REGISTRY_REQUEST_TIMEOUT),
       });
       await response.text().catch(() => undefined); // release the connection, the body is not needed
       if (response.ok) return true;
@@ -155,8 +178,29 @@ export function createIsVersionPublished(
   };
 }
 
-function getRegistryForPackage(registries: Registries, packageName: string): Registry {
-  if (!packageName.startsWith('@')) return registries.defaultRegistry;
-  const scope = packageName.slice(1).split('/')[0];
-  return registries.scopes[scope] || registries.defaultRegistry;
+type Fetcher = Awaited<ReturnType<typeof getFetcherWithAgent>>;
+
+/**
+ * `registryUrl` is where the publish is actually going for this component, so it wins over the
+ * registry configured for the package's scope. its credentials are whatever the npmrc holds for
+ * that same url - when it holds none, the probe is unauthenticated and a private version reads as
+ * free, which is no worse than not checking at all.
+ */
+function getRegistryForPackage(
+  registries: Registries,
+  packageName: string,
+  registryUrl?: string
+): Pick<Registry, 'uri' | 'authHeaderValue'> {
+  const scope = packageName.startsWith('@') ? packageName.slice(1).split('/')[0] : undefined;
+  const byScope = (scope && registries.scopes[scope]) || registries.defaultRegistry;
+  if (!registryUrl || isSameRegistry(registryUrl, byScope.uri)) return byScope;
+  const configured = [registries.defaultRegistry, ...Object.values(registries.scopes)].find((registry) =>
+    isSameRegistry(registryUrl, registry.uri)
+  );
+  return { uri: registryUrl, authHeaderValue: configured?.authHeaderValue };
+}
+
+function isSameRegistry(a: string, b: string): boolean {
+  const normalize = (uri: string) => uri.replace(/\/+$/, '').toLowerCase();
+  return normalize(a) === normalize(b);
 }

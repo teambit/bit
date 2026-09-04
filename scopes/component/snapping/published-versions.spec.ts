@@ -114,6 +114,18 @@ describe('published-versions', () => {
       });
       expect(skipped.size).to.equal(0);
     });
+
+    it('should ask the registry the component publishes to, not the scope default', async () => {
+      const asked: (string | undefined)[] = [];
+      await skipPublishedVersions({
+        candidates: [{ ...candidate('comp0'), registryUrl: 'https://my-registry.example.com' }, candidate('comp1')],
+        isPublished: async (_packageName, _version, registryUrl) => {
+          asked.push(registryUrl);
+          return false;
+        },
+      });
+      expect(asked).to.have.members(['https://my-registry.example.com', undefined]);
+    });
   });
 });
 
