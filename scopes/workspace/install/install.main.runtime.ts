@@ -403,7 +403,7 @@ export class InstallMain {
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
     const { linkedRootDeps } = await this.logger.profileAsync('install.calculateLinks', () =>
-      this.calculateLinks(linkOpts)
+      this.calculateLinks([], linkOpts)
     );
     // eslint-disable-next-line prefer-const
     let { mergedRootPolicy, componentsAndManifests: current } = await this.logger.profileAsync(
@@ -1411,10 +1411,11 @@ export class InstallMain {
    * This information may then be passed to the package manager, which will create the links on its own.
    */
   async calculateLinks(
+    ids: ComponentID[],
     options: WorkspaceLinkOptions = {}
   ): Promise<{ linkResults: WorkspaceLinkResults; linkedRootDeps: Record<string, string> }> {
     await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
-    const compDirMap = await this.getComponentsDirectory([]);
+    const compDirMap = await this.getComponentsDirectory(ids);
     const linker = this.dependencyResolver.getLinker({
       rootDir: this.workspace.path,
       linkingOptions: options,
@@ -1458,8 +1459,9 @@ export class InstallMain {
     return linkToNodeModulesWithCodemod(this.workspace, bitIds, options?.rewire ?? false);
   }
 
-  async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
-    const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
+  async link(ids: string[], options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
+    const componentIds = await Promise.all(ids.map((id) => this.workspace.resolveComponentId(id)));
+    const { linkResults, linkedRootDeps } = await this.calculateLinks(componentIds, options);
     await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps, {
       avoidHardLink: true,
       skipIfSymlinkValid: true,
@@ -1527,9 +1529,10 @@ export class InstallMain {
     // loading seeders during installation causes regressions where lane imports fail with errors like:
     // "Cannot find module '/private/tmp/a27cc147/node_modules/@teambit/node.envs.node-babel-mocha/dist/node-babel-mocha.bit-env.js'"
     // The env aspect files are not yet available during the initial installation phase.
+    const loadOpts = { loadSeedersAsAspects: false };
     const components = ids.length
-      ? await this.workspace.getMany(ids)
-      : await this.workspace.list(undefined, { loadSeedersAsAspects: false });
+      ? await this.workspace.getMany(ids, loadOpts)
+      : await this.workspace.list(undefined, loadOpts);
     return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
   }
 
@@ -1563,7 +1566,7 @@ export class InstallMain {
       return;
     }
     if (needLink) {
-      await this.link();
+      await this.link([]);
     }
   }
 
