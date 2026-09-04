@@ -1,6 +1,12 @@
 import { expect } from 'chai';
+import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import type { VersionCandidate } from './published-versions';
-import { findVersionNotPublished, getNextVersion, skipPublishedVersions } from './published-versions';
+import {
+  findVersionNotPublished,
+  getNextVersion,
+  getRegistryForPackage,
+  skipPublishedVersions,
+} from './published-versions';
 
 describe('published-versions', () => {
   describe('getNextVersion', () => {
@@ -132,3 +138,35 @@ describe('published-versions', () => {
 function candidate(id: string): VersionCandidate {
   return { id, packageName: `@teambit/${id}`, version: '1.0.0' };
 }
+
+describe('getRegistryForPackage', () => {
+  const registries = new Registries(new Registry('https://registry.npmjs.org/', true, 'Bearer default-token'), {
+    teambit: new Registry('https://node.bit.cloud/', true, 'Bearer bit-token'),
+    acme: new Registry('https://private.example.com/npm/', true, 'Bearer acme-token'),
+  });
+
+  it('should use the registry of the package scope', () => {
+    expect(getRegistryForPackage(registries, '@teambit/some-comp').authHeaderValue).to.equal('Bearer bit-token');
+  });
+  it('should fall back to the default registry for an unmapped scope', () => {
+    expect(getRegistryForPackage(registries, '@other/some-comp').authHeaderValue).to.equal('Bearer default-token');
+  });
+  it('should fall back to the default registry for an unscoped package', () => {
+    expect(getRegistryForPackage(registries, 'some-comp').uri).to.equal('https://registry.npmjs.org/');
+  });
+  it('should prefer an explicit publish registry over the scope one', () => {
+    const registry = getRegistryForPackage(registries, '@teambit/some-comp', 'https://private.example.com/npm/');
+    expect(registry.uri).to.equal('https://private.example.com/npm/');
+    expect(registry.authHeaderValue).to.equal('Bearer acme-token');
+  });
+  it('should reuse the credentials of a configured registry that covers the url', () => {
+    // npmrc keys credentials by url prefix, so the /npm/ entry covers /npm/internal/ too
+    const registry = getRegistryForPackage(registries, '@teambit/x', 'https://private.example.com/npm/internal/');
+    expect(registry.authHeaderValue).to.equal('Bearer acme-token');
+  });
+  it('should not borrow credentials from a different host', () => {
+    const registry = getRegistryForPackage(registries, '@teambit/x', 'https://elsewhere.example.com/npm/');
+    expect(registry.uri).to.equal('https://elsewhere.example.com/npm/');
+    expect(registry.authHeaderValue).to.equal(undefined);
+  });
+});

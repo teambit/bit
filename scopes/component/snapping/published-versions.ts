@@ -179,11 +179,9 @@ type Fetcher = Awaited<ReturnType<typeof getFetcherWithAgent>>;
 
 /**
  * `registryUrl` is where the publish is actually going for this component, so it wins over the
- * registry configured for the package's scope. its credentials are whatever the npmrc holds for
- * that same url - when it holds none, the probe is unauthenticated and a private version reads as
- * free, which is no worse than not checking at all.
+ * registry configured for the package's scope.
  */
-function getRegistryForPackage(
+export function getRegistryForPackage(
   registries: Registries,
   packageName: string,
   registryUrl?: string
@@ -191,10 +189,39 @@ function getRegistryForPackage(
   const scope = packageName.startsWith('@') ? packageName.slice(1).split('/')[0] : undefined;
   const byScope = (scope && registries.scopes[scope]) || registries.defaultRegistry;
   if (!registryUrl || isSameRegistry(registryUrl, byScope.uri)) return byScope;
-  const configured = [registries.defaultRegistry, ...Object.values(registries.scopes)].find((registry) =>
-    isSameRegistry(registryUrl, registry.uri)
+  return { uri: registryUrl, authHeaderValue: findAuthHeaderForUrl(registries, registryUrl) };
+}
+
+/**
+ * npmrc keys its credentials by url prefix (`//host/path/:_authToken`), and bit's registry model
+ * carries them on the entries it knows about. so the credential for an explicit publish registry is
+ * the one from the entry that covers its url: the very same url, or the closest one on that host.
+ *
+ * a url no entry covers is probed without authorization. a private version then reads as free,
+ * which leaves the publish to fail exactly as it does without this check - never a wrong version.
+ */
+function findAuthHeaderForUrl(registries: Registries, registryUrl: string): string | undefined {
+  const authenticated = [registries.defaultRegistry, ...Object.values(registries.scopes)].filter(
+    (registry) => registry.authHeaderValue
   );
-  return { uri: registryUrl, authHeaderValue: configured?.authHeaderValue };
+  const exact = authenticated.find((registry) => isSameRegistry(registryUrl, registry.uri));
+  if (exact) return exact.authHeaderValue;
+  const target = toUrl(registryUrl);
+  if (!target) return undefined;
+  const covering = authenticated
+    .map((registry) => ({ registry, uri: toUrl(registry.uri) }))
+    .filter(({ uri }) => uri && uri.host === target.host && target.pathname.startsWith(uri.pathname))
+    // the most specific path wins, the way npm resolves the nearest matching npmrc key
+    .sort((a, b) => (b.uri as URL).pathname.length - (a.uri as URL).pathname.length);
+  return covering[0]?.registry.authHeaderValue;
+}
+
+function toUrl(uri: string): URL | undefined {
+  try {
+    return new URL(uri);
+  } catch {
+    return undefined;
+  }
 }
 
 function isSameRegistry(a: string, b: string): boolean {
