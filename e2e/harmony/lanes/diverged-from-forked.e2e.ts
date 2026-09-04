@@ -47,13 +47,16 @@ describe('lane-b was forked from lane-a and they are now diverged', function () 
       helper.command.mergeLane('lane-a');
     });
     // similar to git, if you merge A into B, the first parent is B and the second is A.
-    it('should snap the components and save the first parent from the current lane (lane-b) and the second parent from lane-a', () => {
+    // the absence of squash metadata is asserted here too - it is what makes this the control for
+    // the --squash cases in merge-lanes-squash-diverge.e2e.ts, which collapse this to a single parent
+    it('should keep both parents (current lane first, merged lane second) and record no squash data', () => {
       const newHead = helper.command.getHeadOfLane('lane-b', 'comp1');
       const cat = helper.command.catComponent(`${helper.scopes.remote}/comp1@${newHead}`);
       const parents = cat.parents;
       expect(parents).to.have.lengthOf(2);
       expect(parents[0]).to.equal(headOnLaneB);
       expect(parents[1]).to.equal(headOnLaneA);
+      expect(cat).to.not.have.property('squashed');
     });
     it('should write the file that was newly added on lane-a', () => {
       expect(fileAddedOnLaneA).to.be.a.file();
