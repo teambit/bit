@@ -28,7 +28,7 @@ export class MoverMain {
     if (!fromExists && !toExists) throw new BitError(`both paths from (${from}) and to (${to}) do not exist`);
     if (fromExists && !isDir(from)) {
       throw new BitError(`bit move supports moving directories only, not files.
-files withing a component dir are automatically tracked, no action is needed.
+files within a component dir are automatically tracked, no action is needed.
 to change the main-file, use "bit add <component-dir> --main <new-main-file>"`);
     }
     if (toExists && !isDir(to)) {

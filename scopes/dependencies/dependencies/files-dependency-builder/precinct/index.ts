@@ -12,6 +12,7 @@ import Walker from 'node-source-walk';
 import detectiveAmd from 'detective-amd';
 import detectiveStylus from 'detective-stylus';
 
+import detectiveMdx from '@teambit/mdx.deps-detectors.detective-mdx';
 import detectiveEs6 from '@teambit/node.deps-detectors.detective-es6';
 import detectiveCss from '@teambit/styling.deps-detectors.detective-css';
 import detectiveLess from '@teambit/styling.deps-detectors.detective-less';
@@ -60,6 +61,8 @@ const extToType = {
   '.cts': 'ts',
   '.ts': 'ts',
   '.tsx': 'ts',
+  '.md': 'md',
+  '.mdx': 'md',
 };
 
 const typeToDetective: Record<string, Detective> = {
@@ -72,6 +75,7 @@ const typeToDetective: Record<string, Detective> = {
   commonjs: detectiveEs6,
   es6: detectiveEs6,
   amd: detectiveAmd,
+  md: detectiveMdx,
 };
 
 const debug = require('debug')('precinct');
@@ -127,6 +131,17 @@ const getDetector = (fileInfo: FileInfo, options?: Options): Detective | undefin
     }
   }
 
+  // from the global detector hook. checked before the builtin detectors so that an
+  // aspect-registered detector (e.g. the mdx aspect's compile-based one) takes precedence over a
+  // builtin detective for the same extension, same as env detectors do.
+  if (detectorHook.isSupported(ext, filename)) {
+    const detector = detectorHook.getDetector(ext, filename);
+    if (detector) {
+      fileInfo.type = ext;
+      return detector.detect as Detective;
+    }
+  }
+
   // from builtin detectors
   // - check `fileInfo.type` first to support `precinct(content, { type })`
   const type = fileInfo.type || extToType[ext];
@@ -139,16 +154,6 @@ const getDetector = (fileInfo: FileInfo, options?: Options): Detective | undefin
       normalizedOptions.ts.jsx = true;
     }
     return detective;
-  }
-
-  // from global detector hook (legacy)
-  if (detectorHook.isSupported(ext, filename)) {
-    const detector = detectorHook.getDetector(ext, filename);
-    if (detector) {
-      fileInfo.type = ext;
-      typeToDetective[ext] = detector.detect as Detective;
-      return detector.detect as Detective;
-    }
   }
 
   return undefined;

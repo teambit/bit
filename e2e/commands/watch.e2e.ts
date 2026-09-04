@@ -104,6 +104,36 @@ chai.use(chaiFs);
       });
     });
   });
+  describe('when the @parcel/watcher native binary is unavailable', () => {
+    let watchRunner: WatchRunner;
+    before(async () => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponentsTS();
+      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
+      // Simulate a missing parcel prebuild so the watcher must fall back to the
+      // chokidar backend (the real prebuild is present locally/CI). The watch
+      // process inherits this env via child_process.spawn.
+      process.env.BIT_WATCHER_SIMULATE_PARCEL_UNAVAILABLE = 'true';
+      watchRunner = new WatchRunner(helper, true);
+      // Without the fallback, the simulated failure would crash watch startup and
+      // WatchRunner.watch() would reject; resolving proves chokidar took over.
+      await watchRunner.watch();
+    });
+    after(() => {
+      delete process.env.BIT_WATCHER_SIMULATE_PARCEL_UNAVAILABLE;
+      watchRunner.killWatcher();
+    });
+    describe('changing a file', () => {
+      before(async () => {
+        helper.fs.outputFile('comp1/index.ts', 'console.log("hello-from-chokidar")');
+        await watchRunner.waitForWatchToRebuildComponent();
+      });
+      it('should fall back to chokidar and still rebuild the component', () => {
+        const distContent = helper.fs.readFile(`node_modules/@${helper.scopes.remote}/comp1/dist/index.js`);
+        expect(distContent).to.have.string('hello-from-chokidar');
+      });
+    });
+  });
   // Test scope file watching for both scope locations:
   // - .bit (no git) and .git/bit (with git)
   function describeScopeFileWatching(scopeDir: string, initGit: boolean) {

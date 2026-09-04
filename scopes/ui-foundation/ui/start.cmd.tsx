@@ -52,7 +52,7 @@ includes hot module reloading for development.`;
       'rebuild the UI (useful e.g. when updating the workspace UI - can use the dev flag for HMR in this case)',
     ],
     ['', 'skip-ui-build', 'skip building UI'],
-    ['v', 'verbose', 'show verbose output for inspection and prints stack trace'],
+    ['v', 'verbose', 'show verbose output for inspection and print stack trace'],
     ['n', 'no-browser', 'do not automatically open browser when ready'],
     ['', 'show-internal-urls', 'show urls for all internal dev servers'],
     ['', 'skip-compilation', 'skip the auto-compilation before starting the web-server'],

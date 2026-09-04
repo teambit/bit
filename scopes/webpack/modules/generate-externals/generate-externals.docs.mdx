@@ -3,7 +3,7 @@ labels: ['typescript', 'utils', 'webpack']
 description: 'generate webpack externals configuration by a list.'
 ---
 
-Get's a list of dependencies and create an externals object out of them
+Gets a list of dependencies and create an externals object out of them
 
 API:
 
@@ -33,7 +33,9 @@ import { generateExternals } from './generate-externals';
 
 ```js live
 () => {
-  const externals = new generateExternals(['dep1', 'dep2'], { transformName: (depName) => depName.captialize() });
+  const externals = new generateExternals(['dep1', 'dep2'], {
+    transformName: (depName) => depName.charAt(0).toUpperCase() + depName.slice(1),
+  });
 
   const dataContent = new JSONFormatter(externals, 2);
   return (

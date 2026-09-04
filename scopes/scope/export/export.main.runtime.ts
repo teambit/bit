@@ -7,9 +7,11 @@ import { ScopeAspect } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { isSnap } from '@teambit/component-version';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { BitMap } from '@teambit/legacy.bit-map';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { ListScopeResult } from '@teambit/legacy.component-list';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { RemoveMain } from '@teambit/remove';
@@ -34,7 +36,7 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import { writeLastExport } from './last-export';
-import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
+import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref, Version } from '@teambit/objects';
 import { ObjectList } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
@@ -434,6 +436,70 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       return allHashes;
     };
 
+    /**
+     * a component head may reference — via its flattened dependencies — a non-head snap of another
+     * component in the same export set. this happens when a component keeps pinning an older snap of
+     * a dependency that has since advanced (e.g. the component was soft-removed on the lane, so it
+     * never gets re-snapped), and the squash of a lane-merge dropped that snap from the dependency's
+     * own parent chain. no history traversal selects it (and a heads-only export selects only heads
+     * to begin with), so without it the remote dependency-integrity check
+     * (throwForMissingLocalDependencies) rejects the export. add any such snap that exists locally so
+     * it is shipped alongside the selected refs. snaps missing locally were fetched during the
+     * lane-merge, see MergeLanesMain.importMissingReferencedDeps().
+     * flattened (not only direct) deps are walked to mirror exactly what the remote check validates.
+     * this is cheap by design and a no-op for ordinary exports: only heads are inspected (the remote
+     * check validates only versions that are heads, and they're loaded later by the export anyway),
+     * only snaps are considered (tags are never squashed out of history), and a ref is added only
+     * when the dependency's head carries the `squashed` marker — i.e. only after a squashing
+     * lane-merge, the sole flow that removes snaps from a component's history.
+     */
+    const addReferencedSnapsIfPossible = async (
+      refsPerComponent: Array<{ modelComponent: ModelComponent; refs: Ref[] }>
+    ) => {
+      const headPerCompIdStr = new Map<
+        string,
+        { entry: { modelComponent: ModelComponent; refs: Ref[] }; headVersion: Version }
+      >();
+      await mapSeries(refsPerComponent, async (entry) => {
+        const { modelComponent, refs } = entry;
+        const headRef =
+          laneObject?.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId()) || modelComponent.head;
+        if (!headRef) return;
+        if (!refs.find((ref) => ref.isEqual(headRef))) return; // the head is not part of this export
+        const headVersion = await modelComponent.loadVersion(headRef.toString(), scope.objects, false);
+        if (!headVersion) return;
+        headPerCompIdStr.set(modelComponent.toComponentId().toStringWithoutVersion(), { entry, headVersion });
+      });
+      const anySquashed = [...headPerCompIdStr.values()].some(({ headVersion }) => headVersion.squashed);
+      if (!anySquashed) return; // no squash in this export set — no snap could have been dropped
+      await mapSeries([...headPerCompIdStr.values()], async ({ entry: headEntry, headVersion }) => {
+        await mapSeries(headVersion.getAllFlattenedDependencies(), async (depId) => {
+          // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`),
+          // so same-scope is all that needs shipping. also filters out most of the flattened list.
+          if (depId.scope !== headEntry.modelComponent.scope) return;
+          if (!depId.version || !isSnap(depId.version)) return;
+          const depComp = headPerCompIdStr.get(depId.toStringWithoutVersion());
+          if (!depComp) return; // the referenced component is not part of this export set
+          if (!depComp.headVersion.squashed) return; // dep history is intact — the pinned snap is on-chain
+          const depRef = depComp.entry.modelComponent.getRef(depId.version);
+          if (!depRef) return;
+          if (depComp.entry.refs.find((ref) => ref.isEqual(depRef))) return; // already included
+          if (!(await scope.objects.has(depRef))) return; // can only ship what exists locally
+          // the objects this version references (file sources, flattened-edges) get collected along
+          // with it, so they must be present locally as well. if they're not, don't add the ref —
+          // exporting it would fail on the missing objects, and the remote may have this version
+          // already anyway (in which case the export succeeds without shipping it).
+          const depVersion = await depComp.entry.modelComponent.loadVersion(depRef.toString(), scope.objects, false);
+          if (!depVersion) return;
+          const subRefs = depVersion.refsWithOptions(false, false);
+          // hasMultiple bounds the I/O concurrency, unlike a Promise.all of has() calls
+          const existingSubRefs = await scope.objects.hasMultiple(subRefs);
+          if (existingSubRefs.length !== subRefs.length) return;
+          depComp.entry.refs.push(depRef);
+        });
+      });
+    };
+
     await validateTargetScopeForLanes();
     const groupedByScopeString = Object.keys(idsGroupedByScope)
       .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
@@ -460,6 +526,8 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         const refs = await getVersionsToExport(modelComponent);
         return { modelComponent, refs };
       });
+
+      await addReferencedSnapsIfPossible(refsToPotentialExportPerComponent);
 
       const getRefsToExportPerComp = async () => {
         if (!filterOutExistingVersions) {
@@ -630,15 +698,22 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     };
     process.on('SIGINT', warnCancelExport);
     let centralHubResults;
-    if (resumeExportId) {
-      const remotes = manyObjectsPerRemote.map((o) => o.remote);
-      await validateRemotes(remotes, resumeExportId);
-      await persistRemotes(manyObjectsPerRemote, resumeExportId);
-    } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
-      centralHubResults = await pushAllToCentralHub();
-    } else {
-      // await pushToRemotes();
-      await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+    try {
+      if (resumeExportId) {
+        const remotes = manyObjectsPerRemote.map((o) => o.remote);
+        await validateRemotes(remotes, resumeExportId);
+        await persistRemotes(manyObjectsPerRemote, resumeExportId);
+      } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
+        centralHubResults = await pushAllToCentralHub();
+      } else {
+        // await pushToRemotes();
+        await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+      }
+    } catch (err: any) {
+      throw addScopesInvolvedToError(
+        err,
+        manyObjectsPerRemote.map((o) => o.remote.name)
+      );
     }
 
     this.logger.setStatusLine('updating data locally...');
@@ -822,8 +897,15 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     }
     this.logger.setStatusLine(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
+    // an id that is not in the workspace should fail the export. (workspace.getMany below would
+    // have loaded it from the scope instead of throwing)
+    parsedIds.forEach((parsedId) => {
+      if (!consumer.bitMap.getComponentIdIfExist(parsedId, { ignoreVersion: true })) {
+        throw new MissingBitMapComponent(parsedId.toString());
+      }
+    });
     // load the components for fixing any out-of-sync issues.
-    await consumer.loadComponents(ComponentIdList.fromArray(parsedIds));
+    await this.workspace.getMany(parsedIds);
 
     return throwForLocalOnlyIfNeeded(ComponentIdList.fromArray(parsedIds));
   }
@@ -876,7 +958,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
   ]) {
     const logger = loggerMain.createLogger(ExportAspect.id);
     const exportMain = new ExportMain(workspace, remove, depResolver, logger, eject);
-    cli.register(new ResumeExportCmd(scope), new ExportCmd(exportMain));
+    cli.register(new ResumeExportCmd(scope, logger), new ExportCmd(exportMain));
     return exportMain;
   }
 }
@@ -937,6 +1019,20 @@ async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
 
 export function isUserTryingToExportLanes(consumer: Consumer) {
   return consumer.isOnLane();
+}
+
+/**
+ * a failed export leaves the objects in the pending-objects dir of every scope it was pushed to, but the
+ * error tells only about the scope that failed (e.g. server-is-busy, which is thrown per scope). without
+ * the full list, cleaning up a stuck export means guessing which other scopes hold the same pending dir.
+ * only the client knows all the scopes of the export, so add them to the error.
+ */
+function addScopesInvolvedToError(err: any, scopeNames: string[]): any {
+  // guard against a non-error being thrown, in which case setting "message" would throw and hide the original error
+  if (!scopeNames.length || typeof err?.message !== 'string') return err;
+  err.message = `${err.message}
+the following scopes were used for this export: ${scopeNames.join(', ')}`;
+  return err;
 }
 
 export default ExportMain;

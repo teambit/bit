@@ -124,6 +124,10 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       useHash,
       getExistingAsIs: true,
       seedersOnly: options.seedersOnly,
+      // pass the *original* (top-level) seeders so the per-env isolation doesn't filter out a dependency that is
+      // built as a capsule anyway by another env (see filterUnmodifiedExportedDependencies). keeping it lets its
+      // dependents leverage project-references instead of resolving it as an installed package.
+      originalSeeders: options.originalSeeders,
     };
 
     await pMapSeries(envsExecutionContext, async (executionContext) => {

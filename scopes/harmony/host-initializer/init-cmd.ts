@@ -42,7 +42,7 @@ supports various reset options to recover from corrupted state or restart from s
     [
       '',
       'reset-lane-new',
-      'same as reset-new, but it only resets components belong to lanes. main components are left intact',
+      'same as reset-new, but it only resets components belonging to lanes. main components are left intact',
     ],
     [
       '',

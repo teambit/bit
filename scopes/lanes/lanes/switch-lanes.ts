@@ -18,10 +18,39 @@ export type SwitchProps = {
   pattern?: string;
   skipFetch?: boolean;
   existingOnWorkspaceOnly?: boolean;
+  /**
+   * switch only the lane components from these scopes. the lane's other components are left
+   * untouched: not written to the filesystem, not added to .bitmap, and not reverted to their main
+   * version either if this workspace happens to track them. the lane object itself is still fetched
+   * and saved whole, so a later snap/export preserves them. (`bit ci sync` mirrors only a lane's
+   * own-scope slice into a git repository.)
+   */
+  restrictToScopes?: string[];
   remoteLane?: Lane;
   localTrackedLane?: string;
   alias?: string;
 };
+
+/**
+ * Which component ids a switch operates on: the lane's own components, plus the workspace components
+ * the lane does not carry (they stay at their main version, as they always have).
+ *
+ * `restrictToScopes` narrows the lane side to those scopes. Its components are then excluded from
+ * BOTH sides - a lane component outside the restriction must not reappear as "main-only", which
+ * would check it out at its main version and write it after all. Excluded means untouched.
+ */
+export function partitionSwitchIds(
+  laneIds: ComponentID[],
+  mainIds: ComponentID[],
+  restrictToScopes?: string[]
+): { ids: ComponentID[]; laneBitIds: ComponentID[] } {
+  const restricted = restrictToScopes?.length ? laneIds.filter((id) => restrictToScopes.includes(id.scope)) : laneIds;
+  const isOnLane = (id: ComponentID) => Boolean(laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)));
+  const idsOnLaneOnly = restricted.filter((id) => !mainIds.find((i) => i.isEqualWithoutVersion(id)));
+  // Compared against the UNRESTRICTED lane ids on purpose - see the doc comment.
+  const idsOnMainOnly = mainIds.filter((id) => !isOnLane(id));
+  return { ids: [...idsOnMainOnly, ...restricted], laneBitIds: idsOnLaneOnly };
+}
 
 export class LaneSwitcher {
   private consumer: Consumer;
@@ -116,12 +145,27 @@ export class LaneSwitcher {
           laneIds = this.populatePropsAccordingToLocalLane(localLane);
         }
       }
-      const idsOnLaneOnly = laneIds.filter((id) => !mainIds.find((i) => i.isEqualWithoutVersion(id)));
-      const idsOnMainOnly = mainIds.filter((id) => !laneIds.find((i) => i.isEqualWithoutVersion(id)));
-      this.switchProps.ids = [...idsOnMainOnly, ...laneIds];
-      this.switchProps.laneBitIds = idsOnLaneOnly;
+      const { ids, laneBitIds } = partitionSwitchIds(laneIds, mainIds, this.switchProps.restrictToScopes);
+      this.switchProps.ids = ids;
+      this.switchProps.laneBitIds = laneBitIds;
     }
     await this.populateIdsAccordingToPattern();
+    this.filterIdsNotInWorkspaceIfNeeded();
+  }
+
+  /**
+   * `--workspace-only`: switch only the components the workspace already tracks. a lane can carry
+   * components this workspace doesn't have - e.g. one that was removed from the source after it was
+   * snapped onto the lane - and checking those out would write them back into .bitmap and to the
+   * filesystem. this flag is how a caller says "move the lane pointer, leave my working tree as is"
+   * (`bit ci pr` relies on it: the git checkout is the source of truth there).
+   */
+  private filterIdsNotInWorkspaceIfNeeded() {
+    if (!this.switchProps.existingOnWorkspaceOnly) return;
+    const bitMapIds = this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
+    const isInWorkspace = (id: ComponentID) => Boolean(bitMapIds.searchWithoutVersion(id));
+    this.switchProps.ids = (this.switchProps.ids || []).filter(isInWorkspace);
+    this.switchProps.laneBitIds = (this.switchProps.laneBitIds || []).filter(isInWorkspace);
   }
 
   private async populateIdsAccordingToPattern() {

@@ -532,7 +532,7 @@ export default class ImportComponents {
     if (idsFromAnotherLane.length) {
       throw new BitError(`unable to import the following component(s) as they belong to other lane(s):
 ${idsFromAnotherLane.map((id) => id.toString()).join(', ')}
-if you need this specific snap, find the lane this snap is belong to, then run "bit lane merge <lane-id> [component-id]" to merge this component from the lane.
+if you need this specific snap, find the lane this snap belongs to, then run "bit lane merge <lane-id> [component-id]" to merge this component from the lane.
 if you just want to get a quick look into this snap, create a new workspace and import it by running "bit lane import <lane-id> --pattern <component-id>"`);
     }
   }
@@ -965,7 +965,8 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
     if (!componentStatus.modified) return mergeStatus;
     const componentModel = await this.consumer.scope.getModelComponent(component.id);
     const existingBitMapBitId = this.consumer.bitMap.getComponentId(component.id, { ignoreVersion: true });
-    const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
+    const fsWorkspaceComponent = await this.workspace.get(existingBitMapBitId);
+    const fsComponent = fsWorkspaceComponent.state._consumer;
     const currentlyUsedVersion = existingBitMapBitId.version;
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
     const otherComponent: Version = await componentModel.loadVersion(component.id.version, this.consumer.scope.objects);

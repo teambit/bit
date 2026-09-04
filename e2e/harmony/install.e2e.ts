@@ -1,6 +1,7 @@
 import stripAnsi from 'strip-ansi';
 import path from 'path';
 import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import { addDistTag } from '@pnpm/registry-mock';
 import { IssuesClasses } from '@teambit/component-issues';
 import { getAnotherInstallRequiredOutput } from '@teambit/install';
@@ -140,7 +141,7 @@ describe('install generator configured envs', function () {
       helper.scopeHelper.destroy();
     });
     it('should not install optional dependencies', async () => {
-      const dirs = fs.readdirSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm'));
+      const dirs = helper.fs.getVirtualStoreDirNames();
       expect(dirs).to.not.include('is-positive@1.0.0');
       expect(dirs).to.include('@pnpm.e2e+pkg-with-good-optional@1.0.0');
     });
@@ -156,6 +157,7 @@ describe('install generator configured envs', function () {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
 
@@ -178,8 +180,13 @@ describe('install generator configured envs', function () {
       expect(manifest.version).to.eq('100.1.0');
     });
     it('should update subdependency inside existing range', async () => {
-      const dirs = fs.readdirSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm'));
-      expect(dirs).to.include('@pnpm.e2e+pkg-with-1-dep@100.1.0');
+      const lockfile = yaml.load(
+        fs.readFileSync(path.join(helper.fixtures.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')
+      ) as any;
+      expect(lockfile.packages).to.have.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
+      expect(
+        lockfile.snapshots?.['@pnpm.e2e/parent-of-pkg-with-1-dep@1.0.0']?.dependencies?.['@pnpm.e2e/pkg-with-1-dep']
+      ).to.eq('100.1.0');
     });
   });
 });
@@ -228,7 +235,8 @@ describe('install new dependencies', function () {
       );
     });
   });
-  describe('using yarn', () => {
+  // skipped: yarn support is deprecated and planned for removal
+  describe.skip('using yarn', () => {
     before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -374,7 +382,10 @@ describe('comment preservation during install', function () {
    **/
   "teambit.dependencies/dependency-resolver": {
     "policy": {
-      "dependencies": {},
+      "dependencies": {
+        // this dependency must stay pinned
+        "is-odd": "1.0.0"
+      },
       "peerDependencies": {}
     },
     "linkCoreAspects": true,
@@ -407,5 +418,8 @@ describe('comment preservation during install', function () {
   it('should have added the lodash dependency to policy', () => {
     // Simply check if the lodash dependency is present in the text
     expect(workspaceConfigAfter).to.include('"lodash":');
+  });
+  it('should preserve a comment attached to a dependency inside the policy', () => {
+    expect(workspaceConfigAfter).to.include('// this dependency must stay pinned');
   });
 });

@@ -1,6 +1,5 @@
 import type { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
 import type { Capsule } from '@teambit/isolator';
-import { hardLinkDirectory } from '@teambit/toolbox.fs.hard-link-directory';
 import type { EnvContext, EnvHandler } from '@teambit/envs';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import fs from 'fs-extra';
@@ -58,6 +57,11 @@ export class CompilerTask implements BuildTask {
    * then the `dist` folder of the `button` component will be copied to `<card_capsule>/node_modules/button/dist`.
    */
   private async _hardLinkBuildArtifactsOnCapsules(context: BuildContext): Promise<void> {
+    // lazy on purpose: this is the only build-time-only dependency of this module, and the module
+    // itself loads on every bit invocation (via envs). a top-level import pulls the package plus
+    // its own fs-extra tree (~36 files in the released bundle's hoisted layout) into every
+    // bootstrap/status, which is what pushed the filesystem-read e2e guard over its threshold.
+    const { hardLinkDirectory } = await import('@teambit/toolbox.fs.hard-link-directory');
     await Promise.all(
       context.capsuleNetwork.seedersCapsules.map(async (capsule) => {
         const relCompDir = path.relative(context.capsuleNetwork.capsulesRootDir, capsule.path).replace(/\\/g, '/');
@@ -68,7 +72,14 @@ export class CompilerTask implements BuildTask {
         );
         return hardLinkDirectory(
           capsule.path,
-          injectedDirs.map((injectedDir) => path.join(context.capsuleNetwork.capsulesRootDir, injectedDir))
+          // An injected copy is reported relative to the lockfile dir when it sits under it, and
+          // absolute when it cannot - which is what the global virtual store always produces, since
+          // its slots live outside the capsule root entirely. Joining an absolute path onto the
+          // capsule root would silently produce `<capsulesRoot>/<store path>` and link the
+          // artifacts into nowhere.
+          injectedDirs.map((injectedDir) =>
+            path.isAbsolute(injectedDir) ? injectedDir : path.join(context.capsuleNetwork.capsulesRootDir, injectedDir)
+          )
         );
       })
     );

@@ -91,7 +91,10 @@ export class CompilerMain {
    */
   getRelativeDistFolder(component: Component): string {
     const environment = this.envs.getOrCalculateEnv(component).env;
-    const compilerInstance: Compiler | undefined = environment.getCompiler?.();
+    return this.getDistDirOfCompiler(environment.getCompiler?.());
+  }
+
+  private getDistDirOfCompiler(compilerInstance: Compiler | undefined): string {
     if (!compilerInstance || !compilerInstance.getDistDir) return DEFAULT_DIST_DIRNAME;
     return compilerInstance.getDistDir();
   }
@@ -99,13 +102,16 @@ export class CompilerMain {
   /**
    * Check if the dist folder (in the component package under node_modules) exist
    * @param component
+   * @param precomputedCompiler pass when the compiler was already resolved, to avoid resolving the env again
    * @returns
    */
-  async isDistDirExists(component: Component): Promise<boolean> {
+  async isDistDirExists(component: Component, precomputedCompiler?: Compiler): Promise<boolean> {
     const packageDir = await this.workspace.getComponentPackagePath(component);
-    const distDir = this.getRelativeDistFolder(component);
+    const distDir = precomputedCompiler
+      ? this.getDistDirOfCompiler(precomputedCompiler)
+      : this.getRelativeDistFolder(component);
     const pathToCheck = path.join(packageDir, distDir);
-    return fs.existsSync(pathToCheck);
+    return fs.pathExists(pathToCheck);
   }
 
   async getDistsFiles(component: Component): Promise<DistArtifact> {
@@ -119,7 +125,13 @@ export class CompilerMain {
     if (issuesToIgnore.includes(IssuesClasses.MissingDists.name)) return;
     await Promise.all(
       components.map(async (component) => {
-        const exist = await this.isDistDirExists(component);
+        const environment = this.envs.getOrCalculateEnv(component).env;
+        // an env without a compiler has no dists - the component is consumed as-source, and
+        // "bit compile" would not produce anything. getCompiler may also be implemented but
+        // return undefined.
+        const compilerInstance: Compiler | undefined = environment.getCompiler?.();
+        if (!compilerInstance) return;
+        const exist = await this.isDistDirExists(component, compilerInstance);
         if (!exist) {
           component.state.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
         }

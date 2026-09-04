@@ -11,8 +11,8 @@ export type MergeAbortOpts = {
 export class MergeMoveLaneCmd implements Command {
   name = 'merge-move <new-lane-name>';
   description = `EXPERIMENT. move the current merge state into a new lane. the current lane will be reset`;
-  extendedDescription = `this command is useful when you got a messy merge state that from one hand you don't want
-to loose the changes, but on the other hand, you want to keep your lane without those changes.
+  extendedDescription = `this command is useful when you got a messy merge state that on one hand you don't want
+to lose the changes, but on the other hand, you want to keep your lane without those changes.
 this command does the following:
 1. create a new lane with the current merge state. including all the filesystem changes. (in practice, it leaves the fs intact)
 2. reset the current lane to the state before the merge. so then once done with the new lane, you can switch to the current lane and it'll be clean.`;

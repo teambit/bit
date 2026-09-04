@@ -284,7 +284,7 @@ export class Workspace implements ComponentFactory {
     if (this.consumer.isLegacy) return;
     if (isEmpty(this.config))
       throw new BitError(
-        `fatal: workspace config is empty. probably one of bit files is missing. please run "bit init" to rewrite them`
+        `fatal: workspace config is empty. probably one of the bit files is missing. please run "bit init" to rewrite them`
       );
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
@@ -418,7 +418,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getAutoTagInfo(changedComponents: ComponentIdList) {
-    return getAutoTagInfo(this.consumer, changedComponents);
+    return getAutoTagInfo(this, changedComponents);
   }
 
   async listAutoTagPendingComponentIds(): Promise<ComponentID[]> {
@@ -426,7 +426,7 @@ export class Workspace implements ComponentFactory {
     const modifiedComponents = (await this.modified()).map((c) => c.id);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    const autoTagPending = await getAutoTagPending(this.consumer, ComponentIdList.fromArray(modifiedComponents));
+    const autoTagPending = await getAutoTagPending(this, ComponentIdList.fromArray(modifiedComponents));
     const localOnly = this.listLocalOnly();
     const comps = autoTagPending
       .filter((autoTagComp) => !newComponents.has(autoTagComp.componentId))
@@ -869,14 +869,18 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   clearComponentCache(id: ComponentID) {
-    this.componentLoader.clearComponentCache(id);
-    this.componentStatusLoader.clearOneComponentCache(id);
-    this.consumer.clearOneComponentCache(id);
-    this._componentList = new ComponentsList(this);
+    this.clearComponentsCache([id]);
   }
 
   clearComponentsCache(ids: ComponentID[]) {
-    ids.forEach((id) => this.clearComponentCache(id));
+    if (!ids.length) return; // nothing to clear, avoid scanning the caches for nothing
+    const uniqueIds = uniqBy(ids, (id) => id.toString());
+    this.componentLoader.clearComponentsCache(uniqueIds);
+    uniqueIds.forEach((id) => {
+      this.componentStatusLoader.clearOneComponentCache(id);
+      this.consumer.clearOneComponentCache(id);
+    });
+    this._componentList = new ComponentsList(this);
   }
 
   async warmCache() {
@@ -1210,7 +1214,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       return envIdFromConfig === env;
     });
     if (!foundComps.length && throwIfNotFound) {
-      throw new BitError(`unable to find components that using "${env}" env.
+      throw new BitError(`unable to find components that use "${env}" env.
 the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}`);
     }
     return foundComps;
@@ -1709,7 +1713,10 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     } catch {
       return; // unable to get the component for some reason. don't sweat it. forget about the warning
     }
-    if (!this.envs.isUsingEnvEnv(env)) {
+    // isEnv covers all the signals identifying an env, including the *.bit-env.* plugin file -
+    // an env recognized by any of them is not misconfigured (isUsingEnvEnv alone misses plugin
+    // envs whose own env is not an env-env).
+    if (!this.envs.isEnv(env)) {
       this.warnedAboutMisconfiguredEnvs.push(envId);
       this.logger.consoleWarning(
         `env "${envId}" is not of type env. (correct the env's type, or component config with "bit env set ${envId} bitdev.general/envs/bit-env")`

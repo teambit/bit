@@ -106,8 +106,11 @@ export abstract class SchemaNode implements ISchemaNode {
     const compareNoDoc = { ...compareObj, doc: undefined, location: undefined };
     if (deepEqualNoLocation(baseNoDoc, compareNoDoc)) return facts;
 
-    // Signature changed
-    if (baseObj.signature !== compareObj.signature) {
+    // Signature changed — only when BOTH sides actually have a signature. A null/empty signature on
+    // one side means the extractor produced no signature there (e.g. an incompletely-built compare
+    // snapshot), not that the API changed; comparing a real signature against `undefined` would
+    // otherwise report a bogus breaking "signature changed" (a major source of false breaking flags).
+    if (baseObj.signature && compareObj.signature && baseObj.signature !== compareObj.signature) {
       facts.push({
         changeKind: 'signature-changed',
         description: 'signature changed',

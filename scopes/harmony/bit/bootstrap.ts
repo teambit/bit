@@ -4,7 +4,8 @@ import semver from 'semver';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';
-import { GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy.constants';
+import path from 'path';
+import { GLOBAL_CONFIG, GLOBAL_LOGS, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 
@@ -66,12 +67,54 @@ process.emit = function (name, data) {
 };
 
 export async function bootstrap() {
+  enableHoistedDependencyResolution();
   enableLoaderIfPossible();
   printBitVersionIfAsked();
   warnIfRunningAsRoot();
   verifyNodeVersionCompatibility();
   await ensureDirectories();
   await Analytics.promptAnalyticsIfNeeded();
+}
+
+/**
+ * Bridge the workspace's privately hoisted dependencies onto the resolution path when the last
+ * install used pnpm's global virtual store. The whole implementation - the layout detection, the
+ * NODE_PATH half, and the ESM loader - lives in
+ * `@teambit/dependency-resolver/dist/hoisted-resolution-bridge` so the install flow can re-apply
+ * it after the install that switches a workspace onto the global store (this pre-aspect gate
+ * still reflects the old layout during that run). Deep-required lazily so CLI startup never pays
+ * for the dependency-resolver barrel, and best-effort: a workspace where the package is absent
+ * or broken has nothing to bridge.
+ */
+function enableHoistedDependencyResolution() {
+  try {
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const bridge = require('@teambit/dependency-resolver/dist/hoisted-resolution-bridge.js') as {
+      isGlobalVirtualStoreLayout(workspaceRoot: string): boolean;
+      ensureHoistedDependencyResolution(workspaceRoot: string): void;
+      ensureSelfInstallationBridge(): void;
+    };
+    // the running installation's own needs come first - a store-linked installation (its
+    // packages living in global-store slots) requires the bridge regardless of which workspace,
+    // if any, this process operates on
+    bridge.ensureSelfInstallationBridge();
+    const workspaceRoot = findWorkspaceRoot(process.cwd());
+    if (workspaceRoot && bridge.isGlobalVirtualStoreLayout(workspaceRoot)) {
+      bridge.ensureHoistedDependencyResolution(workspaceRoot);
+    }
+  } catch {
+    // pre-aspect bootstrap must never fail the CLI over the bridge
+  }
+}
+
+function findWorkspaceRoot(from: string): string | undefined {
+  let dir = path.resolve(from);
+  for (;;) {
+    if (fs.existsSync(path.join(dir, WORKSPACE_JSONC))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
 }
 
 async function ensureDirectories() {

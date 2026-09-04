@@ -484,7 +484,7 @@ describe('bit remove command', function () {
   describe('remove component that exists in workspace.jsonc', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('bit-aspect', 'my-aspect');
+      helper.fixtures.createAspect('my-aspect');
       helper.command.use(`${helper.scopes.remote}/my-aspect`);
       helper.command.removeComponent('my-aspect');
     });

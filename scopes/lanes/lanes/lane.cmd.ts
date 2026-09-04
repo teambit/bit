@@ -358,9 +358,9 @@ export class LaneCheckoutCmd implements Command {
 export class LaneRevertCmd implements Command {
   name = 'revert <history-id>';
   description = 'revert to a previous history of the current lane. see also "bit lane checkout"';
-  extendedDescription = `revert is similar to "lane checkout", but it keeps the versions and only change the files.
+  extendedDescription = `revert is similar to "lane checkout", but it keeps the versions and only changes the files.
 choose one or the other based on your needs.
-if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert".
+if you want to continue working on this lane and need the changes from the history to be the head, then use "lane revert".
 if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.`;
   arguments = [
     { name: 'history-id', description: 'the history-id to checkout to. run "bit lane history" to list the ids' },

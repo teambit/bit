@@ -156,6 +156,13 @@ Tags and exports new semantic versions after merging a PR to main.
 By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.
 Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --auto-tag-increment <level>, --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push, --no-bitmap-commit
 
+## bit ci sync [lane]
+
+Reconciles Bit lanes and the main scope with git branches and pull requests.
+
+Stateless reconciler: compares each mapped lane's remote head against the state the branch itself records, and converges — importing lane changes onto the branch, exporting dev commits to the lane, or opening/closing PRs. That state comes from bit's own data: the .bitmap committed on the branch, which records the lane the branch mirrors and the exact version of every component on it. The "chore(bit-sync)" subject, "Bit-Lane-Head" trailer and "[bit-sync]" marker on sync commits are annotations for humans and triggers; the only decision that consults one is branch deletion, which additionally requires the marker to prove the reconciler wrote the branch tip. The main scope is reconciled by checking the workspace out to its latest exported versions and proposing the result as a sync PR. Triggers (webhook, push, cron) only decide when it runs, never what it does. Safe to re-run at any time; converged state is a no-op. A lane carrying components from other scopes (a cross-scope lane) is reconciled over its defaultScope slice only: foreign components are never written into this repository — the branch consumes them as package dependencies at their lane versions, and only their own scopes' repositories can mirror their sources. A lane with no defaultScope components has nothing to mirror here: enumerated runs skip it and stay green, an explicitly named one is refused, and a mirrored lane whose defaultScope components all left it is halted for a human. Configure mapping under `"teambit.git/ci": { "sync": { ... } }` in workspace.jsonc.
+Flags: --branch <branch>, --all, --main, --dry-run, --init
+
 ## bit clear-cache
 
 remove cached data to resolve stale data issues
@@ -350,7 +357,7 @@ Assigns one or more components a development environment (env)
 
 un-sets an env from components that were previously set by "bit env set" or by a component template
 
-keep in mind that this doesn't remove envs that are set via variants. in only removes envs that appear in the .bitmap file, which were previously configured via "bit env set". the purpose of this command is to reset previously assigned envs to either allow variants configure the env or use the base node env. you can use a `<pattern>` for multiple component ids, such as `bit env unset "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
+keep in mind that this doesn't remove envs that are set via variants. it only removes envs that appear in the .bitmap file, which were previously configured via "bit env set". the purpose of this command is to reset previously assigned envs to either allow variants to configure the env or use the base node env. you can use a `<pattern>` for multiple component ids, such as `bit env unset "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 
 ## bit envs replace <current-env> <new-env>
 
@@ -432,7 +439,7 @@ Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package
 install workspace dependencies
 
 installs workspace dependencies and prepares the workspace for development. when packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies. automatically imports components, compiles components, links to node_modules, and writes config files.
-Flags: --type [lifecycleType], --update, --save-prefix [savePrefix], --skip-dedupe, --skip-import, --skip-compile, --skip-write-config-files, --add-missing-deps, --skip-unavailable, --add-missing-peers, --recurring-install, --no-optional [noOptional], --lockfile-only, --allow-scripts [pkgNames], --disallow-scripts [pkgNames]
+Flags: --type [lifecycleType], --update, --save-prefix [savePrefix], --skip-dedupe, --skip-import, --skip-compile, --skip-write-config-files, --add-missing-deps, --skip-unavailable, --add-missing-peers, --recurring-install, --no-optional [noOptional], --lockfile-only, --restore, --allow-scripts [pkgNames], --disallow-scripts [pkgNames]
 
 ## bit internalize [component-pattern]
 
@@ -547,14 +554,14 @@ Flags: --skip-dependency-installation
 
 revert to a previous history of the current lane. see also "bit lane checkout"
 
-revert is similar to "lane checkout", but it keeps the versions and only change the files. choose one or the other based on your needs. if you want to continue working on this lane and needs the changes from the history to be the head, then use "lane revert". if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.
+revert is similar to "lane checkout", but it keeps the versions and only changes the files. choose one or the other based on your needs. if you want to continue working on this lane and need the changes from the history to be the head, then use "lane revert". if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.
 Flags: --skip-dependency-installation, --restore-deleted-components, --json
 
 ## bit lane merge-move <new-lane-name>
 
 EXPERIMENT. move the current merge state into a new lane. the current lane will be reset
 
-this command is useful when you got a messy merge state that from one hand you don't want to loose the changes, but on the other hand, you want to keep your lane without those changes. this command does the following: 1. create a new lane with the current merge state. including all the filesystem changes. (in practice, it leaves the fs intact) 2. reset the current lane to the state before the merge. so then once done with the new lane, you can switch to the current lane and it'll be clean.
+this command is useful when you got a messy merge state that on one hand you don't want to lose the changes, but on the other hand, you want to keep your lane without those changes. this command does the following: 1. create a new lane with the current merge state. including all the filesystem changes. (in practice, it leaves the fs intact) 2. reset the current lane to the state before the merge. so then once done with the new lane, you can switch to the current lane and it'll be clean.
 Flags: --scope <scope-name>
 
 ## bit link [component-names...]
@@ -615,7 +622,7 @@ Flags: --one-line
 authenticate with Bit Cloud for component publishing and collaboration
 
 opens browser to authenticate with Bit Cloud (bit.cloud) and obtain access token for publishing components. automatically updates .npmrc file with registry configuration and authentication token for seamless package publishing. supports custom cloud domains, CI/machine authentication, and manual token refresh options.
-Flags: --skip-config-update, --refresh-token, --cloud-domain <domain>, --default-cloud-domain, --port <port>, --no-browser, --machine-name <name>, --suppress-browser-launch
+Flags: --skip-config-update, --refresh-token, --cloud-domain <domain>, --default-cloud-domain, --port <port>, --no-browser, --machine-name <name>
 
 ## bit logout
 
@@ -822,7 +829,7 @@ configure scope assignments for components including setting default scopes and 
 
 Sets the scope for specified component/s. If no component is specified, sets the default scope of the workspace
 
-default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc. a component is set with a scope (as oppose to default scope) only once it is versioned.' you can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
+default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc. a component is set with a scope (as opposed to default scope) only once it is versioned. you can use a `<pattern>` for multiple component ids, such as `bit scope set scope-name "org.scope/utils/**"`. use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button' use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. always wrap the pattern with single quotes to avoid collision with shell commands. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.
 
 ## bit scope trust [action] [pattern]
 
@@ -984,8 +991,8 @@ Flags: --yes, --patch, --minor, --major, --semver
 
 run type-checking, linting, and testing in sequence
 
-validates components by running check-types, lint, and test commands in sequence. by default runs all checks even when errors are found. use --fail-fast to stop at the first failure. by default validates only new and modified components. use --all to validate all components.
-Flags: --all, --fail-fast, --skip-tasks <string>
+validates components by running check-types, lint, and test commands in sequence. by default runs all checks even when errors are found. use --fail-fast to stop at the first failure. by default validates only new and modified components. use --unmodified to validate all components.
+Flags: --unmodified, --fail-fast, --skip-tasks <string>
 
 ## bit version
 

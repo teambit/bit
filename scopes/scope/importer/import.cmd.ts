@@ -120,7 +120,7 @@ without arguments, fetches all workspace components' latest versions from their 
     [
       '',
       'dependents-dry-run',
-      'DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
+      'DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and waits for confirmation before importing them',
     ],
     ['', 'silent', 'no prompt for --dependents/--dependents-via flags'],
     [
@@ -141,7 +141,7 @@ without arguments, fetches all workspace components' latest versions from their 
     [
       '',
       'fetch-deps',
-      'fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data',
+      "fetch dependencies (bit components) objects to the local scope, but don't add to the workspace. Useful to resolve errors about missing dependency data",
     ],
     [
       '',

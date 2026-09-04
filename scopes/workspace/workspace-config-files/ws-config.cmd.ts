@@ -182,7 +182,7 @@ function getWarningForNonImplementingEnvs(envsNotImplementing: string[]) {
   const message =
     chalk.yellow(`Bit cannot determine the correct contents for the config files to write. this may result in incorrect content.
 The following environments need to add support for config files: ${chalk.cyan(envsNotImplementing.join(', '))}.
-Read here how to correct and improve dev-ex - LINK
+consider updating these envs to implement config file writing to improve the dev experience.
 
 `);
   return message;

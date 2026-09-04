@@ -48,7 +48,7 @@ export class BitMap {
   ): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
     const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
-    const currentConfig = (bitMapEntry.config ||= {})[aspectId];
+    const currentConfig = bitMapEntry.config?.[aspectId];
     if (isEqual(currentConfig, config)) {
       return false; // no changes
     }
@@ -63,9 +63,14 @@ export class BitMap {
     };
     const newConfig = getNewConfig();
     if (newConfig) {
-      bitMapEntry.config[aspectId] = newConfig;
+      (bitMapEntry.config ||= {})[aspectId] = newConfig;
     } else {
-      delete bitMapEntry.config[aspectId];
+      if (!currentConfig) {
+        return false; // the aspect is not configured, so there is nothing to delete
+      }
+      delete bitMapEntry.config![aspectId];
+      // avoid leaving an empty `config: {}` object in the .bitmap file
+      if (!Object.keys(bitMapEntry.config!).length) delete bitMapEntry.config;
     }
     this.legacyBitMap.markAsChanged();
 
@@ -95,14 +100,16 @@ export class BitMap {
   removeComponentConfig(id: ComponentID, aspectId: string, markWithMinusIfNotExist: boolean): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
     const bitMapEntry = this.getBitmapEntry(id, { ignoreVersion: true });
-    const currentConfig = (bitMapEntry.config ||= {})[aspectId];
+    const currentConfig = bitMapEntry.config?.[aspectId];
     if (currentConfig) {
-      delete bitMapEntry.config[aspectId];
+      delete bitMapEntry.config![aspectId];
+      // avoid leaving an empty `config: {}` object in the .bitmap file
+      if (!Object.keys(bitMapEntry.config!).length) delete bitMapEntry.config;
     } else {
       if (!markWithMinusIfNotExist) {
         return false; // no changes
       }
-      bitMapEntry.config[aspectId] = REMOVE_EXTENSION_SPECIAL_SIGN;
+      (bitMapEntry.config ||= {})[aspectId] = REMOVE_EXTENSION_SPECIAL_SIGN;
     }
 
     this.legacyBitMap.markAsChanged();
@@ -202,9 +209,7 @@ export class BitMap {
     const allVersions = Object.keys(config).filter((id) => id.startsWith(`${aspectId.toStringWithoutVersion()}@`));
     if (allVersions.length > 1) {
       throw new BitError(
-        `error: the same aspect ${
-          aspectId.toStringWithoutVersion
-        } configured multiple times for "${componentId.toString()}"\n${allVersions.join('\n')}`
+        `error: the same aspect ${aspectId.toStringWithoutVersion()} configured multiple times for "${componentId.toString()}"\n${allVersions.join('\n')}`
       );
     }
     return allVersions.length === 1 ? allVersions[0] : undefined;

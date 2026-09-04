@@ -246,7 +246,12 @@ export class DoctorMain {
     if (fileName.endsWith('.tar') || fileName.endsWith('.tar.gz')) {
       return fileName;
     }
-    return `${this.getWithoutExt(fileName)}.tar`;
+    // `--archive` takes a path, not a bare name, so the extension has to be stripped off the last
+    // segment only. Stripping it off the whole path turns a dot anywhere in a parent directory into
+    // the "extension" - `/tmp/my.dir/report` would be archived as `/tmp/my.tar`.
+    const dirName = path.dirname(fileName);
+    const baseName = `${this.getWithoutExt(path.basename(fileName))}.tar`;
+    return dirName === '.' ? baseName : path.join(dirName, baseName);
   }
 
   private _getDefaultFileName() {

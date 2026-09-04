@@ -281,8 +281,8 @@ export class ProcessBasedTsServer {
       const result = await request;
       onCancelled?.dispose();
       return result;
-    } catch (error) {
-      this.logger.error(`Error in request: ${error}`);
+    } catch (error: any) {
+      this.logger.error(`Error in request "${command}" (seq ${seq}): ${stringifyError(error)}`, error);
       throw error;
     }
   }
@@ -369,10 +369,23 @@ export class ProcessBasedTsServer {
       if (success) {
         this.deferreds[request_seq].resolve(message);
       } else {
-        this.deferreds[request_seq].reject(message);
+        this.deferreds[request_seq].reject(this.toRequestError(message));
       }
       delete this.deferreds[request_seq];
     }
+  }
+
+  /**
+   * a failed tsserver response is a plain protocol object, and rejecting with it makes downstream
+   * logs print "[object Object]". convert it to an Error. `message` must stay identical to the
+   * response's message text - callers match on it (e.g. "No content available.").
+   */
+  private toRequestError(response: ts.server.protocol.Message): Error {
+    const { command, message } = response as ts.server.protocol.Response;
+    const error = new Error(message ?? `tsserver "${command}" request failed without an error message`);
+    (error as any).command = command;
+    (error as any).response = response;
+    return error;
   }
 
   private isEvent(message: ts.server.protocol.Message): message is ts.server.protocol.Event {
@@ -393,5 +406,14 @@ export class ProcessBasedTsServer {
     if (!this.tsServerProcess) {
       await this.restart();
     }
+  }
+}
+
+function stringifyError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
   }
 }

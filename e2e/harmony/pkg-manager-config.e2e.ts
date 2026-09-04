@@ -1,15 +1,16 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import { readModulesManifest } from '@pnpm/modules-yaml';
 import chaiString from 'chai-string';
-
-import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import type { ModulesManifest } from '../modules-manifest';
+import { readModulesManifest } from '../modules-manifest';
+
 chai.use(chaiFs);
 chai.use(chaiString);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
-  'package manager rc file is read from the workspace directory when installation is in a capsule',
+  'workspace package-manager config is read when installation is in a capsule',
   function () {
     this.timeout(0);
     let helper: Helper;
@@ -19,7 +20,7 @@ chai.use(chaiString);
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
+      helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -34,7 +35,8 @@ chai.use(chaiString);
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
     });
-    describe('using Yarn', () => {
+    // skipped: yarn support is deprecated and planned for removal
+    describe.skip('using Yarn', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace({
           yarnRCConfig: {
@@ -67,26 +69,27 @@ chai.use(chaiString);
       });
     });
     describe('using pnpm', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace({
-          npmrcConfig: {
-            'hoist-pattern[]': 'foo',
-          },
-        });
+      let modulesState: ModulesManifest | null;
+      before(async () => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fs.outputFile('pnpm-workspace.yaml', 'hoistPattern:\n  - capsule-hoist-pattern\n');
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
+        helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
+        helper.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', false);
         helper.fixtures.populateComponents(1);
         helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
         helper.capsules.removeScopeAspectCapsules();
         helper.command.status(); // populate capsules.
-      });
-      it('workspace .npmrc is taken into account when running install in the capsule', async () => {
+
         const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const modulesState = await readModulesManifest(
+        modulesState = await readModulesManifest(
           path.join(scopeAspectsCapsulesRootDir, `${helper.scopes.remote}_node-env-1@0.0.1/node_modules`)
         );
-        expect(modulesState?.hoistPattern?.[0]).to.eq('foo');
+      });
+      it('workspace pnpm config is taken into account when running install in the capsule', () => {
+        expect(modulesState?.hoistPattern).to.include('capsule-hoist-pattern');
       });
     });
     after(() => {

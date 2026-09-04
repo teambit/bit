@@ -104,7 +104,7 @@ export class UnmergedComponents {
     );
     if (existingComponent) {
       throw new Error(
-        `unable to add an unmerged component, a component with the same name already exist. name ${existingComponent.id.name}, scope: ${existingComponent.id.scope}`
+        `unable to add an unmerged component, a component with the same name already exists. name ${existingComponent.id.name}, scope: ${existingComponent.id.scope}`
       );
     }
     this.unmerged.push(unmergedComponent);

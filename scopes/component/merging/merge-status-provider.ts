@@ -318,9 +318,11 @@ other:   ${otherLaneHead.toString()}`);
         `component is locally deleted, please snap and export first or undo by bit recover`
       );
     }
-    const getCurrentComponent = () => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (existingBitMapId) return consumer!.loadComponent(existingBitMapId);
+    const getCurrentComponent = async () => {
+      if (existingBitMapId && this.workspace) {
+        const currentWorkspaceComp = await this.workspace.get(existingBitMapId);
+        return currentWorkspaceComp.state._consumer;
+      }
       return this.scope.legacyScope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();

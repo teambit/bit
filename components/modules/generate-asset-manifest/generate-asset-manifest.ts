@@ -2,8 +2,20 @@ import type { Compilation } from '@rspack/core';
 
 export type ManifestResult = {
   files: Record<string, string>;
+  /**
+   * assets of the `main` entry, kept for compilations that have exactly one entry.
+   * empty when the compilation has no entry named `main` - read `entrypointsByName` instead.
+   */
   entrypoints: string[];
+  /** assets of every entry, keyed by entry name. */
+  entrypointsByName: Record<string, string[]>;
 };
+
+function assetNames(entry: any): string[] {
+  return (entry?.assets || [])
+    .map((asset: any) => asset.name || asset)
+    .filter((name: string) => !name.endsWith('.map'));
+}
 
 /**
  * Generate a CRA-compatible manifest object from an rspack compilation.
@@ -12,6 +24,10 @@ export type ManifestResult = {
  * ```ts
  * new RspackManifestPlugin({ fileName: 'asset-manifest.json', generate: generateAssetManifest })
  * ```
+ *
+ * A multi-entry compilation cannot describe itself with a single `entrypoints` list, so every
+ * entry is also reported under `entrypointsByName`. Consumers that serve one entry of a
+ * multi-entry build (the UI bundle's ssr middleware) pick their entry from there.
  */
 export function generateAssetManifest(
   _seed: Record<string, any>,
@@ -25,9 +41,10 @@ export function generateAssetManifest(
     if (asset.name) files[asset.name] = `/${asset.name}`;
   }
   const stats = compilation.getStats().toJson({ all: false, entrypoints: true });
-  const mainEntry = (stats as any).entrypoints?.main;
-  const entrypoints = (mainEntry?.assets || [])
-    .map((a: any) => a.name || a)
-    .filter((name: string) => !name.endsWith('.map'));
-  return { files, entrypoints };
+  const statsEntrypoints = ((stats as any).entrypoints || {}) as Record<string, any>;
+  const entrypointsByName: Record<string, string[]> = {};
+  for (const [name, entry] of Object.entries(statsEntrypoints)) {
+    entrypointsByName[name] = assetNames(entry);
+  }
+  return { files, entrypoints: entrypointsByName.main || [], entrypointsByName };
 }
