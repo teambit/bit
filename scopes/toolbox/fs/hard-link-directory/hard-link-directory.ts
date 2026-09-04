@@ -110,47 +110,81 @@ async function linkFileIfNotExists(srcFile: string, destFile: string) {
  * and we don't want to discard the user's data) and `mkdir` is retried.
  */
 async function ensureDir(dir: string) {
-  try {
-    await fs.mkdir(dir, { recursive: true });
-    return;
-  } catch (err) {
+  let mkdirError: unknown;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      await fs.mkdir(dir, { recursive: true });
+      return;
+    } catch (err) {
+      mkdirError = err;
+    }
+
     // ENOTDIR: a regular file blocks the path. EEXIST: leaf already exists as a non-directory
     // (rare with recursive: true). ENOENT: a dangling symlink in the path can't be traversed.
-    const code = errnoCode(err);
-    if (code !== 'ENOTDIR' && code !== 'EEXIST' && code !== 'ENOENT') throw err;
+    const code = errnoCode(mkdirError);
+    if (code !== 'ENOTDIR' && code !== 'EEXIST' && code !== 'ENOENT') throw mkdirError;
     const offender = await findNonDirectoryAncestor(dir);
     if (offender == null) {
       // EEXIST with a directory already at `dir` is benign — recursive mkdir normally
       // swallows it, but be defensive against races.
       if (code === 'EEXIST') return;
-      throw err;
+      // Another worker may have already moved the offender. Retry mkdir against the new state.
+      continue;
     }
     const quarantined = await quarantineStrayEntry(offender);
+    // Another worker already quarantined this entry. Retry mkdir against the new state.
+    if (quarantined == null) continue;
     const msg =
       `non-directory entry at ${offender} blocked link target ${dir}; ` +
       `moved aside to ${quarantined} so the install could continue. inspect or delete it manually if it isn't expected.`;
     logger.warn(msg);
     printWarning(msg);
-    await fs.mkdir(dir, { recursive: true });
   }
+  throw mkdirError;
 }
 
 /**
- * Rename `offender` to a sibling path that won't collide with anything bit creates.
+ * Move `offender` to a sibling path that won't collide with anything bit creates.
  * On the rare chance the suffixed name already exists (e.g. a previous recovery in the
  * same millisecond, or a leftover from a prior failed run), keep bumping a counter.
+ * Returns undefined when another worker already moved the offender.
  */
-async function quarantineStrayEntry(offender: string): Promise<string> {
+async function quarantineStrayEntry(offender: string): Promise<string | undefined> {
   const base = `${offender}.bit-stray-${Date.now()}`;
   let candidate = base;
   for (let i = 1; ; i++) {
     try {
-      await fs.rename(offender, candidate);
+      await moveNonDirectoryEntryNoReplace(offender, candidate);
       return candidate;
     } catch (err) {
-      if (errnoCode(err) !== 'EEXIST' && errnoCode(err) !== 'ENOTEMPTY') throw err;
+      const code = errnoCode(err);
+      if (code === 'ENOENT') return undefined;
+      if (code !== 'EEXIST') throw err;
       candidate = `${base}-${i}`;
     }
+  }
+}
+
+/**
+ * Move a file or symlink without replacing an existing destination. Hard-linking a file and
+ * recreating a symlink are atomic no-clobber operations, unlike rename on POSIX.
+ */
+async function moveNonDirectoryEntryNoReplace(src: string, dest: string) {
+  const stat = await fs.lstat(src);
+  if (stat.isSymbolicLink()) {
+    const target = await fs.readlink(src);
+    await fs.symlink(target, dest);
+  } else {
+    await fs.link(src, dest);
+  }
+
+  try {
+    await fs.unlink(src);
+  } catch (err) {
+    // A concurrent worker may have removed src after we created dest. Remove our duplicate,
+    // then let the caller retry directory creation.
+    await fs.unlink(dest).catch(() => undefined);
+    throw err;
   }
 }
 

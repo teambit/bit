@@ -135,7 +135,7 @@ function findQuarantined(parentDir: string, originalName: string): string | unde
   return fs.readdirSync(parentDir).find((entry) => entry.startsWith(`${originalName}.bit-stray-`));
 }
 
-test('recover when an ancestor of the destination subdirectory is a regular file', async () => {
+it('recover when an ancestor of the destination subdirectory is a regular file', async () => {
   const tempDir = globalBitTempDir();
   const srcDir = path.join(tempDir, 'source');
   const destDir = path.join(tempDir, 'dest');
@@ -152,14 +152,14 @@ test('recover when an ancestor of the destination subdirectory is a regular file
 
   await hardLinkDirectory(srcDir, [destDir]);
 
-  expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).toBe('Hello World');
+  expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).to.equal('Hello World');
   // The stray entry must be preserved (renamed, not deleted) so the user can recover it.
   const quarantined = findQuarantined(destDir, '@scope');
-  expect(quarantined).toBeDefined();
-  expect(fs.readFileSync(path.join(destDir, quarantined!), 'utf8')).toBe('stray file');
+  expect(quarantined).to.not.equal(undefined);
+  expect(fs.readFileSync(path.join(destDir, quarantined!), 'utf8')).to.equal('stray file');
 });
 
-test('recover when the exact destination subdirectory exists as a regular file', async () => {
+it('recover when the exact destination subdirectory exists as a regular file', async () => {
   const tempDir = globalBitTempDir();
   const srcDir = path.join(tempDir, 'source');
   const destDir = path.join(tempDir, 'dest');
@@ -173,13 +173,13 @@ test('recover when the exact destination subdirectory exists as a regular file',
 
   await hardLinkDirectory(srcDir, [destDir]);
 
-  expect(fs.readFileSync(path.join(destDir, 'subdir/file.txt'), 'utf8')).toBe('Hello World');
+  expect(fs.readFileSync(path.join(destDir, 'subdir/file.txt'), 'utf8')).to.equal('Hello World');
   const quarantined = findQuarantined(destDir, 'subdir');
-  expect(quarantined).toBeDefined();
-  expect(fs.readFileSync(path.join(destDir, quarantined!), 'utf8')).toBe('stray file');
+  expect(quarantined).to.not.equal(undefined);
+  expect(fs.readFileSync(path.join(destDir, quarantined!), 'utf8')).to.equal('stray file');
 });
 
-test('recover when an ancestor of the destination subdirectory is a dangling symlink', async () => {
+it('recover when an ancestor of the destination subdirectory is a dangling symlink', async () => {
   const tempDir = globalBitTempDir();
   const srcDir = path.join(tempDir, 'source');
   const destDir = path.join(tempDir, 'dest');
@@ -195,9 +195,74 @@ test('recover when an ancestor of the destination subdirectory is a dangling sym
 
   await hardLinkDirectory(srcDir, [destDir]);
 
-  expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).toBe('Hello World');
+  expect(fs.readFileSync(path.join(destDir, '@scope/pkg/file.txt'), 'utf8')).to.equal('Hello World');
   // The dangling symlink itself must be preserved as a symlink at the quarantined name.
   const quarantined = findQuarantined(destDir, '@scope');
-  expect(quarantined).toBeDefined();
-  expect(fs.lstatSync(path.join(destDir, quarantined!)).isSymbolicLink()).toBe(true);
+  expect(quarantined).to.not.equal(undefined);
+  expect(fs.lstatSync(path.join(destDir, quarantined!)).isSymbolicLink()).to.equal(true);
+});
+
+it('does not overwrite an existing quarantine file', async () => {
+  const tempDir = globalBitTempDir();
+  const srcDir = path.join(tempDir, 'source');
+  const destDir = path.join(tempDir, 'dest');
+  const offender = path.join(destDir, 'subdir');
+  const timestamp = 123456789;
+  const existingQuarantine = `${offender}.bit-stray-${timestamp}`;
+
+  fs.mkdirpSync(path.join(srcDir, 'subdir'));
+  fs.writeFileSync(path.join(srcDir, 'subdir/file.txt'), 'Hello World');
+  fs.mkdirpSync(destDir);
+  fs.writeFileSync(offender, 'new stray file');
+  fs.writeFileSync(existingQuarantine, 'previous stray file');
+
+  const originalDateNow = Date.now;
+  Date.now = () => timestamp;
+  try {
+    await hardLinkDirectory(srcDir, [destDir]);
+  } finally {
+    Date.now = originalDateNow;
+  }
+
+  expect(fs.readFileSync(existingQuarantine, 'utf8')).to.equal('previous stray file');
+  expect(fs.readFileSync(`${existingQuarantine}-1`, 'utf8')).to.equal('new stray file');
+  expect(fs.readFileSync(path.join(destDir, 'subdir/file.txt'), 'utf8')).to.equal('Hello World');
+});
+
+it('recovers when concurrent calls encounter the same non-directory entry', async () => {
+  const tempDir = globalBitTempDir();
+  const srcDir = path.join(tempDir, 'source');
+  const destDir = path.join(tempDir, 'dest');
+  const offender = path.join(destDir, 'subdir');
+
+  fs.mkdirpSync(path.join(srcDir, 'subdir'));
+  fs.writeFileSync(path.join(srcDir, 'subdir/file.txt'), 'Hello World');
+  fs.mkdirpSync(destDir);
+  fs.writeFileSync(offender, 'stray file');
+
+  const originalLink = fs.link;
+  let offenderLinks = 0;
+  let releaseLinks!: () => void;
+  const bothLinksCreated = new Promise<void>((resolve) => {
+    releaseLinks = resolve;
+  });
+  (fs as any).link = async (src: string, dest: string) => {
+    await originalLink(src, dest);
+    if (src !== offender) return;
+    offenderLinks += 1;
+    if (offenderLinks === 2) releaseLinks();
+    await bothLinksCreated;
+  };
+
+  try {
+    await Promise.all([hardLinkDirectory(srcDir, [destDir]), hardLinkDirectory(srcDir, [destDir])]);
+  } finally {
+    (fs as any).link = originalLink;
+  }
+
+  expect(offenderLinks).to.equal(2);
+  expect(fs.readFileSync(path.join(destDir, 'subdir/file.txt'), 'utf8')).to.equal('Hello World');
+  const quarantined = fs.readdirSync(destDir).filter((entry) => entry.startsWith('subdir.bit-stray-'));
+  expect(quarantined).to.have.lengthOf(1);
+  expect(fs.readFileSync(path.join(destDir, quarantined[0]), 'utf8')).to.equal('stray file');
 });
