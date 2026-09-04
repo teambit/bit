@@ -1,5 +1,9 @@
 {
   "extends": "@teambit/react.react-env/config/tsconfig.json",
+  "compilerOptions": {
+    // the base config sets moduleResolution "node" (node10), which TS6 reports as TS5107.
+    "ignoreDeprecations": "6.0"
+  },
   "exclude": [
     "artifacts",
     "public",
