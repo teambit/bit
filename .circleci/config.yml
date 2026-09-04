@@ -462,6 +462,18 @@ commands:
       - restore_cache:
           key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
 
+  # Labels this job's requests to remote scopes with `x-custom-origin`. bit reads __CUSTOM_ORIGIN
+  # in scopes/scope/network/http/http.ts and sends it as a header on every scope request, so
+  # bit.cloud can attribute traffic to a specific job instead of to an anonymous EC2 address —
+  # CircleCI runs jobs on generic AWS us-east-1 IPs, which identify nothing on their own.
+  # This is the scope-side counterpart to the `user-agent=bit-*-circleci` .npmrc lines below,
+  # which label registry requests. Linux only: it writes to $BASH_ENV.
+  set_custom_origin:
+    steps:
+      - run:
+          name: label scope requests with the job name
+          command: echo "export __CUSTOM_ORIGIN=bit-circleci-${CIRCLE_JOB}" >> $BASH_ENV
+
   # Complete Bit environment setup
   setup_bit_environment:
     parameters:
@@ -473,6 +485,7 @@ commands:
         type: string
     steps:
       - bit_global_for_npm
+      - set_custom_origin
       - bit_config:
           env: "<<parameters.env>>"
       - restore_cache:
@@ -590,6 +603,9 @@ commands:
       - run:
           name: set user agent for Bit processes in e2e tests
           command: echo "user-agent=bit-e2e-circleci" >> ~/.npmrc
+      # the e2e helper spreads process.env into every spawned bit, so the origin set on $BASH_ENV
+      # reaches the bit processes the tests run, not just this shell.
+      - set_custom_origin
       # Make sure when we run bit from e2e tests we run it from the global not from here
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
@@ -677,6 +693,7 @@ jobs:
       - attach_workspace:
           at: ./
       - restore_common_caches
+      - set_custom_origin
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v

@@ -2418,6 +2418,11 @@
       ],
       [
         "",
+        "restore",
+        "reconstruct the lockfile from each workspace component's stored dependency graph before installing"
+      ],
+      [
+        "",
         "allow-scripts [pkgNames]",
         "a comma separated list of package names that are allowed to run installation scripts"
       ],
@@ -3008,9 +3013,20 @@
   {
     "name": "resume-export <export-id> <remotes...>",
     "alias": "",
-    "options": [],
+    "options": [
+      [
+        "",
+        "delete",
+        "discard the pending objects of this export-id instead of persisting them"
+      ],
+      [
+        "",
+        "force",
+        "for --delete, skip the confirmation prompt. needed when running non-interactively"
+      ]
+    ],
     "description": "EXPERIMENTAL. resume failed export",
-    "extendedDescription": "resume failed export to persist the pending objects on the given remotes.\nthe export-id is the id the client received in the error message during the failure.\nalternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id",
+    "extendedDescription": "resume failed export to persist the pending objects on the given remotes.\nthe export-id is the id the client received in the error message during the failure.\nalternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id.\n\n\"--delete\" discards the pending objects instead of persisting them, which frees the export-queue of these\nscopes. it is only the right move when no scope has persisted this export yet, e.g. when it failed during\nthe validation step, or when the export was abandoned and is now blocking others. if the export failed\nduring the persist step, some scopes are already updated - deleting the rest would leave them with\ndependencies that were never exported, so run without \"--delete\" to persist the remaining scopes instead.\nthe command checks which scopes still hold the pending objects and asks for confirmation before deleting.\npass all the scopes that were used for the export, the export error lists them.\nonly run it once the export is over: the check and the deletion are separate requests, so an export that\npersists a scope in between can still leave the scopes inconsistent",
     "group": "advanced",
     "private": true,
     "remoteOp": true

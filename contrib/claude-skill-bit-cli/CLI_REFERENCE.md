@@ -439,7 +439,7 @@ Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package
 install workspace dependencies
 
 installs workspace dependencies and prepares the workspace for development. when packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies. automatically imports components, compiles components, links to node_modules, and writes config files.
-Flags: --type [lifecycleType], --update, --save-prefix [savePrefix], --skip-dedupe, --skip-import, --skip-compile, --skip-write-config-files, --add-missing-deps, --skip-unavailable, --add-missing-peers, --recurring-install, --no-optional [noOptional], --lockfile-only, --allow-scripts [pkgNames], --disallow-scripts [pkgNames]
+Flags: --type [lifecycleType], --update, --save-prefix [savePrefix], --skip-dedupe, --skip-import, --skip-compile, --skip-write-config-files, --add-missing-deps, --skip-unavailable, --add-missing-peers, --recurring-install, --no-optional [noOptional], --lockfile-only, --restore, --allow-scripts [pkgNames], --disallow-scripts [pkgNames]
 
 ## bit internalize [component-pattern]
 
