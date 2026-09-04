@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import { Helper } from '@teambit/legacy.e2e-helper';
+import { Helper, ENV_POLICY } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 
 chai.use(chaiFs);
@@ -11,14 +11,30 @@ describe('Mocha Tester', function () {
   let envName: string;
 
   const setupMochaEnv = () => {
-    envName = helper.env.setCustomNewEnv('mocha-only-test-env', [
-      '@teambit/typescript.typescript-compiler',
-      '@teambit/defender.mocha-tester',
-      'chai',
-      'chai-fs',
-      '@babel/preset-typescript',
-      '@babel/preset-env',
-    ]);
+    envName = helper.env.setCustomNewEnv(
+      'mocha-only-test-env',
+      [
+        '@teambit/typescript.typescript-compiler',
+        '@teambit/defender.mocha-tester',
+        'chai',
+        'chai-fs',
+        '@babel/preset-typescript',
+        '@babel/preset-env',
+      ],
+      // this env's spec files use the mocha globals, and TS6 only loads @types packages that the
+      // tsconfig names. the default policy forces @types/jest, which is the wrong runner here.
+      {
+        policy: {
+          ...ENV_POLICY,
+          dev: [
+            ...ENV_POLICY.dev.filter((dep) => dep.name !== '@types/jest'),
+            { name: '@types/mocha', version: '^10.0.0', hidden: true, force: true },
+            // the spec files import chai, and chai ships no declarations of its own.
+            { name: '@types/chai', version: '^5.2.3', hidden: true, force: true },
+          ],
+        },
+      }
+    );
     envId = `${helper.scopes.remote}/${envName}`;
   };
 
