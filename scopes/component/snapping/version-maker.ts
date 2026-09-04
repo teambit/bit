@@ -640,7 +640,9 @@ export class VersionMaker {
     const items = candidates
       .filter((candidate) => versionsToSkip.has(candidate.id))
       .map((candidate) =>
-        formatItem(`${candidate.packageName}@${candidate.version} → ${versionsToSkip.get(candidate.id)}`)
+        formatItem(
+          `${candidate.packageName}: ${candidate.version} is taken, tagging ${versionsToSkip.get(candidate.id)}`
+        )
       );
     if (items.length) {
       this.snapping.logger.console(
