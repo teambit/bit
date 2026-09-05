@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { SchemaLocation } from '../schema-node';
+import type { GetMembersContext, SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import type { SchemaChangeFact } from '../schema-diff';
 import { diffMembers } from '../schema-diff-members';
@@ -27,6 +27,14 @@ export class InterfaceSchema extends SchemaNode {
 
   getNodes() {
     return this.members;
+  }
+
+  /**
+   * own members first, then the ones inherited through `extends` — so an override shadows what it overrides.
+   */
+  getMembers(context: GetMembersContext = {}) {
+    const inherited = (this.extendsNodes || []).flatMap((node) => SchemaNode.membersOf(node.expression, context));
+    return [...this.members, ...inherited];
   }
 
   toString(options?: { color?: boolean }): string {

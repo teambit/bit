@@ -20,6 +20,10 @@ export class TypeLiteralSchema extends SchemaNode {
     return this.members;
   }
 
+  getMembers() {
+    return this.members;
+  }
+
   toString() {
     return `{ ${this.members.map((type) => type.toString()).join('; ')} }`;
   }

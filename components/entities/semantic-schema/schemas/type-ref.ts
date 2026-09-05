@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import type { SchemaLocation } from '../schema-node';
+import type { GetMembersContext, SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
@@ -55,6 +55,13 @@ export class TypeRefSchema extends SchemaNode {
 
   getNodes(): SchemaNode[] {
     return this.typeArgs || [];
+  }
+
+  /**
+   * the members of the declaration this reference points at, as resolved by the context.
+   */
+  getMembers(context: GetMembersContext = {}) {
+    return SchemaNode.membersOf(context.resolveRef?.(this), context);
   }
 
   withTypeArgs(typeArgs: SchemaNode[]) {
