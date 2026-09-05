@@ -11,6 +11,7 @@
     "resolveEnvsFromRoots": true
   },
   "teambit.dependencies/dependency-resolver": {
+    "enableGlobalVirtualStore": true,
     "allowScripts": {
       "@apollo/protobufjs": true,
       "@parcel/watcher": true,

@@ -711,10 +711,21 @@ jobs:
           # tracked changes) — without it, a duplicate user-agent line lands on master every
           # release and, being last in the file, overrides bit-repo-local for local installs too.
           # the flag lives in .git/index, so it survives persist_to_workspace into later jobs.
+          #
+          # storeDir moves the store — and with it the global virtual store at <storeDir>/<version>/links,
+          # which every node_modules entry symlinks into — under the persist_to_workspace root, so the
+          # later jobs that only attach the workspace get resolvable symlinks. pnpm's default store
+          # lives in ~/.local/share/pnpm, outside that root. it has to go in pnpm-workspace.yaml:
+          # .npmrc only carries npm-compatible settings, and store-dir there is silently ignored by
+          # the config reader bit installs through (see scopes/dependencies/pnpm/read-config.ts).
+          # the repo has no committed pnpm-workspace.yaml; info/exclude keeps this CI-only one from
+          # being picked up by anything that stages untracked files.
           command: >
             cd bit &&
             echo "user-agent=bit-repo-circleci" >> .npmrc &&
             git update-index --skip-worktree .npmrc &&
+            echo "storeDir: /home/circleci/bit/.pnpm-store" > pnpm-workspace.yaml &&
+            echo "pnpm-workspace.yaml" >> .git/info/exclude &&
             bbit install
       # `bbit install` compiles as part of the install, but that pass can fall back to the
       # default TypeScript compiler for components whose env is still being imported - notably
@@ -728,11 +739,24 @@ jobs:
       # - run: cd bit && ls -l node_modules/@babel
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
       # - run: cd bit && ls -l node_modules/.bin
+      - run:
+          # a persist path that matches nothing is not an error, so without this check a store that
+          # landed outside the workspace root only shows up much later, as a MODULE_NOT_FOUND on a
+          # dangling node_modules symlink in whichever job runs first.
+          name: verify the global virtual store sits inside the persisted workspace
+          command: |
+            set -e
+            ls -d /home/circleci/bit/.pnpm-store/*/links
+            ls -l bit/node_modules/oxlint
+            test -e bit/node_modules/oxlint/bin/oxlint
       - persist_to_workspace:
           root: .
           paths:
             - bit
-            - .pnpm-store
+            # only the global virtual store, not the content-addressable files/ it hardlinks from:
+            # the consumers of this workspace read node_modules, they never fetch packages, and
+            # carrying files/ too would duplicate every package in the archive.
+            - .pnpm-store/*/links
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
