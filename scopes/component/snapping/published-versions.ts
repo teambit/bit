@@ -160,28 +160,35 @@ export function getRegistryForPackage(
 /**
  * npmrc keys its credentials by url prefix (`//host/path/:_authToken`), and bit's registry model
  * carries them on the entries it knows about. so the credential for an explicit publish registry is
- * the one from the entry that covers its url: the very same url, or the closest one on that host.
+ * the one from the entry that covers its url: the very same url, or the closest one above it.
  *
  * a url no entry covers is probed without authorization. a private version then reads as free,
  * which leaves the publish to fail exactly as it does without this check - never a wrong version.
  */
 function findAuthHeaderForUrl(registries: Registries, registryUrl: string): string | undefined {
-  const authenticated = [registries.defaultRegistry, ...Object.values(registries.scopes)].filter(
-    (registry) => registry.authHeaderValue
-  );
-  const exact = authenticated.find((registry) => isSameRegistry(registryUrl, registry.uri));
-  if (exact) return exact.authHeaderValue;
   const target = toUrl(registryUrl);
   if (!target) return undefined;
-  const covering = authenticated
+  const covering = [registries.defaultRegistry, ...Object.values(registries.scopes)]
     .flatMap((registry) => {
-      const uri = toUrl(registry.uri);
-      const covers = uri && uri.host === target.host && target.pathname.startsWith(uri.pathname);
-      return covers ? [{ registry, uri }] : [];
+      const uri = registry.authHeaderValue ? toUrl(registry.uri) : undefined;
+      return uri && covers(uri, target) ? [{ registry, uri }] : [];
     })
     // the most specific path wins, the way npm resolves the nearest matching npmrc key
     .sort((a, b) => b.uri.pathname.length - a.uri.pathname.length);
   return covering[0]?.registry.authHeaderValue;
+}
+
+/**
+ * the same origin, so a credential never crosses to another host or protocol, and the target path
+ * is the registry's path or nested under it: `/npm/` covers `/npm/internal/` but not `/npm-private/`.
+ */
+function covers(registry: URL, target: URL): boolean {
+  if (registry.origin !== target.origin) return false;
+  return withTrailingSlash(target.pathname).startsWith(withTrailingSlash(registry.pathname));
+}
+
+function withTrailingSlash(path: string): string {
+  return path.endsWith('/') ? path : `${path}/`;
 }
 
 function toUrl(uri: string): URL | undefined {
@@ -192,7 +199,14 @@ function toUrl(uri: string): URL | undefined {
   }
 }
 
+/**
+ * the case of the scheme and host and a trailing slash don't make a different registry. the path
+ * does, in its exact case, like in any url.
+ */
 function isSameRegistry(a: string, b: string): boolean {
-  const normalize = (uri: string) => uri.replace(/\/+$/, '').toLowerCase();
+  const normalize = (uri: string) => {
+    const url = toUrl(uri);
+    return (url ? `${url.origin}${url.pathname}` : uri).replace(/\/+$/, '');
+  };
   return normalize(a) === normalize(b);
 }

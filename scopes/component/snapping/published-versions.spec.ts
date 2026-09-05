@@ -133,5 +133,21 @@ describe('published-versions', () => {
       expect(registry.uri).to.equal('https://elsewhere.example.com/npm/');
       expect(registry.authHeaderValue).to.equal(undefined);
     });
+    it('should not borrow credentials from a sibling path that only shares a prefix', () => {
+      const registry = getRegistryForPackage(registries, '@teambit/x', 'https://private.example.com/npm-private/');
+      expect(registry.authHeaderValue).to.equal(undefined);
+    });
+    it('should not send credentials over another protocol', () => {
+      const registry = getRegistryForPackage(registries, '@teambit/x', 'http://private.example.com/npm/');
+      expect(registry.authHeaderValue).to.equal(undefined);
+    });
+    it('should treat a registry path as case-sensitive, unlike the host', () => {
+      expect(
+        getRegistryForPackage(registries, '@teambit/x', 'https://PRIVATE.example.com/npm').authHeaderValue
+      ).to.equal('Bearer acme-token');
+      const otherPath = getRegistryForPackage(registries, '@teambit/x', 'https://private.example.com/NPM/');
+      expect(otherPath.uri).to.equal('https://private.example.com/NPM/');
+      expect(otherPath.authHeaderValue).to.equal(undefined);
+    });
   });
 });
