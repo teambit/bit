@@ -16,6 +16,7 @@ import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { formatItem, formatSection, formatWarningSummary } from '@teambit/cli';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '@teambit/pkg';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
@@ -82,36 +83,7 @@ export type VersionMakerParams = {
   setHeadAsParent?: boolean;
 } & BasicTagParams;
 
-/**
- * whether the component is published to an external registry (npm), rather than to bit's own one.
- * mirrors `Publisher.shouldPublish` in @teambit/pkg - the gate that decides whether the publish
- * task runs at all - including its `avoidPublishToNPM` opt-out.
- */
-function isPublishedToExternalRegistry(component: ConsumerComponent): boolean {
-  const pkgExt = component.extensions.findExtension(Extensions.pkg);
-  if (!pkgExt) return false; // by default components are published to bit's registry
-  if (pkgExt.config?.avoidPublishToNPM) return false;
-  return Boolean(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
-}
-
-/**
- * the registry `npm publish` will use for this component, when it is not the default one for the
- * package's scope. follows npm's own precedence: the `--registry` argument beats `publishConfig`,
- * which beats the scope's registry from the npmrc. undefined means "whatever the scope resolves to".
- */
-function getPublishRegistry(component: ConsumerComponent): string | undefined {
-  const pkgExt = component.extensions.findExtension(Extensions.pkg);
-  if (!pkgExt) return undefined;
-  // same normalization the publisher applies to these args, they may hold several flags per entry
-  const publishArgs: string[] = Array.isArray(pkgExt.config?.packageManagerPublishArgs)
-    ? pkgExt.config.packageManagerPublishArgs.flatMap((arg: string) => arg.split(' '))
-    : [];
-  const registryFlagIndex = publishArgs.indexOf('--registry');
-  if (registryFlagIndex !== -1 && publishArgs[registryFlagIndex + 1]) return publishArgs[registryFlagIndex + 1];
-  const inlineRegistryFlag = publishArgs.find((arg) => arg.startsWith('--registry='));
-  if (inlineRegistryFlag) return inlineRegistryFlag.slice('--registry='.length);
-  return pkgExt.config?.packageJson?.publishConfig?.registry;
-}
+type ComputedVersion = { componentToTag: ConsumerComponent; version: string };
 
 /**
  * create a tag or a snap of the given components and save them in the local scope.
@@ -538,7 +510,7 @@ export class VersionMaker {
     const isPreReleaseLike = releaseType
       ? ['prerelease', 'premajor', 'preminor', 'prepatch'].includes(releaseType)
       : false;
-    const computedVersions = await Promise.all(
+    const computedVersions: ComputedVersion[] = await Promise.all(
       this.allComponentsToTag.map(async (componentToTag) => {
         const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
         const modelComponent = await this.legacyScope.sources.findOrAddComponent(componentToTag);
@@ -587,7 +559,7 @@ export class VersionMaker {
             : versionByEnteredId ||
                 modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
         };
-        return { componentToTag, modelComponent, version: getNewVersion() };
+        return { componentToTag, version: getNewVersion() };
       })
     );
     const versionsToSkip = await this.getVersionsPublishedToRegistry(computedVersions);
@@ -601,20 +573,32 @@ export class VersionMaker {
    * later on, during the publish task. see `published-versions.ts` for how the registry gets ahead
    * of the scope in the first place, and why a probe is enough to detect it.
    *
+   * only derived versions are checked. a version given explicitly - `--ver`, a versions file, or
+   * on the id itself ("foo@1.2.3") - is tagged as given, the registry is not consulted for it.
+   *
    * @returns the version to tag instead, by component id, for the components that collided.
    */
-  private async getVersionsPublishedToRegistry(
-    computedVersions: { componentToTag: ConsumerComponent; modelComponent: ModelComponent; version: string }[]
-  ): Promise<Map<string, string>> {
+  private async getVersionsPublishedToRegistry(computedVersions: ComputedVersion[]): Promise<Map<string, string>> {
+    const { soft, exactVersion, tagDataPerComp } = this.params;
     // on a soft-tag the "version" is a release-type (e.g. "patch"), there is nothing to look up yet.
-    if (!this.params.skipPublishedVersions || this.params.soft) return new Map();
+    if (!this.params.skipPublishedVersions || soft || exactVersion || tagDataPerComp) return new Map();
     // only an external registry can get ahead of the scope: a component published to bit's own
     // registry gets there during the export itself, so the export failing leaves nothing behind.
     // by default nothing is published externally, which makes this a no-op for most workspaces.
-    const publishedExternally = computedVersions.filter(({ componentToTag }) =>
-      isPublishedToExternalRegistry(componentToTag)
-    );
-    if (!publishedExternally.length) return new Map();
+    const candidates = computedVersions.flatMap(({ componentToTag, version }): VersionCandidate[] => {
+      if (this.hasExplicitVersion(componentToTag)) return [];
+      const pkgConfig = componentToTag.extensions.findExtension(PkgAspect.id)?.config;
+      if (!shouldPublishToExternalRegistry(pkgConfig)) return [];
+      return [
+        {
+          id: componentToTag.id.toStringWithoutVersion(),
+          packageName: componentIdToPackageName(componentToTag),
+          version,
+          registryUrl: getPublishRegistry(pkgConfig),
+        },
+      ];
+    });
+    if (!candidates.length) return new Map();
     let registries: Registries;
     try {
       registries = await this.dependencyResolver.getRegistries();
@@ -625,35 +609,32 @@ export class VersionMaker {
       );
       return new Map();
     }
-    const candidates: VersionCandidate[] = publishedExternally.map(({ componentToTag, modelComponent, version }) => ({
-      id: componentToTag.id.toStringWithoutVersion(),
-      packageName: componentIdToPackageName(componentToTag),
-      version,
-      registryUrl: getPublishRegistry(componentToTag),
-      isTakenLocally: (ver) => Boolean(modelComponent.versions[ver]),
-    }));
-    const versionsToSkip = await skipPublishedVersions({
-      candidates,
-      isPublished: createIsVersionPublished(registries, this.snapping.logger),
-    });
-    // one section rather than a line per component: a run that got stuck can collide on all of them
-    const items = candidates
-      .filter((candidate) => versionsToSkip.has(candidate.id))
-      .map((candidate) =>
-        formatItem(
-          `${candidate.packageName}: ${candidate.version} is taken, tagging ${versionsToSkip.get(candidate.id)}`
-        )
-      );
-    if (items.length) {
+    const skipped = await skipPublishedVersions(candidates, createIsVersionPublished(registries, this.snapping.logger));
+    if (skipped.length) {
+      // one section rather than a line per component: a run that got stuck can collide on all of them
       this.snapping.logger.console(
         formatSection(
           'Versions already in the registry',
           'an earlier run published these versions, tagging the next free one instead',
-          items
+          skipped.map(({ packageName, version, versionToTag }) =>
+            formatItem(`${packageName}: ${version} is taken, tagging ${versionToTag}`)
+          )
         )
       );
     }
-    return versionsToSkip;
+    return new Map(skipped.map(({ id, versionToTag }) => [id, versionToTag]));
+  }
+
+  /**
+   * whether the version was given by the user for this specific component: on the id ("foo@1.2.3")
+   * or on the soft-tag now being persisted. `--ver` and a versions file are explicit for the whole run.
+   */
+  private hasExplicitVersion(componentToTag: ConsumerComponent): boolean {
+    const enteredVersion = this.ids.searchWithoutVersion(componentToTag.id)?.version;
+    const softTagVersion = this.params.persist ? componentToTag.componentMap?.nextVersion?.version : undefined;
+    return [enteredVersion, softTagVersion].some(
+      (given) => given && Boolean(getValidVersionOrReleaseType(given).exactVersion)
+    );
   }
 
   private setCurrentSchema() {

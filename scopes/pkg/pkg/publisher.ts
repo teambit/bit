@@ -1,5 +1,5 @@
 import type { ComponentResult, TaskMetadata } from '@teambit/builder';
-import type { Component, ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 import { isSnap } from '@teambit/component-version';
 import type { Capsule, IsolatorMain } from '@teambit/isolator';
 import type { Logger } from '@teambit/logger';
@@ -14,8 +14,8 @@ import { join } from 'path';
 import ssri from 'ssri';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
-import type { PkgExtensionConfig } from './pkg.main.runtime';
 import { DEFAULT_TAR_DIR_IN_CAPSULE } from './packer';
+import { getPublishArgs, shouldPublishToExternalRegistry } from './publish-config';
 
 const PUBLISH_CONCURRENCY = 7;
 const PUBLISH_RETRY_ATTEMPTS = parseInt(process.env.BIT_PUBLISH_RETRY_ATTEMPTS || '3', 10); // Number of retry attempts for retryable errors
@@ -133,11 +133,7 @@ export class Publisher {
     if (this.options.dryRun) publishParams.push('--dry-run');
     publishParams.push(...this.getTagFlagForPreRelease(capsule.component.id));
     publishParams.push(...this.getTagFlagForSnap(capsule.component.id));
-    const extraArgs = this.getExtraArgsFromConfig(capsule.component);
-    if (extraArgs && Array.isArray(extraArgs) && extraArgs?.length) {
-      const extraArgsSplit = extraArgs.map((arg) => arg.split(' ')).flat();
-      publishParams.push(...extraArgsSplit);
-    }
+    publishParams.push(...getPublishArgs(capsule.component.config.extensions.findExtension(PkgAspect.id)?.config));
     const publishParamsStr = publishParams.join(' ');
     const getPkgJson = async () => fsx.readJSON(`${capsule.path}/package.json`);
     const componentIdStr = capsule.id.toString();
@@ -231,18 +227,8 @@ export class Publisher {
       .map((c) => c.component.toComponentId().changeVersion(c.versionStr).toString());
   }
 
-  // TODO: consider using isPublishedToExternalRegistry from pkg.main.runtime (need to send it a component not extensions)
   public shouldPublish(extensions: ExtensionDataList): boolean {
-    const pkgExt = extensions.findExtension(PkgAspect.id);
-    if (!pkgExt) return false;
-    const config = pkgExt.config as PkgExtensionConfig;
-    if (config?.avoidPublishToNPM) return false;
-    return config?.packageJson?.name || config?.packageJson?.publishConfig;
-  }
-
-  private getExtraArgsFromConfig(component: Component): string | undefined {
-    const pkgExt = component.config.extensions.findExtension(PkgAspect.id);
-    return pkgExt?.config?.packageManagerPublishArgs;
+    return shouldPublishToExternalRegistry(extensions.findExtension(PkgAspect.id)?.config);
   }
 
   private async throwForNonStagedOrTaggedComponents(componentIds: ComponentID[]) {

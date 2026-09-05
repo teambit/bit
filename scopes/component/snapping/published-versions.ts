@@ -1,7 +1,9 @@
 import { SemVer } from 'semver';
+import { memoize } from 'lodash';
 import { getFetcherWithAgent } from '@teambit/scope.network';
 import { BitError } from '@teambit/bit-error';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import type { Registries, Registry } from '@teambit/pkg.entities.registry';
 
 /**
@@ -26,15 +28,6 @@ export type IsVersionPublished = (packageName: string, version: string, registry
  */
 export const MAX_PUBLISHED_VERSIONS_TO_SKIP = 20;
 
-/**
- * every candidate is checked, rather than a sample of them: a publish that failed midway (npm rate
- * limiting is the usual reason) leaves only *some* of the components published, so there is no
- * component whose answer can be taken to hold for the rest. it is cheap enough to be thorough -
- * measured against registry.npmjs.org, 400 checks take ~11s, against a merge job that runs for
- * close to an hour.
- */
-export const REGISTRY_CHECK_CONCURRENCY = 16;
-
 const REGISTRY_REQUEST_TIMEOUT = 10000;
 
 export type VersionCandidate = {
@@ -47,8 +40,9 @@ export type VersionCandidate = {
    * for the package's scope. asking any other registry would say "free" about a taken version.
    */
   registryUrl?: string;
-  isTakenLocally?: (version: string) => boolean;
 };
+
+export type SkippedVersion = VersionCandidate & { versionToTag: string };
 
 /**
  * the version right after `version`, keeping its pre-release identifier when it has one.
@@ -62,33 +56,21 @@ export function getNextVersion(version: string): string {
 }
 
 /**
- * return `version`, or - when it was already published to the registry - the next version that
- * wasn't. `isTakenLocally` keeps the result clear of versions the local model already has, so a
- * skip can't land on an existing tag.
+ * return the candidate's version, or - when it was already published to the registry - the next
+ * version that wasn't.
  */
-export async function findVersionNotPublished({
-  packageName,
-  version,
-  registryUrl,
-  isPublished,
-  isTakenLocally,
-  maxToSkip = MAX_PUBLISHED_VERSIONS_TO_SKIP,
-}: {
-  packageName: string;
-  version: string;
-  registryUrl?: string;
-  isPublished: IsVersionPublished;
-  isTakenLocally?: (version: string) => boolean;
-  maxToSkip?: number;
-}): Promise<string> {
-  let candidate = version;
-  for (let skipped = 0; skipped <= maxToSkip; skipped += 1) {
-    const isTaken = isTakenLocally?.(candidate) || (await isPublished(packageName, candidate, registryUrl));
-    if (!isTaken) return candidate;
-    candidate = getNextVersion(candidate);
+export async function findVersionNotPublished(
+  candidate: VersionCandidate,
+  isPublished: IsVersionPublished
+): Promise<string> {
+  const { packageName, version, registryUrl } = candidate;
+  let versionToTag = version;
+  for (let skipped = 0; skipped <= MAX_PUBLISHED_VERSIONS_TO_SKIP; skipped += 1) {
+    if (!(await isPublished(packageName, versionToTag, registryUrl))) return versionToTag;
+    versionToTag = getNextVersion(versionToTag);
   }
   throw new BitError(
-    `unable to find an unpublished version for ${packageName}, the ${maxToSkip} versions following ${version} are all in the registry.
+    `unable to find an unpublished version for ${packageName}, the ${MAX_PUBLISHED_VERSIONS_TO_SKIP} versions following ${version} are all in the registry.
 this is unlikely to be a stuck release. make sure the package name is correct and that the registry is not returning stale data`
   );
 }
@@ -96,35 +78,27 @@ this is unlikely to be a stuck release. make sure the package name is correct an
 /**
  * resolve the version to tag for each candidate.
  *
- * @returns the candidates whose version changed, by component id.
+ * every candidate is checked, rather than a sample of them: a publish that failed midway (npm rate
+ * limiting is the usual reason) leaves only *some* of the components published, so there is no
+ * component whose answer can be taken to hold for the rest. it is cheap enough to be thorough -
+ * measured against registry.npmjs.org, 400 checks take ~11s, against a merge job that runs for
+ * close to an hour.
+ *
+ * @returns the candidates whose version changed.
  */
-export async function skipPublishedVersions({
-  candidates,
-  isPublished,
-  concurrency = REGISTRY_CHECK_CONCURRENCY,
-}: {
-  candidates: VersionCandidate[];
-  isPublished: IsVersionPublished;
-  concurrency?: number;
-}): Promise<Map<string, string>> {
-  const skipped = new Map<string, string>();
-  if (!candidates.length) return skipped;
-  await pMapPool(
+export async function skipPublishedVersions(
+  candidates: VersionCandidate[],
+  isPublished: IsVersionPublished
+): Promise<SkippedVersion[]> {
+  const resolved = await pMapPool(
     candidates,
-    async (candidate: VersionCandidate) => {
-      const versionToTag = await findVersionNotPublished({
-        packageName: candidate.packageName,
-        version: candidate.version,
-        registryUrl: candidate.registryUrl,
-        isPublished,
-        isTakenLocally: candidate.isTakenLocally,
-      });
-      if (versionToTag === candidate.version) return;
-      skipped.set(candidate.id, versionToTag);
-    },
-    { concurrency }
+    async (candidate: VersionCandidate): Promise<SkippedVersion> => ({
+      ...candidate,
+      versionToTag: await findVersionNotPublished(candidate, isPublished),
+    }),
+    { concurrency: concurrentFetchLimit() }
   );
-  return skipped;
+  return resolved.filter((candidate) => candidate.versionToTag !== candidate.version);
 }
 
 /**
@@ -142,14 +116,7 @@ export function createIsVersionPublished(
   logger: { debug: (message: string) => void }
 ): IsVersionPublished {
   // one fetcher per registry: building it reads bit's global config, no need to redo that per request
-  const fetcherPerRegistry = new Map<string, Promise<Fetcher>>();
-  const getFetcher = (uri: string): Promise<Fetcher> => {
-    const existing = fetcherPerRegistry.get(uri);
-    if (existing) return existing;
-    const fetcher = getFetcherWithAgent(uri);
-    fetcherPerRegistry.set(uri, fetcher);
-    return fetcher;
-  };
+  const getFetcher = memoize(getFetcherWithAgent);
 
   return async (packageName: string, version: string, registryUrl?: string) => {
     const registry = getRegistryForPackage(registries, packageName, registryUrl);
@@ -174,8 +141,6 @@ export function createIsVersionPublished(
     }
   };
 }
-
-type Fetcher = Awaited<ReturnType<typeof getFetcherWithAgent>>;
 
 /**
  * `registryUrl` is where the publish is actually going for this component, so it wins over the
@@ -209,10 +174,13 @@ function findAuthHeaderForUrl(registries: Registries, registryUrl: string): stri
   const target = toUrl(registryUrl);
   if (!target) return undefined;
   const covering = authenticated
-    .map((registry) => ({ registry, uri: toUrl(registry.uri) }))
-    .filter(({ uri }) => uri && uri.host === target.host && target.pathname.startsWith(uri.pathname))
+    .flatMap((registry) => {
+      const uri = toUrl(registry.uri);
+      const covers = uri && uri.host === target.host && target.pathname.startsWith(uri.pathname);
+      return covers ? [{ registry, uri }] : [];
+    })
     // the most specific path wins, the way npm resolves the nearest matching npmrc key
-    .sort((a, b) => (b.uri as URL).pathname.length - (a.uri as URL).pathname.length);
+    .sort((a, b) => b.uri.pathname.length - a.uri.pathname.length);
   return covering[0]?.registry.authHeaderValue;
 }
 
