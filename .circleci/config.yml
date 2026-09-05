@@ -705,16 +705,13 @@ jobs:
       - run: cd bit && bbit init
       - run:
           name: bbit install
-          # the user-agent append labels registry requests from CI installs (the committed .npmrc
-          # says bit-repo-local). skip-worktree keeps the mutation out of any later commit made
-          # from this workspace (e.g. the version-bump commit of `bit ci merge`, which stages all
-          # tracked changes) — without it, a duplicate user-agent line lands on master every
-          # release and, being last in the file, overrides bit-repo-local for local installs too.
-          # the flag lives in .git/index, so it survives persist_to_workspace into later jobs.
+          # pnpm v12 stores the project user-agent in pnpm-workspace.yaml. Override the tracked
+          # local marker only in this CI worktree, then keep the temporary change out of later
+          # commits made from the persisted checkout (notably the release version bump).
           command: >
             cd bit &&
-            echo "user-agent=bit-repo-circleci" >> .npmrc &&
-            git update-index --skip-worktree .npmrc &&
+            pnpm config set --location=project userAgent bit-repo-circleci &&
+            git update-index --skip-worktree pnpm-workspace.yaml &&
             bbit install
       # `bbit install` compiles as part of the install, but that pass can fall back to the
       # default TypeScript compiler for components whose env is still being imported - notably
