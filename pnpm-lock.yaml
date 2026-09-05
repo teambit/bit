@@ -7305,7 +7305,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/pkg/pkg(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -8370,7 +8370,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -9423,7 +9423,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
@@ -10476,7 +10476,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -11511,7 +11511,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -12546,7 +12546,7 @@ importers:
         version: file:scopes/pipelines/modules/merge-component-results
       '@teambit/pkg':
         specifier: workspace:*
-        version: file:scopes/pkg/pkg(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/pkg.aspect-docs.pkg':
         specifier: workspace:*
         version: file:scopes/pkg/aspect-docs/pkg(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -15615,6 +15615,9 @@ importers:
       '@teambit/legacy-bit-id':
         specifier: ^1.1.3
         version: 1.1.3
+      '@teambit/pkg.entities.registry':
+        specifier: ~0.0.4
+        version: 0.0.4
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -20983,6 +20986,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -32797,6 +32803,7 @@ packages:
   '@teambit/pkg@file:scopes/pkg/pkg':
     resolution: {directory: scopes/pkg/pkg, type: directory}
     peerDependencies:
+      chai: 5.2.1
       react: 19.2.7
 
   '@teambit/pnpm@file:scopes/dependencies/pnpm':
@@ -72774,7 +72781,7 @@ snapshots:
 
   '@teambit/pkg.package-json.validator@0.0.1': {}
 
-  '@teambit/pkg@file:scopes/pkg/pkg(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
+  '@teambit/pkg@file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@pnpm/napi': 12.1.0
       '@teambit/bit-error': 0.0.404
@@ -72796,6 +72803,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       chalk: 4.1.2
       cli-highlight: 2.1.9
       execa: 2.1.0
@@ -72815,7 +72823,7 @@ snapshots:
       - graphql
       - supports-color
 
-  '@teambit/pkg@file:scopes/pkg/pkg(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
+  '@teambit/pkg@file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@pnpm/napi': 12.1.0
       '@teambit/bit-error': 0.0.404
@@ -72837,6 +72845,49 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
+      chalk: 4.1.2
+      cli-highlight: 2.1.9
+      execa: 2.1.0
+      fs-extra: 10.0.0
+      graphql-tag: 2.12.1(graphql@15.8.0)
+      is-relative-path: 2.0.0
+      lodash: 4.17.21
+      mime: 2.5.2
+      p-map: 4.0.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+      ssri: 10.0.1
+    transitivePeerDependencies:
+      - domexception
+      - encoding
+      - graphql
+      - supports-color
+
+  '@teambit/pkg@file:scopes/pkg/pkg(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
+    dependencies:
+      '@pnpm/napi': 12.1.0
+      '@teambit/bit-error': 0.0.404
+      '@teambit/component-id': 1.2.4
+      '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-package-version': file:scopes/component/component-package-version
+      '@teambit/component-version': 1.0.4
+      '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.in-memory-cache': file:scopes/harmony/modules/in-memory-cache
+      '@teambit/legacy.constants': file:components/legacy/constants
+      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.extension-data': file:components/legacy/extension-data
+      '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.utils': file:components/legacy/utils
+      '@teambit/ui-foundation.ui.use-box.menu': 1.0.16(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       chalk: 4.1.2
       cli-highlight: 2.1.9
       execa: 2.1.0
@@ -78880,7 +78931,10 @@ snapshots:
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.scope-api': file:components/legacy/scope-api(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/pkg.entities.registry': 0.0.4
+      '@teambit/pkg.modules.component-package-name': file:components/modules/component-package-name
       '@teambit/pkg.modules.semver-helper': file:scopes/pkg/modules/semver-helper
+      '@teambit/scope.network': file:scopes/scope/network(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
@@ -78983,7 +79037,10 @@ snapshots:
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.scope-api': file:components/legacy/scope-api(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/pkg.entities.registry': 0.0.4
+      '@teambit/pkg.modules.component-package-name': file:components/modules/component-package-name
       '@teambit/pkg.modules.semver-helper': file:scopes/pkg/modules/semver-helper
+      '@teambit/scope.network': file:scopes/scope/network(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
@@ -79086,7 +79143,10 @@ snapshots:
       '@teambit/legacy.logger': file:components/legacy/logger
       '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.scope-api': file:components/legacy/scope-api(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/pkg.entities.registry': 0.0.4
+      '@teambit/pkg.modules.component-package-name': file:components/modules/component-package-name
       '@teambit/pkg.modules.semver-helper': file:scopes/pkg/modules/semver-helper
+      '@teambit/scope.network': file:scopes/scope/network(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
@@ -79482,6 +79542,8 @@ snapshots:
 
   '@teambit/toolbox.fs.hard-link-directory@file:scopes/toolbox/fs/hard-link-directory':
     dependencies:
+      '@teambit/legacy.constants': file:components/legacy/constants
+      '@teambit/legacy.logger': file:components/legacy/logger
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
@@ -79491,6 +79553,8 @@ snapshots:
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
       resolve-link-target: 1.0.1
       symlink-dir: 9.0.0
+    transitivePeerDependencies:
+      - encoding
 
   '@teambit/toolbox.fs.is-dir-empty@0.0.5':
     dependencies:
