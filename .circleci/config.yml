@@ -960,6 +960,12 @@ jobs:
       - run: cd bit && npm run generate-core-aspects-ids
       - run:
           name: 'bit ci merge'
+          # versions npm already has are skipped automatically, per component (see the
+          # --no-skip-published-versions flag), so the --increment-by bump below should no longer be
+          # needed. it is kept as a manual override for the cases the automatic skip can't cover -
+          # mainly a registry that answers with neither the version nor a 404 (an outage, or broken
+          # auth), since only a positive answer is allowed to move a version forward. no commit is
+          # needed to apply it: set BIT_CI_MERGE_EXTRA_FLAGS='--increment-by 2' as a CircleCI env var.
           command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
           # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 2 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'

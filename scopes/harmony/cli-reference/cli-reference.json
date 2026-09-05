@@ -3573,6 +3573,11 @@
         "(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3."
       ],
       [
+        "",
+        "skip-published-versions",
+        "skip versions that are already in the registry. useful when a previous run published the packages but failed before exporting"
+      ],
+      [
         "i",
         "ignore-issues <issues>",
         "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
@@ -5104,6 +5109,11 @@
             "",
             "increment-by <number>",
             "(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3."
+          ],
+          [
+            "",
+            "no-skip-published-versions",
+            "tag the computed version even when the registry already has it.\nby default, a version that is already published is skipped in favor of the next one, so that a run following a\npublish-succeeded-but-export-failed run is not rejected by the registry"
           ],
           [
             "",
