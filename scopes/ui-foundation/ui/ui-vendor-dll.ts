@@ -1,5 +1,7 @@
-import { readdirSync, existsSync } from 'fs';
+import { readdirSync, existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { rspack } from '@rspack/core';
+import { ensureDirSync } from 'fs-extra';
 
 export const UI_VENDOR_DLL_DIR = 'ui-vendor-dll';
 export const UI_VENDOR_DLL_MANIFEST_FILENAME = 'vendor-manifest.json';
@@ -35,4 +37,51 @@ export function resolveUiVendorDllPackages(
       return fsDeps.readdirSync(distDir).some((f) => f.endsWith('.ui.runtime.js') || f.endsWith('.preview.runtime.js'));
     });
   return [...new Set([...UI_VENDOR_DLL_EXTRA_PACKAGES, ...corePackages])];
+}
+
+export async function buildUiVendorDll(outputPath: string, packages: string[]): Promise<void> {
+  const dllOutputDir = join(outputPath, UI_VENDOR_DLL_DIR);
+  const entryFile = join(dllOutputDir, 'vendor-entry.js');
+  const entryContents = packages
+    .map((pkg) => `exports[${JSON.stringify(pkg)}] = require(${JSON.stringify(pkg)});`)
+    .join('\n');
+  ensureDirSync(dllOutputDir);
+  writeFileSync(entryFile, entryContents);
+
+  const entry: Record<string, string> = {};
+  packages.forEach((pkg) => {
+    entry[pkg] = pkg;
+  });
+
+  const compiler = rspack({
+    mode: 'production',
+    context: process.cwd(),
+    entry,
+    output: {
+      path: dllOutputDir,
+      filename: UI_VENDOR_DLL_CHUNK_FILENAME,
+      library: { name: UI_VENDOR_DLL_GLOBAL_NAME, type: 'window' },
+    },
+    resolve: {
+      modules: [join(process.cwd(), 'node_modules')],
+    },
+    plugins: [
+      new rspack.DllPlugin({
+        path: join(dllOutputDir, UI_VENDOR_DLL_MANIFEST_FILENAME),
+        name: UI_VENDOR_DLL_GLOBAL_NAME,
+        type: 'window',
+      }),
+    ],
+  });
+
+  await new Promise<void>((resolvePromise, reject) => {
+    compiler.run((err, stats) => {
+      compiler.close((closeErr) => {
+        if (err) return reject(err);
+        if (stats?.hasErrors()) return reject(new Error(stats.toString()));
+        if (closeErr) return reject(closeErr);
+        resolvePromise();
+      });
+    });
+  });
 }

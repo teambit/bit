@@ -1,5 +1,15 @@
 import { expect } from 'chai';
-import { resolveUiVendorDllPackages, UI_VENDOR_DLL_EXTRA_PACKAGES } from './ui-vendor-dll';
+import { existsSync, readFileSync, mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import {
+  buildUiVendorDll,
+  resolveUiVendorDllPackages,
+  UI_VENDOR_DLL_EXTRA_PACKAGES,
+  UI_VENDOR_DLL_DIR,
+  UI_VENDOR_DLL_MANIFEST_FILENAME,
+  UI_VENDOR_DLL_CHUNK_FILENAME,
+} from './ui-vendor-dll';
 
 describe('resolveUiVendorDllPackages', () => {
   it('includes react/react-dom plus any core aspect package with a ui or preview runtime file', () => {
@@ -50,5 +60,30 @@ describe('resolveUiVendorDllPackages', () => {
       existsSync: () => false,
     });
     expect(result).to.deep.equal(UI_VENDOR_DLL_EXTRA_PACKAGES);
+  });
+});
+
+describe('buildUiVendorDll', function () {
+  this.timeout(30000); // real rspack compilation
+
+  let outputPath: string;
+  before(async () => {
+    outputPath = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-test-'));
+    await buildUiVendorDll(outputPath, ['lodash.compact']);
+  });
+  after(() => rmSync(outputPath, { recursive: true, force: true }));
+
+  it('writes a manifest.json naming the covered package', () => {
+    const manifestPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_MANIFEST_FILENAME);
+    expect(existsSync(manifestPath)).to.equal(true);
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+    expect(manifest.name).to.equal('__bitUiVendor__');
+    expect(Object.keys(manifest.content).some((k) => k.includes('lodash.compact'))).to.equal(true);
+  });
+
+  it('writes a vendor.js chunk', () => {
+    const chunkPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_CHUNK_FILENAME);
+    expect(existsSync(chunkPath)).to.equal(true);
+    expect(readFileSync(chunkPath, 'utf-8').length).to.be.greaterThan(0);
   });
 });
