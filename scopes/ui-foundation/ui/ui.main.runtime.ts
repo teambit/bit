@@ -38,6 +38,7 @@ import createRspackSsrConfig from './rspack/rspack.ssr.config';
 import { writeBundleStats } from './rspack/bundle-stats';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME, getUiRootEntryName, getUiRootHtmlFilename } from './bundle-ui.task';
+import { UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_MANIFEST_FILENAME, UI_VENDOR_DLL_CHUNK_FILENAME } from './ui-vendor-dll';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain];
 
@@ -739,6 +740,22 @@ export class UiMain {
       this.logger.debug('getBundleUiPath, no pre-built UI bundle found');
     }
     return bundleUiPath;
+  }
+
+  /**
+   * absolute paths to the shipped UI vendor DLL artifact (a manifest + a chunk exposing
+   * `window.__bitUiVendor__`), or `undefined` if this bit installation doesn't have one - an older
+   * bundle, a build with the artifact stripped, or a bit version that predates this feature. safe to
+   * call unconditionally; never throws.
+   */
+  getUiVendorDllPaths(): { manifestPath: string; chunkPath: string } | undefined {
+    const bundleUiPath = getAspectArtifactDir(UIAspect.id, BundleUiTask.getArtifactDirectory());
+    if (!bundleUiPath) return undefined;
+    const dllDir = join(bundleUiPath, UI_VENDOR_DLL_DIR);
+    const manifestPath = join(dllDir, UI_VENDOR_DLL_MANIFEST_FILENAME);
+    const chunkPath = join(dllDir, UI_VENDOR_DLL_CHUNK_FILENAME);
+    if (!fs.existsSync(manifestPath) || !fs.existsSync(chunkPath)) return undefined;
+    return { manifestPath, chunkPath };
   }
 
   private async buildIfNoBundle(uiRootAspectId: string, uiRoot: UIRoot): Promise<boolean> {

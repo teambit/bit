@@ -647,7 +647,7 @@ export class BuilderMain {
       logger,
       issues
     );
-    builder.registerBuildTasks([new BundleUiTask(ui, logger)]);
+    builder.registerBuildTasks([new BundleUiTask(ui, logger, aspectLoader)]);
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);
     graphql.register(() => builderSchema(builder, logger));
     if (generator) generator.registerComponentTemplate([buildTaskTemplate]);

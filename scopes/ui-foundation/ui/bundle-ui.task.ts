@@ -4,8 +4,10 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
 import type { Capsule } from '@teambit/isolator';
 import type { Logger } from '@teambit/logger';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { UIAspect } from './ui.aspect';
 import type { UiMain } from './ui.main.runtime';
+import { resolveUiVendorDllPackages, buildUiVendorDll, resolvePackageDirFromNodeModules } from './ui-vendor-dll';
 
 export const BUNDLE_UI_TASK_NAME = 'BundleUI';
 export const BUNDLE_UI_DIR = 'ui-bundle';
@@ -43,7 +45,8 @@ export class BundleUiTask implements BuildTask {
 
   constructor(
     private ui: UiMain,
-    private logger: Logger
+    private logger: Logger,
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
@@ -61,6 +64,13 @@ export class BundleUiTask implements BuildTask {
     // to keep alive, so nothing here has to defer closing it. `forPreBundle`: the artifact describes
     // bit, not the workspace it was built in.
     await this.ui.build(undefined, outputPath, { forPreBundle: true });
+
+    const vendorPackages = resolveUiVendorDllPackages(
+      this.aspectLoader.getCoreAspectIds(),
+      resolvePackageDirFromNodeModules
+    );
+    await buildUiVendorDll(outputPath, vendorPackages);
+
     await this.generateHash(outputPath);
 
     return {
