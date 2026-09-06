@@ -87,3 +87,30 @@ describe('buildUiVendorDll', function () {
     expect(readFileSync(chunkPath, 'utf-8').length).to.be.greaterThan(0);
   });
 });
+
+describe('buildUiVendorDll with multiple packages', function () {
+  this.timeout(30000); // real rspack compilation
+
+  let outputPath: string;
+  before(async () => {
+    outputPath = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-test-multi-'));
+    await buildUiVendorDll(outputPath, ['lodash.compact', 'lodash.flatten']);
+  });
+  after(() => rmSync(outputPath, { recursive: true, force: true }));
+
+  it('produces a single combined DLL chunk covering all packages', () => {
+    const chunkPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_CHUNK_FILENAME);
+    expect(existsSync(chunkPath)).to.equal(true);
+    expect(readFileSync(chunkPath, 'utf-8').length).to.be.greaterThan(0);
+  });
+
+  it('writes a manifest with all packages covered', () => {
+    const manifestPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_MANIFEST_FILENAME);
+    expect(existsSync(manifestPath)).to.equal(true);
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+    expect(manifest.name).to.equal('__bitUiVendor__');
+    const contentKeys = Object.keys(manifest.content);
+    expect(contentKeys.some((k) => k.includes('lodash.compact'))).to.equal(true);
+    expect(contentKeys.some((k) => k.includes('lodash.flatten'))).to.equal(true);
+  });
+});
