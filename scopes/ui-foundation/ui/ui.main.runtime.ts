@@ -38,7 +38,8 @@ import createRspackSsrConfig from './rspack/rspack.ssr.config';
 import { writeBundleStats } from './rspack/bundle-stats';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME, getUiRootEntryName, getUiRootHtmlFilename } from './bundle-ui.task';
-import { UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_MANIFEST_FILENAME, UI_VENDOR_DLL_CHUNK_FILENAME } from './ui-vendor-dll';
+import type { UiVendorDllPaths } from './ui-vendor-dll';
+import { resolveUiVendorDllPaths } from './ui-vendor-dll';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain];
 
@@ -747,15 +748,17 @@ export class UiMain {
    * `window.__bitUiVendor__`), or `undefined` if this bit installation doesn't have one - an older
    * bundle, a build with the artifact stripped, or a bit version that predates this feature. safe to
    * call unconditionally; never throws.
+   *
+   * `cssPath` is the stylesheet of every module in the chunk: once `DllReferencePlugin` intercepts
+   * them the consumer's own build compiles none of their css, so a consumer that serves the chunk
+   * has to serve this alongside it. It is `undefined` on its own (the rest of the paths still
+   * returned) for an artifact built before the dll emitted css.
+   *
+   * pass `manifestPath` to `createUiVendorDllReference`, not straight to `DllReferencePlugin` - see
+   * that function's own doc for why.
    */
-  getUiVendorDllPaths(): { manifestPath: string; chunkPath: string } | undefined {
-    const bundleUiPath = getAspectArtifactDir(UIAspect.id, BundleUiTask.getArtifactDirectory());
-    if (!bundleUiPath) return undefined;
-    const dllDir = join(bundleUiPath, UI_VENDOR_DLL_DIR);
-    const manifestPath = join(dllDir, UI_VENDOR_DLL_MANIFEST_FILENAME);
-    const chunkPath = join(dllDir, UI_VENDOR_DLL_CHUNK_FILENAME);
-    if (!fs.existsSync(manifestPath) || !fs.existsSync(chunkPath)) return undefined;
-    return { manifestPath, chunkPath };
+  getUiVendorDllPaths(): UiVendorDllPaths | undefined {
+    return resolveUiVendorDllPaths(getAspectArtifactDir(UIAspect.id, BundleUiTask.getArtifactDirectory()));
   }
 
   private async buildIfNoBundle(uiRootAspectId: string, uiRoot: UIRoot): Promise<boolean> {

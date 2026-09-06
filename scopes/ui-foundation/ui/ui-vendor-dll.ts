@@ -1,5 +1,5 @@
-import { readdirSync, existsSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { readdirSync, existsSync, readFileSync, writeFileSync, mkdirSync, realpathSync } from 'fs';
+import { join, relative, resolve, dirname, sep } from 'path';
 import { rspack } from '@rspack/core';
 import { getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
@@ -21,6 +21,7 @@ import { postCssConfig } from './rspack/postcss.config';
 export const UI_VENDOR_DLL_DIR = 'ui-vendor-dll';
 export const UI_VENDOR_DLL_MANIFEST_FILENAME = 'vendor-manifest.json';
 export const UI_VENDOR_DLL_CHUNK_FILENAME = 'vendor.js';
+export const UI_VENDOR_DLL_CSS_FILENAME = 'vendor.css';
 export const UI_VENDOR_DLL_GLOBAL_NAME = '__bitUiVendor__';
 export const UI_VENDOR_DLL_EXTRA_PACKAGES = ['react', 'react-dom'];
 
@@ -61,13 +62,16 @@ export function resolveUiVendorDllPackages(
  */
 export function resolvePackageDirFromNodeModules(packageName: string): string | undefined {
   try {
-    const searchPaths = require.resolve.paths(packageName) || [];
-    return searchPaths
-      .map((nodeModulesDir) => join(nodeModulesDir, ...packageName.split('/')))
-      .find((candidate) => existsSync(join(candidate, 'package.json')));
+    return findPackageDir(packageName, require.resolve.paths(packageName) || []);
   } catch {
     return undefined;
   }
+}
+
+function findPackageDir(packageName: string, nodeModulesDirs: string[]): string | undefined {
+  return nodeModulesDirs
+    .map((nodeModulesDir) => join(nodeModulesDir, ...packageName.split('/')))
+    .find((candidate) => existsSync(join(candidate, 'package.json')));
 }
 
 /**
@@ -105,6 +109,159 @@ function buildDllEntryContents(packages: string[]): string {
     .join('\n');
 }
 
+export type UiVendorDllPaths = { manifestPath: string; chunkPath: string; cssPath?: string };
+
+/**
+ * the artifact's files inside an already-located `ui-bundle` directory, or `undefined` if this
+ * installation has no dll (no bundle at all, or a bundle predating this feature). `cssPath` alone is
+ * `undefined` for an artifact built before the dll emitted css - the other two are still returned.
+ */
+export function resolveUiVendorDllPaths(bundleUiPath: string | undefined): UiVendorDllPaths | undefined {
+  if (!bundleUiPath) return undefined;
+  const dllDir = join(bundleUiPath, UI_VENDOR_DLL_DIR);
+  const manifestPath = join(dllDir, UI_VENDOR_DLL_MANIFEST_FILENAME);
+  const chunkPath = join(dllDir, UI_VENDOR_DLL_CHUNK_FILENAME);
+  if (!existsSync(manifestPath) || !existsSync(chunkPath)) return undefined;
+  const cssPath = join(dllDir, UI_VENDOR_DLL_CSS_FILENAME);
+  return { manifestPath, chunkPath, cssPath: existsSync(cssPath) ? cssPath : undefined };
+}
+
+export type UiVendorDllManifestEntry = { id: string | number; buildMeta?: unknown; exports?: string[] | true };
+export type UiVendorDllManifest = { name: string; type: string; content: Record<string, UiVendorDllManifestEntry> };
+
+/** the `rspack.DllReferencePlugin` options `createUiVendorDllReference` builds */
+export type UiVendorDllReference = {
+  content: Record<string, UiVendorDllManifestEntry>;
+  /** must be the same `context` the consuming compilation uses - keys are relative to it */
+  context: string;
+  name: string;
+  sourceType: string;
+};
+
+// rspack writes manifest keys with forward slashes on every platform
+const NODE_MODULES_SEGMENT = '/node_modules/';
+
+/**
+ * rspack keys a dll manifest by each module's path relative to the compilation's `context`, and
+ * `DllReferencePlugin` matches by recomputing that same relative path from the module it just
+ * resolved on the consuming side. Under pnpm every one of those paths runs through
+ * `.pnpm/<name>@<version>_<peer-hash>/node_modules/...`, and that hash is derived from the full
+ * dependency graph of the install that produced it - no separate project's own install reproduces
+ * it, so a raw manifest matches nothing outside the machine that built it (and a miss is silent:
+ * `DllReferencePlugin` just lets the module compile from source, no error).
+ *
+ * The one identity both installs do share is package name + subpath, so that is what the shipped
+ * manifest is keyed by. Everything before the last `node_modules/` - the part that is specific to
+ * one install's layout - is dropped. A key with no `node_modules/` in it at all (an external, a
+ * remote font URL, the generated entry file itself) belongs to no package and is dropped entirely;
+ * it could never have matched a consumer's module anyway.
+ */
+export function toPortableUiVendorDllKey(key: string): string | undefined {
+  const lastNodeModules = key.lastIndexOf(NODE_MODULES_SEGMENT);
+  if (lastNodeModules === -1) return undefined;
+  return `./${key.slice(lastNodeModules + NODE_MODULES_SEGMENT.length)}`;
+}
+
+export function toPortableUiVendorDllManifest(manifest: UiVendorDllManifest): UiVendorDllManifest {
+  // `undefined` marks a key seen more than once: the dll covers two versions of the same package
+  // (pnpm keeps them in separate store directories, package name + subpath cannot tell them apart),
+  // so there is no single right module to delegate to - cover neither and let the consumer compile
+  // its own.
+  const entries = new Map<string, UiVendorDllManifestEntry | undefined>();
+  Object.entries(manifest.content).forEach(([key, entry]) => {
+    const portableKey = toPortableUiVendorDllKey(key);
+    if (!portableKey) return;
+    entries.set(portableKey, entries.has(portableKey) ? undefined : entry);
+  });
+  const content: Record<string, UiVendorDllManifestEntry> = {};
+  entries.forEach((entry, key) => {
+    if (entry) content[key] = entry;
+  });
+  return { ...manifest, content };
+}
+
+/**
+ * turns the shipped portable manifest back into `rspack.DllReferencePlugin` options for one specific
+ * consuming install, by resolving each covered package in that install and re-keying its entries by
+ * the paths that install's own rspack compilation will produce. This is the supported way to consume
+ * the artifact - passing `manifestPath` straight to `DllReferencePlugin` as `manifest` matches
+ * nothing, since its keys are package specifiers rather than the context-relative paths rspack
+ * compares against.
+ *
+ * Packages the consumer doesn't have installed (most of the dll's 600+ transitive dependencies) and
+ * files it has at a layout where they don't exist are skipped - they simply stay compiled from the
+ * consumer's own source. Package *versions* are deliberately not compared: this artifact replaces
+ * the bundled cli's existing shims, which redirect these packages into `bit.app.js` regardless of
+ * which version the consuming project declares, so gating on version equality would cover strictly
+ * less than what it replaces.
+ */
+export function createUiVendorDllReference(
+  manifestPath: string,
+  options: { context: string; resolveFrom?: string }
+): UiVendorDllReference | undefined {
+  let manifest: UiVendorDllManifest;
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+  } catch {
+    return undefined;
+  }
+  if (!manifest?.content) return undefined;
+  const consumerNodeModulesDirs = nodeModulesDirsFrom(options.resolveFrom || options.context);
+  const packageDirs = new Map<string, string | undefined>();
+  const content: Record<string, UiVendorDllManifestEntry> = {};
+
+  Object.entries(manifest.content).forEach(([key, entry]) => {
+    const specifier = key.startsWith('./') ? key.slice(2) : key;
+    const packageName = specifier.startsWith('@')
+      ? specifier.split('/').slice(0, 2).join('/')
+      : specifier.split('/')[0];
+    const subPath = specifier.slice(packageName.length + 1);
+    if (!subPath) return;
+    if (!packageDirs.has(packageName)) {
+      packageDirs.set(packageName, resolvePackageDirForConsumer(packageName, consumerNodeModulesDirs));
+    }
+    const packageDir = packageDirs.get(packageName);
+    if (!packageDir) return;
+    const modulePath = join(packageDir, ...subPath.split('/'));
+    if (!existsSync(modulePath)) return;
+    content[contextify(options.context, modulePath)] = entry;
+  });
+
+  if (!Object.keys(content).length) return undefined;
+  return { content, context: options.context, name: manifest.name, sourceType: manifest.type };
+}
+
+/**
+ * `realpathSync` because rspack resolves symlinks by default (`resolve.symlinks`), so the paths it
+ * will compare against are the pnpm store's real ones, not the `node_modules/<pkg>` symlinks pnpm
+ * puts at the top level.
+ */
+function resolvePackageDirForConsumer(packageName: string, nodeModulesDirs: string[]): string | undefined {
+  try {
+    const packageDir = findPackageDir(packageName, nodeModulesDirs);
+    return packageDir ? realpathSync(packageDir) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** node's own module lookup order, walked explicitly so it can start from the consumer's root */
+function nodeModulesDirsFrom(startDir: string): string[] {
+  const dirs: string[] = [];
+  let current = resolve(startDir);
+  for (let parent = dirname(current); ; parent = dirname(current)) {
+    dirs.push(join(current, 'node_modules'));
+    if (parent === current) return dirs;
+    current = parent;
+  }
+}
+
+/** the same relative form rspack keys a manifest by: `./a/b` inside the context, `../a` outside it */
+function contextify(context: string, absolutePath: string): string {
+  const relativePath = relative(context, absolutePath).split(sep).join('/');
+  return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
+}
+
 export async function buildUiVendorDll(outputPath: string, packages: string[]): Promise<void> {
   const dllOutputDir = join(outputPath, UI_VENDOR_DLL_DIR);
   const entryFile = join(dllOutputDir, 'vendor-entry.js');
@@ -115,6 +272,12 @@ export async function buildUiVendorDll(outputPath: string, packages: string[]): 
   const compiler = rspack({
     mode: 'production',
     entry: entryFile,
+    // pinned to the same directory `resolve.modules` below already assumes is the install being
+    // bundled, rather than left to default to whatever `process.cwd()` happens to be when the build
+    // task runs. Only affects the raw manifest keys rspack writes, which
+    // `toPortableUiVendorDllManifest` re-keys straight afterwards - but it keeps those raw keys the
+    // same shape (`./node_modules/...`) no matter where bit was invoked from.
+    context: process.cwd(),
     // required for `module.parser: cssParser` below to mean anything - rspack's native 'css'/
     // 'css/module' module types (and their parser options) only exist with this enabled, same as
     // `rspack.browser.config.ts`.
@@ -207,4 +370,8 @@ export async function buildUiVendorDll(outputPath: string, packages: string[]): 
       });
     });
   });
+
+  const manifestPath = join(dllOutputDir, UI_VENDOR_DLL_MANIFEST_FILENAME);
+  const manifest: UiVendorDllManifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+  writeFileSync(manifestPath, JSON.stringify(toPortableUiVendorDllManifest(manifest)));
 }
