@@ -758,6 +758,26 @@ bit test scopes/ui-foundation/ui
 Expected: all tests still pass (this step only changes internal compiler config, not any test-facing
 interface).
 
+**Corrections found while driving real errors to 0 (this step's code above already reflects the fix,
+noted here for the record):**
+
+- `experiments: { css: true }` is required alongside `module.parser: cssParser` (424 "no parser
+  registered" errors without it — `rspack.browser.config.ts` itself sets this at its top level,
+  easy to miss when only copying the `module`/`resolve` sub-objects).
+- `resolve.modules` needs restoring in a form appropriate to this file's own location
+  (`[<repo-root>, 'node_modules']`), since the DLL's generated entry file lives outside any
+  `node_modules` tree, unlike the main pre-bundle's entries.
+- One more package reaches the same dead-code externals edge as `@rspack/core`/
+  `@teambit/aspect-loader`: `@teambit/yarn`'s `.ui.runtime.js` also reaches `@teambit/ui`'s barrel,
+  pulling in `postcss-loader`, `postcss-preset-env`, `resolve-url-loader`, `sass-loader`,
+  `rspack-manifest-plugin`, `postcss-normalize`, and `@teambit/webpack` (all build-time-only loader
+  packages, never needed at runtime) — added to both this file's `externals` and
+  `rspack.browser.config.ts`'s, same reasoning as Correction 3.
+- `vendor.js` measured at 6.4 MB (3393 real modules) - larger than this doc's earlier "a few MB"
+  estimate, since it now genuinely covers the full design system + Apollo/GraphQL client, not just a
+  couple of hooks. Factor this into Task 6's size-delta check (Global Constraints' 5 MB budget was set
+  before this was known - may need revisiting there, not blocking this task).
+
 - [ ] **Step 5: Commit**
 
 ```bash
