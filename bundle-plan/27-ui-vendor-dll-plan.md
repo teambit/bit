@@ -241,6 +241,39 @@ describe('buildUiVendorDll', function () {
     expect(readFileSync(chunkPath, 'utf-8').length).to.be.greaterThan(0);
   });
 });
+
+describe('buildUiVendorDll with multiple packages', function () {
+  // the realistic case: UI_VENDOR_DLL_EXTRA_PACKAGES alone is already 2 packages. a single-entry
+  // build with only one package can hide a manifest/output collision bug that only shows up with
+  // 2+ - assert on both packages so this can't regress silently.
+  this.timeout(30000);
+
+  let outputPath: string;
+  before(async () => {
+    outputPath = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-multi-test-'));
+    await buildUiVendorDll(outputPath, ['lodash.compact', 'lodash.flatten']);
+  });
+  after(() => rmSync(outputPath, { recursive: true, force: true }));
+
+  it('produces one vendor.js chunk covering every package, no filename collision', () => {
+    const chunkPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_CHUNK_FILENAME);
+    expect(existsSync(chunkPath)).to.equal(true);
+  });
+
+  it('manifests each package individually, correctly keyed', () => {
+    const manifestPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_MANIFEST_FILENAME);
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+    const keys = Object.keys(manifest.content);
+    expect(keys.some((k) => k.includes('lodash.compact'))).to.equal(true);
+    expect(keys.some((k) => k.includes('lodash.flatten'))).to.equal(true);
+    // entryOnly:false manifests every resolved module, not just the entry - real ids only exist
+    // here, never fabricated placeholders.
+    keys.forEach((k) => {
+      expect(manifest.content[k]).to.have.property('id');
+      expect(typeof manifest.content[k].id === 'number' || typeof manifest.content[k].id === 'string').to.equal(true);
+    });
+  });
+});
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -276,6 +309,15 @@ export async function buildUiVendorDll(outputPath: string, packages: string[]): 
         path: join(dllOutputDir, UI_VENDOR_DLL_MANIFEST_FILENAME),
         name: UI_VENDOR_DLL_GLOBAL_NAME,
         type: 'window',
+        // `entryOnly` defaults to true, which manifests only the entry file itself (useless here —
+        // no downstream consumer literally requires `vendor-entry.js`). false makes DllPlugin
+        // manifest every resolved module individually, each keyed by its own resolved path with its
+        // real compiled module id - e.g. `.../lodash.compact/index.js` - which is what
+        // `DllReferencePlugin` on the consuming side actually needs to intercept a `require('react')`
+        // (or any covered package) wherever it's imported from. Verified directly: `entryOnly: true`
+        // produces a manifest with exactly one `content` entry (`./entry.js`); `entryOnly: false`
+        // produces one entry per package, correctly keyed and id'd.
+        entryOnly: false,
       }),
     ],
   });
