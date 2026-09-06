@@ -1246,3 +1246,86 @@ BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save`, persists `.bundle-ca
   `bit compile modules/cli-bundler` + `npm run bundle`: build summary went from listing all 41
   warnings to `"warnings": 0`, `"errors": 0` unchanged, bundle size unaffected (59.33 MB, same as
   before) since nothing was added to externals. See D16.
+- **2026-09-06** — rebuilt everything from current HEAD (`e2245600e`) to try to reproduce a report
+  that `bit run` fails against the real `community-cloud` app (workspace at `/tmp/bit-cloud`):
+  `bd build "teambit.ui-foundation/ui, teambit.preview/preview" --reuse-capsules --tasks
+"BundleUI,PreBundlePreview"` → `bundle:prebundle-cache:save` → `npm run bundle` → `cd
+bundle && npm install`. Fresh sizes (superseding the numbers above): bundle **59.34 MB** (unchanged
+  in substance), UI+preview pre-bundle **16.8 MB** (16.1 + 0.7, unchanged), externals **68 MB** (was
+  64 - `@pnpm` grew 22→27 MB, nothing else moved), other shims **~15.4 MB**, total **159 MB / 2,812
+  files** (was 160 MB / 2,839). Rolled into the "At a glance" tables in the index and
+  `01-goal-and-results.md`.
+  Reproduction itself: **could not reach the known gap-1 rspack-fallback failure at all** - two
+  earlier, unrelated bugs block `bit run community-cloud` first, both confirmed present identically
+  on the plain unbundled `bd` binary (so neither is caused by this branch's bundler or the
+  UI-prebundle work): (1) `@teambit/dot-cloud.bit-cloud@0.0.245`'s own `toPackageName()` special-cases
+  core aspects via `isCoreAspect()` from `@teambit/bit`; since `remove-core-envs-from-manifest`
+  dropped `teambit.react/react` from the core manifest, it now computes `@teambit/react.react`
+  instead of the real published name `@teambit/react` - exactly the gap this branch's new
+  `getAspectPackageName` API (`35a53d63c`) exists to close, but bit-cloud's published code predates
+  it. (2) after working around (1), `ScopeMain.provider` crashes on `ui.registerUiRoot` because `ui`
+  is `null`: bit-cloud's own custom `requireFn` passed to `harmony.run()` (`cloud-app.js`) only knows
+  how to require aspects present in its own pre-resolved `aspectsDefs` list (built from its
+  `defaultAspects`, where `UIAspect` is deliberately commented out) and silently no-ops
+  (`logger.debug('...is not loaded'); return;`) for anything else - but `@teambit/harmony`'s
+  dependency-graph engine correctly discovers `UIAspect` as a hard dependency of `ScopeMain` and calls
+  the same `requireFn` for it too, so `UiMain`'s provider is never invoked. Confirmed neither bug
+  reproduces on the actual released `bit` (bvm 2.2.24) - it gets past both points into the app's own
+  bootstrap, failing only on an unrelated missing-GCP-credentials error. Both bugs live in
+  `@teambit/dot-cloud.bit-cloud`'s own source (a separately published component, not in this repo) -
+  nothing to fix here; would need a bit-cloud-side change and republish. Debugging used a temporary
+  `console.error` patch of the installed `@teambit/harmony@0.4.12` package in the pnpm store to trace
+  execution order and per-aspect `_runtimes` state across bit-cloud's nested Harmony instance -
+  reverted after use (never committed, and pnpm flagged it under `pnpm store status` same as several
+  other already-mutated packages predating this session).
+- **2026-09-06 (continued)** — pushed further to actually reach gap 1 against `community-cloud`,
+  all still through the real bundle binary (`/tmp/bit-bundle/bin/bit`, not `bd`):
+  - `bit import teambit.dot-cloud/bit-cloud` into `/tmp/bit-cloud` brings its real TS source into the
+    workspace (tracked in `.bitmap` under `dot-cloud/bit-cloud/`) - this is almost certainly how one
+    gets access to actually edit/fix it. Found its `cloud-app.ts` already has a **dead, unused**
+    `requireAspects(aspectId, runtime, workingDir)` method that does exactly the generic per-aspect
+    lookup (via `toPackageName` + a `dist/` scan for the right `*.<runtime>.runtime.js`) that the
+    `harmony.run()` callback needs but doesn't have. Wired it in as the fallback for aspects missing
+    from `aspectsDefs` (blocker 2's fix) - recompiled, reinstalled, reran: the `registerUiRoot` crash
+    is gone, confirming the diagnosis and the fix.
+  - Doing this exposed two more, unrelated staleness bugs in the same family, both worked around
+    locally rather than fixed (they're not this repo's to fix): `@teambit/dot-scopes.aspects.exporter`
+    requires the old monolithic `@teambit/legacy` package (since split into scoped
+    `@teambit/legacy.*` sub-packages) - it _is_ still published (bit.cloud registry has `1.0.0` through
+    `1.0.770`, even a new `2.x`), just never installed here since nothing in the workspace's own root
+    policy pulled it in; added `"@teambit/legacy": "^1.0.482"` to `workspace.jsonc`'s
+    `dependency-resolver.policy.dependencies` and it installed fine. Next, more of bit-cloud's ~100+
+    `dot-cloud`/`dot-symphony`/`dot-scopes` microservice aspects (kubernetes, mongo, arango-db, etc.)
+    turned up the same way, but nested too deep in `.pnpm` for `findAspectPath`'s workspace-root-only
+    `node_modules` lookup to find (a `public-hoist-pattern` `.npmrc` didn't help - `bit install` drives
+    pnpm through its own config layer, not the workspace's plain `.npmrc`). Whack-a-moling each one
+    individually has no clear end and would eventually need real infra (mongo/arango/k8s) bit-cloud's
+    full backend expects, so not pursued further.
+  - **`CLIENT_ONLY=true` sidesteps all of that** (suggested by Gilad, who'd seen David use it) - it
+    skips the entire backend aspect graph and gets straight to serving the UI. With it, `bit run
+community-cloud` through the actual bundle **reaches gap 1 cleanly for the first time**: rspack
+    starts a real client build for `community-cloud`'s own UI root (a third root beyond
+    workspace/scope, hash `eb959766e...`, missing from the shipped `.hash`), follows the aspect shims
+    (`@teambit/yarn/dist/yarn.aspect.js`, `@teambit/component-sizer/dist/component-sizer.aspect.js`)
+    into `bit.app.js` - the 62 MB node bundle - for a browser target, and fails with exactly the
+    signature gap 1 predicts: 18 bare `node:*` scheme errors (`node:fs`, `node:util`, `node:zlib`, ...)
+    plus 51 more `Module not found` (the `UI_BUNDLING_EXTERNALS` group - `postcss-loader`,
+    `sass-loader`, `resolve-url-loader`, `@mdx-js/loader`, the `*-browserify` polyfills - deliberately
+    not installed by the default build per D10/D15, plus a few genuine non-core UI packages like
+    `@teambit/lanes.hooks.use-lanes` that aren't in the bundle's shim surface at all) = 64 errors total,
+    matching rspack's own count exactly. `bit run` itself still reports success (`Local:
+http://localhost:3000/`) since the dev server comes up regardless of the client compile errors.
+    This is the first real, clean, end-to-end confirmation of gap 1 against a real app on this branch -
+    everything before it in this session's investigation was unrelated bit-cloud staleness, not this.
+  - **Confirmed the minimal repro**: none of the `bit-cloud`-side workarounds above (importing its
+    source, the `requireAspects` patch, adding `@teambit/legacy` to the workspace policy) are actually
+    needed to reach gap 1 - `CLIENT_ONLY=true` alone skips the whole backend/`ScopeAspect` bootstrap
+    those exist for. Verified by reverting all of them (`bit remove teambit.dot-cloud/bit-cloud
+--force`, dropped the `@teambit/legacy` policy entry, removed the `.npmrc`) and reinstalling clean
+    via the bundle: the plain, unmodified, published `@teambit/dot-cloud.bit-cloud@0.0.245` +
+    `CLIENT_ONLY=true` reaches the client rspack build directly. The one thing still required is the
+    blocker-1 workaround (`ln -s ../react node_modules/@teambit/react.react` - or a real fix to
+    `isCoreAspect`/package-naming) - without it, `uiComputeEntries` itself throws `missing dependency
+teambit.react/react` before rspack ever starts. So the minimal repro is: fresh `bit install` via
+    the bundle + the react symlink + `CLIENT_ONLY=true 'bit run community-cloud'` - same 64
+    errors, same signature, no workspace/source edits needed.

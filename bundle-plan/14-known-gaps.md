@@ -10,6 +10,17 @@
    (2026-08-19, see gap 11 below) — the core preview pre-bundle from `build_ui_prebundle`
    (gap 9) is what's missing in that failure, not something env-specific; `e2e_test_esbuild_bundle`
    itself still runs with no pre-bundle at all, so this class of failure is still live there.
+   **Reproduced cleanly against a real third-party app 2026-09-06**: `community-cloud` (the
+   `bit-cloud` app) owns its own UI root distinct from workspace/scope, so it hits this every time.
+   `bit run community-cloud` with `CLIENT_ONLY=true` (skips `bit-cloud`'s own huge backend aspect
+   graph, which otherwise blocks getting this far with unrelated staleness) gets rspack into a real
+   client build for that root, tracing the aspect shims into `bit.app.js` for a browser target: 18
+   bare `node:*` errors + 51 more `Module not found` (the `UI_BUNDLING_EXTERNALS` group, deliberately
+   not installed by default, plus a few non-core UI packages missing from the shim surface) = 64
+   errors, matching rspack's own count. `bit run` still reports success since the dev server comes up
+   regardless of the client compile errors. See
+   [18-findings-log.md](18-findings-log.md), 2026-09-06 entry, for the full repro steps and error
+   inventory.
 2. ~~**41 `require.resolve` calls remain unresolved in the output.**~~ **Warnings silenced
    2026-09-01** — esbuild warned _"X should be marked as external for use with require.resolve"_ for
    `@svgr/webpack`, `babel-loader`, `expose-loader`, the `*-browserify` polyfills,

@@ -2,7 +2,16 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-09-01 (silenced the 41 `require-resolve-not-external` esbuild warnings via
+> Last updated: 2026-09-06 (rebuilt the bundle and the UI/preview pre-bundle from current HEAD
+> (`e2245600e`, post the `remove-core-envs-from-manifest` merge) and re-measured every size number
+> in this doc against them: **159 MB total** (was 160 MB) — bundle 59 MB (was 60), externals 68 MB
+> (was 64, `@pnpm` grew 22→27 MB), shims ~32 MB incl. 16.8 MB UI/preview pre-bundle (was ~33 MB /
+> 16.7 MB) — and ~2,812 files (was ~2,839). Same day: reproduced
+> [known gap 1](bundle-plan/14-known-gaps.md) cleanly for the first time against a real app
+> (`community-cloud`, `CLIENT_ONLY=true`) and wrote up a proposed fix — see
+> [26-ui-vendor-dll-design.md](bundle-plan/26-ui-vendor-dll-design.md) (not yet implemented) and
+> [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-09-06 entries.)
+> Previously, 2026-09-01 (silenced the 41 `require-resolve-not-external` esbuild warnings via
 > `logOverride` instead of externalizing the packages they name — they're the already-gated
 > `--ui-bundling` group plus dev-only tooling. See
 > [14-known-gaps.md gap 2](bundle-plan/14-known-gaps.md) and
@@ -59,14 +68,14 @@ doc updated as you work.
 
 ## At a glance
 
-|                     | released bit (bvm 2.0.72) | bundled bit (this branch)                                                                                   |
-| ------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| install size        | **1.2 GB**                | **160 MB** (60 MB bundle + 64 MB externals + ~33 MB shims, incl. the 16.7 MB pre-bundled UI/preview — §17i) |
-| files on disk       | **141,008**               | **~2,839**                                                                                                  |
-| `bit --help` (warm) | 0.662 s                   | **0.642 s** (SEA: 1.324 s — §9)                                                                             |
-| `bit list` (warm)   | 0.914 s                   | **0.848 s** (SEA: 1.574 s)                                                                                  |
-| single executable   | —                         | **179 MB `bit-app`** (+ the `bundle/` support dir)                                                          |
-| build time          | n/a                       | ~11 s esbuild + ~5 s codegen (+ ~40 s for the SEA variant)                                                  |
+|                     | released bit (bvm 2.0.72) | bundled bit (this branch)                                                                                                                                          |
+| ------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| install size        | **1.2 GB**                | **159 MB** (59 MB bundle + 68 MB externals + ~32 MB shims, incl. the 16.8 MB pre-bundled UI/preview — §17i, measured 2026-09-06 on a fresh build from `e2245600e`) |
+| files on disk       | **141,008**               | **~2,812**                                                                                                                                                         |
+| `bit --help` (warm) | 0.662 s                   | **0.642 s** (SEA: 1.324 s — §9)                                                                                                                                    |
+| `bit list` (warm)   | 0.914 s                   | **0.848 s** (SEA: 1.574 s)                                                                                                                                         |
+| single executable   | —                         | **179 MB `bit-app`** (+ the `bundle/` support dir)                                                                                                                 |
+| build time          | n/a                       | ~11 s esbuild + ~5 s codegen (+ ~40 s for the SEA variant)                                                                                                         |
 
 Full detail in [01-goal-and-results.md](bundle-plan/01-goal-and-results.md).
 
@@ -117,6 +126,11 @@ Full detail in [01-goal-and-results.md](bundle-plan/01-goal-and-results.md).
 
 - [24 — Handing the branch out through bvm](bundle-plan/24-installing-via-bvm.md) (the tar layout bvm expects, `pack-bundle-for-bvm.js`, pre-release versioning and the `dev` release type)
 - [25 — Cleanup before merging into master](bundle-plan/25-pre-merge-cleanup.md) (running checklist, distinct from the known-gaps list)
+
+**Design work in progress**
+
+- [26 — Design: a UI vendor DLL, so a third-party UI root doesn't need a full rebuild](bundle-plan/26-ui-vendor-dll-design.md) (proposed fix for [known gap 1](bundle-plan/14-known-gaps.md), 2026-09-06 — in progress)
+- [27 — Implementation plan: UI vendor DLL (bit-bundle3 side)](bundle-plan/27-ui-vendor-dll-plan.md) (this repo's half — the `bit-cloud` integration plan lives in `/Users/giladshoham/dev/temp/bit-cloud-bundle/VENDOR_DLL_INTEGRATION_PLAN.md`, a separate workspace)
 
 ## Section-number cross-reference
 
