@@ -617,6 +617,156 @@ git commit -m "feat(ui): produce the ui vendor dll during BundleUiTask, expose g
 
 ---
 
+### Task 3b: give the vendor DLL's own compilation the real UI-bundling machinery
+
+**Why this task exists:** discovered during Task 3's own real-build verification, not anticipated in
+the original design. `buildUiVendorDll`'s rspack config was bare-bones (no CSS/SCSS loader, no
+JSX/TSX transform, no `resolve.fallback`, no alias table). The real production package list
+(~30 core aspects with `.ui.runtime.js`/`.preview.runtime.js` files) pulls in the actual UI component
+library bit's pre-bundle already handles - design-system components, `@dagrejs/dagre` (graph
+rendering), `react-syntax-highlighter`, `@apollo/client`, etc. A real `bd build` with the full
+production list produced 600 rspack errors, none related to Corrections 1-4 (all already independently
+verified fixed) - this is a distinct, larger gap: the DLL's compilation isn't equipped to bundle real
+UI code yet.
+
+**Files:**
+
+- Modify: `scopes/ui-foundation/ui/ui-vendor-dll.ts`
+
+**Interfaces:**
+
+- Consumes: `moduleFileExtensions`, `resolveAlias`, `resolveFallback`, `cssParser`, `mjsRule`,
+  `swcRule`, `sourceMapRule`, `fontRule`, `styleRules`, `shouldUseSourceMap`, `imageInlineSizeLimit`
+  from `./rspack/rspack.common` (confirmed already exported there, already safely imported by the
+  existing `rspack.browser.config.ts` - same directory, no new isolator-graph risk, since that file's
+  imports are already proven safe by the existing pre-bundle build working today).
+- Consumes: `postCssConfig` from `./rspack/postcss.config`, `fallbacksProvidePluginConfig` from
+  `@teambit/webpack` (also already imported by `rspack.browser.config.ts` today - same safety
+  argument).
+- Does **not** reuse `createRspackBrowserConfig` wholesale - that function's `plugins` array includes
+  `HtmlRspackPlugin` (one per entry, generates an HTML document - not wanted for a DLL, which isn't a
+  page) and `WorkboxWebpackPlugin.GenerateSW` (a service-worker generator, irrelevant here), and its
+  `optimization.splitChunks`/`runtimeChunk` are tuned for the multi-root workspace/scope sharing
+  scenario, not a single consolidated DLL chunk. Reuse only the `resolve`/`module` pieces (the
+  genuinely expensive, real UI-bundling machinery) plus the two plugins already proven necessary for
+  this class of code (`ProvidePlugin` for `process`, `IgnorePlugin` for moment locales) - keep
+  `output`/`optimization`/the DLL-specific plugins as `buildUiVendorDll`'s own, as they already are.
+
+- [ ] **Step 1: Replace `buildUiVendorDll`'s compiler config with one that reuses the real bundling machinery**
+
+```ts
+// scopes/ui-foundation/ui/ui-vendor-dll.ts — replace the existing bare `rspack({...})` call
+import { rspack } from '@rspack/core';
+import { fallbacksProvidePluginConfig } from '@teambit/webpack';
+import {
+  moduleFileExtensions,
+  shouldUseSourceMap,
+  imageInlineSizeLimit,
+  resolveAlias,
+  resolveFallback,
+  cssParser,
+  mjsRule,
+  swcRule,
+  sourceMapRule,
+  fontRule,
+  styleRules,
+} from './rspack/rspack.common';
+import { postCssConfig } from './rspack/postcss.config';
+
+// ...inside buildUiVendorDll, after generating entryFile/entryContents as already implemented:
+const compiler = rspack({
+  mode: 'production',
+  entry: entryFile,
+  output: {
+    path: dllOutputDir,
+    filename: UI_VENDOR_DLL_CHUNK_FILENAME,
+    library: { name: UI_VENDOR_DLL_GLOBAL_NAME, type: 'window' },
+  },
+  resolve: {
+    extensions: moduleFileExtensions.map((ext) => `.${ext}`),
+    alias: resolveAlias({ profile: false }),
+    fallback: resolveFallback,
+  },
+  module: {
+    parser: cssParser,
+    rules: [
+      mjsRule(),
+      swcRule(),
+      sourceMapRule(),
+      {
+        test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/, /\.svg$/],
+        type: 'asset',
+        parser: { dataUrlCondition: { maxSize: imageInlineSizeLimit } },
+      },
+      fontRule(),
+      ...styleRules({ sourceMap: shouldUseSourceMap, postCssConfig, resolveUrlLoader: true }),
+      {
+        exclude: [/\.(cjs|js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/, /\.s[ac]ss$/, /\.less$/],
+        type: 'asset/resource',
+      },
+    ],
+  },
+  plugins: [
+    new rspack.ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
+    new rspack.IgnorePlugin({ resourceRegExp: /^\.\/locale$/, contextRegExp: /moment$/ }),
+    new rspack.DllPlugin({
+      path: join(dllOutputDir, UI_VENDOR_DLL_MANIFEST_FILENAME),
+      name: UI_VENDOR_DLL_GLOBAL_NAME,
+      type: 'window',
+      entryOnly: false,
+    }),
+  ],
+  externals: {
+    '@rspack/core': 'commonjs @rspack/core',
+    '@teambit/aspect-loader': 'commonjs @teambit/aspect-loader',
+  },
+});
+```
+
+(the `compiler.run`/`compiler.close` Promise-wrapping already implemented stays unchanged - only the
+`rspack({...})` config object itself is replaced)
+
+- [ ] **Step 2: Re-run the full real-build verification with the actual production package list**
+
+```bash
+bd compile teambit.ui-foundation/ui
+bd build teambit.ui-foundation/ui --tasks BundleUI   # fresh capsule, no --reuse-capsules, per the
+                                                       # implementer's own finding that a stale capsule
+                                                       # can mask real errors
+```
+
+Expected: 0 errors (down from 600). If errors remain, read them carefully — they'll point at whichever
+specific real-world package/loader combination still isn't covered by the reused config; do not
+assume the whole approach is wrong from a handful of remaining errors, diagnose each one specifically
+(this is `superpowers:systematic-debugging` territory, not a reason to abandon this design).
+
+- [ ] **Step 3: Confirm the artifact is real**
+
+```bash
+find <ui-foundation/ui capsule path>/artifacts/ui-bundle/ui-vendor-dll -type f
+```
+
+Expected: `vendor-entry.js`, `vendor.js`, `vendor-manifest.json`, all present, `vendor.js` non-trivial
+size (larger than the earlier tiny-fixture tests, since it now covers real UI component code).
+
+- [ ] **Step 4: Run the full unit suite one more time**
+
+```bash
+bit test scopes/ui-foundation/ui
+```
+
+Expected: all tests still pass (this step only changes internal compiler config, not any test-facing
+interface).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add scopes/ui-foundation/ui/ui-vendor-dll.ts
+git commit -m "fix(ui-vendor-dll): reuse the real ui-bundling rspack config for the vendor DLL"
+```
+
+---
+
 ### Task 4: E2e test — a real `bit build` ships the artifact, existing pre-bundle untouched
 
 **Files:**
