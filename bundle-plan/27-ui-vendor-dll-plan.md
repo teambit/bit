@@ -36,6 +36,12 @@ Mocha e2e suite.
   (currently ~159 MB / 2,812 files — [bundle-plan/01-goal-and-results.md](01-goal-and-results.md)),
   since it's built from packages _already_ compiled into the existing pre-bundle, not new code.
   `bundleSizeMb` reported by `npm run bundle` must not grow by more than 5 MB.
+  **Exceeded, measured during Task 3b**: `vendor.js` alone is 6.4 MB (3393 real modules) - this
+  constraint was set before it was known the DLL would need to cover the _entire_ real UI component
+  library (design system, Apollo/GraphQL client, graph rendering, syntax highlighting), not a handful
+  of small hooks. Flagged for the user's own review at Task 6 rather than silently accepted or
+  silently blocked - this is a real tradeoff decision (ship a bigger artifact vs. narrow what the DLL
+  covers), not something to resolve unilaterally mid-plan.
 - The new public API (`UiMain.getUiVendorDllPaths()`) must return `undefined` — never throw — when
   the artifact is missing, so an external consumer (e.g. `bit-cloud`, see the sibling plan in
   `/Users/giladshoham/dev/temp/bit-cloud-bundle/`) can defensively feature-detect it.
