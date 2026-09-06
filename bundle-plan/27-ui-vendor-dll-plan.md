@@ -127,7 +127,7 @@ Expected: FAIL — `Cannot find module './ui-vendor-dll'`
 
 ```ts
 // scopes/ui-foundation/ui/ui-vendor-dll.ts
-import { readdirSync, existsSync } from 'fs';
+import { readdirSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { getCoreAspectPackageName } from '@teambit/aspect-loader';
 
@@ -303,15 +303,32 @@ Expected: FAIL — `buildUiVendorDll is not a function`
 ```ts
 // append to scopes/ui-foundation/ui/ui-vendor-dll.ts
 import { rspack } from '@rspack/core';
-import { outputFileSync } from 'fs-extra';
 
 export async function buildUiVendorDll(outputPath: string, packages: string[]): Promise<void> {
   const dllOutputDir = join(outputPath, UI_VENDOR_DLL_DIR);
   const entryFile = join(dllOutputDir, 'vendor-entry.js');
   const entryContents = packages
-    .map((pkg) => `exports[${JSON.stringify(pkg)}] = require(${JSON.stringify(pkg)});`)
+    .flatMap((pkg) => {
+      try {
+        const packageDir = join(require.resolve(`${pkg}/package.json`), '..');
+        const distDir = join(packageDir, 'dist');
+        const runtimeFiles = existsSync(distDir)
+          ? readdirSync(distDir).filter((f) => f.endsWith('.ui.runtime.js') || f.endsWith('.preview.runtime.js'))
+          : [];
+        if (runtimeFiles.length === 0) {
+          // a plain package with no runtime-file concept (react, react-dom) - require it directly.
+          return [`exports[${JSON.stringify(pkg)}] = require(${JSON.stringify(pkg)});`];
+        }
+        return runtimeFiles.map(
+          (f) => `exports[${JSON.stringify(`${pkg}/dist/${f}`)}] = require(${JSON.stringify(join(distDir, f))});`
+        );
+      } catch {
+        return [`exports[${JSON.stringify(pkg)}] = require(${JSON.stringify(pkg)});`];
+      }
+    })
     .join('\n');
-  outputFileSync(entryFile, entryContents);
+  if (!existsSync(dllOutputDir)) mkdirSync(dllOutputDir, { recursive: true });
+  writeFileSync(entryFile, entryContents);
 
   const compiler = rspack({
     mode: 'production',
@@ -351,6 +368,34 @@ export async function buildUiVendorDll(outputPath: string, packages: string[]): 
   });
 }
 ```
+
+**Correction 4 (found during Task 3, real bug, a fourth and separate issue - this time in `buildUiVendorDll`
+itself, not the Task 3 wiring):** the original entry-generation `require()`d each package's **whole
+main entry** (bare `require(pkg)`), not specifically its `.ui.runtime.js`/`.preview.runtime.js` file.
+This breaks the DLL's own compilation for some packages, and is also functionally wrong for this
+feature's actual purpose. Concrete failure found via a real `bd build`: `@teambit/pnpm` is correctly
+matched by the filter (it ships `pnpm.ui.runtime.js`), but its main entry ALSO pulls in
+`pnpm.main.runtime.js` → `@teambit/pnpm/dist/lynx.js` → `@pnpm/napi`, a native `.node` binary loader -
+unbundlable for any rspack target, browser or otherwise, and unrelated to what this feature actually
+needs. Separately, `@teambit/ui` itself is one of the covered packages (it ships `ui.ui.runtime.js`),
+so requiring its bare package also pulls this very feature's own code (`BundleUiTask`/`ui-vendor-dll`/
+`@rspack/core`) back into the DLL's own compilation. 534 rspack errors resulted, all traced to the
+DLL's own entry chunk, none in the main browser/SSR chunks (confirmed unaffected by Correction 3).
+
+This also happens to be the functionally correct fix, not just a workaround: a downstream
+`DllReferencePlugin` consumer's generated root (`createRoot`/`generateRoot` in
+`components/modules/harmony-root-generator`) imports each aspect via
+`aspectDef.runtimePath` - an exact file path (`.../dist/<name>.ui.runtime.js`), never the bare package
+specifier. For `DllReferencePlugin` to intercept that exact import, the DLL's own compilation needs to
+have reached that exact file too - fixed above by requiring each matched runtime file **directly**
+(`require('<packageDir>/dist/<name>.ui.runtime.js')`), never the bare package, falling back to a bare
+`require(pkg)` only for packages with no runtime-file concept at all (`react`/`react-dom`).
+
+Known, accepted duplication: this re-derives "find the dist dir, filter for `.ui.runtime.js`/
+`.preview.runtime.js`" - the same logic `resolveUiVendorDllPackages` already has - rather than sharing
+it, since that function's `resolvePackageDir`/`fsDeps` injection points don't cleanly compose with
+`buildUiVendorDll`'s own real-filesystem usage. Flagged as a deferred minor for the final whole-branch
+review, not blocking.
 
 - [ ] **Step 4: Run test to verify it passes**
 
