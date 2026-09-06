@@ -374,6 +374,8 @@ git commit -m "feat(ui): build the ui vendor dll artifact via rspack DllPlugin"
 - Modify: `scopes/ui-foundation/ui/ui.main.runtime.ts`
 - Modify: `scopes/pipelines/builder/builder.main.runtime.ts` (one-line constructor-arg change at the
   sole `new BundleUiTask(...)` call site)
+- Modify: `scopes/ui-foundation/ui/rspack/rspack.browser.config.ts` (add `@rspack/core` to
+  `externals` — see the correction note after Step 3 below)
 - Test: `scopes/ui-foundation/ui/ui-vendor-dll.spec.ts` (real-package integration test)
 
 **Interfaces:**
@@ -480,6 +482,42 @@ root the existing glob covers — **check this first**: the existing glob is
 `artifacts/ui-bundle/`, including the new `ui-vendor-dll/` subdirectory. No change needed here — this
 is a verification sub-step, not a code change: after Step 5's real build, confirm
 `artifacts/ui-bundle/ui-vendor-dll/` files are present in `BuiltTaskResult.artifacts`' matched globs.
+
+**Correction 3 (found during Task 3, real bug, a third and separate issue from Corrections 1-2):**
+`scopes/ui-foundation/ui/index.ts` has a real (value, not type-only) barrel export -
+`export { BUNDLE_UI_DIR, BundleUiTask } from './bundle-ui.task';` - and `@teambit/react-router`'s
+`.ui.runtime.js` (real client/browser code, part of the actual browser entry graph) imports from the
+bare `@teambit/ui` package specifier, which resolves to this barrel. Before this task, that was
+harmless: `bundle-ui.task.ts` only used browser-tolerable `fs` calls and referenced `UiMain` as a
+**type-only** import (erased by TypeScript), so nothing Node-only was actually `require()`-reachable
+from the client bundle through it. This task's wiring adds a **real** (value) import chain -
+`bundle-ui.task.ts` → `./ui-vendor-dll` → `@rspack/core` (a real, heavy, Node-only package using
+`node:vm`/`node:worker_threads`/`node:zlib` internally) - which now genuinely is reachable from the
+client entry graph via that same barrel, and rspack's own client-side pre-bundle compilation
+(`createRspackBrowserConfig` in `scopes/ui-foundation/ui/rspack/rspack.browser.config.ts`) fails
+trying to bundle it for the browser (confirmed via a real `bd build`: 27 errors, `node:vm`/
+`node:worker_threads`/`node:zlib`/`watchpack`'s `constants`/`os`, all inside `@rspack/core`'s own
+bundling machinery - not anything `ui-vendor-dll.ts`'s other dependencies, like `fs-extra`, need).
+
+This is the same problem class `scopes/harmony/modules/cli-bundler/plugins/stub-dev-only-plugin.ts`
+already exists to solve for a _different_ bundler (esbuild, for the separate `BundleCliAppTask`
+feature) - but that plugin is esbuild-specific and doesn't apply to rspack's own config here. The
+idiomatic fix for _this_ bundler is rspack's own `externals` option (confirmed present in the
+installed `@rspack/core@2.1.10`'s own type defs: `externals?: Externals`,
+`ExternalItemObjectValue = Record<string, string | string[]>`, and the classic `'commonjs <module>'`
+string form is a valid value). Since `resolveUiVendorDllPackages`/`buildUiVendorDll` are only ever
+_called_ by the Node-side `BundleUiTask.execute()` - never by client-rendered UI code - a
+`require('@rspack/core')` left in the shipped client bundle by `externals` is genuinely dead code
+there, never executed in a browser.
+
+**Fix - add to `scopes/ui-foundation/ui/rspack/rspack.browser.config.ts`'s returned config object**
+(confirmed by Task 3's implementer: 162 lines, no `externals` key currently):
+
+```ts
+externals: {
+  '@rspack/core': 'commonjs @rspack/core',
+},
+```
 
 - [ ] **Step 4: Add the public `getUiVendorDllPaths()` method to `UiMain`**
 
