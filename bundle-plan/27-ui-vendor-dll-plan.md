@@ -53,7 +53,7 @@ Mocha e2e suite.
 
 **Interfaces:**
 
-- Produces: `export function resolveUiVendorDllPackages(coreAspectIds: string[], resolvePackageDir: (packageName: string) => string | undefined): string[]` — pure, dependency-injected for testability (real callers pass `getAllCoreAspectsIds()` and a real `require.resolve`-based resolver; Task 3 wires the real callers in).
+- Produces: `export function resolveUiVendorDllPackages(coreAspectIds: string[], resolvePackageDir: (packageName: string) => string | undefined): string[]` — pure, dependency-injected for testability (the real production caller, wired in Task 3, passes `AspectLoaderMain.getCoreAspectIds()` and a real `require.resolve`-based resolver).
 - Produces: `export const UI_VENDOR_DLL_EXTRA_PACKAGES = ['react', 'react-dom']`
 
 - [ ] **Step 1: Write the failing test**
@@ -62,7 +62,7 @@ Mocha e2e suite.
 // scopes/ui-foundation/ui/ui-vendor-dll.spec.ts
 import { expect } from 'chai';
 import * as fs from 'fs';
-import { getAspectPackageName } from '@teambit/bit';
+import { getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { resolveUiVendorDllPackages, UI_VENDOR_DLL_EXTRA_PACKAGES } from './ui-vendor-dll';
 
 describe('resolveUiVendorDllPackages', () => {
@@ -82,12 +82,12 @@ describe('resolveUiVendorDllPackages', () => {
     const readdirSyncStub = (dir: string) => distFiles[dir] || [];
     const existsSyncStub = (p: string) => p in distFiles;
 
-    // uses the REAL getAspectPackageName (same function production code uses) rather than a
-    // hand-rolled duplicate - every id here is a core aspect id, so this always takes the
-    // `getCoreAspectPackageName` branch (`@teambit/<name-after-first-slash>`), never the
-    // non-core/org-scoped convention.
+    // uses the REAL getCoreAspectPackageName (same function production code uses) rather than a
+    // hand-rolled duplicate. imported from @teambit/aspect-loader specifically, not @teambit/bit's
+    // getAspectPackageName wrapper - see the note below Step 3: importing anything from @teambit/bit
+    // into this component balloons its own dependency graph and breaks the existing pre-bundle build.
     const resolvePackageDir = (packageName: string) => {
-      const id = Object.keys(fakeDirs).find((aspectId) => getAspectPackageName(aspectId) === packageName);
+      const id = Object.keys(fakeDirs).find((aspectId) => getCoreAspectPackageName(aspectId) === packageName);
       return id ? fakeDirs[id] : undefined;
     };
 
@@ -103,9 +103,9 @@ describe('resolveUiVendorDllPackages', () => {
     );
 
     expect(result).to.include.members(['react', 'react-dom']);
-    expect(result).to.include('@teambit/ui'); // getAspectPackageName('teambit.ui-foundation/ui')
-    expect(result).to.include('@teambit/preview'); // getAspectPackageName('teambit.preview/preview')
-    expect(result).to.not.include('@teambit/scope'); // getAspectPackageName('teambit.scope/scope')
+    expect(result).to.include('@teambit/ui'); // getCoreAspectPackageName('teambit.ui-foundation/ui')
+    expect(result).to.include('@teambit/preview'); // getCoreAspectPackageName('teambit.preview/preview')
+    expect(result).to.not.include('@teambit/scope'); // getCoreAspectPackageName('teambit.scope/scope')
   });
 
   it('always includes UI_VENDOR_DLL_EXTRA_PACKAGES even with an empty core aspect list', () => {
@@ -129,7 +129,7 @@ Expected: FAIL — `Cannot find module './ui-vendor-dll'`
 // scopes/ui-foundation/ui/ui-vendor-dll.ts
 import { readdirSync, existsSync } from 'fs';
 import { join } from 'path';
-import { getAspectPackageName } from '@teambit/bit';
+import { getCoreAspectPackageName } from '@teambit/aspect-loader';
 
 export const UI_VENDOR_DLL_DIR = 'ui-vendor-dll';
 export const UI_VENDOR_DLL_MANIFEST_FILENAME = 'vendor-manifest.json';
@@ -153,7 +153,7 @@ export function resolveUiVendorDllPackages(
   fsDeps: FsDeps = realFsDeps
 ): string[] {
   const corePackages = coreAspectIds
-    .map((id) => getAspectPackageName(id))
+    .map((id) => getCoreAspectPackageName(id))
     .filter((packageName) => {
       const packageDir = resolvePackageDir(packageName);
       if (!packageDir) return false;
@@ -165,20 +165,29 @@ export function resolveUiVendorDllPackages(
 }
 ```
 
-**Correction (found during Task 3, real bug, not just a test-fixture simplification as originally
+**Correction 1 (found during Task 3, real bug, not just a test-fixture simplification as originally
 noted here):** every id passed into this function is a core aspect id, so the correct package-name
 convention is unambiguously `getCoreAspectPackageName`'s (`@teambit/<name-after-first-slash>`, e.g.
-`teambit.ui-foundation/ui` → `@teambit/ui`) - `getAspectPackageName` picks that branch automatically
-since `isCoreAspect`/`isLegacyCoreEnv` is true for all of these. The original plan text here used the
-_non-core_ convention (`getNonCorePackageName`'s `@org/scope.name`, e.g. `@teambit/ui-foundation.ui`)
-inside `resolveUiVendorDllPackages` itself, not just as a test simplification - this was wrong for
-100% of real core aspect ids (verified against all 104 ids from `getAllCoreAspectsIds()`), meaning the
+`teambit.ui-foundation/ui` → `@teambit/ui`). The original plan text here used the _non-core_
+convention (`getNonCorePackageName`'s `@org/scope.name`, e.g. `@teambit/ui-foundation.ui`) inside
+`resolveUiVendorDllPackages` itself, not just as a test simplification - this was wrong for 100% of
+real core aspect ids (verified against all 104 ids from `getAllCoreAspectsIds()`), meaning the
 production function would resolve to `react`/`react-dom` only and silently ship an empty vendor DLL
-for every core aspect. Fixed above to call the real `getAspectPackageName` directly - no reason to
-duplicate that logic when the real function is already a dependency of this same file's neighbors
-(`bundle-ui.task.ts` already imports from `@teambit/bit`).
-duplicating that logic — this function only needs _a_ mapping to exercise the filtering logic, and
-Task 3's integration test is what proves the real mapping end-to-end.
+for every core aspect.
+
+**Correction 2 (found during Task 3, also a real bug):** import `getCoreAspectPackageName` from
+`@teambit/aspect-loader` specifically (as the code above now does), **not** `getAspectPackageName`
+from `@teambit/bit` (an earlier version of this fix used the latter). `@teambit/bit` is bit's own
+aggregator package, itself depending on nearly every core aspect - importing anything from it inside
+`teambit.ui-foundation/ui`'s own source balloons that component's dependency graph to include
+`teambit.harmony/envs/bit-cli-app-env`, which trips a pre-existing, unrelated isolator bug (a
+seeder-resolution edge case) and breaks the existing, already-working pre-bundle build entirely -
+confirmed by bisecting with `git stash` during Task 3. `@teambit/aspect-loader` is a foundational
+package `teambit.ui-foundation/ui` already safely depends on today, so importing
+`getCoreAspectPackageName` from there directly avoids the problem altogether. Since every id this
+function receives is already guaranteed core-only by its caller's contract, there's no need for
+`getAspectPackageName`'s `isCoreAspect`/`isLegacyCoreEnv` branching anyway - `getCoreAspectPackageName`
+alone is correct and sufficient here.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -363,40 +372,57 @@ git commit -m "feat(ui): build the ui vendor dll artifact via rspack DllPlugin"
 
 - Modify: `scopes/ui-foundation/ui/bundle-ui.task.ts`
 - Modify: `scopes/ui-foundation/ui/ui.main.runtime.ts`
+- Modify: `scopes/pipelines/builder/builder.main.runtime.ts` (one-line constructor-arg change at the
+  sole `new BundleUiTask(...)` call site)
 - Test: `scopes/ui-foundation/ui/ui-vendor-dll.spec.ts` (real-package integration test)
 
 **Interfaces:**
 
 - Consumes: `resolveUiVendorDllPackages`, `buildUiVendorDll`, `UI_VENDOR_DLL_DIR`,
   `UI_VENDOR_DLL_MANIFEST_FILENAME`, `UI_VENDOR_DLL_CHUNK_FILENAME` from Tasks 1-2.
-- Consumes: `getAllCoreAspectsIds` from `./manifests` (bit's own core-aspect id list — confirmed used
-  the same way in `scopes/harmony/bit/load-bit.ts:296`, `envs.setCoreAspectIds(getAllCoreAspectsIds())`)
-  and `getAspectPackageName` from `@teambit/bit` (added this same branch, commit `35a53d63c`).
+- Consumes: `AspectLoaderMain.getCoreAspectIds(): string[]`
+  (`scopes/harmony/aspect-loader/aspect-loader.main.runtime.ts:326` — the same core-aspect id list
+  `getAllCoreAspectsIds()` in `@teambit/bit` derives from, just reached via dependency injection
+  instead of importing `@teambit/bit`) and `getCoreAspectPackageName` from `@teambit/aspect-loader`
+  (both from Tasks 1's corrected code).
+  **Do not import anything from `@teambit/bit` into any file in `scopes/ui-foundation/ui/`** -
+  `@teambit/bit` is bit's own aggregator package, depending on nearly every core aspect; importing
+  from it here balloons `teambit.ui-foundation/ui`'s own dependency graph to include
+  `teambit.harmony/envs/bit-cli-app-env`, which trips a pre-existing, unrelated isolator bug and
+  breaks the existing pre-bundle build entirely (confirmed via `git stash` bisection during this
+  task's original implementation attempt - see the ruling in the SDD ledger if resuming this work).
+- `BundleUiTask`'s constructor gains a 3rd parameter, `AspectLoaderMain`, requiring a one-line update
+  to its sole instantiation site: `scopes/pipelines/builder/builder.main.runtime.ts:650` -
+  `new BundleUiTask(ui, logger)` becomes `new BundleUiTask(ui, logger, aspectLoader)`. `aspectLoader`
+  is already an in-scope local variable there (passed into `BuilderMain`'s own constructor a few lines
+  above, confirmed at lines 576/642 of that file) - no new plumbing needed beyond the one call site.
 - Produces: `UiMain.getUiVendorDllPaths(): { manifestPath: string; chunkPath: string } | undefined` —
   **public** method (unlike the existing `private getBundleUiPath()` it mirrors), since it's the
   contract external consumers (e.g. `bit-cloud`) call.
 
-- [ ] **Step 1: Write the failing test** (this one exercises the real production call path end to end, not fixtures — the closest thing to a unit test this task has, since the real wiring only makes sense against real core aspect packages)
+- [ ] **Step 1: Write the failing test** (this one exercises the real production call path end to end, not fixtures — the closest thing to a unit test this task has, since the real wiring only makes sense against real core aspect packages). Uses a small, explicit, real id list rather than a full `getAllCoreAspectsIds()` call, so this test file never needs to import anything from `@teambit/bit` either (test-file imports may or may not hit the same isolator issue as production imports - not worth the risk to find out when three explicit ids prove the same thing).
 
 ```ts
 // append to scopes/ui-foundation/ui/ui-vendor-dll.spec.ts
-import { getAllCoreAspectsIds } from '@teambit/bit';
-import { getAspectPackageName } from '@teambit/bit';
+import { getCoreAspectPackageName } from '@teambit/aspect-loader';
 
 describe('resolveUiVendorDllPackages (real core aspects)', () => {
   it('covers teambit.ui-foundation/ui and teambit.preview/preview, and excludes teambit.scope/scope', () => {
-    const result = resolveUiVendorDllPackages(getAllCoreAspectsIds(), (packageName) => {
-      try {
-        return join(require.resolve(`${packageName}/package.json`), '..');
-      } catch {
-        return undefined;
+    const result = resolveUiVendorDllPackages(
+      ['teambit.ui-foundation/ui', 'teambit.preview/preview', 'teambit.scope/scope'],
+      (packageName) => {
+        try {
+          return join(require.resolve(`${packageName}/package.json`), '..');
+        } catch {
+          return undefined;
+        }
       }
-    });
-    expect(result).to.include(getAspectPackageName('teambit.ui-foundation/ui'));
-    expect(result).to.include(getAspectPackageName('teambit.preview/preview'));
+    );
+    expect(result).to.include(getCoreAspectPackageName('teambit.ui-foundation/ui'));
+    expect(result).to.include(getCoreAspectPackageName('teambit.preview/preview'));
     // scope's own aspect has no .ui.runtime/.preview.runtime file of its own (ScopeUIRoot is
     // registered by teambit.scope/scope but its *rendering* code lives in teambit.ui-foundation/ui).
-    expect(result).to.not.include(getAspectPackageName('teambit.scope/scope'));
+    expect(result).to.not.include(getCoreAspectPackageName('teambit.scope/scope'));
   });
 });
 ```
@@ -404,18 +430,34 @@ describe('resolveUiVendorDllPackages (real core aspects)', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `bit test scopes/ui-foundation/ui`
-Expected: FAIL — depends on `getAllCoreAspectsIds`/`getAspectPackageName` not yet imported in the spec, or (once imports are added) passes trivially since Task 1's implementation already handles this generically. If it already passes at this point, that's fine — it's here to lock in the real-world behavior as a regression guard, not to drive new production code.
+Expected: FAIL — depends on `getCoreAspectPackageName` not yet imported in the spec, or (once imports are added) passes trivially since Task 1's implementation already handles this generically. If it already passes at this point, that's fine — it's here to lock in the real-world behavior as a regression guard, not to drive new production code.
 
 - [ ] **Step 3: Wire `BundleUiTask.execute()` to also build the vendor DLL**
 
 ```ts
-// scopes/ui-foundation/ui/bundle-ui.task.ts — add imports and one call
-import { getAllCoreAspectsIds, getAspectPackageName } from '@teambit/bit';
+// scopes/ui-foundation/ui/bundle-ui.task.ts — add imports, a constructor param, and one call
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { resolveUiVendorDllPackages, buildUiVendorDll } from './ui-vendor-dll';
 
+export class BundleUiTask implements BuildTask {
+  // ...existing fields...
+
+  constructor(
+    private ui: UiMain,
+    private logger: Logger,
+    private aspectLoader: AspectLoaderMain
+  ) {}
+
+  // inside execute(), after `await this.ui.build(undefined, outputPath, { forPreBundle: true });`
+  // and before `await this.generateHash(outputPath);`:
+  // const vendorPackages = ... (below)
+}
+```
+
+```ts
 // inside execute(), after `await this.ui.build(undefined, outputPath, { forPreBundle: true });`
 // and before `await this.generateHash(outputPath);`:
-const vendorPackages = resolveUiVendorDllPackages(getAllCoreAspectsIds(), (packageName) => {
+const vendorPackages = resolveUiVendorDllPackages(this.aspectLoader.getCoreAspectIds(), (packageName) => {
   try {
     return join(require.resolve(`${packageName}/package.json`), '..');
   } catch {
@@ -423,6 +465,12 @@ const vendorPackages = resolveUiVendorDllPackages(getAllCoreAspectsIds(), (packa
   }
 });
 await buildUiVendorDll(outputPath, vendorPackages);
+```
+
+```ts
+// scopes/pipelines/builder/builder.main.runtime.ts:650 — one-line change to the sole instantiation site
+// before: builder.registerBuildTasks([new BundleUiTask(ui, logger)]);
+builder.registerBuildTasks([new BundleUiTask(ui, logger, aspectLoader)]);
 ```
 
 Also extend `getArtifactDef()` so the vendor DLL directory is included in the packaged artifact glob
