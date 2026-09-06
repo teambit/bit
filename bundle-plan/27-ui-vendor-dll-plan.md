@@ -82,9 +82,11 @@ describe('resolveUiVendorDllPackages', () => {
     const existsSyncStub = (p: string) => p in distFiles;
 
     const resolvePackageDir = (packageName: string) => {
-      const id = Object.keys(fakeDirs).find(
-        (aspectId) => aspectId.replace('teambit.', '@teambit/').replace('/', '.') === packageName
-      );
+      const toPackageName = (aspectId: string) => {
+        const [scope, ...nameParts] = aspectId.split('/');
+        return `@${scope.replace('.', '/')}.${nameParts.join('.')}`;
+      };
+      const id = Object.keys(fakeDirs).find((aspectId) => toPackageName(aspectId) === packageName);
       return id ? fakeDirs[id] : undefined;
     };
 
