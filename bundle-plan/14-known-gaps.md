@@ -20,7 +20,15 @@
    errors, matching rspack's own count. `bit run` still reports success since the dev server comes up
    regardless of the client compile errors. See
    [18-findings-log.md](18-findings-log.md), 2026-09-06 entry, for the full repro steps and error
-   inventory.
+   inventory. **Partly mitigated 2026-09-06**: the "UI vendor DLL" work
+   ([27-ui-vendor-dll-plan.md](27-ui-vendor-dll-plan.md), design in
+   [26-ui-vendor-dll-design.md](26-ui-vendor-dll-design.md)) now ships a `ui-vendor-dll/` artifact
+   (`vendor.js` + `vendor-manifest.json`, ~9.6 MB) alongside the existing UI pre-bundle, verified
+   end-to-end against a real rebuilt bundle in [18-findings-log.md](18-findings-log.md)'s 2026-09-06
+   "Task 5" entry — once Task 1-4's changes are committed together in a real PR. This does not by
+   itself close this gap (a workspace/env whose UI root misses the shipped `.hash` still falls into
+   the rebuild path this gap describes), but gives that rebuild path a shared vendor chunk to
+   reference instead of duplicating React + the core UI aspect surface from scratch.
 2. ~~**41 `require.resolve` calls remain unresolved in the output.**~~ **Warnings silenced
    2026-09-01** — esbuild warned _"X should be marked as external for use with require.resolve"_ for
    `@svgr/webpack`, `babel-loader`, `expose-loader`, the `*-browserify` polyfills,

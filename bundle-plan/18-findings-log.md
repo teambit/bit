@@ -1329,3 +1329,55 @@ http://localhost:3000/`) since the dev server comes up regardless of the client 
 teambit.react/react` before rspack ever starts. So the minimal repro is: fresh `bit install` via
     the bundle + the react symlink + `CLIENT_ONLY=true 'bit run community-cloud'` - same 64
     errors, same signature, no workspace/source edits needed.
+- **2026-09-06 (Task 5, ui-vendor-dll-plan)** — real-world verification of the "UI vendor DLL" artifact
+  (`bundle-plan/27-ui-vendor-dll-plan.md` Tasks 1-4) against a freshly rebuilt CLI bundle, at
+  `13def302c` (Task 4's final, reviewed commit): `bd build "teambit.ui-foundation/ui,
+teambit.preview/preview" --reuse-capsules --tasks "BundleUI,PreBundlePreview"` →
+  `bundle:prebundle-cache:save` → `rm -rf /tmp/bit-bundle && npm run bundle` → `cd /tmp/bit-bundle &&
+npm install`.
+  - **Found and worked around a stale-artifact trap in the local bundle workflow itself** (not a
+    Task 1-4 bug): `node_modules/@teambit/{ui,preview}/artifacts` on disk predated this session (dated
+    2026-08-30, from an earlier build on this branch before the DllPlugin work), so it had no
+    `ui-vendor-dll/`. `restorePrebundleCache` (`prebundle-cache.ts:89`) only checks
+    `fs.pathExists(target)` before skipping - "a real local build already produced one - keep it" -
+    with no freshness/hash check, so `npm run bundle` silently kept the stale pre-DLL artifacts instead
+    of the ones Step 1 had just built and cached, printing `[bundle] prebundle cache: nothing to
+restore (artifacts already present, or cache incomplete)` with no signal that "already present" could
+    mean "stale." First `npm run bundle` run: `ui-vendor-dll/` absent, `artifactFiles: 60`. Removed
+    `node_modules/@teambit/{ui,preview}/artifacts` by hand (not a source change) and reran: `[bundle]
+prebundle cache: restored @teambit/ui, @teambit/preview (built ...)`, `artifactFiles: 24`,
+    `ui-vendor-dll/` present. This is a real gap in the dev workflow (CI is unaffected - it starts from
+    a clean checkout each run) worth a follow-up: anyone iterating locally across branches without
+    manually clearing these two directories will silently bundle a stale ui/preview artifact with no
+    warning.
+  - **Step 2 (vendor DLL shipped), confirmed** once the stale-artifact issue above was worked around:
+    `dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/ui-vendor-dll/` contains all 4
+    expected files - `vendor-entry.js` (5.3 KB), `vendor-manifest.json` (1.1 MB), `vendor.css` (433 KB),
+    `vendor.js` (6.1 MB) - directory total **9.6 MB**, matching the brief's "a few MB, not ~16 MB"
+    expectation exactly.
+  - **Step 3 (existing pre-bundle path unaffected), confirmed**: `/tmp/bit-cloud` (this session's
+    earlier `community-cloud` repro workspace) hung indefinitely on `bit start` - matches this same
+    2026-09-06 entry's own already-logged, unrelated bit-cloud backend-bootstrap issues, not a
+    regression here. Used a fresh `bit init` workspace instead (the brief's own documented fallback).
+    Server came up cleanly (`UI server ready → http://localhost:3000`), `curl` returned HTTP 200, and
+    `debug.log` confirms `shouldServeBundleUi, currentBundleUiHash: 7e829ba4...,
+cachedBundleUiHash: 7e829ba4...` (exact match) with no rspack rebuild triggered - the existing
+    hash-gated pre-bundle serving path (§17) is completely unaffected by the vendor DLL addition.
+  - **Step 4 (size delta) - real, unexpected regression found, unrelated to the vendor DLL**: total
+    **214 MB / 2,776 files**, up from the 2026-09-06 baseline above (159 MB / 2,812 files) - net **+55
+    MB** despite the vendor DLL itself adding only 9.6 MB across 4 files, and despite the net shipped
+    `ui`+`preview` artifact file count actually _dropping_ (24 files now vs. whatever the stale Aug-30
+    copy had). Root cause is **not** the vendor DLL: the shipped `@teambit/ui` artifact's SSR output
+    (`artifacts/ui-bundle/public/bit/ssr/`) is back up to **~53 MB** (a 39 MB native `09d1881b1035e146.
+node` Mach-O binary + 14 MB `index.js`) - the exact shape of bloat PRs #10628/#10629 fixed down to a
+    16 MB total UI artifact on 2026-08-19 (see that date's entries above). Confirmed via `git diff
+3eeaf3591..HEAD` that the vendor-DLL commit (`290f72d57`) and its dependents touch only
+    `bundle-ui.task.ts` (purely additive - builds the vendor DLL in a separate call _after_ the
+    existing, unmodified `this.ui.build(...)`) and `rspack.browser.config.ts` (adds `externals` entries
+    for the vendor-dll module's own Node-side deps, e.g. `@rspack/core`, `@teambit/aspect-loader`) -
+    nothing touching SSR compilation or `rspack.ssr.config.ts`. So this ~53 MB SSR regrowth was already
+    present on `bit-bundle3` before the vendor DLL work, most likely reintroduced by the large
+    `remove-core-envs-from-manifest` merge that landed on this branch after 2026-08-19 (this session's
+    own 2026-08-16 entry already flags that merge as the source of at least one other unrelated
+    regression). **Not investigated further or fixed** - out of this task's verification-only scope,
+    flagged here for a follow-up session. Isolated vendor-DLL-only cost: **+9.6 MB**, as expected.
