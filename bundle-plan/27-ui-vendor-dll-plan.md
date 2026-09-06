@@ -62,6 +62,7 @@ Mocha e2e suite.
 // scopes/ui-foundation/ui/ui-vendor-dll.spec.ts
 import { expect } from 'chai';
 import * as fs from 'fs';
+import { getAspectPackageName } from '@teambit/bit';
 import { resolveUiVendorDllPackages, UI_VENDOR_DLL_EXTRA_PACKAGES } from './ui-vendor-dll';
 
 describe('resolveUiVendorDllPackages', () => {
@@ -81,12 +82,12 @@ describe('resolveUiVendorDllPackages', () => {
     const readdirSyncStub = (dir: string) => distFiles[dir] || [];
     const existsSyncStub = (p: string) => p in distFiles;
 
+    // uses the REAL getAspectPackageName (same function production code uses) rather than a
+    // hand-rolled duplicate - every id here is a core aspect id, so this always takes the
+    // `getCoreAspectPackageName` branch (`@teambit/<name-after-first-slash>`), never the
+    // non-core/org-scoped convention.
     const resolvePackageDir = (packageName: string) => {
-      const toPackageName = (aspectId: string) => {
-        const [scope, ...nameParts] = aspectId.split('/');
-        return `@${scope.replace('.', '/')}.${nameParts.join('.')}`;
-      };
-      const id = Object.keys(fakeDirs).find((aspectId) => toPackageName(aspectId) === packageName);
+      const id = Object.keys(fakeDirs).find((aspectId) => getAspectPackageName(aspectId) === packageName);
       return id ? fakeDirs[id] : undefined;
     };
 
@@ -102,9 +103,9 @@ describe('resolveUiVendorDllPackages', () => {
     );
 
     expect(result).to.include.members(['react', 'react-dom']);
-    expect(result).to.include('@teambit/ui-foundation.ui');
-    expect(result).to.include('@teambit/preview.preview');
-    expect(result).to.not.include('@teambit/scope.scope');
+    expect(result).to.include('@teambit/ui'); // getAspectPackageName('teambit.ui-foundation/ui')
+    expect(result).to.include('@teambit/preview'); // getAspectPackageName('teambit.preview/preview')
+    expect(result).to.not.include('@teambit/scope'); // getAspectPackageName('teambit.scope/scope')
   });
 
   it('always includes UI_VENDOR_DLL_EXTRA_PACKAGES even with an empty core aspect list', () => {
@@ -127,7 +128,8 @@ Expected: FAIL — `Cannot find module './ui-vendor-dll'`
 ```ts
 // scopes/ui-foundation/ui/ui-vendor-dll.ts
 import { readdirSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join } from 'path';
+import { getAspectPackageName } from '@teambit/bit';
 
 export const UI_VENDOR_DLL_DIR = 'ui-vendor-dll';
 export const UI_VENDOR_DLL_MANIFEST_FILENAME = 'vendor-manifest.json';
@@ -151,10 +153,7 @@ export function resolveUiVendorDllPackages(
   fsDeps: FsDeps = realFsDeps
 ): string[] {
   const corePackages = coreAspectIds
-    .map((id) => {
-      const [scope, ...nameParts] = id.split('/');
-      return `@${scope.replace('.', '/')}.${nameParts.join('.')}`;
-    })
+    .map((id) => getAspectPackageName(id))
     .filter((packageName) => {
       const packageDir = resolvePackageDir(packageName);
       if (!packageDir) return false;
@@ -166,9 +165,18 @@ export function resolveUiVendorDllPackages(
 }
 ```
 
-Note: this step's package-name derivation (`@${scope.replace('.', '/')}.${nameParts.join('.')}`) is a
-simplified version of the real `getAspectPackageName` rule for readability in the test fixture; Task 3
-wires in the real `getAspectPackageName` from `@teambit/bit` for the production call site instead of
+**Correction (found during Task 3, real bug, not just a test-fixture simplification as originally
+noted here):** every id passed into this function is a core aspect id, so the correct package-name
+convention is unambiguously `getCoreAspectPackageName`'s (`@teambit/<name-after-first-slash>`, e.g.
+`teambit.ui-foundation/ui` → `@teambit/ui`) - `getAspectPackageName` picks that branch automatically
+since `isCoreAspect`/`isLegacyCoreEnv` is true for all of these. The original plan text here used the
+_non-core_ convention (`getNonCorePackageName`'s `@org/scope.name`, e.g. `@teambit/ui-foundation.ui`)
+inside `resolveUiVendorDllPackages` itself, not just as a test simplification - this was wrong for
+100% of real core aspect ids (verified against all 104 ids from `getAllCoreAspectsIds()`), meaning the
+production function would resolve to `react`/`react-dom` only and silently ship an empty vendor DLL
+for every core aspect. Fixed above to call the real `getAspectPackageName` directly - no reason to
+duplicate that logic when the real function is already a dependency of this same file's neighbors
+(`bundle-ui.task.ts` already imports from `@teambit/bit`).
 duplicating that logic — this function only needs _a_ mapping to exercise the filtering logic, and
 Task 3's integration test is what proves the real mapping end-to-end.
 
