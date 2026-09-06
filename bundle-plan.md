@@ -10,7 +10,11 @@
 > [known gap 1](bundle-plan/14-known-gaps.md) cleanly for the first time against a real app
 > (`community-cloud`, `CLIENT_ONLY=true`) and wrote up a proposed fix — see
 > [26-ui-vendor-dll-design.md](bundle-plan/26-ui-vendor-dll-design.md) (not yet implemented) and
-> [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-09-06 entries.)
+> [18-findings-log.md](bundle-plan/18-findings-log.md), 2026-09-06 entries.
+> Later the same day: the vendor DLL is implemented and its manifest is now portable across installs
+> — it was keyed by the building install's own pnpm store paths and matched nothing anywhere else;
+> consumers now go through `createUiVendorDllReference()`. See D17 in
+> [17-decisions-taken.md](bundle-plan/17-decisions-taken.md) and the 2026-09-06 "Task 6" entry.)
 > Previously, 2026-09-01 (silenced the 41 `require-resolve-not-external` esbuild warnings via
 > `logOverride` instead of externalizing the packages they name — they're the already-gated
 > `--ui-bundling` group plus dev-only tooling. See

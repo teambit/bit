@@ -1335,6 +1335,7 @@ teambit.react/react` before rspack ever starts. So the minimal repro is: fresh `
 teambit.preview/preview" --reuse-capsules --tasks "BundleUI,PreBundlePreview"` →
   `bundle:prebundle-cache:save` → `rm -rf /tmp/bit-bundle && npm run bundle` → `cd /tmp/bit-bundle &&
 npm install`.
+
   - **Found and worked around a stale-artifact trap in the local bundle workflow itself** (not a
     Task 1-4 bug): `node_modules/@teambit/{ui,preview}/artifacts` on disk predated this session (dated
     2026-08-30, from an earlier build on this branch before the DllPlugin work), so it had no
@@ -1381,3 +1382,47 @@ node` Mach-O binary + 14 MB `index.js`) - the exact shape of bloat PRs #10628/#1
     own 2026-08-16 entry already flags that merge as the source of at least one other unrelated
     regression). **Not investigated further or fixed** - out of this task's verification-only scope,
     flagged here for a follow-up session. Isolated vendor-DLL-only cost: **+9.6 MB**, as expected.
+
+- **2026-09-06 (Task 6, ui-vendor-dll-plan)** — the shipped vendor manifest could not match anything
+  outside the machine that built it, and the fix required changing what the manifest is keyed by.
+  - **How rspack's Dll plugins actually match (read from `@rspack/core@1.7.12`'s own source, then
+    confirmed empirically, not assumed)**: `DllPlugin` delegates to the Rust `LibManifestPlugin`,
+    which keys each `content` entry by the module's path **relative to the compilation's `context`**
+    (`./node_modules/.pnpm/postcss@8.4.45/node_modules/postcss/lib/at-rule.js`), with the module's own
+    id (a number in a production build) in the entry's `id` field — key and id are independent.
+    `DllReferencePlugin` (JS wrapper → Rust `DllReferenceAgencyPlugin`) has two modes: without
+    `scope` it resolves the request normally, recomputes that same context-relative path from the
+    **resolved** module, and does a plain **string equality** lookup against the manifest keys; with
+    `scope` it never resolves at all and matches raw request specifiers prefixed by the scope. A miss
+    in either mode is silent — the module just compiles from source, no warning, no error.
+  - **A successful interception is visible in `stats.toJson().modules`** as a module with
+    `moduleType: 'javascript/dynamic'` and identifier `delegated <id> from dll-reference
+__bitUiVendor__`, plus one `external window "__bitUiVendor__"` module. This is the only reliable
+    proof: "0 rspack errors" is produced equally by a total miss.
+  - **Reproduced C1 against a genuinely separate install**: a temp project with its own `pnpm install`
+    of `@teambit/design.ui.time-ago@0.0.388`, `@teambit/design.ui.styles.ellipsis@0.0.357`,
+    `@teambit/base-ui.text.paragraph@1.0.3` on react 18.3.1 (bit's repo has 19.2.7, so the peer hashes
+    genuinely differ). With the manifest as shipped: **0 of the 3 delegated**, all 3 recompiled from
+    the consumer's own source, 133 modules compiled and 5 rspack errors (unhandled `.scss` from the
+    subtree the dll was supposed to have covered) — "0 errors" was never even true here.
+  - **No `context` value can fix this**, because the mismatch is per-package, not a shared prefix: the
+    same package sits at `./node_modules/@teambit/design.ui.time-ago/...` in bit's install and at
+    `./node_modules/.pnpm/@teambit+design.ui.time-ago@0.0.388_@testing-library+react@16.3.3_..._aac043b2ec32bfad61f5ac5a106b6306/node_modules/@teambit/design.ui.time-ago/...` in the consumer's.
+    Only **package name + subpath** is shared, so that is what the manifest is now keyed by, and
+    `createUiVendorDllReference()` (new, exported from `@teambit/ui`) resolves those specifiers in the
+    consuming install and re-keys them to the paths that install's own rspack will produce.
+  - **Manifest arithmetic on the real artifact** (3393 raw entries): 3320 normalize, 26 belong to no
+    package at all (externals like `postcss-preset-env`, `https://static.bit.dev/...` font URLs, the
+    generated `vendor-entry.js`) and are dropped, 47 more collapse onto a key two different versions
+    of the same package share (`use-debounce@3.4.3` and `@7.0.1`, `property-information@5.6.0` and
+    `@7.2.0`, ...) and are dropped as ambiguous → **3273 portable entries**. `vendor.js`
+    (6,399,878 bytes) and `vendor.css` (442,998 bytes) are unchanged; only the manifest's keys are.
+  - **Verified against the final code**: rebuilt the full artifact (same 31 covered packages), 3273
+    entries, **0 keys still carrying an install layout**; same separate-install consumer now shows
+    **3 of 3 delegated**, 0 errors, 11 total modules (down from 144), and each delegated id
+    (`52464`, `38348`, `60239`) is a real module inside the shipped `vendor.js`.
+  - **Consequence for the bit-cloud side**: `VENDOR_DLL_INTEGRATION_PLAN.md`'s Task 2 code
+    (`new rspack.DllReferencePlugin({ manifest: vendorDll.manifestPath })`) matches nothing and must
+    become `new rspack.DllReferencePlugin(createUiVendorDllReference(vendorDll.manifestPath, {
+context: raw.context }))`, plus serving `vendorDll.cssPath` alongside the chunk. That plan lives
+    in another repo and was not edited here.

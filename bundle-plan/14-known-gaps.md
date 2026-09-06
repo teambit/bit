@@ -28,7 +28,15 @@
    "Task 5" entry — once Task 1-4's changes are committed together in a real PR. This does not by
    itself close this gap (a workspace/env whose UI root misses the shipped `.hash` still falls into
    the rebuild path this gap describes), but gives that rebuild path a shared vendor chunk to
-   reference instead of duplicating React + the core UI aspect surface from scratch.
+   reference instead of duplicating React + the core UI aspect surface from scratch. **Amended
+   2026-09-06 (Task 6)**: as first shipped, that artifact's manifest was keyed by the building
+   install's own pnpm store paths and matched nothing in any other project — it is now keyed by
+   package name + subpath, and a consumer must build its `DllReferencePlugin` options through
+   `createUiVendorDllReference()` (exported from `@teambit/ui`) rather than passing the manifest file
+   to the plugin directly. It also has to serve the artifact's `vendor.css`
+   (`getUiVendorDllPaths().cssPath`), since the intercepted modules' css exists only there. Proven
+   against a genuinely separate `pnpm install` — see [18-findings-log.md](18-findings-log.md)'s
+   2026-09-06 "Task 6" entry and D17.
 2. ~~**41 `require.resolve` calls remain unresolved in the output.**~~ **Warnings silenced
    2026-09-01** — esbuild warned _"X should be marked as external for use with require.resolve"_ for
    `@svgr/webpack`, `babel-loader`, `expose-loader`, the `*-browserify` polyfills,

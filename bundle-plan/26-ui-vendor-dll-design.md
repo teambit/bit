@@ -17,6 +17,19 @@
 > what's actually being built. If a genuinely new loader need surfaces during real verification,
 > that's a separate, follow-up concern, not a blocker for this design.
 >
+> **Correction, 2026-09-06 (Task 6)**: "intercepts a matching module transparently at rspack's
+> resolution layer" is right about _where_ the interception happens but wrong about what counts as
+> "matching". `DllReferencePlugin` matches by **string equality** between the manifest's keys and the
+> path it recomputes for the module it just resolved, relative to its own `context` — and under pnpm
+> those paths carry a `.pnpm/<name>@<version>_<peer-hash>` segment specific to the install that built
+> the dll, so nothing in a separate project ever matched (silently: a miss just recompiles from
+> source). The consuming build still doesn't need to pre-split its aspect list — the transparency
+> claim survives — but it does need one more step than "add `DllReferencePlugin` pointed at the
+> shipped manifest": the manifest is now keyed by package name + subpath, and
+> `createUiVendorDllReference()` (exported from `@teambit/ui`) resolves those specifiers in the
+> consuming install to produce the plugin's options. See D17 and
+> [18-findings-log.md](18-findings-log.md)'s 2026-09-06 "Task 6" entry.
+>
 > Status: **in progress.** Written 2026-09-06 after reproducing
 > [gap 1](14-known-gaps.md) cleanly for the first time against a real app (`community-cloud`,
 > `CLIENT_ONLY=true` — see [18-findings-log.md](18-findings-log.md), 2026-09-06 entries). Next step
