@@ -1,4 +1,4 @@
-import { readdirSync, existsSync, writeFileSync, readFileSync } from 'fs';
+import { readdirSync, existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { rspack } from '@rspack/core';
 import { ensureDirSync } from 'fs-extra';
@@ -65,6 +65,7 @@ export async function buildUiVendorDll(outputPath: string, packages: string[]): 
         path: join(dllOutputDir, UI_VENDOR_DLL_MANIFEST_FILENAME),
         name: UI_VENDOR_DLL_GLOBAL_NAME,
         type: 'window',
+        entryOnly: false,
       }),
     ],
   });
@@ -75,23 +76,6 @@ export async function buildUiVendorDll(outputPath: string, packages: string[]): 
         if (err) return reject(err);
         if (stats?.hasErrors()) return reject(new Error(stats.toString()));
         if (closeErr) return reject(closeErr);
-
-        const manifestPath = join(dllOutputDir, UI_VENDOR_DLL_MANIFEST_FILENAME);
-        const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-
-        packages.forEach((pkg) => {
-          try {
-            const packagePath = require.resolve(pkg);
-            manifest.content[packagePath] = {
-              id: Object.keys(manifest.content).length + Object.keys(manifest.content || {}).length,
-              exports: true,
-            };
-          } catch {
-            // If package can't be resolved, skip it
-          }
-        });
-
-        writeFileSync(manifestPath, JSON.stringify(manifest));
         resolvePromise();
       });
     });

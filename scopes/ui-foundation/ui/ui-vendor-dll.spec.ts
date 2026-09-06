@@ -104,7 +104,7 @@ describe('buildUiVendorDll with multiple packages', function () {
     expect(readFileSync(chunkPath, 'utf-8').length).to.be.greaterThan(0);
   });
 
-  it('writes a manifest with all packages covered', () => {
+  it('writes a manifest with all packages covered and real module ids', () => {
     const manifestPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_MANIFEST_FILENAME);
     expect(existsSync(manifestPath)).to.equal(true);
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
@@ -112,5 +112,12 @@ describe('buildUiVendorDll with multiple packages', function () {
     const contentKeys = Object.keys(manifest.content);
     expect(contentKeys.some((k) => k.includes('lodash.compact'))).to.equal(true);
     expect(contentKeys.some((k) => k.includes('lodash.flatten'))).to.equal(true);
+
+    // Verify all manifest entries have real ids (not fabricated values)
+    contentKeys.forEach((k) => {
+      expect(manifest.content[k]).to.have.property('id');
+      const idType = typeof manifest.content[k].id;
+      expect(['number', 'string']).to.include(idType, `Entry ${k} has invalid id type: ${idType}`);
+    });
   });
 });
