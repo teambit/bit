@@ -105,12 +105,14 @@ async function copyTypeDeclarations(sourceDir: string | undefined, shimDistDir: 
  * `bundle-plan.md` §14/§17 - `@teambit/webpack`'s own `webpack-fallbacks.js` alone needs
  * `assert/`/`buffer/`/`constants-browserify`, part of that ~1.1 GB opt-in group), so a `browser/`
  * copy of their real dist would only ever fail to compile for a browser target - confirmed
- * empirically (2026-09-07): copying all 105 shims' real dist surfaced 57 new errors, all four
- * traced to `@teambit/ui`, `@teambit/webpack`, `@teambit/aspect-loader` reaching exactly that
- * externals group, plus `@teambit/harmony` needing `reflect-metadata` (fixed separately by adding it
- * to `externals.ts`'s `MISC`, not by excluding harmony here). Excluding these three here costs
- * nothing bare imports of them didn't already cost before this file existed - they keep today's
- * `require(bit.app.js)[...]` shim behavior, unchanged.
+ * empirically (2026-09-07): copying all 105 shims' real dist surfaced 57 new errors, most traced to
+ * `@teambit/ui`, `@teambit/webpack`, `@teambit/aspect-loader` reaching exactly that externals group,
+ * plus a separate handful from `@teambit/harmony` needing `reflect-metadata`/`cleargraph`/etc. - fixed
+ * for harmony by vendoring its real runtime dependency closure directly (`copyHarmonyRuntimeDeps`
+ * below), not by excluding it here: unlike `@teambit/ui`/`@teambit/webpack`/`@teambit/aspect-loader`,
+ * harmony's gap was a handful of small, real, missing npm packages, not an architectural mismatch.
+ * Excluding these three here costs nothing bare imports of them didn't already cost before this file
+ * existed - they keep today's `require(bit.app.js)[...]` shim behavior, unchanged.
  */
 const BROWSER_DIST_EXCLUDED_PACKAGES = new Set(['@teambit/ui', '@teambit/webpack', '@teambit/aspect-loader']);
 
