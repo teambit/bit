@@ -910,3 +910,108 @@ there with the result — follow the same format as the existing 2026-09-06 entr
 - [ ] **Step 5: No commit** (verification only) — but update
       `bundle-plan/14-known-gaps.md` gap 1's entry to note the vendor DLL artifact now ships, linking this
       plan and the design doc, once Task 1-4's changes are committed together in a real PR.
+
+### Task 6: Fix cross-install manifest portability, expose the CSS artifact, cover `getUiVendorDllPaths()`
+
+**Added after the final whole-branch review** (all of Tasks 1-5 already passed their own task reviews;
+this review looked at the complete diff together and found a load-bearing gap task-scoped review
+couldn't see). Full detail is in the SDD ledger
+(`.superpowers/sdd/27-ui-vendor-dll-plan/progress.md`) under "Final review" — read that entry first,
+it has exact file:line citations and independently-reproduced evidence for every claim below. This
+summary exists so the task has its own self-contained brief.
+
+**Files:**
+
+- Modify: `scopes/ui-foundation/ui/ui-vendor-dll.ts` (the `buildUiVendorDll` rspack config)
+- Modify: `scopes/ui-foundation/ui/ui.main.runtime.ts` (`getUiVendorDllPaths()`)
+- Modify: `scopes/ui-foundation/ui/index.ts` (barrel exports, if the fix needs a new export)
+- Test: `scopes/ui-foundation/ui/ui-vendor-dll.spec.ts`, `scopes/ui-foundation/ui/ui.main.runtime.spec.ts`
+  (or wherever `getUiVendorDllPaths` is best unit-tested — none exists today, verify by grepping first)
+
+**The problem (Critical, independently confirmed against the real shipped artifact):**
+
+`buildUiVendorDll`'s rspack config never sets `context`, so rspack defaults it to `process.cwd()` —
+this repo's own checkout at build time. Inspecting the real shipped
+`vendor-manifest.json` (3393 `content` entries) directly: **2629 of 3393 keys (78%)** are relative
+paths of the shape
+`./node_modules/.pnpm/@teambit+explorer.ui.component-card@0.0.52_..._52b3fb1e434343391ecd1f6075b98856/node_modules/...`
+— pnpm's content-addressed store directory names, whose hash suffix is derived from _this specific
+repo's own_ full dependency graph (peer-dependency resolution). A separate consuming project (e.g.
+bit-cloud, or any workspace with its own independent `pnpm install`) has its own, different dependency
+graph, and there is no reason its own resolution of the same package would ever produce the identical
+`.pnpm/<name>@<version>_<hash>` directory name — so `DllReferencePlugin` on the consumer side cannot
+match these keys under any `context` value the consumer could plausibly choose. This isn't a config
+tweak away from working; it undermines the design doc's core claim
+(`26-ui-vendor-dll-design.md`: "`DllReferencePlugin` intercepts a matching module transparently... at
+rspack's resolution layer") that this whole plan built on.
+
+- [ ] **Step 1: Understand how rspack's `DllPlugin`/`DllReferencePlugin` actually match modules**
+
+Before changing anything, read `@rspack/core`'s real behavior (installed at
+`node_modules/@rspack/core@2.1.10` in this repo) and, if available, pull current docs via the
+`context7` MCP tool (`resolve-library-id` for `@rspack/core`, or webpack's `DllPlugin`/
+`DllReferencePlugin` if rspack's own docs are thin — rspack's Dll plugins are webpack-compatible by
+design, per this plan's own spec doc). Answer concretely, in your report, before writing any fix:
+
+- What identity is a manifest `content` entry actually keyed by (resolved absolute path relative to
+  `context`? raw request string? something else)?
+- What does `DllReferencePlugin` do on the consuming side to look up a match — does it resolve the
+  request itself and relativize against its own `context`, or match on the raw specifier?
+- Given `buildDllEntryContents` (`ui-vendor-dll.ts`) currently `require()`s each aspect's exact
+  resolved `.ui.runtime.js`/`.preview.runtime.js` **absolute file path** (not a bare package
+  specifier) — because Correction 4 in the ledger established that a real downstream consumer
+  (bit's own `generateRoot` pipeline) also resolves each aspect via `aspectDef.runtimePath`, an exact
+  file path, never a bare specifier — what would it take for the DLL side's manifest key and the
+  consumer side's resolved-and-relativized path to line up? Consider: does the fix belong in what
+  `context` is set to (e.g. something both sides can independently reconstruct, like a package's own
+  `node_modules` root rather than a whole monorepo checkout), in how entries are keyed (e.g.
+  normalizing pnpm's `.pnpm/name@version_hash` segment out of the path before it's used as a key,
+  since bit's own aspect resolution already has to solve "which node_modules is this package
+  physically in" independently of pnpm's virtual store layout), or in matching by package name +
+  subpath instead of by resolved filesystem identity entirely.
+
+- [ ] **Step 2: Implement the fix, and prove it works with a real, separate-install repro**
+
+A real fix must be verified with a repro that has two genuinely separate `node_modules` trees (not
+the same repo's own single install) — e.g. build the vendor DLL from this repo, then in a **different
+temp directory** with the **same package installed via its own separate `npm install`/`pnpm install`
+of just that one package**, configure a small rspack build with `DllReferencePlugin` pointed at the
+shipped manifest, and confirm rspack's compiled output stats show the module as _externalized_
+(resolved from the DLL, not recompiled from source) rather than silently falling through to a normal
+compile (rspack does not error when a `DllReferencePlugin` match fails — it just recompiles from
+source — so "0 errors" alone does NOT prove interception happened; check `stats.toJson().modules` for
+the module's `type`/`identifier`, which differs for a Dll-externalized module vs. a normally compiled
+one). This is the same rigor this plan's own Task 3b used to drive 600 real rspack errors to 0 — do
+not accept "it built without errors" as proof here, since that's exactly the failure mode this task
+exists to fix.
+
+- [ ] **Step 3: Expose `vendor.css` and `UI_VENDOR_DLL_DIR` through the public API (Important, I1)**
+
+The real shipped artifact includes `vendor.css` (442,998 bytes) — 360 of the manifest's 3393 entries
+are `.scss`/`.css` modules, meaning once `DllReferencePlugin` intercepts them, the consumer's own
+build compiles none of their CSS; it exists only in this file. `UiMain.getUiVendorDllPaths()`
+(`ui.main.runtime.ts`) currently returns only `{ manifestPath, chunkPath }` and `UI_VENDOR_DLL_DIR` is
+not re-exported from `scopes/ui-foundation/ui/index.ts` — there is no supported way for a consumer to
+discover or serve `vendor.css`. Add a `cssPath` (or similarly named) field to
+`getUiVendorDllPaths()`'s return shape, computed and existence-checked the same way
+`chunkPath`/`manifestPath` already are, returning `undefined` for that field alone (not the whole
+method) if `vendor.css` happens to be absent (e.g. an older artifact built before this fix) — keep the
+method's overall "never throws" contract.
+
+- [ ] **Step 4: Add test coverage for `getUiVendorDllPaths()` (Important, I2)**
+
+Zero callers and zero tests exist for this method anywhere in `scopes/`, `components/`, or `e2e/`
+today (verify this is still true before writing tests — grep first). It's this plan's own declared
+"sole point of external contact." Write unit tests (fixture-driven, following this file's existing
+test conventions) covering: returns the correct paths when the artifact exists, returns `undefined`
+cleanly (not throwing) when the artifact directory doesn't exist, and returns `undefined` cleanly when
+the aspect itself was never built (mirrors whatever fixture pattern `getBundleUiPath`'s own tests
+already use, if any exist — check).
+
+- [ ] **Step 5: Run `bit test scopes/ui-foundation/ui`, `npm run lint`, and re-run the real
+      cross-install repro from Step 2 one more time against the final code**, then commit.
+
+**Global Constraints for this task** (in addition to the plan's own, still binding): the existing
+pre-bundle build and `.hash` output must remain untouched (same as every prior task); the fix must be
+verified against a genuinely separate install, not just re-running `bd build` in this same repo
+checkout, since that's exactly what let C1 go undetected through five prior task reviews.
