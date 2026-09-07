@@ -1563,3 +1563,50 @@ run bundle` produced a `bit.app.js` with **zero** occurrences of `createUiVendor
     this specific fix, on top of the already-existing 159 MB baseline + the unrelated SSR regression +
     the vendor DLL's own ~9.6 MB.
   - Committed `a92e9a7be`/`265c9e517` on the `ui-vendor-dll` branch (PR #10690).
+- **2026-09-07 (bit-bundle3, closing the render gap - a real react-router-dom context mismatch, not
+  a bundling error)** — with the browser-barrel fix above landing, `bit run community-cloud` compiled
+  with 0 rspack errors for the first time, but a real browser (Playwright) still showed a blank page:
+  `useLocation()` (react-router) threw an uncaught error the moment `#root` would otherwise have
+  mounted. Root-caused, not guessed at, in three steps:
+  1. The vendor DLL (Task 6, unrelated to today's browser-barrel work) delegates
+     `@teambit/react-router`'s real bare `index.js` - and its real source
+     (`scopes/ui-foundation/react-router/react-router/index.ts`) does
+     `export * as ReactRouter from 'react-router-dom'`, a real value re-export. Delegating that
+     package hands the consumer bit's own compiled react-router-dom hooks, tied to bit's own
+     `@remix-run/router` context instance - which the consumer's own, separately-compiled `<Router>`
+     (bit-cloud's own app root, never delegated) does not provide. Same failure class `@apollo/client`
+     already has a fix for (`resolveAlias()`'s own directory alias, `rspack.common.ts`) - just not yet
+     applied to react-router.
+  2. Confirmed empirically that bit-bundle3's own monorepo carries **4 separately peer-resolved
+     `react-router-dom` copies** (paired with every react@18/19 x react-dom@18/19 combination some
+     aspect declares) - so even the vendor dll's OWN compilation (before any consumer is involved)
+     bakes in more than one `react-router-dom` internally, unaliased. Fixed: extended
+     `resolveAlias()` with a `reactRouterAliases()` helper pinning `react-router-dom` (aliased as a
+     directory, matching the existing apollo entry, since react-router-dom's `main.js`/`index.js`/
+     `server.mjs` are root-level, not nested under `dist/`) and its own nested dependencies
+     `react-router`/`@remix-run/router` (resolved via `require.resolve(spec, { paths: [...] })` from
+     react-router-dom's own directory, since neither has a flat top-level `node_modules/` entry).
+  3. That alone did NOT fix the crash (verified: same error, `vendor.js`'s own byte offset shifted
+     slightly, confirming the alias took effect internally, but the crash didn't move) - because the
+     real mismatch isn't _inside_ the dll's own build at all, it's _between_ the dll's now-internally-
+     consistent react-router-dom and bit-cloud's own, entirely separately-compiled copy. Fixed for
+     real by excluding the whole "carries or wraps a foreign React context" package family from the
+     dll's manifest (`CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES` in `ui-vendor-dll.ts`):
+     `react-router-dom`/`react-router`/`@remix-run/router` themselves (a real consumer's own installed
+     version can have a different file layout entirely - confirmed: bit-cloud-bundle's real
+     `react-router-dom@6.2.2` has no `dist/` directory at all, so this dll's `dist/index.js` manifest
+     key never matched there; a separate, unrelated key for `react-router-dom/server.mjs` happened to
+     exist at the same relative path in both versions by coincidence, delegating a Node/SSR module in
+     place of the real client one) plus bit's own four react-router wrapper packages
+     (`@teambit/react-router`, `@teambit/ui-foundation.ui.navigation.react-router-adapter`,
+     `@teambit/ui-foundation.ui.react-router.slot-router`, `@teambit/ui-foundation.ui.react-router.use-query`)
+     that all re-export or consume react-router-dom's context. None of these need vendor-dll
+     delegation to work - they still compile fine standalone via the browser-barrel fix above.
+  - **Real, final result, verified in an actual browser (Playwright, screenshot-confirmed)**:
+    `CLIENT_ONLY=true bit run community-cloud` now renders the REAL bit.cloud landing page end to
+    end - nav bar, gradient hero, live-typing search box animation, "What you can build" section,
+    cookie banner - matching the exact same behavior as the released (bvm) `bit` reference the user
+    ran side-by-side for comparison (same benign search-suggest GraphQL warning overlay, dismissible,
+    landing page fully rendered underneath either way). This is the first time gap 1's own repro
+    (`bit run community-cloud`) has produced a genuinely working, rendered UI on this branch.
+  - Committed `cc02f1487` on the `ui-vendor-dll` branch (PR #10690).

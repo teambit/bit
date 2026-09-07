@@ -44,20 +44,29 @@
    [18-findings-log.md](18-findings-log.md)'s 2026-09-07 entry for the full trace. Closing this gap
    for real needs either broader per-package coverage (more than one entry point) or a different
    matching strategy; not yet decided.
-   **Closed 2026-09-07** (pending commit — see [18-findings-log.md](18-findings-log.md)'s 2026-09-07
-   "closing the bare-import gap for real" entry): fixed at the bundler level, not by expanding the
-   vendor DLL's own coverage. `generate-shim-packages.ts` now ships a real, standalone-compilable
-   `browser/` copy of every shim's actual local `dist/` output (excluding
+   **Closed 2026-09-07** — fixed at the bundler level, not by expanding the vendor DLL's own
+   coverage. `generate-shim-packages.ts` now ships a real, standalone-compilable `browser/` copy of
+   every shim's actual local `dist/` output (excluding
    `@teambit/ui`/`@teambit/webpack`/`@teambit/aspect-loader`, genuinely Node/build-tooling-coupled by
-   design — see that entry) plus `@teambit/harmony`'s real runtime dependency closure, and wires both
-   in via each shim's own `package.json` `"browser"` exports condition — no bit-cloud-side rspack
-   config change needed at all; a `target: 'web'` bundler picks it up by default. Verified end-to-end:
-   `CLIENT_ONLY=true bit run community-cloud` goes from the 64-error baseline to **0 rspack errors**,
-   confirmed executing for real in a browser (React Router, Harmony's client bootstrap, reaching a
-   real `fetch` to bit.cloud's GraphQL API before failing on the _lack of a real backend_ under
-   `CLIENT_ONLY` — a separate, pre-existing, already-documented limitation, not this gap). +18.4 MB
-   total for this fix (browser barrels + vendored harmony deps) — see `01-goal-and-results.md`'s
-   updated size table.
+   design — see [18-findings-log.md](18-findings-log.md)'s 2026-09-07 entry) plus `@teambit/harmony`'s
+   real runtime dependency closure, and wires both in via each shim's own `package.json` `"browser"`
+   exports condition — no bit-cloud-side rspack config change needed at all; a `target: 'web'`
+   bundler picks it up by default. A second, real bug surfaced once that compile succeeded for the
+   first time: the vendor DLL (from Task 6) delegating `@teambit/react-router` and bare
+   `react-router-dom`/`react-router`/`@remix-run/router` handed the consumer a react-router context
+   instance that didn't match the `<Router>` its own, separately-compiled app root provides -
+   `useLocation()` throwing on mount, blank page. Fixed by excluding that whole package family from
+   the dll's manifest (same 18-findings-log.md entry) — they still compile fine standalone via the
+   browser-barrel fix above, just not shared as one singleton.
+   **Verified end-to-end, in an actual browser (Playwright, screenshot-confirmed)**:
+   `CLIENT_ONLY=true bit run community-cloud` goes from the original 64-error baseline to **0 rspack
+   errors** and a genuinely rendered page — the real bit.cloud landing page (nav bar, hero, live
+   search-box animation), matching the released (bvm) `bit` reference byte-for-byte in behavior (same
+   benign search-suggest GraphQL warning overlay, landing page rendered underneath either way). This
+   is the first time this gap's own repro has produced a working, rendered UI on this branch. +18.4 MB
+   total for the browser-barrel/harmony-deps fix (browser barrels + vendored harmony deps), no
+   measurable size change for the react-router exclusion (manifest-only) — see
+   `01-goal-and-results.md`'s updated size table.
 2. ~~**41 `require.resolve` calls remain unresolved in the output.**~~ **Warnings silenced
    2026-09-01** — esbuild warned _"X should be marked as external for use with require.resolve"_ for
    `@svgr/webpack`, `babel-loader`, `expose-loader`, the `*-browserify` polyfills,
