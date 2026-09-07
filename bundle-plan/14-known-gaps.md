@@ -36,7 +36,14 @@
    to the plugin directly. It also has to serve the artifact's `vendor.css`
    (`getUiVendorDllPaths().cssPath`), since the intercepted modules' css exists only there. Proven
    against a genuinely separate `pnpm install` — see [18-findings-log.md](18-findings-log.md)'s
-   2026-09-06 "Task 6" entry and D17.
+   2026-09-06 "Task 6" entry and D17. **Still open after 2026-09-07's real end-to-end attempt**: the
+   mechanism itself works (real modules genuinely delegate to the DLL in a real consumer), but this
+   gap's own repro (`bit run community-cloud`) still shows the same 64-error baseline, because
+   bit-cloud's own non-core aspects reach a covered core aspect via its bare package specifier
+   (`dist/index.js`) rather than the exact runtime file the DLL's manifest is keyed by — see
+   [18-findings-log.md](18-findings-log.md)'s 2026-09-07 entry for the full trace. Closing this gap
+   for real needs either broader per-package coverage (more than one entry point) or a different
+   matching strategy; not yet decided.
 2. ~~**41 `require.resolve` calls remain unresolved in the output.**~~ **Warnings silenced
    2026-09-01** — esbuild warned _"X should be marked as external for use with require.resolve"_ for
    `@svgr/webpack`, `babel-loader`, `expose-loader`, the `*-browserify` polyfills,

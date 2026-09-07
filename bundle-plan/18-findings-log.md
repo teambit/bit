@@ -1444,3 +1444,56 @@ run bundle` produced a `bit.app.js` with **zero** occurrences of `createUiVendor
   files present). Not yet a fixed workflow gap (no code change proposed here) — just documented so
   the next person rebuilding this bundle after touching a core UI aspect's public exports knows to
   `bit compile` that aspect first.
+- **2026-09-07 (bit-bundle3 + bit-cloud-bundle, Plan B Task 5 real proof)** — real cross-project
+  consumption of the vendor DLL (`bundle-plan/27-ui-vendor-dll-plan.md`) attempted end-to-end for the
+  first time, in `/Users/giladshoham/dev/temp/bit-cloud-bundle`. Found and fixed one real bug in
+  bit-bundle3 itself, found one environment-specific workaround needed (documented, not fixed here),
+  and found one real, distinct design gap not yet closed:
+  - **Fixed**: `buildMeta.defaultObject` cross-rspack-version incompatibility. The vendor DLL is built
+    with the `@rspack/core` version `scopes/ui-foundation/ui` resolves (**1.7.12**, not 2.1.10 as the
+    original plan assumed — confirmed via `require.resolve('@rspack/core')`), which serializes a JSON
+    module's "redirect-warn" `buildMeta.defaultObject` as an object
+    (`{ redirectWarn: { ignore: boolean } }`); a real consumer's own installed rspack (**2.2.2**, in
+    bit-cloud-bundle) only accepts the plain string enum there and fails its _entire_ compiler
+    instantiation on the mismatch (`StringExpected ... on JsBuildMeta.defaultObject`), not just that
+    one module — 10 of 3273 real manifest entries carried this shape. Fixed in
+    `scopes/ui-foundation/ui/ui-vendor-dll.ts` (`toPortableBuildMeta()`, called from
+    `toPortableUiVendorDllManifest()`), normalizing to the plain string form; unit-tested (23/23
+    passing); committed `9e3b82b94`, pushed to the `ui-vendor-dll` branch (PR #10690).
+  - **Workaround needed, not fixed here** (a bit-cloud-bundle workspace/pnpm environment issue, same
+    class as the pre-existing blocker-1 `@teambit/react` symlink, not a code bug): a component whose
+    own `require('@teambit/ui')` resolves via a pnpm-isolated `file:`-linked subtree can walk up past
+    this workspace's root-level override straight into pnpm's own shared/hoisted virtual store
+    (`node_modules/.pnpm/node_modules/@teambit/ui`), which — independent of any root-level override —
+    resolves to a real, differently-versioned, npm-published `@teambit/ui` from the registry. Real
+    consequence observed: `createUiVendorDllReference`, imported via a plain top-level `import` in
+    `bit-cloud`'s `cloud-app.ts`, resolved as `undefined` in the real running process even though a
+    plain `node -e` script from the same file's location resolved it correctly — traced via a
+    temporary `console.error` patch (`__filename`, `require.resolve('@teambit/ui')`) to exactly this
+    pnpm-hoisting path. Workaround (mirrors blocker-1's pattern):
+    `ln -sfn <bundle>/node_modules/@teambit/ui node_modules/.pnpm/node_modules/@teambit/ui`, needed
+    again after any `bit install` in that workspace. Not this repo's to fix (it's about how
+    bit-cloud-bundle's own dependency graph interacts with pnpm's hoisting, and how bit's own
+    core-aspect-to-bundle override is applied at install time) — flagged for whoever owns that
+    install-time override mechanism.
+  - **Not solved — a real, distinct design gap in the vendor DLL's coverage**: even after both fixes
+    above, `CLIENT_ONLY=true bit run community-cloud` against the real app still produces the same
+    64-error baseline (diffed byte-for-byte against the 2026-09-06 baseline — one cosmetic line-number
+    shift only). Root cause, confirmed by tracing the error import chains: bit-cloud's own
+    application-specific aspects (`@teambit/dot-cloud.ui.cloud-lanes`, `@teambit/dot-analytics.analytics`,
+    `@teambit/ai-agents.ai-agents`, etc. — published bit-cloud aspects, not bit core aspects) import a
+    DLL-covered core aspect (e.g. `@teambit/changelog`) via its **bare package specifier**, which
+    resolves to the package's main `dist/index.js` — a different file from the **exact runtime file**
+    (`@teambit/changelog/dist/changelog.ui.runtime.js`) the vendor DLL's manifest is keyed by (a
+    deliberate Task 3 Correction 4 design choice, to avoid pulling in each covered package's _other_
+    unbundlable runtime files). `createUiVendorDllReference` correctly does not match `index.js`
+    against a manifest entry for a different file, so it compiles the bare barrel from source — which
+    itself re-exports things reaching back into `bit.app.js` (the same self-reference class Task 3
+    Correction 3 fixed for `@teambit/ui`'s own barrel), reproducing the original 64-error signature via
+    a different aspect than any repro before it hit. **This means the "real proof" (zero rspack
+    errors) is not yet achieved** — the cross-install matching mechanism itself is proven correct (579
+    real modules genuinely delegated in this same run), but the DLL's coverage scope (one entry point
+    per package) doesn't reach every way real application code imports a covered package. Not fixed
+    here — a design decision (expand coverage to more entry points? require app code to import via the
+    exact runtime path?) belongs with whoever owns this plan's continuation, not something to resolve
+    unilaterally mid-verification.
