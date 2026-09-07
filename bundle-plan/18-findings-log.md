@@ -1562,6 +1562,4 @@ run bundle` produced a `bit.app.js` with **zero** occurrences of `createUiVendor
     barrels, **+6.4 MB** (12 packages) for harmony's vendored runtime deps - **+18.4 MB total** for
     this specific fix, on top of the already-existing 159 MB baseline + the unrelated SSR regression +
     the vendor DLL's own ~9.6 MB.
-  - Not yet done: this is implemented and verified, but not committed to the `ui-vendor-dll` branch
-    (PR #10690) - the user asked to implement, run, and verify first, decide whether to commit after
-    seeing it run.
+  - Committed `a92e9a7be`/`265c9e517` on the `ui-vendor-dll` branch (PR #10690).
