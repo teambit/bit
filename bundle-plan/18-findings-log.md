@@ -1426,3 +1426,21 @@ __bitUiVendor__`, plus one `external window "__bitUiVendor__"` module. This is t
     become `new rspack.DllReferencePlugin(createUiVendorDllReference(vendorDll.manifestPath, {
 context: raw.context }))`, plus serving `vendorDll.cssPath` alongside the chunk. That plan lives
     in another repo and was not edited here.
+- **2026-09-07 (bit-bundle3, Plan B's Task 3 rebuild)** — `bit compile` must be re-run before
+  `npm run bundle` whenever a core aspect's _exports_ change, not just when its build artifacts
+  change. Found while rebuilding `/tmp/bit-bundle` for the bit-cloud consumer plan, on the
+  `ui-vendor-dll` branch (commit `b5508188f`, after Task 6 added `createUiVendorDllReference` to
+  `scopes/ui-foundation/ui/index.ts`): `bd build "teambit.ui-foundation/ui, teambit.preview/preview"
+--reuse-capsules --tasks "BundleUI,PreBundlePreview"` succeeded, but `rm -rf /tmp/bit-bundle && npm
+run bundle` produced a `bit.app.js` with **zero** occurrences of `createUiVendorDllReference` (`grep
+-c` confirmed) despite the source genuinely exporting it. Root cause: the CLI bundler's "packages
+  root" reads this repo's own local `node_modules/@teambit/ui/dist/` directly — which was stale,
+  missing `index.js` entirely (only `bundle-ui.task.js` was compiled there) — because `bd build
+  --tasks BundleUI` builds into an isolated _capsule_, which does not refresh this local
+  `node_modules/dist/` tree. Fixed: `bd compile teambit.ui-foundation/ui` (regenerated
+  `node_modules/@teambit/ui/dist/index.js`, confirmed to contain the new export), then redid the
+  `bd build` → `prebundle-cache:save` → `npm run bundle` sequence — second rebuild verified clean
+  (`bit.app.js` now has 7 occurrences of `createUiVendorDllReference`, all 4 vendor-DLL artifact
+  files present). Not yet a fixed workflow gap (no code change proposed here) — just documented so
+  the next person rebuilding this bundle after touching a core UI aspect's public exports knows to
+  `bit compile` that aspect first.
