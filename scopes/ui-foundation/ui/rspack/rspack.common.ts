@@ -1,4 +1,4 @@
-import type { RuleSetRule } from '@rspack/core';
+import type { RuleSetRule, RuleSetUseItem } from '@rspack/core';
 import { fallbacks } from '@teambit/webpack';
 import { excludeNodeModulesJs } from '@teambit/webpack.modules.exclude-node-modules-js';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
@@ -79,16 +79,20 @@ export const resolveFallbackDev = {
 } as const;
 
 // Keep CSS module imports webpack-compatible: `import styles from './x.module.scss'`.
-// `url: false`: every `url()` in this graph is either an absolute CDN font url or a `data:` URI -
-// none are local files needing rspack's asset pipeline. Rspack v2's CSS handler (unlike v1) tries
-// to resolve every `url()` as a module to read, which fails on a remote https: font url with
-// "Unhandled scheme" (no plugin registered for reading over http). Disabling it leaves such urls
-// as literal text in the emitted CSS, which is what a browser needs anyway.
 export const cssParser = {
-  css: { namedExports: false, url: false },
-  'css/auto': { namedExports: false, url: false },
-  'css/module': { namedExports: false, url: false },
+  css: { namedExports: false },
+  'css/auto': { namedExports: false },
+  'css/module': { namedExports: false },
 } as const;
+
+// Vendored stylesheets (under node_modules) reference assets we don't control - in this codebase
+// that's always an absolute CDN url or a `data:` URI (see the design system's font package),
+// never a local relative path. Rspack v2's CSS handler (unlike v1) tries to resolve every
+// `url()` as a module to read, which fails on a remote https: url with "Unhandled scheme" (no
+// plugin registered for reading over http). First-party source is expected to keep resolving
+// local relative urls through the normal asset pipeline (fontRule, the image asset rule), so
+// `url` handling is disabled only for node_modules-sourced stylesheets.
+const vendorCssParser = { url: false as const };
 
 export function swcRule(options?: { dev?: boolean; refresh?: boolean }): RuleSetRule {
   return {
@@ -147,6 +151,38 @@ interface StyleRulesOptions {
 }
 
 /**
+ * Builds one style rule as a node_modules-scoped variant (vendor `url()`s left untouched, see
+ * `vendorCssParser`) and a first-party variant (default asset-pipeline `url()` resolution). The
+ * two are mutually exclusive by `include`/`exclude`, so exactly one ever matches a given file.
+ */
+function styleRule(
+  test: RegExp,
+  type: 'css' | 'css/module',
+  use: RuleSetUseItem[],
+  generator: object | undefined,
+  sideEffects: boolean | undefined
+): RuleSetRule[] {
+  const vendorRule: RuleSetRule = {
+    test,
+    type,
+    use,
+    include: /node_modules/,
+    parser: vendorCssParser,
+    ...(generator && { generator }),
+    ...(sideEffects !== undefined && { sideEffects }),
+  };
+  const firstPartyRule: RuleSetRule = {
+    test,
+    type,
+    use,
+    exclude: /node_modules/,
+    ...(generator && { generator }),
+    ...(sideEffects !== undefined && { sideEffects }),
+  };
+  return [vendorRule, firstPartyRule];
+}
+
+/**
  * Returns all 6 style rules: CSS, SCSS, LESS — each as modules and non-modules.
  */
 export function styleRules(opts: StyleRulesOptions): RuleSetRule[] {
@@ -168,31 +204,21 @@ export function styleRules(opts: StyleRulesOptions): RuleSetRule[] {
   const sassLoader = { loader: require.resolve('sass-loader'), options: { sourceMap: true } };
 
   return [
-    {
-      test: stylesRegexps.cssNoModulesRegex,
-      type: 'css',
-      use: [...postCss],
-      ...(regularGenerator && { generator: regularGenerator }),
-      sideEffects: true,
-    },
-    {
-      test: stylesRegexps.cssModuleRegex,
-      type: 'css/module',
-      use: [...postCss],
-      generator: moduleGenerator,
-    },
-    {
-      test: stylesRegexps.sassNoModuleRegex,
-      type: 'css',
-      use: [...postCss, ...resolveUrl, sassLoader],
-      ...(regularGenerator && { generator: regularGenerator }),
-      sideEffects: true,
-    },
-    {
-      test: stylesRegexps.sassModuleRegex,
-      type: 'css/module',
-      use: [...postCss, ...resolveUrl, sassLoader],
-      generator: moduleGenerator,
-    },
+    ...styleRule(stylesRegexps.cssNoModulesRegex, 'css', [...postCss], regularGenerator, true),
+    ...styleRule(stylesRegexps.cssModuleRegex, 'css/module', [...postCss], moduleGenerator, undefined),
+    ...styleRule(
+      stylesRegexps.sassNoModuleRegex,
+      'css',
+      [...postCss, ...resolveUrl, sassLoader],
+      regularGenerator,
+      true
+    ),
+    ...styleRule(
+      stylesRegexps.sassModuleRegex,
+      'css/module',
+      [...postCss, ...resolveUrl, sassLoader],
+      moduleGenerator,
+      undefined
+    ),
   ];
 }
