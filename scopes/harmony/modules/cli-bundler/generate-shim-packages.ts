@@ -98,6 +98,124 @@ async function copyTypeDeclarations(sourceDir: string | undefined, shimDistDir: 
 }
 
 /**
+ * Packages whose real `index.ts` barrel intentionally re-exports a Node-only, build-tooling class as
+ * a VALUE - not a bug to fix, a real, load-bearing need (`builder.main.runtime.ts` genuinely
+ * `import`s `BundleUiTask` from bare `@teambit/ui` to instantiate it). Their real dist is correctly
+ * excluded from `UI_BUNDLING_EXTERNALS`'s default-off installation (D10/D15,
+ * `bundle-plan.md` §14/§17 - `@teambit/webpack`'s own `webpack-fallbacks.js` alone needs
+ * `assert/`/`buffer/`/`constants-browserify`, part of that ~1.1 GB opt-in group), so a `browser/`
+ * copy of their real dist would only ever fail to compile for a browser target - confirmed
+ * empirically (2026-09-07): copying all 105 shims' real dist surfaced 57 new errors, all four
+ * traced to `@teambit/ui`, `@teambit/webpack`, `@teambit/aspect-loader` reaching exactly that
+ * externals group, plus `@teambit/harmony` needing `reflect-metadata` (fixed separately by adding it
+ * to `externals.ts`'s `MISC`, not by excluding harmony here). Excluding these three here costs
+ * nothing bare imports of them didn't already cost before this file existed - they keep today's
+ * `require(bit.app.js)[...]` shim behavior, unchanged.
+ */
+const BROWSER_DIST_EXCLUDED_PACKAGES = new Set(['@teambit/ui', '@teambit/webpack', '@teambit/aspect-loader']);
+
+/**
+ * Copy an aspect's REAL compiled `dist/` output into `<shim>/browser/`, verbatim, alongside the
+ * existing `dist/` shim - so a browser-target bundler resolving `@teambit/<aspect>`'s **bare
+ * specifier** (not one of the specific runtime files `buildUiVendorDll` already covers) gets the
+ * actual compiled module instead of `require(bit.app.js)[...]`, which chokes on `bit.app.js`'s own
+ * bare `node:*` imports the moment ANYTHING pulls it into a browser compilation (see
+ * `bundle-plan/18-findings-log.md`'s 2026-09-07 entries and `26-ui-vendor-dll-design.md` for the
+ * repro this fixes).
+ *
+ * Copied into its own `browser/` directory (not mixed into the existing shim `dist/`) so every
+ * *relative* import inside the copied files (`require('./x.aspect')`, `require('./ui/y')`, ...)
+ * resolves to another real, copied file - never falls back to a sibling shim. A package with no
+ * `index.js` in its real `dist/` (nothing to expose bare), or one of `BROWSER_DIST_EXCLUDED_PACKAGES`
+ * above, is skipped; the shim's `dist/index.js` keeps working exactly as it does today either way.
+ *
+ * `.d.ts`/`.map`/`.mdx` are excluded - types are already served from the shim's own `dist/`
+ * (`copyTypeDeclarations`), source maps and docs add real weight (measured, see
+ * `bundle-plan/01-goal-and-results.md`) for zero runtime benefit in a browser bundle.
+ */
+async function copyBrowserDist(
+  packageName: string,
+  sourceDir: string | undefined,
+  browserDir: string
+): Promise<number> {
+  if (!sourceDir || BROWSER_DIST_EXCLUDED_PACKAGES.has(packageName)) return 0;
+  const from = join(sourceDir, 'dist');
+  if (!(await fs.pathExists(join(from, 'index.js')))) return 0;
+  // same self-reference guard as `copyTypeDeclarations` - building in place, `@teambit/bit`'s own
+  // source dir is the capsule whose `dist/core-aspects/` holds every shim already generated.
+  const files = await globby(['**/*.js', '**/*.scss', '**/*.css', '**/*.svg', '**/*.json', '!core-aspects/**'], {
+    cwd: from,
+    dot: true,
+  });
+  await Promise.all(
+    files.map(async (file) => {
+      const target = join(browserDir, file);
+      await fs.ensureDir(join(target, '..'));
+      await fs.copy(join(from, file), target, { dereference: true, overwrite: true });
+    })
+  );
+  return files.length;
+}
+
+/**
+ * `@teambit/harmony/dist/harmony.js` does a plain top-level `require('reflect-metadata')`, which in
+ * turn needs `cleargraph` (`extension-graph.js`), which needs `graphlib`/`lodash`, and so on. Marking
+ * these external (`externals.ts`) is the wrong tool even though the header there is right that a
+ * separate npm-install *sounds* like the pattern to reach for: `bit.app.js` itself needs
+ * `reflect-metadata` at its own top level too (harmony is always loaded), and externals are only
+ * installed by a LATER, separate `npm install` step in this same directory - `bit.app.js` would fail
+ * to load at all until a consumer completed that second step (verified:
+ * `require(bit.app.js)` throws `Cannot find module 'reflect-metadata'` immediately after
+ * `npm run bundle` on its own, before that second step runs). `harmony/browser/`'s copy
+ * (`copyBrowserDist`) has the exact same problem one level further out - a plain external wouldn't
+ * fix that either. Both need every one of these packages already on disk the moment `npm run bundle`
+ * finishes, with no further install step - so they are vendored here directly, verbatim, recursively
+ * (a dependency's own `dependencies` need the same treatment - `cleargraph` alone pulled in two
+ * more), once, at `<shimsDir>/<name>`: node's own upward `node_modules` search from
+ * `<shimsDir>/@teambit/harmony/browser/harmony.js` (or from `bit.app.js`'s own bundled
+ * `require("reflect-metadata")`, resolved from `<shimsDir>/@teambit/harmony/dist/index.js`) reaches
+ * `<shimsDir>` itself as an ancestor, so `<shimsDir>/<name>` satisfies both without any
+ * `node_modules`-nesting trick. Every package in this closure is tiny, pure JS, no native/platform
+ * variants (verified per-package before adding) - safe to duplicate rather than engineer around.
+ */
+const HARMONY_RUNTIME_DEPS = ['reflect-metadata', 'cleargraph', 'comment-json', 'user-home'];
+
+/**
+ * `resolveFrom` - not `packagesRoot` - because pnpm only symlinks a package's *direct* dependencies
+ * into a flat, repo-root `node_modules`; `cleargraph` (harmony's dependency, not the repo's) lives
+ * only inside harmony's own per-package store dir (`.pnpm/@teambit+harmony@.../node_modules/`), and
+ * `cleargraph`'s own dependencies (`graphlib`, `lodash`) likewise only inside *its* per-package dir.
+ * Node's own resolution would look in exactly this place first too - each level recurses from the
+ * dir it just found, the same as a real `require()` chain would.
+ */
+async function copyPackageWithDeps(
+  packageName: string,
+  resolveFrom: string,
+  shimsDir: string,
+  copied: Set<string>
+): Promise<void> {
+  if (copied.has(packageName)) return;
+  copied.add(packageName);
+  const sourceDir = resolvePackageDir(resolveFrom, packageName);
+  if (!sourceDir) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[bundle] "${packageName}" not resolvable from ${resolveFrom} - harmony's runtime deps may be incomplete`
+    );
+    return;
+  }
+  await fs.copy(sourceDir, join(shimsDir, packageName), { dereference: true, overwrite: true });
+  const { dependencies = {} } = await fs.readJson(join(sourceDir, 'package.json')).catch(() => ({}) as any);
+  await Promise.all(Object.keys(dependencies).map((dep) => copyPackageWithDeps(dep, sourceDir, shimsDir, copied)));
+}
+
+async function copyHarmonyRuntimeDeps(shimsDir: string, harmonyDir: string): Promise<string[]> {
+  const copied = new Set<string>();
+  await Promise.all(HARMONY_RUNTIME_DEPS.map((name) => copyPackageWithDeps(name, harmonyDir, shimsDir, copied)));
+  return [...copied];
+}
+
+/**
  * Copy an aspect's `artifacts/` tree into the shim - today that means the pre-built UI and preview
  * bundles produced by `BundleUI` / `PreBundlePreview`.
  *
@@ -173,7 +291,10 @@ async function generateOne(paths: BundlePaths, target: ShimTarget) {
   const original = await readSourcePackageJson(target.sourceDir);
   const typesCopied = await copyTypeDeclarations(target.sourceDir, distDir);
   const artifactsCopied = await copyShippedArtifacts(target.sourceDir, pkgDir);
+  const browserDir = join(pkgDir, 'browser');
+  const browserFilesCopied = await copyBrowserDist(target.packageName, target.sourceDir, browserDir);
   const hasTypes = typesCopied > 0 && (await fs.pathExists(join(distDir, 'index.d.ts')));
+  const hasBrowserDist = browserFilesCopied > 0 && (await fs.pathExists(join(browserDir, 'index.js')));
 
   const packageJson: Record<string, any> = {
     name: target.packageName,
@@ -190,6 +311,10 @@ async function generateOne(paths: BundlePaths, target: ShimTarget) {
       '.': {
         // `types` must come first - node/TS pick the first matching condition
         ...(hasTypes ? { types: './dist/index.d.ts' } : {}),
+        // a browser-target bundler (webpack/rspack `target: 'web'`) tries `browser` before
+        // `default` - see `copyBrowserDist`'s own comment for why this exists at all. `node` stays
+        // pinned to the shim: nothing about the *Node* CLI process's own resolution changes.
+        ...(hasBrowserDist ? { browser: './browser/index.js' } : {}),
         // `generate-esm-bridges` derives dist/esm.mjs from the built bundle
         node: { require: './dist/index.js', import: './dist/esm.mjs' },
         default: './dist/index.js',
@@ -209,7 +334,7 @@ async function generateOne(paths: BundlePaths, target: ShimTarget) {
     const rel = relative(locatorDir, join(distDir, 'index.js')).split('\\').join('/');
     await fs.writeFile(join(locatorDir, 'index.js'), locatorContent(rel.startsWith('.') ? rel : `./${rel}`));
   }
-  return { typesCopied, artifactsCopied };
+  return { typesCopied, artifactsCopied, browserFilesCopied: hasBrowserDist ? browserFilesCopied : 0 };
 }
 
 export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspectInfo[], extraPackages: string[]) {
@@ -235,6 +360,16 @@ export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspe
   const typeFiles = results.reduce((acc, r) => acc + r.typesCopied, 0);
   const withTypes = results.filter((r) => r.typesCopied).length;
   const artifactFiles = results.reduce((acc, r) => acc + r.artifactsCopied, 0);
+  const browserDistFiles = results.reduce((acc, r) => acc + r.browserFilesCopied, 0);
+  const withBrowserDist = results.filter((r) => r.browserFilesCopied).length;
+  const harmonyDir = resolvePackageDir(paths.packagesRoot, '@teambit/harmony');
+  const harmonyDepsCopied = harmonyDir ? await copyHarmonyRuntimeDeps(paths.shimsDir, harmonyDir) : [];
+  // eslint-disable-next-line no-console
+  console.log(
+    harmonyDir
+      ? `[bundle] harmony runtime deps vendored: ${harmonyDepsCopied.join(', ')}`
+      : '[bundle] "@teambit/harmony" not resolvable - skipping its vendored runtime deps'
+  );
   // types are optional, but their absence is worth saying out loud: it is the difference between a
   // user's workspace getting autocomplete for `@teambit/*` and getting `any`. In this repo it means
   // the components were compiled without `bit compile --generate-types`.
@@ -252,10 +387,17 @@ export async function generateShimPackages(paths: BundlePaths, aspects: CoreAspe
       : `[bundle] shipped artifacts: none - "bit start" will try to build the UI at runtime. run the ` +
           `BundleUI and PreBundlePreview build tasks so @teambit/ui and @teambit/preview carry artifacts/.`
   );
+  // see `copyBrowserDist`'s own comment: without this, ANY browser-target bundler resolving a core
+  // aspect's bare specifier (rather than one of the specific runtime files the vendor DLL covers)
+  // falls into `require(bit.app.js)[...]`, which cannot compile for a browser target at all.
+  // eslint-disable-next-line no-console
+  console.log(`[bundle] browser dist: ${browserDistFiles} files across ${withBrowserDist}/${targets.length} shims`);
   return {
     packageNames: targets.map((t) => t.packageName),
     typeFiles,
     shimsWithTypes: withTypes,
     artifactFiles,
+    browserDistFiles,
+    shimsWithBrowserDist: withBrowserDist,
   };
 }

@@ -1497,3 +1497,71 @@ run bundle` produced a `bit.app.js` with **zero** occurrences of `createUiVendor
     here — a design decision (expand coverage to more entry points? require app code to import via the
     exact runtime path?) belongs with whoever owns this plan's continuation, not something to resolve
     unilaterally mid-verification.
+- **2026-09-07 (bit-bundle3, closing the bare-import gap for real)** — the coverage gap above (bare
+  imports of a covered core aspect fall through to `require(bit.app.js)[...]`, which cannot compile
+  for a browser target) is now fixed at the bundler level, not via a bit-cloud-side rspack config
+  change. `generate-shim-packages.ts` (`scopes/harmony/modules/cli-bundler/`) now, for every shim,
+  copies that aspect's REAL compiled local `dist/` output verbatim into a new `<shim>/browser/`
+  directory and adds a `"browser"` condition to the shim's `package.json` `exports['.']` pointing at
+  it — `"node"`/`"default"` still point at the existing `require(bit.app.js)[...]` shim, completely
+  unchanged. A browser-target bundler (any bundler with `target: 'web'`, which tries the `"browser"`
+  condition before `"default"` by default - confirmed for rspack 2.2.2 with **zero** bit-cloud-side
+  config change) now gets the real module for a bare `@teambit/<aspect>` import instead of the broken
+  proxy, while the Node CLI process's own resolution (no `"browser"` condition) is provably
+  unaffected either way.
+  - Prototyped by hand first (2 packages, `@teambit/changelog` + `@teambit/harmony`) before touching
+    the generator, per the same "simulate before you commit" discipline as the rest of this plan.
+    That prototype's own first attempt (blindly overwriting `dist/index.js` instead of adding a
+    separate `browser/index.js`) broke the Node CLI process itself (`bit run` crashed:
+    `@teambit/harmony`'s real code needs `reflect-metadata`, only available bundled inside
+    `bit.app.js`, not as an installed package) — confirming the conditional-export split is load-
+    bearing, not a nice-to-have.
+  - Generalizing from 2 hand-picked packages to all 105 shims surfaced two further real, empirically-
+    found gaps, both fixed at the SAME generator level (`generate-shim-packages.ts`), not by
+    special-casing bit-cloud:
+    1. **`@teambit/ui`/`@teambit/webpack`/`@teambit/aspect-loader`'s real barrels are genuinely
+       Node/build-tooling-coupled** (`@teambit/ui`'s real `index.ts` re-exports `BundleUiTask` as a
+       value - `builder.main.runtime.ts` genuinely needs it at runtime - which pulls in
+       `@teambit/webpack`'s `webpack-fallbacks.js`, needing exactly the `assert/`/`buffer/`/
+       `constants-browserify` group `UI_BUNDLING_EXTERNALS` already keeps opt-in-only, D10/D15,
+       to avoid a 231 MB→1.3 GB blowup). Exposing their real dist via the `"browser"` condition would
+       only ever fail for a browser target - excluded via a small, explicit, documented constant
+       (`BROWSER_DIST_EXCLUDED_PACKAGES`), same today-unchanged shim behavior as before this fix, no
+       regression (bare imports of these 3 were already broken; this doesn't make them worse).
+    2. **`@teambit/harmony`'s real code needs `reflect-metadata`, `cleargraph`, `comment-json`,
+       `user-home`, and their own transitive deps (`graphlib`, `lodash`, `os-homedir`,
+       `array-timsort`, `core-util-is`, `esprima`, `has-own-prop`, `repeat-string` - 12 packages
+       total)**, none of which are installed as standalone packages anywhere near the bundle (esbuild
+       inlines them straight into `bit.app.js`). Marking any of them `external` (`externals.ts`) was
+       tried and is the wrong tool: `bit.app.js` itself needs `reflect-metadata` at its own top level
+       (harmony is always loaded), and externals are only installed by the _separate_, later
+       `npm install` step - `require(bit.app.js)` throws `Cannot find module 'reflect-metadata'`
+       immediately after `npm run bundle` on its own, before that step runs (verified directly).
+       Fixed instead by vendoring the whole resolved closure directly into `<shimsDir>/<name>` during
+       `npm run bundle` itself (`copyHarmonyRuntimeDeps`/`copyPackageWithDeps`, recursive, resolving
+       each package from wherever ITS OWN parent resolves it - not `packagesRoot` - since pnpm only
+       flat-symlinks a package's _direct_ dependencies; `cleargraph` etc. live only inside harmony's
+       own per-package pnpm store dir). Verified: `require(bit.app.js)` and
+       `require('<shim>/@teambit/harmony/browser/index.js')` both load cleanly with zero further
+       missing-module errors.
+  - **Real end-to-end result, in `/Users/giladshoham/dev/temp/bit-cloud-bundle`**: full rebuild
+    (`npm run bundle` → `npm install` → `bit install`, plus the two still-independently-needed
+    workarounds - the `@teambit/react.react` symlink and the pnpm-hoisted-`@teambit/ui` symlink, both
+    already documented above, unrelated to this fix), then `CLIENT_ONLY=true bit run community-cloud`:
+    **0 rspack errors** (`client (Rspack 2.2.2) compiled with 2 warnings` - the 2 warnings are the
+    same pre-existing, unrelated `import.meta.webpackHot` parse warnings from
+    `ui.root<hash>.js`, not new). Confirmed executing for real in an actual browser (Playwright): the
+    served page runs React Router's `useLocation` and Bit's own `Harmony.load([...])` client
+    bootstrap for real, reaching all the way to a genuine `fetch` to `https://api.v2.bit.cloud/graphql`
+    (which 405s - this sandbox has no real backend behind it under `CLIENT_ONLY=true`, a pre-existing,
+    unrelated, already-documented limitation of that flag, not a rendering bug - the render never
+    getting past that fetch is the ONLY thing left unverified, and it is out of this fix's scope).
+    `window.__bitUiVendor__` populated with 9 real delegated modules at the point the fetch failed.
+  - Size cost, measured after the FULL rebuild + install (see `01-goal-and-results.md`'s own updated
+    breakdown table for the complete picture): **+12 MB** (1,726 files, 102/105 shims) for the browser
+    barrels, **+6.4 MB** (12 packages) for harmony's vendored runtime deps - **+18.4 MB total** for
+    this specific fix, on top of the already-existing 159 MB baseline + the unrelated SSR regression +
+    the vendor DLL's own ~9.6 MB.
+  - Not yet done: this is implemented and verified, but not committed to the `ui-vendor-dll` branch
+    (PR #10690) - the user asked to implement, run, and verify first, decide whether to commit after
+    seeing it run.

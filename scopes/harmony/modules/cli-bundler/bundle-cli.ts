@@ -73,6 +73,9 @@ export type BundleCliResult = {
   shimsWithTypes: number;
   /** files copied from the aspects' `artifacts/` - the pre-built UI and preview bundles */
   artifactFiles: number;
+  /** real compiled `.js`/asset files copied into each shim's `browser/`, and how many shims got any */
+  browserDistFiles: number;
+  shimsWithBrowserDist: number;
   sea?: { exePath: string; sizeMb: number; nodeVersion: string };
   errors: number;
   warnings: number;
@@ -163,6 +166,8 @@ export async function bundleCli(options: BundleCliOptions): Promise<BundleCliRes
     typeFiles: shims.typeFiles,
     shimsWithTypes: shims.shimsWithTypes,
     artifactFiles: shims.artifactFiles,
+    browserDistFiles: shims.browserDistFiles,
+    shimsWithBrowserDist: shims.shimsWithBrowserDist,
     sea,
     errors: result.errors.length,
     warnings: result.warnings.length,
