@@ -251,6 +251,40 @@ describe('toPortableUiVendorDllManifest', () => {
     const portable = toPortableUiVendorDllManifest(manifest);
     expect(Object.keys(portable.content)).to.deep.equal(['./use-debounce/esm/other.js']);
   });
+
+  it("normalizes rspack 1.7.12's object-shaped buildMeta.defaultObject to the plain string a newer rspack's DllReferencePlugin requires", () => {
+    // real, observed shape from a real build: rspack 1.7.12 (this component's own installed version)
+    // serializes a JSON module's "redirect-warn" defaultObject as an object; rspack 2.2.2 (a real
+    // consumer install used in end-to-end verification) rejects that object with `StringExpected ...
+    // on JsBuildMeta.defaultObject`, failing the consumer's ENTIRE compiler instantiation - not just
+    // skipping that one module.
+    const manifest: UiVendorDllManifest = {
+      name: '__bitUiVendor__',
+      type: 'window',
+      content: {
+        './node_modules/binary-extensions/binary-extensions.json': {
+          id: 1,
+          buildMeta: {
+            strictEsmModule: false,
+            exportsType: 'default',
+            defaultObject: { redirectWarn: { ignore: true } },
+          },
+        },
+        './node_modules/some-pkg/redirect.json': {
+          id: 2,
+          buildMeta: { exportsType: 'default', defaultObject: { redirect: {} } },
+        },
+        './node_modules/some-pkg/plain.js': { id: 3, buildMeta: { exportsType: 'namespace', defaultObject: false } },
+      },
+    };
+    const portable = toPortableUiVendorDllManifest(manifest);
+    expect((portable.content['./binary-extensions/binary-extensions.json'].buildMeta as any).defaultObject).to.equal(
+      'redirect-warn'
+    );
+    expect((portable.content['./some-pkg/redirect.json'].buildMeta as any).defaultObject).to.equal('redirect');
+    // a non-object defaultObject (or no buildMeta at all) passes through untouched
+    expect((portable.content['./some-pkg/plain.js'].buildMeta as any).defaultObject).to.equal(false);
+  });
 });
 
 describe('createUiVendorDllReference (a separate install with its own layout)', () => {

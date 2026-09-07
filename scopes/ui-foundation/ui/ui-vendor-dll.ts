@@ -162,6 +162,28 @@ export function toPortableUiVendorDllKey(key: string): string | undefined {
   return `./${key.slice(lastNodeModules + NODE_MODULES_SEGMENT.length)}`;
 }
 
+/**
+ * the rspack version that builds this dll (currently 1.7.12, resolved by this component's own
+ * `package.json`) may differ from the rspack a consumer's own project installs (bit-cloud-bundle's
+ * real consumption was tested against rspack 2.2.2). `buildMeta.defaultObject` is one place this
+ * actually breaks across versions: 1.7.12 serializes the "redirect-warn" case as an object
+ * (`{ redirectWarn: { ignore: boolean } }`), while 2.2.2's Rust-side type only accepts the plain
+ * string enum (`'redirect' | 'redirect-warn'`) - passing the object form makes `DllReferencePlugin`
+ * fail its *entire* compiler instantiation with `StringExpected ... on JsBuildMeta.defaultObject`,
+ * not just skip that one module. Confirmed empirically consuming a real 1.7.12-built manifest from a
+ * real 2.2.2 install. Normalizing to the string form here keeps the artifact consumable by both.
+ */
+function toPortableBuildMeta(buildMeta: unknown): unknown {
+  if (!buildMeta || typeof buildMeta !== 'object') return buildMeta;
+  const meta = buildMeta as Record<string, unknown>;
+  const defaultObject = meta.defaultObject;
+  if (!defaultObject || typeof defaultObject !== 'object') return buildMeta;
+  const kind = Object.keys(defaultObject)[0]; // 'redirectWarn' | 'redirect'
+  const portableDefaultObject =
+    kind === 'redirectWarn' ? 'redirect-warn' : kind === 'redirect' ? 'redirect' : defaultObject;
+  return { ...meta, defaultObject: portableDefaultObject };
+}
+
 export function toPortableUiVendorDllManifest(manifest: UiVendorDllManifest): UiVendorDllManifest {
   // `undefined` marks a key seen more than once: the dll covers two versions of the same package
   // (pnpm keeps them in separate store directories, package name + subpath cannot tell them apart),
@@ -171,7 +193,9 @@ export function toPortableUiVendorDllManifest(manifest: UiVendorDllManifest): Ui
   Object.entries(manifest.content).forEach(([key, entry]) => {
     const portableKey = toPortableUiVendorDllKey(key);
     if (!portableKey) return;
-    entries.set(portableKey, entries.has(portableKey) ? undefined : entry);
+    const portableEntry =
+      entry && 'buildMeta' in entry ? { ...entry, buildMeta: toPortableBuildMeta(entry.buildMeta) } : entry;
+    entries.set(portableKey, entries.has(portableKey) ? undefined : portableEntry);
   });
   const content: Record<string, UiVendorDllManifestEntry> = {};
   entries.forEach((entry, key) => {
