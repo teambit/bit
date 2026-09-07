@@ -236,6 +236,26 @@ describe('toPortableUiVendorDllManifest', () => {
     expect(portable.content['./lodash.compact/index.js']).to.deep.equal({ id: 42, exports: true });
   });
 
+  it("drops react-router-dom/react-router/@remix-run/router and bit's own react-router wrapper packages entirely - a delegated consumer of a context whose provider lives in the (never delegated) consumer app root is unsafe regardless of internal version consistency", () => {
+    const manifest: UiVendorDllManifest = {
+      name: '__bitUiVendor__',
+      type: 'window',
+      content: {
+        './node_modules/react-router-dom/dist/index.js': { id: 1 },
+        './node_modules/react-router-dom/server.mjs': { id: 2 },
+        './node_modules/react-router/dist/index.js': { id: 3 },
+        './node_modules/.pnpm/@remix-run+router@1.0.0/node_modules/@remix-run/router/dist/router.js': { id: 4 },
+        './node_modules/@teambit/react-router/dist/LocationHooks.js': { id: 5 },
+        './node_modules/@teambit/ui-foundation.ui.navigation.react-router-adapter/dist/index.js': { id: 6 },
+        './node_modules/@teambit/ui-foundation.ui.react-router.slot-router/dist/index.js': { id: 7 },
+        './node_modules/@teambit/ui-foundation.ui.react-router.use-query/dist/index.js': { id: 8 },
+        './node_modules/@teambit/ui/dist/ui.ui.runtime.js': { id: 9 },
+      },
+    };
+    const portable = toPortableUiVendorDllManifest(manifest);
+    expect(Object.keys(portable.content)).to.deep.equal(['./@teambit/ui/dist/ui.ui.runtime.js']);
+  });
+
   it('covers neither copy when two versions of one package collapse onto the same key', () => {
     // package name + subpath cannot tell two installed versions apart, so there is no single right
     // module to delegate to - the consumer compiles its own instead.

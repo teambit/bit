@@ -184,6 +184,53 @@ function toPortableBuildMeta(buildMeta: unknown): unknown {
   return { ...meta, defaultObject: portableDefaultObject };
 }
 
+/**
+ * Packages that carry - or wrap something that carries - a React context whose PROVIDER lives
+ * outside this dll's own coverage (in the consumer's own app root, never delegated). Delegating the
+ * *consumer* of such a context without also delegating its *provider* is unsafe regardless of how
+ * internally version-consistent this dll's own build is: `resolveAlias()` (`rspack.common.ts`)
+ * already pins `react-router-dom`/`react-router`/`@remix-run/router` to one copy within this dll's
+ * own compilation (2026-09-07, same fix `@apollo/client` already had for the same reason - see that
+ * alias's own comment) - real symptom BEFORE that fix: this repo alone carries 4 separately
+ * peer-resolved `react-router-dom` copies, so an unaliased dll build baked in two different
+ * `useLocation` implementations internally. Even AFTER pinning it, `useLocation()` still threw the
+ * exact same way (2026-09-07, confirmed - byte offset in `vendor.js` shifted, meaning the alias did
+ * take effect, but the crash didn't move) - because the *real* mismatch isn't inside this dll's own
+ * build at all: it's between whichever ONE consistent react-router-dom this dll now bakes in and
+ * bit-cloud's OWN, entirely separately-compiled react-router-dom, wrapped in the `<Router>` that
+ * bit-cloud's own app root (never delegated) provides. `@teambit/react-router`'s own real barrel
+ * (`react-router/index.ts`) re-exports react-router-dom's hooks directly
+ * (`export * as ReactRouter from 'react-router-dom'`) - delegating IT hands the consumer bit's own
+ * copy of those hooks, tied to bit's own `@remix-run/router` context instance, which the consumer's
+ * own, separately-compiled `<Router>` never provides. Bare `react-router-dom`/`react-router`/
+ * `@remix-run/router` themselves are excluded too, for the more basic reason that a real consumer's
+ * own installed version can have a genuinely different file layout than whatever this dll's producer
+ * build resolved (confirmed: bit-cloud-bundle's real `react-router-dom@6.2.2` has no `dist/`
+ * directory at all, a different shape than this dll's own build resolved, so its manifest key never
+ * matches there - a separate, unrelated key for `react-router-dom/server.mjs` happened to exist at
+ * the same relative path in both versions by coincidence, delegating a Node/SSR module in place of
+ * the real client one). Unlike a core `@teambit/*` aspect that carries no such foreign context (one
+ * version, defined by this branch, genuinely safe to share), every package below either wraps
+ * react-router-dom's context directly or is the library itself - excluding them costs only the
+ * (rare) case where a consumer's own copy happens to exactly match this dll's producer version;
+ * their real dist still compiles fine standalone via `copyBrowserDist`'s browser barrels either way.
+ */
+const CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES = new Set([
+  'react-router-dom',
+  'react-router',
+  '@remix-run/router',
+  '@teambit/react-router',
+  '@teambit/ui-foundation.ui.navigation.react-router-adapter',
+  '@teambit/ui-foundation.ui.react-router.slot-router',
+  '@teambit/ui-foundation.ui.react-router.use-query',
+]);
+
+function packageNameOf(portableKey: string): string | undefined {
+  const specifier = portableKey.startsWith('./') ? portableKey.slice(2) : portableKey;
+  const packageName = specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0];
+  return packageName || undefined;
+}
+
 export function toPortableUiVendorDllManifest(manifest: UiVendorDllManifest): UiVendorDllManifest {
   // `undefined` marks a key seen more than once: the dll covers two versions of the same package
   // (pnpm keeps them in separate store directories, package name + subpath cannot tell them apart),
@@ -193,6 +240,8 @@ export function toPortableUiVendorDllManifest(manifest: UiVendorDllManifest): Ui
   Object.entries(manifest.content).forEach(([key, entry]) => {
     const portableKey = toPortableUiVendorDllKey(key);
     if (!portableKey) return;
+    const packageName = packageNameOf(portableKey);
+    if (packageName && CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES.has(packageName)) return;
     const portableEntry =
       entry && 'buildMeta' in entry ? { ...entry, buildMeta: toPortableBuildMeta(entry.buildMeta) } : entry;
     entries.set(portableKey, entries.has(portableKey) ? undefined : portableEntry);
