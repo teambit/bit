@@ -47,9 +47,6 @@ export default function createRspackBrowserConfig(
     mode: 'production',
 
     devtool: shouldUseSourceMap ? 'source-map' : false,
-    experiments: {
-      css: true,
-    },
 
     entry: Object.fromEntries(
       (() => {

@@ -79,10 +79,15 @@ export const resolveFallbackDev = {
 } as const;
 
 // Keep CSS module imports webpack-compatible: `import styles from './x.module.scss'`.
+// `url: false`: every `url()` in this graph is either an absolute CDN font url or a `data:` URI -
+// none are local files needing rspack's asset pipeline. Rspack v2's CSS handler (unlike v1) tries
+// to resolve every `url()` as a module to read, which fails on a remote https: font url with
+// "Unhandled scheme" (no plugin registered for reading over http). Disabling it leaves such urls
+// as literal text in the emitted CSS, which is what a browser needs anyway.
 export const cssParser = {
-  css: { namedExports: false },
-  'css/auto': { namedExports: false },
-  'css/module': { namedExports: false },
+  css: { namedExports: false, url: false },
+  'css/auto': { namedExports: false, url: false },
+  'css/module': { namedExports: false, url: false },
 } as const;
 
 export function swcRule(options?: { dev?: boolean; refresh?: boolean }): RuleSetRule {
