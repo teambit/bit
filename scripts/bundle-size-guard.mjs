@@ -5,9 +5,10 @@
  * SSR bundle jumping 6 MB -> 53 MB (bundle-plan/18-findings-log.md, 2026-09-07/08) fails CI
  * immediately instead of shipping.
  *
- * Two phases, because half the tree isn't there yet when `setup_esbuild_bundle` finishes -
- * the UI/preview pre-bundle is injected later, by a separate CI job (bundle-plan/12-first-ci-run.md,
- * `inject_ui_prebundle`):
+ * Two phases, because half the tree isn't there yet when `setup_esbuild_bundle` finishes - the
+ * UI/preview pre-bundle is injected later, by a separate CI job (`check_ui_prebundle_size`, which
+ * runs `inject_ui_prebundle` then this in `--phase=post`, before `e2e_test_ui_prebundle` even
+ * starts - build validation, not a test):
  *
  *   node scripts/bundle-size-guard.mjs --phase=pre  --out-dir <dir>   # right after the bundle is built
  *   node scripts/bundle-size-guard.mjs --phase=post --out-dir <dir>   # right after inject_ui_prebundle

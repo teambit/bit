@@ -1431,22 +1431,43 @@ jobs:
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
-  # Injects build_ui_prebundle's fresh pre-bundle into setup_esbuild_bundle's already-built bundle
-  # - a plain file copy, since the pre-bundle is static artifacts alongside bit.app.js rather than
-  # compiled into it, so no rebuild is needed - then runs, against the result in `prebuilt` mode:
-  # the UI-bundling sanity suites (ui-start.e2e.ts/ui-ssr.e2e.ts, gated behind BIT_E2E_UI_MODE, see
-  # bundle-plan/11-e2e-suite.md) and any other spec file whose own gate checks for the same thing
-  # (custom-env-operations-2.e2e.ts's "preview/bundler but no compiler" describe block, added
-  # 2026-08-19 - bundle-plan §10 gap 11 - needs the *core* preview pre-bundle to build a
-  # workspace-local env's preview under the bundle at all; add further files here the same way).
+  # Injects build_ui_prebundle's fresh pre-bundle into setup_esbuild_bundle's already-built bundle -
+  # a plain file copy, since the pre-bundle is static artifacts alongside bit.app.js rather than
+  # compiled into it, so no rebuild is needed - then guards its size (the parts that don't exist
+  # until this injection has run; setup_esbuild_bundle's own "check bundle size (pre-prebundle)"
+  # step covers everything else). Build validation, not a test, so it lives here rather than in
+  # e2e_test_ui_prebundle - and its combined output is persisted so that job can attach it directly
+  # instead of redoing the injection. See scripts/bundle-size-guard.mjs.
   # Requires both upstream jobs but runs independently of e2e_test_esbuild_bundle, so a slow or
-  # failing pre-bundle build never delays or fails the main e2e signal - only this job's own,
-  # narrower one.
-  # Runs `restore_common_caches`/`bit_global_for_npm`/`bit_config` before touching the bundle -
-  # the same global-config setup `e2e_test_esbuild_bundle` gets via `e2e_test_cmd` (registry,
-  # hub_domain, package-manager.cache, etc., all set through the repo's own `bit.js`, not the
-  # bundle under test). Without it this job's `bit install`/`bit build` calls run against
-  # whatever config CircleCI's stock image happens to have, unlike every other e2e job.
+  # failing pre-bundle build never delays or fails the main e2e signal.
+  check_ui_prebundle_size:
+    <<: *defaults
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: ./
+      - inject_ui_prebundle
+      - run:
+          name: check bundle size (post-prebundle)
+          command: |
+            cd bit
+            node scripts/bundle-size-guard.mjs --phase=post --out-dir=/home/circleci/bit/esbuild-bundle
+      - persist_to_workspace:
+          root: .
+          paths:
+            - esbuild-bundle
+
+  # Runs, against check_ui_prebundle_size's already-injected, already-size-checked bundle, in
+  # `prebuilt` mode: the UI-bundling sanity suites (ui-start.e2e.ts/ui-ssr.e2e.ts, gated behind
+  # BIT_E2E_UI_MODE, see bundle-plan/11-e2e-suite.md) and any other spec file whose own gate checks
+  # for the same thing (custom-env-operations-2.e2e.ts's "preview/bundler but no compiler" describe
+  # block, added 2026-08-19 - bundle-plan §10 gap 11 - needs the *core* preview pre-bundle to build a
+  # workspace-local env's preview under the bundle at all; add further files here the same way).
+  # Runs `restore_common_caches`/`bit_global_for_npm`/`bit_config` before touching the bundle - the
+  # same global-config setup `e2e_test_esbuild_bundle` gets via `e2e_test_cmd` (registry, hub_domain,
+  # package-manager.cache, etc., all set through the repo's own `bit.js`, not the bundle under test).
+  # Without it this job's `bit install`/`bit build` calls run against whatever config CircleCI's
+  # stock image happens to have, unlike every other e2e job.
   e2e_test_ui_prebundle:
     <<: *defaults
     resource_class: medium
@@ -1459,15 +1480,6 @@ jobs:
       - restore_common_caches
       - bit_global_for_npm
       - bit_config
-      - inject_ui_prebundle
-      # the UI/preview parts only exist from here on - checked separately from setup_esbuild_bundle's
-      # "check bundle size (pre-prebundle)" step, which covers everything else. Runs before the 10-min
-      # e2e suite below so a size regression fails fast. See scripts/bundle-size-guard.mjs.
-      - run:
-          name: check bundle size (post-prebundle)
-          command: |
-            cd bit
-            node scripts/bundle-size-guard.mjs --phase=post --out-dir=/home/circleci/bit/esbuild-bundle
       - run:
           name: put the bundled bit on PATH as "bit-bundled"
           # the launcher resolves the bundle relative to its own realpath, so a symlink is enough.
@@ -2150,10 +2162,13 @@ workflows:
       - build_ui_prebundle:
           requires:
             - setup_harmony
-      - e2e_test_ui_prebundle:
+      - check_ui_prebundle_size:
           requires:
             - setup_esbuild_bundle
             - build_ui_prebundle
+      - e2e_test_ui_prebundle:
+          requires:
+            - check_ui_prebundle_size
       # auto-publishes a bvm dev pre-release on every bit-bundle* push, reusing the two jobs'
       # output above instead of rebuilding it - see bundle_push_build's own comment and
       # bundle-plan/24-installing-via-bvm.md. The manual, arbitrary-version bundle_deploy workflow
