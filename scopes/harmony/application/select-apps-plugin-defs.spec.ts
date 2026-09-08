@@ -67,11 +67,35 @@ describe('selectAppsPluginDefs', () => {
     const result = selectAppsPluginDefs(defsByAspectId, [APP_TYPE_PATTERN, OTHER_APP_TYPE_PATTERN], []);
     expect(result).to.have.lengthOf(2);
   });
-  it('should not pick a second def when the same aspect-version registered the pattern twice', () => {
+  it('should keep all defs of the selected aspect-version when it registered the pattern more than once', () => {
     const first = pluginDef(APP_TYPE_PATTERN);
     const second = pluginDef(APP_TYPE_PATTERN);
     const defsByAspectId: PluginDefsByAspectId = [[LANE_SNAP_ASPECT_ID, [first, second]]];
     const result = selectAppsPluginDefs(defsByAspectId, [APP_TYPE_PATTERN], [LANE_SNAP_ASPECT_ID]);
-    expect(result).to.deep.equal([first]);
+    expect(result).to.deep.equal([first, second]);
+  });
+  it('should keep defs of different aspects that share the same pattern', () => {
+    const fromOneAspect = pluginDef(APP_TYPE_PATTERN);
+    const fromAnotherAspect = pluginDef(APP_TYPE_PATTERN);
+    const defsByAspectId: PluginDefsByAspectId = [
+      [LANE_SNAP_ASPECT_ID, [fromOneAspect]],
+      ['my-scope/another-aspect@1.0.0', [fromAnotherAspect]],
+    ];
+    const result = selectAppsPluginDefs(defsByAspectId, [APP_TYPE_PATTERN], [LANE_SNAP_ASPECT_ID]);
+    expect(result).to.deep.equal([fromOneAspect, fromAnotherAspect]);
+  });
+  it('should keep all defs of an aspect-version that registered several app-types', () => {
+    const appDef = pluginDef(APP_TYPE_PATTERN);
+    const otherAppDef = pluginDef(OTHER_APP_TYPE_PATTERN);
+    const defsByAspectId: PluginDefsByAspectId = [
+      [LANE_SNAP_ASPECT_ID, [appDef, otherAppDef]],
+      [RELEASED_ASPECT_ID, [pluginDef(APP_TYPE_PATTERN), pluginDef(OTHER_APP_TYPE_PATTERN)]],
+    ];
+    const result = selectAppsPluginDefs(
+      defsByAspectId,
+      [APP_TYPE_PATTERN, OTHER_APP_TYPE_PATTERN],
+      [LANE_SNAP_ASPECT_ID]
+    );
+    expect(result).to.deep.equal([appDef, otherAppDef]);
   });
 });
