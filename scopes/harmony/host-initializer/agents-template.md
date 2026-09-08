@@ -112,7 +112,7 @@ bit compile                          # rebuild dist/ — automatic while bit wat
 bit validate                         # lint + type-check + tests (fast build)
 bit test                             # run tests only
 bit lint                             # run linter only
-bit check-types                      # TypeScript type checker only
+bit check-types --strict             # TypeScript type checker only (without --strict it exits 0 even on errors)
 bit ripple log                       # check Ripple CI build status (auto-detects current lane)
 bit ripple errors                    # show build errors for a Ripple CI job
 bit ripple retry                     # retry a failed Ripple CI job
@@ -126,7 +126,7 @@ bit ripple stop                      # stop a running Ripple CI job
 > **Use Bit for type checking and testing.** Never use `tsc` or `npx tsc` directly. Use `bit validate` for a full check, or scope to specific components:
 >
 > ```bash
-> bit check-types "[component-id1, component-id2]"
+> bit check-types --strict "[component-id1, component-id2]"
 > bit test "[component-id1, component-id2]"
 > bit validate "[component-id1, component-id2]"
 > ```
@@ -368,7 +368,7 @@ There are two ways to compose an app. Decide before creating anything:
 
 - **Do NOT default to Harmony/Symphony — most projects do not need it.** For personal sites, MVPs, small-to-medium apps and single-team projects, use the simple `platform` composition below.
 - Use **Harmony** only for large enterprise platforms with multiple teams that need extensibility, plugin architecture and IoC — or when the user explicitly asks for it.
-- To tell what an existing workspace uses: check `workspace.jsonc` for `teambit.harmony/harmony`, or the code for `symphonyPlatform`. If neither is present, use simple platform composition.
+- To tell what an existing workspace uses: check `workspace.jsonc` for `bitdev.symphony/symphony-platform`, or the code for `symphonyPlatform`. If neither is present, use simple platform composition.
 - When it's unclear which fits, ask: _"Are you building a simple app/site, or an enterprise platform that multiple teams will extend?"_
 
 ### Simple platform composition
