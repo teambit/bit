@@ -55,7 +55,7 @@ bit templates                        # see what generators are available
 
 ## Scopes & the Bit Cloud MCP
 
-A **scope** is a remote registry for one business domain — and the unit a full-stack feature ships as (see _Full-Stack Platforms & Harmony_). Every component ID is `<owner>.<scope>/<namespace>/<name>`.
+A **scope** is a remote registry for one business domain — and the unit a full-stack feature ships as (see _Full-Stack Apps_). A component ID is `<owner>.<scope>/<name>`, optionally with a namespace before the name: `<owner>.<scope>/<namespace>/<name>`. The namespace is optional — don't add one to an ID that doesn't have it.
 
 Anything remote — scopes, components, lanes, change requests — goes through the **Bit Cloud MCP**, not the CLI. The server advertises its own tools; two rules about _ordering_ them:
 
@@ -503,14 +503,14 @@ bit ripple retry        # retry a failed job
 
 Copy that URL verbatim; never assemble one by hand. Its last segment is the job's slug, not the display name, so a hand-built link lands on "No CI job found".
 
-Then report the outcome once it finishes. Once the build succeeds the app is live — get the URL with the `list_apps` MCP tool, don't guess or construct it:
+Then report the outcome once it finishes. Once the build succeeds, an app that defines a deployment is live — get its URL with the `list_apps` MCP tool, don't guess or construct it:
 
 | Exported from     | Served on        |
 | ----------------- | ---------------- |
 | A lane (staging)  | `*.bit-app.dev`  |
 | main (production) | `*.composed.app` |
 
-**The URL changes when a change request is merged.** The lane's `bit-app.dev` URL is not the production one — after a release, call `list_apps` again and give the user the new `composed.app` URL. Component-only releases (no app) have no URL at all; point the user at the scope page instead.
+**The URL changes when a change request is merged.** The lane's `bit-app.dev` URL is not the production one — after a release, call `list_apps` again and give the user the new `composed.app` URL. Component-only releases have no URL at all, and neither does an app that defines no deployment — a green build on its own is not proof that anything was deployed. If `list_apps` gives you no URL, say so rather than implying the app is live, and point the user at the scope page instead.
 
 Custom domains are a Bit Cloud settings flow with no CLI equivalent — send the user to `https://bit.cloud/<owner>/~settings/deployment`. Never claim to have connected a domain yourself.
 
