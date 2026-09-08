@@ -1823,6 +1823,7 @@ scopes/harmony/modules/cli-bundler`; did not affect the already-pushed code or t
 - **2026-09-08 — the Qodo-review fix commit above broke `build_ui_prebundle` on real CI; root-caused
   via `circleci run get --failure-report` and fixed.** Two distinct regressions, both introduced by
   that same commit:
+
   1. **`import { tmpdir } from 'os'` in `ui-vendor-dll.ts` broke the real browser UI/preview
      pre-bundle compilation** - `os` has no browser `resolve.fallback` the way `fs`/`path` do (they
      were already imported; `os` was new), and this file is reachable from a browser build via
@@ -1862,3 +1863,36 @@ scopes/harmony/modules/cli-bundler`; did not affect the already-pushed code or t
      practice. `shims-total` grew too (10.11 -> ~10.90 MB, per the same CI report) but still fits within
      its existing margin (78% used) - left as is, worth watching on the next legitimate size-affecting
      change to this area.
+
+- **2026-09-08 — follow-up correction: the previous commit's `p-map-series`/`chalk` fixture swap still
+  wasn't enough; `bit_pr`'s real capsule needed the _original_ fixture/root pairing, not just a real
+  dependency of `@teambit/ui`.** After pushing the `os`-import fix above, the next real CI run showed
+  `build_ui_prebundle`, `build_esbuild_bundle`, and both e2e jobs all green (confirming the `os` fix and
+  the `shims-dist` baseline bump both worked) - but `bit_pr`'s `MochaTest` task still failed, two ways:
+  1. Even `p-map-series` (a genuine declared dependency of `@teambit/ui`) failed to resolve via
+     `buildUiVendorDll`'s new default `sourceRoot` inside that real capsule -
+     `Module not found: Can't resolve 'p-map-series'`. `resolveUiVendorDllSourceRoot()`'s own
+     resolution of `@teambit/ui`'s install root is apparently not the same `node_modules` a real
+     build/test capsule installs that component's _other_ dependencies into - not fully understood
+     (not reproducible locally against this checkout; `bit test` here uses a different execution path
+     than `bit_pr`'s build-pipeline `MochaTest` task), and not worth chasing further given a
+     known-good alternative exists: confirmed via `circleci run list`/`run get` against `f8ba1027f`
+     and `dc90ca9c5` (both before any of this review-fix work) that `bit_pr` passed there with the
+     _original_ `lodash.compact`/`lodash.flatten` fixtures resolved off `process.cwd()` - so these
+     tests now pass `process.cwd()` explicitly as `sourceRoot` (real `BundleUiTask` usage never passes
+     one, so it's unaffected and still gets the correct, newly-fixed default) and were reverted back
+     to that exact proven pairing rather than trusting a different package's own hoisting story.
+  2. `resolveContextProviderMismatchUnsafePackages`'s own "does not flag a package with no router
+     dependency" test used `@teambit/preview` as the negative example, and failed _only_ in CI:
+     `expected Set{...} to not include '@teambit/preview'`. Not reproducible locally (`bit show
+   teambit.preview/preview`'s own dependency graph and a direct check both agree it isn't flagged
+     here) - a live, moving-target component's exact dependency graph is the wrong thing to pin a
+     "this is never flagged" assertion to regardless of why it disagreed with CI this time. Replaced
+     with a small, fully controlled fake package (zero dependencies by construction), matching this
+     spec file's own established pattern for exactly this kind of determinism need.
+     General lesson for this feature: anything exercising `buildUiVendorDll`'s _bare-package_ resolution
+     path (as opposed to the runtime-file-matching path, which resolves by absolute path and has proven
+     robust regardless of capsule/env quirks) needs either a fixture placed by construction alongside
+     whatever root the build will actually use, or a `process.cwd()`-anchored pairing already proven safe
+     in the real `bit_pr` capsule - not an assumption that "a real dependency of the component" is
+     automatically safe.

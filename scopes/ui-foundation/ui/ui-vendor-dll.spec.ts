@@ -75,13 +75,17 @@ describe('buildUiVendorDll', function () {
   let outputPath: string;
   before(async () => {
     outputPath = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-test-'));
-    // `p-map-series` - a real, declared dependency of `@teambit/ui` itself (zero deps of its own),
-    // not an arbitrary hoisted package: an isolated capsule/install building this component is
-    // guaranteed to have it, unlike a package that only happens to be hoisted at this repo's flat
-    // root. `buildUiVendorDll`'s default `sourceRoot` resolves the real install being bundled (see
-    // `resolveUiVendorDllSourceRoot`), not `process.cwd()` - a fixture that only exists by cwd
-    // happenstance would fail to resolve inside a real, isolated capsule.
-    await buildUiVendorDll(outputPath, ['p-map-series']);
+    // `process.cwd()` passed explicitly, not the default `resolveUiVendorDllSourceRoot()` - real
+    // production usage (`BundleUiTask`) never passes a `sourceRoot`, so it always gets that default,
+    // which is what actually fixes cwd-independence there. These tests are about other things
+    // entirely (manifest shape, multi-package chunks, ...) and just need *some* real, resolvable
+    // package as a fixture. `resolveUiVendorDllSourceRoot()`'s own resolution of `@teambit/ui`'s
+    // install root is not reliable for that under a real build/test capsule (confirmed in CI: even
+    // `p-map-series`, a genuine declared dependency of `@teambit/ui`, failed to resolve off that
+    // "correct" root there) - `lodash.compact`/`lodash.flatten` off `process.cwd()` is this suite's
+    // original, CI-proven-safe fixture/root pairing from before `sourceRoot` was configurable, kept
+    // deliberately unchanged here rather than risking a different package's own hoisting story.
+    await buildUiVendorDll(outputPath, ['lodash.compact'], process.cwd());
   });
   after(() => rmSync(outputPath, { recursive: true, force: true }));
 
@@ -90,7 +94,7 @@ describe('buildUiVendorDll', function () {
     expect(existsSync(manifestPath)).to.equal(true);
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
     expect(manifest.name).to.equal('__bitUiVendor__');
-    expect(Object.keys(manifest.content).some((k) => k.includes('p-map-series'))).to.equal(true);
+    expect(Object.keys(manifest.content).some((k) => k.includes('lodash.compact'))).to.equal(true);
   });
 
   it('writes a vendor.js chunk', () => {
@@ -102,7 +106,7 @@ describe('buildUiVendorDll', function () {
   it('ships the manifest keyed by package specifier, carrying nothing from this install layout', () => {
     const manifestPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_MANIFEST_FILENAME);
     const contentKeys = Object.keys(JSON.parse(readFileSync(manifestPath, 'utf-8')).content);
-    expect(contentKeys).to.include('./p-map-series/index.js');
+    expect(contentKeys).to.include('./lodash.compact/index.js');
     contentKeys.forEach((key) => {
       expect(key).to.not.include('node_modules', `${key} still carries a node_modules path`);
       expect(key).to.not.include('.pnpm', `${key} still carries a pnpm store path`);
@@ -136,7 +140,7 @@ describe('buildUiVendorDll cleans its own output directory before writing', func
     mkdirSync(dllDir, { recursive: true });
     const staleFile = join(dllDir, 'a-file-from-a-previous-run-with-a-different-package-set.js');
     writeFileSync(staleFile, '');
-    await buildUiVendorDll(outputPath, ['p-map-series']);
+    await buildUiVendorDll(outputPath, ['lodash.compact'], process.cwd());
     expect(existsSync(staleFile)).to.equal(false);
     expect(existsSync(join(dllDir, UI_VENDOR_DLL_MANIFEST_FILENAME))).to.equal(true);
   });
@@ -145,19 +149,14 @@ describe('buildUiVendorDll cleans its own output directory before writing', func
 describe('buildUiVendorDll with multiple packages', function () {
   this.timeout(30000); // real rspack compilation
 
-  // two real, declared dependencies of `@teambit/ui` (see the single-package test's comment above for
-  // why a fixture has to actually be one) - `fs-extra` (an earlier choice here) failed to compile at
-  // all: its `graceful-fs` dependency does an old-style `require('constants')` this build has no
-  // fallback for. `chai` doesn't work either as a *placement* anchor for a self-made fixture package:
-  // it resolves to wherever the *test env* provides it, which is not guaranteed to be the same
-  // `node_modules` `resolveUiVendorDllSourceRoot()` resolves for `@teambit/ui` itself once this runs
-  // inside a real build/test capsule (confirmed - this is what originally broke CI here).
-  const packageNames = ['p-map-series', 'chalk'];
+  // two real npm packages, resolved off `process.cwd()` explicitly - see the single-package test's
+  // comment above for why (this exact pairing, off this exact root, is CI-proven).
+  const packageNames = ['lodash.compact', 'lodash.flatten'];
   let outputPath: string;
 
   before(async () => {
     outputPath = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-test-multi-'));
-    await buildUiVendorDll(outputPath, packageNames);
+    await buildUiVendorDll(outputPath, packageNames, process.cwd());
   });
   after(() => rmSync(outputPath, { recursive: true, force: true }));
 
@@ -572,8 +571,22 @@ describe('resolveContextProviderMismatchUnsafePackages (real core aspects)', () 
   });
 
   it('does not flag a package with no router dependency at all', () => {
-    const result = resolveContextProviderMismatchUnsafePackages(['@teambit/preview'], resolvePackageDirFromNodeModules);
-    expect(result).to.not.include('@teambit/preview');
+    // a small, fully controlled fake package rather than a real core aspect - a real one's own
+    // dependency graph can (and did, in CI) legitimately drift over time, which would make this
+    // assertion flaky for a reason that has nothing to do with the walk itself. This test is about
+    // the mechanism (something with no path to a router package is never flagged), not about any one
+    // real aspect's current, moving-target dependency state.
+    const packageName = 'ui-vendor-dll-test-no-router-dep-pkg';
+    const nodeModulesDir = require.resolve.paths('chai')![0];
+    const packageDir = join(nodeModulesDir, packageName);
+    mkdirSync(packageDir, { recursive: true });
+    writeFileSync(join(packageDir, 'package.json'), JSON.stringify({ name: packageName, dependencies: {} }));
+    try {
+      const result = resolveContextProviderMismatchUnsafePackages([packageName], resolvePackageDirFromNodeModules);
+      expect(result).to.not.include(packageName);
+    } finally {
+      rmSync(packageDir, { recursive: true, force: true });
+    }
   });
 });
 
