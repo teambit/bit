@@ -1533,6 +1533,7 @@ export class CiMain {
     autoTagReleaseType,
     preReleaseId,
     incrementBy,
+    skipPublishedVersions,
     explicitVersionBump,
     verbose,
     versionsFile,
@@ -1549,6 +1550,7 @@ export class CiMain {
     autoTagReleaseType?: ReleaseType;
     preReleaseId?: string;
     incrementBy?: number;
+    skipPublishedVersions?: boolean;
     explicitVersionBump?: boolean;
     verbose?: boolean;
     versionsFile?: string;
@@ -1685,6 +1687,7 @@ export class CiMain {
       autoTagReleaseType,
       preReleaseId,
       incrementBy,
+      skipPublishedVersions,
       versionsFile,
     });
 
