@@ -117,7 +117,7 @@ bit validate                         # lint + type-check + tests (fast build) �
 bit test                             # run tests only
 bit lint                             # run linter only
 bit check-types --strict             # TypeScript type checker only (without --strict it exits 0 even on errors)
-bit ripple list --lane <scope>/<lane> # find the Ripple CI jobs for a lane
+bit ripple list --lane <scope>/<lane> # find the Ripple CI jobs for a lane (lane name is the sanitized branch)
 bit ripple log <job-id>              # check a Ripple CI build's status
 bit ripple errors <job-id>           # show build errors for a Ripple CI job
 bit ripple retry <job-id>            # retry a failed Ripple CI job
@@ -272,11 +272,13 @@ git push                                 # push your branch
 Those CI builds run as Ripple CI jobs on bit.cloud. **Identify the job explicitly** — the bare `bit ripple log` resolves a job from your current lane or from a local export record, and in a Git-integrated workspace you're on main and CI did the exporting, so it has neither to work from. Find the job first, then pass its id:
 
 ```bash
-bit ripple list --lane <scope>/<branch-name>   # the lane CI created from your Git branch
-bit ripple log <job-id>                        # follow that job
-bit ripple errors <job-id>                     # build errors for a failing job
-bit ripple retry <job-id>                      # retry a failed job
+bit ripple list --lane <default-scope>/<lane-name>   # the lane CI created from your Git branch
+bit ripple log <job-id>                              # follow that job
+bit ripple errors <job-id>                           # build errors for a failing job
+bit ripple retry <job-id>                            # retry a failed job
 ```
+
+The lane name is **not** the raw branch name: CI lowercases the branch and replaces every `/` and `.` with `-`, then prefixes the workspace's default scope. So branch `feature/New.Component` in scope `acme.billing` becomes lane `acme.billing/feature-new-component`. Derive it that way, or read the lane straight out of the CI job output.
 
 **Give the user the build link as soon as CI starts a job.** Don't sit silently through the build and don't wait for it to go green — post the link, then report the outcome once it finishes.
 
@@ -469,10 +471,10 @@ You never run the export yourself — CI does, at two separate points:
 So a build exists from the moment the PR opens. Don't wait for the merge to start reporting: follow the PR build and hand the user its link, then do the same again after the merge.
 
 ```bash
-bit ripple list --lane <scope>/<branch-name>   # find the job CI created
-bit ripple log <job-id>                        # build status
-bit ripple errors <job-id>                     # why a build failed
-bit ripple retry <job-id>                      # retry a failed job
+bit ripple list --lane <default-scope>/<lane-name>   # find the job CI created (see lane naming above)
+bit ripple log <job-id>                              # build status
+bit ripple errors <job-id>                           # why a build failed
+bit ripple retry <job-id>                            # retry a failed job
 ```
 
 Copy the URL that `bit ripple log` prints; never assemble one by hand. Its last segment is the job's slug, not the display name, so a hand-built link lands on "No CI job found".
