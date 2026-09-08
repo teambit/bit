@@ -1,0 +1,85 @@
+{
+  "marginPercent": 10,
+  "checks": [
+    {
+      "id": "bundle-file",
+      "label": "bit.app.js (the CLI bundle)",
+      "phase": "pre",
+      "path": "dist/core-aspects/bundle/bit.app.js",
+      "baselineMB": 59.37
+    },
+    {
+      "id": "bundle-externals",
+      "label": "externals (npm-installed node_modules)",
+      "phase": "pre",
+      "path": "node_modules",
+      "baselineMB": 62.84
+    },
+    {
+      "id": "shims-total",
+      "label": "shims total (@teambit/* + vendored harmony deps)",
+      "phase": "pre",
+      "path": "dist/core-aspects/node_modules",
+      "baselineMB": 10.06
+    },
+    {
+      "id": "shims-dist",
+      "label": "shim dist files (regular barrels)",
+      "phase": "pre",
+      "pathGlob": "dist/core-aspects/node_modules/@teambit/*",
+      "suffix": "dist",
+      "baselineMB": 0.12
+    },
+    {
+      "id": "shims-browser",
+      "label": "shim browser barrels",
+      "phase": "pre",
+      "pathGlob": "dist/core-aspects/node_modules/@teambit/*",
+      "suffix": "browser",
+      "baselineMB": 7.27
+    },
+    {
+      "id": "combined-pre",
+      "label": "combined dist/core-aspects (before UI/preview prebundle injected)",
+      "phase": "pre",
+      "path": "dist/core-aspects",
+      "baselineMB": 81.43
+    },
+    {
+      "id": "ui-prebundle-app",
+      "label": "UI prebundle - app shell (workspace+scope, excl. SSR)",
+      "phase": "post",
+      "path": "dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/public",
+      "excludePath": "dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/public/bit/ssr",
+      "baselineMB": 6.65
+    },
+    {
+      "id": "ssr",
+      "label": "SSR bundle",
+      "phase": "post",
+      "path": "dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/public/bit/ssr",
+      "baselineMB": 6.35
+    },
+    {
+      "id": "vendor-dll",
+      "label": "UI vendor DLL",
+      "phase": "post",
+      "path": "dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/ui-vendor-dll",
+      "baselineMB": 7.38
+    },
+    {
+      "id": "preview-prebundle",
+      "label": "preview prebundle",
+      "phase": "post",
+      "path": "dist/core-aspects/node_modules/@teambit/preview/artifacts",
+      "baselineMB": 0.68
+    },
+    {
+      "id": "combined-post",
+      "label": "combined dist/core-aspects (after UI/preview prebundle injected)",
+      "phase": "post",
+      "path": "dist/core-aspects",
+      "baselineMB": 102.5
+    }
+  ]
+}

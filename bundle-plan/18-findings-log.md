@@ -1660,23 +1660,23 @@ e2e/harmony/ui-ssr.e2e.ts` - **16/16 passing**, including "should start without 
   via the `circleci` CLI** — PR #10690's `e2e_test_esbuild_bundle` job (parallelism 40) failed with
   4/40 executions red. Pulled each failing execution's step output with
   `circleci job output get <job-id> --step-num 127 --execution <n> --condensed`. Two unrelated causes:
+
   - **`ui-vendor-dll.e2e.ts` (execution 31, caused by this branch)**: `Error: Cannot find module
 'assert/'` from `bit-bundled build teambit.ui-foundation/ui --tasks BundleUI`. `--tasks BundleUI`
     really invokes rspack to build the vendor DLL (`ui-vendor-dll.ts`), which needs the
     `--ui-bundling` externals group (`assert`/`buffer`/`constants-browserify`, `generate-shim-packages.ts`
-    line ~106) - off by default (D10/D15, §8.3). No CI job passes `--ui-bundling` today, and this test
-    - unlike `ui-start.e2e.ts`/`ui-ssr.e2e.ts` - was never gated behind `BIT_E2E_UI_MODE` (§10 "The
-      UI-bundling sanity suites" gate in `11-e2e-suite.md`), so it ran unguarded inside
-      `e2e_test_esbuild_bundle`'s full-suite sweep instead of being skipped like its siblings. The
-      original plan (`27-ui-vendor-dll-plan.md` Task 4/5) always intended this test for the plain dev
-      binary, with the bundled-binary case as a manual-only check (Task 5) - the gate was simply missed
-      when the test was authored. **Fix**: added the same `uiE2eMode()` skip-unless-`BIT_E2E_UI_MODE`
-      gate to `ui-vendor-dll.e2e.ts` that `ui-start.e2e.ts` uses, so it's skipped by default (matching
-      original intent) instead of failing the sweep. Not wired into any CI job's explicit
-      `BIT_E2E_UI_MODE` run (e.g. `e2e_test_ui_prebundle`) - that job's bundle also lacks the
-      `--ui-bundling` toolchain (`inject_ui_prebundle` only copies static pre-bundle artifacts, doesn't
-      install it), so it would fail there too; wiring a real CI run of this test needs a job that builds
-      with `--ui-bundling`, which is out of scope of this fix.
+    line ~106) - off by default (D10/D15, §8.3). No CI job passes `--ui-bundling` today, and this test - unlike `ui-start.e2e.ts`/`ui-ssr.e2e.ts` - was never gated behind `BIT_E2E_UI_MODE` (§10 "The
+    UI-bundling sanity suites" gate in `11-e2e-suite.md`), so it ran unguarded inside
+    `e2e_test_esbuild_bundle`'s full-suite sweep instead of being skipped like its siblings. The
+    original plan (`27-ui-vendor-dll-plan.md` Task 4/5) always intended this test for the plain dev
+    binary, with the bundled-binary case as a manual-only check (Task 5) - the gate was simply missed
+    when the test was authored. **Fix**: added the same `uiE2eMode()` skip-unless-`BIT_E2E_UI_MODE`
+    gate to `ui-vendor-dll.e2e.ts` that `ui-start.e2e.ts` uses, so it's skipped by default (matching
+    original intent) instead of failing the sweep. Not wired into any CI job's explicit
+    `BIT_E2E_UI_MODE` run (e.g. `e2e_test_ui_prebundle`) - that job's bundle also lacks the
+    `--ui-bundling` toolchain (`inject_ui_prebundle` only copies static pre-bundle artifacts, doesn't
+    install it), so it would fail there too; wiring a real CI run of this test needs a job that builds
+    with `--ui-bundling`, which is out of scope of this fix.
   - **`multiple-testers.e2e.ts`/Jest-Tester/Mocha-Tester suites (executions 18/21/25, pre-existing, NOT
     caused by this branch)**: `bit build`'s `TypescriptCompile` task fails with `error TS5107: Option
 'moduleResolution=node10' is deprecated`. `scopes/typescript/typescript/tsconfig.default.json` sets
@@ -1685,3 +1685,24 @@ e2e/harmony/ui-ssr.e2e.ts` - **16/16 passing**, including "should start without 
     esbuild bundle (`08-externals-inventory.md`). Confirmed unrelated to `rspack.ssr.config.ts`/the
     vendor-dll work - neither file nor the TS pin changed on this branch. Left open; see
     `14-known-gaps.md` for tracking.
+
+- **2026-09-08 — added a CI size guard for the bundle, direct response to the SSR 6 MB → 53 MB
+  regression above.** New `scripts/bundle-size-guard.mjs` + checked-in `scripts/bundle-size-baseline.json`
+  (12 checks, 10% margin) measure the bundle piece by piece and fail CI if any piece grows past
+  baseline+margin. Two phases, since the UI/preview pre-bundle isn't injected until a separate job:
+  `--phase=pre` (bundle file, externals, shims, browser barrels, combined `dist/core-aspects` before
+  injection) runs as a new step in `setup_esbuild_bundle` right after "build the esbuild bundle";
+  `--phase=post` (UI prebundle app shell, SSR, UI vendor DLL, preview prebundle, combined
+  `dist/core-aspects` after injection) runs as a new step in `e2e_test_ui_prebundle` right after
+  `inject_ui_prebundle`, before its 10-min e2e suite. `--update-baseline` re-measures and rewrites the
+  baseline file - the way to accept an intentional size increase.
+  Baseline measured from a real local build at `2b1bbd597` (current HEAD, i.e. already includes the
+  `@rspack/core` SSR fix): bundle 59.37 MB, externals 62.84 MB, shims 10.06 MB (pre-injection) / 31.12 MB
+  (post), combined `dist/core-aspects` 81.43 MB (pre) / 102.50 MB (post), SSR 6.35 MB, UI vendor DLL
+  7.38 MB, UI prebundle app shell 6.65 MB, preview prebundle 0.68 MB.
+  One correction made against `21-bit-start-prebundles.md`'s described layout while building the
+  baseline: the UI artifact no longer splits into separate `ui-bundle/workspace` and `ui-bundle/scope`
+  directories - that was the pre-single-compilation-dedupe layout (§17h, fixed 2026-08-19). The current
+  layout is one shared `ui-bundle/public/bit/` tree (with `ssr/` and `static/` under it) plus a sibling
+  `ui-vendor-dll/`, so the guard's "UI prebundle" check covers `ui-bundle/public` (excluding `ssr/`) as
+  a single bucket instead of two.

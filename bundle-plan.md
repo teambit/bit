@@ -2,7 +2,14 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-09-08 (root-caused PR #10690's `e2e_test_esbuild_bundle` CI failure via the
+> Last updated: 2026-09-08 (added a CI size guard, `scripts/bundle-size-guard.mjs` +
+> `scripts/bundle-size-baseline.json`, direct response to the SSR 6 MB → 53 MB regression below —
+> two `--phase` runs, `pre` in `setup_esbuild_bundle` and `post` in `e2e_test_ui_prebundle` after
+> `inject_ui_prebundle`, each checking the bundle file, externals, shims, browser barrels, UI/preview
+> prebundle, SSR, UI vendor DLL, and the combined `dist/core-aspects` folder, with 10% growth margin
+> before failing. See [18-findings-log.md](bundle-plan/18-findings-log.md)'s 2026-09-08 entry and
+> [17-decisions-taken.md](bundle-plan/17-decisions-taken.md) D18.)
+> Previously, 2026-09-08 (root-caused PR #10690's `e2e_test_esbuild_bundle` CI failure via the
 > `circleci` CLI: `ui-vendor-dll.e2e.ts` was missing the `BIT_E2E_UI_MODE` gate its
 > `ui-start.e2e.ts`/`ui-ssr.e2e.ts` siblings have, so it ran unguarded and hit the missing
 > `--ui-bundling` toolchain — fixed by adding the same gate. Separately, 3/40 executions hit an

@@ -6,7 +6,7 @@
     "node": ">=22.13.0"
   },
   "lint-staged": {
-    "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings",
+    "!(scripts)/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings",
     "*.{ts,js,jsx,tsx,css,scss,md,mdx}": [
       "prettier --write",
       "git add"

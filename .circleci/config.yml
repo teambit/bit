@@ -1301,6 +1301,15 @@ jobs:
           command: |
             node /home/circleci/bit/esbuild-bundle/bin/bit --version
             node /home/circleci/bit/esbuild-bundle/bin/bit --help > /dev/null
+      # catches a regression like the SSR bundle jumping 6 MB -> 53 MB (bundle-plan/18-findings-log.md,
+      # 2026-09-07/08) before the 40-way e2e fan-out even starts. Only checks the parts that don't
+      # need the UI/preview pre-bundle (that's checked separately in e2e_test_ui_prebundle, once
+      # inject_ui_prebundle has run) - see scripts/bundle-size-guard.mjs.
+      - run:
+          name: check bundle size (pre-prebundle)
+          command: |
+            cd bit
+            node scripts/bundle-size-guard.mjs --phase=pre --out-dir=/home/circleci/bit/esbuild-bundle
       - persist_to_workspace:
           root: .
           paths:
@@ -1428,6 +1437,14 @@ jobs:
       - bit_global_for_npm
       - bit_config
       - inject_ui_prebundle
+      # the UI/preview parts only exist from here on - checked separately from setup_esbuild_bundle's
+      # "check bundle size (pre-prebundle)" step, which covers everything else. Runs before the 10-min
+      # e2e suite below so a size regression fails fast. See scripts/bundle-size-guard.mjs.
+      - run:
+          name: check bundle size (post-prebundle)
+          command: |
+            cd bit
+            node scripts/bundle-size-guard.mjs --phase=post --out-dir=/home/circleci/bit/esbuild-bundle
       - run:
           name: put the bundled bit on PATH as "bit-bundled"
           # the launcher resolves the bundle relative to its own realpath, so a symlink is enough.
