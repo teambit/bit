@@ -2,7 +2,17 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-09-06 (rebuilt the bundle and the UI/preview pre-bundle from current HEAD
+> Last updated: 2026-09-08 (root-caused and fixed the ~53 MB SSR-bundle regression flagged on
+> 2026-09-06/07: `@teambit/ui`'s barrel re-exports `BundleUiTask` as a value, which pulled
+> `ui-vendor-dll.ts`'s `@rspack/core` import — and its ~40 MB native binding — into the shipped SSR
+> bundle. Fixed by externalizing `@rspack/core` in `rspack.ssr.config.ts`, matching the browser
+> config's existing externals. Verified safe (not just smaller) against a real default,
+> non-`--ui-bundling` build: `@rspack/core` confirmed absent from `node_modules`, 16/16 e2e passing
+> including real SSR render (`ui-ssr.e2e.ts`/`ui-start.e2e.ts`), plus a manual scope/browser check.
+> SSR artifact 52.76 MB → 6.35 MB; total distribution 234 MB → 182 MB. See
+> [18-findings-log.md](bundle-plan/18-findings-log.md)'s 2026-09-07/08 entry and
+> [01-goal-and-results.md](bundle-plan/01-goal-and-results.md)'s updated size table.
+> Previously, 2026-09-06 (rebuilt the bundle and the UI/preview pre-bundle from current HEAD
 > (`e2245600e`, post the `remove-core-envs-from-manifest` merge) and re-measured every size number
 > in this doc against them: **159 MB total** (was 160 MB) — bundle 59 MB (was 60), externals 68 MB
 > (was 64, `@pnpm` grew 22→27 MB), shims ~32 MB incl. 16.8 MB UI/preview pre-bundle (was ~33 MB /

@@ -1568,6 +1568,7 @@ run bundle` produced a `bit.app.js` with **zero** occurrences of `createUiVendor
   with 0 rspack errors for the first time, but a real browser (Playwright) still showed a blank page:
   `useLocation()` (react-router) threw an uncaught error the moment `#root` would otherwise have
   mounted. Root-caused, not guessed at, in three steps:
+
   1. The vendor DLL (Task 6, unrelated to today's browser-barrel work) delegates
      `@teambit/react-router`'s real bare `index.js` - and its real source
      (`scopes/ui-foundation/react-router/react-router/index.ts`) does
@@ -1602,6 +1603,7 @@ run bundle` produced a `bit.app.js` with **zero** occurrences of `createUiVendor
      `@teambit/ui-foundation.ui.react-router.slot-router`, `@teambit/ui-foundation.ui.react-router.use-query`)
      that all re-export or consume react-router-dom's context. None of these need vendor-dll
      delegation to work - they still compile fine standalone via the browser-barrel fix above.
+
   - **Real, final result, verified in an actual browser (Playwright, screenshot-confirmed)**:
     `CLIENT_ONLY=true bit run community-cloud` now renders the REAL bit.cloud landing page end to
     end - nav bar, gradient hero, live-typing search box animation, "What you can build" section,
@@ -1610,3 +1612,45 @@ run bundle` produced a `bit.app.js` with **zero** occurrences of `createUiVendor
     landing page fully rendered underneath either way). This is the first time gap 1's own repro
     (`bit run community-cloud`) has produced a genuinely working, rendered UI on this branch.
   - Committed `cc02f1487` on the `ui-vendor-dll` branch (PR #10690).
+
+- **2026-09-07/08 (bit-bundle3, root-caused and fixed the ~53 MB SSR regression)** — the "unrelated
+  SSR-size regression" flagged in the 2026-09-06 Task 5 entry above (`artifacts/ui-bundle/public/bit/ssr/`
+  back up to ~53 MB: a 39 MB native `@rspack/binding-darwin-arm64` Mach-O plus a bloated 14 MB
+  `index.js`) is **not** caused by `remove-core-envs-from-manifest` - verified via `git diff` that
+  branch's own unique commits (relative to their merge-base with `bit-bundle3`) touch only
+  `scopes/workspace/install/*` (phantom-legacy-core-envs handling), nothing in UI/preview/rspack.
+  - **Root cause, found via `BIT_UI_BUNDLE_STATS=1` + a temporary `reasons: true` on the rspack stats
+    call** (`bundle-stats.ts`, reverted after use) and tracing the module graph: `@teambit/ui/index.ts`
+    re-exports `BundleUiTask` and the vendor-dll helpers as real values (not `export type`, unlike
+    `UiMain`/`UiUI`/etc. right above them in the same file). `bundle-ui.task.ts` imports
+    `ui-vendor-dll.ts`, which does `import { rspack } from '@rspack/core'` at module scope. ~30
+    aspects' compiled `.ui.runtime.js` files do `require('@teambit/ui')` (CJS, so nothing is
+    tree-shakeable) purely to read `UIAspect` off it - which drags the entire chain, including
+    `@rspack/core` -> `@rspack/binding` -> the native `.node` binding, into whatever bundle happens to
+    include any of those `.ui.runtime.js` files.
+  - The vendor-DLL work (`290f72d57`) already hit this exact chain for the **browser** bundle and
+    fixed it there by adding an `externals` block to `rspack.browser.config.ts` (`@rspack/core` +
+    its own Node-side deps) - but never added the equivalent to `rspack.ssr.config.ts`, which had no
+    `externals` at all. So the client bundle was protected and the SSR bundle wasn't - explaining why
+    this predates the vendor-DLL commit's own diff (which only touches `bundle-ui.task.ts`/
+    `rspack.browser.config.ts`) yet only became a live problem once `bundle-ui.task.ts` started
+    importing `ui-vendor-dll.ts`.
+  - **Fix**: mirrored the same `externals` block into `rspack.ssr.config.ts`. Verified with
+    `BIT_UI_BUNDLE_STATS=1 bd build teambit.ui-foundation/ui --tasks BundleUI --unmodified` (must omit
+    `--reuse-capsules` or force a fresh capsule - `--reuse-capsules` alone silently reused a
+    pre-fix capsule once during verification, a real trap worth remembering): SSR assets
+    **52.76 MB (3 files, incl. the 39 MB `.node`) -> 6.35 MB (1 file)**, matching (slightly beating)
+    the original post-#10628 baseline (6.8 MB).
+  - **Runtime safety verified for real, not just measured**: `@rspack/core` is intentionally _not_
+    installed in a default (non-`--ui-bundling`) bundle (`UI_BUNDLING_EXTERNALS` in `externals.ts`),
+    so externalizing it in the SSR config could in principle make the shipped `index.js` throw
+    `Cannot find module '@rspack/core'` the moment it loads. Tested against a real freshly-built
+    default bundle (`uiBundlingExternals: false`, confirmed `@rspack/core` absent from
+    `node_modules`): `BIT_E2E_UI_MODE=prebuilt npm run e2e-test:bundle -- e2e/harmony/ui-start.e2e.ts
+e2e/harmony/ui-ssr.e2e.ts` - **16/16 passing**, including "should start without writing errors to
+    stderr" and "should render the app on the server, not fall back to an empty client-rendered root"
+    (the exact assertion `ui-ssr.e2e.ts`'s own comment says would have caught the original
+    months-long-silent SSR bug). Also manually stood up a scope with the shipped binary and `curl`'d
+    it directly - `#root` full of real server-rendered markup, not the empty-div fallback. So the
+    dead `BundleUiTask`/vendor-dll code path is never actually reached at SSR request time; marking it
+    external only stops it from being _bundled_, and costs nothing at runtime.
