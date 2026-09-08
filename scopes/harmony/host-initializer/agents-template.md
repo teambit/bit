@@ -221,7 +221,7 @@ cat node_modules/@<org>/<package-name>/package.json | grep -A3 '"componentId"'
 # → component ID: myorg.myfeature/pages/my-page
 ```
 
-### Importing Components
+### Importing Bit Components
 
 ```bash
 bit import <scope>/<name>
@@ -231,7 +231,7 @@ bit import myorg.myfeature/pages/my-page myorg.myfeature/pages/lobby-page
 
 Imported components land at `<scope-short-name>/<name>/` in the workspace.
 
-#### Importing Scopes
+#### Importing Entire Scopes
 
 ```bash
 bit import "<owner>.<scope>/**"
