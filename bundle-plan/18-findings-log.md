@@ -1734,3 +1734,88 @@ locally at ~0.1 MB)`: `total-pre` 149.94 MB, `total-post` 170.98 MB. Should be t
   harmony-deps measurements read 0 for one build. Fixed with a targeted `bd compile
 scopes/harmony/modules/cli-bundler`; did not affect the already-pushed code or the real CI numbers
   above, which come from the CI job's own compile.
+
+- **2026-09-08 — worked through Qodo's 32 review comments on PR #10690 (the UI vendor DLL PR, already
+  merged into this branch) and fixed the confirmed real bugs.** In `ui-vendor-dll.ts`: (1) the DLL's
+  rspack config used `process.cwd()` as `context`/`resolve.modules` root instead of the actual Bit
+  install being bundled - `resolveUiVendorDllSourceRoot()` now locates it via `@teambit/ui`'s own
+  package dir, so a `bit build` invoked from an unrelated workspace can no longer bake that
+  workspace's own dependency versions into the shipped dll. (2) `toPortableUiVendorDllKey` collapsed
+  a genuinely nested, unhoisted dependency (`a/node_modules/b`) down to just `b`, which could match an
+  unrelated, differently-versioned top-level `b` in a consumer that never hoisted it that way - now
+  strips only pnpm's own virtual-store segment, preserving real nesting. (3)
+  `toPortableUiVendorDllManifest` only excluded the specific manifest keys that collided across two
+  installed versions of one package, keeping that package's _other_, non-colliding files - now tracks
+  physical-install identity per package and drops the whole package once ambiguous. (4) added a
+  `reactVersions` field to the manifest (producer's `react`/`react-dom` versions) and
+  `createUiVendorDllReference` now rejects the _entire_ reference (not just react entries) when the
+  consumer's react/react-dom version differs - every other delegated module was compiled against, and
+  internally references, that exact react runtime. (5) `CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES` was
+  a hand-maintained list of router _wrapper_ packages, but real core aspects consume those wrappers
+  directly - `@teambit/workspace`'s own UI calls `useLocation()`/`useSearchParams()` straight from
+  `react-router-dom` - so delegating `@teambit/workspace` itself was exactly as unsafe. Added
+  `resolveContextProviderMismatchUnsafePackages()`, a dependency-aware walk (through each covered
+  package's `dependencies` _and_ `peerDependencies` - core aspects declare shared UI libraries as peer
+  deps, confirmed against `@teambit/workspace`'s real `package.json`) that flags any covered package
+  transitively depending on a router wrapper; verified against this repo's real installed packages -
+  correctly flags `@teambit/workspace`/`@teambit/lanes`/`@teambit/component-compare` (all three named
+  in the review) and does not flag `@teambit/preview`. (6) the generated `vendor-entry.js` was written
+  inside the published artifact directory and embedded this build's own absolute filesystem paths -
+  now written to a scratch tmpdir outside the artifact tree, cleaned up in a `finally`. (7) the dll's
+  own output directory was never cleaned between runs, so a reused capsule could ship a stale prior
+  run's files alongside the new ones - now `rmSync`'d before each build. (8) `output.cssFilename` was
+  never set (only `output.filename`, for JS), while `resolveUiVendorDllPaths()` hard-codes a
+  `vendor.css` lookup - set explicitly now, matching `rspack.browser.config.ts`'s own existing
+  pattern. All of the above are covered by new/updated unit tests in `ui-vendor-dll.spec.ts` (36/36
+  passing, several run against this repo's real installed packages rather than fixtures).
+  In `generate-shim-packages.ts`: `copyPackageWithDeps` treated an unresolvable harmony runtime
+  dependency as a warning and returned successfully - now throws, since there is no later install step
+  to recover in (same reasoning the function's own doc comment already gave for vendoring these at
+  all) and a silently-incomplete bundle would only fail later, opaquely, when harmony actually loads.
+  Separately, confirmed a real, distinct gap the review flagged: `@teambit/react-router`'s real
+  `browser/` dist (copied in by `copyBrowserDist` for bare-import resolution) re-exports
+  `@teambit/base-react.navigation.link`, which is only installed via the opt-in
+  `UI_BUNDLING_EXTERNALS` group - absent from the default distribution, so a browser-target bundler
+  resolving bare `@teambit/react-router` would hit `Cannot find module
+'@teambit/base-react.navigation.link'`. `@teambit/react-router`'s own `package.json` declares no
+  `dependencies` at all, so this can't be discovered generically (unlike the router-context-safety
+  walk above) - added `BROWSER_DIST_EXTRA_RUNTIME_DEPS`, a manually-verified per-package list (same
+  pattern as `HARMONY_RUNTIME_DEPS`), vendoring `@teambit/base-react.navigation.link`'s own closure
+  alongside the shims. **Not closed as a general class of bug** - see
+  [14-known-gaps.md](14-known-gaps.md) gap 14: only this one, concretely-verified instance is fixed;
+  whether other browser-copied packages have similar undeclared runtime dependencies has not been
+  audited, and doing so reliably needs a real third-party consumer build (`bit-cloud-bundle`), not
+  static analysis of this repo alone.
+  In `scripts/bundle-size-guard.mjs`: `measure()`/`measureAcross()` return 0 for a missing path, and
+  the guard only ever compared that 0 against the _upper_ bound - so a completely missing artifact (a
+  build step that silently didn't run, an injection that never happened) read as "0 bytes, comfortably
+  within budget" instead of failing. Added `checkExists()`, checked independently of size, before every
+  comparison; manually verified against a deliberately incomplete fake out-dir (2 of 7 `pre`-phase
+  checks correctly reported `MISS` and exit code 1).
+  In `.circleci/config.yml`: the post-injection size guard (the whole reason the guard exists - the
+  SSR 6 MB → 53 MB regression, see the 2026-09-07/08 entries above) ran only in
+  `check_ui_prebundle_size`/`e2e_test_ui_prebundle`, which neither `bundle_push_build` (the automatic
+  per-push bvm dev-release publish) nor `bundle_deploy_build` (the manual arbitrary-version deploy)
+  depends on or runs itself - both could publish a regressed bundle unchecked. Added the same
+  `--phase=post` guard invocation to `bundle_push_build` (right after its own `inject_ui_prebundle`)
+  and to `bundle_deploy_build` (after its from-scratch build, which already bakes the UI/preview
+  prebundle in before that point, so only `post`'s baselines - which assume the prebundle is present -
+  actually apply there). Validated with `circleci config validate`.
+  In `package.json`: `lint-staged`'s oxlint glob, `!(scripts)/**/*.{js,...}`, was meant to exclude only
+  `scripts/` from the previous `**/*.{js,...}` (see the commit that introduced it) but the extglob
+  requires a leading directory segment before the filename, so it silently also excluded every
+  repository-_root_ JS file (`babel.config.js`, `babel-register.js`, ...) from `oxlint
+--deny-warnings` on commit. Verified with `micromatch` directly against both patterns. Added a second
+  glob, `*.{js,...}` (no leading directory), covering root files without reintroducing `scripts/`.
+  Several other review comments were assessed and replied to without a code change - either already
+  fixed by a later commit before merge (three Prettier formatting comments - verified via `npx
+  prettier --check`), by design and already documented in the flagged file itself (`ui-vendor-dll.e2e.ts`
+  intentionally builds against this repo's own checkout rather than an isolated workspace, since
+  `teambit.ui-foundation/ui` is dogfooded from source and isn't trackable as a fixture component - see
+  that file's own top-of-file comment), a correct understanding of CircleCI's additive workspace-layer
+  semantics being read as a bug (the `check_ui_prebundle_size` re-persist is a safe superset, not an
+  overlap - `inject_ui_prebundle` only ever adds files), or a style-guide suggestion that doesn't apply
+  outside actual `bit` CLI command output (`generate-shim-packages.ts`'s/`bundle-size-guard.mjs`'s
+  `console.log`/ANSI usage - standalone CI scripts run with plain `node`, not compiled `bit` aspects,
+  so `@teambit/cli`'s output-formatter isn't reachable there without adding a build step to what are
+  otherwise dependency-free scripts).

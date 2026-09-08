@@ -2,7 +2,17 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-09-08 (renamed the `setup_esbuild_bundle` CI job to `build_esbuild_bundle` -
+> Last updated: 2026-09-08 (worked through PR #10690's 32 Qodo review comments and fixed the real
+> bugs: react-version compatibility, `process.cwd()`-as-resolve-root, nested `node_modules` handling,
+> per-package version-collision, dependency-aware router-context safety, and the generated
+> `vendor-entry.js` leaking build paths, all in `ui-vendor-dll.ts`; a missing browser-dist runtime
+> dependency and a silent-warning-instead-of-fail in `generate-shim-packages.ts`; the size guard
+> silently passing missing artifacts; the size guard not being wired into the two publish CI jobs; and
+> a `lint-staged` glob that silently excluded root-level JS files. New gap 14 tracks the unaudited
+> general form of the browser-dist-dependency issue. See
+> [18-findings-log.md](bundle-plan/18-findings-log.md)'s 2026-09-08 entry and
+> [14-known-gaps.md](bundle-plan/14-known-gaps.md) gap 14.)
+> Previously, 2026-09-08 (renamed the `setup_esbuild_bundle` CI job to `build_esbuild_bundle` -
 > it builds the bundle, it doesn't set anything up - and moved the size guard's `post`-phase check
 > out of `e2e_test_ui_prebundle` into a new `check_ui_prebundle_size` job that runs
 > `inject_ui_prebundle` + the check as build validation, before the e2e job even starts;

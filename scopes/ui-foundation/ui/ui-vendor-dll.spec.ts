@@ -7,8 +7,10 @@ import type { UiVendorDllManifest } from './ui-vendor-dll';
 import {
   buildUiVendorDll,
   resolveUiVendorDllPackages,
+  resolveUiVendorDllSourceRoot,
   resolvePackageDirFromNodeModules,
   resolveUiVendorDllPaths,
+  resolveContextProviderMismatchUnsafePackages,
   toPortableUiVendorDllKey,
   toPortableUiVendorDllManifest,
   createUiVendorDllReference,
@@ -99,6 +101,38 @@ describe('buildUiVendorDll', function () {
       expect(key).to.not.include('node_modules', `${key} still carries a node_modules path`);
       expect(key).to.not.include('.pnpm', `${key} still carries a pnpm store path`);
     });
+  });
+
+  it("records this install's real react/react-dom versions in the manifest", () => {
+    const manifestPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_MANIFEST_FILENAME);
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+    const reactPackageDir = resolvePackageDirFromNodeModules('react')!;
+    const { version } = JSON.parse(readFileSync(join(reactPackageDir, 'package.json'), 'utf-8'));
+    expect(manifest.reactVersions.react).to.equal(version);
+  });
+
+  it('does not ship the generated entry file - an input to the compilation, never part of its output', () => {
+    expect(existsSync(join(outputPath, UI_VENDOR_DLL_DIR, 'vendor-entry.js'))).to.equal(false);
+  });
+});
+
+describe('buildUiVendorDll cleans its own output directory before writing', function () {
+  this.timeout(30000); // real rspack compilation
+
+  let outputPath: string;
+  before(() => {
+    outputPath = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-test-stale-'));
+  });
+  after(() => rmSync(outputPath, { recursive: true, force: true }));
+
+  it('removes a stale file left in the dll directory by an earlier run', async () => {
+    const dllDir = join(outputPath, UI_VENDOR_DLL_DIR);
+    mkdirSync(dllDir, { recursive: true });
+    const staleFile = join(dllDir, 'a-file-from-a-previous-run-with-a-different-package-set.js');
+    writeFileSync(staleFile, '');
+    await buildUiVendorDll(outputPath, ['lodash.compact']);
+    expect(existsSync(staleFile)).to.equal(false);
+    expect(existsSync(join(dllDir, UI_VENDOR_DLL_MANIFEST_FILENAME))).to.equal(true);
   });
 });
 
@@ -198,9 +232,12 @@ describe('toPortableUiVendorDllKey', () => {
     );
   });
 
-  it('keys a nested dependency by the innermost package that physically holds it', () => {
+  it('keeps a nested dependency scoped to the package that physically holds it, instead of collapsing it to the top level', () => {
+    // `b` is only ever installed under `a/node_modules/b` here - a consumer where `b` is not hoisted
+    // to its own top-level `node_modules/b` has no way to resolve the collapsed form, and one where a
+    // *different*, unrelated `b` happens to be hoisted there would otherwise get that wrong module.
     expect(toPortableUiVendorDllKey('./node_modules/.pnpm/a@1/node_modules/a/node_modules/b/index.js')).to.equal(
-      './b/index.js'
+      './a/node_modules/b/index.js'
     );
   });
 
@@ -256,9 +293,13 @@ describe('toPortableUiVendorDllManifest', () => {
     expect(Object.keys(portable.content)).to.deep.equal(['./@teambit/ui/dist/ui.ui.runtime.js']);
   });
 
-  it('covers neither copy when two versions of one package collapse onto the same key', () => {
-    // package name + subpath cannot tell two installed versions apart, so there is no single right
-    // module to delegate to - the consumer compiles its own instead.
+  it('drops every entry of a package resolved from more than one physical install, not just the specific keys that collide', () => {
+    // two different installs of `use-debounce` were both reached by this dll's compilation (pnpm
+    // keeps each version/peer-hash in its own store directory) - package name + subpath cannot tell
+    // a consumer with only one of them which is theirs, even for `other.js`, whose subpath happens
+    // not to collide between the two versions. Keeping `other.js` (as a purely per-*key* collision
+    // check previously did) could still hand a consumer on the 3.4.3 install code compiled against
+    // 7.0.1's `other.js`, silently.
     const manifest: UiVendorDllManifest = {
       name: '__bitUiVendor__',
       type: 'window',
@@ -266,10 +307,24 @@ describe('toPortableUiVendorDllManifest', () => {
         './node_modules/.pnpm/use-debounce@3.4.3_react@19.2.7/node_modules/use-debounce/esm/index.js': { id: 1 },
         './node_modules/.pnpm/use-debounce@7.0.1_react@19.2.7/node_modules/use-debounce/esm/index.js': { id: 2 },
         './node_modules/.pnpm/use-debounce@7.0.1_react@19.2.7/node_modules/use-debounce/esm/other.js': { id: 3 },
+        './node_modules/@teambit/ui/dist/ui.ui.runtime.js': { id: 4 },
       },
     };
     const portable = toPortableUiVendorDllManifest(manifest);
-    expect(Object.keys(portable.content)).to.deep.equal(['./use-debounce/esm/other.js']);
+    expect(Object.keys(portable.content)).to.deep.equal(['./@teambit/ui/dist/ui.ui.runtime.js']);
+  });
+
+  it('accepts an additional dynamic set of unsafe packages, on top of whatever it is given', () => {
+    const manifest: UiVendorDllManifest = {
+      name: '__bitUiVendor__',
+      type: 'window',
+      content: {
+        './node_modules/@teambit/workspace/dist/workspace.ui.runtime.js': { id: 1 },
+        './node_modules/@teambit/ui/dist/ui.ui.runtime.js': { id: 2 },
+      },
+    };
+    const portable = toPortableUiVendorDllManifest(manifest, new Set(['@teambit/workspace']));
+    expect(Object.keys(portable.content)).to.deep.equal(['./@teambit/ui/dist/ui.ui.runtime.js']);
   });
 
   it("normalizes rspack 1.7.12's object-shaped buildMeta.defaultObject to the plain string a newer rspack's DllReferencePlugin requires", () => {
@@ -368,6 +423,65 @@ describe('createUiVendorDllReference (a separate install with its own layout)', 
   });
 });
 
+describe('createUiVendorDllReference rejects the whole reference on a react version mismatch', () => {
+  let consumerDir: string;
+
+  function writeConsumerReact(version: string) {
+    const reactDir = join(consumerDir, 'node_modules', 'react');
+    mkdirSync(reactDir, { recursive: true });
+    writeFileSync(join(reactDir, 'package.json'), JSON.stringify({ name: 'react', version }));
+    const otherDir = join(consumerDir, 'node_modules', 'some-other-pkg');
+    mkdirSync(join(otherDir, 'dist'), { recursive: true });
+    writeFileSync(join(otherDir, 'package.json'), JSON.stringify({ name: 'some-other-pkg' }));
+    writeFileSync(join(otherDir, 'dist', 'index.js'), 'module.exports = {};');
+  }
+
+  function writeManifest(reactVersions?: Record<string, string>) {
+    const manifestPath = join(consumerDir, 'vendor-manifest.json');
+    writeFileSync(
+      manifestPath,
+      JSON.stringify({
+        name: '__bitUiVendor__',
+        type: 'window',
+        content: { './some-other-pkg/dist/index.js': { id: 1 } },
+        ...(reactVersions ? { reactVersions } : {}),
+      })
+    );
+    return manifestPath;
+  }
+
+  beforeEach(() => {
+    consumerDir = realpathSync(mkdtempSync(join(tmpdir(), 'ui-vendor-dll-test-react-version-')));
+  });
+  afterEach(() => rmSync(consumerDir, { recursive: true, force: true }));
+
+  it('returns undefined when the consumer has a different react version than the dll was built against', () => {
+    writeConsumerReact('18.3.1');
+    const manifestPath = writeManifest({ react: '19.2.7' });
+    expect(createUiVendorDllReference(manifestPath, { context: consumerDir })).to.equal(undefined);
+  });
+
+  it('still builds a reference when the react version matches', () => {
+    writeConsumerReact('19.2.7');
+    const manifestPath = writeManifest({ react: '19.2.7' });
+    expect(createUiVendorDllReference(manifestPath, { context: consumerDir })).to.not.equal(undefined);
+  });
+
+  it('does not reject an older manifest with no reactVersions field at all (backward compatible)', () => {
+    writeConsumerReact('18.3.1');
+    const manifestPath = writeManifest(undefined);
+    expect(createUiVendorDllReference(manifestPath, { context: consumerDir })).to.not.equal(undefined);
+  });
+
+  it('only checks packages the producer actually recorded a version for', () => {
+    // the consumer's react is a different version than a hypothetical producer build would have used,
+    // but this manifest only recorded `react-dom` - `react` itself is "unknown" here, not a mismatch.
+    writeConsumerReact('18.3.1');
+    const manifestPath = writeManifest({ 'react-dom': '19.2.7' });
+    expect(createUiVendorDllReference(manifestPath, { context: consumerDir })).to.not.equal(undefined);
+  });
+});
+
 describe('resolveUiVendorDllPaths', () => {
   let bundleUiPath: string;
   let dllDir: string;
@@ -420,5 +534,42 @@ describe('resolveUiVendorDllPackages (real core aspects)', () => {
     // here as the negative example: it actually does ship its own scope.ui.runtime.js and is
     // correctly included by resolveUiVendorDllPackages - verified against its real dist/ output.
     expect(result).to.not.include(getCoreAspectPackageName('teambit.harmony/bit'));
+  });
+});
+
+describe('resolveContextProviderMismatchUnsafePackages (real core aspects)', () => {
+  it('flags core aspects whose own UI directly consumes react-router hooks, via their real declared dependencies', () => {
+    // `@teambit/workspace`'s ui code imports `useLocation`/`useSearchParams` straight from
+    // `react-router-dom` (`ui/workspace/workspace.tsx`), and `@teambit/lanes`/`@teambit/component-compare`
+    // consume it through `@teambit/ui-foundation.ui.react-router.slot-router` - none of the three is,
+    // or should have to be, in the hand-maintained `CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES` list
+    // itself for this to catch them.
+    const result = resolveContextProviderMismatchUnsafePackages(
+      ['@teambit/workspace', '@teambit/lanes', '@teambit/component-compare'],
+      resolvePackageDirFromNodeModules
+    );
+    expect(result).to.include('@teambit/workspace');
+    expect(result).to.include('@teambit/lanes');
+    expect(result).to.include('@teambit/component-compare');
+    // the built-in wrapper packages are always present too, regardless of `packages`.
+    expect(result).to.include('react-router-dom');
+  });
+
+  it('does not flag a package with no router dependency at all', () => {
+    const result = resolveContextProviderMismatchUnsafePackages(['@teambit/preview'], resolvePackageDirFromNodeModules);
+    expect(result).to.not.include('@teambit/preview');
+  });
+});
+
+describe('resolveUiVendorDllSourceRoot', () => {
+  it('resolves to the install directory containing @teambit/ui, not process.cwd()', () => {
+    const uiPackageDir = resolvePackageDirFromNodeModules('@teambit/ui')!;
+    const root = resolveUiVendorDllSourceRoot(resolvePackageDirFromNodeModules);
+    expect(existsSync(join(root, 'node_modules', '@teambit', 'ui'))).to.equal(true);
+    expect(uiPackageDir.startsWith(join(root, 'node_modules'))).to.equal(true);
+  });
+
+  it('falls back to process.cwd() when @teambit/ui cannot be resolved', () => {
+    expect(resolveUiVendorDllSourceRoot(() => undefined)).to.equal(process.cwd());
   });
 });

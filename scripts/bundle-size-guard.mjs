@@ -72,6 +72,27 @@ function measureAcross(outDir, globPattern, suffix) {
   return total;
 }
 
+/**
+ * Whether `check`'s path (or, for a glob, at least one matching directory) exists at all - checked
+ * separately from its byte size, because `measure()`/`measureAcross()` return 0 for an absent path
+ * exactly the same as for a present-but-empty one, and every check here has a positive baseline: an
+ * entirely missing artifact (a build step that silently didn't run, an injection that didn't happen)
+ * must never read as "0 bytes, comfortably within budget".
+ */
+function checkExists(outDir, check) {
+  if (check.optional) return true;
+  if (check.pathGlob) {
+    const starAt = check.pathGlob.indexOf('*');
+    if (starAt === -1) return existsSync(join(outDir, check.pathGlob));
+    const before = check.pathGlob.slice(0, starAt).replace(/\/$/, '');
+    const parentDir = join(outDir, before);
+    if (!existsSync(parentDir)) return false;
+    return readdirSync(parentDir, { withFileTypes: true }).some((entry) => entry.isDirectory());
+  }
+  if (check.excludePath) return existsSync(join(outDir, check.path));
+  return existsSync(join(outDir, check.path));
+}
+
 function measureCheck(outDir, check) {
   if (check.pathGlob) return measureAcross(outDir, check.pathGlob, check.suffix);
   if (check.excludePath) return measure(join(outDir, check.path)) - measure(join(outDir, check.excludePath));
@@ -116,30 +137,30 @@ function printReport(phase, outDir, marginPercent, rows) {
     `${'ACTUAL'.padStart(cols.actual)} ${'MAX'.padStart(cols.max)} ${'MARGIN USED'.padStart(cols.used)}`;
   console.log(paint(COLOR?.bold, header));
 
-  for (const { check, actualMB, maxMB, over } of rows) {
+  for (const { check, actualMB, maxMB, over, missing } of rows) {
     // % of the *allowed growth room* consumed, not of max - right at baseline this reads 0%, not
     // ~91%, since max is always baseline*(1+margin). Can go negative (shrunk below baseline).
     const allowedGrowth = maxMB - check.baselineMB;
     const marginUsedPercent = allowedGrowth > 0 ? ((actualMB - check.baselineMB) / allowedGrowth) * 100 : over ? 100 : 0;
     const nearLimit = !over && marginUsedPercent >= 75;
-    const statusColor = over ? COLOR?.red : nearLimit ? COLOR?.yellow : COLOR?.green;
-    const statusPlain = over ? 'FAIL' : nearLimit ? 'warn' : ' ok ';
-    const usedText = `${marginUsedPercent.toFixed(0)}%`;
+    const statusColor = over || missing ? COLOR?.red : nearLimit ? COLOR?.yellow : COLOR?.green;
+    const statusPlain = missing ? 'MISS' : over ? 'FAIL' : nearLimit ? 'warn' : ' ok ';
+    const usedText = missing ? 'n/a' : `${marginUsedPercent.toFixed(0)}%`;
 
     const line =
       `  ${padVisible(paint(statusColor, statusPlain), statusPlain.length, cols.status)} ` +
       `${check.label.padEnd(cols.label)} ` +
-      `${`${actualMB.toFixed(2)} MB`.padStart(cols.actual)} ` +
+      `${(missing ? 'MISSING' : `${actualMB.toFixed(2)} MB`).padStart(cols.actual)} ` +
       `${`${maxMB.toFixed(2)} MB`.padStart(cols.max)} ` +
       `${padVisibleStart(paint(statusColor, usedText), usedText.length, cols.used)}`;
     console.log(line);
   }
 
-  const overCount = rows.filter((r) => r.over).length;
+  const failCount = rows.filter((r) => r.over || r.missing).length;
   console.log(
     paint(
       COLOR?.dim,
-      `\n  ${rows.length - overCount}/${rows.length} within budget${overCount ? `, ${overCount} over` : ''} (baseline + margin; see scripts/bundle-size-baseline.json)`
+      `\n  ${rows.length - failCount}/${rows.length} within budget${failCount ? `, ${failCount} failing` : ''} (baseline + margin; see scripts/bundle-size-baseline.json)`
     )
   );
 }
@@ -164,11 +185,25 @@ function main() {
   const margin = 1 + baseline.marginPercent / 100;
 
   const rows = checks.map((check) => {
-    const actualBytes = measureCheck(args.outDir, check);
+    // a completely absent artifact (a build step that silently didn't run, an injection that never
+    // happened) measures as 0 bytes exactly like an empty-but-present one - checked separately so it
+    // fails loudly instead of reading as "comfortably within budget".
+    const missing = !checkExists(args.outDir, check);
+    const actualBytes = missing ? 0 : measureCheck(args.outDir, check);
     const actualMB = actualBytes / 1024 / 1024;
     const maxMB = check.baselineMB * margin;
-    return { check, actualMB, maxMB, over: actualMB > maxMB };
+    return { check, actualMB, maxMB, over: actualMB > maxMB, missing };
   });
+
+  const missingChecks = rows.filter((r) => r.missing);
+  if (missingChecks.length) {
+    console.error(
+      `[bundle-size-guard] ${missingChecks.length} expected artifact(s) are missing entirely:\n` +
+        missingChecks.map((r) => `  - ${r.check.label} (${r.check.pathGlob || r.check.path})`).join('\n')
+    );
+    if (!args.updateBaseline) printReport(args.phase, args.outDir, baseline.marginPercent, rows);
+    process.exit(1);
+  }
 
   if (args.updateBaseline) {
     for (const { check, actualMB } of rows) {

@@ -156,3 +156,22 @@
     branch's own changes (see [18-findings-log.md](18-findings-log.md)'s 2026-09-08 entry). Not fixed
     here; likely needs either `"ignoreDeprecations": "6.0"` or a `moduleResolution` bump in
     `tsconfig.default.json`, or a `typescript` downgrade - out of scope of this branch's work.
+
+14. **A browser-copied core aspect's real `dist/` can reference a runtime dependency that isn't part
+    of the default distribution, beyond the one already-fixed instance.** Found 2026-09-08 while
+    working through PR #10690's Qodo review comments: `@teambit/react-router`'s real `browser/index.js`
+    (copied in by `copyBrowserDist` for bare-import resolution, see gap 1's 2026-09-07 closure)
+    re-exports `@teambit/base-react.navigation.link`, which lives only in the opt-in
+    `UI_BUNDLING_EXTERNALS` group (`externals.ts`) - absent otherwise. Fixed for this one, concretely
+    verified case: `generate-shim-packages.ts`'s new `BROWSER_DIST_EXTRA_RUNTIME_DEPS` vendors that
+    package's own dependency closure alongside the shims, the same pattern `HARMONY_RUNTIME_DEPS`
+    already uses for harmony (see [18-findings-log.md](18-findings-log.md)'s 2026-09-08 entry).
+    **Not closed as a general class of bug**: this can't be discovered generically the way
+    `ui-vendor-dll.ts`'s `resolveContextProviderMismatchUnsafePackages()` walks declared
+    `dependencies`/`peerDependencies`, because `@teambit/react-router`'s own `package.json` declares no
+    `dependencies` at all - the real import was simply never tracked there. Whether any _other_
+    browser-copied core aspect has a similar undeclared runtime dependency has not been audited across
+    the full core-aspect list, and reliably finding out needs a real third-party consumer build
+    (`bit-cloud-bundle`, per [27-ui-vendor-dll-plan.md](27-ui-vendor-dll-plan.md)) that actually
+    exercises each aspect's browser barrel, not static analysis of this repo alone - a `Cannot find
+module` at that point would be the symptom.

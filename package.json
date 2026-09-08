@@ -7,6 +7,7 @@
   },
   "lint-staged": {
     "!(scripts)/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings",
+    "*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings",
     "*.{ts,js,jsx,tsx,css,scss,md,mdx}": [
       "prettier --write",
       "git add"

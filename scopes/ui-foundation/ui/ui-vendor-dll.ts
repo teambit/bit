@@ -1,4 +1,5 @@
-import { readdirSync, existsSync, readFileSync, writeFileSync, mkdirSync, realpathSync } from 'fs';
+import { readdirSync, existsSync, readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, realpathSync } from 'fs';
+import { tmpdir } from 'os';
 import { join, relative, resolve, dirname, sep } from 'path';
 import { rspack } from '@rspack/core';
 import { getCoreAspectPackageName } from '@teambit/aspect-loader';
@@ -75,6 +76,23 @@ function findPackageDir(packageName: string, nodeModulesDirs: string[]): string 
 }
 
 /**
+ * The actual Bit installation being bundled - located via `@teambit/ui`'s own package directory
+ * (this module is compiled into it) rather than `process.cwd()`. `BundleUiTask.execute()` can run
+ * from a capsule whose cwd is unrelated to the install that will actually be resolving `react`,
+ * `react-dom`, and every other covered package's transitive dependencies - if the dll's rspack
+ * compilation resolved bare imports against `process.cwd()/node_modules` first, a `bit build` invoked
+ * from a workspace with its own, different dependency versions would bake THOSE versions into the
+ * shipped vendor dll instead of the install's own.
+ */
+export function resolveUiVendorDllSourceRoot(
+  resolvePackageDir: (packageName: string) => string | undefined = resolvePackageDirFromNodeModules
+): string {
+  const uiPackageDir = resolvePackageDir('@teambit/ui');
+  // `<root>/node_modules/@teambit/ui` -> `@teambit` -> `node_modules` -> `<root>`
+  return uiPackageDir ? dirname(dirname(dirname(uiPackageDir))) : process.cwd();
+}
+
+/**
  * per package: find its dist dir, filter for `.ui.runtime.js`/`.preview.runtime.js` files, and
  * `require()` each matched file directly rather than the bare package. Requiring the bare package
  * (its main entry) also pulls in whatever its *other* runtimes need - e.g. `@teambit/pnpm`'s main
@@ -127,7 +145,13 @@ export function resolveUiVendorDllPaths(bundleUiPath: string | undefined): UiVen
 }
 
 export type UiVendorDllManifestEntry = { id: string | number; buildMeta?: unknown; exports?: string[] | true };
-export type UiVendorDllManifest = { name: string; type: string; content: Record<string, UiVendorDllManifestEntry> };
+export type UiVendorDllManifest = {
+  name: string;
+  type: string;
+  content: Record<string, UiVendorDllManifestEntry>;
+  /** react/react-dom versions this dll's own compilation actually bundled - see `createUiVendorDllReference` */
+  reactVersions?: Record<string, string>;
+};
 
 /** the `rspack.DllReferencePlugin` options `createUiVendorDllReference` builds */
 export type UiVendorDllReference = {
@@ -140,6 +164,9 @@ export type UiVendorDllReference = {
 
 // rspack writes manifest keys with forward slashes on every platform
 const NODE_MODULES_SEGMENT = '/node_modules/';
+// pnpm's own virtual-store flattening layer: every package it installs sits behind exactly one of
+// these, regardless of hoisting - purely a storage-layout artifact, never a real nested dependency.
+const PNPM_STORE_SEGMENT = /\.pnpm\/[^/]+\/node_modules\//g;
 
 /**
  * rspack keys a dll manifest by each module's path relative to the compilation's `context`, and
@@ -151,15 +178,26 @@ const NODE_MODULES_SEGMENT = '/node_modules/';
  * `DllReferencePlugin` just lets the module compile from source, no error).
  *
  * The one identity both installs do share is package name + subpath, so that is what the shipped
- * manifest is keyed by. Everything before the last `node_modules/` - the part that is specific to
- * one install's layout - is dropped. A key with no `node_modules/` in it at all (an external, a
- * remote font URL, the generated entry file itself) belongs to no package and is dropped entirely;
- * it could never have matched a consumer's module anyway.
+ * manifest is keyed by. Everything through pnpm's own virtual-store segment - the part that is
+ * specific to one install's layout - is dropped (its *last* occurrence, for a package nested inside
+ * another pnpm-managed package). A genuine nested `node_modules/<pkg>` that follows it - a real,
+ * unhoisted transitive dependency, reproducible by any install that resolves the outer package the
+ * same way - is deliberately preserved rather than collapsed to just `<pkg>`: collapsing it would
+ * let `createUiVendorDllReference` match it against an unrelated, possibly differently-versioned
+ * top-level package of the same name in a consumer that never hoisted it that way at all. A key with
+ * no `node_modules/` in it at all (an external, a remote font URL, the generated entry file itself)
+ * belongs to no package and is dropped entirely; it could never have matched a consumer's module
+ * anyway.
  */
 export function toPortableUiVendorDllKey(key: string): string | undefined {
-  const lastNodeModules = key.lastIndexOf(NODE_MODULES_SEGMENT);
-  if (lastNodeModules === -1) return undefined;
-  return `./${key.slice(lastNodeModules + NODE_MODULES_SEGMENT.length)}`;
+  const pnpmMatches = [...key.matchAll(PNPM_STORE_SEGMENT)];
+  if (pnpmMatches.length) {
+    const last = pnpmMatches[pnpmMatches.length - 1];
+    return `./${key.slice(last.index + last[0].length)}`;
+  }
+  const firstNodeModules = key.indexOf(NODE_MODULES_SEGMENT);
+  if (firstNodeModules === -1) return undefined;
+  return `./${key.slice(firstNodeModules + NODE_MODULES_SEGMENT.length)}`;
 }
 
 /**
@@ -231,24 +269,96 @@ function packageNameOf(portableKey: string): string | undefined {
   return packageName || undefined;
 }
 
-export function toPortableUiVendorDllManifest(manifest: UiVendorDllManifest): UiVendorDllManifest {
-  // `undefined` marks a key seen more than once: the dll covers two versions of the same package
-  // (pnpm keeps them in separate store directories, package name + subpath cannot tell them apart),
-  // so there is no single right module to delegate to - cover neither and let the consumer compile
-  // its own.
-  const entries = new Map<string, UiVendorDllManifestEntry | undefined>();
+/**
+ * BFS through `packageName`'s own `package.json` `dependencies` AND `peerDependencies` (never
+ * `devDependencies` - only what actually ships and runs) to check whether requiring it necessarily
+ * also runs code from a package in `unsafeRoots`. Generalizes
+ * `CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES` beyond a hand-maintained list of router wrapper
+ * packages to every covered core aspect that transitively pulls one in - e.g. `@teambit/workspace`'s
+ * own UI directly calls `useLocation()`/`useSearchParams()` from `react-router-dom`, making it
+ * exactly as unsafe to delegate as `react-router-dom` itself, even though it is not, and can never
+ * practically be, hand-listed alongside the libraries it happens to use this way today.
+ *
+ * `peerDependencies`, not just `dependencies`, because every core aspect declares its own shared UI
+ * libraries that way (verified: `@teambit/workspace`'s own `package.json` lists `react-router-dom`
+ * under `peerDependencies`, not `dependencies`, same as `react` itself) - skipping them would make
+ * this walk find nothing for any real core aspect at all.
+ */
+function dependsOnUnsafePackage(
+  packageName: string,
+  unsafeRoots: Set<string>,
+  resolvePackageDir: (packageName: string) => string | undefined,
+  visited: Set<string>
+): boolean {
+  if (unsafeRoots.has(packageName)) return true;
+  if (visited.has(packageName)) return false;
+  visited.add(packageName);
+  const packageDir = resolvePackageDir(packageName);
+  if (!packageDir) return false;
+  let dependencies: Record<string, string> = {};
+  try {
+    const packageJson = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf-8'));
+    dependencies = { ...packageJson.dependencies, ...packageJson.peerDependencies };
+  } catch {
+    return false;
+  }
+  return Object.keys(dependencies).some((dep) => dependsOnUnsafePackage(dep, unsafeRoots, resolvePackageDir, visited));
+}
+
+/**
+ * `CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES` plus every one of `packages` (the dll's own covered
+ * package list) that transitively depends on one of them - each walked independently, from a fresh
+ * `visited` set, so one package's own dependency closure never marks a sibling unsafe by association.
+ */
+export function resolveContextProviderMismatchUnsafePackages(
+  packages: string[],
+  resolvePackageDir: (packageName: string) => string | undefined = resolvePackageDirFromNodeModules
+): Set<string> {
+  const unsafe = new Set(CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES);
+  packages.forEach((pkg) => {
+    if (dependsOnUnsafePackage(pkg, CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES, resolvePackageDir, new Set())) {
+      unsafe.add(pkg);
+    }
+  });
+  return unsafe;
+}
+
+export function toPortableUiVendorDllManifest(
+  manifest: UiVendorDllManifest,
+  unsafePackages: Set<string> = CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES
+): UiVendorDllManifest {
+  const portableEntries: Array<{ portableKey: string; packageName: string; entry: UiVendorDllManifestEntry }> = [];
+  // per-package physical-install identity: the raw prefix `toPortableUiVendorDllKey` stripped off to
+  // produce the portable key. Two entries for the same package name with *different* raw prefixes
+  // came from two distinct installs (pnpm keeps every version/peer-hash combination in its own store
+  // directory) - package name + subpath alone cannot tell a consumer with only one of those installs
+  // which is theirs, even for the specific files whose subpath happens not to collide between the two.
+  const instancePrefixesByPackage = new Map<string, Set<string>>();
+
   Object.entries(manifest.content).forEach(([key, entry]) => {
     const portableKey = toPortableUiVendorDllKey(key);
     if (!portableKey) return;
     const packageName = packageNameOf(portableKey);
-    if (packageName && CONTEXT_PROVIDER_MISMATCH_UNSAFE_PACKAGES.has(packageName)) return;
+    if (!packageName || unsafePackages.has(packageName)) return;
+    const instancePrefix = key.slice(0, key.length - (portableKey.length - 2));
+    const prefixes = instancePrefixesByPackage.get(packageName) ?? new Set<string>();
+    prefixes.add(instancePrefix);
+    instancePrefixesByPackage.set(packageName, prefixes);
     const portableEntry =
       entry && 'buildMeta' in entry ? { ...entry, buildMeta: toPortableBuildMeta(entry.buildMeta) } : entry;
-    entries.set(portableKey, entries.has(portableKey) ? undefined : portableEntry);
+    portableEntries.push({ portableKey, packageName, entry: portableEntry });
   });
+
+  // a package resolved from more than one physical install has no single right module to delegate
+  // any of its files to - drop the whole package, not just the keys that happen to collide, and let
+  // the consumer compile all of it from source.
+  const ambiguousPackages = new Set(
+    [...instancePrefixesByPackage].filter(([, prefixes]) => prefixes.size > 1).map(([name]) => name)
+  );
+
   const content: Record<string, UiVendorDllManifestEntry> = {};
-  entries.forEach((entry, key) => {
-    if (entry) content[key] = entry;
+  portableEntries.forEach(({ portableKey, packageName, entry }) => {
+    if (!ambiguousPackages.has(packageName)) content[portableKey] = entry;
   });
   return { ...manifest, content };
 }
@@ -263,10 +373,11 @@ export function toPortableUiVendorDllManifest(manifest: UiVendorDllManifest): Ui
  *
  * Packages the consumer doesn't have installed (most of the dll's 600+ transitive dependencies) and
  * files it has at a layout where they don't exist are skipped - they simply stay compiled from the
- * consumer's own source. Package *versions* are deliberately not compared: this artifact replaces
- * the bundled cli's existing shims, which redirect these packages into `bit.app.js` regardless of
- * which version the consuming project declares, so gating on version equality would cover strictly
- * less than what it replaces.
+ * consumer's own source. Most package *versions* are deliberately not compared: this artifact
+ * replaces the bundled cli's existing shims, which redirect these packages into `bit.app.js`
+ * regardless of which version the consuming project declares, so gating on version equality would
+ * cover strictly less than what it replaces. React and react-dom are the one deliberate exception -
+ * see `hasIncompatibleReactVersion`.
  */
 export function createUiVendorDllReference(
   manifestPath: string,
@@ -280,6 +391,14 @@ export function createUiVendorDllReference(
   }
   if (!manifest?.content) return undefined;
   const consumerNodeModulesDirs = nodeModulesDirsFrom(options.resolveFrom || options.context);
+  if (manifest.reactVersions && hasIncompatibleReactVersion(manifest.reactVersions, consumerNodeModulesDirs)) {
+    // every other delegated module (core aspects included) was compiled against, and internally
+    // still references, this exact react runtime - a consumer on a different version would run a
+    // renderer and hooks different from the one its own dependency graph selected. Reject the whole
+    // reference rather than filtering just the react/react-dom entries: everything else in the dll
+    // was built assuming this react, mismatched or not.
+    return undefined;
+  }
   const packageDirs = new Map<string, string | undefined>();
   const content: Record<string, UiVendorDllManifestEntry> = {};
 
@@ -302,6 +421,29 @@ export function createUiVendorDllReference(
 
   if (!Object.keys(content).length) return undefined;
   return { content, context: options.context, name: manifest.name, sourceType: manifest.type };
+}
+
+/**
+ * `true` only when BOTH sides declare a version for the same package and they differ - an older or
+ * hand-crafted manifest with no `reactVersions` at all, or a consumer install where a covered package
+ * is unresolvable (handled elsewhere, by the normal "skip this entry" path), reads as "unknown" here
+ * rather than as a mismatch, so this never rejects a reference the pre-version-check manifest format
+ * already supported.
+ */
+function hasIncompatibleReactVersion(
+  producerVersions: Record<string, string>,
+  consumerNodeModulesDirs: string[]
+): boolean {
+  return Object.entries(producerVersions).some(([packageName, producerVersion]) => {
+    const packageDir = findPackageDir(packageName, consumerNodeModulesDirs);
+    if (!packageDir) return false;
+    try {
+      const { version } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf-8'));
+      return Boolean(version) && version !== producerVersion;
+    } catch {
+      return false;
+    }
+  });
 }
 
 /**
@@ -335,22 +477,75 @@ function contextify(context: string, absolutePath: string): string {
   return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
 }
 
-export async function buildUiVendorDll(outputPath: string, packages: string[]): Promise<void> {
+export async function buildUiVendorDll(
+  outputPath: string,
+  packages: string[],
+  sourceRoot: string = resolveUiVendorDllSourceRoot()
+): Promise<void> {
   const dllOutputDir = join(outputPath, UI_VENDOR_DLL_DIR);
-  const entryFile = join(dllOutputDir, 'vendor-entry.js');
-  const entryContents = buildDllEntryContents(packages);
+  // a reused capsule (or test tmpdir) may already carry a previous run's chunk/manifest/css under a
+  // package set or content hash that no longer matches this one - clean the dll's own directory
+  // before writing, rather than let rspack's default incremental output leave stale assets alongside
+  // the new ones. Scoped to `dllOutputDir`, never the artifact's other, sibling UI/preview output.
+  rmSync(dllOutputDir, { recursive: true, force: true });
   mkdirSync(dllOutputDir, { recursive: true });
+
+  // built in a scratch directory outside the artifact tree, never under `dllOutputDir` - unlike
+  // every other file rspack writes there, this one is only an input to the compilation, not part of
+  // its output: `BundleUiTask`'s artifact glob ships the whole `dllOutputDir` recursively, and this
+  // file's own content embeds this build's absolute local filesystem paths (see
+  // `buildDllEntryContents`), which a published artifact must neither carry nor need after
+  // compilation.
+  const entryScratchDir = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-entry-'));
+  const entryFile = join(entryScratchDir, 'vendor-entry.js');
+  const entryContents = buildDllEntryContents(packages);
   writeFileSync(entryFile, entryContents);
 
+  try {
+    await runUiVendorDllCompiler(entryFile, dllOutputDir, sourceRoot);
+  } finally {
+    rmSync(entryScratchDir, { recursive: true, force: true });
+  }
+
+  const manifestPath = join(dllOutputDir, UI_VENDOR_DLL_MANIFEST_FILENAME);
+  const manifest: UiVendorDllManifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+  const unsafePackages = resolveContextProviderMismatchUnsafePackages(packages);
+  const portableManifest = toPortableUiVendorDllManifest(manifest, unsafePackages);
+  portableManifest.reactVersions = resolveReactVersions();
+  writeFileSync(manifestPath, JSON.stringify(portableManifest));
+}
+
+/**
+ * The react/react-dom versions this dll's own compilation actually bundled, read directly off each
+ * package's `package.json` - `createUiVendorDllReference` compares these against the consuming
+ * install's own versions before delegating anything.
+ */
+function resolveReactVersions(): Record<string, string> {
+  const versions: Record<string, string> = {};
+  UI_VENDOR_DLL_EXTRA_PACKAGES.forEach((pkg) => {
+    const packageDir = resolvePackageDirFromNodeModules(pkg);
+    if (!packageDir) return;
+    try {
+      const { version } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf-8'));
+      if (version) versions[pkg] = version;
+    } catch {
+      // no version to record - treated the same as an entry this install never had at all.
+    }
+  });
+  return versions;
+}
+
+async function runUiVendorDllCompiler(entryFile: string, dllOutputDir: string, sourceRoot: string): Promise<void> {
   const compiler = rspack({
     mode: 'production',
     entry: entryFile,
-    // pinned to the same directory `resolve.modules` below already assumes is the install being
-    // bundled, rather than left to default to whatever `process.cwd()` happens to be when the build
-    // task runs. Only affects the raw manifest keys rspack writes, which
-    // `toPortableUiVendorDllManifest` re-keys straight afterwards - but it keeps those raw keys the
-    // same shape (`./node_modules/...`) no matter where bit was invoked from.
-    context: process.cwd(),
+    // the actual Bit installation being bundled (see `resolveUiVendorDllSourceRoot`), not
+    // `process.cwd()` - `BundleUiTask.execute()` can run from a capsule whose cwd has nothing to do
+    // with the install whose `react`, `react-dom`, and other transitive dependencies this
+    // compilation must resolve. Only affects the raw manifest keys rspack writes, which
+    // `toPortableUiVendorDllManifest` re-keys straight afterwards - but it keeps `resolve.modules`
+    // below pointed at the right `node_modules` regardless of where bit was invoked from.
+    context: sourceRoot,
     // required for `module.parser: cssParser` below to mean anything - rspack's native 'css'/
     // 'css/module' module types (and their parser options) only exist with this enabled, same as
     // `rspack.browser.config.ts`.
@@ -360,6 +555,11 @@ export async function buildUiVendorDll(outputPath: string, packages: string[]): 
     output: {
       path: dllOutputDir,
       filename: UI_VENDOR_DLL_CHUNK_FILENAME,
+      // rspack's native CSS support does not derive this from `filename` - left unset, extracted CSS
+      // falls back to its own default naming, which `resolveUiVendorDllPaths`'s hard-coded
+      // `vendor.css` lookup would then miss entirely (`rspack.browser.config.ts` sets its own
+      // `output.cssFilename` explicitly for the same reason).
+      cssFilename: UI_VENDOR_DLL_CSS_FILENAME,
       library: { name: UI_VENDOR_DLL_GLOBAL_NAME, type: 'window' },
     },
     // the same resolve/module machinery the existing pre-bundle (`rspack.browser.config.ts`) uses -
@@ -373,15 +573,13 @@ export async function buildUiVendorDll(outputPath: string, packages: string[]): 
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
       alias: resolveAlias({ profile: false }),
       fallback: resolveFallback,
-      // unlike the pre-bundle's entry (generated inside `node_modules/@teambit/ui/`, so the default
-      // walk-up finds it), the DLL's own entry file lives under the build's output directory (a
-      // capsule's artifacts dir, or a test tmpdir) - outside any node_modules tree. A bare require
-      // there (`react`, `react-dom`, or a test fixture) has no ancestor `node_modules` to walk up to
-      // at all, so the explicit repo-root path covers it. `'node_modules'` is kept alongside it (not
-      // replaced) so files that *are* inside the tree - e.g. `@teambit/harmony`'s own pnpm-nested
-      // `cleargraph` dependency - still get the default walk-up: a single hardcoded root without it
-      // is exactly what broke that resolution earlier.
-      modules: [join(process.cwd(), 'node_modules'), 'node_modules'],
+      // the DLL's own entry file lives in a scratch tmpdir, outside any node_modules tree and outside
+      // `sourceRoot` itself. A bare require there (`react`, `react-dom`, or a test fixture) has no
+      // ancestor `node_modules` to walk up to at all, so the explicit `sourceRoot` path covers it.
+      // `'node_modules'` is kept alongside it (not replaced) so files that *are* inside the tree -
+      // e.g. `@teambit/harmony`'s own pnpm-nested `cleargraph` dependency - still get the default
+      // walk-up: a single hardcoded root without it is exactly what broke that resolution earlier.
+      modules: [join(sourceRoot, 'node_modules'), 'node_modules'],
     },
     module: {
       parser: cssParser,
@@ -443,8 +641,4 @@ export async function buildUiVendorDll(outputPath: string, packages: string[]): 
       });
     });
   });
-
-  const manifestPath = join(dllOutputDir, UI_VENDOR_DLL_MANIFEST_FILENAME);
-  const manifest: UiVendorDllManifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-  writeFileSync(manifestPath, JSON.stringify(toPortableUiVendorDllManifest(manifest)));
 }

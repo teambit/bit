@@ -1754,6 +1754,17 @@ jobs:
           command: |
             node /home/circleci/bit/esbuild-bundle/bin/bit --version
             node /home/circleci/bit/esbuild-bundle/bin/bit --help > /dev/null
+      - run:
+          name: check bundle size
+          # unlike build_esbuild_bundle/check_ui_prebundle_size's two-phase split, this job's own UI
+          # prebundle is already baked in by the time "build the cli bundle" finishes (the prebundle
+          # cache was restored into node_modules before that step ran) - so only the "post" phase's
+          # baselines, which assume the prebundle is present, actually apply here. Guards the same
+          # SSR/vendor-DLL/UI-prebundle regression class this job would otherwise ship unchecked - see
+          # scripts/bundle-size-guard.mjs and bundle-plan/18-findings-log.md.
+          command: |
+            cd bit
+            node scripts/bundle-size-guard.mjs --phase=post --out-dir=/home/circleci/bit/esbuild-bundle
       - pack_bvm_tars
 
   # Packs bvm tars straight from build_and_test's own build_esbuild_bundle + build_ui_prebundle
@@ -1769,6 +1780,16 @@ jobs:
       - attach_workspace:
           at: ./
       - inject_ui_prebundle
+      # this job does not depend on check_ui_prebundle_size (it runs in parallel, off the same two
+      # upstream jobs, to publish a dev pre-release as soon as possible) - so its own post-injection
+      # size regression check has to run here too, or the guard the SSR 6 MB -> 53 MB regression was
+      # built for (bundle-plan/18-findings-log.md) never actually gates this publish path. Same
+      # command check_ui_prebundle_size runs, against the same freshly-injected bundle.
+      - run:
+          name: check bundle size (post-prebundle)
+          command: |
+            cd bit
+            node scripts/bundle-size-guard.mjs --phase=post --out-dir=/home/circleci/bit/esbuild-bundle
       - resolve_bundle_version
       - pack_bvm_tars
 

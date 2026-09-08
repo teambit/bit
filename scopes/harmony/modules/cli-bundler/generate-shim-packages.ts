@@ -183,6 +183,25 @@ async function copyBrowserDist(
 const HARMONY_RUNTIME_DEPS = ['reflect-metadata', 'cleargraph', 'comment-json', 'user-home'];
 
 /**
+ * Per browser-copied package (see `copyBrowserDist`), the extra runtime dependencies its real
+ * `browser/` dist needs that are not themselves core aspects (which always get their own shim) and
+ * are not part of the default (non-`--ui-bundling`) distribution otherwise. A manually-verified list,
+ * same reasoning as `HARMONY_RUNTIME_DEPS`: `@teambit/react-router/index.ts`'s
+ * `export * as navigation from '@teambit/base-react.navigation.link'` is a real, load-bearing import
+ * of its compiled `browser/index.js`, but `@teambit/react-router`'s own `package.json` declares no
+ * `dependencies` at all (confirmed empty) - so this cannot be discovered generically by walking
+ * declared dependencies the way `resolveContextProviderMismatchUnsafePackages` does for
+ * `ui-vendor-dll.ts`'s router-context-safety check; it has to be named explicitly, per package, once
+ * verified. `@teambit/base-react.navigation.link` itself is only ever installed via
+ * `UI_BUNDLING_EXTERNALS` (`externals.ts`) - absent from the default distribution - so without this,
+ * any browser-target bundler resolving a bare `@teambit/react-router` import throws `Cannot find
+ * module '@teambit/base-react.navigation.link'` the moment it reaches this re-export.
+ */
+const BROWSER_DIST_EXTRA_RUNTIME_DEPS: Record<string, string[]> = {
+  '@teambit/react-router': ['@teambit/base-react.navigation.link'],
+};
+
+/**
  * `resolveFrom` - not `packagesRoot` - because pnpm only symlinks a package's *direct* dependencies
  * into a flat, repo-root `node_modules`; `cleargraph` (harmony's dependency, not the repo's) lives
  * only inside harmony's own per-package store dir (`.pnpm/@teambit+harmony@.../node_modules/`), and
@@ -200,11 +219,14 @@ async function copyPackageWithDeps(
   copied.add(packageName);
   const sourceDir = resolvePackageDir(resolveFrom, packageName);
   if (!sourceDir) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `[bundle] "${packageName}" not resolvable from ${resolveFrom} - harmony's runtime deps may be incomplete`
+    // this closure is vendored precisely because bit.app.js/harmony's own top-level require() of it
+    // has no further install step to recover in (see this function's own doc comment) - a missing
+    // link here is not a degraded-but-usable bundle, it is a bundle that throws "Cannot find module"
+    // the moment harmony loads. Failing the build now is strictly better than shipping that.
+    throw new Error(
+      `[bundle] "${packageName}" not resolvable from ${resolveFrom} - harmony's runtime deps would be ` +
+        `incomplete and the bundled CLI would fail to load. Fix the resolution or update HARMONY_RUNTIME_DEPS.`
     );
-    return;
   }
   await fs.copy(sourceDir, join(shimsDir, packageName), { dereference: true, overwrite: true });
   const { dependencies = {} } = await fs.readJson(join(sourceDir, 'package.json')).catch(() => ({}) as any);
@@ -297,6 +319,13 @@ async function generateOne(paths: BundlePaths, target: ShimTarget) {
   const browserFilesCopied = await copyBrowserDist(target.packageName, target.sourceDir, browserDir);
   const hasTypes = typesCopied > 0 && (await fs.pathExists(join(distDir, 'index.d.ts')));
   const hasBrowserDist = browserFilesCopied > 0 && (await fs.pathExists(join(browserDir, 'index.js')));
+  const extraRuntimeDeps = BROWSER_DIST_EXTRA_RUNTIME_DEPS[target.packageName];
+  if (hasBrowserDist && extraRuntimeDeps && target.sourceDir) {
+    const copied = new Set<string>();
+    await Promise.all(
+      extraRuntimeDeps.map((dep) => copyPackageWithDeps(dep, target.sourceDir!, paths.shimsDir, copied))
+    );
+  }
 
   const packageJson: Record<string, any> = {
     name: target.packageName,
