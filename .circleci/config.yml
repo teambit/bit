@@ -51,7 +51,7 @@ master_only_filter: &master_only_filter
       only: master
 
 # The bundle branches, which can publish a pre-release build to bvm without going through a
-# release. Same pattern setup_esbuild_bundle is gated on.
+# release. Same pattern build_esbuild_bundle is gated on.
 bundle_branch_filter: &bundle_branch_filter
   filters:
     branches:
@@ -318,7 +318,7 @@ commands:
           paths:
             - /home/circleci/.bvm
 
-  # Merges build_ui_prebundle's cached UI/preview artifacts into setup_esbuild_bundle's already-
+  # Merges build_ui_prebundle's cached UI/preview artifacts into build_esbuild_bundle's already-
   # built bundle - a plain file copy, since the pre-bundle is static artifacts alongside
   # bit.app.js rather than compiled into it, so no rebuild is needed. Shared between
   # e2e_test_ui_prebundle and bundle_push_build, both of which combine the two upstream jobs'
@@ -1301,7 +1301,7 @@ jobs:
   # ========== esbuild CLI bundle ==========
   # Builds the bundled CLI once and persists it, so all e2e nodes share a single build instead of
   # each of them producing (and installing the externals for) their own.
-  setup_esbuild_bundle:
+  build_esbuild_bundle:
     <<: *defaults
     resource_class: large
     environment:
@@ -1342,7 +1342,7 @@ jobs:
       - store_artifacts:
           path: /home/circleci/bit/esbuild-bundle/bundle-stamp.json
 
-  # Runs the full e2e suite against the bundled CLI from setup_esbuild_bundle.
+  # Runs the full e2e suite against the bundled CLI from build_esbuild_bundle.
   e2e_test_esbuild_bundle:
     <<: *defaults
     environment:
@@ -1382,10 +1382,10 @@ jobs:
 
   # Builds a real ui/preview pre-bundle from the dev binary (bundle-plan §17i) and caches it under
   # .bundle-cache/. Deliberately its own job, parallel to (not chained in front of)
-  # setup_esbuild_bundle: producing this is a real `bit build`, minutes on top of the esbuild
+  # build_esbuild_bundle: producing this is a real `bit build`, minutes on top of the esbuild
   # bundle's own build, and it would otherwise delay every node of e2e_test_esbuild_bundle's
   # 40-way sweep just to serve two spec files. e2e_test_ui_prebundle combines this job's output
-  # with setup_esbuild_bundle's once both are ready, so neither job blocks the other.
+  # with build_esbuild_bundle's once both are ready, so neither job blocks the other.
   build_ui_prebundle:
     <<: *defaults
     resource_class: large
@@ -1431,10 +1431,10 @@ jobs:
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
-  # Injects build_ui_prebundle's fresh pre-bundle into setup_esbuild_bundle's already-built bundle -
+  # Injects build_ui_prebundle's fresh pre-bundle into build_esbuild_bundle's already-built bundle -
   # a plain file copy, since the pre-bundle is static artifacts alongside bit.app.js rather than
   # compiled into it, so no rebuild is needed - then guards its size (the parts that don't exist
-  # until this injection has run; setup_esbuild_bundle's own "check bundle size (pre-prebundle)"
+  # until this injection has run; build_esbuild_bundle's own "check bundle size (pre-prebundle)"
   # step covers everything else). Build validation, not a test, so it lives here rather than in
   # e2e_test_ui_prebundle - and its combined output is persisted so that job can attach it directly
   # instead of redoing the injection. See scripts/bundle-size-guard.mjs.
@@ -1741,7 +1741,7 @@ jobs:
             npm run bundle:prebundle-cache:restore
       - run:
           name: build the cli bundle
-          # The bundler script, same invocation setup_esbuild_bundle uses. It emits the published
+          # The bundler script, same invocation build_esbuild_bundle uses. It emits the published
           # layout directly - bin/bit plus dist/core-aspects/{bundle,node_modules} - so the packer
           # consumes the out dir as-is. No `bit build` of teambit.harmony/bit is involved: that
           # would be a full component compile of the CLI for an artifact this already produces.
@@ -1756,7 +1756,7 @@ jobs:
             node /home/circleci/bit/esbuild-bundle/bin/bit --help > /dev/null
       - pack_bvm_tars
 
-  # Packs bvm tars straight from build_and_test's own setup_esbuild_bundle + build_ui_prebundle
+  # Packs bvm tars straight from build_and_test's own build_esbuild_bundle + build_ui_prebundle
   # output, instead of bundle_deploy_build's from-scratch bit install + bit build: those two jobs
   # already run on every bit-bundle* push and persist exactly what's needed (esbuild-bundle,
   # bit/.bundle-cache), so this just merges and packs it - no separate bit install or bit build.
@@ -2151,20 +2151,20 @@ workflows:
       # the esbuild CLI bundle - runs on every branch (ungated 2026-08-19; was gated to bit-bundle*
       # branches only while unproven, which would have stopped running entirely once that work
       # merged to master instead of continuing there).
-      - setup_esbuild_bundle:
+      - build_esbuild_bundle:
           requires:
             - setup_harmony
       - e2e_test_esbuild_bundle:
           requires:
-            - setup_esbuild_bundle
-      # parallel to setup_esbuild_bundle/e2e_test_esbuild_bundle, not chained in front of them -
+            - build_esbuild_bundle
+      # parallel to build_esbuild_bundle/e2e_test_esbuild_bundle, not chained in front of them -
       # see build_ui_prebundle's own comment for why.
       - build_ui_prebundle:
           requires:
             - setup_harmony
       - check_ui_prebundle_size:
           requires:
-            - setup_esbuild_bundle
+            - build_esbuild_bundle
             - build_ui_prebundle
       - e2e_test_ui_prebundle:
           requires:
@@ -2176,7 +2176,7 @@ workflows:
       - bundle_push_build:
           <<: *bundle_branch_filter
           requires:
-            - setup_esbuild_bundle
+            - build_esbuild_bundle
             - build_ui_prebundle
       - bundle_publish_to_gcloud:
           <<: *bundle_branch_filter

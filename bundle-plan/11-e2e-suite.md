@@ -102,26 +102,29 @@ same caveat as §17i's "plain file cache, not a freshness gate" note.
 
 **Wired into CI as of 2026-08-19 — as two jobs parallel to the main e2e signal, not chained in
 front of it.** An earlier version of this wiring put the pre-bundle build inside
-`setup_esbuild_bundle` itself, ahead of the esbuild build — which meant every one of
-`e2e_test_esbuild_bundle`'s 40 parallel nodes had to wait for a real `bit build` to finish first,
-just to serve two spec files. Reworked into:
+`setup_esbuild_bundle` (renamed `build_esbuild_bundle` 2026-09-08) itself, ahead of the esbuild
+build — which meant every one of `e2e_test_esbuild_bundle`'s 40 parallel nodes had to wait for a
+real `bit build` to finish first, just to serve two spec files. Reworked into:
 
-- **`build_ui_prebundle`** (parallel to `setup_esbuild_bundle`, both requiring only
+- **`build_ui_prebundle`** (parallel to `build_esbuild_bundle`, both requiring only
   `setup_harmony`) — runs the dev-binary install + `bit build ... --tasks
 BundleUI,PreBundlePreview` + `bundle:prebundle-cache:save` from step 1 above, and persists
   `.bundle-cache/` to the workspace. This is the slow part (a real `bit build`, plus the dev-binary
   install it needs first — see the job's own comment for why); it no longer blocks anything.
-- **`e2e_test_ui_prebundle`** (requires both `setup_esbuild_bundle` _and_ `build_ui_prebundle`) —
-  copies `build_ui_prebundle`'s fresh pre-bundle directly into `setup_esbuild_bundle`'s
-  already-built bundle output (a plain file copy: the pre-bundle is static artifacts alongside
-  `bit.app.js`, not compiled into it, so nothing needs rebuilding) and runs
-  `BIT_E2E_UI_MODE=prebuilt` against an explicit file list — `ui-start.e2e.ts`, `ui-ssr.e2e.ts`,
-  and `custom-env-operations-2.e2e.ts` (its "preview/bundler but no compiler" describe block needs
-  the same core pre-bundle for a different reason — `EnvPreviewTemplateTask`, not `bit start` —
-  see bundle-plan §10 gap 11) — not the full-suite sweep. Add further spec files here the same way:
-  gate the specific `describe`/`it` with a `uiE2eMode()` check (`this.skip()` in a `before()` hook
-  works for an existing file without touching its other tests), then list the file in this job's
-  mocha invocation.
+- **`check_ui_prebundle_size`** (requires both `build_esbuild_bundle` _and_ `build_ui_prebundle`,
+  added 2026-09-08) — copies `build_ui_prebundle`'s fresh pre-bundle directly into
+  `build_esbuild_bundle`'s already-built bundle output (a plain file copy: the pre-bundle is static
+  artifacts alongside `bit.app.js`, not compiled into it, so nothing needs rebuilding), guards its
+  size (`scripts/bundle-size-guard.mjs --phase=post`), and persists the combined result — build
+  validation, not a test, so it's a separate job rather than a step inside the e2e job below.
+- **`e2e_test_ui_prebundle`** (requires `check_ui_prebundle_size`) — attaches the already-injected,
+  already-size-checked bundle and runs `BIT_E2E_UI_MODE=prebuilt` against an explicit file list —
+  `ui-start.e2e.ts`, `ui-ssr.e2e.ts`, and `custom-env-operations-2.e2e.ts` (its "preview/bundler but
+  no compiler" describe block needs the same core pre-bundle for a different reason —
+  `EnvPreviewTemplateTask`, not `bit start` — see bundle-plan §10 gap 11) — not the full-suite
+  sweep. Add further spec files here the same way: gate the specific `describe`/`it` with a
+  `uiE2eMode()` check (`this.skip()` in a `before()` hook works for an existing file without
+  touching its other tests), then list the file in this job's mocha invocation.
 
 `e2e_test_esbuild_bundle` itself is untouched — no added step, no `BIT_E2E_UI_MODE`, so it starts
 and finishes exactly as fast as before this work. `e2e_test_ui_prebundle` runs alongside it; a slow

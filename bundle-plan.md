@@ -2,12 +2,24 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-09-08 (added a CI size guard, `scripts/bundle-size-guard.mjs` +
+> Last updated: 2026-09-08 (renamed the `setup_esbuild_bundle` CI job to `build_esbuild_bundle` -
+> it builds the bundle, it doesn't set anything up - and moved the size guard's `post`-phase check
+> out of `e2e_test_ui_prebundle` into a new `check_ui_prebundle_size` job that runs
+> `inject_ui_prebundle` + the check as build validation, before the e2e job even starts;
+> `e2e_test_ui_prebundle` now just attaches the already-injected, already-checked bundle. See
+> [17-decisions-taken.md](bundle-plan/17-decisions-taken.md) D18.)
+> Previously, 2026-09-08 (the size guard's first real CI run showed the `pre`-phase baseline, captured
+> on a local macOS build, undercounting `node_modules` externals by ~9% vs. real CircleCI (Linux) -
+> platform-specific native binaries, not a regression. Recalibrated the baseline from the real CI
+> job's own report, and added `total-pre`/`total-post` checks that measure the _entire_ out-dir as a
+> catch-all, not just the twelve named sub-paths. See
+> [18-findings-log.md](bundle-plan/18-findings-log.md)'s 2026-09-08 entry.)
+> Previously, 2026-09-08 (added a CI size guard, `scripts/bundle-size-guard.mjs` +
 > `scripts/bundle-size-baseline.json`, direct response to the SSR 6 MB → 53 MB regression below —
-> two `--phase` runs, `pre` in `setup_esbuild_bundle` and `post` in `e2e_test_ui_prebundle` after
-> `inject_ui_prebundle`, each checking the bundle file, externals, shims, browser barrels, UI/preview
-> prebundle, SSR, UI vendor DLL, and the combined `dist/core-aspects` folder, with 10% growth margin
-> before failing. See [18-findings-log.md](bundle-plan/18-findings-log.md)'s 2026-09-08 entry and
+> two `--phase` runs, `pre` in `build_esbuild_bundle` and `post` in `check_ui_prebundle_size`, each
+> checking the bundle file, externals, shims, browser barrels, UI/preview prebundle, SSR, UI vendor
+> DLL, and the combined `dist/core-aspects` folder, with 10% growth margin before failing. See
+> [18-findings-log.md](bundle-plan/18-findings-log.md)'s 2026-09-08 entry and
 > [17-decisions-taken.md](bundle-plan/17-decisions-taken.md) D18.)
 > Previously, 2026-09-08 (root-caused PR #10690's `e2e_test_esbuild_bundle` CI failure via the
 > `circleci` CLI: `ui-vendor-dll.e2e.ts` was missing the `BIT_E2E_UI_MODE` gate its

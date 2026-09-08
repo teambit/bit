@@ -229,11 +229,17 @@ build per split machine, and an automatic local rebuild after any `bit compile`.
 
 Two jobs in `.circleci/config.yml`, gated to `^bit-bundle.*` branches:
 
-- `setup_esbuild_bundle` — builds once (~210 s) and persists to the workspace, so all e2e nodes share
-  one build. It needs neither bvm nor a compile step: `bit install` compiles by default (which is why
-  `setup_harmony` has `bbit compile` commented out), and building the bundle is plain node + npm.
+- `build_esbuild_bundle` (renamed from `setup_esbuild_bundle` 2026-09-08 — it builds the bundle, it
+  doesn't set anything up) — builds once (~210 s) and persists to the workspace, so all e2e nodes
+  share one build. It needs neither bvm nor a compile step: `bit install` compiles by default (which
+  is why `setup_harmony` has `bbit compile` commented out), and building the bundle is plain node +
+  npm. Also runs `scripts/bundle-size-guard.mjs --phase=pre` right after building.
 - `e2e_test_esbuild_bundle` — parallelism 40, symlinks the launcher onto PATH as `bit-bundled` and
   reuses the existing `e2e_test_cmd` (same file splitting, timings, junit).
+
+A separate `check_ui_prebundle_size` job (added 2026-09-08, see bundle-plan §11) injects
+`build_ui_prebundle`'s UI/preview artifacts into `build_esbuild_bundle`'s output and runs
+`scripts/bundle-size-guard.mjs --phase=post`, before `e2e_test_ui_prebundle` even starts.
 
 **CircleCI only builds branches with an open PR** (plus scheduled master runs). Pushing alone does
 nothing — that is why PR #10590 exists.

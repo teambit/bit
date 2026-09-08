@@ -49,7 +49,7 @@ node scripts/pack-bundle-for-bvm.js --capsule /tmp/bit-bundle --version 2.2.11-b
 ```
 
 Only the UI/preview pre-bundle needs a real `bit build`; the CLI bundle is the bundler script, the
-same invocation `setup_esbuild_bundle` runs. Its `--out-dir` is already the published layout
+same invocation `build_esbuild_bundle` runs. Its `--out-dir` is already the published layout
 (`bin/bit`, `dist/core-aspects/bundle`, `dist/core-aspects/node_modules`), identical to what the
 in-place capsule build emits, so the packer takes either.
 
@@ -168,14 +168,14 @@ because the `@pnpm/napi` check is a hard failure. Verified on pnpm 10.17.1 and 1
 
 `bundle_deploy` needs a manual trigger. `build_and_test` also carries `bundle_push_build` and a
 second instance of `bundle_publish_to_gcloud`, filtered to `bit-bundle*` branches, that do the same
-thing on every push without one — `setup_esbuild_bundle` and `build_ui_prebundle` already run on
+thing on every push without one — `build_esbuild_bundle` and `build_ui_prebundle` already run on
 every branch and persist exactly what packing needs (`esbuild-bundle`, `bit/.bundle-cache`), so
 `bundle_push_build` just merges and packs that instead of rebuilding it from scratch:
 
 1. `attach_workspace`
-2. inject `build_ui_prebundle`'s cached UI/preview artifacts into `setup_esbuild_bundle`'s bundle —
-   the same plain-copy step `e2e_test_ui_prebundle` uses to combine the two jobs' output, now shared
-   as the `inject_ui_prebundle` command
+2. inject `build_ui_prebundle`'s cached UI/preview artifacts into `build_esbuild_bundle`'s bundle —
+   the same plain-copy step `check_ui_prebundle_size` uses to combine the two jobs' output, now
+   shared as the `inject_ui_prebundle` command
 3. resolve the version — always auto-derived (`next-bundle-version.js`, no override), via the
    `resolve_bundle_version` command
 4. pack the five tars — the `pack_bvm_tars` command
