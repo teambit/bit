@@ -1706,3 +1706,31 @@ e2e/harmony/ui-ssr.e2e.ts` - **16/16 passing**, including "should start without 
   layout is one shared `ui-bundle/public/bit/` tree (with `ssr/` and `static/` under it) plus a sibling
   `ui-vendor-dll/`, so the guard's "UI prebundle" check covers `ui-bundle/public` (excluding `ssr/`) as
   a single bucket instead of two.
+
+- **2026-09-08 — the size guard's first real CI run exposed a platform-baseline bug, fixed by
+  recalibrating against real Linux numbers, and added a whole-folder catch-all check.** The `pre`-phase
+  baseline had been captured on a local macOS/arm64 dev machine; CircleCI runs Ubuntu/amd64, and
+  externals (`node_modules`, npm-installed) came in **5.47 MB (8.7%) larger** on real CI (68.31 MB vs.
+  the 62.84 MB macOS baseline) - almost certainly npm packages (esbuild, `@swc/core`, etc.) shipping
+  different-sized platform-specific native binaries for linux-x64 vs. darwin-arm64. Not a regression -
+  every other `pre` check was within 1-12% of baseline on the same run - but it consumed 87% of the
+  10% margin on the very first CI execution, which would have false-failed soon after. Fixed by
+  re-measuring the `pre`-phase baseline from the real CI job's own printed report (fetched via
+  `circleci job output get <job-id> --step-num 104`, job `945c9c7b` on this branch) instead of the
+  local macOS build: bundle 59.42 MB, externals 68.31 MB, shims 10.11 MB, shim dist 0.12 MB, shim
+  browser 7.32 MB, combined `dist/core-aspects` 81.54 MB. The `post`-phase numbers (SSR, UI vendor DLL,
+  UI app shell, preview) are static pre-built browser assets, not npm-installed packages, so they
+  don't carry the same platform variance and were left as originally measured.
+  Also added two new checks, `total-pre`/`total-post`, each measuring the **entire** out-dir (`path:
+"."`) rather than a specific sub-path - a catch-all so anything landing anywhere in the shipped
+  folder trips the guard, not just the twelve named locations. Baseline for these was derived (not
+  directly CI-measured, since the checks didn't exist yet on the run above) as
+  `combined + externals + small root overhead (bin/, package.json, package-lock.json, measured
+locally at ~0.1 MB)`: `total-pre` 149.94 MB, `total-post` 170.98 MB. Should be tightened with
+  `--update-baseline` once a CI run with these checks in place has reported real numbers.
+  Separately hit and fixed a transient local issue while re-measuring: `node_modules/@teambit/harmony.modules.cli-bundler`'s
+  compiled `dist/generate-shim-packages.js` was briefly stale (missing `copyBrowserDist`/
+  `copyHarmonyRuntimeDeps` entirely, 0 occurrences vs. the expected 8), making local browser-barrel/
+  harmony-deps measurements read 0 for one build. Fixed with a targeted `bd compile
+scopes/harmony/modules/cli-bundler`; did not affect the already-pushed code or the real CI numbers
+  above, which come from the CI job's own compile.

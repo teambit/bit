@@ -2,25 +2,32 @@
   "marginPercent": 10,
   "checks": [
     {
+      "id": "total-pre",
+      "label": "TOTAL shipped distribution (before UI/preview prebundle injected) - catches anything not covered by the checks below",
+      "phase": "pre",
+      "path": ".",
+      "baselineMB": 149.94
+    },
+    {
       "id": "bundle-file",
       "label": "bit.app.js (the CLI bundle)",
       "phase": "pre",
       "path": "dist/core-aspects/bundle/bit.app.js",
-      "baselineMB": 59.37
+      "baselineMB": 59.42
     },
     {
       "id": "bundle-externals",
       "label": "externals (npm-installed node_modules)",
       "phase": "pre",
       "path": "node_modules",
-      "baselineMB": 62.84
+      "baselineMB": 68.31
     },
     {
       "id": "shims-total",
       "label": "shims total (@teambit/* + vendored harmony deps)",
       "phase": "pre",
       "path": "dist/core-aspects/node_modules",
-      "baselineMB": 10.06
+      "baselineMB": 10.11
     },
     {
       "id": "shims-dist",
@@ -36,14 +43,21 @@
       "phase": "pre",
       "pathGlob": "dist/core-aspects/node_modules/@teambit/*",
       "suffix": "browser",
-      "baselineMB": 7.27
+      "baselineMB": 7.32
     },
     {
       "id": "combined-pre",
       "label": "combined dist/core-aspects (before UI/preview prebundle injected)",
       "phase": "pre",
       "path": "dist/core-aspects",
-      "baselineMB": 81.43
+      "baselineMB": 81.54
+    },
+    {
+      "id": "total-post",
+      "label": "TOTAL shipped distribution (after UI/preview prebundle injected) - catches anything not covered by the checks below",
+      "phase": "post",
+      "path": ".",
+      "baselineMB": 170.98
     },
     {
       "id": "ui-prebundle-app",
@@ -79,7 +93,7 @@
       "label": "combined dist/core-aspects (after UI/preview prebundle injected)",
       "phase": "post",
       "path": "dist/core-aspects",
-      "baselineMB": 102.5
+      "baselineMB": 102.57
     }
   ]
 }
