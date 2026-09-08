@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { uiE2eMode } from '../http-helper';
 
 /**
  * `teambit.ui-foundation/ui` is a core aspect bit dogfoods from its own source (this repo IS its
@@ -10,10 +11,19 @@ import { Helper } from '@teambit/legacy.e2e-helper';
  * fixture workspace the way `helper.fixtures.populateComponents` produces. So, unlike most e2e
  * suites, this one builds against the real repo checkout rather than a throwaway workspace.
  * this file lives at <repo>/e2e/harmony.
+ *
+ * Skipped unless `BIT_E2E_UI_MODE` is set, same gate as `ui-start.e2e.ts`/`ui-ssr.e2e.ts` (see
+ * `uiE2eMode` in `../http-helper.ts`): `--tasks BundleUI` really invokes rspack to build the vendor
+ * DLL, which needs the UI toolchain the default esbuild-bundle distribution doesn't ship (the
+ * `--ui-bundling` externals group, bundle-plan §8.3/§10) - left ungated this fails under
+ * `e2e_test_esbuild_bundle`'s unguarded sweep with "Cannot find module 'assert/'" instead of
+ * skipping. Run locally with `BIT_E2E_UI_MODE=rebuild npx mocha --require ./babel-register
+ * e2e/harmony/ui-vendor-dll.e2e.ts`.
  */
 const repoRoot = resolve(__dirname, '../..');
+const mode = uiE2eMode();
 
-(IS_WINDOWS ? describe.skip : describe)('ui vendor dll', function () {
+(IS_WINDOWS || !mode ? describe.skip : describe)('ui vendor dll', function () {
   this.timeout(0);
   let helper: Helper;
 

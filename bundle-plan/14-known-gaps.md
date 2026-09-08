@@ -138,3 +138,21 @@
     the pre-bundle is actually available. Verified end to end: all three states (no mode, `pending`;
     `prebuilt` mode, all 11 tests in the file pass). Not a general fix for every test shaped like
     this - each one needs the same opt-in check added individually.
+
+12. ~~**`ui-vendor-dll.e2e.ts` fails `e2e_test_esbuild_bundle`** (`Cannot find module 'assert/'` from
+    `--tasks BundleUI` actually invoking rspack) - exactly gap 11's "each one needs the same opt-in
+    check added individually" left undone for this file.~~ **Closed 2026-09-08** - added the same
+    `uiE2eMode()`/`BIT_E2E_UI_MODE` skip gate `ui-start.e2e.ts`/`ui-ssr.e2e.ts` use. Not wired into any
+    CI job's explicit `BIT_E2E_UI_MODE` run: `e2e_test_ui_prebundle` only injects the static
+    pre-bundle, not the `--ui-bundling` toolchain this test's real rspack build needs, so it would
+    fail there too - a CI job that builds with `--ui-bundling` is a separate piece of work. See
+    [18-findings-log.md](18-findings-log.md)'s 2026-09-08 entry.
+
+13. **`bit build` fails with `error TS5107: Option 'moduleResolution=node10' is deprecated`** for any
+    component env using the default tsconfig (`scopes/typescript/typescript/tsconfig.default.json`'s
+    `"moduleResolution": "node"`, unchanged since 2019) under the pinned `typescript@5.9.2` (bumped
+    months ago, #10001/#9915). Surfaced 2026-09-08 in 3/40 `e2e_test_esbuild_bundle` executions
+    (`multiple-testers.e2e.ts`, Jest/Mocha-Tester suites) - confirmed unrelated to the `ui-vendor-dll`
+    branch's own changes (see [18-findings-log.md](18-findings-log.md)'s 2026-09-08 entry). Not fixed
+    here; likely needs either `"ignoreDeprecations": "6.0"` or a `moduleResolution` bump in
+    `tsconfig.default.json`, or a `typescript` downgrade - out of scope of this branch's work.

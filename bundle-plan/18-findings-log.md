@@ -1619,6 +1619,7 @@ run bundle` produced a `bit.app.js` with **zero** occurrences of `createUiVendor
   `index.js`) is **not** caused by `remove-core-envs-from-manifest` - verified via `git diff` that
   branch's own unique commits (relative to their merge-base with `bit-bundle3`) touch only
   `scopes/workspace/install/*` (phantom-legacy-core-envs handling), nothing in UI/preview/rspack.
+
   - **Root cause, found via `BIT_UI_BUNDLE_STATS=1` + a temporary `reasons: true` on the rspack stats
     call** (`bundle-stats.ts`, reverted after use) and tracing the module graph: `@teambit/ui/index.ts`
     re-exports `BundleUiTask` and the vendor-dll helpers as real values (not `export type`, unlike
@@ -1654,3 +1655,33 @@ e2e/harmony/ui-ssr.e2e.ts` - **16/16 passing**, including "should start without 
     it directly - `#root` full of real server-rendered markup, not the empty-div fallback. So the
     dead `BundleUiTask`/vendor-dll code path is never actually reached at SSR request time; marking it
     external only stops it from being _bundled_, and costs nothing at runtime.
+
+- **2026-09-08 (`ui-vendor-dll` branch, PR #10690) — `e2e_test_esbuild_bundle` CI failure, root-caused
+  via the `circleci` CLI** — PR #10690's `e2e_test_esbuild_bundle` job (parallelism 40) failed with
+  4/40 executions red. Pulled each failing execution's step output with
+  `circleci job output get <job-id> --step-num 127 --execution <n> --condensed`. Two unrelated causes:
+  - **`ui-vendor-dll.e2e.ts` (execution 31, caused by this branch)**: `Error: Cannot find module
+'assert/'` from `bit-bundled build teambit.ui-foundation/ui --tasks BundleUI`. `--tasks BundleUI`
+    really invokes rspack to build the vendor DLL (`ui-vendor-dll.ts`), which needs the
+    `--ui-bundling` externals group (`assert`/`buffer`/`constants-browserify`, `generate-shim-packages.ts`
+    line ~106) - off by default (D10/D15, §8.3). No CI job passes `--ui-bundling` today, and this test
+    - unlike `ui-start.e2e.ts`/`ui-ssr.e2e.ts` - was never gated behind `BIT_E2E_UI_MODE` (§10 "The
+      UI-bundling sanity suites" gate in `11-e2e-suite.md`), so it ran unguarded inside
+      `e2e_test_esbuild_bundle`'s full-suite sweep instead of being skipped like its siblings. The
+      original plan (`27-ui-vendor-dll-plan.md` Task 4/5) always intended this test for the plain dev
+      binary, with the bundled-binary case as a manual-only check (Task 5) - the gate was simply missed
+      when the test was authored. **Fix**: added the same `uiE2eMode()` skip-unless-`BIT_E2E_UI_MODE`
+      gate to `ui-vendor-dll.e2e.ts` that `ui-start.e2e.ts` uses, so it's skipped by default (matching
+      original intent) instead of failing the sweep. Not wired into any CI job's explicit
+      `BIT_E2E_UI_MODE` run (e.g. `e2e_test_ui_prebundle`) - that job's bundle also lacks the
+      `--ui-bundling` toolchain (`inject_ui_prebundle` only copies static pre-bundle artifacts, doesn't
+      install it), so it would fail there too; wiring a real CI run of this test needs a job that builds
+      with `--ui-bundling`, which is out of scope of this fix.
+  - **`multiple-testers.e2e.ts`/Jest-Tester/Mocha-Tester suites (executions 18/21/25, pre-existing, NOT
+    caused by this branch)**: `bit build`'s `TypescriptCompile` task fails with `error TS5107: Option
+'moduleResolution=node10' is deprecated`. `scopes/typescript/typescript/tsconfig.default.json` sets
+    `"moduleResolution": "node"` (unchanged since #3306, 2019); `typescript` is pinned to `5.9.2`
+    (bumped in #10001/#9915, months before this branch) and is intentionally externalized from the
+    esbuild bundle (`08-externals-inventory.md`). Confirmed unrelated to `rspack.ssr.config.ts`/the
+    vendor-dll work - neither file nor the TS pin changed on this branch. Left open; see
+    `14-known-gaps.md` for tracking.

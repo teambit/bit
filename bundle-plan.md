@@ -2,7 +2,14 @@
 
 > Branch: `bit-bundle3` (based on `remove-core-envs-from-manifest`)
 > Status: **working end-to-end** — and now also **as a real `bit build` task**, with types.
-> Last updated: 2026-09-08 (root-caused and fixed the ~53 MB SSR-bundle regression flagged on
+> Last updated: 2026-09-08 (root-caused PR #10690's `e2e_test_esbuild_bundle` CI failure via the
+> `circleci` CLI: `ui-vendor-dll.e2e.ts` was missing the `BIT_E2E_UI_MODE` gate its
+> `ui-start.e2e.ts`/`ui-ssr.e2e.ts` siblings have, so it ran unguarded and hit the missing
+> `--ui-bundling` toolchain — fixed by adding the same gate. Separately, 3/40 executions hit an
+> unrelated, pre-existing `TS5107 moduleResolution=node10` failure, confirmed unrelated to this
+> branch and left open. See [18-findings-log.md](bundle-plan/18-findings-log.md)'s 2026-09-08 entry
+> and [14-known-gaps.md](bundle-plan/14-known-gaps.md) gaps 12/13.)
+> Previously, 2026-09-08 (root-caused and fixed the ~53 MB SSR-bundle regression flagged on
 > 2026-09-06/07: `@teambit/ui`'s barrel re-exports `BundleUiTask` as a value, which pulled
 > `ui-vendor-dll.ts`'s `@rspack/core` import — and its ~40 MB native binding — into the shipped SSR
 > bundle. Fixed by externalizing `@rspack/core` in `rspack.ssr.config.ts`, matching the browser
