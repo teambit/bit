@@ -234,7 +234,12 @@ export class BuilderMain {
         }
 
         const envCompId = (envId && ComponentID.fromString(envId)) || undefined;
-        const inWs = this.workspace && envCompId ? await this.workspace.hasId(envCompId) : false;
+        // envs that used to be core aspects may appear without a version - match them against the
+        // workspace ignoring the version
+        const inWs =
+          this.workspace && envCompId
+            ? await this.workspace.hasId(envCompId, { ignoreVersion: !envCompId.hasVersion() })
+            : false;
 
         const lastTaggedEnvHasOnlyOverview: boolean | undefined =
           envCompId &&
@@ -642,7 +647,7 @@ export class BuilderMain {
       logger,
       issues
     );
-    builder.registerBuildTasks([new BundleUiTask(ui, logger)]);
+    builder.registerBuildTasks([new BundleUiTask(ui, logger, aspectLoader)]);
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);
     graphql.register(() => builderSchema(builder, logger));
     if (generator) generator.registerComponentTemplate([buildTaskTemplate]);

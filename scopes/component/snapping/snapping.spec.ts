@@ -80,6 +80,23 @@ describe('Snapping aspect', function () {
       const bareScope = mockBareScope(workspaceData.remoteScopePath, 'bare-for-snap');
       harmonyBareScope = await loadManyAspects([SnappingAspect, ScopeAspect], bareScope.scopePath);
       const snappingScope = harmonyBareScope.get<SnappingMain>(SnappingAspect.id);
+      // seed a dev dependency first. (previously the default env added @types/node to every
+      // component, now the default empty-env adds no dependencies)
+      const seedSnapData: SnapDataPerCompRaw[] = [
+        {
+          componentId: `${workspaceData.remoteScopeName}/comp1`,
+          message: 'seed a dev dep',
+          newDependencies: [
+            {
+              id: '@types/node',
+              version: '20.0.0',
+              isComponent: false,
+              type: 'dev',
+            },
+          ],
+        },
+      ];
+      await snappingScope.snapFromScope(seedSnapData, {});
       const snapDataPerComp: SnapDataPerCompRaw[] = [
         {
           componentId: `${workspaceData.remoteScopeName}/comp1`,

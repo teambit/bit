@@ -24,7 +24,7 @@ import { writeFileSync, existsSync, mkdirSync, ensureDirSync, writeJSONSync } fr
 import { join } from 'path';
 import type { PkgMain } from '@teambit/pkg';
 import { PkgAspect } from '@teambit/pkg';
-import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, filterCoreAspectDefs, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
 import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
@@ -76,7 +76,7 @@ import { PreviewAssetsRoute } from './preview-assets.route';
 import { PreviewService } from './preview.service';
 import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
 import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
-import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
+import { hashAspects, getAspectIds, getBundlePath, readBundleHash } from './pre-bundle-utils';
 import { GeneratePreviewCmd } from './generate-preview.cmd';
 import { ServePreviewCmd } from './serve-preview.cmd';
 
@@ -309,7 +309,7 @@ export class PreviewMain {
   }
 
   private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
-    if (this.envs.isUsingCoreEnv(component)) {
+    if (this.isUsingCoreOrLegacyCoreEnv(component)) {
       return true;
     }
     const envComponent = await this.envs.getEnvComponent(component);
@@ -317,11 +317,24 @@ export class PreviewMain {
   }
 
   private async calculateUseNameParam(component: Component): Promise<boolean> {
-    if (this.envs.isUsingCoreEnv(component)) {
+    if (this.isUsingCoreOrLegacyCoreEnv(component)) {
       return true;
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvUseNameParam(envComponent);
+  }
+
+  /**
+   * envs that used to be core aspects keep their core preview behavior. also, they may not be
+   * installed yet, in which case fetching their env component (getEnvComponent) throws - and this
+   * runs during component load.
+   */
+  private isUsingCoreOrLegacyCoreEnv(component: Component): boolean {
+    return this.envs.isUsingCoreEnv(component) || this.isUsingLegacyCoreEnv(component);
+  }
+
+  private isUsingLegacyCoreEnv(component: Component): boolean {
+    return this.envs.isLegacyCoreEnv(this.envs.getEnvId(component));
   }
 
   async generateComponentPreview(
@@ -556,6 +569,12 @@ export class PreviewMain {
   // if you want to get the final result use the `doesScaling` method below
   // This should be used only for component load
   private async calcDoesScalingForComponent(component: Component): Promise<boolean> {
+    // envs that used to be core aspects may not be installed yet, in which case getEnvComponent
+    // below throws - and this runs during component load. their pinned versions all support
+    // scaling. (core envs are handled separately below.)
+    if (this.isUsingLegacyCoreEnv(component)) {
+      return true;
+    }
     const isBundledWithEnv = await this.calcIsBundledWithEnv(component);
     // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
     if (this.envs.isUsingCoreEnv(component)) {
@@ -580,6 +599,11 @@ export class PreviewMain {
    * this calculation is based on the env of the component and if the env of the component support it.
    */
   async doesScaling(component: Component): Promise<boolean> {
+    // envs that used to be core aspects may not be installed yet, in which case getEnvComponent
+    // below throws. their pinned versions all support scaling (matches calcDoesScalingForComponent).
+    if (this.isUsingLegacyCoreEnv(component)) {
+      return true;
+    }
     const inWorkspace = await this.workspace?.hasId(component.id);
     // Support case when we have the dev server for the env, in that case we calc the data of the env as we can't rely on the env data from the scope
     // since we bundle it for the dev server again
@@ -626,7 +650,9 @@ export class PreviewMain {
 
   async isSupportSkipIncludes(component: Component) {
     if (!this.config.onlyOverview && !isFeatureEnabled(ONLY_OVERVIEW)) return false;
-    const isCore = this.envs.isUsingCoreEnv(component);
+    // include legacy former-core envs: they may not be installed yet, and getEnvComponent below
+    // throws for them. treat them like core envs (no skip-includes).
+    const isCore = this.isUsingCoreOrLegacyCoreEnv(component);
     if (isCore) return false;
 
     const envComponent = await this.envs.getEnvComponent(component);
@@ -856,15 +882,35 @@ export class PreviewMain {
 
     const [name, uiRoot] = this.getUi();
     const cacheKey = `${uiRoot.path}|${RUNTIME_NAME}`;
-    const currentBundleHash = await createBundleHash(uiRoot, RUNTIME_NAME);
+    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
+    const currentBundleHash = hashAspects(resolvedAspects);
+    // the shipped pre-bundle's `.hash` is generated from the core-aspects-only list
+    // (`PreBundlePreviewTask` hashes `filterCoreAspectDefs(...)`, not the raw resolution), so a
+    // workspace that resolves extra, non-core aspects anywhere (e.g. a component using
+    // `teambit.react/react` as its env) needs the same filtering before comparing, or the two hashes
+    // can never agree even when nothing that actually ships in the pre-bundle has changed.
+    const currentCoreBundleHash = hashAspects(filterCoreAspectDefs(resolvedAspects));
     const preBundleHash = readBundleHash(PreviewAspect.id, BUNDLE_DIR, '');
     const workspaceBundleDir = join(uiRoot.path, PUBLIC_DIR);
     const lastBundleHash = await this.cache.get(cacheKey);
 
     let bundlePath = '';
 
+    this.logger.debug(
+      `writePreviewEntry, currentBundleHash: ${currentBundleHash}, currentCoreBundleHash: ${currentCoreBundleHash}, preBundleHash: ${preBundleHash}, lastBundleHash: ${lastBundleHash}, preBundlePath: ${getBundlePath(
+        PreviewAspect.id,
+        BUNDLE_DIR,
+        ''
+      )}, workspaceBundleDir exists: ${existsSync(workspaceBundleDir)}, rebuild: ${rebuild}, skipUiBuild: ${skipUiBuild}`
+    );
+    this.logger.debug(`writePreviewEntry, aspect ids: ${getAspectIds(resolvedAspects).join(', ')}`);
+
     // ensure the pre-bundle is ready
-    if (!rebuild && !existsSync(workspaceBundleDir) && (currentBundleHash === preBundleHash || skipUiBuild)) {
+    if (
+      !rebuild &&
+      !existsSync(workspaceBundleDir) &&
+      (currentBundleHash === preBundleHash || currentCoreBundleHash === preBundleHash || skipUiBuild)
+    ) {
       // use pre-bundle
       bundlePath = getBundlePath(PreviewAspect.id, BUNDLE_DIR, '') as string;
     } else if (!rebuild && existsSync(workspaceBundleDir) && (currentBundleHash === lastBundleHash || skipUiBuild)) {
@@ -872,7 +918,6 @@ export class PreviewMain {
       bundlePath = workspaceBundleDir;
     } else {
       // do build
-      const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
       const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
 
       await buildPreBundlePreview(filteredAspects);

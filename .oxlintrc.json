@@ -61,6 +61,12 @@
       "rules": {
         "no-console": "off"
       }
+    },
+    {
+      "files": ["scopes/workspace/install/install.main.runtime.ts"],
+      "rules": {
+        "max-lines": ["error", 2100]
+      }
     }
   ],
   "ignorePatterns": [

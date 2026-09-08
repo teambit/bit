@@ -423,14 +423,28 @@ export class Component {
   }
 
   static isComponentInvalidByErrorType(err: Error): boolean {
-    const invalidComponentErrors = [
-      MainFileRemoved,
-      ComponentNotFoundInPath,
-      ComponentOutOfSync,
-      ComponentsPendingImport,
-      IgnoredDirectory,
-    ];
-    return invalidComponentErrors.some((errorType) => err instanceof errorType);
+    try {
+      const invalidComponentErrors = [
+        MainFileRemoved,
+        ComponentNotFoundInPath,
+        ComponentOutOfSync,
+        ComponentsPendingImport,
+        IgnoredDirectory,
+      ];
+      return invalidComponentErrors.some((errorType) => err instanceof errorType);
+    } catch (classErr: any) {
+      // each of these exception classes is a named cross-component import, which compiles to a
+      // per-property getter that does a fresh `require` on access - unsafe during the same
+      // install-time transient-dist window `resolveCoreAspectDefs`/`importAndGetAspects`
+      // (workspace-aspects-loader.ts) already guard against, just reached from a completely
+      // different direction: this classifier runs *inside* those callers' error handling, so it
+      // needs its own guard rather than relying on theirs. Can't know the real answer here, so
+      // return `false` (not one of the recognized invalid-component types) rather than crash -
+      // `handleError`'s caller re-throws the *original* `err` unchanged in that case, same as if
+      // this had genuinely not matched.
+      logger.warn(`isComponentInvalidByErrorType: unable to classify the error, ${classErr.message}`);
+      return false;
+    }
   }
 
   copyAllDependenciesFromModel() {
