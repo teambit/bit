@@ -1,5 +1,4 @@
 import { readdirSync, existsSync, readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, realpathSync } from 'fs';
-import { tmpdir } from 'os';
 import { join, relative, resolve, dirname, sep } from 'path';
 import { rspack } from '@rspack/core';
 import { getCoreAspectPackageName } from '@teambit/aspect-loader';
@@ -492,11 +491,17 @@ export async function buildUiVendorDll(
 
   // built in a scratch directory outside the artifact tree, never under `dllOutputDir` - unlike
   // every other file rspack writes there, this one is only an input to the compilation, not part of
-  // its output: `BundleUiTask`'s artifact glob ships the whole `dllOutputDir` recursively, and this
-  // file's own content embeds this build's absolute local filesystem paths (see
+  // its output: `BundleUiTask`'s artifact glob ships `dllOutputDir` (and everything under it)
+  // recursively, and this file's own content embeds this build's absolute local filesystem paths (see
   // `buildDllEntryContents`), which a published artifact must neither carry nor need after
-  // compilation.
-  const entryScratchDir = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-entry-'));
+  // compilation. A sibling of `outputPath` itself (not `os.tmpdir()`) - this module is reachable from
+  // a browser build via `@teambit/ui`'s barrel (confirmed: `docs.ui.runtime.js` -> the barrel ->
+  // here), and `os` has no browser resolve fallback the way `fs`/`path` do, so importing it here broke
+  // `build_ui_prebundle`'s real rspack compilation with "Module not found: Can't resolve 'os'" the
+  // moment this file shipped. `dirname(outputPath)` needs no new Node builtin at all, and structurally
+  // sits outside the glob (`artifacts/ui-bundle/**`) that ships `outputPath` itself, not just cleaned
+  // up in time.
+  const entryScratchDir = mkdtempSync(join(dirname(outputPath), 'ui-vendor-dll-entry-'));
   const entryFile = join(entryScratchDir, 'vendor-entry.js');
   const entryContents = buildDllEntryContents(packages);
   writeFileSync(entryFile, entryContents);

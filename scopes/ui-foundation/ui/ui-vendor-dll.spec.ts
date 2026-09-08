@@ -75,7 +75,13 @@ describe('buildUiVendorDll', function () {
   let outputPath: string;
   before(async () => {
     outputPath = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-test-'));
-    await buildUiVendorDll(outputPath, ['lodash.compact']);
+    // `p-map-series` - a real, declared dependency of `@teambit/ui` itself (zero deps of its own),
+    // not an arbitrary hoisted package: an isolated capsule/install building this component is
+    // guaranteed to have it, unlike a package that only happens to be hoisted at this repo's flat
+    // root. `buildUiVendorDll`'s default `sourceRoot` resolves the real install being bundled (see
+    // `resolveUiVendorDllSourceRoot`), not `process.cwd()` - a fixture that only exists by cwd
+    // happenstance would fail to resolve inside a real, isolated capsule.
+    await buildUiVendorDll(outputPath, ['p-map-series']);
   });
   after(() => rmSync(outputPath, { recursive: true, force: true }));
 
@@ -84,7 +90,7 @@ describe('buildUiVendorDll', function () {
     expect(existsSync(manifestPath)).to.equal(true);
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
     expect(manifest.name).to.equal('__bitUiVendor__');
-    expect(Object.keys(manifest.content).some((k) => k.includes('lodash.compact'))).to.equal(true);
+    expect(Object.keys(manifest.content).some((k) => k.includes('p-map-series'))).to.equal(true);
   });
 
   it('writes a vendor.js chunk', () => {
@@ -96,7 +102,7 @@ describe('buildUiVendorDll', function () {
   it('ships the manifest keyed by package specifier, carrying nothing from this install layout', () => {
     const manifestPath = join(outputPath, UI_VENDOR_DLL_DIR, UI_VENDOR_DLL_MANIFEST_FILENAME);
     const contentKeys = Object.keys(JSON.parse(readFileSync(manifestPath, 'utf-8')).content);
-    expect(contentKeys).to.include('./lodash.compact/index.js');
+    expect(contentKeys).to.include('./p-map-series/index.js');
     contentKeys.forEach((key) => {
       expect(key).to.not.include('node_modules', `${key} still carries a node_modules path`);
       expect(key).to.not.include('.pnpm', `${key} still carries a pnpm store path`);
@@ -130,7 +136,7 @@ describe('buildUiVendorDll cleans its own output directory before writing', func
     mkdirSync(dllDir, { recursive: true });
     const staleFile = join(dllDir, 'a-file-from-a-previous-run-with-a-different-package-set.js');
     writeFileSync(staleFile, '');
-    await buildUiVendorDll(outputPath, ['lodash.compact']);
+    await buildUiVendorDll(outputPath, ['p-map-series']);
     expect(existsSync(staleFile)).to.equal(false);
     expect(existsSync(join(dllDir, UI_VENDOR_DLL_MANIFEST_FILENAME))).to.equal(true);
   });
@@ -139,10 +145,19 @@ describe('buildUiVendorDll cleans its own output directory before writing', func
 describe('buildUiVendorDll with multiple packages', function () {
   this.timeout(30000); // real rspack compilation
 
+  // two real, declared dependencies of `@teambit/ui` (see the single-package test's comment above for
+  // why a fixture has to actually be one) - `fs-extra` (an earlier choice here) failed to compile at
+  // all: its `graceful-fs` dependency does an old-style `require('constants')` this build has no
+  // fallback for. `chai` doesn't work either as a *placement* anchor for a self-made fixture package:
+  // it resolves to wherever the *test env* provides it, which is not guaranteed to be the same
+  // `node_modules` `resolveUiVendorDllSourceRoot()` resolves for `@teambit/ui` itself once this runs
+  // inside a real build/test capsule (confirmed - this is what originally broke CI here).
+  const packageNames = ['p-map-series', 'chalk'];
   let outputPath: string;
+
   before(async () => {
     outputPath = mkdtempSync(join(tmpdir(), 'ui-vendor-dll-test-multi-'));
-    await buildUiVendorDll(outputPath, ['lodash.compact', 'lodash.flatten']);
+    await buildUiVendorDll(outputPath, packageNames);
   });
   after(() => rmSync(outputPath, { recursive: true, force: true }));
 
@@ -158,8 +173,9 @@ describe('buildUiVendorDll with multiple packages', function () {
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
     expect(manifest.name).to.equal('__bitUiVendor__');
     const contentKeys = Object.keys(manifest.content);
-    expect(contentKeys.some((k) => k.includes('lodash.compact'))).to.equal(true);
-    expect(contentKeys.some((k) => k.includes('lodash.flatten'))).to.equal(true);
+    packageNames.forEach((name) => {
+      expect(contentKeys.some((k) => k.includes(name))).to.equal(true);
+    });
 
     // Verify all manifest entries have real ids (not fabricated values)
     contentKeys.forEach((k) => {

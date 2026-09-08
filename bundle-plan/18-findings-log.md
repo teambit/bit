@@ -1819,3 +1819,46 @@ scopes/harmony/modules/cli-bundler`; did not affect the already-pushed code or t
   `console.log`/ANSI usage - standalone CI scripts run with plain `node`, not compiled `bit` aspects,
   so `@teambit/cli`'s output-formatter isn't reachable there without adding a build step to what are
   otherwise dependency-free scripts).
+
+- **2026-09-08 — the Qodo-review fix commit above broke `build_ui_prebundle` on real CI; root-caused
+  via `circleci run get --failure-report` and fixed.** Two distinct regressions, both introduced by
+  that same commit:
+  1. **`import { tmpdir } from 'os'` in `ui-vendor-dll.ts` broke the real browser UI/preview
+     pre-bundle compilation** - `os` has no browser `resolve.fallback` the way `fs`/`path` do (they
+     were already imported; `os` was new), and this file is reachable from a browser build via
+     `@teambit/ui`'s barrel (confirmed from the real failure trace: `docs.ui.runtime.js` -> the
+     barrel -> `ui-vendor-dll.js`, `Module not found: Can't resolve 'os'`) - the exact risk this PR's
+     Qodo review comments 3946648603/3950639227/3957657455 raised and this branch's own reply
+     dismissed as "probably already safe, matching the SSR precedent" (see that commit's PR replies).
+     That precedent covers the _existing_ `fs`/`path`/aspect-loader/rspack-core reachability, not a
+     brand-new import added on top of it - it needed the same scrutiny and didn't get it. Fixed by
+     writing the scratch entry file under `dirname(outputPath)` instead of `os.tmpdir()` - needs no
+     new Node builtin, and structurally sits outside the artifact glob rather than merely being
+     cleaned up in time. Verified the compiled output no longer contains `require("os")`.
+  2. **`buildUiVendorDll`'s new default `sourceRoot` (`resolveUiVendorDllSourceRoot()`, replacing
+     `process.cwd()`) broke two pre-existing unit tests under real capsule execution** -
+     `bit_pr`'s `MochaTest` task failed with `Module not found: Can't resolve 'lodash.compact'`.
+     Those tests used `lodash.compact`/`lodash.flatten` as DLL-build fixtures - real, resolvable npm
+     packages, but _not_ declared dependencies of `@teambit/ui` itself, only incidentally hoisted to
+     this monorepo's flat root `node_modules`. `process.cwd()` during that repo's own local runs
+     happened to equal that flat root (by coincidence, since apparently the CLI process's own cwd,
+     not necessarily the capsule, is what backed the old default) so the tests passed by accident;
+     the new, _correctly_ scoped `sourceRoot` resolves the actual, narrower install being bundled
+     (right - matching D-fix intent - see `resolveUiVendorDllSourceRoot`'s own doc comment), which for
+     an isolated test/build capsule genuinely does not carry either package. Reproduced locally with
+     `bit test teambit.ui-foundation/ui` (which also runs in a capsule) and fixed by switching those
+     fixtures to `p-map-series`/`chalk` - real, declared dependencies of `@teambit/ui`, guaranteed
+     present wherever its own install is, by construction. A third attempt using two self-created
+     fixture packages anchored to `require.resolve.paths('chai')![0]` (mirroring the existing
+     "requires the matched runtime file directly" test's own pattern) _also_ failed the same way -
+     `chai`'s own resolution isn't guaranteed to land in the same `node_modules` as
+     `resolveUiVendorDllSourceRoot()`'s `@teambit/ui`-anchored one once real capsule/env machinery is
+     involved, unlike that other test (safe because it resolves its fixture via an absolute file path,
+     never through `resolve.modules` at all). Real dependencies of the component under test are the
+     only safe fixture for anything exercising bare-package resolution.
+     Also updated `scripts/bundle-size-baseline.json`'s `shims-dist` check (0.12 MB -> 0.17 MB) - real,
+     expected growth from vendoring `@teambit/base-react.navigation.link` (the S/M fix above), confirmed
+     against the real CI job's own report rather than guessed, per this doc's established recalibration
+     practice. `shims-total` grew too (10.11 -> ~10.90 MB, per the same CI report) but still fits within
+     its existing margin (78% used) - left as is, worth watching on the next legitimate size-affecting
+     change to this area.

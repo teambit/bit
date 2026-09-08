@@ -35,7 +35,7 @@
       "phase": "pre",
       "pathGlob": "dist/core-aspects/node_modules/@teambit/*",
       "suffix": "dist",
-      "baselineMB": 0.12
+      "baselineMB": 0.17
     },
     {
       "id": "shims-browser",
