@@ -68,7 +68,7 @@ Anything remote — scopes, components, lanes, change requests — goes through 
 
 **Don't create a scope up front — create it before you export.** `bit create <template> <name> --scope <owner>.<scope>` only records the scope ID locally, so you can build, validate and iterate against a scope that doesn't exist on Bit Cloud yet. The scope only has to exist by the time you publish, and creating one you never export to just leaves an empty scope on the account.
 
-The gate is right before `bit snap`, `bit tag` or `bit export`: for every scope you're about to publish to, confirm it exists (`read_scope` → `existsOnCloud`) and create the missing ones first. An export to a scope that doesn't exist fails.
+The gate is right before `bit export`: for every scope you're about to publish to, confirm it exists (`read_scope` → `existsOnCloud`) and create the missing ones first. An export to a scope that doesn't exist fails. `bit snap` and `bit tag` only write to the local scope, so they don't need it.
 
 Scopes cannot be created from the CLI — use the `create_scope` MCP tool, or https://bit.cloud/create-scope in the browser.
 
@@ -257,14 +257,23 @@ bit export                           # push lane to remote
 
 > Always check `bit lane current` first. If you're already on a non-main lane, continue using it — don't create a new one.
 
-> **Before snapping, tagging or exporting**, make sure every scope you're publishing to exists on Bit Cloud — check `existsOnCloud` via `read_scope` and create the missing ones with `create_scope` (see _Creating a scope_). This is the point at which a scope must exist; don't create it earlier.
+> **Before exporting**, make sure every scope you're publishing to exists on Bit Cloud — check `existsOnCloud` via `read_scope` and create the missing ones with `create_scope` (see _Creating a scope_). This is the point at which a scope must exist; don't create it earlier.
 
 ### `bit snap` vs `bit tag`
 
 Where you are decides which one you run — it is not a preference:
 
 - **On a lane → `bit snap`.** Produces a hash, no version number. This is the default path.
-- **On main → `bit tag`.** Produces a semver version, releasing to production. Bumps the patch by default; use `--minor` / `--major` only when the user describes a minor, major, or breaking release.
+- **On main → `bit tag`.** Produces a semver version. Bumps the patch by default; use `--minor` / `--major` only when the user describes a minor, major, or breaking release.
+
+Both only write to the local scope. **`bit export` is what publishes** — until it runs, nothing has reached the remote scope or the deployment pipeline. Releasing to production from main is therefore tag _then_ export:
+
+```bash
+bit validate                         # hard gate
+bit tag --message "describe release"
+bit export
+bit ripple log                       # post the build link straight away
+```
 
 `bit tag` is **only possible on main** — it is not a thing you can do on a lane, so there is no choice to make once `bit lane current` tells you where you are. On a lane, snap. And even on main, tagging is rejected when the scope protects `main` or the account requires review; then the lane workflow is the only path (see _When main is protected_).
 
@@ -490,11 +499,9 @@ bit ripple errors       # why a build failed
 bit ripple retry        # retry a failed job
 ```
 
-**Give the user the build link as soon as you have it.** Right after `bit export` returns, run `bit ripple log` to pick up the job and post the link — don't sit silently through the build and don't wait for it to go green. The user can watch progress themselves, and if it fails they already have the page open:
+**Give the user the build link as soon as you have it.** Right after `bit export` returns, run `bit ripple log` to pick up the job and post the link it prints — don't sit silently through the build and don't wait for it to go green. The user can watch progress themselves, and if it fails they already have the page open.
 
-```
-https://bit.cloud/<owner>/<scope>/~lane/<lane-name>/~ripple-ci/job/<job-name>
-```
+Copy that URL verbatim; never assemble one by hand. Its last segment is the job's slug, not the display name, so a hand-built link lands on "No CI job found".
 
 Then report the outcome once it finishes. Once the build succeeds the app is live — get the URL with the `list_apps` MCP tool, don't guess or construct it:
 
@@ -534,7 +541,7 @@ The backend schema and the query the frontend sends have drifted apart. Compare 
 
 ### Apollo test imports fail to resolve
 
-Import from `@apollo/client/testing/react/index.js` — not `@apollo/client/testing`.
+`@apollo/client/testing` is the normal import and works on most versions. Only when it genuinely fails to resolve, import from `@apollo/client/testing/react/index.js` instead — don't rewrite an import that already works.
 
 ---
 
@@ -555,7 +562,7 @@ Import from `@apollo/client/testing/react/index.js` — not `@apollo/client/test
 | Using `tsc` or `npx tsc` to check types                                         | Use `bit validate`, `bit check-types`, or `bit test`                                                                      |
 | Trying to create a scope from the CLI                                           | Scopes only exist on Bit Cloud — use the `create_scope` MCP tool                                                          |
 | Creating a scope for a domain that already has one                              | Run `read_scope` / `list_components` first — reuse the existing scope                                                     |
-| Creating a scope up front, before any code exists                               | Create it right before `bit snap`/`bit tag`/`bit export` — that's the only point it must exist                            |
+| Creating a scope up front, before any code exists                               | Create it right before `bit export` — that's the only point it must exist                                                 |
 | Creating a scope without asking                                                 | Confirm the name, owner and visibility with the user; on paid plans preview first, then call again with `confirmed: true` |
 | Exporting, then going quiet during the build                                    | Post the Ripple CI job link as soon as `bit export` returns, then report the result                                       |
 | Continuing to snap onto a lane that was already released                        | `bit switch main`, then `bit lane create` for the next piece of work                                                      |

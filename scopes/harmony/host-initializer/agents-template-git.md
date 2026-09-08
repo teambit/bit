@@ -8,7 +8,7 @@ This file teaches AI agents how to work correctly inside a **Git-integrated Bit 
 
 Bit is a composable development platform where every piece of functionality is an independent, versioned, composed **component**. Components live in **scopes** (remote registries of business domains) and are managed through the `bit` CLI.
 
-In this workspace, **Git is the source of truth** for source code and collaboration. Bit's component versioning (`bit snap`, `bit tag`, `bit export`) runs in CI/CD on merge — not locally.
+In this workspace, **Git is the source of truth** for source code and collaboration. Bit's component versioning (`bit snap`, `bit tag`, `bit export`) runs in CI/CD — not locally.
 
 ### Component Types
 
@@ -70,7 +70,7 @@ This workspace ships with a `.mcp.json` that wires up the **Bit Cloud MCP** serv
 
 **Don't create a scope up front — create it before the code that needs it reaches CI.** `bit create <template> <name> --scope <owner>.<scope>` only records the scope ID locally, so you can build, validate and iterate against a scope that doesn't exist on Bit Cloud yet. Creating one you never publish to just leaves an empty scope on the account.
 
-The gate is the pull request: CI runs `bit export` on merge, and an export to a scope that doesn't exist fails. Before you open the PR, confirm every scope your components target exists (`read_scope` → `existsOnCloud`) and create the missing ones.
+The gate is the pull request: CI exports as soon as the PR is opened, and an export to a scope that doesn't exist fails. Before you open the PR, confirm every scope your components target exists (`read_scope` → `existsOnCloud`) and create the missing ones.
 
 Scopes cannot be created from the CLI — use the `create_scope` MCP tool, or https://bit.cloud/create-scope in the browser.
 
@@ -245,11 +245,11 @@ bit import "<owner>.<scope>/**"
 
 ## Saving and Publishing Changes (Git-Integrated Workflow)
 
-**This workspace is Git-integrated.** Git owns version control of source code; Bit's snap/tag/export are handled automatically by CI/CD on merge. Your collaboration unit is the Git branch, not a Bit lane.
+**This workspace is Git-integrated.** Git owns version control of source code; Bit's snap/tag/export are handled automatically by CI/CD. Your collaboration unit is the Git branch, not a Bit lane.
 
 **Do not run locally:**
 
-- `bit snap`, `bit tag`, `bit export` — CI/CD handles these on merge.
+- `bit snap`, `bit tag`, `bit export` — CI/CD handles these when the PR opens and again on merge.
 - `bit lane create` and `bit lane` management — use Git branches instead.
 
 **Your workflow:**
@@ -260,7 +260,7 @@ git checkout -b <branch-name>            # create a feature branch
 bit validate                             # confirm no build errors
 git add . && git commit -m "describe change"
 git push                                 # push your branch
-# open a PR; CI runs `bit snap` + `bit export` on merge.
+# open a PR; CI snaps and exports a preview lane, then tags on merge.
 ```
 
 `bit validate` is a hard gate — never push a branch that fails it, because CI's build will fail for the same reason. And talk to the user in outcomes, not CLI verbs: "ship this to production", not "tag it".
@@ -459,9 +459,14 @@ export { User } from './user.js';
 
 ## Deploying
 
-**There is nothing to configure.** Exporting is deploying: when CI exports the components on merge, Ripple CI builds them, detects the app framework from the build artifacts, and deploys to a managed container automatically. Never add a deployer config or tell the user to set one up.
+**There is nothing to configure.** Exporting is deploying: Ripple CI builds the exported components, detects the app framework from the build artifacts, and deploys to a managed container automatically. Never add a deployer config or tell the user to set one up.
 
-You don't trigger this — the merge does. Follow the build and inspect failures with:
+You never run the export yourself — CI does, at two separate points:
+
+- **When the pull request is opened or updated** (`bit ci pr`) — CI snaps and exports a feature lane, producing a **preview** deployment before merge.
+- **When the PR merges to main** (`bit ci merge`) — CI tags semantic versions and exports them, producing the **production** deployment.
+
+So a build exists from the moment the PR opens. Don't wait for the merge to start reporting: follow the PR build and hand the user its link, then do the same again after the merge.
 
 ```bash
 bit ripple log          # build status
@@ -469,7 +474,9 @@ bit ripple errors       # why a build failed
 bit ripple retry        # retry a failed job
 ```
 
-Once the build succeeds the app is live — get the URL with the `list_apps` MCP tool, don't guess or construct it. Production apps are served on `*.composed.app`. Component-only releases (no app) have no URL at all; point the user at the scope page instead.
+Copy the URL that `bit ripple log` prints; never assemble one by hand. Its last segment is the job's slug, not the display name, so a hand-built link lands on "No CI job found".
+
+Once a build succeeds the app is live — get the URL with the `list_apps` MCP tool, don't guess or construct it. Production apps are served on `*.composed.app`; the PR preview is deployed separately, so call `list_apps` again after the merge instead of reusing the preview link. Component-only releases (no app) have no URL at all; point the user at the scope page instead.
 
 Custom domains are a Bit Cloud settings flow with no CLI equivalent — send the user to `https://bit.cloud/<owner>/~settings/deployment`. Never claim to have connected a domain yourself.
 
@@ -500,7 +507,7 @@ The backend schema and the query the frontend sends have drifted apart. Compare 
 
 ### Apollo test imports fail to resolve
 
-Import from `@apollo/client/testing/react/index.js` — not `@apollo/client/testing`.
+`@apollo/client/testing` is the normal import and works on most versions. Only when it genuinely fails to resolve, import from `@apollo/client/testing/react/index.js` instead — don't rewrite an import that already works.
 
 ---
 
@@ -513,7 +520,7 @@ Import from `@apollo/client/testing/react/index.js` — not `@apollo/client/test
 | Importing only the target component but not its dependents                      | Import the full chain top-down: platform → app → feature → page → component                                               |
 | Treating all components as UI widgets                                           | Understand the type first — platform, app, feature/aspect, hook, entity, or UI component — it determines the chain        |
 | Running `bit build`                                                             | Use `bit validate` instead — faster and sufficient                                                                        |
-| Running `bit snap`, `bit tag`, or `bit export` locally                          | These are handled by CI/CD on merge — don't run them in the workspace                                                     |
+| Running `bit snap`, `bit tag`, or `bit export` locally                          | These are handled by CI/CD — don't run them in the workspace                                                              |
 | Creating or managing Bit lanes                                                  | Use Git branches instead — this workspace is Git-integrated                                                               |
 | Pushing a branch that fails `bit validate`                                      | Fix it first — CI's build fails for the same reason                                                                       |
 | Guessing a component ID                                                         | Check `package.json` under `componentId` or use `bit list`                                                                |
