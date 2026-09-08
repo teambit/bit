@@ -111,6 +111,8 @@ describe('peer-dependencies functionality', function () {
         'custom-env/env1'
       );
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env1`, {});
+      // The peer needs a compiler too because comp1 references its TypeScript project during the build.
+      helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-env/env1`, {});
       helper.extensions.addExtensionToVariant('custom-env', 'teambit.envs/env', {});
       helper.workspaceJsonc.addPolicyToDependencyResolver({
         peerDependencies: { [`@${helper.scopes.remote}/comp2`]: '*' },
