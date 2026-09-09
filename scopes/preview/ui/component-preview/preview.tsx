@@ -210,6 +210,10 @@ export function ComponentPreview({
     <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
+        // a `sandbox` change on a live iframe only applies to its next navigation, so keying
+        // on the value remounts the iframe and the new flags apply from the first load.
+        // empty string means "no permissions configured" and renders without the attribute.
+        key={`preview-iframe-${sandbox || ''}`}
         sandbox={sandbox || undefined}
         ref={currentRef}
         style={{
