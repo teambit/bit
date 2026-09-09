@@ -14,8 +14,9 @@ describe('prepareBuildScriptsPath()', () => {
   before(() => {
     originalPath = process.env.PATH;
     // Whatever runs the specs may already have put this Node first. Push it
-    // back so the prepend is exercised, not skipped as already done.
-    process.env.PATH = ['/nonexistent-first', ...(originalPath ?? '').split(delimiter)].join(delimiter);
+    // back so the prepend is exercised, not skipped as already done. The empty
+    // component stands for the working directory and has to survive as is.
+    process.env.PATH = ['/nonexistent-first', '', ...(originalPath ?? '').split(delimiter)].join(delimiter);
     pathBefore = process.env.PATH.split(delimiter);
     prepareBuildScriptsPath();
     entries = (process.env.PATH ?? '').split(delimiter);
@@ -38,8 +39,8 @@ describe('prepareBuildScriptsPath()', () => {
     expect(entries[0]).to.equal(nodeDir);
   });
 
-  it('keeps the rest of PATH, in order, between the node dir and the node-gyp wrapper', () => {
-    expect(entries.slice(1, -1)).to.deep.equal(pathBefore.filter((dir) => dir !== ''));
+  it('keeps the rest of PATH as it was, between the node dir and the node-gyp wrapper', () => {
+    expect(entries.slice(1, -1)).to.deep.equal(pathBefore);
   });
 
   it('appends exactly one directory, holding a node-gyp that runs', function () {

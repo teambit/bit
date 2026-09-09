@@ -38,9 +38,11 @@ export function prepareBuildScriptsPath(logger?: Logger): void {
 
 function addNodeToPath(): void {
   const nodeDir = dirname(process.execPath);
-  const entries = (process.env.PATH ?? '').split(delimiter);
-  if (entries[0] === nodeDir) return;
-  process.env.PATH = [nodeDir, ...entries.filter((entry) => entry !== '')].join(delimiter);
+  const currentPath = process.env.PATH ?? '';
+  if (currentPath.split(delimiter)[0] === nodeDir) return;
+  // The inherited value is kept as is after the prefix: an empty component in
+  // it means the working directory, so it must not be dropped as noise.
+  process.env.PATH = currentPath === '' ? nodeDir : `${nodeDir}${delimiter}${currentPath}`;
 }
 
 function addNodeGypToPath(logger?: Logger): void {
