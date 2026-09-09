@@ -5,38 +5,32 @@ import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
 
-describe('linking to a target', function () {
+describe('linking components to a target, with and without a pattern', function () {
   this.timeout(0);
   let helper: Helper;
   let targetDir: string;
-  before(() => {
-    helper = new Helper();
-    helper.scopeHelper.setWorkspaceWithRemoteScope();
-    helper.fixtures.populateComponents(1);
-    targetDir = globalBitTempDir();
-    helper.command.link(`--target=${targetDir}`);
-  });
-  it('should link the components to the target directory', () => {
-    expect(path.join(targetDir, `node_modules/@${helper.scopes.remote}`)).to.be.a.path();
-  });
-});
-
-describe('linking a subset of components to a target', function () {
-  this.timeout(0);
-  let helper: Helper;
-  let targetDir: string;
+  let allTargetDir: string;
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.populateComponents(2);
     targetDir = globalBitTempDir();
     helper.command.link(`comp1 --target=${targetDir}`);
+    // the no-pattern case reuses this workspace rather than paying for a second one. it used to
+    // live in its own describe that asserted only that the scope dir exists - the same assertion
+    // the "including peers" describe below already makes.
+    allTargetDir = globalBitTempDir();
+    helper.command.link(`--target=${allTargetDir}`);
   });
   it('should link the scecified component to the target directory', () => {
     expect(path.join(targetDir, `node_modules/@${helper.scopes.remote}/comp1`)).to.be.a.path();
   });
   it('should not link the not specified component to the target directory', () => {
     expect(path.join(targetDir, `node_modules/@${helper.scopes.remote}/comp2`)).not.to.be.a.path();
+  });
+  it('without a pattern, it should link every component to the target directory', () => {
+    expect(path.join(allTargetDir, `node_modules/@${helper.scopes.remote}/comp1`)).to.be.a.path();
+    expect(path.join(allTargetDir, `node_modules/@${helper.scopes.remote}/comp2`)).to.be.a.path();
   });
 });
 
