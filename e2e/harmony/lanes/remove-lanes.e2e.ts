@@ -1,10 +1,8 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
 describe('remove lanes', function () {
   this.timeout(0);
@@ -19,11 +17,12 @@ describe('remove lanes', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
-      helper.command.snapAllComponents();
+      // nothing here asserts on build output, so skip the build pipeline
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
       helper.command.createLane();
-      helper.command.snapComponent(`comp1 --unmodified`);
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
     });
     it('as an intermediate step, make sure the snapped components are part of the lane', () => {
       const lane = helper.command.showOneLaneParsed('dev');
@@ -116,12 +115,8 @@ describe('remove lanes', function () {
         const lanes = helper.command.listRemoteLanesParsed();
         expect(lanes.lanes).to.have.lengthOf(0);
       });
-      // this has been changed to support the ability to restore a deleted lane.
-      // it's ok that the model-components objects are there. it doesn't harm.
-      it.skip('the remote should not have the components anymore as they dont belong to any lane', () => {
-        const remoteComps = helper.command.catScope(undefined, helper.scopes.remotePath);
-        expect(remoteComps).to.have.lengthOf(0);
-      });
+      // the component objects are deliberately left on the remote after the lane is removed, so that
+      // a deleted lane can be restored - hence no assertion here that the remote scope is emptied
       describe('removing again after the lane was removed', () => {
         it('should indicate that the lane was not found', () => {
           const err = new LaneNotFound(helper.scopes.remote, `${helper.scopes.remote}/dev`);
