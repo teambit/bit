@@ -301,8 +301,4 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
       expect(fileOnBranch(LANE, 'comp2/index.js')).to.not.include('rival-lane-snap');
     });
   });
-
-  // D2 proves the default (halt); these two prove the automatic policies on the same shape. The
-  // load-bearing assertions are on file bytes — a policy that "succeeded" while dropping either half
-  // would pass any summary-line check.
 });

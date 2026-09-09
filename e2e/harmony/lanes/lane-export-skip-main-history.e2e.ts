@@ -648,11 +648,14 @@ describe('lane export skips main history objects', function () {
     });
   });
 
-  // Consistency: bit status's staged list should match what bit export will actually push.
-  // After merging main into a lane (lean lane scope), divergence returns the lane snap plus the
-  // main snap(s) merged in. bit export drops the main-origin foreign refs (filterOutForeignMainOriginRefs);
-  // bit status currently shows them. The two disagree — fixed by sharing the lean filter.
-  describe('bit status staged list should agree with bit export on a lane far behind main', () => {
+  // Consistency: on a lane that merged main in, raw divergence returns the lane snap PLUS the
+  // merged-in main snap(s). Two commands read that list and both must ignore the main-origin
+  // entries the way `bit export` does (filterOutForeignMainOriginRefs):
+  //   - bit status's staged list should match what export will actually push.
+  //   - bit reset's "what to un-snap" list (getLocalHashes) must not drop a main tag that is
+  //     already exported on scope-C, or the workspace forgets a version that exists upstream.
+  // Same lane-far-behind-main state for both, so they share one setup.
+  describe('a lane far behind main, after merging main in', () => {
     let laneScope: string;
     let laneScopePath: string;
     let mergeSnap: string;
@@ -702,53 +705,21 @@ describe('lane export skips main history objects', function () {
         .exist;
       expect(comp1Staged.versions).to.eql([mergeSnap]);
     });
-  });
 
-  // Same root cause as the bit-status discrepancy, different command. bit reset reads its
-  // "what to un-snap" list from getLocalHashes (raw divergence), which on a lane that merged
-  // main returns lane-origin snaps PLUS the merged-in main snaps. Resetting removes ALL of
-  // them — including the main tag (e.g. 0.0.2) that's already exported on scope-C. After
-  // reset, the workspace forgets about a tag that still exists upstream.
-  describe('bit reset should not remove main-origin versions merged into a lane', () => {
-    let laneScope: string;
-    let laneScopePath: string;
+    describe('running bit reset', () => {
+      before(() => {
+        helper.command.resetAll();
+      });
 
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      const newScope = helper.scopeHelper.getNewBareScope('-lane-reset');
-      laneScope = newScope.scopeName;
-      laneScopePath = newScope.scopePath;
-      helper.scopeHelper.addRemoteScope(laneScopePath);
-      helper.scopeHelper.addRemoteScope(laneScopePath, helper.scopes.remotePath);
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, laneScopePath);
-
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild(); // 0.0.1
-      helper.command.export();
-
-      helper.command.createLane('dev', `--scope ${laneScope}`);
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.export();
-
-      const laneWs = helper.scopeHelper.cloneWorkspace();
-      helper.command.switchLocalLane('main');
-      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2 — only on main
-      helper.command.export();
-
-      helper.scopeHelper.getClonedWorkspace(laneWs);
-      helper.command.import();
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
-    });
-
-    it('bit reset should leave the merged-in main tag (0.0.2) intact in the component versions', () => {
-      // Pre-fix: bit reset's localVersions = [mergeSnap, 0.0.2]. Resetting removes both →
-      // workspace loses knowledge of 0.0.2 even though it's exported on main (scope-C).
-      // After the fix, reset should only remove the lane-origin mergeSnap.
-      helper.command.resetAll();
-      const comp1 = helper.command.catComponent('comp1');
-      const knownTags = Object.keys(comp1.versions || {});
-      expect(knownTags, `comp1.versions after reset: ${JSON.stringify(knownTags)}`).to.include('0.0.2');
-      expect(knownTags).to.include('0.0.1');
+      it('should leave the merged-in main tag (0.0.2) intact in the component versions', () => {
+        // Pre-fix: bit reset's localVersions = [mergeSnap, 0.0.2]. Resetting removes both →
+        // workspace loses knowledge of 0.0.2 even though it's exported on main (scope-C).
+        // After the fix, reset should only remove the lane-origin mergeSnap.
+        const comp1 = helper.command.catComponent('comp1');
+        const knownTags = Object.keys(comp1.versions || {});
+        expect(knownTags, `comp1.versions after reset: ${JSON.stringify(knownTags)}`).to.include('0.0.2');
+        expect(knownTags).to.include('0.0.1');
+      });
     });
   });
 

@@ -96,25 +96,6 @@ describe('extensions config diff', function () {
         expect(output).to.have.string('+  "newKey": "newVal"');
       });
     });
-    // Skipped for now, because of a bug will be unskipped after bug fix
-    // TODO: make sure it works
-    describe.skip('change extension version', () => {
-      before(() => {
-        reEjectAndCheckStatusBefore(helper);
-        helper.command.tagComponent('ext1', 'sss', '--unmodified');
-        helper.componentJson.removeExtension('my-scope/ext1@0.0.21');
-        helper.componentJson.setExtension('my-scope/ext1@0.0.2', { key: 'val' });
-      });
-      it('should make the component modified', () => {
-        output = helper.command.statusComponentIsModified('my-scope/bar/foo');
-        expect(output).to.be.true;
-      });
-      it('should show it in bit diff', () => {
-        output = helper.command.diff();
-        // TODO: add proper string here
-        expect(output).to.have.string('aaaaaa');
-      });
-    });
   });
 });
 

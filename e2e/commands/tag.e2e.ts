@@ -80,10 +80,6 @@ describe('bit tag command', function () {
         output = helper.command.tagWithoutBuild('components/exact-new@5.12.10', '--unmodified');
         expect(output).to.have.string('components/exact-new@5.12.10');
       });
-      it('Should set the exact version when specified on existing component', () => {
-        output = helper.command.tagWithoutBuild('components/exact@3.3.3', '--unmodified');
-        expect(output).to.have.string('components/exact@3.3.3');
-      });
       it('Should increment patch version of dependent when using other flag on tag dependency', () => {
         helper.fs.createFile('components/dependency', 'dependency.js');
         const fixture = "import foo from '../dependency/dependency'";

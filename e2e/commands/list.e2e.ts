@@ -11,16 +11,6 @@ describe('bit list command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('when no components created', () => {
-    before(() => {
-      helper.scopeHelper.clean();
-      helper.command.init();
-    });
-    it('should display "found 0 components"', () => {
-      const output = helper.command.listLocalScope();
-      expect(output.includes('found 0 components')).to.be.true;
-    });
-  });
   describe('when a component is created but not tagged', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();

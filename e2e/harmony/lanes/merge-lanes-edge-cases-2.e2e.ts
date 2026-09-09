@@ -411,8 +411,12 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
     });
   });
 
+  // only the --loose run is kept: a full `--build` merge runs the whole jest pipeline, and asserting
+  // both "the test failed" and "the snap still happened" on the same run already proves the flag
+  // tolerates a real failure. the non-loose baseline (a failing build during merge produces no snap)
+  // is covered by "auto-snap during merge when the snap is failing" in merge-lanes-edge-cases.e2e.ts.
   describe('merge with --build --loose', () => {
-    let beforeMerge: string;
+    let mergeOutput: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
@@ -430,26 +434,13 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       helper.command.switchLocalLane('main', '-x');
       helper.command.tagAllWithoutBuild('--unmodified'); // This creates divergent history
 
-      beforeMerge = helper.scopeHelper.cloneWorkspace();
+      mergeOutput = helper.command.mergeLane('dev', '--build --loose --no-squash');
     });
-    describe('without --loose flag', () => {
-      it('should fail when merging with --build due to test failures', () => {
-        const output = helper.command.mergeLane('dev', '--build --no-squash');
-        expect(output).to.have.string('Total Snapped: 0');
-      });
+    it('should succeed despite test failures', () => {
+      expect(mergeOutput).to.have.string('Total Snapped: 1');
     });
-    describe('with --loose flag', () => {
-      let mergeOutput: string;
-      before(() => {
-        helper.scopeHelper.getClonedWorkspace(beforeMerge);
-        mergeOutput = helper.command.mergeLane('dev', '--build --loose --no-squash');
-      });
-      it('should succeed despite test failures', () => {
-        expect(mergeOutput).to.have.string('Total Snapped: 1');
-      });
-      it('should indicate that the test failed', () => {
-        expect(mergeOutput).to.include('task "teambit.defender/tester:JestTest" has failed');
-      });
+    it('should indicate that the test failed', () => {
+      expect(mergeOutput).to.include('task "teambit.defender/tester:JestTest" has failed');
     });
   });
 });

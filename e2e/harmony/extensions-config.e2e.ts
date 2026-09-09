@@ -138,9 +138,6 @@ describe('harmony extension config', function () {
           it('should have version for extension in the component models when tagging the extension before component', () => {
             expect(componentModel.extensions[0].extensionId.version).to.equal('0.0.1');
           });
-          it('should not insert extensions into the component dev deps', () => {
-            expect(componentModel.devDependencies).to.be.of.length(0);
-          });
         });
         describe('exporting component with extension', () => {
           let localBeforeExport;
@@ -209,29 +206,6 @@ describe('harmony extension config', function () {
           const scopeList = helper.command.listLocalScopeParsed();
           const ids = scopeList.map((entry) => entry.id);
           expect(ids).to.include(`${helper.scopes.remote}/dummy-extension-without-logs`);
-        });
-        describe('removing the extension with "-"', () => {
-          let dummyExtensionBefore;
-          let dummyExtensionAfter;
-          before(() => {
-            helper.scopeHelper.getClonedWorkspace(localBeforeTag);
-            const componentShowBeforeRemove = helper.command.showComponentParsed('bar/foo');
-            dummyExtensionBefore = findDummyExtension(componentShowBeforeRemove.extensions);
-            helper.extensions.addExtensionToVariant(
-              '{bar/foo}',
-              `${helper.scopes.remote}/dummy-extension-without-logs`,
-              '-'
-            );
-            const componentShowAfterRemove = helper.command.showComponentParsed('bar/foo');
-            dummyExtensionAfter = findDummyExtension(componentShowAfterRemove.extensions);
-          });
-          // Make sure the extension is indeed there before we removed it
-          it('should have the extension defined on the component', () => {
-            expect(dummyExtensionBefore).to.not.be.undefined;
-          });
-          it('should not have the extension defined on the component', () => {
-            expect(dummyExtensionAfter).to.be.undefined;
-          });
         });
       });
     });

@@ -76,7 +76,8 @@ describe('bit lane command', function () {
       describe("snapping the component (so, it's an imported lane with local snaps)", () => {
         before(() => {
           helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
-          helper.command.snapAllComponents();
+          // nothing below asserts on build output, so skip the build pipeline
+          helper.command.snapAllComponentsWithoutBuild();
         });
         it('bit status should show the component as staged', () => {
           const status = helper.command.statusJson();
@@ -111,12 +112,12 @@ describe('bit lane command', function () {
         it('should switch successfully', () => {
           helper.command.expectCurrentLaneToBe('int');
         });
+        // a generic "bit install should not throw" test used to sit here. it asserted nothing about
+        // switching and paid for a real install; running install on a local lane is still exercised
+        // by the "switching lanes with deleted files" setup below.
         it('should not save the local lane in bitmap', () => {
           const bitMap = helper.bitMap.read();
           expect(bitMap[LANE_KEY]).to.not.deep.equal({ name: 'int', scope: helper.scopes.remote });
-        });
-        it('should not throw an error on bit install', () => {
-          expect(() => helper.command.install()).not.to.throw();
         });
       });
     });
@@ -304,13 +305,8 @@ describe('bit lane command', function () {
       after(() => {
         npmCiRegistry.destroy();
       });
-      // previously, the bar/foo component was available on lane-a with a version from lane-b unexpectedly.
-      // this test was to make sure that if we have such bugs, it won't let snapping.
-      it.skip('bit snap should throw an error saying a dependency is from another lane', () => {
-        expect(() => helper.command.snapAllComponentsWithoutBuild()).to.throw(
-          'is not part of current lane "lane-a" history'
-        );
-      });
+      // a permanently-skipped test asserting that snapping is blocked when a dependency comes from
+      // another lane was removed from here; the assertion below is what actually guards the bug.
       it('should use the dep from main and not from the previous lane', () => {
         const comp1 = helper.command.catComponent('comp1@latest');
         expect(comp1.dependencies[0].id.version).to.equal('0.0.1');

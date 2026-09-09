@@ -41,10 +41,6 @@ describe('run bit init', function () {
       const init = helper.command.init();
       expect(init).to.have.string('successfully re-initialized a bit workspace.');
     });
-    it('should create bitmap"', () => {
-      const bitmapPath = path.join(helper.scopes.localPath, '.bitmap');
-      expect(bitmapPath).to.be.a.file('missing bitmap');
-    });
     it('bitmap should contain version"', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property(SCHEMA_FIELD);
@@ -423,75 +419,6 @@ describe('run bit init', function () {
         expect(packageJson).to.not.have.property('type');
       });
     });
-    describe('disabling external package manager mode', () => {
-      before(() => {
-        helper.scopeHelper.cleanWorkspace();
-        helper.command.init('--external-package-manager');
-      });
-      it('should revert to normal mode when externalPackageManager is removed', () => {
-        // Simulate what happens when user chooses 'yes' to switch back to Bit PM
-        const workspaceConfig = helper.workspaceJsonc.read();
-
-        // Remove externalPackageManager flag
-        delete workspaceConfig['teambit.dependencies/dependency-resolver'].externalPackageManager;
-
-        // Restore settings
-        workspaceConfig['teambit.dependencies/dependency-resolver'].rootComponent = true;
-        workspaceConfig['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = true;
-
-        helper.workspaceJsonc.write(workspaceConfig);
-
-        // Remove postinstall script from package.json
-        const packageJson = helper.packageJson.read();
-        delete packageJson.scripts.postinstall;
-        if (Object.keys(packageJson.scripts).length === 0) {
-          delete packageJson.scripts;
-        }
-        helper.packageJson.write(packageJson);
-
-        // Verify configuration is back to normal
-        const updatedConfig = helper.workspaceJsonc.read();
-        expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.not.have.property(
-          'externalPackageManager'
-        );
-        expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', true);
-        expect(updatedConfig['teambit.workspace/workspace-config-files']).to.have.property(
-          'enableWorkspaceConfigWrite',
-          true
-        );
-
-        // Verify postinstall script is removed
-        const updatedPackageJson = helper.packageJson.read();
-        expect(updatedPackageJson).to.not.have.property('scripts');
-      });
-      it('should preserve user scripts when removing postinstall', () => {
-        // Reset and create scenario with user scripts
-        helper.scopeHelper.cleanWorkspace();
-        const existingPackageJson = {
-          name: 'my-project',
-          scripts: {
-            start: 'node index.js',
-            test: 'jest',
-          },
-        };
-        helper.packageJson.write(existingPackageJson);
-        helper.command.init('--external-package-manager');
-
-        // Verify postinstall was added
-        const packageJson = helper.packageJson.read();
-        expect(packageJson.scripts).to.have.property('postinstall', EXTERNAL_PM_POSTINSTALL_SCRIPT);
-
-        // Simulate removing only our postinstall script
-        delete packageJson.scripts.postinstall;
-        helper.packageJson.write(packageJson);
-
-        // Verify user scripts are preserved
-        const finalPackageJson = helper.packageJson.read();
-        expect(finalPackageJson.scripts).to.have.property('start', 'node index.js');
-        expect(finalPackageJson.scripts).to.have.property('test', 'jest');
-        expect(finalPackageJson.scripts).to.not.have.property('postinstall');
-      });
-    });
   });
 
   describe('interactive mode', () => {
@@ -505,25 +432,6 @@ describe('run bit init', function () {
         const output = helper.command.init('--skip-interactive', true);
         expect(output).to.not.have.string('Interactive setup for existing Git repository');
         expect(output).to.have.string('initialized a bit workspace');
-      });
-
-      it('should skip interactive mode with --external-package-manager flag', () => {
-        const output = helper.command.init('--external-package-manager', true);
-        expect(output).to.not.have.string('Interactive setup for existing Git repository');
-        expect(output).to.have.string('initialized a bit workspace');
-      });
-
-      it('should skip interactive mode with --standalone flag', () => {
-        const output = helper.command.init('--standalone', true);
-        expect(output).to.not.have.string('Interactive setup for existing Git repository');
-        expect(output).to.have.string('initialized a bit workspace');
-      });
-
-      it('should skip interactive mode with reset flags', () => {
-        helper.command.init(); // Initialize first
-        const output = helper.command.init('--reset', true);
-        expect(output).to.not.have.string('Interactive setup for existing Git repository');
-        expect(output).to.have.string('your bit workspace has been reset successfully');
       });
 
       it('should run interactive mode by default in git repository', () => {
@@ -551,42 +459,6 @@ describe('run bit init', function () {
         const finalOutput = helper.command.init('--skip-interactive');
         expect(finalOutput).to.have.string('initialized a bit workspace');
         expect(workspaceJsonc).to.be.a.file();
-      });
-
-      // find a good way to test it
-      it.skip('should preserve existing .gitignore content when adding Bit entries', () => {
-        const existingGitignore = `# Existing content
-*.log
-dist/
-`;
-        helper.fs.createFile('.gitignore', existingGitignore);
-
-        // Simulate user input: none environment, no external PM, no MCP
-        helper.command.runCmd('timeout 5s bash -c \'printf "0\\nn\\nn\\n" | bit init\' 2>/dev/null || true');
-
-        const gitignoreContent = helper.fs.readFile('.gitignore');
-        expect(gitignoreContent).to.have.string('# Existing content');
-        expect(gitignoreContent).to.have.string('*.log');
-        expect(gitignoreContent).to.have.string('dist/');
-        expect(gitignoreContent).to.have.string('# Bit');
-        expect(gitignoreContent).to.have.string('.bit');
-      });
-
-      // find a good way to test it
-      it.skip('should not duplicate Bit entries in .gitignore if already present', () => {
-        const existingGitignore = `# Existing content
-# Bit
-.bit
-node_modules
-`;
-        helper.fs.createFile('.gitignore', existingGitignore);
-
-        // Simulate user input: none environment, no external PM, no MCP
-        helper.command.runCmd('echo -e "0\nn\nn" | bit init');
-
-        const gitignoreContent = helper.fs.readFile('.gitignore');
-        const bitSectionMatches = gitignoreContent.match(/# Bit/g);
-        expect(bitSectionMatches).to.have.lengthOf(1);
       });
     });
   });

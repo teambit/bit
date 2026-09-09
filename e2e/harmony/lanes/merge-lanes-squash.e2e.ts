@@ -13,9 +13,12 @@ describe('merge lanes - squash functionality', function () {
     helper.scopeHelper.destroy();
   });
 
+  // both cases below share everything up to the lane's first snap, so the setup runs once and each
+  // case continues from a clone. neither exports the lane, so the merges stay local and the clone
+  // restores the scope completely
   describe('merge with squash', () => {
     let headOnMain: string;
-    let headOnLane: string;
+    let afterFirstSnapOnLane: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
@@ -24,43 +27,40 @@ describe('merge lanes - squash functionality', function () {
       helper.command.export();
       helper.command.createLane('dev');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
-      // as an intermediate step, verify that it has 4 snaps.
-      const log = helper.command.logParsed('comp1');
-      expect(log).to.have.lengthOf(4);
-
-      helper.command.switchLocalLane('main');
-      helper.command.mergeLane('dev');
+      afterFirstSnapOnLane = helper.scopeHelper.cloneWorkspace();
     });
-    it('should squash the snaps and leave only the last one', () => {
-      const log = helper.command.logParsed('comp1');
-      expect(log).to.have.lengthOf(2);
-
-      expect(log[0].hash).to.equal(headOnMain);
-      expect(log[1].hash).to.equal(headOnLane);
-      expect(log[1].parents[0]).to.equal(headOnMain);
+    describe('when the lane is ahead by only 1 snap, so there is nothing to squash', () => {
+      let headOnLane: string;
+      before(() => {
+        headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+        helper.command.switchLocalLane('main');
+        helper.command.mergeLane('dev');
+      });
+      it('should not add the squashed prop into the version object', () => {
+        const head = helper.command.catComponent(`comp1@${headOnLane}`);
+        expect(head).to.not.have.property('squashed');
+        expect(head.modified).to.have.lengthOf(0);
+      });
     });
-  });
+    describe('when the lane is ahead by 3 snaps', () => {
+      let headOnLane: string;
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(afterFirstSnapOnLane);
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+        helper.command.switchLocalLane('main');
+        helper.command.mergeLane('dev');
+      });
+      // the history before the merge is the tag + 3 snaps
+      it('should squash the snaps and leave only the last one', () => {
+        const log = helper.command.logParsed('comp1');
+        expect(log).to.have.lengthOf(2);
 
-  describe('merge with squash when other lane is ahead by only 1 snap, so no need to squash', () => {
-    let headOnLane: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-      helper.command.createLane('dev');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
-      helper.command.switchLocalLane('main');
-      helper.command.mergeLane('dev');
-    });
-    it('should not add the squashed prop into the version object', () => {
-      const head = helper.command.catComponent(`comp1@${headOnLane}`);
-      expect(head).to.not.have.property('squashed');
-      expect(head.modified).to.have.lengthOf(0);
+        expect(log[0].hash).to.equal(headOnMain);
+        expect(log[1].hash).to.equal(headOnLane);
+        expect(log[1].parents[0]).to.equal(headOnMain);
+      });
     });
   });
 
@@ -71,11 +71,7 @@ describe('merge lanes - squash functionality', function () {
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      // headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
-      // as an intermediate step, verify that it has 3 snaps.
-      const log = helper.command.logParsed('comp1');
-      expect(log).to.have.lengthOf(3);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // 3 snaps on the lane
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();

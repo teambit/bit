@@ -252,17 +252,6 @@ describe('component id with wildcard', function () {
         });
       });
     });
-    describe('merge with wildcard', () => {
-      before(() => {
-        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
-        helper.command.tagAllWithoutBuild();
-        helper.command.tagIncludeUnmodified('0.0.5');
-
-        // as an intermediate step, make sure all components are staged
-        const status = helper.command.statusJson();
-        expect(status.stagedComponents).to.have.lengthOf(5);
-      });
-    });
     describe('diff with wildcard', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);

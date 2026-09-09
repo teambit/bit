@@ -17,44 +17,33 @@ describe('bit lane basic operations', function () {
   });
 
   describe('creating a new lane without any component', () => {
-    let output;
-    before(() => {
-      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
-      helper.command.createLane();
-      output = helper.command.listLanes();
-    });
-    it('bit lane should show the active lane', () => {
-      expect(output).to.have.string(`current lane - my-scope/dev`);
-      expect(output).to.have.string('main');
-    });
-  });
-
-  describe('default tracking data', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.command.createLane();
+    });
+    it('bit lane should show the active lane', () => {
+      const output = helper.command.listLanes();
+      expect(output).to.have.string(`current lane - ${helper.scopes.remote}/dev`);
+      expect(output).to.have.string('main');
     });
     it('should set the remote-scope to the default-scope and remote-name to the local-lane', () => {
       const laneData = helper.command.showOneLane('dev');
       expect(laneData).to.have.string(`${helper.scopes.remote}${LANE_REMOTE_DELIMITER}dev`);
     });
-  });
-
-  describe('change tracking data', () => {
-    let output: string;
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.command.createLane();
-      output = helper.command.changeLaneScope('my-remote');
-    });
-    it('should output the changes', () => {
-      expect(removeChalkCharacters(output)).to.have.string(
-        `the remote-scope of dev has been changed from ${helper.scopes.remote} to my-remote`
-      );
-    });
-    it('bit lane show should show the changed values', () => {
-      const laneData = helper.command.showOneLane('dev');
-      expect(laneData).to.have.string(`my-remote${LANE_REMOTE_DELIMITER}dev`);
+    describe('changing the tracking data', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.changeLaneScope('my-remote');
+      });
+      it('should output the changes', () => {
+        expect(removeChalkCharacters(output)).to.have.string(
+          `the remote-scope of dev has been changed from ${helper.scopes.remote} to my-remote`
+        );
+      });
+      it('bit lane show should show the changed values', () => {
+        const laneData = helper.command.showOneLane('dev');
+        expect(laneData).to.have.string(`my-remote${LANE_REMOTE_DELIMITER}dev`);
+      });
     });
   });
 

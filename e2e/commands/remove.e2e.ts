@@ -422,7 +422,7 @@ describe('bit remove command', function () {
     });
   });
 
-  describe('soft remove on lane then tagging the dependent without removing the references to the removed component', () => {
+  describe('soft remove then tagging the dependent without removing the references to the removed component', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
@@ -436,7 +436,7 @@ describe('bit remove command', function () {
     });
   });
 
-  describe('soft remove on lane then tagging the dependent without removing the references to the removed component then recovering it', () => {
+  describe('soft remove then tagging the dependent without removing the references to the removed component then recovering it', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
