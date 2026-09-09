@@ -1,9 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-
-chai.use(chaiFs);
 
 /**
  * Cascade behavior on a lane that has `updateDependents` (hidden cascade entries on the lane).
@@ -12,7 +8,9 @@ chai.use(chaiFs);
  *
  * The two sides being exercised:
  *  1. Local `bit snap` on a lane with existing `updateDependents` folds the affected entries
- *     into the same snap pass, producing one Version per cascaded component (scenarios 1, 5, 6).
+ *     into the same snap pass, producing one Version per cascaded component (scenarios 5, 6).
+ *     Scenario 5 covers the basic single-dependent cascade too - it is the transitive case, so its
+ *     assertions are a superset of the basic one that used to live here as scenario 1.
  *  2. The bare-scope "snap updates" path also re-snaps any entries in `lane.components` that
  *     depend on the new updateDependent, so the lane doesn't end up with
  *     `compA@lane.components -> compB@main` once `compB` enters `lane.updateDependents`
@@ -22,7 +20,7 @@ chai.use(chaiFs);
  * "parent = main head" updateDependents should interact with reset/re-snap and remote merge.
  *
  * The suite is split across three files so CI can parallelize it:
- * - this file: core cascade mechanics (scenarios 1, 3, 4, 5, 6)
+ * - this file: core cascade mechanics (scenarios 3, 4, 5, 6)
  * - update-dependents-cascade-reset.e2e.ts: reset / history / checkout (7, 8, 9, 12, 14, 15)
  * - update-dependents-cascade-import.e2e.ts: import / fetch / promotion (11, 13, 16-21)
  */
@@ -37,16 +35,14 @@ describe('local snap cascades updateDependents on the lane', function () {
   });
 
   /**
-   * Common starting state used by every scenario:
+   * Starting state for scenario 3 (scenarios 4, 5 and 6 each seed their own variation):
    *   main:  comp1@0.0.1 -> comp2@0.0.1 -> comp3@0.0.1
    *   lane `dev` on remote:
-   *     components:        [ comp3@<comp3HeadOnLaneInitial> ]
-   *     updateDependents:  [ comp2@<comp2InUpdDepInitial>    ]
+   *     components:        [ comp3 ]
+   *     updateDependents:  [ comp2 ]
+   * Returns the initial comp2 hash in updateDependents.
    */
-  async function buildBaseRemoteState(): Promise<{
-    comp3HeadOnLaneInitial: string;
-    comp2InUpdDepInitial: string;
-  }> {
+  async function buildBaseRemoteState(): Promise<string> {
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.populateComponents(3);
     helper.command.tagAllWithoutBuild();
@@ -54,7 +50,6 @@ describe('local snap cascades updateDependents on the lane', function () {
     helper.command.createLane();
     helper.command.snapComponentWithoutBuild('comp3', '--skip-auto-snap --unmodified');
     helper.command.export();
-    const comp3HeadOnLaneInitial = helper.command.getHeadOfLane('dev', 'comp3');
 
     const bareSnap = helper.scopeHelper.getNewBareScope('-bare-seed-updep');
     helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
@@ -65,58 +60,8 @@ describe('local snap cascades updateDependents on the lane', function () {
     );
 
     const lane = helper.command.catLane('dev', helper.scopes.remotePath);
-    const comp2InUpdDepInitial = lane.updateDependents[0].split('@')[1];
-    return { comp3HeadOnLaneInitial, comp2InUpdDepInitial };
+    return lane.updateDependents[0].split('@')[1];
   }
-
-  // ---------------------------------------------------------------------------------------------
-  // Scenario 1: basic cascade — workspace has only comp3, snaps it, comp2 (in updateDependents)
-  // should be auto-re-snapped with the new comp3 version, and the parent chain should be intact.
-  // ---------------------------------------------------------------------------------------------
-  describe('scenario 1: workspace has the lane component only (no workspace dependents)', () => {
-    let comp3HeadOnLaneInitial: string;
-    let comp2InUpdDepInitial: string;
-    let comp3HeadAfterLocalSnap: string;
-
-    before(async () => {
-      const base = await buildBaseRemoteState();
-      comp3HeadOnLaneInitial = base.comp3HeadOnLaneInitial;
-      comp2InUpdDepInitial = base.comp2InUpdDepInitial;
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
-      helper.command.importLane('dev', '-x');
-      helper.command.importComponent('comp3');
-
-      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, "module.exports = () => 'comp3-v2';");
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
-      comp3HeadAfterLocalSnap = helper.command.getHeadOfLane('dev', 'comp3');
-    });
-
-    it('comp3 should have advanced on the lane', () => {
-      expect(comp3HeadAfterLocalSnap).to.not.equal(comp3HeadOnLaneInitial);
-    });
-
-    it('comp2 in updateDependents should be re-snapped to a new hash', () => {
-      const lane = helper.command.catLane('dev', helper.scopes.remotePath);
-      expect(lane.updateDependents).to.have.lengthOf(1);
-      const comp2NewVersion = lane.updateDependents[0].split('@')[1];
-      expect(comp2NewVersion).to.not.equal(comp2InUpdDepInitial);
-    });
-
-    it('cascaded comp2 should point at the new comp3 head', () => {
-      const lane = helper.command.catLane('dev', helper.scopes.remotePath);
-      const comp2 = helper.command.catComponent(lane.updateDependents[0], helper.scopes.remotePath);
-      const comp3Dep = comp2.dependencies.find((d) => d.id.name === 'comp3');
-      expect(comp3Dep.id.version).to.equal(comp3HeadAfterLocalSnap);
-    });
-
-    it('comp2 should NOT appear in the workspace bitmap (still a hidden updateDependent)', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.not.have.property('comp2');
-    });
-  });
 
   // ---------------------------------------------------------------------------------------------
   // Scenario 4 (first "snap updates" click on a lane with existing lane.components that depend
@@ -303,6 +248,14 @@ describe('local snap cascades updateDependents on the lane', function () {
       const comp2Dep = comp1.dependencies.find((d) => d.id.name === 'comp2');
       expect(comp2Dep.id.version).to.equal(comp2NewHash);
     });
+
+    // relocated from the removed scenario 1: cascading must not pull a hidden updateDependent into
+    // the workspace. asserted here for both cascaded components, since both are hidden in this setup
+    it('the cascaded components should NOT appear in the workspace bitmap (still hidden updateDependents)', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
+      expect(bitMap).to.not.have.property('comp2');
+    });
   });
 
   // ---------------------------------------------------------------------------------------------
@@ -371,8 +324,7 @@ describe('local snap cascades updateDependents on the lane', function () {
     let comp2AfterUserAExport: string;
 
     before(async () => {
-      const base = await buildBaseRemoteState();
-      comp2InUpdDepInitial = base.comp2InUpdDepInitial;
+      comp2InUpdDepInitial = await buildBaseRemoteState();
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
