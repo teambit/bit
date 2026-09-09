@@ -12,6 +12,14 @@ import type NpmHelper from './e2e-npm-helper';
 import type ScopesData from './e2e-scopes';
 import { DEFAULT_OWNER } from './e2e-scopes';
 import type WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
+import {
+  addFileRemoteToScopeJson,
+  copyBareScopeTemplate,
+  copyWorkspaceTemplate,
+  ensureBareScopeTemplate,
+  ensureWorkspaceTemplate,
+  isSetupTemplateEnabled,
+} from './e2e-setup-template';
 
 type SetupWorkspaceOpts = {
   addRemoteScopeAsDefaultScope?: boolean; // default to true, otherwise, the scope is "my-scope"
@@ -67,8 +75,7 @@ export default class ScopeHelper {
   reInitWorkspace(opts?: SetupWorkspaceOpts) {
     this.cleanWorkspace();
     if (opts?.initGit) this.command.runCmd('git init');
-    const pkgJsonFlag = opts?.generatePackageJson ? undefined : '--no-package-json';
-    this.command.init(pkgJsonFlag, opts?.interactive);
+    this.initWorkspace(opts);
 
     if (opts?.addRemoteScopeAsDefaultScope ?? true) this.workspaceJsonc.addDefaultScope();
     if (opts?.disablePreview ?? true) this.workspaceJsonc.disablePreview();
@@ -93,6 +100,37 @@ export default class ScopeHelper {
       }
     }
   }
+  /**
+   * a fresh `bit init` writes the same files for every test bar two directory-derived names, so
+   * copy a template built by a real init rather than spawn bit ~1,250 times per suite run.
+   * the options below make init write something else — `.git` moves the scope to `.git/bit` and
+   * suppresses AGENTS.md, and the other two take different branches in create-consumer — so they
+   * keep running the real command.
+   */
+  private initWorkspace(opts?: SetupWorkspaceOpts) {
+    const canUseTemplate = !opts?.initGit && !opts?.interactive && !opts?.generatePackageJson;
+    if (!canUseTemplate || !isSetupTemplateEnabled()) {
+      const pkgJsonFlag = opts?.generatePackageJson ? undefined : '--no-package-json';
+      this.command.init(pkgJsonFlag, opts?.interactive);
+      return;
+    }
+    const template = ensureWorkspaceTemplate(this.scopes.e2eDir, (cwd) =>
+      this.command.runCmd('bit init --no-package-json', cwd)
+    );
+    copyWorkspaceTemplate(template, this.scopes.localPath);
+  }
+
+  /**
+   * a bare scope is a scope.json plus three empty directories, and only the scope name varies.
+   * same reasoning as initWorkspace, ~800 spawns per suite run.
+   */
+  private initBareScope(scopePath: string): string {
+    if (!isSetupTemplateEnabled()) return this.command.runCmd('bit init --bare', scopePath);
+    const template = ensureBareScopeTemplate(this.scopes.e2eDir, (cwd) => this.command.runCmd('bit init --bare', cwd));
+    copyBareScopeTemplate(template, scopePath);
+    return '';
+  }
+
   private _writeYarnRC(yarnRCConfig: any) {
     this.fsHelper.writeFile('.yarnrc.yml', yaml.stringify(yarnRCConfig));
   }
@@ -112,6 +150,10 @@ export default class ScopeHelper {
     cwd: string = this.scopes.localPath,
     isGlobal = false
   ) {
+    // `--global` writes the remotes file rather than the scope, and addFileRemoteToScopeJson bows
+    // out when there's no scope yet to write into (which some tests trigger on purpose), so both
+    // fall through to the real command.
+    if (!isGlobal && isSetupTemplateEnabled() && addFileRemoteToScopeJson(remoteScopePath, cwd)) return '';
     const globalArg = isGlobal ? '-g' : '';
     return this.command.runCmd(`bit remote add file://${remoteScopePath} ${globalArg}`, cwd);
   }
@@ -135,7 +177,7 @@ export default class ScopeHelper {
 
   reInitRemoteScope(scopePath = this.scopes.remotePath) {
     fs.emptyDirSync(scopePath);
-    return this.command.runCmd('bit init --bare', scopePath);
+    return this.initBareScope(scopePath);
   }
 
   /**
@@ -154,7 +196,7 @@ export default class ScopeHelper {
     const scopeName = prefix + generateRandomStr() + scopeNameSuffix;
     const scopePath = path.join(this.scopes.e2eDir, scopeName);
     fs.emptyDirSync(scopePath);
-    this.command.runCmd('bit init --bare', scopePath);
+    this.initBareScope(scopePath);
     this.addRemoteScope(remoteScopeToAdd, scopePath);
     const scopeWithoutOwner = scopeName.replace(prefix, '');
     return { scopeName, scopePath, scopeWithoutOwner };
@@ -163,7 +205,7 @@ export default class ScopeHelper {
   getNewBareScopeWithSpecificName(scopeName: string) {
     const scopePath = path.join(this.scopes.e2eDir, scopeName);
     fs.emptyDirSync(scopePath);
-    this.command.runCmd('bit init --bare', scopePath);
+    this.initBareScope(scopePath);
     return scopePath;
   }
 

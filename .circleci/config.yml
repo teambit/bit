@@ -462,6 +462,18 @@ commands:
       - restore_cache:
           key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
 
+  # Labels this job's requests to remote scopes with `x-custom-origin`. bit reads __CUSTOM_ORIGIN
+  # in scopes/scope/network/http/http.ts and sends it as a header on every scope request, so
+  # bit.cloud can attribute traffic to a specific job instead of to an anonymous EC2 address —
+  # CircleCI runs jobs on generic AWS us-east-1 IPs, which identify nothing on their own.
+  # This is the scope-side counterpart to the `user-agent=bit-*-circleci` .npmrc lines below,
+  # which label registry requests. Linux only: it writes to $BASH_ENV.
+  set_custom_origin:
+    steps:
+      - run:
+          name: label scope requests with the job name
+          command: echo "export __CUSTOM_ORIGIN=bit-circleci-${CIRCLE_JOB}" >> $BASH_ENV
+
   # Complete Bit environment setup
   setup_bit_environment:
     parameters:
@@ -473,6 +485,7 @@ commands:
         type: string
     steps:
       - bit_global_for_npm
+      - set_custom_origin
       - bit_config:
           env: "<<parameters.env>>"
       - restore_cache:
@@ -600,6 +613,9 @@ commands:
       - run:
           name: set user agent for Bit processes in e2e tests
           command: echo "user-agent=bit-e2e-circleci" >> ~/.npmrc
+      # the e2e helper spreads process.env into every spawned bit, so the origin set on $BASH_ENV
+      # reaches the bit processes the tests run, not just this shell.
+      - set_custom_origin
       # Make sure when we run bit from e2e tests we run it from the global not from here
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
@@ -687,6 +703,7 @@ jobs:
       - attach_workspace:
           at: ./
       - restore_common_caches
+      - set_custom_origin
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -865,6 +882,7 @@ jobs:
   bit_pr:
     # xlarge validated on a worst-case 98-component cascade (no OOM at 12GB heap, same wall time
     # as 2xlarge). If this job dies with "Killed", revert to 2xlarge + max-old-space-size=30000.
+    # large (8GB/6GB heap) was tried after the rspack preview migration and OOM'd within 8 minutes.
     resource_class: xlarge
     <<: *defaults
     environment:
@@ -955,6 +973,12 @@ jobs:
       - run: cd bit && npm run generate-core-aspects-ids
       - run:
           name: 'bit ci merge'
+          # versions npm already has are skipped automatically, per component (see the
+          # --no-skip-published-versions flag), so the --increment-by bump below should no longer be
+          # needed. it is kept as a manual override for the cases the automatic skip can't cover -
+          # mainly a registry that answers with neither the version nor a 404 (an outage, or broken
+          # auth), since only a positive answer is allowed to move a version forward. no commit is
+          # needed to apply it: set BIT_CI_MERGE_EXTRA_FLAGS='--increment-by 2' as a CircleCI env var.
           command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
           # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 2 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
@@ -973,6 +997,12 @@ jobs:
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
+      # An explicit compile-cache dir, out of /tmp which the suite itself churns (e2e workspaces
+      # live under BIT_TEMP_ROOT = /tmp/bit). Left on the default, the cache came out half-built on
+      # CI - 599 entries here vs 1,220 from a single `bit status` locally - and a controlled A/B
+      # showed no gain at all. The e2e helper spreads process.env into every spawned bit, so all
+      # ~13,700 invocations of a run share this one cache.
+      NODE_COMPILE_CACHE: /home/circleci/node-compile-cache
     parallelism: 40
     steps:
       - e2e_test_cmd:
