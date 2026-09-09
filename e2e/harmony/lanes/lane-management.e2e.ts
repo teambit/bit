@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import { InvalidScopeName } from '@teambit/legacy-bit-id';
+import { LANE_KEY } from '@teambit/legacy.bit-map';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
@@ -31,6 +32,12 @@ describe('bit lane management', function () {
     it('should change the current lane', () => {
       const lanes = helper.command.listLanesParsed();
       expect(lanes.currentLane).to.equal('new-lane');
+    });
+    // asserted on the file itself, not only through the CLI. kept before the export below, which
+    // this describe performs inside an it
+    it('should update .bitmap with the new name', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap[LANE_KEY].id.name).to.equal('new-lane');
     });
     it('should not change the remote lane name before export', () => {
       const remoteLanes = helper.command.listRemoteLanesParsed();
