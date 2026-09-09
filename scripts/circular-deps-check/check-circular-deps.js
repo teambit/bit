@@ -15,7 +15,9 @@
  *   --verbose: Show detailed output
  */
 
-const bitBin = 'bit';
+// override with BIT_BIN=<bin-name> (mirrors e2e's --bit_bin), e.g. to compare the repo's own
+// binary against a bvm-linked release when narrowing down a perf/behavior difference between them
+const bitBin = process.env.BIT_BIN || process.env.npm_config_bit_bin || 'bit';
 
 const { execSync } = require('child_process');
 const fs = require('fs');

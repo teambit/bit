@@ -306,40 +306,52 @@ describe('bit reset command', function () {
     });
   });
   describe('components with env config after multiple snaps', () => {
+    // these tests only verify that the env CONFIG round-trips through snap/reset - the env itself
+    // is never exercised, so a zero-install local env (setSimpleEnv) is used instead of a real one
     describe('when env is not changed between snaps', () => {
+      let envId: string;
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
-        helper.command.setEnv('comp1', 'teambit.react/react');
+        const envName = helper.env.setSimpleEnv();
+        envId = `${helper.scopes.remote}/${envName}`;
+        helper.command.setEnv('comp1', envId);
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.resetAll();
       });
       it('bit reset should restore the env config that was set before the first snap', () => {
         const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
-        expect(envData.config.env).to.equal('teambit.react/react');
+        expect(envData.config.env).to.equal(envId);
       });
     });
     describe('when env is changed between snaps', () => {
+      let secondEnvId: string;
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
-        helper.command.setEnv('comp1', 'teambit.react/react');
+        const firstEnvName = helper.env.setSimpleEnv('simple-env-a');
+        const secondEnvName = helper.env.setSimpleEnv('simple-env-b');
+        secondEnvId = `${helper.scopes.remote}/${secondEnvName}`;
+        helper.command.setEnv('comp1', `${helper.scopes.remote}/${firstEnvName}`);
         helper.command.snapAllComponentsWithoutBuild();
-        helper.command.setEnv('comp1', 'teambit.harmony/node');
+        helper.command.setEnv('comp1', secondEnvId);
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.resetAll();
       });
       it('bit reset should keep the latest env config (not revert to the first snap env)', () => {
         const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
-        expect(envData.config.env).to.equal('teambit.harmony/node');
+        expect(envData.config.env).to.equal(secondEnvId);
       });
     });
     describe('when a different config (deps) is changed between snaps but env stays the same', () => {
+      let envId: string;
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
-        helper.command.setEnv('comp1', 'teambit.react/react');
+        const envName = helper.env.setSimpleEnv();
+        envId = `${helper.scopes.remote}/${envName}`;
+        helper.command.setEnv('comp1', envId);
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.dependenciesSet('comp1', 'lodash@4.17.21');
         helper.command.snapAllComponentsWithoutBuild();
@@ -347,7 +359,7 @@ describe('bit reset command', function () {
       });
       it('bit reset should restore both the env and the deps config', () => {
         const envData = helper.command.showAspectConfig('comp1', 'teambit.envs/envs');
-        expect(envData.config.env).to.equal('teambit.react/react');
+        expect(envData.config.env).to.equal(envId);
       });
     });
   });

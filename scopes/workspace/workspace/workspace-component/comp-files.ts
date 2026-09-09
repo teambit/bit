@@ -3,7 +3,7 @@ import { SourceFile } from '@teambit/component.sources';
 import type { Repository, SourceFileModel } from '@teambit/objects';
 
 type FILE_STATUS = 'new' | 'modified' | 'deleted' | 'unchanged';
-type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
+type PathLinux = string;
 export type FilesStatus = { [pathRelativeToCompDir: PathLinux]: FILE_STATUS };
 
 export class CompFiles {

@@ -309,7 +309,7 @@ export class PreviewMain {
   }
 
   private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
-    if (this.envs.isUsingCoreEnv(component)) {
+    if (this.isUsingCoreOrLegacyCoreEnv(component)) {
       return true;
     }
     const envComponent = await this.envs.getEnvComponent(component);
@@ -317,11 +317,24 @@ export class PreviewMain {
   }
 
   private async calculateUseNameParam(component: Component): Promise<boolean> {
-    if (this.envs.isUsingCoreEnv(component)) {
+    if (this.isUsingCoreOrLegacyCoreEnv(component)) {
       return true;
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvUseNameParam(envComponent);
+  }
+
+  /**
+   * envs that used to be core aspects keep their core preview behavior. also, they may not be
+   * installed yet, in which case fetching their env component (getEnvComponent) throws - and this
+   * runs during component load.
+   */
+  private isUsingCoreOrLegacyCoreEnv(component: Component): boolean {
+    return this.envs.isUsingCoreEnv(component) || this.isUsingLegacyCoreEnv(component);
+  }
+
+  private isUsingLegacyCoreEnv(component: Component): boolean {
+    return this.envs.isLegacyCoreEnv(this.envs.getEnvId(component));
   }
 
   async generateComponentPreview(
@@ -556,6 +569,12 @@ export class PreviewMain {
   // if you want to get the final result use the `doesScaling` method below
   // This should be used only for component load
   private async calcDoesScalingForComponent(component: Component): Promise<boolean> {
+    // envs that used to be core aspects may not be installed yet, in which case getEnvComponent
+    // below throws - and this runs during component load. their pinned versions all support
+    // scaling. (core envs are handled separately below.)
+    if (this.isUsingLegacyCoreEnv(component)) {
+      return true;
+    }
     const isBundledWithEnv = await this.calcIsBundledWithEnv(component);
     // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
     if (this.envs.isUsingCoreEnv(component)) {
@@ -580,6 +599,11 @@ export class PreviewMain {
    * this calculation is based on the env of the component and if the env of the component support it.
    */
   async doesScaling(component: Component): Promise<boolean> {
+    // envs that used to be core aspects may not be installed yet, in which case getEnvComponent
+    // below throws. their pinned versions all support scaling (matches calcDoesScalingForComponent).
+    if (this.isUsingLegacyCoreEnv(component)) {
+      return true;
+    }
     const inWorkspace = await this.workspace?.hasId(component.id);
     // Support case when we have the dev server for the env, in that case we calc the data of the env as we can't rely on the env data from the scope
     // since we bundle it for the dev server again
@@ -626,7 +650,9 @@ export class PreviewMain {
 
   async isSupportSkipIncludes(component: Component) {
     if (!this.config.onlyOverview && !isFeatureEnabled(ONLY_OVERVIEW)) return false;
-    const isCore = this.envs.isUsingCoreEnv(component);
+    // include legacy former-core envs: they may not be installed yet, and getEnvComponent below
+    // throws for them. treat them like core envs (no skip-includes).
+    const isCore = this.isUsingCoreOrLegacyCoreEnv(component);
     if (isCore) return false;
 
     const envComponent = await this.envs.getEnvComponent(component);

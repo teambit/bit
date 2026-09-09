@@ -58,6 +58,9 @@ describe('tag components on Harmony', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
+      // the default env (empty env) has no compiler hence no dist artifacts. set a compiling env
+      // so the build generates artifacts
+      helper.env.setTsEnv();
       helper.command.tagAllComponents();
       helper.command.export();
       helper.command.tagIncludeUnmodified('0.0.2');
@@ -231,21 +234,24 @@ describe('tag components on Harmony', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.outputFile('bar/index.js');
       helper.fs.outputFile(
-        'bar/foo.spec.js',
-        `
-        describe('bar component', () => {
-          it('should fail', () => {
-            expect(true).toBe(false);
-          });
-        });
-      `
+        'bar/foo.spec.ts',
+        `describe('bar component', () => {
+  it('should fail', () => {
+    expect(true).toBe(false);
+  });
+});
+`
       );
       helper.command.addComponent('bar');
+      // the default env (empty env) has no tester. set a testing env (the bitdev node env is a
+      // single light install, its tester is vitest)
+      helper.env.setBitdevNodeEnv();
       beforeTagScope = helper.scopeHelper.cloneWorkspace();
     });
     it('should fail without --skip-tests', () => {
       const cmd = () => helper.command.tagAllComponents();
-      const error = new Error('Failed task 1: "teambit.defender/tester:JestTest" of env "teambit.harmony/node"');
+      // the env is installed with a pinned version, hence the "@" after the env id
+      const error = new Error('Failed task 1: "teambit.defender/tester:VitestTest" of env "bitdev.node/node-env@');
       helper.general.expectToThrow(cmd, error);
       const stagedConfigPath = helper.general.getStagedConfigPath();
       expect(stagedConfigPath).to.not.be.a.path();

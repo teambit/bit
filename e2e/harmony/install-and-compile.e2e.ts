@@ -52,7 +52,9 @@ describe('all custom envs are compiled during installation', function () {
       'custom-env2'
     );
 
-    helper.command.create('module', 'comp', `--env ${helper.scopes.remoteWithoutOwner}/custom-env2`);
+    // the "mdx" template is provided by custom-env2 (mdx based). the "module" template that was
+    // used here previously was registered by the node env when it was a core aspect.
+    helper.command.create('mdx', 'comp', `--env ${helper.scopes.remoteWithoutOwner}/custom-env2`);
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/comp/comp.ts`,
       `

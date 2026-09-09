@@ -1,4 +1,5 @@
 import * as path from 'path';
+import fs from 'fs-extra';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
 import type CommandHelper from './e2e-command-helper';
 import type ExtensionsHelper from './e2e-extensions-helper';
@@ -13,6 +14,71 @@ type SetCustomEnvOpts = {
   skipCompile?: boolean;
   skipLink?: boolean;
 };
+
+/**
+ * env packages that the old-format env fixtures import. these envs used to be core aspects, so
+ * their packages were always available. now they need to be installed. the versions should match
+ * the pinned versions in legacy-core-envs.ts (scopes/envs/envs).
+ */
+const FIXTURE_ENV_BASE_PACKAGES: Record<string, string> = {
+  '@teambit/node': '@teambit/node@1.0.1107',
+  '@teambit/react': '@teambit/react@1.0.1107',
+  '@teambit/mdx': '@teambit/mdx@1.0.1108',
+  // not env bases - the tiny runtime deps of the minimal fixture envs (node-env-1/node-env-2),
+  // listed here so setCustomEnv installs them and the fixtures load without MissingPackages
+  'lodash.get': 'lodash.get@4.4.2',
+  'lodash.flatten': 'lodash.flatten@4.4.0',
+};
+
+/**
+ * the env configured on the old-format env fixtures (see setCustomEnv). it used to be a core
+ * aspect, now its package must be installed for the fixture env to be compiled and loaded.
+ */
+const ENVS_ENV_PACKAGE = '@teambit/env@1.0.1107';
+
+/**
+ * every legacy-core-env package an old-format fixture env needs before it can load, as a
+ * dependency-resolver policy. Loading such an env pulls its whole env chain, and each missing link
+ * fails the load on its own - the fixture's own imports are only the first of them.
+ *
+ * for a test that skips setCustomEnv's install because it measures what each install does: stating
+ * these as a policy lets the *first* install fetch them, so the env is still unloadable going into
+ * that install (what makes it an "old env" there) and loadable by the second. Installing them
+ * beforehand instead would make the env load on the first install and defeat the test.
+ *
+ * versions must match the pinned versions in legacy-core-envs.ts (scopes/envs/envs).
+ */
+const LEGACY_CORE_ENV_POLICY: Record<string, string> = {
+  '@teambit/env': '1.0.1107',
+  '@teambit/node': '1.0.1107',
+  '@teambit/react': '1.0.1107',
+  '@teambit/aspect': '1.0.1107',
+};
+
+/**
+ * peers required by the published legacy env packages (via @teambit/cloud UI hooks and
+ * graphql-request) that yarn's hoisted linker doesn't auto-install (pnpm auto-installs peers).
+ * without them the env fails to load under yarn with "Cannot find module '@apollo/client'" (or
+ * 'graphql').
+ */
+export const NODE_ENV_HOISTED_PEERS = '@apollo/client@3.14.1 graphql@14.7.0';
+
+/**
+ * a modern env.jsonc-based node env, pinned so upstream releases don't change test behavior.
+ * see setBitdevNodeEnv.
+ */
+const BITDEV_NODE_ENV = 'bitdev.node/node-env';
+const BITDEV_NODE_ENV_VERSION = '6.0.16';
+const BITDEV_NODE_ENV_PACKAGE = `@bitdev/node.node-env@${BITDEV_NODE_ENV_VERSION}`;
+export const BITDEV_NODE_ENV_ID = `${BITDEV_NODE_ENV}@${BITDEV_NODE_ENV_VERSION}`;
+
+/**
+ * the env configured on old-format aspect-style env fixtures (see installAspectEnv). it used
+ * to be a core aspect, now its package must be installed for the fixture env to be loaded.
+ * the node env is a runtime dependency of the aspect env and must be installed at the root as
+ * well for the aspect env to load.
+ */
+const ASPECT_ENV_PACKAGES = ['@teambit/aspect@1.0.1107', '@teambit/node@1.0.1107'];
 
 export const ENV_POLICY = {
   peers: [
@@ -97,6 +163,11 @@ export default class EnvHelper {
     this.extensions = extensions;
   }
 
+  /** see LEGACY_CORE_ENV_POLICY */
+  getLegacyCoreEnvPolicyDependencies(): Record<string, string> {
+    return { ...LEGACY_CORE_ENV_POLICY };
+  }
+
   rootCompDirDep(envName: string, depComponentName: string) {
     return path.join(this.rootCompDir(envName), 'node_modules', `@${this.scopes.remote}/${depComponentName}`);
   }
@@ -119,29 +190,107 @@ export default class EnvHelper {
   }
 
   /**
-   * set up a new environment with two compilers, babel for the dists and ts for the d.ts files
-   * returns the env name.
+   * create a minimal env component with zero dependencies - like the core empty-env, just under
+   * a different name. the env plugin file is plain .js, so it needs no compilation (the env
+   * component itself stays on the default env) and no package installation at all.
+   * use it for suites that just need "an env" (or two envs, to switch between) and don't
+   * exercise any actual env functionality (compiler/tester/etc).
    */
-  setBabelWithTsHarmony(): string {
-    const EXTENSIONS_BASE_FOLDER = 'multiple-compilers-env';
-    this.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
-    this.command.addComponent(EXTENSIONS_BASE_FOLDER);
-    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
+  setSimpleEnv(name = 'simple-env'): string {
+    this.fs.outputFile(
+      `${name}/${name}.bit-env.js`,
+      `class SimpleEnv {
+  name = '${name}';
+}
+module.exports.default = new SimpleEnv();
+`
+    );
+    // the env manifest is what marks the component as an env before it was ever loaded
+    this.fs.outputFile(`${name}/env.jsonc`, `{}`);
+    this.fs.outputFile(`${name}/index.js`, `module.exports = require('./${name}.bit-env');\n`);
+    this.command.addComponent(name);
     this.command.link();
-    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
-      policy: {
-        dependencies: {
-          '@babel/runtime': '^7.8.4',
-          '@babel/core': '7.11.6',
-          '@babel/preset-env': '7.23.2',
-          '@babel/preset-typescript': '7.22.15',
-          '@babel/plugin-transform-class-properties': '7.22.5',
+    return name;
+  }
+
+  /**
+   * create a minimal env component that provides only a typescript compiler (workspace compile
+   * and build pipeline), taken from the core teambit.typescript/typescript aspect at runtime -
+   * so like setSimpleEnv, it needs NO package installation and no compilation of the env itself
+   * (the plugin file is plain .js). by default it is configured on all components via variants
+   * (like setBitdevNodeEnv), pass variantPattern=undefined to only create the env component.
+   * use it for suites that need components to actually compile (dists) but don't exercise any
+   * other env functionality (tester/linter/etc). it is much faster than installing an env like
+   * the legacy teambit.harmony/node chain or even the modern node env.
+   */
+  setTsEnv(variantPattern: string | undefined = '*', name = 'ts-env'): string {
+    this.fs.outputFile(
+      `${name}/${name}.bit-env.js`,
+      `class TsEnv {
+  name = '${name}';
+  createTsCompiler(context) {
+    // the env context exposes core aspects. the typescript aspect is a core aspect, so no
+    // installation is needed.
+    const typescript = context.getAspect('teambit.typescript/typescript');
+    return typescript.createCjsCompiler({
+      tsconfig: {
+        compilerOptions: {
+          lib: ['es2019'],
+          target: 'es2019',
+          module: 'commonjs',
+          declaration: true,
+          sourceMap: true,
+          allowJs: true,
         },
       },
+      types: [],
+      // compile all capsules in one ts program instead of project-references. it is faster, and
+      // more importantly, project-references require every dependency capsule to have a
+      // tsconfig.json, which the capsule of this env itself (compiler-less, on the default env)
+      // does not have.
+      singleProgramCompilation: true,
     });
-    this.command.install();
-    this.command.compile();
-    return EXTENSIONS_BASE_FOLDER;
+  }
+  compiler() {
+    return (context) => this.createTsCompiler(context);
+  }
+  package() {
+    // the pkg service only duck-types the PackageGenerator class. without it, the package.json
+    // main of the components points to the source file instead of the dist
+    return () => ({
+      packageJsonProps: { main: 'dist/{main}.js', types: '{main}.ts' },
+      npmIgnore: [],
+    });
+  }
+  build() {
+    // the builder service only duck-types the Pipeline class (an object with compute() returning
+    // the build tasks), so there is no need to import @teambit/builder for Pipeline.from()
+    return {
+      compute: (context) => {
+        const compilerAspect = context.getAspect('teambit.compilation/compiler');
+        return [compilerAspect.createTask('TSCompiler', this.createTsCompiler(context))];
+      },
+    };
+  }
+}
+module.exports.default = new TsEnv();
+`
+    );
+    // the env manifest marks the component as an env before it was ever loaded
+    this.fs.outputFile(`${name}/env.jsonc`, `{}`);
+    this.fs.outputFile(`${name}/index.js`, `module.exports = require('./${name}.bit-env');\n`);
+    this.command.addComponent(name);
+    if (variantPattern) {
+      // the env component gets the workspace default-scope, which is not necessarily the remote
+      // scope (e.g. when the workspace was set up with addRemoteScopeAsDefaultScope: false)
+      const envId = `${this.extensions.workspaceJsonc.getDefaultScope()}/${name}`;
+      this.extensions.addExtensionToVariant(variantPattern, envId, {});
+      this.extensions.addExtensionToVariant(variantPattern, 'teambit.envs/envs', { env: envId });
+      // the env component itself must not get the variant config (an env can't be its own env)
+      this.extensions.workspaceJsonc.addToVariant(name, 'propagate', false);
+    }
+    this.command.link();
+    return name;
   }
 
   setEmptyEnv() {
@@ -154,6 +303,49 @@ export default new EmptyEnv();
     this.fs.outputFile('empty-env/index.ts', `export { EmptyEnv } from './empty-env.bit-env';`);
     this.command.addComponent('empty-env');
     this.command.setEnv('empty-env', 'teambit.envs/env');
+    // teambit.envs/env is no longer a core aspect - install it so the .bit-env plugin compiles
+    this.command.install(ENVS_ENV_PACKAGE);
+  }
+
+  /**
+   * set the legacy `teambit.harmony/node` env on the given variant and install its package.
+   * this env used to be a core aspect so no installation was needed, now it must be installed
+   * (with the version pinned in legacy-core-envs.ts, see FIXTURE_ENV_BASE_PACKAGES).
+   * `extraPackages` is for peers the env package needs but the package manager doesn't
+   * auto-install (see NODE_ENV_HOISTED_PEERS for yarn).
+   */
+  setNodeEnv(variantPattern = '*', extraPackages = '') {
+    this.extensions.addExtensionToVariant(variantPattern, 'teambit.harmony/node', {});
+    this.command.install(`${FIXTURE_ENV_BASE_PACKAGES['@teambit/node']} ${extraPackages}`.trim());
+    // the env is loaded only at the end of the first install. run a second install so its
+    // dependency policies (e.g. @types/jest as a dev dep) are applied to the components - the
+    // standard flow for old-style envs (see the "run bit install again" suggestion).
+    this.command.install();
+  }
+
+  /**
+   * install the packages of the legacy `teambit.harmony/aspect` env (and its node env runtime
+   * dependency). needed after configuring the aspect env on a component the old way (versionless).
+   */
+  installAspectEnv() {
+    this.command.install(ASPECT_ENV_PACKAGES.join(' '));
+  }
+
+  /**
+   * set the modern `bitdev.node/node-env` env (env.jsonc based) on the given variant and install
+   * its package. much lighter and faster to install than the legacy `teambit.harmony/node` chain
+   * (a single install, no scope-aspect capsules) - prefer it for suites that just need an env
+   * with a typescript compiler and don't test the legacy-env surface itself.
+   * caveats: its build pipeline (tag/snap with --build) compiles with moduleResolution nodenext,
+   * so relative imports in fixture files must include the `.js` extension; its tester is vitest
+   * (not jest) and its linter is oxlint (not eslint).
+   */
+  setBitdevNodeEnv(variantPattern = '*') {
+    this.extensions.addExtensionToVariant(variantPattern, `${BITDEV_NODE_ENV}@${BITDEV_NODE_ENV_VERSION}`, {});
+    this.extensions.addExtensionToVariant(variantPattern, 'teambit.envs/envs', {
+      env: BITDEV_NODE_ENV,
+    });
+    this.command.install(BITDEV_NODE_ENV_PACKAGE);
   }
 
   setCustomEnv(extensionsBaseFolder = 'node-env', options: SetCustomEnvOpts = {}): string {
@@ -161,9 +353,52 @@ export default new EmptyEnv();
     this.command.addComponent(extensionsBaseFolder);
     this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
     if (!options.skipLink) this.command.link();
-    if (!options.skipInstall) this.command.install();
+    if (!options.skipInstall) {
+      // `bit install` compiles the workspace on its way out, so when this function is going to
+      // compile anyway (right below) that compile is done twice. The workspace compile is the
+      // memory peak of an env-scaffolding test, so let the install skip it and keep the explicit
+      // one. When the caller asked for no compile, the install's compile is the only one there is.
+      this.command.install(
+        [ENVS_ENV_PACKAGE, ...this.getFixtureEnvBasePackages(extensionsBaseFolder)].join(' '),
+        options.skipCompile ? undefined : { 'skip-compile': '' }
+      );
+    }
     if (!options.skipCompile) this.command.compile();
     return extensionsBaseFolder;
+  }
+
+  /**
+   * find which env packages the given fixture imports, so they can be installed (see
+   * FIXTURE_ENV_BASE_PACKAGES).
+   */
+  getFixtureEnvBasePackages(extensionsBaseFolder: string): string[] {
+    const extensionDir = path.join(this.scopes.localPath, extensionsBaseFolder);
+    const allContent = fs
+      .readdirSync(extensionDir)
+      .filter((file) => file.endsWith('.ts'))
+      .map((file) => fs.readFileSync(path.join(extensionDir, file)).toString())
+      .join('\n');
+    return Object.keys(FIXTURE_ENV_BASE_PACKAGES)
+      .filter((pkg) => allContent.includes(`'${pkg}'`) || allContent.includes(`"${pkg}"`))
+      .map((pkg) => FIXTURE_ENV_BASE_PACKAGES[pkg]);
+  }
+
+  /**
+   * an env whose only job is to carry configuration - its env.jsonc policy - for the components
+   * that use it. the fixture extends no base env, so the only thing installed for it is the
+   * `.bit-env` plugin provider (teambit.envs/env). the default fixture of `setCustomNewEnv`
+   * (`react-based-env`) instead drags in @teambit/react.react-env: a closure of thousands of
+   * packages, installed in the workspace and then again in the env's capsule on `tag --build` -
+   * enough, on top of the plugin provider's own closure, to OOM-kill a CI node.
+   *
+   * it provides no compiler/tester/preview, so use it only where nothing has to be built.
+   */
+  setPolicyOnlyEnv(
+    envJsoncOptions: GenerateEnvJsoncOptions,
+    targetFolder = 'custom-env/env',
+    id: string = targetFolder
+  ): string {
+    return this.setCustomNewEnv('policy-only-env', [], envJsoncOptions, false, targetFolder, id);
   }
 
   /**
@@ -177,7 +412,12 @@ export default new EmptyEnv();
     envJsoncOptions: GenerateEnvJsoncOptions = { policy: ENV_POLICY },
     runInstall = true,
     targetFolder?: string,
-    id?: string
+    id?: string,
+    // the env of the generated env itself. defaults to the legacy teambit.envs/env. pass the
+    // real-world envs-of-envs (e.g. `bitdev.general/envs/bit-env@x.y.z`, what `bit create
+    // react-env` produces) to exercise the regular-external-env loading path - remember to
+    // include its package in basePackages so it gets installed.
+    envsEnv = 'teambit.envs/env'
   ): string {
     const addOptions = id ? { i: id } : {};
     // Pin the base react-env to a React 18 version, but only for envs that actually pull in react-env.
@@ -203,8 +443,8 @@ export default new EmptyEnv();
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder, undefined, targetFolder);
     this.command.addComponent(targetFolder || extensionsBaseFolder, addOptions);
     this.fixtures.generateEnvJsoncFile(targetFolder || extensionsBaseFolder, envJsoncOptions);
-    this.extensions.addExtensionToVariant(targetFolder || extensionsBaseFolder, 'teambit.envs/env');
-    this.command.setEnv(id || extensionsBaseFolder, 'teambit.envs/env');
+    this.extensions.addExtensionToVariant(targetFolder || extensionsBaseFolder, envsEnv);
+    this.command.setEnv(id || extensionsBaseFolder, envsEnv);
     this.command.link();
     if (runInstall) {
       this.command.install(basePackages.join(' '));
