@@ -558,18 +558,34 @@ commands:
           steps:
             - run:
                 name: 'halt when the diff is docs-only (*.md / *.mdx)'
-                # any uncertainty (master branch, missing merge-base, empty diff) falls back to
-                # running the full suite. doc files under e2e/ are treated as test changes, not
-                # docs, so they never trigger a skip.
+                # any uncertainty (master branch, missing merge-base, unreadable or empty diff)
+                # falls back to running the full suite. doc files under e2e/ are treated as test
+                # changes, not docs, so they never trigger a skip.
+                #
+                # every git command here has to stay off the network: `checkout` makes a blobless
+                # clone (--filter=blob:none), and this container has no ssh key or known_hosts of
+                # its own (the ssh cache is restored further down), so a git that reaches for a
+                # missing blob sits on ssh's host-key prompt until the step times out - taking
+                # every step after it, including the one that puts `bit` on PATH, down with it.
+                # hence --no-renames: inexact rename detection is the one thing `--name-only`
+                # needs blob contents for. it also widens the file list (both sides of a rename
+                # instead of just the new path), which can only make the skip more conservative.
+                # BatchMode/GIT_TERMINAL_PROMPT and the timeouts are the backstop: anything else
+                # that still tries to talk to the remote fails, or gives up, in seconds - and the
+                # fallback for that is the full suite, never a broken job.
                 command: |
                   if [ "$CIRCLE_BRANCH" = "master" ]; then
                     echo "on master - running the full suite"; exit 0
                   fi
                   cd bit
-                  if ! BASE=$(git merge-base HEAD origin/master 2>/dev/null); then
+                  export GIT_TERMINAL_PROMPT=0
+                  export GIT_SSH_COMMAND='ssh -o BatchMode=yes'
+                  if ! BASE=$(timeout 60 git merge-base HEAD origin/master 2>/dev/null); then
                     echo "cannot determine merge-base with origin/master - running the full suite"; exit 0
                   fi
-                  CHANGED_FILES=$(git diff --name-only "$BASE" HEAD)
+                  if ! CHANGED_FILES=$(timeout 60 git diff --name-only --no-renames "$BASE" HEAD 2>/dev/null); then
+                    echo "cannot diff against merge-base $BASE - running the full suite"; exit 0
+                  fi
                   if [ -z "$CHANGED_FILES" ]; then
                     echo "empty diff against merge-base - running the full suite"; exit 0
                   fi
