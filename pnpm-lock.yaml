@@ -6684,7 +6684,7 @@ importers:
         version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(react@19.2.7)
+        version: file:scopes/harmony/application(chai@5.2.1)(react@19.2.7)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(supports-color@9.4.0)(uglify-js@3.19.3)
@@ -7749,7 +7749,7 @@ importers:
         version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(react@19.2.7)
+        version: file:scopes/harmony/application(chai@4.3.0)(react@19.2.7)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(supports-color@9.4.0)(uglify-js@3.19.3)
@@ -8796,7 +8796,7 @@ importers:
         version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(react@18.3.1)
+        version: file:scopes/harmony/application(chai@4.3.0)(react@18.3.1)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(supports-color@9.4.0)(uglify-js@3.19.3)
@@ -9855,7 +9855,7 @@ importers:
         version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(react@19.2.7)
+        version: file:scopes/harmony/application(chai@4.3.0)(react@19.2.7)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(supports-color@9.4.0)(uglify-js@3.19.3)
@@ -10890,7 +10890,7 @@ importers:
         version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(react@19.2.7)
+        version: file:scopes/harmony/application(chai@4.3.0)(react@19.2.7)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(supports-color@9.4.0)(uglify-js@3.19.3)
@@ -11925,7 +11925,7 @@ importers:
         version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
-        version: file:scopes/harmony/application(react@19.2.7)
+        version: file:scopes/harmony/application(chai@4.3.0)(react@19.2.7)
       '@teambit/aspect':
         specifier: workspace:*
         version: file:scopes/harmony/aspect(@babel/core@7.26.9)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(babel-plugin-macros@3.1.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(supports-color@9.4.0)(uglify-js@3.19.3)
@@ -18355,6 +18355,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -28863,6 +28866,7 @@ packages:
   '@teambit/application@file:scopes/harmony/application':
     resolution: {directory: scopes/harmony/application, type: directory}
     peerDependencies:
+      chai: 5.2.1
       react: 19.2.7
 
   '@teambit/aspect-loader@file:scopes/harmony/aspect-loader':
@@ -52111,7 +52115,7 @@ snapshots:
       - graphql
       - supports-color
 
-  '@teambit/application@file:scopes/harmony/application(react@18.3.1)':
+  '@teambit/application@file:scopes/harmony/application(chai@4.3.0)(react@18.3.1)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
@@ -52121,6 +52125,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       chalk: 4.1.2
       lodash: 4.17.21
       open: 8.4.2
@@ -52129,7 +52134,7 @@ snapshots:
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
 
-  '@teambit/application@file:scopes/harmony/application(react@19.2.7)':
+  '@teambit/application@file:scopes/harmony/application(chai@4.3.0)(react@19.2.7)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
@@ -52139,6 +52144,26 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
+      chalk: 4.1.2
+      lodash: 4.17.21
+      open: 8.4.2
+      p-map-series: 2.1.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+
+  '@teambit/application@file:scopes/harmony/application(chai@5.2.1)(react@19.2.7)':
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
+      '@teambit/harmony': 0.4.12
+      '@teambit/lane-id': 0.0.312
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       chalk: 4.1.2
       lodash: 4.17.21
       open: 8.4.2
