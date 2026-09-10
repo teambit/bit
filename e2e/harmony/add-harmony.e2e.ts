@@ -101,7 +101,39 @@ describe('add command on Harmony', function () {
       });
     });
   });
-  describe('component issues on the workspace-root component', () => {
+  describe('writing the workspace-root component to the filesystem', () => {
+    let firstSnap: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+      firstSnap = helper.command.getHead('ws-root');
+      helper.fs.outputFile('README.md', '# workspace root v2\n');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+    });
+    it('should check out an earlier version of it without throwing', () => {
+      // the writer used to hard-fail on a rootDir of "." with a non-BitError.
+      expect(() => helper.command.checkoutVersion(firstSnap, 'ws-root', '-x')).to.not.throw();
+    });
+    describe('importing it into another workspace', () => {
+      before(() => {
+        helper.command.export();
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponentWithoutInstall('ws-root');
+      });
+      it('should not write a .bitmap outside the workspace root', () => {
+        // a .bitmap inside a component dir turns that dir into a broken nested workspace - every
+        // bit command run from there operates on it instead of on the real workspace.
+        const bitmaps = helper.fs.getConsumerFiles('.bitmap', true, false);
+        expect(bitmaps).to.deep.equal([path.normalize('.bitmap')]);
+      });
+    });
+  });
+  describe('env of the workspace-root component', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
@@ -109,24 +141,30 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
     });
-    it('should not report issues that only apply to a component with an env and a compiler', () => {
-      const withIssues = helper.command
-        .statusJson()
-        .componentsWithIssues.map((comp) => comp.id)
-        .filter((id: string) => id.includes('ws-root'));
-      expect(withIssues).to.have.lengthOf(0);
+    it('should default to the empty env, not to the regular default env', () => {
+      // it is a bag of the workspace's own config files - nothing compiles it, tests it, or
+      // imports it as a package. the regular default env would give it a toolchain it can't use.
+      expect(helper.env.getComponentEnv('ws-root')).to.equal('teambit.harmony/empty-env');
     });
-    it('should snap without needing --ignore-issues', () => {
-      expect(() => helper.command.snapComponentWithoutBuild('ws-root')).to.not.throw();
+    it('should leave the env of a regular component alone', () => {
+      expect(helper.env.getComponentEnv('comp1')).to.equal('teambit.harmony/node');
+    });
+    it('should not report compiler-derived issues, while a regular component still does', () => {
+      const issuesOf = (name: string): string[] => {
+        const comp = helper.command.statusJson().componentsWithIssues.find((c) => c.id.includes(name));
+        return comp ? comp.issues.map((issue) => issue.type) : [];
+      };
+      // the empty env has no compiler, so "missing dists" can never apply to the root component.
+      expect(issuesOf('ws-root')).to.not.include('MissingDists');
+      expect(issuesOf('comp1')).to.include('MissingDists');
     });
     describe('when a root file has a relative import into a component', () => {
       before(() => {
         helper.fs.outputFile('app.js', "const comp1 = require('./comp1');\n");
       });
-      it('should still report the relative-import issue', () => {
-        // this one is NOT irrelevant to the root component. suppressing it would replace an
-        // actionable issue with a "this error should have never happened" failure on saving the
-        // Version object.
+      it('should report the relative-import issue like any other component', () => {
+        // the root component is not exempt from this one. without it, the user gets an
+        // "this error should have never happened" failure when the Version object is saved.
         expect(helper.command.getAllIssuesFromStatus()).to.include('RelativeComponentsAuthored');
       });
     });
