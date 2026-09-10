@@ -19,6 +19,7 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
@@ -272,8 +273,11 @@ export class ComponentWriterMain {
     component: ConsumerComponent,
     opts: ManyComponentsWriterParams
   ): ComponentWriterProps {
+    // "--path ." resolves to an empty relative path. normalize it to "." so it is a real rootDir
+    // rather than a falsy one that later turns into an undefined path segment.
     const componentRootDir: PathLinuxRelative = opts.writeToPath
-      ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath)))
+      ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath))) ||
+        WORKSPACE_ROOT_DIR
       : this.consumer.composeRelativeComponentPath(component.id);
     // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
     const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
@@ -351,6 +355,11 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     if (!isDir(componentDir)) {
       throw new BitError(`unable to import to ${componentDir} because it's a file`);
     }
+    // the workspace root is never empty - it holds .bit, .bitmap and workspace.jsonc - so "not
+    // empty" says nothing about a conflict there. the target is only reachable for a workspace-root
+    // component (see ComponentWriter.addComponentToBitMap), whose files are meant to land on top of
+    // the freshly initialized ones when restoring a workspace from its scope.
+    if (componentDirRelative === WORKSPACE_ROOT_DIR) return;
     if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
       throw new BitError(
         `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`

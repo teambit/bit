@@ -174,6 +174,25 @@ describe('add command on Harmony', function () {
         expect(bitmaps).to.deep.equal([path.normalize('.bitmap')]);
       });
     });
+    describe('importing it onto the root of an empty workspace', () => {
+      // this is how a git-free workspace is restored from its scope: the root component's files
+      // land on top of the freshly initialized workspace, at the root.
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponentWithoutInstall('ws-root', '--path .');
+      });
+      it('should write its files at the workspace root', () => {
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# workspace root v2\n');
+      });
+      it('should record "." as its rootDir', () => {
+        expect(helper.bitMap.read()['ws-root'].rootDir).to.equal('.');
+      });
+      it('should leave the live .bitmap alone rather than overwrite it with the exported one', () => {
+        // the exported .bitmap lists comp1. the restored workspace must not inherit that entry.
+        expect(helper.bitMap.read()).to.not.have.property('comp1');
+      });
+    });
   });
   describe('env of the workspace-root component', () => {
     before(() => {
