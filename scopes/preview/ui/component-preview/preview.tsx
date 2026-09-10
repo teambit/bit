@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 import type { IframeHTMLAttributes } from 'react';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import classNames from 'classnames';
 import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
@@ -120,24 +120,9 @@ export function ComponentPreview({
   const isScaling = component.preview?.isScaling;
   const currentRef = isScaling ? iframeRef : heightIframeRef;
   const [forceVisible, setForceVisible] = useState(false);
-  // the mounted iframe is tracked in state, not only in a ref, because the connections wired
-  // to it (pubsub, penpal) live in effects. a ref assignment doesn't re-render, so effects
-  // keyed on `ref.current` read the *previous* element during the render that replaces it and
-  // never re-run — leaving both connections bound to a detached iframe. `key` below replaces
-  // the element whenever the sandbox changes, so that has to work.
-  const [iframeEl, setIframeEl] = useState<HTMLIFrameElement | null>(null);
-  const attachIframe = useCallback(
-    (node: HTMLIFrameElement | null) => {
-      // preserve which of the two refs owns the node: only the active one is populated,
-      // and `useIframeContentHeight` polls its own ref for the legacy (non-scaling) path.
-      currentRef.current = node;
-      setIframeEl(node);
-    },
-    [currentRef]
-  );
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
-  usePubSubIframe(pubsub && iframeEl ? { current: iframeEl } : undefined);
+  usePubSubIframe(pubsub ? currentRef : undefined);
   // const pubsubContext = usePubSub();
   // pubsubContext?.connect(iframeHeight);
 
@@ -181,10 +166,9 @@ export function ComponentPreview({
   }, [component.id.toString(), onLoad, propagateError, onPreviewError]);
 
   useEffect(() => {
-    // penpal is only wired for scaling previews — they are the ones that own `iframeRef`.
-    if (!isScaling || !iframeEl) return undefined;
-    const connection = connectToChild({
-      iframe: iframeEl,
+    if (!iframeRef.current) return;
+    connectToChild({
+      iframe: iframeRef.current,
       methods: {
         pub: (event, message) => {
           if (message.type === 'preview-size') {
@@ -198,10 +182,7 @@ export function ComponentPreview({
         },
       },
     });
-    // tear the old connection down when the element is replaced, otherwise every sandbox
-    // change would leave another live penpal listener behind.
-    return () => connection.destroy();
-  }, [iframeEl, isScaling]);
+  }, [iframeRef?.current]);
 
   const theme = useThemePicker();
   const themeParam = theme?.current?.themeName ? `theme=${theme.current.themeName}` : '';
@@ -229,12 +210,8 @@ export function ComponentPreview({
     <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
-        // a `sandbox` change on a live iframe only applies to its next navigation, so keying
-        // on the value remounts the iframe and the new flags apply from the first load.
-        // empty string means "no permissions configured" and renders without the attribute.
-        key={`preview-iframe-${sandbox || ''}`}
         sandbox={sandbox || undefined}
-        ref={attachIframe}
+        ref={currentRef}
         style={{
           ...style,
           height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),
