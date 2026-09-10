@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { logger } from '@teambit/legacy.logger';
-import { BitMap } from './bit-map';
+import { BitMap, normalizeBitmapContentForVersioning } from './bit-map';
 import { WORKSPACE_ROOT_DIR } from './component-map';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
@@ -132,6 +132,42 @@ describe('BitMap', function () {
       bitMap.addComponent(nestedComponentParams);
       expect(bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR)).to.deep.equal(['packages/comp1']);
       expect(bitMap.getNestedRootDirs('packages/comp1')).to.deep.equal([]);
+    });
+  });
+  describe('normalizeBitmapContentForVersioning', () => {
+    const rawBitmap = JSON.stringify(
+      {
+        comp1: {
+          name: 'comp1',
+          scope: 'my-scope',
+          version: '0a14284ddaadde623d5c11f5511594485a14b3c8',
+          defaultScope: 'my-org.demo',
+          mainFile: 'index.ts',
+          rootDir: 'comp1',
+        },
+        '$schema-version': '17.0.0',
+      },
+      null,
+      4
+    );
+    let normalized: string;
+    let parsed: Record<string, any>;
+    before(() => {
+      normalized = normalizeBitmapContentForVersioning(rawBitmap);
+      parsed = JSON.parse(normalized.slice(normalized.indexOf('{')));
+    });
+    it('should empty the fields that change on every snap and export', () => {
+      expect(parsed.comp1.version).to.equal('');
+      expect(parsed.comp1.scope).to.equal('');
+    });
+    it('should keep the durable map intact', () => {
+      expect(parsed.comp1.rootDir).to.equal('comp1');
+      expect(parsed.comp1.mainFile).to.equal('index.ts');
+      expect(parsed.comp1.defaultScope).to.equal('my-org.demo');
+      expect(parsed['$schema-version']).to.equal('17.0.0');
+    });
+    it('should be idempotent, otherwise the root component would never converge', () => {
+      expect(normalizeBitmapContentForVersioning(normalized)).to.equal(normalized);
     });
   });
 });

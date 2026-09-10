@@ -41,10 +41,15 @@ export type Config = { [aspectId: string]: Record<string, any> | '-' };
 export const WORKSPACE_ROOT_DIR = '.';
 
 /**
- * workspace-internal paths. relevant only for the workspace-root component - for any other
- * component these live outside its root-dir and are never reached by the scan.
+ * paths the workspace-root component must never own. relevant only for that component - for any
+ * other component these live outside its root-dir and are never reached by the scan.
+ *
+ * note that `.bitmap` is deliberately NOT here. it is the map of the workspace and a git-free
+ * workspace has to be able to restore it, so the root component tracks it like any other file.
+ * `.bit` (the local object store) and `.git` are the outputs of versioning, not sources, so they
+ * stay excluded.
  */
-const WORKSPACE_ROOT_IGNORE_LIST = [`${BIT_HIDDEN_DIR}/**`, BIT_MAP, `${DOT_GIT_DIR}/**`];
+const WORKSPACE_ROOT_IGNORE_LIST = [`${BIT_HIDDEN_DIR}/**`, `${DOT_GIT_DIR}/**`];
 
 export type ComponentMapFile = {
   relativePath: PathLinux;

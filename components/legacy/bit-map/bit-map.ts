@@ -1044,6 +1044,30 @@ type OutputFileParams = {
   prefixMessage?: string;
 };
 
+/**
+ * the workspace-root component tracks `.bitmap` so a git-free workspace can be restored from the
+ * scope. the `version` and `scope` of every entry change on each snap and export - including the
+ * root component's own entry - so versioning them verbatim would leave that component modified
+ * immediately after every snap, forever, and never converge.
+ *
+ * only the durable part of the map is versioned: which components exist and where they live. the
+ * versions themselves are restored from the component heads on import, which is the correct source
+ * for them anyway.
+ */
+export function normalizeBitmapContentForVersioning(rawContent: string): string {
+  const parsed = json.parse(rawContent, undefined, true) as Record<string, any> | undefined;
+  if (!parsed) return rawContent;
+  Object.keys(parsed).forEach((key) => {
+    const entry = parsed[key];
+    // component entries are objects with a mainFile. skips the schema field (a string) and the
+    // lanes key (an object without a mainFile).
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry) || !('mainFile' in entry)) return;
+    if ('version' in entry) entry.version = '';
+    if ('scope' in entry) entry.scope = '';
+  });
+  return `${AUTO_GENERATED_MSG}${BITMAP_PREFIX_MESSAGE}${JSON.stringify(parsed, null, 4)}`;
+}
+
 async function outputFile({
   filePath,
   content,

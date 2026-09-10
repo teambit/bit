@@ -241,7 +241,14 @@ export default class AddComponents {
       }
       const caseSensitive = false;
       const existingIdOfFile = this.bitMap.getComponentIdByPath(file.relativePath, caseSensitive);
-      const idOfFileIsDifferent = existingIdOfFile && !existingIdOfFile.isEqual(parsedBitId);
+      // the workspace-root component owns every file no other component claims, so it "owns" this
+      // file only until a more specific component is added for it. the component being added wins,
+      // and the root subtracts the new root-dir from its own file-set on the next scan.
+      const existingIsWorkspaceRoot = existingIdOfFile
+        ? this.bitMap.getComponentIfExist(existingIdOfFile, { ignoreVersion: true })?.rootDir === WORKSPACE_ROOT_DIR
+        : false;
+      const idOfFileIsDifferent =
+        existingIdOfFile && !existingIdOfFile.isEqual(parsedBitId) && !existingIsWorkspaceRoot;
       if (idOfFileIsDifferent) {
         // not imported component file but exists in bitmap
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

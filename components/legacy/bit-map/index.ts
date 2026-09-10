@@ -5,6 +5,7 @@ export {
   CURRENT_BITMAP_SCHEMA,
   SCHEMA_FIELD,
   LANE_KEY,
+  normalizeBitmapContentForVersioning,
 } from './bit-map';
 export { MissingBitMapComponent, MissingMainFile, InvalidBitMap } from './exceptions';
 export {
