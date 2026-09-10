@@ -7,6 +7,7 @@ import type { AbstractVinyl } from '@teambit/component.sources';
 import type { Capsule } from '@teambit/isolator';
 import type { ArtifactDefinition, ComponentResult } from '@teambit/builder';
 import type { BundlerContext, BundlerHtmlConfig, BundlerResult } from '@teambit/bundler';
+import { PHANTOM_HOST_CORE_ASPECTS } from '@teambit/bundler';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { PkgMain } from '@teambit/pkg';
 import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
@@ -49,7 +50,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
         outputPath,
         /* It's a path to the root of the host component. */
         // hostRootDir, handle this
-        hostDependencies: peers,
+        hostDependencies: [...peers, ...PHANTOM_HOST_CORE_ASPECTS],
         aliasHostDependencies: true,
       },
     ];
