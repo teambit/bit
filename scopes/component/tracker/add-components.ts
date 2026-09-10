@@ -11,7 +11,7 @@ import type { BitIdStr } from '@teambit/legacy-bit-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { PACKAGE_JSON, VERSION_DELIMITER, AUTO_GENERATED_STAMP } from '@teambit/legacy.constants';
 import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
-import { ComponentMap, getIgnoreListHarmony, MissingMainFile } from '@teambit/legacy.bit-map';
+import { ComponentMap, getIgnoreListHarmony, MissingMainFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { DuplicateIds, EmptyDirectory, ExcludedMainFile, MainFileIsDir, NoFiles, PathsNotExist } from './exceptions';
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
@@ -291,9 +291,13 @@ export default class AddComponents {
       if (this.trackDirFeature) throw new Error('track dir should not calculate the rootDir');
       if (foundComponentFromBitMap) return foundComponentFromBitMap.rootDir;
       if (!trackDir) throw new Error(`addOrUpdateComponentInBitMap expect to have trackDir for non-legacy workspace`);
-      const fileNotInsideTrackDir = componentFiles.find(
-        (file) => !pathNormalizeToLinux(file.relativePath).startsWith(`${pathNormalizeToLinux(trackDir)}/`)
-      );
+      // every file in the workspace is inside the workspace root, so there is nothing to check.
+      const fileNotInsideTrackDir =
+        trackDir === WORKSPACE_ROOT_DIR
+          ? undefined
+          : componentFiles.find(
+              (file) => !pathNormalizeToLinux(file.relativePath).startsWith(`${pathNormalizeToLinux(trackDir)}/`)
+            );
       if (fileNotInsideTrackDir) {
         // we check for this error before. however, it's possible that a user have one trackDir
         // and another dir for the tests.
@@ -492,13 +496,23 @@ you can add the directory these files are located at and it'll change the root d
     if (this.id) {
       finalBitId = this._getIdAccordingToExistingComponent(this.id);
     }
-    const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
+    // when the tracked dir is the workspace root itself, the relative path is empty. normalize it
+    // to "." so it is a real rootDir rather than a falsy one.
+    const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath) || WORKSPACE_ROOT_DIR;
     this._throwForOutsideConsumer(relativeComponentPath);
     throwForExistingParentDir(this.bitMap, relativeComponentPath);
-    const matches = await glob(pathNormalizeToLinux(path.join(relativeComponentPath, '**')), {
+    const allMatches = await glob(pathNormalizeToLinux(path.join(relativeComponentPath, '**')), {
       cwd: this.consumer.getPath(),
       nodir: true,
     });
+    // files of components nested inside this dir belong to them, not to the component being added.
+    const nestedRootDirs = this.bitMap.getNestedRootDirs(relativeComponentPath);
+    const matches = nestedRootDirs.length
+      ? allMatches.filter((match: PathOsBased) => {
+          const linuxMatch = pathNormalizeToLinux(match);
+          return !nestedRootDirs.some((nestedRootDir) => linuxMatch.startsWith(`${nestedRootDir}/`));
+        })
+      : allMatches;
 
     if (!matches.length) throw new EmptyDirectory(componentPath);
 
@@ -656,6 +670,9 @@ function throwForExistingParentDir(bitMap: BitMap, relativeToConsumerPath: PathO
   };
   bitMap.components.forEach((componentMap) => {
     if (!componentMap.rootDir) return;
+    // the workspace-root component contains every other component by design. it subtracts their
+    // root-dirs from its own file-set, so tracking a dir inside it is not a conflict.
+    if (componentMap.rootDir === WORKSPACE_ROOT_DIR) return;
     if (isParentDir(componentMap.rootDir)) {
       throw new ParentDirTracked(
         componentMap.rootDir,

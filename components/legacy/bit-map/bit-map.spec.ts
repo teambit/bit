@@ -3,6 +3,7 @@ import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { logger } from '@teambit/legacy.logger';
 import { BitMap } from './bit-map';
+import { WORKSPACE_ROOT_DIR } from './component-map';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
 const getBitmapInstance = async () => {
@@ -88,6 +89,49 @@ describe('BitMap', function () {
       expect(() => bitMap.loadComponents(invalidBitMap, 'my-scope')).to.throw(
         '.bitmap entry of "scope/comp1" is invalid, it has a scope-name "scope", however, it does not have any version'
       );
+    });
+  });
+  describe('workspace-root component', () => {
+    const rootComponentParams = {
+      componentId: ComponentID.fromObject({ name: 'ws-root' }, 'my-scope'),
+      files: [{ name: 'README.md', relativePath: 'README.md', test: false }],
+      mainFile: 'README.md',
+      defaultScope: 'my-scope',
+      rootDir: WORKSPACE_ROOT_DIR,
+    };
+    const nestedComponentParams = {
+      componentId: ComponentID.fromObject({ name: 'comp1' }, 'my-scope'),
+      files: [{ name: 'index.js', relativePath: 'index.js', test: false }],
+      mainFile: 'index.js',
+      defaultScope: 'my-scope',
+      rootDir: 'packages/comp1',
+    };
+    it('should allow a rootDir of "." to contain other components, in both add orders', async () => {
+      const rootFirst = await getBitmapInstance();
+      rootFirst.addComponent(rootComponentParams);
+      expect(() => rootFirst.addComponent(nestedComponentParams)).to.not.throw();
+
+      const nestedFirst = await getBitmapInstance();
+      nestedFirst.addComponent(nestedComponentParams);
+      expect(() => nestedFirst.addComponent(rootComponentParams)).to.not.throw();
+    });
+    it('should keep rejecting nesting between two non-root components', async () => {
+      const bitMap = await getBitmapInstance();
+      bitMap.addComponent(nestedComponentParams);
+      expect(() =>
+        bitMap.addComponent({
+          ...nestedComponentParams,
+          componentId: ComponentID.fromObject({ name: 'comp2' }, 'my-scope'),
+          rootDir: 'packages/comp1/nested',
+        })
+      ).to.throw();
+    });
+    it('getNestedRootDirs should return the nested components for the root, and nothing for a leaf', async () => {
+      const bitMap = await getBitmapInstance();
+      bitMap.addComponent(rootComponentParams);
+      bitMap.addComponent(nestedComponentParams);
+      expect(bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR)).to.deep.equal(['packages/comp1']);
+      expect(bitMap.getNestedRootDirs('packages/comp1')).to.deep.equal([]);
     });
   });
 });

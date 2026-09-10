@@ -3,7 +3,14 @@ import globby from 'globby';
 import ignore from 'ignore';
 import { pickBy, isNil, sortBy, isEmpty } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
-import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy.constants';
+import {
+  BIT_HIDDEN_DIR,
+  BIT_MAP,
+  DOT_GIT_DIR,
+  Extensions,
+  PACKAGE_JSON,
+  IGNORE_ROOT_ONLY_LIST,
+} from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { isValidPath } from '@teambit/legacy.utils';
@@ -25,6 +32,19 @@ import OutsideRootDir from './exceptions/outside-root-dir';
 import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
+
+/**
+ * rootDir of a component that owns the workspace root. such a component holds the files that no
+ * other component claims - e.g. the workspace config, CI config, README and license files.
+ * it is the only rootDir allowed to contain other components' root-dirs.
+ */
+export const WORKSPACE_ROOT_DIR = '.';
+
+/**
+ * workspace-internal paths. relevant only for the workspace-root component - for any other
+ * component these live outside its root-dir and are never reached by the scan.
+ */
+const WORKSPACE_ROOT_IGNORE_LIST = [`${BIT_HIDDEN_DIR}/**`, BIT_MAP, `${DOT_GIT_DIR}/**`];
 
 export type ComponentMapFile = {
   relativePath: PathLinux;
@@ -265,13 +285,17 @@ export class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumerPath: PathOsBasedAbsolute, ignoredFiles?: string[]): Promise<void> {
+  async trackDirectoryChangesHarmony(
+    consumerPath: PathOsBasedAbsolute,
+    ignoredFiles?: string[],
+    excludeDirs: PathLinux[] = []
+  ): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;
     }
     const gitIgnore = await getGitIgnoreHarmony(consumerPath, ignoredFiles);
-    this.files = await getFilesByDir(trackDir, consumerPath, gitIgnore);
+    this.files = await getFilesByDir(trackDir, consumerPath, gitIgnore, excludeDirs);
   }
 
   updateNextVersion(nextVersion: NextVersion) {
@@ -347,10 +371,8 @@ export class ComponentMap {
     if (!isValidPath(this.mainFile)) {
       throw new ValidationError(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
     }
-    if (this.rootDir && !isValidPath(this.rootDir)) {
-      throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
-    }
-    if (this.rootDir && this.rootDir === '.') {
+    // "." is valid - it marks the component that owns the workspace root. see WORKSPACE_ROOT_DIR.
+    if (this.rootDir && this.rootDir !== WORKSPACE_ROOT_DIR && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }
     if (this.nextVersion && !this.nextVersion.version) {
@@ -382,19 +404,39 @@ if you renamed the mainFile, please re-add the component with the "--main" flag 
   }
 }
 
-export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
-  const matches = await globby(dir, {
+/**
+ * scan a component's root-dir for its files.
+ *
+ * `excludeDirs` holds the root-dirs of components nested inside `dir`. their files belong to the
+ * nested component, not to this one. this is what makes a workspace-root component (rootDir ".")
+ * possible: it owns every file that no other component claims.
+ */
+export async function getFilesByDir(
+  dir: string,
+  consumerPath: string,
+  gitIgnore: any,
+  excludeDirs: PathLinux[] = []
+): Promise<ComponentMapFile[]> {
+  const isWorkspaceRoot = dir === WORKSPACE_ROOT_DIR;
+  const matches = await globby(isWorkspaceRoot ? '**' : dir, {
     cwd: consumerPath,
     dot: true,
     onlyFiles: true,
     // must ignore node_modules at this stage, although we check for gitignore later on.
     // otherwise, it hurts performance dramatically for components that have node_modules in the comp-dir.
-    ignore: [`${dir}/node_modules/`],
+    ignore: [
+      isWorkspaceRoot ? '**/node_modules/**' : `${dir}/node_modules/`,
+      ...(isWorkspaceRoot ? WORKSPACE_ROOT_IGNORE_LIST : []),
+      ...excludeDirs.map((excludeDir) => `${excludeDir}/**`),
+    ],
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches: string[] = gitIgnore.filter(matches);
-  // the path is relative to consumer. remove the rootDir.
-  const relativePathsLinux = filteredMatches.map((match) => pathNormalizeToLinux(match).replace(`${dir}/`, ''));
+  // the path is relative to consumer. remove the rootDir. for the workspace-root component the
+  // paths are already relative to the consumer, so there is nothing to strip.
+  const relativePathsLinux = filteredMatches.map((match) =>
+    isWorkspaceRoot ? pathNormalizeToLinux(match) : pathNormalizeToLinux(match).replace(`${dir}/`, '')
+  );
   const filteredByIgnoredFromRoot = relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
   const bitOrGitIgnore = filteredByIgnoredFromRoot.includes(BIT_IGNORE)
     ? await getBitIgnoreFile(dir)

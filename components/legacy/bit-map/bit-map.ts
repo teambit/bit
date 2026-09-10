@@ -28,7 +28,7 @@ import type {
 } from '@teambit/toolbox.path.path';
 import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { ComponentMapFile, Config, PathChange } from './component-map';
-import { ComponentMap, getFilesByDir, getGitIgnoreHarmony } from './component-map';
+import { ComponentMap, getFilesByDir, getGitIgnoreHarmony, WORKSPACE_ROOT_DIR } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
@@ -99,15 +99,20 @@ export class BitMap {
 
   /**
    * in case the added component's root-dir is a parent-dir of other components
-   * or other component's root-dir is a parent root-dir of this component, throw an error
+   * or other component's root-dir is a parent root-dir of this component, throw an error.
+   *
+   * the workspace-root component (rootDir ".") is the one exception - it is allowed to contain
+   * other components. its file-set subtracts their root-dirs, so the two never claim the same file.
    */
   private throwForExistingParentDir({ id, rootDir }: ComponentMap) {
+    if (rootDir === WORKSPACE_ROOT_DIR) return;
     const isParentDir = (parent: string, child: string) => {
       const relative = path.relative(parent, child);
       return relative && !relative.startsWith('..');
     };
     this.components.forEach((existingComponentMap) => {
       if (!existingComponentMap.rootDir) return;
+      if (existingComponentMap.rootDir === WORKSPACE_ROOT_DIR) return;
       if (isParentDir(existingComponentMap.rootDir, rootDir)) {
         throw new BitError(
           `unable to add "${id.toString()}", its rootDir ${rootDir} is inside ${
@@ -212,6 +217,21 @@ export class BitMap {
     delete componentsJson[LANE_KEY];
   }
 
+  /**
+   * root-dirs of the components nested inside the given root-dir. their files belong to them, so
+   * the containing component must subtract them from its own file-set.
+   */
+  getNestedRootDirs(rootDir: PathLinuxRelative): PathLinuxRelative[] {
+    return this.components
+      .map((componentMap) => componentMap.rootDir)
+      .filter((nested): nested is PathLinuxRelative => {
+        if (!nested || nested === rootDir) return false;
+        if (rootDir === WORKSPACE_ROOT_DIR) return nested !== WORKSPACE_ROOT_DIR;
+        const relative = path.relative(rootDir, nested);
+        return Boolean(relative) && !relative.startsWith('..');
+      });
+  }
+
   async loadFiles() {
     const gitIgnore = await getGitIgnoreHarmony(this.projectRoot, this.ignoredFiles);
     await Promise.all(
@@ -219,7 +239,12 @@ export class BitMap {
         const rootDir = componentMap.rootDir;
         if (!rootDir) return;
         try {
-          componentMap.files = await getFilesByDir(rootDir, this.projectRoot, gitIgnore);
+          componentMap.files = await getFilesByDir(
+            rootDir,
+            this.projectRoot,
+            gitIgnore,
+            this.getNestedRootDirs(rootDir)
+          );
           componentMap.recentlyTracked = true;
         } catch (err: any) {
           componentMap.files = [];

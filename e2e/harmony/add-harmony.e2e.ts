@@ -4,6 +4,7 @@ import { ParentDirTracked, AddingIndividualFiles } from '@teambit/tracker';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
+const { expect } = chai;
 
 describe('add command on Harmony', function () {
   this.timeout(0);
@@ -35,6 +36,31 @@ describe('add command on Harmony', function () {
       const cmd = () => helper.command.addComponent('comp1/foo');
       const error = new ParentDirTracked('comp1', `${helper.scopes.remote}/comp1`, path.normalize('comp1/foo'));
       helper.general.expectToThrow(cmd, error);
+    });
+  });
+  describe('adding the workspace root as a component', () => {
+    let rootFiles: string[];
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      // written after tracking. the root file-set is re-scanned, not frozen at add-time.
+      helper.fs.outputFile('LICENSE', 'MIT\n');
+      rootFiles = helper.command.showComponentParsed('ws-root').files.map((file) => file.relativePath);
+    });
+    it('should save "." as the rootDir', () => {
+      expect(helper.bitMap.read()['ws-root'].rootDir).to.equal('.');
+    });
+    it('should own the root files, including files added after it was tracked', () => {
+      expect(rootFiles).to.include('README.md');
+      expect(rootFiles).to.include('LICENSE');
+    });
+    it('should not claim the files of the component nested inside it', () => {
+      expect(rootFiles.some((file) => file.startsWith('comp1/'))).to.be.false;
+    });
+    it('should not claim bit internal files', () => {
+      expect(rootFiles.some((file) => file.startsWith('.bit'))).to.be.false;
     });
   });
 });
