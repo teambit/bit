@@ -61,10 +61,14 @@ export class NpmCiRegistry {
   }
 
   /**
-   * makes sure to kill the server process, otherwise, the tests will continue forever and never exit
+   * makes sure to kill the server process, otherwise, the tests will continue forever and never exit.
+   *
+   * tolerates a server that never came up: this runs from an `after` hook, which mocha still runs
+   * when the matching `before` failed, and a TypeError here would replace the startup error the
+   * report needs to show.
    */
   destroy() {
-    this.registryServer.kill();
+    this.registryServer?.kill();
   }
 
   /**
