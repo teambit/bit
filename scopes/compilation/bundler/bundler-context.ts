@@ -209,9 +209,13 @@ export type MetaData = {
  * `Can't resolve '@teambit/component'`.
  *
  * listing them alongside a target's own host dependencies aliases them to the host's copy - the
- * instance they were written against - instead of bundling a second one from the registry. only add
- * these where the host dependencies are aliased and NOT externalized: an external expects the
- * runtime to supply the module, which nothing does for a core aspect in a component preview.
+ * instance they were written against - instead of bundling a second one from the registry.
+ *
+ * Two conditions for adding these to a target, both necessary:
+ * - the bundle carries bit's own UI packages, which is what these phantom imports come from. That
+ *   is the preview and dev-server paths, not a user's application build.
+ * - its host dependencies are aliased and NOT externalized. An external expects the runtime to
+ *   supply the module, and nothing supplies a core aspect to a component preview.
  */
 export const PHANTOM_HOST_CORE_ASPECTS = ['@teambit/component'];
 
