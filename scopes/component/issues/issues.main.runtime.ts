@@ -1,7 +1,9 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Component } from '@teambit/component';
+import type { IssuesNames } from '@teambit/component-issues';
 import { IssuesClasses, IssuesList } from '@teambit/component-issues';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import pMapSeries from 'p-map-series';
@@ -12,6 +14,31 @@ import { NonExistIssueError } from './non-exist-issue-error';
 export type IssuesConfig = {
   ignoreIssues: string[];
 };
+
+/**
+ * the workspace-root component (rootDir ".") holds the files that no other component claims -
+ * workspace config, CI config, .bitmap, README, LICENSE. it has no env toolchain, no compiler, and
+ * nothing imports it as a package.
+ *
+ * only the issues that misfire *because of those three properties* are ignored. the rest are kept
+ * on purpose: the dependency-related issues simply never fire for a component whose files hold no
+ * imports, and when they do fire they are reporting something real. ignoring them is actively
+ * harmful - suppressing RelativeComponents, for instance, replaces an actionable issue with a
+ * "this error should have never happened" failure when the Version object is saved.
+ */
+const ISSUES_IRRELEVANT_TO_WORKSPACE_ROOT: IssuesNames[] = [
+  // the env's dependency policy (@types/node and friends) is not installed for a component that
+  // has no env toolchain.
+  'MissingManuallyConfiguredPackages',
+  // there is no compiler, so there is never any dist output.
+  'MissingDists',
+  // nothing resolves this component as a package, so it needs no node_modules link.
+  'MissingLinksFromNodeModulesToSrc',
+];
+
+function isWorkspaceRootComponent(component: Component): boolean {
+  return component.state._consumer?.componentMap?.rootDir === WORKSPACE_ROOT_DIR;
+}
 
 export type AddComponentsIssues = (components: Component[], issuesToIgnore: string[]) => Promise<void>;
 
@@ -30,9 +57,11 @@ export class IssuesMain {
   }
 
   getIssuesToIgnorePerComponent(component: Component): string[] {
-    const issuesToIgnore = component.state.aspects.get(IssuesAspect.id)?.config.ignoreIssues;
-    if (!issuesToIgnore) return [];
-    this.validateIssueNames(issuesToIgnore);
+    const issuesToIgnore: string[] = component.state.aspects.get(IssuesAspect.id)?.config.ignoreIssues || [];
+    if (issuesToIgnore.length) this.validateIssueNames(issuesToIgnore);
+    if (isWorkspaceRootComponent(component)) {
+      return [...issuesToIgnore, ...ISSUES_IRRELEVANT_TO_WORKSPACE_ROOT];
+    }
     return issuesToIgnore;
   }
 

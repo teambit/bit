@@ -101,4 +101,34 @@ describe('add command on Harmony', function () {
       });
     });
   });
+  describe('component issues on the workspace-root component', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+    });
+    it('should not report issues that only apply to a component with an env and a compiler', () => {
+      const withIssues = helper.command
+        .statusJson()
+        .componentsWithIssues.map((comp) => comp.id)
+        .filter((id: string) => id.includes('ws-root'));
+      expect(withIssues).to.have.lengthOf(0);
+    });
+    it('should snap without needing --ignore-issues', () => {
+      expect(() => helper.command.snapComponentWithoutBuild('ws-root')).to.not.throw();
+    });
+    describe('when a root file has a relative import into a component', () => {
+      before(() => {
+        helper.fs.outputFile('app.js', "const comp1 = require('./comp1');\n");
+      });
+      it('should still report the relative-import issue', () => {
+        // this one is NOT irrelevant to the root component. suppressing it would replace an
+        // actionable issue with a "this error should have never happened" failure on saving the
+        // Version object.
+        expect(helper.command.getAllIssuesFromStatus()).to.include('RelativeComponentsAuthored');
+      });
+    });
+  });
 });
