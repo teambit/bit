@@ -1062,8 +1062,14 @@ export function normalizeBitmapContentForVersioning(rawContent: string): string 
     // component entries are objects with a mainFile. skips the schema field (a string) and the
     // lanes key (an object without a mainFile).
     if (!entry || typeof entry !== 'object' || Array.isArray(entry) || !('mainFile' in entry)) return;
+    // only "version" is cleared. it changes on every snap - including this component's own entry -
+    // so keeping it would make the component modified again the moment it is snapped.
+    // "scope" is deliberately kept: it changes once (on the first export) and is then stable, so it
+    // costs one extra snap rather than perpetual drift, and clearing it would lose the identity of
+    // components belonging to a scope other than the workspace default - on restore they would all
+    // collapse onto the default scope, and same-named components from different scopes would
+    // overwrite each other.
     if ('version' in entry) entry.version = '';
-    if ('scope' in entry) entry.scope = '';
   });
   return `${AUTO_GENERATED_MSG}${BITMAP_PREFIX_MESSAGE}${JSON.stringify(parsed, null, 4)}`;
 }

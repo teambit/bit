@@ -16,4 +16,5 @@ export {
   getIgnoreListHarmony,
   NextVersion,
   WORKSPACE_ROOT_DIR,
+  WORKSPACE_ROOT_IGNORE_LIST,
 } from './component-map';

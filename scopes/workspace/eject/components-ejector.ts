@@ -16,6 +16,7 @@ import { getScopeRemotes } from '@teambit/scope.remotes';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { Logger } from '@teambit/logger';
 import type { InstallMain } from '@teambit/install';
 import { removeComponentsFromNodeModules } from '@teambit/remove';
@@ -163,6 +164,11 @@ your package.json (if existed) has been restored, however, some bit generated da
       const rootDir = componentMap.rootDir;
       if (!rootDir) {
         throw new Error('ComponentEjector.removeComponentsFiles expect a componentMap to have rootDir');
+      }
+      if (rootDir === WORKSPACE_ROOT_DIR) {
+        // see the same guard in deleteComponentsFiles - removing this rootDir deletes the whole
+        // workspace. the files it owns are the workspace's own, so ejecting it leaves them alone.
+        return;
       }
       dataToPersist.removePath(new RemovePath(rootDir, true));
     });

@@ -101,6 +101,48 @@ describe('add command on Harmony', function () {
       });
     });
   });
+  describe('removing the workspace-root component', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.fs.outputFile('untracked-by-bit.txt', 'not a component file\n');
+      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      helper.command.removeComponent('ws-root --silent');
+    });
+    it('should not delete the workspace', () => {
+      // its rootDir is the workspace itself, so deleting it takes .bitmap, .bit, every nested
+      // component and every unrelated file with it.
+      expect(path.join(helper.scopes.localPath, '.bitmap')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'comp1/index.js')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'untracked-by-bit.txt')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.path();
+    });
+    it('should keep the other component tracked', () => {
+      expect(helper.bitMap.read()).to.have.property('comp1');
+    });
+  });
+  describe('re-adding and double-adding the workspace root', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+    });
+    it('should allow re-adding the same component', () => {
+      helper.fs.outputFile('extra.md', 'extra\n');
+      expect(() => helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' })).to.not.throw();
+    });
+    it('should reject a second component claiming the workspace root', () => {
+      const cmd = () => helper.command.addComponent('.', { i: 'another-root', m: 'README.md' });
+      expect(cmd).to.throw('already tracked by');
+    });
+    it('should pick up dotfiles at add time, not only on the next rescan', () => {
+      helper.fs.outputFile('.npmrc', 'registry=https://example.com\n');
+      const output = helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      expect(output).to.have.string('.npmrc');
+    });
+  });
   describe('writing the workspace-root component to the filesystem', () => {
     let firstSnap: string;
     before(() => {

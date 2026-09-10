@@ -133,13 +133,17 @@ export default class ComponentWriter {
   }
 
   async addComponentToBitMap(rootDir: string): Promise<ComponentMap> {
-    // "." is a valid rootDir only for the component that owns this workspace's root. it is never a
-    // valid *target* to write some other component into.
-    if (rootDir === WORKSPACE_ROOT_DIR && this.existingComponentMap?.rootDir !== WORKSPACE_ROOT_DIR) {
-      throw new BitError(
-        `unable to write "${this.component.id.toString()}" to the workspace root.
-the workspace root is owned by the workspace itself, a component can only be written into its own directory`
-      );
+    // "." is a valid rootDir only for the component that owns this workspace's root. reject it only
+    // when a *different* component already owns it - checking `existingComponentMap` alone would
+    // also reject restoring a root component whose .bitmap entry is not there yet (e.g. loading a
+    // stashed new component).
+    if (rootDir === WORKSPACE_ROOT_DIR) {
+      const currentOwner = this.bitMap.getComponentIdByRootPath(WORKSPACE_ROOT_DIR);
+      if (currentOwner && !currentOwner.isEqualWithoutVersion(this.component.id)) {
+        throw new BitError(
+          `unable to write "${this.component.id.toString()}" to the workspace root, it is already owned by "${currentOwner.toStringWithoutVersion()}"`
+        );
+      }
     }
     const filesForBitMap = this.component.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };

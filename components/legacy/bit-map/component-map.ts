@@ -6,8 +6,10 @@ import type { ComponentID } from '@teambit/component-id';
 import {
   BIT_HIDDEN_DIR,
   BIT_MAP,
+  BIT_WORKSPACE_TMP_DIRNAME,
   DOT_GIT_DIR,
   Extensions,
+  OLD_BIT_MAP,
   PACKAGE_JSON,
   IGNORE_ROOT_ONLY_LIST,
 } from '@teambit/legacy.constants';
@@ -46,10 +48,18 @@ export const WORKSPACE_ROOT_DIR = '.';
  *
  * note that `.bitmap` is deliberately NOT here. it is the map of the workspace and a git-free
  * workspace has to be able to restore it, so the root component tracks it like any other file.
- * `.bit` (the local object store) and `.git` are the outputs of versioning, not sources, so they
- * stay excluded.
+ * `.bit` (the local object store), `.git` and `.bitTmp` are outputs of versioning, not sources, and
+ * `.bit.map.json` is the legacy location of the map itself, so they all stay excluded.
+ *
+ * exported so that `bit add .` builds its initial file-set from the same list the rescan uses -
+ * otherwise the two disagree about what the root component owns.
  */
-const WORKSPACE_ROOT_IGNORE_LIST = [`${BIT_HIDDEN_DIR}/**`, `${DOT_GIT_DIR}/**`];
+export const WORKSPACE_ROOT_IGNORE_LIST = [
+  `${BIT_HIDDEN_DIR}/**`,
+  `${DOT_GIT_DIR}/**`,
+  `${BIT_WORKSPACE_TMP_DIRNAME}/**`,
+  OLD_BIT_MAP,
+];
 
 export type ComponentMapFile = {
   relativePath: PathLinux;
@@ -443,9 +453,13 @@ export async function getFilesByDir(
     isWorkspaceRoot ? pathNormalizeToLinux(match) : pathNormalizeToLinux(match).replace(`${dir}/`, '')
   );
   const filteredByIgnoredFromRoot = relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
+  // resolve against the workspace, not the process cwd. `dir` is workspace-relative, so running bit
+  // from a sub-directory would otherwise look for the ignore file in the wrong place - and
+  // getBitIgnoreFile() does not swallow ENOENT, so it throws rather than falling back.
+  const ignoreFileDir = path.join(consumerPath, dir);
   const bitOrGitIgnore = filteredByIgnoredFromRoot.includes(BIT_IGNORE)
-    ? await getBitIgnoreFile(dir)
-    : await getGitIgnoreFile(dir);
+    ? await getBitIgnoreFile(ignoreFileDir)
+    : await getGitIgnoreFile(ignoreFileDir);
   const filteredByBitIgnore = bitOrGitIgnore
     ? ignore().add(bitOrGitIgnore).filter(filteredByIgnoredFromRoot)
     : filteredByIgnoredFromRoot;

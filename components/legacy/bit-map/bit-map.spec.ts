@@ -156,9 +156,11 @@ describe('BitMap', function () {
       normalized = normalizeBitmapContentForVersioning(rawBitmap);
       parsed = JSON.parse(normalized.slice(normalized.indexOf('{')));
     });
-    it('should empty the fields that change on every snap and export', () => {
+    it('should empty the version, which changes on every snap', () => {
       expect(parsed.comp1.version).to.equal('');
-      expect(parsed.comp1.scope).to.equal('');
+    });
+    it('should keep the scope, so cross-scope components survive a restore', () => {
+      expect(parsed.comp1.scope).to.equal('my-scope');
     });
     it('should keep the durable map intact', () => {
       expect(parsed.comp1.rootDir).to.equal('comp1');
