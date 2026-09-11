@@ -136,7 +136,11 @@ export class ComponentsEjector {
   }
 
   getPackagesToInstall(): string[] {
-    return this.componentsToEject.map((c) => componentIdToPackageName(c));
+    // the workspace-root component is not a package (never linked, never published), ejecting it only
+    // untracks it. the name its id derives may belong to an unrelated package.
+    return this.componentsToEject
+      .filter((c) => c.componentMap?.rootDir !== WORKSPACE_ROOT_DIR)
+      .map((c) => componentIdToPackageName(c));
   }
 
   _buildExceptionMessageWithRollbackData(action: string): string {

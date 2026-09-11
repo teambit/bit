@@ -42,6 +42,7 @@ export type WorkspaceExtensionProps = {
   defaultDirectory?: string;
   components?: ComponentScopeDirMap;
   ignoredFiles?: string[];
+  trackAllFiles?: boolean;
 };
 
 export type PackageManagerClients = 'npm' | 'yarn' | undefined;

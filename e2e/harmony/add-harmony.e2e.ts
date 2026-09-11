@@ -185,6 +185,8 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('.npmrc', 'registry=https://example.com\n');
       const output = helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
       expect(output).to.have.string('.npmrc');
+      // its auto-generated banner must not get it dropped, the rescan tracks it
+      expect(output).to.have.string('.bitmap');
     });
   });
   describe('adding a nested component that holds the main file of the workspace root', () => {
