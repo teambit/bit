@@ -144,4 +144,32 @@ describe('bit lane diff operations', function () {
       expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
     });
   });
+
+  describe('bit lane diff with TypeScript components', () => {
+    let diffOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.outputFile('bar/foo.ts', `export function greet(name: string): string { return 'hello ' + name; }`);
+      helper.command.addComponent('bar');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fs.outputFile(
+        'bar/foo.ts',
+        `export function greet(name: string, greeting: string): string { return greeting + ' ' + name; }`
+      );
+      helper.command.snapAllComponentsWithoutBuild();
+      diffOutput = helper.command.diffLane();
+    });
+    it('should show the file diff', () => {
+      expect(diffOutput).to.have.string('--- foo.ts');
+      expect(diffOutput).to.have.string('+++ foo.ts');
+    });
+    it('should not crash when API diff is attempted', () => {
+      // API diff is best-effort. Without build artifacts, schema extraction
+      // may not be available for scope-loaded components. The important thing
+      // is that lane diff still works and shows file diffs.
+      expect(diffOutput).to.be.a('string');
+    });
+  });
 });

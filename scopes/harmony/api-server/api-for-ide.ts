@@ -54,6 +54,7 @@ type LaneDiffForIDEResult = {
     hasDiff: boolean;
     filesDiff: { filePath: string; status: string; fromContent?: string; toContent?: string }[];
     fieldsDiff?: { fieldName: string; diffOutput: string }[] | null;
+    apiDiff?: Record<string, any> | null;
   }[];
   compsWithNoChanges: string[];
   toLaneName: string;
@@ -660,7 +661,7 @@ export class APIForIDE {
     const laneHistory = await this.lanes.getLaneHistory(laneId);
     const laneObj = await this.lanes.loadLane(laneId);
     if (!laneObj) throw new Error(`unable to find lane "${laneId.toString()}"`);
-    const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+    const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare, this.schema);
     const diffResults = await diffGenerator.generateDiffHistory(laneObj, laneHistory, fromHistoryId, toHistoryId);
     return this.toLaneDiffForIDEResult(diffResults);
   }
@@ -670,7 +671,7 @@ export class APIForIDE {
     if (currentLaneId.isDefault()) {
       throw new Error('lane diff is not available on main');
     }
-    const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);
+    const diffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare, this.schema);
     const diffResults = await diffGenerator.generate([]);
     return this.toLaneDiffForIDEResult(diffResults);
   }
@@ -689,6 +690,7 @@ export class APIForIDE {
           toContent: f.status === 'UNCHANGED' ? undefined : f.toContent,
         })),
         fieldsDiff: d.fieldsDiff,
+        apiDiff: d.apiDiff ?? null,
       })),
       compsWithNoChanges: diffResults.compsWithNoChanges,
       toLaneName: diffResults.toLaneName,
