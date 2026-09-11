@@ -12,6 +12,7 @@ import {
   OLD_BIT_MAP,
   PACKAGE_JSON,
   IGNORE_ROOT_ONLY_LIST,
+  LOCKFILES_IGNORE_LIST,
 } from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
@@ -303,14 +304,15 @@ export class ComponentMap {
   async trackDirectoryChangesHarmony(
     consumerPath: PathOsBasedAbsolute,
     ignoredFiles?: string[],
-    excludeDirs: PathLinux[] = []
+    excludeDirs: PathLinux[] = [],
+    trackAllFiles = false
   ): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;
     }
-    const gitIgnore = await getGitIgnoreHarmony(consumerPath, ignoredFiles);
-    this.files = await getFilesByDir(trackDir, consumerPath, gitIgnore, excludeDirs);
+    const gitIgnore = await getGitIgnoreHarmony(consumerPath, ignoredFiles, trackAllFiles);
+    this.files = await getFilesByDir(trackDir, consumerPath, gitIgnore, excludeDirs, trackAllFiles);
   }
 
   updateNextVersion(nextVersion: NextVersion) {
@@ -430,7 +432,8 @@ export async function getFilesByDir(
   dir: string,
   consumerPath: string,
   gitIgnore: any,
-  excludeDirs: PathLinux[] = []
+  excludeDirs: PathLinux[] = [],
+  trackAllFiles = false
 ): Promise<ComponentMapFile[]> {
   const isWorkspaceRoot = dir === WORKSPACE_ROOT_DIR;
   const matches = await globby(isWorkspaceRoot ? '**' : dir, {
@@ -452,7 +455,11 @@ export async function getFilesByDir(
   const relativePathsLinux = filteredMatches.map((match) =>
     isWorkspaceRoot ? pathNormalizeToLinux(match) : pathNormalizeToLinux(match).replace(`${dir}/`, '')
   );
-  const filteredByIgnoredFromRoot = relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
+  // the config files "bit ws-config write" generates are not source - unless the workspace declares that
+  // every file is (trackAllFiles). in a repo adopted from an existing monorepo, the user wrote them.
+  const filteredByIgnoredFromRoot = trackAllFiles
+    ? relativePathsLinux
+    : relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
   // resolve against the workspace, not the process cwd. `dir` is workspace-relative, so running bit
   // from a sub-directory would otherwise look for the ignore file in the wrong place - and
   // getBitIgnoreFile() does not swallow ENOENT, so it throws rather than falling back.
@@ -471,15 +478,30 @@ export async function getFilesByDir(
   }));
 }
 
-export async function getGitIgnoreHarmony(consumerPath: string, additionalPatterns?: string[]): Promise<any> {
-  const ignoreList = await getIgnoreListHarmony(consumerPath, additionalPatterns);
+export async function getGitIgnoreHarmony(
+  consumerPath: string,
+  additionalPatterns?: string[],
+  trackAllFiles = false
+): Promise<any> {
+  const ignoreList = await getIgnoreListHarmony(consumerPath, additionalPatterns, trackAllFiles);
   return ignore().add(ignoreList);
 }
 
-export async function getIgnoreListHarmony(consumerPath: string, additionalPatterns?: string[]): Promise<string[]> {
-  const ignoreList = await retrieveIgnoreList(consumerPath);
-  // the ability to track package.json is deprecated since Harmony
-  ignoreList.push(PACKAGE_JSON);
+/**
+ * the patterns git ignores, plus the files bit owns. with `trackAllFiles` the workspace declares that
+ * bit owns nothing: package.json and the lockfiles are the user's source, so only the git-ignored
+ * files and the hard exclusions (node_modules, .env and friends) are left out.
+ */
+export async function getIgnoreListHarmony(
+  consumerPath: string,
+  additionalPatterns?: string[],
+  trackAllFiles = false
+): Promise<string[]> {
+  const fromIgnoreFiles = await retrieveIgnoreList(consumerPath);
+  // tracking package.json is deprecated since Harmony - bit generates it
+  const ignoreList = trackAllFiles
+    ? fromIgnoreFiles.filter((pattern) => !LOCKFILES_IGNORE_LIST.includes(pattern))
+    : [...fromIgnoreFiles, PACKAGE_JSON];
   if (additionalPatterns?.length) {
     ignoreList.push(...additionalPatterns);
   }

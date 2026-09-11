@@ -590,7 +590,7 @@ you can add the directory these files are located at and it'll change the root d
 
   async getIgnoreList(): Promise<string[]> {
     const consumerPath = this.consumer.getPath();
-    return getIgnoreListHarmony(consumerPath, this.consumer.config.ignoredFiles);
+    return getIgnoreListHarmony(consumerPath, this.consumer.config.ignoredFiles, this.consumer.config.trackAllFiles);
   }
 
   async linkComponents(ids: ComponentID[]) {
@@ -780,7 +780,11 @@ export async function addMultipleFromResolvedTrackData(
   trackData: ResolvedTrackData[]
 ): Promise<ComponentID[]> {
   const bitMap = workspace.consumer.bitMap;
-  const ignoreList = await getIgnoreListHarmony(workspace.path, workspace.consumer.config.ignoredFiles);
+  const ignoreList = await getIgnoreListHarmony(
+    workspace.path,
+    workspace.consumer.config.ignoredFiles,
+    workspace.consumer.config.trackAllFiles
+  );
   const gitIgnore = ignore().add(ignoreList);
   const componentMaps = trackData.map((data) => {
     const { rootDir, files, componentName, defaultScope, mainFile, config } = data;

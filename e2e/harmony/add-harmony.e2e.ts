@@ -230,4 +230,45 @@ describe('add command on Harmony', function () {
       });
     });
   });
+  describe('trackAllFiles: tracking the files bit treats as generated', () => {
+    // a workspace adopted from an existing monorepo owns its package.json and tsconfig.json files. bit
+    // normally drops them as generated, and a workspace restored from the scope can then be neither
+    // installed nor built.
+    const filesOf = (id: string): string[] =>
+      helper.command.showComponentParsed(id).files.map((file) => file.relativePath);
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.workspaceJsonc.addKeyValToWorkspace('trackAllFiles', true);
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.fs.outputFile('comp1/package.json', '{ "name": "comp1", "version": "0.0.1" }\n');
+      helper.fs.outputFile('comp1/tsconfig.json', '{}\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('package.json', '{ "name": "monorepo", "private": true }\n');
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+    });
+    it('should track the package.json and tsconfig.json of a component', () => {
+      expect(filesOf('comp1')).to.include.members(['package.json', 'tsconfig.json']);
+    });
+    it('should track the package.json of the workspace root', () => {
+      expect(filesOf('ws-root')).to.include('package.json');
+    });
+    describe('restoring the workspace from the scope', () => {
+      before(() => {
+        helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+        helper.command.export();
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        helper.command.importComponentWithoutInstall('comp1', '--path comp1');
+      });
+      it('should write the manifests back, so the workspace can be installed and built', () => {
+        expect(path.join(helper.scopes.localPath, 'package.json'))
+          .to.be.a.file()
+          .with.content('{ "name": "monorepo", "private": true }\n');
+        expect(path.join(helper.scopes.localPath, 'comp1/package.json')).to.be.a.file();
+        expect(path.join(helper.scopes.localPath, 'comp1/tsconfig.json')).to.be.a.file();
+      });
+    });
+  });
 });

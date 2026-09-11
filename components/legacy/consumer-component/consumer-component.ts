@@ -610,7 +610,8 @@ async function getLoadedFiles(
   await componentMap.trackDirectoryChangesHarmony(
     consumer.getPath(),
     consumer.config.ignoredFiles,
-    consumer.bitMap.getNestedRootDirs(componentMap.getRootDir())
+    consumer.bitMap.getNestedRootDirs(componentMap.getRootDir()),
+    consumer.config.trackAllFiles
   );
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);

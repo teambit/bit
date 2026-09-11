@@ -66,6 +66,7 @@ export class BitMap {
   _cacheIdsAllStrWithoutScopeAndVersion: { [idStr: string]: ComponentID } | undefined;
   allTrackDirs: { [trackDir: string]: ComponentID } | null | undefined;
   ignoredFiles?: string[];
+  trackAllFiles?: boolean;
   protected updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
     public projectRoot: string,
@@ -166,7 +167,12 @@ export class BitMap {
     return result;
   }
 
-  static async load(dirPath: PathOsBasedAbsolute, defaultScope: string, ignoredFiles?: string[]): Promise<BitMap> {
+  static async load(
+    dirPath: PathOsBasedAbsolute,
+    defaultScope: string,
+    ignoredFiles?: string[],
+    trackAllFiles?: boolean
+  ): Promise<BitMap> {
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
     if (!mapFileContent || !currentLocation) {
@@ -174,6 +180,7 @@ export class BitMap {
     }
     const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
     bitMap.ignoredFiles = ignoredFiles;
+    bitMap.trackAllFiles = trackAllFiles;
     await bitMap.loadFiles();
 
     return bitMap;
@@ -233,7 +240,7 @@ export class BitMap {
   }
 
   async loadFiles() {
-    const gitIgnore = await getGitIgnoreHarmony(this.projectRoot, this.ignoredFiles);
+    const gitIgnore = await getGitIgnoreHarmony(this.projectRoot, this.ignoredFiles, this.trackAllFiles);
     await Promise.all(
       this.components.map(async (componentMap) => {
         const rootDir = componentMap.rootDir;
@@ -243,7 +250,8 @@ export class BitMap {
             rootDir,
             this.projectRoot,
             gitIgnore,
-            this.getNestedRootDirs(rootDir)
+            this.getNestedRootDirs(rootDir),
+            this.trackAllFiles
           );
           componentMap.recentlyTracked = true;
         } catch (err: any) {
