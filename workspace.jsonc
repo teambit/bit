@@ -11,6 +11,25 @@
     "resolveEnvsFromRoots": true
   },
   "teambit.dependencies/dependency-resolver": {
+    "enableGlobalVirtualStore": true,
+    // the verdaccio the e2e suite runs as its mock registry under-declares two dependencies. with the
+    // project-local layout its realpath sits under node_modules/.pnpm, so the walk out of it passes
+    // pnpm's privately hoisted node_modules/.pnpm/node_modules and picks them up by accident. under the
+    // global virtual store the walk leaves for the store and finds nothing, so verdaccio exits before it
+    // prints a listening port. both versions are the ones already resolved elsewhere in the tree, so
+    // these add a node_modules entry rather than another copy.
+    "packageExtensions": {
+      "@verdaccio/signature": {
+        "dependencies": {
+          "@verdaccio/config": "8.0.0-next-8.1"
+        }
+      },
+      "@verdaccio/auth": {
+        "dependencies": {
+          "express": "4.21.0"
+        }
+      }
+    },
     "allowScripts": {
       "@apollo/protobufjs": true,
       "@parcel/watcher": true,

@@ -305,7 +305,9 @@ export class DependencyLinker {
       ...(await this.linkCoreAspectsAndLegacy(finalRootDir, componentIds, linkingOpts)),
     };
     const registeredPackages = this.linkingOptions?.additionalPackagesToLink || [];
-    result.slotOriginatedLinks = registeredPackages.map((pkgName) => this.linkNonCorePackages(finalRootDir, pkgName));
+    result.slotOriginatedLinks = compact(
+      registeredPackages.map((pkgName) => this.linkNonCorePackages(finalRootDir, pkgName))
+    );
 
     if (!this.linkingContext?.inCapsule) {
       this.logger.consoleSuccess(outputMessage, startTime);
@@ -860,13 +862,17 @@ export class DependencyLinker {
     return path.join(this._currentBitDir, 'node_modules', packageName);
   }
 
-  private linkNonCorePackages(rootDir: string, packageName: string): LinkDetail {
+  private linkNonCorePackages(rootDir: string, packageName: string): LinkDetail | undefined {
     const target = path.join(rootDir, 'node_modules', packageName);
     const fromDirBvm = this._getPkgPathFromCurrentBitDir(packageName);
     if (fromDirBvm) {
       return { packageName, from: fromDirBvm, to: target };
     }
-    const fromDirBitRepo = getDistDirForDevEnv(packageName);
+    const fromDirBitRepo = getDistDirForDevEnv(packageName, [rootDir]);
+    if (!fromDirBitRepo) {
+      this.logger.debug(`linkNonCorePackages: unable to locate ${packageName}, skipping the link`);
+      return undefined;
+    }
     return { packageName, from: fromDirBitRepo, to: target };
   }
 
@@ -881,7 +887,11 @@ export class DependencyLinker {
     }
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
-      const newDir = getDistDirForDevEnv(packageName);
+      const newDir = getDistDirForDevEnv(packageName, [resolveRealPath(mainAspectPath), rootDir]);
+      if (!newDir) {
+        this.logger.debug(`linkNonAspectCorePackages: unable to locate ${packageName}, skipping the link`);
+        return undefined;
+      }
       return { packageName, from: newDir, to: target };
     }
 
@@ -897,24 +907,40 @@ export class DependencyLinker {
 }
 
 /**
- * When running dev env (bd) we need to get the harmony/legacy folder from the node_modules of the clone
+ * find a package bit links into the target workspace without depending on it - @teambit/legacy and
+ * @teambit/harmony, plus whatever the addPackagesToLink slot registered. a bvm installation is served
+ * earlier by _getPkgPathFromCurrentBitDir; this covers a bit that runs from a clone (bd) or from a
+ * plain npm installation, where the package can only come from an installation already on disk.
+ *
+ * the directories to search from are passed in rather than left to a bare `require.resolve`, which
+ * searches from this module's own realpath. that realpath is inside the pnpm store whenever the
+ * workspace uses a global virtual store, and the walk out of the store never re-enters the workspace,
+ * so every candidate is missed.
+ *
+ * returns undefined when the package is nowhere on disk: linking it is a backward-compatibility
+ * convenience for workspaces that still import it, not a reason to fail the whole command.
  */
-function getDistDirForDevEnv(packageName: string): string {
-  let moduleDirectory = require.resolve(packageName);
-  let dirPath;
-  if (moduleDirectory.includes(packageName)) {
-    dirPath = path.join(moduleDirectory, '../..'); // to remove the "index.js" at the end
-  } else {
-    // This is usually required for the @teambit/legacy, as we re inside the nm so we can't find it in the other way
-    const nmDir = __dirname.substring(0, __dirname.indexOf('@teambit'));
-    dirPath = path.join(nmDir, packageName);
-    moduleDirectory = require.resolve(packageName, { paths: [nmDir] });
+function getDistDirForDevEnv(packageName: string, fromDirs: (string | undefined)[]): string | undefined {
+  for (const fromDir of uniq(compact([...fromDirs, __dirname]))) {
+    const resolvedModulePath = resolveModuleFromDir(fromDir, packageName);
+    if (!resolvedModulePath) continue;
+    const dirPath = resolveModuleDirFromFile(resolvedModulePath, packageName);
+    if (fs.existsSync(dirPath)) return dirPath;
   }
-  if (!fs.existsSync(dirPath)) {
-    throw new BitError(`unable to find ${packageName} in ${dirPath}`);
-  }
+  return undefined;
+}
 
-  return dirPath;
+/**
+ * mainAspectPath is a symlink into the installation that actually holds @teambit/bit. resolving from
+ * the link itself would search the workspace it points from, not the installation the sibling
+ * packages live in.
+ */
+function resolveRealPath(dirPath: string): string | undefined {
+  try {
+    return fs.realpathSync(dirPath);
+  } catch {
+    return undefined;
+  }
 }
 
 // TODO: extract to new component

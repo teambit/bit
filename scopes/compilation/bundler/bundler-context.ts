@@ -198,6 +198,27 @@ export type MetaData = {
    */
   isEnvTemplate?: boolean;
 };
+/**
+ * core aspects that published preview packages import without declaring them - they are written
+ * against the instance the host provides, which is why the import was never a dependency.
+ *
+ * such an import used to resolve on its own: under the project-local layout the package's real
+ * directory sits inside the workspace or capsule, so the bundler's walk up from it reached a root
+ * whose node_modules holds bit's linked core aspects. with a global virtual store that real
+ * directory is inside the pnpm store, the walk leaves for the store, and the bundle fails with
+ * `Can't resolve '@teambit/component'`.
+ *
+ * listing them alongside a target's own host dependencies aliases them to the host's copy - the
+ * instance they were written against - instead of bundling a second one from the registry.
+ *
+ * Two conditions for adding these to a target, both necessary:
+ * - the bundle carries bit's own UI packages, which is what these phantom imports come from. That
+ *   is the preview and dev-server paths, not a user's application build.
+ * - its host dependencies are aliased and NOT externalized. An external expects the runtime to
+ *   supply the module, and nothing supplies a core aspect to a component preview.
+ */
+export const PHANTOM_HOST_CORE_ASPECTS = ['@teambit/component'];
+
 export interface BundlerContext extends BuildContext {
   /**
    * targets for bundling.

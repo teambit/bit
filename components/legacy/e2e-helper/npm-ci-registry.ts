@@ -7,6 +7,8 @@ import * as path from 'path';
 
 import type { Helper } from './e2e-helper';
 
+const STARTUP_TIMEOUT_MS = 60 * 1000;
+
 const skipRegistryTests = process.env.SKIP_REGISTRY_TESTS === 'True' || process.env.SKIP_REGISTRY_TESTS === 'true';
 export const supportNpmCiRegistryTesting = !skipRegistryTests;
 
@@ -59,23 +61,52 @@ export class NpmCiRegistry {
   }
 
   /**
-   * makes sure to kill the server process, otherwise, the tests will continue forever and never exit
+   * makes sure to kill the server process, otherwise, the tests will continue forever and never exit.
+   *
+   * tolerates a server that never came up: this runs from an `after` hook, which mocha still runs
+   * when the matching `before` failed, and a TypeError here would replace the startup error the
+   * report needs to show.
    */
   destroy() {
-    this.registryServer.kill();
+    this.registryServer?.kill();
   }
 
+  /**
+   * every path out of here has to settle the promise. the suites that call it run with
+   * `this.timeout(0)`, so a verdaccio that dies without ever printing its port - an unresolvable
+   * dependency of its own, a port already taken - used to leave this pending forever and cost the
+   * shard CircleCI's 50-minute no-output timeout instead of a one-line failure.
+   */
   _establishRegistry(): Promise<void> {
     return new Promise((resolve, reject) => {
       prepare({
         uplinkedRegistry: 'https://node-registry.bit.cloud/',
       });
       this.registryServer = startRegistryMock({ detached: true });
-      let resolved = false;
+      let settled = false;
+      // verdaccio reports startup failures on stderr, so keep the output around to report with them.
+      const output: string[] = [];
+      let startupTimer: NodeJS.Timeout | undefined;
+      const settle = (err?: Error) => {
+        if (settled) return;
+        settled = true;
+        if (startupTimer) clearTimeout(startupTimer);
+        if (err) reject(err);
+        else resolve();
+      };
+      const startupError = (reason: string) =>
+        new Error(`the mock registry failed to start on port ${REGISTRY_MOCK_PORT}: ${reason}
+verdaccio output:
+${output.join('') || '(none)'}`);
+      startupTimer = setTimeout(() => {
+        this.registryServer.kill();
+        settle(startupError(`it did not report a listening port within ${STARTUP_TIMEOUT_MS}ms`));
+      }, STARTUP_TIMEOUT_MS);
+      startupTimer.unref();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.registryServer.stdout.on('data', async (data): void => {
-        if (!resolved && data.includes(REGISTRY_MOCK_PORT)) {
-          resolved = true;
+        output.push(data.toString());
+        if (!settled && data.includes(REGISTRY_MOCK_PORT)) {
           let fetchResults;
           try {
             const { fetch } = await import('@pnpm/network.fetch');
@@ -87,27 +118,29 @@ export class NpmCiRegistry {
               },
             });
           } catch (err) {
-            reject(err);
+            settle(err as Error);
             return;
           }
           if (fetchResults.status === 200) {
             if (this.helper.debugMode) console.log('Verdaccio server is up and running');
-            resolve();
+            settle();
           } else {
-            reject(new Error('Registry has not started'));
+            settle(startupError(`it answered /is-odd with status ${fetchResults.status}`));
           }
         }
       });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.registryServer.stderr.on('data', (data) => {
+        output.push(data.toString());
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
       });
       this.registryServer.on('error', (err) => {
         if (this.helper.debugMode) console.log(`child process errored ${err.message}`);
-        reject(err);
+        settle(err);
       });
       this.registryServer.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
+        settle(startupError(`it exited with code ${code}`));
       });
     });
   }

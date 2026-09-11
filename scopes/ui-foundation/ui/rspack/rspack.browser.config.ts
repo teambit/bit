@@ -9,6 +9,7 @@ import {
   shouldUseSourceMap,
   imageInlineSizeLimit,
   resolveAlias,
+  resolveModules,
   resolveFallback,
   RspackManifestPlugin,
   generateAssetManifest,
@@ -93,6 +94,7 @@ export default function createRspackBrowserConfig(
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
       alias: resolveAlias({ profile: isEnvProductionProfile }),
       fallback: resolveFallback,
+      modules: resolveModules,
     },
 
     module: {
