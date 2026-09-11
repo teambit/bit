@@ -919,7 +919,8 @@ export class InstallMain {
       return;
     }
     const skippedWarning = this.wsConfigFiles.formatSkippedFilesWarning(writeResults?.skippedPaths);
-    if (skippedWarning) this.logger.consoleWarning(`\n${skippedWarning}`);
+    // the formatted section already starts with the shared warning symbol, so no need for consoleWarning here.
+    if (skippedWarning) this.logger.console(`\n${skippedWarning}`);
   }
 
   private async addConfiguredAspectsToWorkspacePolicy(): Promise<WorkspacePolicy> {
