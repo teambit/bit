@@ -111,7 +111,7 @@ export class BitMap {
    * the workspace-root component (rootDir ".") is the one exception - it is allowed to contain
    * other components. its file-set subtracts their root-dirs, so the two never claim the same file.
    */
-  private throwForExistingParentDir({ id, rootDir }: ComponentMap) {
+  private throwForExistingParentDir(id: ComponentID, rootDir: PathLinuxRelative) {
     const isParentDir = (parent: string, child: string) => {
       const relative = path.relative(parent, child);
       return relative && !relative.startsWith('..');
@@ -756,11 +756,13 @@ export class BitMap {
       this.setComponent(componentId, newComponentMap);
       return newComponentMap;
     };
+    // validated before an existing entry is touched, so a rejected add leaves the map as it was
+    const rootDirLinux = rootDir ? pathNormalizeToLinux(rootDir) : undefined;
+    if (rootDirLinux) this.throwForExistingParentDir(componentId, rootDirLinux);
     const componentMap = getOrCreateComponentMap();
     componentMap.mainFile = mainFile;
-    if (rootDir) {
-      componentMap.rootDir = pathNormalizeToLinux(rootDir);
-      this.throwForExistingParentDir(componentMap);
+    if (rootDirLinux) {
+      componentMap.rootDir = rootDirLinux;
     }
     if (onLanesOnly) {
       componentMap.onLanesOnly = onLanesOnly;
@@ -1079,11 +1081,12 @@ type OutputFileParams = {
 
 /**
  * the workspace-root component tracks `.bitmap` so a git-free workspace can be restored from the
- * scope. the `version` of every entry changes on each snap - including the root component's own
- * entry - so versioning it verbatim would leave that component modified immediately after every
- * snap, forever, and never converge. only the durable part of the map is versioned: which components
- * exist and where they live. the versions are restored from the component heads on import, which is
- * the correct source for them anyway.
+ * scope. two fields of every entry change on a snap - including the root component's own entry -
+ * so versioning them verbatim would leave that component modified immediately after every snap,
+ * forever, and never converge: `version`, and `config`, which is the pending config - a snap stores
+ * it in the version and removes it from the map. only the durable part of the map is versioned:
+ * which components exist and where they live. the versions and the config are restored from the
+ * component heads on import, which is the correct source for them anyway.
  *
  * `scope` is deliberately kept: it changes once (on the first export) and is then stable, so it
  * costs one extra snap rather than perpetual drift. clearing it would lose the identity of
@@ -1095,8 +1098,10 @@ export function normalizeBitmapContentForVersioning(rawContent: string): string 
   const parsed = json.parse(rawContent, undefined, true) as Record<string, any> | undefined;
   if (!parsed) return rawContent;
   Object.keys(parsed).forEach((key) => {
-    if (key === SCHEMA_FIELD || key === LANE_KEY) return;
-    if (parsed[key]?.version !== undefined) parsed[key].version = '';
+    const entry = parsed[key];
+    if (key === SCHEMA_FIELD || key === LANE_KEY || !entry || typeof entry !== 'object') return;
+    if (entry.version !== undefined) entry.version = '';
+    delete entry.config;
   });
   return formatBitMapFile(parsed);
 }

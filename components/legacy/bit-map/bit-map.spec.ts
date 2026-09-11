@@ -144,6 +144,7 @@ describe('BitMap', function () {
           defaultScope: 'my-org.demo',
           mainFile: 'index.ts',
           rootDir: 'comp1',
+          config: { 'teambit.envs/envs': { env: 'teambit.harmony/node' } },
         },
         '$schema-version': '17.0.0',
       },
@@ -158,6 +159,9 @@ describe('BitMap', function () {
     });
     it('should empty the version, which changes on every snap', () => {
       expect(parsed.comp1.version).to.equal('');
+    });
+    it('should drop the config, which a snap moves into the version and removes from the map', () => {
+      expect(parsed.comp1).to.not.have.property('config');
     });
     it('should keep the scope, so cross-scope components survive a restore', () => {
       expect(parsed.comp1.scope).to.equal('my-scope');
@@ -186,6 +190,9 @@ describe('BitMap', function () {
       const addAnother = () =>
         bitMap.addComponent({ ...componentParams, componentId: ComponentID.fromObject({ name: 'comp2' }, 'my-scope') });
       expect(addAnother).to.throw('already used by another component');
+      // and the rejected entry is not left behind in the map
+      expect(bitMap.components).to.have.lengthOf(1);
+      expect(bitMap.components[0].rootDir).to.equal('packages/comp1');
     });
     it('should let the same component be added again', async () => {
       const bitMap = await getBitmapInstance();

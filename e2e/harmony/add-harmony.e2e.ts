@@ -262,10 +262,23 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
     });
-    it('should default to the empty env, not to the regular default env', () => {
+    it('should be tracked with the empty env, not the regular default env', () => {
       // it is a bag of the workspace's own config files - nothing compiles it, tests it, or
       // imports it as a package. the regular default env would give it a toolchain it can't use.
       expect(helper.env.getComponentEnv('ws-root')).to.equal('teambit.harmony/empty-env');
+    });
+    it('should record that env in .bitmap as explicit config', () => {
+      // explicit, so every path that resolves an env or a dependency policy sees the same answer
+      expect(helper.bitMap.read()['ws-root'].config['teambit.envs/envs'].env).to.equal('teambit.harmony/empty-env');
+    });
+    it('should get no dependency policy from an env, unlike a regular component', () => {
+      const envPolicyOf = (name: string): string[] =>
+        helper.command
+          .showAspectConfig(name, 'teambit.dependencies/dependency-resolver')
+          .data.policy.filter((entry) => entry.source === 'env')
+          .map((entry) => entry.dependencyId);
+      expect(envPolicyOf('comp1')).to.include('@types/node');
+      expect(envPolicyOf('ws-root')).to.deep.equal([]);
     });
     it('should leave the env of a regular component alone', () => {
       expect(helper.env.getComponentEnv('comp1')).to.equal('teambit.harmony/node');

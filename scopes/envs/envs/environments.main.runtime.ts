@@ -26,7 +26,6 @@ import { head, uniq } from 'lodash';
 import type { WorkerMain } from '@teambit/worker';
 import { WorkerAspect } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
-import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { EnvService } from './services';
 import type { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -105,17 +104,6 @@ export type EnvCompDescriptor = EnvCompDescriptorProps & {
 export type Descriptor = RegularCompDescriptor | EnvCompDescriptor;
 
 export const DEFAULT_ENV = 'teambit.harmony/node';
-
-/**
- * the workspace-root component (rootDir ".") owns the files no other component claims - workspace
- * config, CI config, .bitmap, README, LICENSE. it is a bag of config files, not a source component:
- * nothing compiles it, nothing tests it, and nothing imports it as a package. defaulting it to the
- * regular default env gives it a compiler and a dependency policy it can never satisfy.
- *
- * hardcoded rather than imported from the aspect, same as DEFAULT_ENV above - empty-env depends on
- * this aspect, so importing it back here would be circular.
- */
-export const DEFAULT_ENV_FOR_WORKSPACE_ROOT = 'teambit.harmony/empty-env';
 
 export class EnvsMain {
   /**
@@ -239,20 +227,6 @@ export class EnvsMain {
     if (!defaultEnv) throw new Error('default env must be set.');
 
     return new EnvDefinition(DEFAULT_ENV, defaultEnv);
-  }
-
-  /**
-   * the default env to fall back to when the component has no env configured on it. it is only
-   * different from getDefaultEnv() for the workspace-root component, see
-   * DEFAULT_ENV_FOR_WORKSPACE_ROOT. note this is a *fallback* - an env explicitly set on the
-   * component (`bit env set`) is resolved earlier and always wins.
-   */
-  getDefaultEnvForComponent(component: Component): EnvDefinition {
-    if (component.state._consumer?.componentMap?.rootDir !== WORKSPACE_ROOT_DIR) return this.getDefaultEnv();
-    const emptyEnv = this.envSlot.get(DEFAULT_ENV_FOR_WORKSPACE_ROOT);
-    // empty-env is a core aspect, but be defensive: a missing env must not break loading.
-    if (!emptyEnv) return this.getDefaultEnv();
-    return new EnvDefinition(DEFAULT_ENV_FOR_WORKSPACE_ROOT, emptyEnv);
   }
 
   getCoreEnvsIds(): string[] {
@@ -684,7 +658,7 @@ export class EnvsMain {
     });
     ids = uniq(ids);
     const envId = await this.findFirstEnv(ids);
-    const finalId = envId || this.getDefaultEnvForComponent(component).id;
+    const finalId = envId || this.getDefaultEnv().id;
     return ComponentID.fromString(finalId);
   }
 
@@ -751,7 +725,7 @@ export class EnvsMain {
       this.envIds.add(envDefFromList.id);
       return envDefFromList;
     }
-    return this.getDefaultEnvForComponent(component);
+    return this.getDefaultEnv();
   }
 
   /**
