@@ -65,6 +65,32 @@ describe('add command on Harmony', function () {
     it('should not claim the local scope directory', () => {
       expect(rootFiles.some((file) => file.startsWith('.bit/'))).to.be.false;
     });
+    it('should not be linked into node_modules, unlike a regular component', () => {
+      // it is the workspace itself, not a package. linking it would symlink the workspace into its
+      // own node_modules, .bitmap included.
+      const nodeModules = path.join(helper.scopes.localPath, 'node_modules');
+      expect(path.join(nodeModules, helper.general.getPackageNameByCompName('comp1', false))).to.be.a.path();
+      expect(path.join(nodeModules, helper.general.getPackageNameByCompName('ws-root', false))).to.not.be.a.path();
+    });
+  });
+  describe('adding the workspace root and a nested component in one command', () => {
+    let addedComponents: Array<{ id: string; files: string[] }>;
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fs.outputFile('index.js', 'module.exports = {};\n');
+      // a direct child ("bit add . comp1") is dropped from the batch as a wildcard expansion of ".",
+      // a pre-existing rule. a deeper one is added alongside the root.
+      helper.fs.outputFile('packages/comp1/index.js', 'module.exports = () => "comp1";\n');
+      addedComponents = JSON.parse(helper.command.runCmd('bit add . packages/comp1 --json')).addedComponents;
+    });
+    it('should leave the nested component files out of the root, already at add time', () => {
+      // the nested component is not in .bitmap yet when the root is scanned, so the batch itself has
+      // to provide the exclusion. otherwise the two own the same files until the next rescan.
+      expect(addedComponents).to.have.lengthOf(2);
+      const root = addedComponents.find((added) => !added.id.endsWith('comp1'));
+      expect(root?.files).to.include('index.js');
+      expect(root?.files.some((file) => file.startsWith('packages/'))).to.be.false;
+    });
   });
   describe('workspace-root component and .bitmap', () => {
     before(() => {

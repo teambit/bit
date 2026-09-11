@@ -9,7 +9,12 @@ import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID } from '@teambit/component-id';
 import type { BitIdStr } from '@teambit/legacy-bit-id';
 import { BitId } from '@teambit/legacy-bit-id';
-import { PACKAGE_JSON, VERSION_DELIMITER, AUTO_GENERATED_STAMP } from '@teambit/legacy.constants';
+import {
+  PACKAGE_JSON,
+  VERSION_DELIMITER,
+  AUTO_GENERATED_STAMP,
+  IGNORE_ROOT_ONLY_LIST,
+} from '@teambit/legacy.constants';
 import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
 import {
   ComponentMap,
@@ -519,7 +524,7 @@ you can add the directory these files are located at and it'll change the root d
    * e.g. bar/foo.js, the id would be bar/foo.
    * in case bitmap has already the same id, the complete id is taken from bitmap (see _getIdAccordingToExistingComponent)
    */
-  async addOneComponent(componentPath: PathOsBased): Promise<AddedComponent> {
+  async addOneComponent(componentPath: PathOsBased, batchRootDirs: PathLinuxRelative[] = []): Promise<AddedComponent> {
     let finalBitId: ComponentID | undefined; // final id to use for bitmap file
     let idFromPath;
     if (this.id) {
@@ -530,8 +535,16 @@ you can add the directory these files are located at and it'll change the root d
     const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath) || WORKSPACE_ROOT_DIR;
     this._throwForOutsideConsumer(relativeComponentPath);
     throwForExistingParentDir(this.bitMap, relativeComponentPath, finalBitId);
-    // files of components nested inside this dir belong to them, not to the component being added.
-    const nestedRootDirs = this.bitMap.getNestedRootDirs(relativeComponentPath);
+    // files of components nested inside this dir belong to them, not to the component being added -
+    // whether they are tracked already or added by the same command.
+    const nestedRootDirs = uniq([
+      ...this.bitMap.getNestedRootDirs(relativeComponentPath),
+      ...batchRootDirs.filter(
+        (other) =>
+          other !== relativeComponentPath &&
+          (relativeComponentPath === WORKSPACE_ROOT_DIR || other.startsWith(`${relativeComponentPath}/`))
+      ),
+    ]);
     const matches = await glob(pathNormalizeToLinux(path.join(relativeComponentPath, '**')), {
       cwd: this.consumer.getPath(),
       nodir: true,
@@ -545,7 +558,14 @@ you can add the directory these files are located at and it'll change the root d
 
     if (!matches.length) throw new EmptyDirectory(componentPath);
 
-    const filteredMatches = this.gitIgnore.filter(matches);
+    // the config files "bit ws-config write" generates are not source - the same rule the rescan
+    // applies (see getFilesByDir), so the add-time file-set matches the next rescan.
+    const generatedAtRoot = new Set(
+      IGNORE_ROOT_ONLY_LIST.map((file) => pathNormalizeToLinux(path.join(relativeComponentPath, file)))
+    );
+    const filteredMatches = this.gitIgnore
+      .filter(matches)
+      .filter((match) => this.consumer.config.trackAllFiles || !generatedAtRoot.has(pathNormalizeToLinux(match)));
 
     if (!filteredMatches.length) {
       throw new NoFiles(matches);
@@ -621,7 +641,8 @@ you can add the directory these files are located at and it'll change the root d
   _removeDirectoriesWhenTheirFilesAreAdded(componentPathsStats: PathsStats) {
     const allPaths = Object.keys(componentPathsStats);
     allPaths.forEach((componentPath) => {
-      const foundDir = allPaths.find((p) => p === path.dirname(componentPath));
+      // the dirname of "." is "." itself - the workspace root is not a wildcard expansion of itself.
+      const foundDir = allPaths.find((p) => p !== componentPath && p === path.dirname(componentPath));
       if (foundDir && componentPathsStats[foundDir]) {
         logger.debug(`add-components._removeDirectoriesWhenTheirFilesAreAdded, ignoring ${foundDir}`);
         delete componentPathsStats[foundDir];
@@ -671,9 +692,12 @@ you can add the directory these files are located at and it'll change the root d
   }
 
   async _tryAddingMultiple(componentPathsStats: PathsStats): Promise<AddedComponent[]> {
+    const batchRootDirs = Object.keys(componentPathsStats).map(
+      (onePath) => pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(onePath)) || WORKSPACE_ROOT_DIR
+    );
     const addedP = Object.keys(componentPathsStats).map(async (onePath) => {
       try {
-        const addedComponent = await this.addOneComponent(onePath);
+        const addedComponent = await this.addOneComponent(onePath, batchRootDirs);
         return addedComponent;
       } catch (err: any) {
         if (!(err instanceof EmptyDirectory)) throw err;
@@ -792,7 +816,9 @@ export async function addMultipleFromResolvedTrackData(
   const componentMaps = trackData.map((data) => {
     const { rootDir, files, componentName, defaultScope, mainFile, config } = data;
     if (path.isAbsolute(rootDir)) throw new BitError(`path is absolute, got ${rootDir}`);
-    throwForExistingParentDir(bitMap, rootDir);
+    const componentId = ComponentID.fromObject({ name: componentName }, defaultScope);
+    // re-tracking the workspace root with the same id is a no-op, not a second owner
+    throwForExistingParentDir(bitMap, rootDir, componentId);
 
     const filtered = gitIgnore.filter(files);
     if (!filtered.length) {
@@ -804,7 +830,7 @@ export async function addMultipleFromResolvedTrackData(
     });
 
     const componentMap = bitMap.addComponent({
-      componentId: ComponentID.fromObject({ name: componentName }, defaultScope),
+      componentId,
       files: componentFiles,
       defaultScope,
       config,

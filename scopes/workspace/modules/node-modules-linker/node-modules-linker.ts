@@ -5,6 +5,7 @@ import { linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import type { ComponentID } from '@teambit/component-id';
 import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy.constants';
 import type { BitMap } from '@teambit/legacy.bit-map';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile, DataToPersist, RemovePath, Symlink } from '@teambit/component.sources';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -47,7 +48,13 @@ export default class NodeModuleLinker {
     this.packageJsonCreated = false;
   }
   async link(): Promise<NodeModulesLinksResult[]> {
-    this.components = this.components.filter((component) => this.bitMap.getComponentIfExist(component.id));
+    // the workspace-root component (rootDir ".") is the workspace itself, not a package. linking it
+    // would symlink the workspace into its own node_modules, .bitmap included. the package manager
+    // side of the same rule is in InstallMain.getComponentsDirectory().
+    this.components = this.components.filter((component) => {
+      const componentMap = this.bitMap.getComponentIfExist(component.id);
+      return componentMap && componentMap.rootDir !== WORKSPACE_ROOT_DIR;
+    });
     const links = await this.getLinks();
 
     const linksResults = this.getLinksResults();

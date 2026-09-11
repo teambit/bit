@@ -74,6 +74,11 @@ describe('getFilesByDir', function () {
         [`${BIT_WORKSPACE_TMP_DIRNAME}/x`]: '',
         'node_modules/dep/index.js': '',
         'packages/comp1/index.ts': '',
+        // a vendored repository and a nested bit workspace that no component claims
+        'vendor/lib/.git/HEAD': '',
+        'vendor/lib/index.js': '',
+        'nested/.bit/objects/bb': '',
+        'nested/.bit.map.json': '',
       });
     });
     after(() => fs.remove(workspacePath));
@@ -97,6 +102,7 @@ describe('getFilesByDir', function () {
         '.bitmap',
         '.github/ci.yml',
         'README.md',
+        'vendor/lib/index.js',
         'workspace.jsonc',
       ]);
     });

@@ -53,11 +53,12 @@ export function isWorkspaceMapFile(relativePath: PathLinux): boolean {
 /**
  * excluded from every directory scan, before the ignore files are consulted.
  * node_modules is filtered by the ignore list later on anyway, but enumerating it first hurts
- * performance dramatically. the rest are bit's own outputs at the workspace root: `.bit` (the local
- * object store), `.git` and `.bitTmp` are outputs of versioning, not sources, `.bit.map.json` is the
- * legacy location of the map itself, and `.git` is also a file in git worktrees and submodules (a
- * pointer to the real git dir). they only exist at the root, so they only matter for the
- * workspace-root component; for any other component they live outside its root-dir.
+ * performance dramatically. the rest are git's and bit's own internals: `.bit` (the local object
+ * store), `.git` and `.bitTmp` are outputs of versioning, not sources, `.bit.map.json` is the legacy
+ * location of the map itself, and `.git` is also a file in git worktrees and submodules (a pointer to
+ * the real git dir). they are matched at any depth: the workspace-root component scans the whole
+ * workspace, and a nested repository or bit workspace that no component claims must not hand its
+ * metadata to it.
  *
  * note that `.bitmap` is deliberately NOT here. it is the map of the workspace and a git-free
  * workspace has to be able to restore it, so the root component tracks it like any other file.
@@ -67,11 +68,11 @@ export function isWorkspaceMapFile(relativePath: PathLinux): boolean {
  */
 export const SCAN_IGNORE_LIST = [
   '**/node_modules/**',
-  `${BIT_HIDDEN_DIR}/**`,
-  DOT_GIT_DIR,
-  `${DOT_GIT_DIR}/**`,
-  `${BIT_WORKSPACE_TMP_DIRNAME}/**`,
-  OLD_BIT_MAP,
+  `**/${BIT_HIDDEN_DIR}/**`,
+  `**/${DOT_GIT_DIR}`,
+  `**/${DOT_GIT_DIR}/**`,
+  `**/${BIT_WORKSPACE_TMP_DIRNAME}/**`,
+  `**/${OLD_BIT_MAP}`,
 ];
 
 export type ComponentMapFile = {
