@@ -20,8 +20,8 @@ import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
 import {
   ComponentMap,
   getIgnoreListHarmony,
+  getScanIgnorePatterns,
   MissingMainFile,
-  SCAN_IGNORE_LIST,
   WORKSPACE_ROOT_DIR,
 } from '@teambit/legacy.bit-map';
 import { DuplicateIds, EmptyDirectory, ExcludedMainFile, MainFileIsDir, NoFiles, PathsNotExist } from './exceptions';
@@ -538,7 +538,12 @@ you can add the directory these files are located at and it'll change the root d
     // to "." so it is a real rootDir rather than a falsy one.
     const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath) || WORKSPACE_ROOT_DIR;
     this._throwForOutsideConsumer(relativeComponentPath);
-    throwForExistingParentDir(this.bitMap, relativeComponentPath, finalBitId);
+    // the component this add is for: the one the user named, tracked already or not, or else the
+    // one already tracking this dir. for the workspace root, this is what tells a re-add from a
+    // second owner.
+    const idOfTrackDir = this._getIdAccordingToTrackDir(relativeComponentPath);
+    const idToAdd = this.id ? finalBitId : idOfTrackDir;
+    throwForExistingParentDir(this.bitMap, relativeComponentPath, idToAdd || undefined);
     // files of components nested inside this dir belong to them, not to the component being added -
     // whether they are tracked already or added by the same command.
     const nestedRootDirs = uniq([
@@ -556,8 +561,8 @@ you can add the directory these files are located at and it'll change the root d
       // this, "bit add ." records an incomplete file-set that only the next rescan corrects, since
       // getFilesByDir() scans with dot: true.
       dot: relativeComponentPath === WORKSPACE_ROOT_DIR,
-      // the same exclusions the rescan applies, see SCAN_IGNORE_LIST.
-      ignore: [...SCAN_IGNORE_LIST, ...nestedRootDirs.map((nestedRootDir) => `${nestedRootDir}/**`)],
+      // the same exclusions the rescan applies, see getFilesByDir().
+      ignore: getScanIgnorePatterns(nestedRootDirs),
     });
 
     if (!matches.length) throw new EmptyDirectory(componentPath);
@@ -583,7 +588,6 @@ you can add the directory these files are located at and it'll change the root d
     const absoluteComponentPath = pathNormalizeToLinux(path.resolve(componentPath));
     const splitPath = absoluteComponentPath.split('/');
     const lastDir = splitPath[splitPath.length - 1];
-    const idOfTrackDir = this._getIdAccordingToTrackDir(componentPath);
     if (!finalBitId) {
       if (this.id) {
         const bitId = BitId.parse(this.id, false);

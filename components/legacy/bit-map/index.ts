@@ -15,8 +15,8 @@ export {
   ComponentMap,
   Config,
   getIgnoreListHarmony,
+  getScanIgnorePatterns,
   isWorkspaceMapFile,
   NextVersion,
-  SCAN_IGNORE_LIST,
   WORKSPACE_ROOT_DIR,
 } from './component-map';

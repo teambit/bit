@@ -163,6 +163,10 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('extra.md', 'extra\n');
       expect(() => helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' })).to.not.throw();
     });
+    it('should allow re-adding it without repeating its name', () => {
+      expect(() => helper.command.addComponent('.', { m: 'README.md' })).to.not.throw();
+      expect(Object.keys(helper.bitMap.readComponentsMapOnly())).to.deep.equal(['ws-root']);
+    });
     it('should reject a second component claiming the workspace root', () => {
       const cmd = () => helper.command.addComponent('.', { i: 'another-root', m: 'README.md' });
       expect(cmd).to.throw('already tracked by');

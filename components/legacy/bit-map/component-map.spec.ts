@@ -74,6 +74,10 @@ describe('getFilesByDir', function () {
         [`${BIT_WORKSPACE_TMP_DIRNAME}/x`]: '',
         'node_modules/dep/index.js': '',
         'packages/comp1/index.ts': '',
+        // a nested component whose root-dir is glob syntax (a Next.js route), next to a dir that
+        // the unescaped pattern "app/[slug]" would match instead
+        'app/[slug]/page.ts': '',
+        'app/l/index.ts': '',
         // a vendored repository and a nested bit workspace that no component claims
         'vendor/lib/.git/HEAD': '',
         'vendor/lib/index.js': '',
@@ -98,10 +102,11 @@ describe('getFilesByDir', function () {
     };
 
     it('should own every file no other component claims, and skip the bit and git internals', async () => {
-      expect(await scanFromInsideTheWorkspace(WORKSPACE_ROOT_DIR, ['packages/comp1'])).to.deep.equal([
+      expect(await scanFromInsideTheWorkspace(WORKSPACE_ROOT_DIR, ['packages/comp1', 'app/[slug]'])).to.deep.equal([
         '.bitmap',
         '.github/ci.yml',
         'README.md',
+        'app/l/index.ts',
         'vendor/lib/index.js',
         'workspace.jsonc',
       ]);

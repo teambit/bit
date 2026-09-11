@@ -62,11 +62,8 @@ export function isWorkspaceMapFile(relativePath: PathLinux): boolean {
  *
  * note that `.bitmap` is deliberately NOT here. it is the map of the workspace and a git-free
  * workspace has to be able to restore it, so the root component tracks it like any other file.
- *
- * exported so that `bit add` builds its initial file-set from the same list the rescan uses -
- * otherwise the two disagree about what the workspace-root component owns.
  */
-export const SCAN_IGNORE_LIST = [
+const SCAN_IGNORE_LIST = [
   '**/node_modules/**',
   `**/${BIT_HIDDEN_DIR}/**`,
   `**/${DOT_GIT_DIR}`,
@@ -74,6 +71,24 @@ export const SCAN_IGNORE_LIST = [
   `**/${BIT_WORKSPACE_TMP_DIRNAME}/**`,
   `**/${OLD_BIT_MAP}`,
 ];
+
+/**
+ * the ignore patterns for scanning a directory. `excludeDirs` are the root-dirs of the components
+ * nested inside it, whose files belong to them. they are literal paths, so their glob metacharacters
+ * are escaped: a Next.js route dir like "app/[slug]" is a valid root-dir, and read as a pattern it
+ * would exclude the wrong directories (`app/l`) rather than itself.
+ *
+ * shared with `bit add`, so its initial file-set is built from the same exclusions the rescan uses -
+ * otherwise the two disagree about what the workspace-root component owns.
+ */
+export function getScanIgnorePatterns(excludeDirs: PathLinux[] = []): string[] {
+  return [...SCAN_IGNORE_LIST, ...excludeDirs.map((excludeDir) => `${escapeGlobPath(excludeDir)}/**`)];
+}
+
+/** backslash-escapes the characters that globby and glob read as pattern syntax */
+function escapeGlobPath(literalPath: PathLinux): string {
+  return literalPath.replace(/[*?[\]{}()!@+|]/g, '\\$&');
+}
 
 export type ComponentMapFile = {
   relativePath: PathLinux;
@@ -434,7 +449,7 @@ export async function getFilesByDir(
     cwd: consumerPath,
     dot: true,
     onlyFiles: true,
-    ignore: [...SCAN_IGNORE_LIST, ...excludeDirs.map((excludeDir) => `${excludeDir}/**`)],
+    ignore: getScanIgnorePatterns(excludeDirs),
     // every pattern here is an explicit glob. with expansion on, globby stats each ignore pattern
     // (relative to the process cwd, not to `cwd`) to decide whether to expand it, and `.git/**`
     // throws ENOTDIR wherever `.git` is a file - every git worktree.
