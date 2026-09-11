@@ -262,11 +262,12 @@ export default class AddComponents {
       const ownedByWorkspaceRoot = Boolean(
         workspaceRootMap && existingIdOfFile?.isEqualWithoutVersion(workspaceRootMap.id)
       );
+      // the ownership lookup above is case-insensitive, so this comparison is too
       if (
         workspaceRootMap &&
         idOfFileIsDifferent &&
         ownedByWorkspaceRoot &&
-        file.relativePath === workspaceRootMap.mainFile
+        file.relativePath.toLowerCase() === workspaceRootMap.mainFile.toLowerCase()
       ) {
         throw new BitError(
           `unable to add "${file.relativePath}" to "${parsedBitId.toString()}", it is the main file of the workspace-root component "${workspaceRootMap.id.toStringWithoutVersion()}". set a different main file for it first: bit add . --main <file>`
@@ -846,6 +847,7 @@ export async function addMultipleFromResolvedTrackData(
     workspace.consumer.config.trackAllFiles
   );
   const gitIgnore = ignore().add(ignoreList);
+  const batchRootDirs = trackData.map((data) => data.rootDir);
   const componentMaps = trackData.map((data) => {
     const { rootDir, files, componentName, defaultScope, mainFile, config } = data;
     if (path.isAbsolute(rootDir)) throw new BitError(`path is absolute, got ${rootDir}`);
@@ -856,8 +858,18 @@ export async function addMultipleFromResolvedTrackData(
     const existingConfig = isWorkspaceRoot
       ? bitMap.getComponentIfExist(componentId, { ignoreVersion: true })?.config
       : undefined;
+    // files of components nested inside the workspace root belong to them, not to the root - whether
+    // tracked already or by this same call. the rule addOneComponent() and the rescan apply, so the
+    // map stays loadable: a root main-file inside a nested component fails validation before the map
+    // is written, not on the next load.
+    const nestedRootDirs = isWorkspaceRoot
+      ? uniq([...bitMap.getNestedRootDirs(rootDir), ...batchRootDirs.filter((dir) => dir !== WORKSPACE_ROOT_DIR)])
+      : [];
+    const ownedFiles = files.filter(
+      (file) => !nestedRootDirs.some((nestedRootDir) => pathNormalizeToLinux(file).startsWith(`${nestedRootDir}/`))
+    );
 
-    const filtered = gitIgnore.filter(files);
+    const filtered = gitIgnore.filter(ownedFiles);
     if (!filtered.length) {
       throw new NoFiles(files);
     }
