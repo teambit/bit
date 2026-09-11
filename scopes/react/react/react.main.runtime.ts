@@ -50,6 +50,8 @@ import { getTemplates } from './react.templates';
 import { getStarters } from './react.starters';
 import type { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactSchema } from './react.schema';
+import type { ReactDocsFromSchema } from './react-docs-from-schema';
+import { reactDocsFromSchema } from './react-docs-from-schema';
 import { ReactAPITransformer } from './react.api.transformer';
 import type { PrettierConfigTransformer } from '@teambit/defender.prettier.config-mutator';
 
@@ -124,7 +126,9 @@ export class ReactMain {
 
     private dependencyResolver: DependencyResolverMain,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private schema?: SchemaMain
   ) {}
 
   readonly env = this.reactEnv;
@@ -395,21 +399,34 @@ export class ReactMain {
   }
 
   /**
-   * returns doc adjusted specifically for react components.
+   * dedupes concurrent extractions of the same component. nothing is retained once an extraction
+   * settles, so a workspace component is never described from a stale schema.
    */
-  getDocs(component: Component) {
-    const docsArray = component.state._consumer.docs;
-    if (!docsArray || !docsArray[0]) {
-      return null;
-    }
+  private docsInflight = new Map<string, Promise<ReactDocsFromSchema | null>>();
 
-    const docs = docsArray[0];
+  /**
+   * returns doc adjusted specifically for react components, derived from the component's API schema.
+   */
+  async getDocs(component: Component): Promise<ReactDocsFromSchema | null> {
+    if (!this.schema) return null;
 
-    return {
-      abstract: docs.description,
-      filePath: docs.filePath,
-      properties: docs.properties,
-    };
+    const key = component.id.toString();
+    const inflight = this.docsInflight.get(key);
+    if (inflight) return inflight;
+
+    const promise = this.schema
+      .getSchema(component)
+      .then((api) => reactDocsFromSchema(api) || null)
+      .catch((err) => {
+        this.logger.debug(`react.getDocs, failed extracting the schema of ${key}`, err);
+        return null;
+      })
+      .finally(() => {
+        this.docsInflight.delete(key);
+      });
+
+    this.docsInflight.set(key, promise);
+    return promise;
   }
 
   static runtime = MainRuntime;
@@ -469,7 +486,7 @@ export class ReactMain {
       CompilerAspect.id
     );
     const appType = new ReactAppType('react-app', reactEnv, logger, dependencyResolver);
-    const react = new ReactMain(reactEnv, envs, application, appType, dependencyResolver, logger);
+    const react = new ReactMain(reactEnv, envs, application, appType, dependencyResolver, logger, schemaMain);
     graphql.register(() => reactSchema(react));
     envs.registerEnv(reactEnv);
     if (generator) {
