@@ -3,6 +3,7 @@ import type { Scope } from '@teambit/legacy.scope';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
+import { isWorkspaceMapFile } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -104,8 +105,12 @@ export default class ComponentWriter {
     if (this.deleteBitDirContent) {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
-    this.component.files.forEach((file) => (file.override = this.override));
-    this.component.files.map((file) => this.component.dataToPersist.addFile(file));
+    this.component.files.forEach((file) => {
+      // the live map is never written from a versioned copy, see isWorkspaceMapFile
+      if (isWorkspaceMapFile(pathNormalizeToLinux(file.relative))) return;
+      file.override = this.override;
+      this.component.dataToPersist.addFile(file);
+    });
 
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
@@ -119,9 +124,6 @@ export default class ComponentWriter {
   }
 
   async addComponentToBitMap(rootDir: string): Promise<ComponentMap> {
-    if (rootDir === '.') {
-      throw new Error('addComponentToBitMap: rootDir cannot be "."');
-    }
     const filesForBitMap = this.component.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });

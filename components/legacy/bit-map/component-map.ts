@@ -3,28 +3,92 @@ import globby from 'globby';
 import ignore from 'ignore';
 import { pickBy, isNil, sortBy, isEmpty } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
-import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy.constants';
+import {
+  BIT_HIDDEN_DIR,
+  BIT_MAP,
+  BIT_WORKSPACE_TMP_DIRNAME,
+  DOT_GIT_DIR,
+  Extensions,
+  OLD_BIT_MAP,
+  IGNORE_ROOT_ONLY_LIST,
+  ALWAYS_IGNORE_LIST,
+  IGNORE_LIST,
+} from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { isValidPath } from '@teambit/legacy.utils';
 import {
-  retrieveIgnoreList,
+  retrieveUserIgnoreList,
   BIT_IGNORE,
   getBitIgnoreFile,
   getGitIgnoreFile,
 } from '@teambit/git.modules.ignore-file-reader';
-import type {
-  PathLinux,
-  PathLinuxRelative,
-  PathOsBasedAbsolute,
-  PathOsBasedRelative,
-} from '@teambit/toolbox.path.path';
+import type { PathLinux, PathLinuxRelative, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/toolbox.path.path';
 import { removeInternalConfigFields } from '@teambit/legacy.extension-data';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
+
+/**
+ * rootDir of a component that owns the workspace root. such a component holds the files that no
+ * other component claims - e.g. the workspace config, CI config, README and license files.
+ * it is the only rootDir allowed to contain other components' root-dirs.
+ */
+export const WORKSPACE_ROOT_DIR = '.';
+
+/**
+ * `.bitmap` is the live map of the workspace. the workspace-root component versions it, so a git-free
+ * workspace can be restored from the scope, but no operation may write or delete the one on disk
+ * from a versioned copy: writing it into a sub-directory (importing a workspace-root component into
+ * another workspace) creates a broken nested workspace there, and writing or deleting it at the root
+ * clobbers the map the running command is mutating. the rest of the component's files are handled
+ * normally.
+ */
+export function isWorkspaceMapFile(relativePath: PathLinux): boolean {
+  return relativePath === BIT_MAP;
+}
+
+/**
+ * excluded from every directory scan, before the ignore files are consulted.
+ * node_modules is filtered by the ignore list later on anyway, but enumerating it first hurts
+ * performance dramatically. the rest are git's and bit's own internals: `.bit` (the local object
+ * store), `.git` and `.bitTmp` are outputs of versioning, not sources, `.bit.map.json` is the legacy
+ * location of the map itself, and `.git` is also a file in git worktrees and submodules (a pointer to
+ * the real git dir). they are matched at any depth: the workspace-root component scans the whole
+ * workspace, and a nested repository or bit workspace that no component claims must not hand its
+ * metadata to it.
+ *
+ * note that `.bitmap` is deliberately NOT here. it is the map of the workspace and a git-free
+ * workspace has to be able to restore it, so the root component tracks it like any other file.
+ */
+const SCAN_IGNORE_LIST = [
+  '**/node_modules/**',
+  `**/${BIT_HIDDEN_DIR}/**`,
+  `**/${DOT_GIT_DIR}`,
+  `**/${DOT_GIT_DIR}/**`,
+  `**/${BIT_WORKSPACE_TMP_DIRNAME}/**`,
+  `**/${OLD_BIT_MAP}`,
+];
+
+/**
+ * the ignore patterns for scanning a directory. `excludeDirs` are the root-dirs of the components
+ * nested inside it, whose files belong to them. they are literal paths, so their glob metacharacters
+ * are escaped: a Next.js route dir like "app/[slug]" is a valid root-dir, and read as a pattern it
+ * would exclude the wrong directories (`app/l`) rather than itself.
+ *
+ * shared with `bit add`, so its initial file-set is built from the same exclusions the rescan uses -
+ * otherwise the two disagree about what the workspace-root component owns.
+ */
+export function getScanIgnorePatterns(excludeDirs: PathLinux[] = []): string[] {
+  return [...SCAN_IGNORE_LIST, ...excludeDirs.map((excludeDir) => `${escapeGlobPath(excludeDir)}/**`)];
+}
+
+/** backslash-escapes the characters that globby and glob read as pattern syntax */
+function escapeGlobPath(literalPath: PathLinux): string {
+  return literalPath.replace(/[*?[\]{}()!@+|]/g, '\\$&');
+}
 
 export type ComponentMapFile = {
   relativePath: PathLinux;
@@ -261,19 +325,6 @@ export class ComponentMap {
     return Boolean(this.rootDir);
   }
 
-  /**
-   * if the component dir has changed since the last tracking, re-scan the component-dir to get the
-   * updated list of the files
-   */
-  async trackDirectoryChangesHarmony(consumerPath: PathOsBasedAbsolute, ignoredFiles?: string[]): Promise<void> {
-    const trackDir = this.rootDir;
-    if (!trackDir) {
-      return;
-    }
-    const gitIgnore = await getGitIgnoreHarmony(consumerPath, ignoredFiles);
-    this.files = await getFilesByDir(trackDir, consumerPath, gitIgnore);
-  }
-
   updateNextVersion(nextVersion: NextVersion) {
     this.nextVersion = nextVersion;
     this.validate();
@@ -347,10 +398,8 @@ export class ComponentMap {
     if (!isValidPath(this.mainFile)) {
       throw new ValidationError(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
     }
-    if (this.rootDir && !isValidPath(this.rootDir)) {
-      throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
-    }
-    if (this.rootDir && this.rootDir === '.') {
+    // "." is valid - it marks the component that owns the workspace root. see WORKSPACE_ROOT_DIR.
+    if (this.rootDir && this.rootDir !== WORKSPACE_ROOT_DIR && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }
     if (this.nextVersion && !this.nextVersion.version) {
@@ -382,23 +431,46 @@ if you renamed the mainFile, please re-add the component with the "--main" flag 
   }
 }
 
-export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
-  const matches = await globby(dir, {
+/**
+ * scan a component's root-dir for its files.
+ *
+ * `excludeDirs` holds the root-dirs of components nested inside `dir`. their files belong to the
+ * nested component, not to this one. this is what makes a workspace-root component (rootDir ".")
+ * possible: it owns every file that no other component claims.
+ */
+export async function getFilesByDir(
+  dir: string,
+  consumerPath: string,
+  gitIgnore: any,
+  excludeDirs: PathLinux[] = [],
+  trackAllFiles = false
+): Promise<ComponentMapFile[]> {
+  const matches = await globby(pathJoinLinux(dir, '**'), {
     cwd: consumerPath,
     dot: true,
     onlyFiles: true,
-    // must ignore node_modules at this stage, although we check for gitignore later on.
-    // otherwise, it hurts performance dramatically for components that have node_modules in the comp-dir.
-    ignore: [`${dir}/node_modules/`],
+    ignore: getScanIgnorePatterns(excludeDirs),
+    // every pattern here is an explicit glob. with expansion on, globby stats each ignore pattern
+    // (relative to the process cwd, not to `cwd`) to decide whether to expand it, and `.git/**`
+    // throws ENOTDIR wherever `.git` is a file - every git worktree.
+    expandDirectories: false,
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches: string[] = gitIgnore.filter(matches);
-  // the path is relative to consumer. remove the rootDir.
-  const relativePathsLinux = filteredMatches.map((match) => pathNormalizeToLinux(match).replace(`${dir}/`, ''));
-  const filteredByIgnoredFromRoot = relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
+  // the paths are relative to the workspace. make them relative to the component's root-dir.
+  const relativePathsLinux = filteredMatches.map((match) => pathRelativeLinux(dir, match));
+  // the config files "bit ws-config write" generates are not source - unless the workspace declares that
+  // every file is (trackAllFiles). in a repo adopted from an existing monorepo, the user wrote them.
+  const filteredByIgnoredFromRoot = trackAllFiles
+    ? relativePathsLinux
+    : relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
+  // resolve against the workspace, not the process cwd. `dir` is workspace-relative, so running bit
+  // from a sub-directory would otherwise look for the ignore file in the wrong place - and
+  // getBitIgnoreFile() does not swallow ENOENT, so it throws rather than falling back.
+  const ignoreFileDir = path.join(consumerPath, dir);
   const bitOrGitIgnore = filteredByIgnoredFromRoot.includes(BIT_IGNORE)
-    ? await getBitIgnoreFile(dir)
-    : await getGitIgnoreFile(dir);
+    ? await getBitIgnoreFile(ignoreFileDir)
+    : await getGitIgnoreFile(ignoreFileDir);
   const filteredByBitIgnore = bitOrGitIgnore
     ? ignore().add(bitOrGitIgnore).filter(filteredByIgnoredFromRoot)
     : filteredByIgnoredFromRoot;
@@ -410,15 +482,29 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
   }));
 }
 
-export async function getGitIgnoreHarmony(consumerPath: string, additionalPatterns?: string[]): Promise<any> {
-  const ignoreList = await getIgnoreListHarmony(consumerPath, additionalPatterns);
+export async function getGitIgnoreHarmony(
+  consumerPath: string,
+  additionalPatterns?: string[],
+  trackAllFiles = false
+): Promise<any> {
+  const ignoreList = await getIgnoreListHarmony(consumerPath, additionalPatterns, trackAllFiles);
   return ignore().add(ignoreList);
 }
 
-export async function getIgnoreListHarmony(consumerPath: string, additionalPatterns?: string[]): Promise<string[]> {
-  const ignoreList = await retrieveIgnoreList(consumerPath);
-  // the ability to track package.json is deprecated since Harmony
-  ignoreList.push(PACKAGE_JSON);
+/**
+ * the patterns git ignores, plus the files bit owns. with `trackAllFiles` the workspace declares that
+ * bit owns nothing: package.json and the lockfiles are the user's source, so only the git-ignored
+ * files and the hard exclusions (node_modules, .env and friends) are left out.
+ */
+export async function getIgnoreListHarmony(
+  consumerPath: string,
+  additionalPatterns?: string[],
+  trackAllFiles = false
+): Promise<string[]> {
+  const userIgnoreList = await retrieveUserIgnoreList(consumerPath);
+  // with trackAllFiles the workspace declares that bit generates nothing: package.json and the
+  // lockfiles are the user's source. what the user ignores stays ignored either way.
+  const ignoreList = [...userIgnoreList, ...(trackAllFiles ? ALWAYS_IGNORE_LIST : IGNORE_LIST)];
   if (additionalPatterns?.length) {
     ignoreList.push(...additionalPatterns);
   }

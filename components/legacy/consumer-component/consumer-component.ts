@@ -16,6 +16,7 @@ import type { PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolb
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
+import { fileContentsForVersioning } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
 import type { Dist, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import { License, SourceFile } from '@teambit/component.sources';
@@ -600,10 +601,11 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
-  await componentMap.trackDirectoryChangesHarmony(consumer.getPath(), consumer.config.ignoredFiles);
+  await consumer.bitMap.loadFilesOf(componentMap);
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
     const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), { test: file.test || false });
+    sourceFile.contents = fileContentsForVersioning(componentMap, file.relativePath, sourceFile.contents);
     return sourceFile;
   });
   const filePaths = componentMap.getAllFilesPaths();

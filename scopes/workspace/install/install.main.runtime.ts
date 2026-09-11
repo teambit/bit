@@ -1537,7 +1537,13 @@ export class InstallMain {
     const components = ids.length
       ? await this.workspace.getMany(ids, loadOpts)
       : await this.workspace.list(undefined, loadOpts);
-    return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
+    // the workspace-root component's dir is the workspace root itself. it is not an installable
+    // package - it holds the workspace's own config files, nothing depends on it, and handing its
+    // dir to the package manager makes it collide with the root project (pnpm resolves it to an
+    // empty "file:" spec and fails to build the lockfile).
+    return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id)).filter(
+      (componentDir) => componentDir !== this.workspace.path
+    );
   }
 
   private async onRootAspectAddedSubscriber(_aspectId: ComponentID, inWs: boolean): Promise<void> {

@@ -4,6 +4,7 @@ import type { Version } from '@teambit/objects';
 import type { SourceFile } from '@teambit/component.sources';
 import { RemovePath, DataToPersist } from '@teambit/component.sources';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { isWorkspaceMapFile } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
@@ -127,6 +128,8 @@ export async function removeFilesIfNeeded(
   const dataToPersist = new DataToPersist();
   filePathsFromFS.forEach((file) => {
     const filename = pathNormalizeToLinux(file.relative);
+    // the live .bitmap is never deleted from a versioned copy, see isWorkspaceMapFile
+    if (isWorkspaceMapFile(filename)) return;
     if (!filesStatus[filename]) {
       // @ts-ignore todo: typescript has a good point here. it should be the string "removed", not chalk.green(removed).
       filesStatus[filename] = FileStatus.removed;
