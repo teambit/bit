@@ -356,7 +356,11 @@ to move all component files to a different directory, run bit remove and then bi
         const relativePath = pathNormalizeToLinux(file.relative);
         if (isWorkspaceMapFile(relativePath) || generatedByInit.includes(relativePath)) return false;
         const absolutePath = this.consumer.toAbsolutePath(relativePath);
-        return fs.existsSync(absolutePath) && !fs.readFileSync(absolutePath).equals(file.contents);
+        // lstat rather than exists: a symlink in the way, dangling or not, is a conflict and not a path
+        // to write through, and so is a directory. only a regular file is compared with the incoming copy.
+        const stat = fs.lstatSync(absolutePath, { throwIfNoEntry: false });
+        if (!stat) return false;
+        return !stat.isFile() || !fs.readFileSync(absolutePath).equals(file.contents);
       })
       .map((file) => pathNormalizeToLinux(file.relative));
     if (!filesToOverwrite.length) return;

@@ -845,11 +845,8 @@ export async function addMultipleFromResolvedTrackData(
   trackData: ResolvedTrackData[]
 ): Promise<ComponentID[]> {
   const bitMap = workspace.consumer.bitMap;
-  const ignoreList = await getIgnoreListHarmony(
-    workspace.path,
-    workspace.consumer.config.ignoredFiles,
-    workspace.consumer.config.trackAllFiles
-  );
+  const { ignoredFiles, trackAllFiles } = workspace.consumer.config;
+  const ignoreList = await getIgnoreListHarmony(workspace.path, ignoredFiles, trackAllFiles);
   const gitIgnore = ignore().add(ignoreList);
   const batchRootDirs = trackData.map((data) => data.rootDir);
   const componentMaps = trackData.map((data) => {
@@ -869,9 +866,13 @@ export async function addMultipleFromResolvedTrackData(
     const nestedRootDirs = isWorkspaceRoot
       ? uniq([...bitMap.getNestedRootDirs(rootDir), ...batchRootDirs.filter((dir) => dir !== WORKSPACE_ROOT_DIR)])
       : [];
-    const ownedFiles = files.filter(
-      (file) => !nestedRootDirs.some((nestedRootDir) => pathNormalizeToLinux(file).startsWith(`${nestedRootDir}/`))
-    );
+    // and the config files "bit ws-config write" generates are not source, the rule the rescan applies
+    // (see getFilesByDir), so one of them cannot be the main file the next load drops.
+    const ownedFiles = files.filter((file) => {
+      const relativePath = pathNormalizeToLinux(file);
+      if (nestedRootDirs.some((nestedRootDir) => relativePath.startsWith(`${nestedRootDir}/`))) return false;
+      return trackAllFiles || !IGNORE_ROOT_ONLY_LIST.includes(relativePath);
+    });
 
     const filtered = gitIgnore.filter(ownedFiles);
     if (!filtered.length) {

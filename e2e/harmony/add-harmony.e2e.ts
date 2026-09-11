@@ -1,4 +1,5 @@
 import chai from 'chai';
+import fs from 'fs-extra';
 import path from 'path';
 import { ParentDirTracked, AddingIndividualFiles } from '@teambit/tracker';
 import { Helper } from '@teambit/legacy.e2e-helper';
@@ -261,6 +262,25 @@ describe('add command on Harmony', function () {
         const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
         expect(cmd).to.throw('use --override');
         expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# my own readme\n');
+      });
+    });
+    describe('importing it onto the root with a directory or a dangling symlink in the way', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('should report a directory at a file path as a conflict rather than fail reading it', () => {
+        fs.mkdirSync(path.join(helper.scopes.localPath, 'README.md'));
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        expect(cmd).to.throw('use --override');
+      });
+      it('should report a dangling symlink as a conflict rather than write through it', () => {
+        fs.rmdirSync(path.join(helper.scopes.localPath, 'README.md'));
+        const target = path.join(helper.scopes.localPath, 'missing-target');
+        fs.symlinkSync(target, path.join(helper.scopes.localPath, 'README.md'));
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        expect(cmd).to.throw('use --override');
+        expect(target).to.not.be.a.path();
       });
     });
     describe('importing it onto the root of a workspace that already tracks components', () => {
