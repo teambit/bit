@@ -40,6 +40,7 @@ when no app name is specified, automatically detects and runs the app if only on
   ];
   alias = 'c';
   group = 'run-serve';
+  _packageManagerArgs: string[] = []; // populated by yargs-adapter from anything after `--` (e.g. `bit run my-app -- --device --ios`)
   options = [
     ['d', 'dev', 'start the application in dev mode.'],
     ['p', 'port [port-number]', 'port to run the app on'],
@@ -78,6 +79,9 @@ when no app name is specified, automatically detects and runs the app if only on
       this.logger.console(`multiple apps found, please specify one using "${runStr}".\n\n${section}`);
       process.exit(1);
     }
+    // merge any args passed after `--` (e.g. `bit run my-app -- --device --ios`) into the args string forwarded to the app.
+    const extraArgs = this._packageManagerArgs.join(' ');
+    const mergedArgs = [args, extraArgs].filter(Boolean).join(' ');
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     this.logger.off();
     const { port, errors, isOldApi } = await this.application.runApp(resolvedApp, {
@@ -85,7 +89,7 @@ when no app name is specified, automatically detects and runs the app if only on
       watch,
       ssr,
       port: +exactPort,
-      args,
+      args: mergedArgs,
     });
 
     if (errors) {
