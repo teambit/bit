@@ -20,7 +20,7 @@ import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
-import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
+import { COMPONENT_CONFIG_FILE_NAME, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { ConfigMergerAspect } from '@teambit/config-merger';
@@ -338,26 +338,32 @@ to move all component files to a different directory, run bit remove and then bi
    * the workspace root is never empty - it holds .bit, .bitmap and workspace.jsonc - so "not empty"
    * says nothing about a conflict there. the target is only reachable for a workspace-root component.
    * restoring a git-free workspace from its scope starts from `bit init`, and the root files are meant
-   * to land on top of the freshly initialized ones. a workspace that already tracks components is not
-   * being restored: its workspace.jsonc and root files would be overwritten silently, so it takes
-   * --override like any other occupied directory.
+   * to land on top of the ones it generated. every other existing file at the root is the user's own,
+   * whether or not the workspace tracks components yet, so overwriting it takes --override like any
+   * other occupied directory. a file identical to its incoming copy is not overwritten in any sense
+   * that matters, and this is what lets the files `bit init` generates (agent instructions, mcp config)
+   * meet their own versioned copies. workspace.jsonc is the exception: the freshly initialized one is
+   * meant to be replaced by the versioned one.
    */
   private throwForOccupiedWorkspaceRoot(component: ConsumerComponent, opts: ManyComponentsWriterParams) {
     if (!opts.throwForExistingDir) return;
     const isFreshWorkspace = this.consumer.bitMap.components.every((componentMap) =>
       componentMap.id.isEqualWithoutVersion(component.id)
     );
-    if (isFreshWorkspace) return;
+    const generatedByInit = isFreshWorkspace ? [WORKSPACE_JSONC] : [];
     const filesToOverwrite = component.files
-      .map((file) => pathNormalizeToLinux(file.relative))
-      .filter(
-        (relativePath) => !isWorkspaceMapFile(relativePath) && fs.existsSync(this.consumer.toAbsolutePath(relativePath))
-      );
+      .filter((file) => {
+        const relativePath = pathNormalizeToLinux(file.relative);
+        if (isWorkspaceMapFile(relativePath) || generatedByInit.includes(relativePath)) return false;
+        const absolutePath = this.consumer.toAbsolutePath(relativePath);
+        return fs.existsSync(absolutePath) && !fs.readFileSync(absolutePath).equals(file.contents);
+      })
+      .map((file) => pathNormalizeToLinux(file.relative));
     if (!filesToOverwrite.length) return;
     const shown = filesToOverwrite.slice(0, 10).join(', ');
     const rest = filesToOverwrite.length > 10 ? ` and ${filesToOverwrite.length - 10} more` : '';
     throw new BitError(
-      `unable to import "${component.id.toString()}" to the workspace root, this workspace already tracks other components and the import would overwrite ${shown}${rest}.
+      `unable to import "${component.id.toString()}" to the workspace root, it would overwrite ${shown}${rest}.
 use --override to overwrite them`
     );
   }

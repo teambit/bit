@@ -139,6 +139,11 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.fs.outputFile('untracked-by-bit.txt', 'not a component file\n');
       helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      // a dependency that happens to share the package name the root's id derives
+      helper.fs.outputFile(
+        path.join('node_modules', helper.general.getPackageNameByCompName('ws-root', false), 'index.js'),
+        ''
+      );
       helper.command.removeComponent('ws-root --silent');
     });
     it('should not delete the workspace', () => {
@@ -151,6 +156,11 @@ describe('add command on Harmony', function () {
     });
     it('should keep the other component tracked', () => {
       expect(helper.bitMap.read()).to.have.property('comp1');
+    });
+    it('should not delete a dependency that shares its derived package name', () => {
+      // it was never linked, so the node_modules cleanup has nothing of it to remove
+      const packageDir = path.join('node_modules', helper.general.getPackageNameByCompName('ws-root', false));
+      expect(path.join(helper.scopes.localPath, packageDir, 'index.js')).to.be.a.path();
     });
   });
   describe('re-adding and double-adding the workspace root', () => {
@@ -236,6 +246,19 @@ describe('add command on Harmony', function () {
       it('should leave the live .bitmap alone rather than overwrite it with the exported one', () => {
         // the exported .bitmap lists comp1. the restored workspace must not inherit that entry.
         expect(helper.bitMap.read()).to.not.have.property('comp1');
+      });
+    });
+    describe('importing it onto the root of a fresh workspace that has its own files', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.fs.outputFile('README.md', '# my own readme\n');
+      });
+      it('should refuse to overwrite them without --override, even though nothing is tracked yet', () => {
+        // only the files "bit init" generated are meant to be landed on. the rest of the root is the user's.
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        expect(cmd).to.throw('use --override');
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# my own readme\n');
       });
     });
     describe('importing it onto the root of a workspace that already tracks components', () => {

@@ -10,6 +10,7 @@ import { logger } from '@teambit/legacy.logger';
 import { Http } from '@teambit/scope.network';
 import { Remotes } from '@teambit/scope.remotes';
 import { deleteComponentsFiles } from './delete-component-files';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { RemovedObjects } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
@@ -186,7 +187,12 @@ If you understand the risks and wish to proceed with the removal, please use the
 
 export async function removeComponentsFromNodeModules(consumer: Consumer, components: ConsumerComponent[]) {
   logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
-  const pathsToRemoveWithNulls = components.map((c) => {
+  // the workspace-root component is never linked (it is the workspace, not a package), so there is
+  // nothing of it to remove, and the path its id derives may belong to a dependency of the same name.
+  const linkedComponents = components.filter(
+    (c) => consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })?.rootDir !== WORKSPACE_ROOT_DIR
+  );
+  const pathsToRemoveWithNulls = linkedComponents.map((c) => {
     return getNodeModulesPathOfComponent({ ...c, id: c.id });
   });
   const pathsToRemove = compact(pathsToRemoveWithNulls);
