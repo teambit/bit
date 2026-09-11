@@ -78,15 +78,30 @@ describe('getFilesByDir', function () {
     });
     after(() => fs.remove(workspacePath));
 
+    // bit runs with the workspace as its cwd. globby stats ignore patterns relative to the process
+    // cwd, so the `.git` pointer file is only exercised from inside the workspace.
+    const scanFromInsideTheWorkspace = async (dir: string, excludeDirs: string[]): Promise<string[]> => {
+      const originalCwd = process.cwd();
+      process.chdir(workspacePath);
+      try {
+        const gitIgnore = await getGitIgnoreHarmony(workspacePath);
+        const files = await getFilesByDir(dir, workspacePath, gitIgnore, excludeDirs);
+        return files.map((file) => file.relativePath).sort();
+      } finally {
+        process.chdir(originalCwd);
+      }
+    };
+
     it('should own every file no other component claims, and skip the bit and git internals', async () => {
-      const gitIgnore = await getGitIgnoreHarmony(workspacePath);
-      const files = await getFilesByDir(WORKSPACE_ROOT_DIR, workspacePath, gitIgnore, ['packages/comp1']);
-      expect(files.map((file) => file.relativePath).sort()).to.deep.equal([
+      expect(await scanFromInsideTheWorkspace(WORKSPACE_ROOT_DIR, ['packages/comp1'])).to.deep.equal([
         '.bitmap',
         '.github/ci.yml',
         'README.md',
         'workspace.jsonc',
       ]);
+    });
+    it('should scan a nested component in a git worktree, where .git is a file', async () => {
+      expect(await scanFromInsideTheWorkspace('packages/comp1', [])).to.deep.equal(['index.ts']);
     });
   });
 });

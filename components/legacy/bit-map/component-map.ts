@@ -434,6 +434,10 @@ export async function getFilesByDir(
     dot: true,
     onlyFiles: true,
     ignore: [...SCAN_IGNORE_LIST, ...excludeDirs.map((excludeDir) => `${excludeDir}/**`)],
+    // every pattern here is an explicit glob. with expansion on, globby stats each ignore pattern
+    // (relative to the process cwd, not to `cwd`) to decide whether to expand it, and `.git/**`
+    // throws ENOTDIR wherever `.git` is a file - every git worktree.
+    expandDirectories: false,
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches: string[] = gitIgnore.filter(matches);
