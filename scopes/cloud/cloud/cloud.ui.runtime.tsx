@@ -118,8 +118,8 @@ export class CloudUI {
                     link: 'https://support.bit.cloud',
                   },
                   {
-                    label: 'Bit Community Slack',
-                    link: 'https://join.slack.com/t/bit-dev-community/shared_invite/zt-29pmawrp1-ehfEzYbQyuAC3CNA_jYPvA',
+                    label: 'Bit Community Discord',
+                    link: 'https://discord.bit.cloud/',
                   },
                 ] as any,
               }}
