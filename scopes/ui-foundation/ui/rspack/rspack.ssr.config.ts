@@ -31,9 +31,6 @@ export default function createRspackSsrConfig(
     // this bundle ships inside the package, so it follows the browser config's opt-in: the `eval-*`
     // devtools inline a base64 source map per module, which was 60% of the 37 MB `ssr/index.js`.
     devtool: shouldUseSourceMap ? 'source-map' : false,
-    experiments: {
-      css: true,
-    },
 
     optimization: {
       minimize: true,

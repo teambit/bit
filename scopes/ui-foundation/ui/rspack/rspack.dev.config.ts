@@ -1,6 +1,6 @@
 import { rspack, type Configuration } from '@rspack/core';
 import type { Configuration as DevServerConfig } from '@rspack/dev-server';
-import RefreshPlugin from '@rspack/plugin-react-refresh';
+import { ReactRefreshRspackPlugin } from '@rspack/plugin-react-refresh';
 import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
@@ -40,10 +40,6 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
     mode: 'development',
 
     devtool: 'eval-cheap-module-source-map',
-
-    experiments: {
-      css: true,
-    },
 
     // enable persistent cache
     cache: true,
@@ -91,7 +87,6 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
           directory: resolveWorkspacePath(publicUrlOrPath),
           staticOptions: {},
           publicPath: publicUrlOrPath,
-          serveIndex: true,
           watch: false,
         },
       ],
@@ -171,7 +166,7 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
     },
 
     plugins: [
-      new RefreshPlugin(),
+      new ReactRefreshRspackPlugin(),
       new rspack.HtmlRspackPlugin({
         inject: true,
         templateContent: html(title || 'My component workspace')(),
