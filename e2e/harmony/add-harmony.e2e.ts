@@ -47,7 +47,7 @@ describe('add command on Harmony', function () {
       helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
       // written after tracking. the root file-set is re-scanned, not frozen at add-time.
       helper.fs.outputFile('LICENSE', 'MIT\n');
-      rootFiles = helper.command.showComponentParsed('ws-root').files.map((file) => file.relativePath);
+      rootFiles = helper.command.getComponentFiles('ws-root');
     });
     it('should save "." as the rootDir', () => {
       expect(helper.bitMap.read()['ws-root'].rootDir).to.equal('.');
@@ -83,13 +83,17 @@ describe('add command on Harmony', function () {
       // own entry. without normalizing those fields out, the component would never converge.
       expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
     });
+    it('should not be modified on the quick-status path either, which hashes the files on disk', () => {
+      const quickStatus = JSON.parse(helper.command.runCmd('bit status --quick --json'));
+      expect(quickStatus.modified).to.have.lengthOf(0);
+    });
     describe('adding a new component inside the workspace root', () => {
       before(() => {
         helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";\n');
         helper.command.addComponent('comp2', { i: 'comp2' });
       });
       it('should let the new component take the files from the root component', () => {
-        const rootFiles = helper.command.showComponentParsed('ws-root').files.map((file) => file.relativePath);
+        const rootFiles = helper.command.getComponentFiles('ws-root');
         expect(rootFiles.some((file) => file.startsWith('comp2/'))).to.be.false;
       });
       it('should mark the root component as modified, because the map changed', () => {
@@ -143,6 +147,17 @@ describe('add command on Harmony', function () {
       expect(output).to.have.string('.npmrc');
     });
   });
+  describe('adding a nested component that holds the main file of the workspace root', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fs.outputFile('packages/comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('.', { i: 'ws-root', m: 'packages/comp1/index.js' });
+    });
+    it('should refuse, because the root would fail to load without its main file', () => {
+      const cmd = () => helper.command.addComponent('packages/comp1', { i: 'comp1' });
+      expect(cmd).to.throw('main file of the workspace-root component');
+    });
+  });
   describe('writing the workspace-root component to the filesystem', () => {
     let firstSnap: string;
     before(() => {
@@ -193,6 +208,25 @@ describe('add command on Harmony', function () {
         expect(helper.bitMap.read()).to.not.have.property('comp1');
       });
     });
+    describe('importing it onto the root of a workspace that already tracks components', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";\n');
+        helper.command.addComponent('comp2', { i: 'comp2' });
+        helper.fs.outputFile('README.md', '# my own readme\n');
+      });
+      it('should refuse to overwrite the root files without --override', () => {
+        // this workspace is not being restored - its root files are the user's own.
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        expect(cmd).to.throw('use --override');
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# my own readme\n');
+      });
+      it('should overwrite them with --override', () => {
+        helper.command.importComponentWithoutInstall('ws-root', '--path . --override');
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# workspace root v2\n');
+      });
+    });
   });
   describe('env of the workspace-root component', () => {
     before(() => {
@@ -234,8 +268,6 @@ describe('add command on Harmony', function () {
     // a workspace adopted from an existing monorepo owns its package.json and tsconfig.json files. bit
     // normally drops them as generated, and a workspace restored from the scope can then be neither
     // installed nor built.
-    const filesOf = (id: string): string[] =>
-      helper.command.showComponentParsed(id).files.map((file) => file.relativePath);
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.addKeyValToWorkspace('trackAllFiles', true);
@@ -248,10 +280,10 @@ describe('add command on Harmony', function () {
       helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
     });
     it('should track the package.json and tsconfig.json of a component', () => {
-      expect(filesOf('comp1')).to.include.members(['package.json', 'tsconfig.json']);
+      expect(helper.command.getComponentFiles('comp1')).to.include.members(['package.json', 'tsconfig.json']);
     });
     it('should track the package.json of the workspace root', () => {
-      expect(filesOf('ws-root')).to.include('package.json');
+      expect(helper.command.getComponentFiles('ws-root')).to.include('package.json');
     });
     describe('restoring the workspace from the scope', () => {
       before(() => {

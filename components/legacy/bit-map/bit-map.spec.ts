@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { logger } from '@teambit/legacy.logger';
-import { BitMap, normalizeBitmapContentForVersioning } from './bit-map';
+import { BitMap, fileContentsForVersioning, normalizeBitmapContentForVersioning } from './bit-map';
 import { WORKSPACE_ROOT_DIR } from './component-map';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
@@ -170,6 +170,49 @@ describe('BitMap', function () {
     });
     it('should be idempotent, otherwise the root component would never converge', () => {
       expect(normalizeBitmapContentForVersioning(normalized)).to.equal(normalized);
+    });
+  });
+  describe('a rootDir with one owner', () => {
+    const componentParams = {
+      componentId: ComponentID.fromObject({ name: 'comp1' }, 'my-scope'),
+      files: [{ name: 'index.ts', relativePath: 'index.ts', test: false }],
+      mainFile: 'index.ts',
+      defaultScope: 'my-scope',
+      rootDir: 'packages/comp1',
+    };
+    it('should reject a second component with the same rootDir, rather than leave it for the next load', async () => {
+      const bitMap = await getBitmapInstance();
+      bitMap.addComponent(componentParams);
+      const addAnother = () =>
+        bitMap.addComponent({ ...componentParams, componentId: ComponentID.fromObject({ name: 'comp2' }, 'my-scope') });
+      expect(addAnother).to.throw('already used by another component');
+    });
+    it('should let the same component be added again', async () => {
+      const bitMap = await getBitmapInstance();
+      bitMap.addComponent(componentParams);
+      expect(() => bitMap.addComponent(componentParams)).to.not.throw();
+    });
+  });
+  describe('fileContentsForVersioning', () => {
+    const rawBitmap = Buffer.from(
+      JSON.stringify({
+        comp1: { name: 'comp1', scope: 'my-scope', version: 'abc', mainFile: 'index.ts', rootDir: 'comp1' },
+      })
+    );
+    const params = (name: string, rootDir: string) => ({
+      componentId: ComponentID.fromObject({ name }, 'my-scope'),
+      files: [{ name: 'README.md', relativePath: 'README.md', test: false }],
+      mainFile: 'README.md',
+      defaultScope: 'my-scope',
+      rootDir,
+    });
+    it('should normalize only the .bitmap of the workspace-root component', async () => {
+      const bitMap = await getBitmapInstance();
+      const rootMap = bitMap.addComponent(params('ws-root', WORKSPACE_ROOT_DIR));
+      const nestedMap = bitMap.addComponent(params('comp1', 'packages/comp1'));
+      expect(fileContentsForVersioning(rootMap, '.bitmap', rawBitmap).toString()).to.have.string('"version": ""');
+      expect(fileContentsForVersioning(rootMap, 'README.md', rawBitmap)).to.equal(rawBitmap);
+      expect(fileContentsForVersioning(nestedMap, '.bitmap', rawBitmap)).to.equal(rawBitmap);
     });
   });
 });

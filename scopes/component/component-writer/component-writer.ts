@@ -3,8 +3,7 @@ import type { Scope } from '@teambit/legacy.scope';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
-import { BIT_MAP } from '@teambit/legacy.constants';
+import { isWorkspaceMapFile } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -106,9 +105,12 @@ export default class ComponentWriter {
     if (this.deleteBitDirContent) {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
-    const filesToWrite = this.component.files.filter((file) => !this.shouldSkipWritingFile(file));
-    filesToWrite.forEach((file) => (file.override = this.override));
-    filesToWrite.map((file) => this.component.dataToPersist.addFile(file));
+    this.component.files.forEach((file) => {
+      // the live map is never written from a versioned copy, see isWorkspaceMapFile
+      if (isWorkspaceMapFile(pathNormalizeToLinux(file.relative))) return;
+      file.override = this.override;
+      this.component.dataToPersist.addFile(file);
+    });
 
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
@@ -121,30 +123,7 @@ export default class ComponentWriter {
     }
   }
 
-  /**
-   * `.bitmap` is only ever a file of the workspace-root component, and it is never safe to write:
-   * writing it into a sub-directory (importing a workspace-root component into another workspace)
-   * creates a broken nested workspace there, and writing it onto the workspace root would clobber
-   * the live map with a stale one - while the very operation doing the write is mutating it.
-   * the rest of the component's files are written normally.
-   */
-  private shouldSkipWritingFile(file: { relative: string }): boolean {
-    return pathNormalizeToLinux(file.relative) === BIT_MAP;
-  }
-
   async addComponentToBitMap(rootDir: string): Promise<ComponentMap> {
-    // "." is a valid rootDir only for the component that owns this workspace's root. reject it only
-    // when a *different* component already owns it - checking `existingComponentMap` alone would
-    // also reject restoring a root component whose .bitmap entry is not there yet (e.g. loading a
-    // stashed new component).
-    if (rootDir === WORKSPACE_ROOT_DIR) {
-      const currentOwner = this.bitMap.getComponentIdByRootPath(WORKSPACE_ROOT_DIR);
-      if (currentOwner && !currentOwner.isEqualWithoutVersion(this.component.id)) {
-        throw new BitError(
-          `unable to write "${this.component.id.toString()}" to the workspace root, it is already owned by "${currentOwner.toStringWithoutVersion()}"`
-        );
-      }
-    }
     const filesForBitMap = this.component.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });

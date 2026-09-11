@@ -1537,10 +1537,9 @@ export class InstallMain {
     // package - it holds the workspace's own config files, nothing depends on it, and handing its
     // dir to the package manager makes it collide with the root project (pnpm resolves it to an
     // empty "file:" spec and fails to build the lockfile).
-    const installableComponents = components.filter(
-      (component) => this.workspace.componentDir(component.id) !== this.workspace.path
+    return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id)).filter(
+      (componentDir) => componentDir !== this.workspace.path
     );
-    return ComponentMap.as<string>(installableComponents, (component) => this.workspace.componentDir(component.id));
   }
 
   private async onRootAspectAddedSubscriber(_aspectId: ComponentID, inWs: boolean): Promise<void> {

@@ -6,6 +6,7 @@ export {
   SCHEMA_FIELD,
   LANE_KEY,
   normalizeBitmapContentForVersioning,
+  fileContentsForVersioning,
 } from './bit-map';
 export { MissingBitMapComponent, MissingMainFile, InvalidBitMap } from './exceptions';
 export {
@@ -14,7 +15,8 @@ export {
   ComponentMap,
   Config,
   getIgnoreListHarmony,
+  isWorkspaceMapFile,
   NextVersion,
+  SCAN_IGNORE_LIST,
   WORKSPACE_ROOT_DIR,
-  WORKSPACE_ROOT_IGNORE_LIST,
 } from './component-map';

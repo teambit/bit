@@ -7,13 +7,7 @@ import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import type { BuildStatus } from '@teambit/legacy.constants';
-import {
-  getCloudDomain,
-  BIT_MAP,
-  BIT_WORKSPACE_TMP_DIRNAME,
-  DEFAULT_LANGUAGE,
-  Extensions,
-} from '@teambit/legacy.constants';
+import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
 import type { Doclet } from '@teambit/semantics.doc-parser';
 import { parser as docsParser } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
@@ -22,7 +16,7 @@ import type { PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolb
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
-import { normalizeBitmapContentForVersioning, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
+import { fileContentsForVersioning } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
 import type { Dist, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import { License, SourceFile } from '@teambit/component.sources';
@@ -607,20 +601,11 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
-  await componentMap.trackDirectoryChangesHarmony(
-    consumer.getPath(),
-    consumer.config.ignoredFiles,
-    consumer.bitMap.getNestedRootDirs(componentMap.getRootDir()),
-    consumer.config.trackAllFiles
-  );
+  await consumer.bitMap.loadFilesOf(componentMap);
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
     const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), { test: file.test || false });
-    // the workspace-root component owns .bitmap. strip the fields that change on every snap so the
-    // component converges instead of being modified again the moment it is snapped.
-    if (componentMap.rootDir === WORKSPACE_ROOT_DIR && file.relativePath === BIT_MAP) {
-      sourceFile.contents = Buffer.from(normalizeBitmapContentForVersioning(sourceFile.contents.toString()));
-    }
+    sourceFile.contents = fileContentsForVersioning(componentMap, file.relativePath, sourceFile.contents);
     return sourceFile;
   });
   const filePaths = componentMap.getAllFilesPaths();

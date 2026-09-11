@@ -19,7 +19,7 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
-import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
+import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
@@ -284,7 +284,7 @@ export class ComponentWriterMain {
     // with --write-to-empty-dir, dir-conflict resolution is deferred to relocateOccupiedDirs() so it runs after the
     // fixDirs* passes (which may still adjust writeToPath); otherwise fail here when the target dir is occupied.
     if (this.consumer && !opts.writeToEmptyDir) {
-      this.throwErrorWhenDirectoryNotEmpty(componentRootDir, existingComponentMap, opts);
+      this.throwErrorWhenDirectoryNotEmpty(component, componentRootDir, existingComponentMap, opts);
     }
     return {
       workspace: this.workspace,
@@ -334,7 +334,36 @@ to move all component files to a different directory, run bit remove and then bi
     return componentMap.rootDir === componentDirRelative;
   }
 
+  /**
+   * the workspace root is never empty - it holds .bit, .bitmap and workspace.jsonc - so "not empty"
+   * says nothing about a conflict there. the target is only reachable for a workspace-root component.
+   * restoring a git-free workspace from its scope starts from `bit init`, and the root files are meant
+   * to land on top of the freshly initialized ones. a workspace that already tracks components is not
+   * being restored: its workspace.jsonc and root files would be overwritten silently, so it takes
+   * --override like any other occupied directory.
+   */
+  private throwForOccupiedWorkspaceRoot(component: ConsumerComponent, opts: ManyComponentsWriterParams) {
+    if (!opts.throwForExistingDir) return;
+    const isFreshWorkspace = this.consumer.bitMap.components.every((componentMap) =>
+      componentMap.id.isEqualWithoutVersion(component.id)
+    );
+    if (isFreshWorkspace) return;
+    const filesToOverwrite = component.files
+      .map((file) => pathNormalizeToLinux(file.relative))
+      .filter(
+        (relativePath) => !isWorkspaceMapFile(relativePath) && fs.existsSync(this.consumer.toAbsolutePath(relativePath))
+      );
+    if (!filesToOverwrite.length) return;
+    const shown = filesToOverwrite.slice(0, 10).join(', ');
+    const rest = filesToOverwrite.length > 10 ? ` and ${filesToOverwrite.length - 10} more` : '';
+    throw new BitError(
+      `unable to import "${component.id.toString()}" to the workspace root, this workspace already tracks other components and the import would overwrite ${shown}${rest}.
+use --override to overwrite them`
+    );
+  }
+
   private throwErrorWhenDirectoryNotEmpty(
+    component: ConsumerComponent,
     componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
@@ -355,11 +384,10 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     if (!isDir(componentDir)) {
       throw new BitError(`unable to import to ${componentDir} because it's a file`);
     }
-    // the workspace root is never empty - it holds .bit, .bitmap and workspace.jsonc - so "not
-    // empty" says nothing about a conflict there. the target is only reachable for a workspace-root
-    // component (see ComponentWriter.addComponentToBitMap), whose files are meant to land on top of
-    // the freshly initialized ones when restoring a workspace from its scope.
-    if (componentDirRelative === WORKSPACE_ROOT_DIR) return;
+    if (componentDirRelative === WORKSPACE_ROOT_DIR) {
+      this.throwForOccupiedWorkspaceRoot(component, opts);
+      return;
+    }
     if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
       throw new BitError(
         `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`

@@ -15,8 +15,8 @@ import {
   ComponentMap,
   getIgnoreListHarmony,
   MissingMainFile,
+  SCAN_IGNORE_LIST,
   WORKSPACE_ROOT_DIR,
-  WORKSPACE_ROOT_IGNORE_LIST,
 } from '@teambit/legacy.bit-map';
 import { DuplicateIds, EmptyDirectory, ExcludedMainFile, MainFileIsDir, NoFiles, PathsNotExist } from './exceptions';
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
@@ -238,6 +238,11 @@ export default class AddComponents {
     const foundComponentFromBitMap = this.bitMap.getComponentIfExist(component.componentId, {
       ignoreVersion: true,
     });
+    // the workspace-root component owns every file no other component claims, so it "owns" a file
+    // only until a more specific component is added for it: the component being added wins, and the
+    // root subtracts the new root-dir from its own file-set on the next scan. the one file it cannot
+    // give away is its main file - without it, it fails to load from the next scan on.
+    const workspaceRootMap = this.bitMap.components.find((componentMap) => componentMap.rootDir === WORKSPACE_ROOT_DIR);
     const componentFilesP = files.map(async (file: ComponentMapFile) => {
       // $FlowFixMe null is removed later on
       const filePath = path.join(consumerPath, file.relativePath);
@@ -247,15 +252,21 @@ export default class AddComponents {
       }
       const caseSensitive = false;
       const existingIdOfFile = this.bitMap.getComponentIdByPath(file.relativePath, caseSensitive);
-      // the workspace-root component owns every file no other component claims, so it "owns" this
-      // file only until a more specific component is added for it. the component being added wins,
-      // and the root subtracts the new root-dir from its own file-set on the next scan.
-      const existingIsWorkspaceRoot = existingIdOfFile
-        ? this.bitMap.getComponentIfExist(existingIdOfFile, { ignoreVersion: true })?.rootDir === WORKSPACE_ROOT_DIR
-        : false;
-      const idOfFileIsDifferent =
-        existingIdOfFile && !existingIdOfFile.isEqual(parsedBitId) && !existingIsWorkspaceRoot;
-      if (idOfFileIsDifferent) {
+      const idOfFileIsDifferent = existingIdOfFile && !existingIdOfFile.isEqual(parsedBitId);
+      const ownedByWorkspaceRoot = Boolean(
+        workspaceRootMap && existingIdOfFile?.isEqualWithoutVersion(workspaceRootMap.id)
+      );
+      if (
+        workspaceRootMap &&
+        idOfFileIsDifferent &&
+        ownedByWorkspaceRoot &&
+        file.relativePath === workspaceRootMap.mainFile
+      ) {
+        throw new BitError(
+          `unable to add "${file.relativePath}" to "${parsedBitId.toString()}", it is the main file of the workspace-root component "${workspaceRootMap.id.toStringWithoutVersion()}". set a different main file for it first: bit add . --main <file>`
+        );
+      }
+      if (idOfFileIsDifferent && !ownedByWorkspaceRoot) {
         // not imported component file but exists in bitmap
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (this.warnings.alreadyUsed[existingIdOfFile]) {
@@ -519,27 +530,18 @@ you can add the directory these files are located at and it'll change the root d
     const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath) || WORKSPACE_ROOT_DIR;
     this._throwForOutsideConsumer(relativeComponentPath);
     throwForExistingParentDir(this.bitMap, relativeComponentPath, finalBitId);
-    const isWorkspaceRoot = relativeComponentPath === WORKSPACE_ROOT_DIR;
-    const allMatches = await glob(pathNormalizeToLinux(path.join(relativeComponentPath, '**')), {
+    // files of components nested inside this dir belong to them, not to the component being added.
+    const nestedRootDirs = this.bitMap.getNestedRootDirs(relativeComponentPath);
+    const matches = await glob(pathNormalizeToLinux(path.join(relativeComponentPath, '**')), {
       cwd: this.consumer.getPath(),
       nodir: true,
       // the workspace root is full of dotfiles that belong to it (.gitignore, .github/**). without
       // this, "bit add ." records an incomplete file-set that only the next rescan corrects, since
       // getFilesByDir() scans with dot: true.
-      dot: isWorkspaceRoot,
-      // node_modules is filtered out by gitIgnore below anyway, but enumerating it first is slow
-      // enough to matter at the workspace root. the rest are bit's own internals - see
-      // WORKSPACE_ROOT_IGNORE_LIST, which the rescan uses for the same reason.
-      ignore: isWorkspaceRoot ? ['**/node_modules/**', ...WORKSPACE_ROOT_IGNORE_LIST] : undefined,
+      dot: relativeComponentPath === WORKSPACE_ROOT_DIR,
+      // the same exclusions the rescan applies, see SCAN_IGNORE_LIST.
+      ignore: [...SCAN_IGNORE_LIST, ...nestedRootDirs.map((nestedRootDir) => `${nestedRootDir}/**`)],
     });
-    // files of components nested inside this dir belong to them, not to the component being added.
-    const nestedRootDirs = this.bitMap.getNestedRootDirs(relativeComponentPath);
-    const matches = nestedRootDirs.length
-      ? allMatches.filter((match: PathOsBased) => {
-          const linuxMatch = pathNormalizeToLinux(match);
-          return !nestedRootDirs.some((nestedRootDir) => linuxMatch.startsWith(`${nestedRootDir}/`));
-        })
-      : allMatches;
 
     if (!matches.length) throw new EmptyDirectory(componentPath);
 
@@ -691,26 +693,27 @@ you can add the directory these files are located at and it'll change the root d
 }
 
 function throwForExistingParentDir(bitMap: BitMap, relativeToConsumerPath: PathOsBased, addedId?: ComponentID) {
+  if (relativeToConsumerPath === WORKSPACE_ROOT_DIR) {
+    // only one component can own the workspace root. rejected before the (expensive) scan of the
+    // whole workspace, with a message that says which component already owns it. re-adding the same
+    // component is fine. the root component contains every other component by design, so there is no
+    // parent-dir conflict to check for it.
+    const currentOwner = bitMap.getComponentIdByRootPath(WORKSPACE_ROOT_DIR);
+    if (currentOwner && !addedId?.isEqual(currentOwner, { ignoreVersion: true })) {
+      throw new BitError(
+        `unable to track the workspace root, it is already tracked by "${currentOwner.toStringWithoutVersion()}"`
+      );
+    }
+    return;
+  }
   const isParentDir = (parent: string) => {
     const relative = path.relative(parent, relativeToConsumerPath);
     return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
   };
   bitMap.components.forEach((componentMap) => {
-    if (!componentMap.rootDir) return;
-    if (componentMap.rootDir === WORKSPACE_ROOT_DIR) {
-      // only one component can own the workspace root. a second one is accepted here but fails
-      // .bitmap's duplicate-rootDir validation on the next load, so reject it now with a message
-      // that says which component already owns it. re-adding the same component is fine.
-      const isSameComponent = addedId?.isEqual(componentMap.id, { ignoreVersion: true });
-      if (relativeToConsumerPath === WORKSPACE_ROOT_DIR && !isSameComponent) {
-        throw new BitError(
-          `unable to track the workspace root, it is already tracked by "${componentMap.id.toStringWithoutVersion()}"`
-        );
-      }
-      // otherwise it is not a conflict: the workspace-root component contains every other component
-      // by design, and subtracts their root-dirs from its own file-set.
-      return;
-    }
+    // the workspace-root component contains every other component by design, and subtracts their
+    // root-dirs from its own file-set.
+    if (!componentMap.rootDir || componentMap.rootDir === WORKSPACE_ROOT_DIR) return;
     if (isParentDir(componentMap.rootDir)) {
       throw new ParentDirTracked(
         componentMap.rootDir,
