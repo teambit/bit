@@ -9,7 +9,7 @@ import type {
 import type { WriteConfigCmdFlags } from '../ws-config.cmd';
 import { formatCleanOutput } from './format-clean-output';
 import { formatSkippedOutput } from './format-skipped-output';
-import { SUMMARY, WRITE_TITLE } from './write-outputs-texts';
+import { getSummary, WRITE_TITLE } from './write-outputs-texts';
 import type {
   EnvsWrittenExtendingConfigFile,
   EnvsWrittenExtendingConfigFiles,
@@ -27,7 +27,11 @@ export function verboseFormatWriteOutput(
   const writeResultsOutput = getWriteResultsOutput(writeResults, wsDir, isDryRun);
   const skippedOutput = formatSkippedOutput(writeResults.skippedPaths, wsDir);
 
-  return joinSections([`${cleanResultsOutput}\n${writeResultsOutput}`, skippedOutput, SUMMARY]);
+  return joinSections([
+    `${cleanResultsOutput}\n${writeResultsOutput}`,
+    skippedOutput,
+    getSummary(writeResults.skippedPaths),
+  ]);
 }
 
 function getWriteResultsOutput(writeResults: WriteResults, wsDir: string, isDryRun: boolean) {

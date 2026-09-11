@@ -48,4 +48,16 @@ describe('write output with skipped files', () => {
     expect(formatWriteOutput(mockWriteConfigFilesResult([]), {})).to.not.have.string('not overridden');
     expect(verboseFormatWriteOutput(mockWriteConfigFilesResult([]), {})).to.not.have.string('not overridden');
   });
+  it('should not claim the IDE is fully in-sync when a file was skipped', () => {
+    const output = formatWriteOutput(mockWriteConfigFilesResult([skippedPath]), {});
+    const verboseOutput = verboseFormatWriteOutput(mockWriteConfigFilesResult([skippedPath]), {});
+    expect(output).to.not.have.string('IDE is now in-sync');
+    expect(verboseOutput).to.not.have.string('IDE is now in-sync');
+    expect(output).to.have.string('except for the files above');
+    expect(verboseOutput).to.have.string('except for the files above');
+  });
+  it('should claim the IDE is in-sync when nothing was skipped', () => {
+    expect(formatWriteOutput(mockWriteConfigFilesResult([]), {})).to.have.string('IDE is now in-sync');
+    expect(verboseFormatWriteOutput(mockWriteConfigFilesResult([]), {})).to.have.string('IDE is now in-sync');
+  });
 });
