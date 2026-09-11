@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { relative } from 'path';
+import { joinSections } from '@teambit/cli';
 import type {
   OneConfigWriterIdResult,
   WriteConfigFilesResult,
@@ -20,7 +21,7 @@ export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult
   const cleanWriteOutput = cleanResultsOutput ? `${cleanResultsOutput}\n${writeResultsOutput}` : writeResultsOutput;
   const skippedOutput = formatSkippedOutput(writeResults.skippedPaths, wsDir);
 
-  return `${cleanWriteOutput}\n\n${skippedOutput ? `${skippedOutput}\n\n` : ''}${SUMMARY}`;
+  return joinSections([cleanWriteOutput, skippedOutput, SUMMARY]);
 }
 
 function getWriteResultsOutput(writeResults: WriteResults, wsDir: string, isDryRun: boolean) {
