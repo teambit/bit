@@ -905,7 +905,7 @@ export class InstallMain {
     if (clearCache) {
       await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
     }
-    const { err } = await this.wsConfigFiles.writeConfigFiles({
+    const { err, writeResults } = await this.wsConfigFiles.writeConfigFiles({
       clean: true,
       silent: true,
       dedupe: true,
@@ -916,7 +916,10 @@ export class InstallMain {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
       );
+      return;
     }
+    const skippedWarning = this.wsConfigFiles.formatSkippedFilesWarning(writeResults?.skippedPaths);
+    if (skippedWarning) this.logger.consoleWarning(`\n${skippedWarning}`);
   }
 
   private async addConfiguredAspectsToWorkspacePolicy(): Promise<WorkspacePolicy> {

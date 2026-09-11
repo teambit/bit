@@ -7,6 +7,7 @@ import type {
 } from '../workspace-config-files.main.runtime';
 import type { WriteConfigCmdFlags } from '../ws-config.cmd';
 import { formatCleanOutput } from './format-clean-output';
+import { formatSkippedOutput } from './format-skipped-output';
 import { SUMMARY, WRITE_TITLE } from './write-outputs-texts';
 import type { EnvsWrittenExtendingConfigFile, EnvsWrittenExtendingConfigFiles } from '../writers';
 
@@ -17,8 +18,9 @@ export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult
   const writeResultsOutput = getWriteResultsOutput(writeResults, wsDir, isDryRun);
 
   const cleanWriteOutput = cleanResultsOutput ? `${cleanResultsOutput}\n${writeResultsOutput}` : writeResultsOutput;
+  const skippedOutput = formatSkippedOutput(writeResults.skippedPaths, wsDir);
 
-  return `${cleanWriteOutput}\n\n${SUMMARY}`;
+  return `${cleanWriteOutput}\n\n${skippedOutput ? `${skippedOutput}\n\n` : ''}${SUMMARY}`;
 }
 
 function getWriteResultsOutput(writeResults: WriteResults, wsDir: string, isDryRun: boolean) {
