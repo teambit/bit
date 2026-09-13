@@ -1028,7 +1028,7 @@ writes configuration files (tsconfig.json, eslintrc.js, etc.) to your workspace 
 ## bit ws-config write
 
 write config files in the workspace. useful for IDEs
-Flags: --clean, --writers <writers>, --silent, --no-dedupe, --dry-run, --dry-run-with-content, --verbose, --json
+Flags: --clean, --writers <writers>, --silent, --force, --no-dedupe, --dry-run, --dry-run-with-content, --verbose, --json
 
 ## bit ws-config clean
 
