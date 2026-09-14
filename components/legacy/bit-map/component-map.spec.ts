@@ -83,6 +83,14 @@ describe('getFilesByDir', function () {
         'vendor/lib/index.js': '',
         'nested/.bit/objects/bb': '',
         'nested/.bit.map.json': '',
+        'nested/.bitmap': '',
+        // an ignore file below the root applies to its directory, like git: unanchored patterns at any
+        // depth below it, anchored ones to it
+        'docs/.gitignore': 'build/\n/local.env\n',
+        'docs/index.md': '',
+        'docs/build/out.html': '',
+        'docs/local.env': '',
+        'docs/nested/local.env': '',
       });
     });
     after(() => fs.remove(workspacePath));
@@ -107,6 +115,9 @@ describe('getFilesByDir', function () {
         '.github/ci.yml',
         'README.md',
         'app/l/index.ts',
+        'docs/.gitignore',
+        'docs/index.md',
+        'docs/nested/local.env',
         'vendor/lib/index.js',
         'workspace.jsonc',
       ]);

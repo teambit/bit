@@ -358,9 +358,12 @@ to move all component files to a different directory, run bit remove and then bi
         const absolutePath = this.consumer.toAbsolutePath(relativePath);
         // lstat rather than exists: a symlink in the way, dangling or not, is a conflict and not a path
         // to write through, and so is a directory. only a regular file is compared with the incoming copy.
-        const stat = fs.lstatSync(absolutePath, { throwIfNoEntry: false });
+        const stat = lstatIfExists(absolutePath);
         if (!stat) return false;
-        return !stat.isFile() || !fs.readFileSync(absolutePath).equals(file.contents);
+        // compared byte for byte through latin1, which maps each byte to one character. Buffer.equals is
+        // avoided because its signature differs between @types/node majors, and an aspect build type-checks
+        // this file with whichever version its capsule resolves.
+        return !stat.isFile() || fs.readFileSync(absolutePath, 'latin1') !== file.contents.toString('latin1');
       })
       .map((file) => pathNormalizeToLinux(file.relative));
     if (!filesToOverwrite.length) return;
@@ -493,4 +496,13 @@ export function incrementPathRecursively(p: string, allPaths: string[]) {
     newPath = incrementPath(p, (num += 1));
   }
   return newPath;
+}
+
+function lstatIfExists(absolutePath: string): fs.Stats | undefined {
+  try {
+    return fs.lstatSync(absolutePath);
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return undefined;
+    throw err;
+  }
 }

@@ -13,6 +13,7 @@ import {
   IGNORE_ROOT_ONLY_LIST,
   ALWAYS_IGNORE_LIST,
   IGNORE_LIST,
+  GIT_IGNORE,
 } from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
@@ -73,6 +74,13 @@ const SCAN_IGNORE_LIST = [
 ];
 
 /**
+ * a bit workspace nested in the scanned tree that no component claims must not hand its map to the
+ * workspace-root component: restored, it would turn that directory into a broken workspace (a map
+ * without its scope). only the root's own map is tracked, see isWorkspaceMapFile.
+ */
+const NESTED_WORKSPACE_MAP = `*/**/${BIT_MAP}`;
+
+/**
  * the ignore patterns for scanning a directory. `excludeDirs` are the root-dirs of the components
  * nested inside it, whose files belong to them. they are literal paths, so their glob metacharacters
  * are escaped: a Next.js route dir like "app/[slug]" is a valid root-dir, and read as a pattern it
@@ -81,8 +89,54 @@ const SCAN_IGNORE_LIST = [
  * shared with `bit add`, so its initial file-set is built from the same exclusions the rescan uses -
  * otherwise the two disagree about what the workspace-root component owns.
  */
-export function getScanIgnorePatterns(excludeDirs: PathLinux[] = []): string[] {
-  return [...SCAN_IGNORE_LIST, ...excludeDirs.map((excludeDir) => `${escapeGlobPath(excludeDir)}/**`)];
+export function getScanIgnorePatterns(dir: PathLinux, excludeDirs: PathLinux[] = []): string[] {
+  return [
+    ...SCAN_IGNORE_LIST,
+    ...(dir === WORKSPACE_ROOT_DIR ? [NESTED_WORKSPACE_MAP] : []),
+    ...excludeDirs.map((excludeDir) => `${escapeGlobPath(excludeDir)}/**`),
+  ];
+}
+
+/**
+ * git applies each .gitignore to the directory it sits in, so the scan of the workspace root - the one
+ * scan that spans directories no component claims - honors the ignore files below the root as well.
+ * their patterns are rebased to their directory: a pattern with no slash before its end matches at any
+ * depth below it (`build/` becomes `docs/**\/build/`), any other is anchored to it (`/local.env` becomes
+ * `docs/local.env`). a .bitignore beside a .gitignore wins, as at the root. nested components are
+ * subtracted before this runs, so their ignore files are theirs to apply.
+ */
+export async function filterByNestedIgnoreFiles(
+  dir: PathLinux,
+  consumerPath: string,
+  relativePaths: PathLinux[]
+): Promise<PathLinux[]> {
+  if (dir !== WORKSPACE_ROOT_DIR) return relativePaths;
+  const ignoreFileByDir = new Map<PathLinux, string>();
+  relativePaths.forEach((relativePath) => {
+    const name = path.basename(relativePath);
+    if (name !== GIT_IGNORE && name !== BIT_IGNORE) return;
+    const fileDir = path.dirname(relativePath);
+    if (fileDir === '.') return; // the root's own ignore file is in the workspace ignore list already
+    if (name === BIT_IGNORE || !ignoreFileByDir.has(fileDir)) ignoreFileByDir.set(fileDir, name);
+  });
+  if (!ignoreFileByDir.size) return relativePaths;
+  const patternsPerDir = await Promise.all(
+    Array.from(ignoreFileByDir, async ([fileDir, name]) => {
+      const absoluteDir = path.join(consumerPath, fileDir);
+      const patterns = name === BIT_IGNORE ? await getBitIgnoreFile(absoluteDir) : await getGitIgnoreFile(absoluteDir);
+      return patterns.map((pattern) => rebaseIgnorePattern(pattern, fileDir));
+    })
+  );
+  const patterns = ([] as string[]).concat(...patternsPerDir);
+  return ignore().add(patterns).filter(relativePaths);
+}
+
+function rebaseIgnorePattern(pattern: string, dir: PathLinux): string {
+  const negated = pattern.startsWith('!');
+  const body = negated ? pattern.slice(1) : pattern;
+  const anchored = body.slice(0, -1).includes('/');
+  const rebased = anchored ? pathJoinLinux(dir, body.replace(/^\//, '')) : pathJoinLinux(dir, '**', body);
+  return negated ? `!${rebased}` : rebased;
 }
 
 /** backslash-escapes the characters that globby and glob read as pattern syntax */
@@ -449,14 +503,14 @@ export async function getFilesByDir(
     cwd: consumerPath,
     dot: true,
     onlyFiles: true,
-    ignore: getScanIgnorePatterns(excludeDirs),
+    ignore: getScanIgnorePatterns(dir, excludeDirs),
     // every pattern here is an explicit glob. with expansion on, globby stats each ignore pattern
     // (relative to the process cwd, not to `cwd`) to decide whether to expand it, and `.git/**`
     // throws ENOTDIR wherever `.git` is a file - every git worktree.
     expandDirectories: false,
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
-  const filteredMatches: string[] = gitIgnore.filter(matches);
+  const filteredMatches: string[] = await filterByNestedIgnoreFiles(dir, consumerPath, gitIgnore.filter(matches));
   // the paths are relative to the workspace. make them relative to the component's root-dir.
   const relativePathsLinux = filteredMatches.map((match) => pathRelativeLinux(dir, match));
   // the config files "bit ws-config write" generates are not source - unless the workspace declares that

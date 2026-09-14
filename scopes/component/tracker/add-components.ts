@@ -19,6 +19,7 @@ import {
 import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
 import {
   ComponentMap,
+  filterByNestedIgnoreFiles,
   getIgnoreListHarmony,
   getScanIgnorePatterns,
   isWorkspaceMapFile,
@@ -567,7 +568,7 @@ you can add the directory these files are located at and it'll change the root d
       // getFilesByDir() scans with dot: true.
       dot: relativeComponentPath === WORKSPACE_ROOT_DIR,
       // the same exclusions the rescan applies, see getFilesByDir().
-      ignore: getScanIgnorePatterns(nestedRootDirs),
+      ignore: getScanIgnorePatterns(relativeComponentPath, nestedRootDirs),
     });
 
     if (!matches.length) throw new EmptyDirectory(componentPath);
@@ -577,9 +578,14 @@ you can add the directory these files are located at and it'll change the root d
     const generatedAtRoot = new Set(
       IGNORE_ROOT_ONLY_LIST.map((file) => pathNormalizeToLinux(path.join(relativeComponentPath, file)))
     );
-    const filteredMatches = this.gitIgnore
-      .filter(matches)
-      .filter((match) => this.consumer.config.trackAllFiles || !generatedAtRoot.has(pathNormalizeToLinux(match)));
+    const matchesNotIgnored = await filterByNestedIgnoreFiles(
+      relativeComponentPath,
+      this.consumer.getPath(),
+      this.gitIgnore.filter(matches).map(pathNormalizeToLinux)
+    );
+    const filteredMatches = matchesNotIgnored.filter(
+      (match) => this.consumer.config.trackAllFiles || !generatedAtRoot.has(match)
+    );
 
     if (!filteredMatches.length) {
       throw new NoFiles(matches);
