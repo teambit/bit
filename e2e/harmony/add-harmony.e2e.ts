@@ -369,6 +369,10 @@ describe('add command on Harmony', function () {
     });
   });
   describe('env of the workspace-root component', () => {
+    const issuesOf = (name: string): string[] => {
+      const comp = helper.command.statusJson().componentsWithIssues.find((c) => c.id.includes(name));
+      return comp ? comp.issues.map((issue) => issue.type) : [];
+    };
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
@@ -398,13 +402,13 @@ describe('add command on Harmony', function () {
       expect(helper.env.getComponentEnv('comp1')).to.equal('teambit.harmony/node');
     });
     it('should not report compiler-derived issues, while a regular component still does', () => {
-      const issuesOf = (name: string): string[] => {
-        const comp = helper.command.statusJson().componentsWithIssues.find((c) => c.id.includes(name));
-        return comp ? comp.issues.map((issue) => issue.type) : [];
-      };
       // the empty env has no compiler, so "missing dists" can never apply to the root component.
       expect(issuesOf('ws-root')).to.not.include('MissingDists');
       expect(issuesOf('comp1')).to.include('MissingDists');
+    });
+    it('should not report missing links from node_modules, it is never linked there', () => {
+      // "run bit link" is the suggested fix for that issue, and it would not link the root either
+      expect(issuesOf('ws-root')).to.not.include('MissingLinksFromNodeModulesToSrc');
     });
     describe('when a root file has a relative import into a component', () => {
       before(() => {
