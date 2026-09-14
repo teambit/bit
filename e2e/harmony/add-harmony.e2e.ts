@@ -213,6 +213,7 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
       helper.command.addComponent('comp1', { i: 'comp1' });
       helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.fs.outputFile('docs/guide.md', '# guide\n');
       helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
       helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
       firstSnap = helper.command.getHead('ws-root');
@@ -299,6 +300,16 @@ describe('add command on Harmony', function () {
         const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
         expect(cmd).to.throw('use --override');
         expect(target).to.not.be.a.path();
+      });
+      it('should refuse a symlinked ancestor directory even with --override, rather than write through it', () => {
+        fs.unlinkSync(path.join(helper.scopes.localPath, 'README.md'));
+        const outside = path.join(helper.scopes.localPath, '..', `outside-${path.basename(helper.scopes.localPath)}`);
+        fs.mkdirSync(outside);
+        fs.symlinkSync(outside, path.join(helper.scopes.localPath, 'docs'));
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path . --override');
+        expect(cmd).to.throw('symbolic link');
+        expect(path.join(outside, 'guide.md')).to.not.be.a.path();
+        fs.removeSync(outside);
       });
     });
     describe('importing an ordinary component onto the root', () => {
