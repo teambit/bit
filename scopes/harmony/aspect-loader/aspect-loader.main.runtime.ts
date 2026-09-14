@@ -526,6 +526,15 @@ export class AspectLoaderMain {
     return flatten(this.pluginSlot.values());
   }
 
+  /**
+   * same as `getPluginDefs`, only that the defs are grouped by the aspect-id (including the version) that registered
+   * them. useful when the same plugin-pattern is registered by more than one version of the same aspect, and the
+   * consumer needs to know which version registered what.
+   */
+  getPluginDefsByAspectId(): Array<[string, PluginDefinition[]]> {
+    return this.pluginSlot.toArray();
+  }
+
   getPlugins(component: Component, componentPath: string): Plugins {
     const defs = this.getPluginDefs();
     return this.getPluginsFromDefs(component, componentPath, defs);
