@@ -564,10 +564,10 @@ you can add the directory these files are located at and it'll change the root d
     const matches = await glob(pathNormalizeToLinux(path.join(relativeComponentPath, '**')), {
       cwd: this.consumer.getPath(),
       nodir: true,
-      // the workspace root is full of dotfiles that belong to it (.gitignore, .github/**). without
-      // this, "bit add ." records an incomplete file-set that only the next rescan corrects, since
-      // getFilesByDir() scans with dot: true.
-      dot: relativeComponentPath === WORKSPACE_ROOT_DIR,
+      // dotfiles are component files like any other (the workspace root is full of them: .gitignore,
+      // .github/**). the rescan, getFilesByDir(), scans with dot: true, and the add-time file-set has to
+      // agree with it rather than be corrected by the next command.
+      dot: true,
       // the same exclusions the rescan applies, see getFilesByDir().
       ignore: getScanIgnorePatterns(relativeComponentPath, nestedRootDirs),
     });

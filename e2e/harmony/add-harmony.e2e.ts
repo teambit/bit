@@ -190,6 +190,17 @@ describe('add command on Harmony', function () {
       expect(output).to.have.string('.bitmap');
     });
   });
+  describe('adding a component that has dotfiles', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.fs.outputFile('comp1/.npmrc', 'registry=https://example.com\n');
+    });
+    it('should list them at add time, as the rescan tracks them', () => {
+      const output = helper.command.addComponent('comp1', { i: 'comp1' });
+      expect(output).to.have.string('.npmrc');
+    });
+  });
   describe('adding a nested component that holds the main file of the workspace root', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
