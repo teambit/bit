@@ -284,7 +284,8 @@ export class ComponentWriterMain {
     const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
     // with --write-to-empty-dir, dir-conflict resolution is deferred to relocateOccupiedDirs() so it runs after the
     // fixDirs* passes (which may still adjust writeToPath); otherwise fail here when the target dir is occupied.
-    if (this.consumer && !opts.writeToEmptyDir) {
+    // the workspace root is never relocated (see relocateOccupiedDirs), so its own check runs either way.
+    if (this.consumer && (!opts.writeToEmptyDir || componentRootDir === WORKSPACE_ROOT_DIR)) {
       this.throwErrorWhenDirectoryNotEmpty(component, componentRootDir, existingComponentMap, opts);
     }
     return {
@@ -443,6 +444,9 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     componentWriterInstances.forEach((componentWriter) => {
       const currentDir = componentWriter.writeToPath;
       const componentMap = componentWriter.existingComponentMap;
+      // the workspace root is a target only for a workspace-root component, and "._1" is not the
+      // workspace root. its conflicts are handled by throwForOccupiedWorkspaceRoot.
+      if (currentDir === WORKSPACE_ROOT_DIR) return;
       if (this.shouldSkipDirConflictCheck(currentDir, componentMap, opts)) return;
       const unavailableReason = this.getDirUnavailableReason(currentDir, componentMap);
       if (!unavailableReason) return;

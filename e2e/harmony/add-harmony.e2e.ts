@@ -251,6 +251,9 @@ describe('add command on Harmony', function () {
       it('should record "." as its rootDir', () => {
         expect(helper.bitMap.read()['ws-root'].rootDir).to.equal('.');
       });
+      it('should keep the empty env, which its version carries', () => {
+        expect(helper.env.getComponentEnv('ws-root')).to.equal('teambit.harmony/empty-env');
+      });
       it('should leave the live .bitmap alone rather than overwrite it with the exported one', () => {
         // the exported .bitmap lists comp1. the restored workspace must not inherit that entry.
         expect(helper.bitMap.read()).to.not.have.property('comp1');

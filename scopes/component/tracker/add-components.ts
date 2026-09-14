@@ -269,16 +269,8 @@ export default class AddComponents {
       const ownedByWorkspaceRoot = Boolean(
         workspaceRootMap && existingIdOfFile?.isEqualWithoutVersion(workspaceRootMap.id)
       );
-      // the ownership lookup above is case-insensitive, so this comparison is too
-      if (
-        workspaceRootMap &&
-        idOfFileIsDifferent &&
-        ownedByWorkspaceRoot &&
-        file.relativePath.toLowerCase() === workspaceRootMap.mainFile.toLowerCase()
-      ) {
-        throw new BitError(
-          `unable to add "${file.relativePath}" to "${parsedBitId.toString()}", it is the main file of the workspace-root component "${workspaceRootMap.id.toStringWithoutVersion()}". set a different main file for it first: bit add . --main <file>`
-        );
+      if (workspaceRootMap && idOfFileIsDifferent && ownedByWorkspaceRoot) {
+        throwForTakingWorkspaceRootMainFile(workspaceRootMap, parsedBitId, file.relativePath);
       }
       if (idOfFileIsDifferent && !ownedByWorkspaceRoot) {
         // not imported component file but exists in bitmap
@@ -878,6 +870,14 @@ export async function addMultipleFromResolvedTrackData(
     const componentFiles = isWorkspaceRoot
       ? await scanWorkspaceRootFiles(workspace, gitIgnore, batchRootDirs)
       : await filterResolvedFiles(rootDir, workspace.path, files, gitIgnore, trackAllFiles);
+    // a nested component may take any file from a tracked workspace root but its main file, the
+    // rule "bit add" applies. a root tracked later in the same call scans around this component.
+    const workspaceRootMap = bitMap.components.find((componentMap) => componentMap.rootDir === WORKSPACE_ROOT_DIR);
+    if (!isWorkspaceRoot && workspaceRootMap) {
+      componentFiles.forEach((file) =>
+        throwForTakingWorkspaceRootMainFile(workspaceRootMap, idToTrack, path.posix.join(rootDir, file.relativePath))
+      );
+    }
     const componentMap = bitMap.addComponent({
       componentId: idToTrack,
       files: componentFiles,
@@ -893,6 +893,22 @@ export async function addMultipleFromResolvedTrackData(
   await linkToNodeModulesByIds(workspace, allIds);
 
   return allIds;
+}
+
+/**
+ * the workspace-root component owns every file no other component claims, so it gives a file away to
+ * a more specific component - all but its main file: without it, it fails to load from the next scan on.
+ */
+function throwForTakingWorkspaceRootMainFile(
+  workspaceRootMap: ComponentMap,
+  componentId: ComponentID,
+  relativePath: PathLinux
+) {
+  // the ownership lookups are case-insensitive, so this comparison is too
+  if (relativePath.toLowerCase() !== workspaceRootMap.mainFile.toLowerCase()) return;
+  throw new BitError(
+    `unable to add "${relativePath}" to "${componentId.toString()}", it is the main file of the workspace-root component "${workspaceRootMap.id.toStringWithoutVersion()}". set a different main file for it first: bit add . --main <file>`
+  );
 }
 
 /**

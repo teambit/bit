@@ -197,7 +197,10 @@ describe('BitMap', function () {
       const bitMap = await getBitmapInstance();
       bitMap.addComponent(componentParams);
       const addAnother = () =>
-        bitMap.addComponent({ ...componentParams, componentId: ComponentID.fromObject({ name: 'comp2' }, 'my-scope') });
+        bitMap.addComponent({
+          ...componentParams,
+          componentId: ComponentID.fromObject({ name: 'comp2' }, 'my-scope'),
+        });
       expect(addAnother).to.throw('already used by another component');
       // and the rejected entry is not left behind in the map
       expect(bitMap.components).to.have.lengthOf(1);
