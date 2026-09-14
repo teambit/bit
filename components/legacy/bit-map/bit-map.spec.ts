@@ -2,7 +2,12 @@ import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { logger } from '@teambit/legacy.logger';
-import { BitMap, fileContentsForVersioning, normalizeBitmapContentForVersioning } from './bit-map';
+import {
+  BitMap,
+  fileContentsForVersioning,
+  isWorkspaceMapOwnedBy,
+  normalizeBitmapContentForVersioning,
+} from './bit-map';
 import { WORKSPACE_ROOT_DIR } from './component-map';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
@@ -224,6 +229,22 @@ describe('BitMap', function () {
       expect(fileContentsForVersioning(rootMap, '.bitmap', rawBitmap).toString()).to.have.string('"version": ""');
       expect(fileContentsForVersioning(rootMap, 'README.md', rawBitmap)).to.equal(rawBitmap);
       expect(fileContentsForVersioning(nestedMap, '.bitmap', rawBitmap)).to.equal(rawBitmap);
+    });
+  });
+  describe('isWorkspaceMapOwnedBy', () => {
+    const rawMap = JSON.stringify({
+      '$schema-version': '17.0.0',
+      'ws-root': { scope: 'my-scope', version: '', mainFile: 'README.md', rootDir: '.' },
+      comp1: { scope: 'my-scope', version: '', mainFile: 'index.ts', rootDir: 'packages/comp1' },
+    });
+    const id = (name: string) => ComponentID.fromObject({ name }, 'my-scope');
+    it('should recognize the component the map lists as the owner of the workspace root', () => {
+      expect(isWorkspaceMapOwnedBy(rawMap, id('ws-root'))).to.be.true;
+    });
+    it('should reject a component the map lists elsewhere, or not at all, and a map it cannot parse', () => {
+      expect(isWorkspaceMapOwnedBy(rawMap, id('comp1'))).to.be.false;
+      expect(isWorkspaceMapOwnedBy(rawMap, id('other'))).to.be.false;
+      expect(isWorkspaceMapOwnedBy('not a map', id('ws-root'))).to.be.false;
     });
   });
   describe('loading a workspace that has no .bitmap yet', () => {

@@ -1096,6 +1096,23 @@ type OutputFileParams = {
  * collapse onto the default scope, and same-named components from different scopes would overwrite
  * each other.
  */
+/**
+ * whether a versioned map is the workspace map of the given component: it lists the component itself
+ * as the owner of the workspace root. this is what tells a workspace-root component from an ordinary
+ * one that happens to carry a file of that name, when it is written to ".".
+ */
+export function isWorkspaceMapOwnedBy(rawContent: Buffer | string, id: ComponentID): boolean {
+  let parsed: Record<string, any> | undefined;
+  try {
+    parsed = json.parse(rawContent.toString(), undefined, true) as Record<string, any> | undefined;
+  } catch {
+    return false;
+  }
+  const entry = parsed?.[id.fullName] ?? parsed?.[id.toStringWithoutVersion()];
+  if (!entry || typeof entry !== 'object' || entry.rootDir !== WORKSPACE_ROOT_DIR) return false;
+  return !entry.scope || !id.scope || entry.scope === id.scope;
+}
+
 export function normalizeBitmapContentForVersioning(rawContent: string): string {
   const parsed = json.parse(rawContent, undefined, true) as Record<string, any> | undefined;
   if (!parsed) return rawContent;
