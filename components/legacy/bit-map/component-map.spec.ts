@@ -3,7 +3,14 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { BIT_HIDDEN_DIR, BIT_WORKSPACE_TMP_DIRNAME, DOT_GIT_DIR } from '@teambit/legacy.constants';
-import { getFilesByDir, getGitIgnoreHarmony, getIgnoreListHarmony, WORKSPACE_ROOT_DIR } from './component-map';
+import {
+  filterByOwnIgnoreFile,
+  filterByScanIgnorePatterns,
+  getFilesByDir,
+  getGitIgnoreHarmony,
+  getIgnoreListHarmony,
+  WORKSPACE_ROOT_DIR,
+} from './component-map';
 
 const createWorkspace = async (prefix: string, files: Record<string, string>): Promise<string> => {
   const workspacePath = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
@@ -112,6 +119,24 @@ describe('getFilesByDir', function () {
       await fs.symlink(outsidePath, path.join(workspacePath, 'linked'));
     });
     after(() => Promise.all([fs.remove(workspacePath), fs.remove(outsidePath)]));
+
+    it("should apply a nested component's own .bitignore although the workspace rules hide that file from the list", async () => {
+      // the root .gitignore ignores every nested .bitignore, so it is not among the paths handed over
+      const filtered = await filterByOwnIgnoreFile('vendor/lib', workspacePath, ['index.js', 'generated/x.js']);
+      expect(filtered).to.deep.equal(['index.js']);
+    });
+    it('should drop from caller-resolved paths what a scan never yields', () => {
+      const dir = 'packages/comp1';
+      const paths = [
+        `${dir}/index.ts`,
+        `${dir}/.bitmap`,
+        `${dir}/${DOT_GIT_DIR}/HEAD`,
+        `${dir}/${BIT_HIDDEN_DIR}/objects/aa`,
+        `${dir}/${BIT_WORKSPACE_TMP_DIRNAME}/x`,
+        `${dir}/node_modules/dep/index.js`,
+      ];
+      expect(filterByScanIgnorePatterns(dir, paths)).to.deep.equal([`${dir}/index.ts`]);
+    });
 
     // bit runs with the workspace as its cwd. globby stats ignore patterns relative to the process
     // cwd, so the `.git` pointer file is only exercised from inside the workspace.

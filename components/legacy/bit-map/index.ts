@@ -17,6 +17,7 @@ export {
   Config,
   filterByIgnoreFiles,
   filterByOwnIgnoreFile,
+  filterByScanIgnorePatterns,
   getFilesByDir,
   getIgnoreListHarmony,
   getScanIgnorePatterns,

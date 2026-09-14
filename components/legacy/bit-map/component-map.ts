@@ -132,10 +132,12 @@ export async function filterByIgnoreFiles(
 
 /**
  * the component's own ignore file (.bitignore, else .gitignore, at its root), applied to its files.
- * resolved against the workspace, not the process cwd: `dir` is workspace-relative, so running bit
- * from a sub-directory would otherwise look in the wrong place - and getBitIgnoreFile() does not
- * swallow ENOENT. not for the workspace root: its own file is the workspace's, part of `gitIgnore`
- * and evaluated together with the nested ones - applied again on its own it would undo their negations.
+ * looked up on disk, not in `relativePaths`: the workspace rules may hide the file itself from the
+ * scanned list (a root .gitignore that ignores every nested .bitignore), and the component's rules still apply, as in
+ * git. resolved against the workspace, not the process cwd: `dir` is workspace-relative, so running
+ * bit from a sub-directory would otherwise look in the wrong place. not for the workspace root: its
+ * own file is the workspace's, part of `gitIgnore` and evaluated together with the nested ones -
+ * applied again on its own it would undo their negations.
  */
 export async function filterByOwnIgnoreFile(
   dir: PathLinux,
@@ -143,11 +145,16 @@ export async function filterByOwnIgnoreFile(
   relativePaths: PathLinux[]
 ): Promise<PathLinux[]> {
   if (dir === WORKSPACE_ROOT_DIR) return relativePaths;
-  const ignoreFileDir = path.join(consumerPath, dir);
-  const ownIgnoreFile = relativePaths.includes(BIT_IGNORE)
-    ? await getBitIgnoreFile(ignoreFileDir)
-    : await getGitIgnoreFile(ignoreFileDir);
+  const ownIgnoreFile = await retrieveUserIgnoreList(path.join(consumerPath, dir));
   return ownIgnoreFile.length ? ignore().add(ownIgnoreFile).filter(relativePaths) : relativePaths;
+}
+
+/**
+ * the paths a scan never yields - bit's own dirs, git's, a nested workspace map - applied to
+ * workspace-relative paths a caller resolved itself, so what it tracks is what the next rescan keeps.
+ */
+export function filterByScanIgnorePatterns(dir: PathLinux, workspaceRelativePaths: PathLinux[]): PathLinux[] {
+  return ignore().add(getScanIgnorePatterns(dir)).filter(workspaceRelativePaths);
 }
 
 async function getNestedIgnorePatterns(

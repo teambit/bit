@@ -410,6 +410,12 @@ describe('add command on Harmony', function () {
       // "run bit link" is the suggested fix for that issue, and it would not link the root either
       expect(issuesOf('ws-root')).to.not.include('MissingLinksFromNodeModulesToSrc');
     });
+    it('should not report a duplicate component-and-package issue for the root, it is not a package', () => {
+      // the default remote scope of the e2e has no owner prefix, so the package name has none either
+      const wouldBePackageName = helper.general.getPackageNameByCompName('ws-root', false);
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { [wouldBePackageName]: '1.0.0' } });
+      expect(issuesOf('ws-root')).to.not.include('DuplicateComponentAndPackage');
+    });
     describe('when a root file has a relative import into a component', () => {
       before(() => {
         helper.fs.outputFile('app.js', "const comp1 = require('./comp1');\n");

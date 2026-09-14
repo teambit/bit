@@ -22,6 +22,7 @@ import {
   ComponentMap,
   filterByIgnoreFiles,
   filterByOwnIgnoreFile,
+  filterByScanIgnorePatterns,
   getFilesByDir,
   getIgnoreListHarmony,
   getScanIgnorePatterns,
@@ -962,7 +963,12 @@ async function filterResolvedFiles(
   const notGenerated = files
     .map(pathNormalizeToLinux)
     .filter((file) => trackAllFiles || !IGNORE_ROOT_ONLY_LIST.includes(file));
-  const workspaceRelative = notGenerated.map((file) => path.posix.join(rootDir, file));
+  // what a scan never yields (bit's and git's own dirs, a nested workspace map) is not tracked here either,
+  // or the next rescan would drop it
+  const workspaceRelative = filterByScanIgnorePatterns(
+    rootDir,
+    notGenerated.map((file) => path.posix.join(rootDir, file))
+  );
   const filteredByWorkspaceRules: string[] = gitIgnore
     .filter(workspaceRelative)
     .map((file) => path.posix.relative(rootDir, file));

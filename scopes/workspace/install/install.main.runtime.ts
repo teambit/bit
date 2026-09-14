@@ -1365,6 +1365,9 @@ export class InstallMain {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
     components.forEach((component) => {
       if (component.state._consumer.removed) return;
+      // the workspace-root component is not a package (see getComponentsDirectory): a workspace dependency
+      // by the name it would have had is no duplicate of it
+      if (this.workspace.componentDir(component.id) === this.workspace.path) return;
       const pkgName = componentIdToPackageName(component.state._consumer);
       const found = workspacePolicy.find(pkgName);
       if (found) {
