@@ -1,3 +1,4 @@
+import path from 'path';
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
@@ -49,9 +50,7 @@ describe('local head Version object is missing from scope', function () {
     });
   });
   describe('the head Version object is missing locally while the remote has it', () => {
-    // a fetch that completes while the remote is mid-export can leave the component object with its
-    // new head and no Version object for it. from then on, every load of that component failed on
-    // the missing object, although the remote has it by now, until "bit import --objects" was run.
+    // the state a fetch leaves behind when it completes while the remote is mid-export
     let head: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -70,7 +69,8 @@ describe('local head Version object is missing from scope', function () {
       expect(output).to.have.string('comp1@0.0.1');
     });
     it('should write the fetched Version object to the local scope', () => {
-      expect(() => helper.command.catObject(head)).to.not.throw();
+      const objectPath = path.join(helper.scopes.localPath, '.bit/objects', helper.general.getHashPathOfObject(head));
+      expect(objectPath).to.be.a.file();
     });
   });
   describe('bit envs with a component on a core env', () => {
