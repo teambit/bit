@@ -736,13 +736,20 @@ export class Watcher {
       }
     }
     this.workspace.clearComponentCache(updatedComponentId);
-    const component = await this.workspace.get(updatedComponentId);
-    const componentMap: ComponentMap = component.state._consumer.componentMap;
+    const componentMap: ComponentMap | undefined = this.consumer.bitMap.getComponentIfExist(updatedComponentId, {
+      ignoreVersion: true,
+    });
     if (!componentMap) {
       throw new Error(
         `unable to find componentMap for ${updatedComponentId.toString()}, make sure this component is in .bitmap`
       );
     }
+    // refresh the files from the filesystem. loading the component does this as well, but it must not be
+    // loaded before bitMap.paths is updated below: a component loaded while that index is still missing
+    // the newly added files resolves them as "untracked dependencies" and caches that result. adding a
+    // file inside an existing rootDir doesn't change .bitmap, so nothing invalidates the cache afterwards
+    // and the false issue sticks until the workspace is reloaded.
+    await componentMap.trackDirectoryChangesHarmony(this.consumer.getPath(), this.consumer.config.ignoredFiles);
     const compFilesRelativeToWorkspace = componentMap.getFilesRelativeToConsumer();
     const [compFiles, nonCompFiles] = partition(files, (filePath) => {
       const relativeFile = this.getRelativePathLinux(filePath);
