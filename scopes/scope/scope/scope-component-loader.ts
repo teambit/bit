@@ -122,26 +122,29 @@ export class ScopeComponentLoader {
       return await modelComponent.loadVersion(versionStr, repo);
     } catch (err: any) {
       const isMissingFromFs = err instanceof VersionNotFoundOnFS || err?.name === 'VersionNotFoundOnFS';
-      const idStr = id.toString();
-      if (!isMissingFromFs || !this.scope.isExported(id) || this.failedVersionFetches.get(idStr)) throw err;
+      if (!isMissingFromFs || !this.scope.isExported(id)) throw err;
+      // the fetch goes to the lane's scope when on a lane, so a failure on one lane says nothing about another
+      const laneId = this.scope.legacyScope.getCurrentLaneId();
+      const fetchKey = laneId ? `${id.toString()} (lane ${laneId.toString()})` : id.toString();
+      if (this.failedVersionFetches.get(fetchKey)) throw err;
       try {
-        await this.fetchMissingVersion(id, span);
+        await this.fetchMissingVersion(id, fetchKey, span);
         return await modelComponent.loadVersion(versionStr, repo);
       } catch (fetchErr: any) {
-        this.failedVersionFetches.set(idStr, true);
-        this.logger.error(`ScopeComponentLoader, failed fetching the missing Version object of ${idStr}`, fetchErr);
+        this.failedVersionFetches.set(fetchKey, true);
+        this.logger.error(`ScopeComponentLoader, failed fetching the missing Version object of ${fetchKey}`, fetchErr);
         throw err;
       }
     }
   }
 
-  private fetchMissingVersion(id: ComponentID, span: LoadSpan): Promise<void> {
+  private fetchMissingVersion(id: ComponentID, fetchKey: string, span: LoadSpan): Promise<void> {
     const idStr = id.toString();
-    const inFlight = this.missingVersionFetches.get(idStr);
+    const inFlight = this.missingVersionFetches.get(fetchKey);
     if (inFlight) return inFlight;
     const fetching = (async () => {
       this.logger.warn(
-        `ScopeComponentLoader, the Version object of ${idStr} is missing locally, fetching it from the remote`
+        `ScopeComponentLoader, the Version object of ${fetchKey} is missing locally, fetching it from the remote`
       );
       span.setAttribute('missingVersionFetched', 'true');
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
@@ -153,8 +156,8 @@ export class ScopeComponentLoader {
           reason: `${idStr} because its Version object is missing from the local scope`,
         })
       );
-    })().finally(() => this.missingVersionFetches.delete(idStr));
-    this.missingVersionFetches.set(idStr, fetching);
+    })().finally(() => this.missingVersionFetches.delete(fetchKey));
+    this.missingVersionFetches.set(fetchKey, fetching);
     return fetching;
   }
 
