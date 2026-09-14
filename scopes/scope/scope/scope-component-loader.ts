@@ -89,7 +89,7 @@ export class ScopeComponentLoader {
 
     if (versionStr === VERSION_ZERO) return undefined;
     const newId = id.changeVersion(versionStr);
-    const version = await this.loadVersionOrFetch(modelComponent, newId, versionStr, span);
+    const version = await this.loadVersionOrFetch(modelComponent, newId, versionStr, span, importIfMissing);
     const versionOriginId = version.originId;
     if (versionOriginId && !versionOriginId.isEqualWithoutVersion(id)) {
       throw new BitError(
@@ -115,14 +115,14 @@ export class ScopeComponentLoader {
     modelComponent: ModelComponent,
     id: ComponentID,
     versionStr: string,
-    span: LoadSpan
+    span: LoadSpan,
+    importIfMissing: boolean
   ): Promise<Version> {
     const repo = this.scope.legacyScope.objects;
     try {
       return await modelComponent.loadVersion(versionStr, repo);
     } catch (err: any) {
-      const isMissingFromFs = err instanceof VersionNotFoundOnFS || err?.name === 'VersionNotFoundOnFS';
-      if (!isMissingFromFs || !this.scope.isExported(id)) throw err;
+      if (!isVersionMissingFromFs(err) || !importIfMissing || !this.scope.isExported(id)) throw err;
       // the fetch goes to the lane's scope when on a lane, so a failure on one lane says nothing about
       // another. the lane is read once here and used for both the key and the fetch.
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
@@ -130,11 +130,18 @@ export class ScopeComponentLoader {
       if (this.failedVersionFetches.get(fetchKey)) throw err;
       try {
         await this.fetchMissingVersion(id, lane, fetchKey, span);
-        return await modelComponent.loadVersion(versionStr, repo);
       } catch (fetchErr: any) {
         this.failedVersionFetches.set(fetchKey, true);
         this.logger.error(`ScopeComponentLoader, failed fetching the missing Version object of ${fetchKey}`, fetchErr);
         throw err;
+      }
+      try {
+        return await modelComponent.loadVersion(versionStr, repo);
+      } catch (retryErr: any) {
+        // still missing: the remote answered without it, remembered like a failed fetch. any other
+        // failure of the fetched object is its own and is reported as such.
+        if (isVersionMissingFromFs(retryErr)) this.failedVersionFetches.set(fetchKey, true);
+        throw retryErr;
       }
     }
   }
@@ -312,4 +319,8 @@ export class ScopeComponentLoader {
     );
     return state;
   }
+}
+
+function isVersionMissingFromFs(err: any): boolean {
+  return err instanceof VersionNotFoundOnFS || err?.name === 'VersionNotFoundOnFS';
 }
