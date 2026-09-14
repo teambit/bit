@@ -240,9 +240,20 @@ describe('BitMap', function () {
       'ws-root': { scope: 'my-scope', version: '', mainFile: 'README.md', rootDir: '.' },
       comp1: { scope: 'my-scope', version: '', mainFile: 'index.ts', rootDir: 'packages/comp1' },
     });
-    const id = (name: string) => ComponentID.fromObject({ name }, 'my-scope');
+    const id = (name: string, scope = 'my-scope') => ComponentID.fromObject({ name }, scope);
     it('should recognize the component the map lists as the owner of the workspace root', () => {
       expect(isWorkspaceMapOwnedBy(rawMap, id('ws-root'))).to.be.true;
+    });
+    it('should resolve the scope of an entry snapped before its export from its defaultScope', () => {
+      const entry = { scope: '', defaultScope: 'my-scope', version: '', mainFile: 'README.md', rootDir: '.' };
+      const rawMapBeforeExport = JSON.stringify({ 'ws-root': entry });
+      expect(isWorkspaceMapOwnedBy(rawMapBeforeExport, id('ws-root'))).to.be.true;
+      expect(isWorkspaceMapOwnedBy(rawMapBeforeExport, id('ws-root', 'other-scope'))).to.be.false;
+      const rawMapWithoutScope = JSON.stringify({ 'ws-root': { ...entry, defaultScope: undefined } });
+      expect(isWorkspaceMapOwnedBy(rawMapWithoutScope, id('ws-root'))).to.be.false;
+    });
+    it('should reject the same name from another scope', () => {
+      expect(isWorkspaceMapOwnedBy(rawMap, id('ws-root', 'other-scope'))).to.be.false;
     });
     it('should reject a component the map lists elsewhere, or not at all, and a map it cannot parse', () => {
       expect(isWorkspaceMapOwnedBy(rawMap, id('comp1'))).to.be.false;

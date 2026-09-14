@@ -183,7 +183,8 @@ function rebaseIgnorePattern(pattern: string, dir: PathLinux): string {
   const anchored = body.slice(0, -1).includes('/');
   // a trailing slash means "directories only". the join drops it, so it is put back.
   const dirOnly = body.endsWith('/') ? '/' : '';
-  const rebased = (anchored ? pathJoinLinux(dir, body.replace(/^\//, '')) : pathJoinLinux(dir, '**', body)) + dirOnly;
+  const base = anchored ? pathJoinLinux(dir, body.replace(/^\//, '')) : pathJoinLinux(dir, '**', body);
+  const rebased = base + dirOnly;
   return negated ? `!${rebased}` : rebased;
 }
 
@@ -552,6 +553,10 @@ export async function getFilesByDir(
     dot: true,
     onlyFiles: true,
     ignore: getScanIgnorePatterns(dir, excludeDirs),
+    // the workspace root is the one scan that spans the whole tree, where a symbolic link the user made
+    // may lead anywhere. what it points to is not the workspace's source, so the link is not followed -
+    // the add-time scan does not follow links either.
+    followSymbolicLinks: dir !== WORKSPACE_ROOT_DIR,
     // every pattern here is an explicit glob. with expansion on, globby stats each ignore pattern
     // (relative to the process cwd, not to `cwd`) to decide whether to expand it, and `.git/**`
     // throws ENOTDIR wherever `.git` is a file - every git worktree.

@@ -1110,7 +1110,10 @@ export function isWorkspaceMapOwnedBy(rawContent: Buffer | string, id: Component
   }
   const entry = parsed?.[id.fullName] ?? parsed?.[id.toStringWithoutVersion()];
   if (!entry || typeof entry !== 'object' || entry.rootDir !== WORKSPACE_ROOT_DIR) return false;
-  return !entry.scope || !id.scope || entry.scope === id.scope;
+  // an entry snapped before its export carries its scope as defaultScope. either way it has to be the
+  // scope the component comes from - an empty one is not a wildcard.
+  const entryScope = entry.scope || entry.defaultScope;
+  return Boolean(entryScope) && entryScope === id.scope;
 }
 
 export function normalizeBitmapContentForVersioning(rawContent: string): string {

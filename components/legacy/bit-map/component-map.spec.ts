@@ -62,6 +62,7 @@ describe('getFilesByDir', function () {
 
   describe('scanning the workspace root', () => {
     let workspacePath: string;
+    let outsidePath: string;
     before(async () => {
       workspacePath = await createWorkspace('bit-workspace-root-scan-', {
         'README.md': '',
@@ -105,8 +106,12 @@ describe('getFilesByDir', function () {
         // "tmp/" ignores directories only. this is a file
         'docs/tmp': '',
       });
+      // a symbolic link at the root, to a directory outside the workspace. what it points to is not
+      // the workspace's source, so its files must never be tracked
+      outsidePath = await createWorkspace('bit-outside-the-workspace-', { 'secret.txt': 'SECRET' });
+      await fs.symlink(outsidePath, path.join(workspacePath, 'linked'));
     });
-    after(() => fs.remove(workspacePath));
+    after(() => Promise.all([fs.remove(workspacePath), fs.remove(outsidePath)]));
 
     // bit runs with the workspace as its cwd. globby stats ignore patterns relative to the process
     // cwd, so the `.git` pointer file is only exercised from inside the workspace.
