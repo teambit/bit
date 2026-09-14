@@ -582,7 +582,8 @@ you can add the directory these files are located at and it'll change the root d
       relativeComponentPath,
       this.consumer.getPath(),
       this.gitIgnore,
-      matches.map(pathNormalizeToLinux)
+      matches.map(pathNormalizeToLinux),
+      this.consumer.config.trackAllFiles
     );
     const filteredMatches = matchesNotIgnored.filter(
       (match) => this.consumer.config.trackAllFiles || !generatedAtRoot.has(match)

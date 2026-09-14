@@ -76,7 +76,9 @@ const SCAN_IGNORE_LIST = [
 /**
  * a bit workspace nested in the scanned tree that no component claims must not hand its map to the
  * workspace-root component: restored, it would turn that directory into a broken workspace (a map
- * without its scope). only the root's own map is tracked, see isWorkspaceMapFile.
+ * without its scope). only the root's own map is tracked, see isWorkspaceMapFile - a map at any
+ * other component's root is never tracked either, so what a component versions is what a write
+ * lands, the live map excepted.
  */
 const NESTED_WORKSPACE_MAP = `*/**/${BIT_MAP}`;
 
@@ -92,7 +94,7 @@ const NESTED_WORKSPACE_MAP = `*/**/${BIT_MAP}`;
 export function getScanIgnorePatterns(dir: PathLinux, excludeDirs: PathLinux[] = []): string[] {
   return [
     ...SCAN_IGNORE_LIST,
-    ...(dir === WORKSPACE_ROOT_DIR ? [NESTED_WORKSPACE_MAP] : []),
+    dir === WORKSPACE_ROOT_DIR ? NESTED_WORKSPACE_MAP : `${escapeGlobPath(dir)}/${BIT_MAP}`,
     ...excludeDirs.map((excludeDir) => `${escapeGlobPath(excludeDir)}/**`),
   ];
 }
@@ -107,19 +109,25 @@ export function getScanIgnorePatterns(dir: PathLinux, excludeDirs: PathLinux[] =
  * their directory: a pattern with no slash before its end matches at any depth below it (`build/`
  * becomes `docs/**\/build/`), any other is anchored to it (`/local.env` becomes `docs/local.env`).
  * a .bitignore beside a .gitignore wins, as at the root. nested components are subtracted before
- * this runs, so their ignore files are theirs to apply.
+ * this runs, so their ignore files are theirs to apply. the rules bit owns (`.env`, node_modules, and
+ * the generated files unless `trackAllFiles`) are applied last, on their own, so no negation
+ * re-includes them.
  */
 export async function filterByIgnoreFiles(
   dir: PathLinux,
   consumerPath: string,
   gitIgnore: any,
-  relativePaths: PathLinux[]
+  relativePaths: PathLinux[],
+  trackAllFiles = false
 ): Promise<PathLinux[]> {
   const filteredByRoot: PathLinux[] = gitIgnore.filter(relativePaths);
   if (dir !== WORKSPACE_ROOT_DIR) return filteredByRoot;
   const nestedPatterns = await getNestedIgnorePatterns(consumerPath, filteredByRoot);
   if (!nestedPatterns.length) return filteredByRoot;
-  return ignore().add(gitIgnore).add(nestedPatterns).filter(relativePaths);
+  const filteredByUserRules: PathLinux[] = ignore().add(gitIgnore).add(nestedPatterns).filter(relativePaths);
+  return ignore()
+    .add(trackAllFiles ? ALWAYS_IGNORE_LIST : IGNORE_LIST)
+    .filter(filteredByUserRules);
 }
 
 async function getNestedIgnorePatterns(consumerPath: string, relativePaths: PathLinux[]): Promise<string[]> {
@@ -523,7 +531,7 @@ export async function getFilesByDir(
     expandDirectories: false,
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
-  const filteredMatches: string[] = await filterByIgnoreFiles(dir, consumerPath, gitIgnore, matches);
+  const filteredMatches: string[] = await filterByIgnoreFiles(dir, consumerPath, gitIgnore, matches, trackAllFiles);
   // the paths are relative to the workspace. make them relative to the component's root-dir.
   const relativePathsLinux = filteredMatches.map((match) => pathRelativeLinux(dir, match));
   // the config files "bit ws-config write" generates are not source - unless the workspace declares that

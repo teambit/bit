@@ -75,6 +75,8 @@ describe('getFilesByDir', function () {
         [`${BIT_WORKSPACE_TMP_DIRNAME}/x`]: '',
         'node_modules/dep/index.js': '',
         'packages/comp1/index.ts': '',
+        // a map at a nested component's root is never its file (that dir would be a nested workspace)
+        'packages/comp1/.bitmap': '',
         // a nested component whose root-dir is glob syntax (a Next.js route), next to a dir that
         // the unescaped pattern "app/[slug]" would match instead
         'app/[slug]/page.ts': '',
@@ -87,11 +89,13 @@ describe('getFilesByDir', function () {
         'nested/.bitmap': '',
         // an ignore file below the root applies to its directory, like git: unanchored patterns at any
         // depth below it, anchored ones to it
-        // and a nested negation re-includes a file the root's rule excluded, evaluated in git's order
-        'docs/.gitignore': 'build/\n/local.env\ntmp/\n!keep.txt\n',
+        // and a nested negation re-includes a file the root's rule excluded, evaluated in git's order,
+        // but never one of the files bit always excludes
+        'docs/.gitignore': 'build/\n/local.env\ntmp/\n!keep.txt\n!.env\n',
         'docs/index.md': '',
         'docs/notes.txt': '',
         'docs/keep.txt': '',
+        'docs/.env': 'SECRET=1\n',
         'docs/build/out.html': '',
         'docs/local.env': '',
         'docs/nested/local.env': '',
