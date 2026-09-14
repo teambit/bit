@@ -24,6 +24,11 @@ describe('Bit Ignore functionality', function () {
       expect(files).to.not.include('hello.json');
       expect(files).to.include('index.js');
     });
+    it('should respect it at add time as well, not only on the next rescan', () => {
+      const output = helper.command.addComponent('comp1', { i: 'comp1' });
+      expect(output).to.have.string('index.js');
+      expect(output).to.not.have.string('hello.json');
+    });
   });
   describe('adding .bitignore in the root dir', () => {
     before(() => {

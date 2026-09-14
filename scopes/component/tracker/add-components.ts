@@ -579,8 +579,20 @@ you can add the directory these files are located at and it'll change the root d
       matches.map(pathNormalizeToLinux),
       this.consumer.config.trackAllFiles
     );
+    // and by the component's own ignore file, the rule the rescan applies (see getFilesByDir) - it
+    // takes paths relative to the component, the matches are relative to the workspace.
+    const relativeToComponent = (match: PathLinux) => path.posix.relative(relativeComponentPath, match);
+    const keptByOwnIgnoreFile = new Set(
+      await filterByOwnIgnoreFile(
+        relativeComponentPath,
+        this.consumer.getPath(),
+        matchesNotIgnored.map(relativeToComponent)
+      )
+    );
     const filteredMatches = matchesNotIgnored.filter(
-      (match) => this.consumer.config.trackAllFiles || !generatedAtRoot.has(match)
+      (match) =>
+        keptByOwnIgnoreFile.has(relativeToComponent(match)) &&
+        (this.consumer.config.trackAllFiles || !generatedAtRoot.has(match))
     );
 
     if (!filteredMatches.length) {
