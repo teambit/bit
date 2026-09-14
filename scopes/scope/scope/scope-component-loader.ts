@@ -4,7 +4,7 @@ import pMapSeries from 'p-map-series';
 import type { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import type { ModelComponent, Version } from '@teambit/objects';
+import type { Lane, ModelComponent, Version } from '@teambit/objects';
 import { VERSION_ZERO, Ref } from '@teambit/objects';
 import { BitError } from '@teambit/bit-error';
 import { VersionNotFoundOnFS } from '@teambit/legacy.scope';
@@ -123,12 +123,13 @@ export class ScopeComponentLoader {
     } catch (err: any) {
       const isMissingFromFs = err instanceof VersionNotFoundOnFS || err?.name === 'VersionNotFoundOnFS';
       if (!isMissingFromFs || !this.scope.isExported(id)) throw err;
-      // the fetch goes to the lane's scope when on a lane, so a failure on one lane says nothing about another
-      const laneId = this.scope.legacyScope.getCurrentLaneId();
-      const fetchKey = laneId ? `${id.toString()} (lane ${laneId.toString()})` : id.toString();
+      // the fetch goes to the lane's scope when on a lane, so a failure on one lane says nothing about
+      // another. the lane is read once here and used for both the key and the fetch.
+      const lane = await this.scope.legacyScope.getCurrentLaneObject();
+      const fetchKey = lane ? `${id.toString()} (lane ${lane.id().toString()})` : id.toString();
       if (this.failedVersionFetches.get(fetchKey)) throw err;
       try {
-        await this.fetchMissingVersion(id, fetchKey, span);
+        await this.fetchMissingVersion(id, lane, fetchKey, span);
         return await modelComponent.loadVersion(versionStr, repo);
       } catch (fetchErr: any) {
         this.failedVersionFetches.set(fetchKey, true);
@@ -138,7 +139,12 @@ export class ScopeComponentLoader {
     }
   }
 
-  private fetchMissingVersion(id: ComponentID, fetchKey: string, span: LoadSpan): Promise<void> {
+  private fetchMissingVersion(
+    id: ComponentID,
+    lane: Lane | undefined,
+    fetchKey: string,
+    span: LoadSpan
+  ): Promise<void> {
     const idStr = id.toString();
     const inFlight = this.missingVersionFetches.get(fetchKey);
     if (inFlight) return inFlight;
@@ -147,7 +153,6 @@ export class ScopeComponentLoader {
         `ScopeComponentLoader, the Version object of ${fetchKey} is missing locally, fetching it from the remote`
       );
       span.setAttribute('missingVersionFetched', 'true');
-      const lane = await this.scope.legacyScope.getCurrentLaneObject();
       // useCache false: the component object is present locally, so the importer would otherwise skip the fetch.
       await loadSpan('scope-import-missing-version', { id: idStr }, () =>
         this.scope.import([id], {
