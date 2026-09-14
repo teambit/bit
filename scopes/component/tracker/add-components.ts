@@ -20,6 +20,7 @@ import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
 import {
   ComponentMap,
   filterByIgnoreFiles,
+  filterByOwnIgnoreFile,
   getFilesByDir,
   getIgnoreListHarmony,
   getScanIgnorePatterns,
@@ -869,16 +870,18 @@ export async function addMultipleFromResolvedTrackData(
     // re-tracking the workspace root with the same id is a no-op, not a second owner
     throwForExistingParentDir(bitMap, rootDir, componentId);
     const isWorkspaceRoot = rootDir === WORKSPACE_ROOT_DIR;
-    const existingConfig = isWorkspaceRoot
-      ? bitMap.getComponentIfExist(componentId, { ignoreVersion: true })?.config
-      : undefined;
+    // re-tracking keeps the entry's id, version included, the way "bit add" does: the id built from
+    // the name alone would replace it and make a snapped component look newly tracked.
+    const existingEntry = bitMap.getComponentIfExist(componentId, { ignoreVersion: true });
+    const idToTrack = existingEntry?.id ?? componentId;
+    const existingConfig = isWorkspaceRoot ? existingEntry?.config : undefined;
     const componentFiles = isWorkspaceRoot
       ? await scanWorkspaceRootFiles(workspace, gitIgnore, batchRootDirs)
-      : filterResolvedFiles(rootDir, files, gitIgnore, trackAllFiles);
+      : await filterResolvedFiles(rootDir, workspace.path, files, gitIgnore, trackAllFiles);
     const componentMap = bitMap.addComponent({
-      componentId,
+      componentId: idToTrack,
       files: componentFiles,
-      defaultScope,
+      defaultScope: idToTrack.hasScope() ? undefined : defaultScope,
       config: isWorkspaceRoot ? configForWorkspaceRoot(existingConfig, config) : config,
       mainFile,
       rootDir,
@@ -913,21 +916,26 @@ async function scanWorkspaceRootFiles(
 
 /**
  * the files the caller resolved for a component, minus the config files "bit ws-config write"
- * generates (the rule the rescan applies, see getFilesByDir) and the ignored ones. the ignore rules
- * are written against the workspace root, so a file is matched by its workspace-relative path, then
- * mapped back to the component-relative one the map stores.
+ * generates and the ignored ones - the rules the rescan applies, see getFilesByDir. the workspace
+ * ignore rules are written against the workspace root, so a file is matched by its workspace-relative
+ * path and mapped back to the component-relative one the map stores; the component's own ignore file
+ * is applied to the latter.
  */
-function filterResolvedFiles(
+async function filterResolvedFiles(
   rootDir: PathLinuxRelative,
+  consumerPath: string,
   files: string[],
   gitIgnore: any,
   trackAllFiles?: boolean
-): ComponentMapFile[] {
+): Promise<ComponentMapFile[]> {
   const notGenerated = files
     .map(pathNormalizeToLinux)
     .filter((file) => trackAllFiles || !IGNORE_ROOT_ONLY_LIST.includes(file));
   const workspaceRelative = notGenerated.map((file) => path.posix.join(rootDir, file));
-  const filtered: string[] = gitIgnore.filter(workspaceRelative).map((file) => path.posix.relative(rootDir, file));
+  const filteredByWorkspaceRules: string[] = gitIgnore
+    .filter(workspaceRelative)
+    .map((file) => path.posix.relative(rootDir, file));
+  const filtered = await filterByOwnIgnoreFile(rootDir, consumerPath, filteredByWorkspaceRules);
   if (!filtered.length) throw new NoFiles(files);
   return filtered.map((relativePath) => ({ relativePath, name: path.basename(relativePath), test: false }));
 }

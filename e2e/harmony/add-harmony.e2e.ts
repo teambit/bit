@@ -82,7 +82,12 @@ describe('add command on Harmony', function () {
       // a direct child ("bit add . comp1") is dropped from the batch as a wildcard expansion of ".",
       // a pre-existing rule. a deeper one is added alongside the root.
       helper.fs.outputFile('packages/comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.fs.outputFile('packages/comp1/.npmrc', 'registry=https://example.com\n');
       addedComponents = JSON.parse(helper.command.runCmd('bit add . packages/comp1 --json')).addedComponents;
+    });
+    it('should list the dotfiles of a nested component at add time, as the rescan tracks them', () => {
+      const nested = addedComponents.find((added) => added.id.endsWith('comp1'));
+      expect(nested?.files.some((file) => file.endsWith('.npmrc'))).to.be.true;
     });
     it('should leave the nested component files out of the root, already at add time', () => {
       // the nested component is not in .bitmap yet when the root is scanned, so the batch itself has
@@ -188,17 +193,6 @@ describe('add command on Harmony', function () {
       expect(output).to.have.string('.npmrc');
       // its auto-generated banner must not get it dropped, the rescan tracks it
       expect(output).to.have.string('.bitmap');
-    });
-  });
-  describe('adding a component that has dotfiles', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
-      helper.fs.outputFile('comp1/.npmrc', 'registry=https://example.com\n');
-    });
-    it('should list them at add time, as the rescan tracks them', () => {
-      const output = helper.command.addComponent('comp1', { i: 'comp1' });
-      expect(output).to.have.string('.npmrc');
     });
   });
   describe('adding a nested component that holds the main file of the workspace root', () => {

@@ -130,6 +130,26 @@ export async function filterByIgnoreFiles(
     .filter(filteredByUserRules);
 }
 
+/**
+ * the component's own ignore file (.bitignore, else .gitignore, at its root), applied to its files.
+ * resolved against the workspace, not the process cwd: `dir` is workspace-relative, so running bit
+ * from a sub-directory would otherwise look in the wrong place - and getBitIgnoreFile() does not
+ * swallow ENOENT. not for the workspace root: its own file is the workspace's, part of `gitIgnore`
+ * and evaluated together with the nested ones - applied again on its own it would undo their negations.
+ */
+export async function filterByOwnIgnoreFile(
+  dir: PathLinux,
+  consumerPath: string,
+  relativePaths: PathLinux[]
+): Promise<PathLinux[]> {
+  if (dir === WORKSPACE_ROOT_DIR) return relativePaths;
+  const ignoreFileDir = path.join(consumerPath, dir);
+  const ownIgnoreFile = relativePaths.includes(BIT_IGNORE)
+    ? await getBitIgnoreFile(ignoreFileDir)
+    : await getGitIgnoreFile(ignoreFileDir);
+  return ownIgnoreFile.length ? ignore().add(ownIgnoreFile).filter(relativePaths) : relativePaths;
+}
+
 async function getNestedIgnorePatterns(
   consumerPath: string,
   gitIgnore: any,
@@ -546,22 +566,7 @@ export async function getFilesByDir(
   const filteredByIgnoredFromRoot = trackAllFiles
     ? relativePathsLinux
     : relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
-  // resolve against the workspace, not the process cwd. `dir` is workspace-relative, so running bit
-  // from a sub-directory would otherwise look for the ignore file in the wrong place - and
-  // getBitIgnoreFile() does not swallow ENOENT, so it throws rather than falling back.
-  const ignoreFileDir = path.join(consumerPath, dir);
-  // the component's own ignore file, applied to its files. for the workspace root that file is the
-  // workspace's, already part of `gitIgnore` and evaluated above together with the nested ones -
-  // applied again on its own it would undo their negations.
-  const ownIgnoreFile =
-    dir === WORKSPACE_ROOT_DIR
-      ? []
-      : filteredByIgnoredFromRoot.includes(BIT_IGNORE)
-        ? await getBitIgnoreFile(ignoreFileDir)
-        : await getGitIgnoreFile(ignoreFileDir);
-  const filteredByBitIgnore = ownIgnoreFile.length
-    ? ignore().add(ownIgnoreFile).filter(filteredByIgnoredFromRoot)
-    : filteredByIgnoredFromRoot;
+  const filteredByBitIgnore = await filterByOwnIgnoreFile(dir, consumerPath, filteredByIgnoredFromRoot);
   if (!filteredByBitIgnore.length) throw new IgnoredDirectory(dir);
   return filteredByBitIgnore.map((relativePath) => ({
     relativePath,
