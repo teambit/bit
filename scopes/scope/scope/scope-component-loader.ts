@@ -7,6 +7,7 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ModelComponent, Version } from '@teambit/objects';
 import { VERSION_ZERO, Ref } from '@teambit/objects';
 import { BitError } from '@teambit/bit-error';
+import { VersionNotFoundOnFS } from '@teambit/legacy.scope';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { LoadSpan } from '@teambit/harmony.modules.load-trace';
@@ -82,7 +83,7 @@ export class ScopeComponentLoader {
 
     if (versionStr === VERSION_ZERO) return undefined;
     const newId = id.changeVersion(versionStr);
-    const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
+    const version = await this.loadVersionOrFetch(modelComponent, newId, versionStr, span);
     const versionOriginId = version.originId;
     if (versionOriginId && !versionOriginId.isEqualWithoutVersion(id)) {
       throw new BitError(
@@ -96,6 +97,48 @@ export class ScopeComponentLoader {
     const component = new Component(newId, snap, state, tagMap, this.scope);
     this.componentsCache.set(idStr, component);
     return component;
+  }
+
+  /**
+   * a component object may point at a Version object the local scope does not have. a fetch that ran
+   * while the remote was mid-export gets the component with its new head but no Version for it, and
+   * every load from then on fails on the missing object, although the remote has it by now. fetch
+   * it once and retry, rather than fail until the user runs "bit import --objects" by hand.
+   */
+  private async loadVersionOrFetch(
+    modelComponent: ModelComponent,
+    id: ComponentID,
+    versionStr: string,
+    span: LoadSpan
+  ): Promise<Version> {
+    const repo = this.scope.legacyScope.objects;
+    try {
+      return await modelComponent.loadVersion(versionStr, repo);
+    } catch (err: any) {
+      const isMissingFromFs = err instanceof VersionNotFoundOnFS || err?.name === 'VersionNotFoundOnFS';
+      const idStr = id.toString();
+      if (!isMissingFromFs || !this.scope.isExported(id) || this.importedComponentsCache.get(idStr)) throw err;
+      this.importedComponentsCache.set(idStr, true);
+      this.logger.warn(
+        `ScopeComponentLoader, the Version object of ${idStr} is missing locally, fetching it from the remote`
+      );
+      span.setAttribute('missingVersionFetched', 'true');
+      const lane = await this.scope.legacyScope.getCurrentLaneObject();
+      try {
+        // useCache false: the component object is present locally, so the importer would otherwise skip the fetch.
+        await loadSpan('scope-import-missing-version', { id: idStr }, () =>
+          this.scope.import([id], {
+            useCache: false,
+            lane,
+            reason: `${idStr} because its Version object is missing from the local scope`,
+          })
+        );
+      } catch (importErr: any) {
+        this.logger.error(`ScopeComponentLoader, failed fetching the missing Version object of ${idStr}`, importErr);
+        throw err;
+      }
+      return modelComponent.loadVersion(versionStr, repo);
+    }
   }
 
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {

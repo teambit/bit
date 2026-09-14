@@ -48,4 +48,40 @@ describe('local head Version object is missing from scope', function () {
       expect(output).to.match(/bit import .*--objects/);
     });
   });
+  describe('the head Version object is missing locally while the remote has it', () => {
+    // a fetch that completes while the remote is mid-export can leave the component object with its
+    // new head and no Version object for it. from then on, every load of that component failed on
+    // the missing object, although the remote has it by now, until "bit import --objects" was run.
+    let head: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      // objects only: the component is loaded from the scope, the way an env or an aspect is
+      helper.command.importComponent('comp1', '--objects');
+      head = helper.command.getHead(`${helper.scopes.remote}/comp1`);
+      helper.fs.deleteObject(helper.general.getHashPathOfObject(head));
+    });
+    it('should fetch the missing Version object rather than fail', () => {
+      const output = helper.command.showComponent(`${helper.scopes.remote}/comp1`);
+      expect(output).to.have.string('comp1@0.0.1');
+    });
+    it('should write the fetched Version object to the local scope', () => {
+      expect(() => helper.command.catObject(head)).to.not.throw();
+    });
+  });
+  describe('bit envs with a component on a core env', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1, false);
+    });
+    it('should not fetch the core env component into the local scope, it ships with bit', () => {
+      const output = helper.command.envs();
+      expect(output).to.have.string('teambit.harmony/node');
+      expect(() => helper.command.catComponent('teambit.harmony/node')).to.throw();
+    });
+  });
 });
