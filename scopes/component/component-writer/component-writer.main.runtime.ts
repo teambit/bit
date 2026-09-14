@@ -279,6 +279,7 @@ export class ComponentWriterMain {
       ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath))) ||
         WORKSPACE_ROOT_DIR
       : this.consumer.composeRelativeComponentPath(component.id);
+    if (componentRootDir === WORKSPACE_ROOT_DIR) this.throwForNonWorkspaceRootComponent(component);
     // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
     const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
     // with --write-to-empty-dir, dir-conflict resolution is deferred to relocateOccupiedDirs() so it runs after the
@@ -332,6 +333,22 @@ to move all component files to a different directory, run bit remove and then bi
     // writeToPath specified and that directory is already used for that component. compare against the
     // normalized componentDirRelative (not the raw opts.writeToPath, which may be absolute/OS-specific).
     return componentMap.rootDir === componentDirRelative;
+  }
+
+  /**
+   * only a workspace-root component may be written to ".". any other component written there would own
+   * every unclaimed file in the workspace from the next scan on, and drop out of install and link. a
+   * workspace-root component is told by the workspace map it versions (see isWorkspaceMapFile): no
+   * other component carries one at its root, its scan never hands it one.
+   */
+  private throwForNonWorkspaceRootComponent(component: ConsumerComponent) {
+    const versionsTheWorkspaceMap = component.files.some((file) =>
+      isWorkspaceMapFile(pathNormalizeToLinux(file.relative))
+    );
+    if (versionsTheWorkspaceMap) return;
+    throw new BitError(
+      `unable to import "${component.id.toString()}" to the workspace root, it is not a workspace-root component. use --path to write it to a directory`
+    );
   }
 
   /**

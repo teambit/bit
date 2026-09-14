@@ -20,6 +20,7 @@ import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
 import {
   ComponentMap,
   filterByIgnoreFiles,
+  getFilesByDir,
   getIgnoreListHarmony,
   getScanIgnorePatterns,
   isWorkspaceMapFile,
@@ -859,7 +860,8 @@ export async function addMultipleFromResolvedTrackData(
   // normalized once, the way the map stores it, so "./" is the workspace root here as well as there
   const normalizeRootDir = (rootDir: string): PathLinuxRelative => pathNormalizeToLinux(path.normalize(rootDir));
   const batchRootDirs = trackData.map((data) => normalizeRootDir(data.rootDir));
-  const componentMaps = trackData.map((data) => {
+  const componentMaps: ComponentMap[] = [];
+  for (const data of trackData) {
     const { files, componentName, defaultScope, mainFile, config } = data;
     if (path.isAbsolute(data.rootDir)) throw new BitError(`path is absolute, got ${data.rootDir}`);
     const rootDir = normalizeRootDir(data.rootDir);
@@ -870,35 +872,9 @@ export async function addMultipleFromResolvedTrackData(
     const existingConfig = isWorkspaceRoot
       ? bitMap.getComponentIfExist(componentId, { ignoreVersion: true })?.config
       : undefined;
-    // files of components nested inside the workspace root belong to them, not to the root - whether
-    // tracked already or by this same call. the rule addOneComponent() and the rescan apply, so the
-    // map stays loadable: a root main-file inside a nested component fails validation before the map
-    // is written, not on the next load.
-    const nestedRootDirs = isWorkspaceRoot
-      ? uniq([...bitMap.getNestedRootDirs(rootDir), ...batchRootDirs.filter((dir) => dir !== WORKSPACE_ROOT_DIR)])
-      : [];
-    // and the config files "bit ws-config write" generates are not source, the rule the rescan applies
-    // (see getFilesByDir), so one of them cannot be the main file the next load drops.
-    const ownedFiles = files.filter((file) => {
-      const relativePath = pathNormalizeToLinux(file);
-      if (nestedRootDirs.some((nestedRootDir) => relativePath.startsWith(`${nestedRootDir}/`))) return false;
-      return trackAllFiles || !IGNORE_ROOT_ONLY_LIST.includes(relativePath);
-    });
-
-    // the ignore rules are written against the workspace root, so a file is matched by its
-    // workspace-relative path, then mapped back to the component-relative one the map stores.
-    const workspaceRelative = ownedFiles.map((file) => path.posix.join(rootDir, pathNormalizeToLinux(file)));
-    const filtered: string[] = gitIgnore
-      .filter(workspaceRelative)
-      .map((file) => (isWorkspaceRoot ? file : path.posix.relative(rootDir, file)));
-    if (!filtered.length) {
-      throw new NoFiles(files);
-    }
-
-    const componentFiles = filtered.map((match: PathOsBased) => {
-      return { relativePath: pathNormalizeToLinux(match), name: path.basename(match) };
-    });
-
+    const componentFiles = isWorkspaceRoot
+      ? await scanWorkspaceRootFiles(workspace, gitIgnore, batchRootDirs)
+      : filterResolvedFiles(rootDir, files, gitIgnore, trackAllFiles);
     const componentMap = bitMap.addComponent({
       componentId,
       files: componentFiles,
@@ -907,11 +883,51 @@ export async function addMultipleFromResolvedTrackData(
       mainFile,
       rootDir,
     });
-    return componentMap;
-  });
+    componentMaps.push(componentMap);
+  }
 
   const allIds = componentMaps.map((c) => c.id);
   await linkToNodeModulesByIds(workspace, allIds);
 
   return allIds;
+}
+
+/**
+ * the workspace-root's file-set is derived by scanning, the way every load derives it, rather than
+ * taken from the caller: the scan is what knows the nested components (tracked already, or by the same
+ * call), the ignore files below the root and bit's own exclusions. a main file the scan leaves out
+ * fails the map validation before the map is written, not on the next load.
+ */
+async function scanWorkspaceRootFiles(
+  workspace: Workspace,
+  gitIgnore: any,
+  batchRootDirs: PathLinuxRelative[]
+): Promise<ComponentMapFile[]> {
+  const nestedRootDirs = uniq([
+    ...workspace.consumer.bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR),
+    ...batchRootDirs.filter((dir) => dir !== WORKSPACE_ROOT_DIR),
+  ]);
+  const { trackAllFiles } = workspace.consumer.config;
+  return getFilesByDir(WORKSPACE_ROOT_DIR, workspace.path, gitIgnore, nestedRootDirs, trackAllFiles);
+}
+
+/**
+ * the files the caller resolved for a component, minus the config files "bit ws-config write"
+ * generates (the rule the rescan applies, see getFilesByDir) and the ignored ones. the ignore rules
+ * are written against the workspace root, so a file is matched by its workspace-relative path, then
+ * mapped back to the component-relative one the map stores.
+ */
+function filterResolvedFiles(
+  rootDir: PathLinuxRelative,
+  files: string[],
+  gitIgnore: any,
+  trackAllFiles?: boolean
+): ComponentMapFile[] {
+  const notGenerated = files
+    .map(pathNormalizeToLinux)
+    .filter((file) => trackAllFiles || !IGNORE_ROOT_ONLY_LIST.includes(file));
+  const workspaceRelative = notGenerated.map((file) => path.posix.join(rootDir, file));
+  const filtered: string[] = gitIgnore.filter(workspaceRelative).map((file) => path.posix.relative(rootDir, file));
+  if (!filtered.length) throw new NoFiles(files);
+  return filtered.map((relativePath) => ({ relativePath, name: path.basename(relativePath), test: false }));
 }

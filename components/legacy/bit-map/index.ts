@@ -15,6 +15,7 @@ export {
   ComponentMap,
   Config,
   filterByIgnoreFiles,
+  getFilesByDir,
   getIgnoreListHarmony,
   getScanIgnorePatterns,
   isWorkspaceMapFile,
