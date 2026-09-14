@@ -187,13 +187,15 @@ export class BitMap {
   ): Promise<BitMap> {
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
-    if (!mapFileContent || !currentLocation) {
-      return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
-    }
-    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
+    // the ignore rules apply to every scan, including the ones of a map that starts empty: the first
+    // component tracked in a fresh workspace is rescanned by the same process.
+    const bitMap =
+      !mapFileContent || !currentLocation
+        ? new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA)
+        : BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
     bitMap.ignoredFiles = ignoredFiles;
     bitMap.trackAllFiles = trackAllFiles;
-    await bitMap.loadFiles();
+    if (mapFileContent && currentLocation) await bitMap.loadFiles();
 
     return bitMap;
   }

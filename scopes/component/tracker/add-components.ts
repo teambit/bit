@@ -854,10 +854,13 @@ export async function addMultipleFromResolvedTrackData(
   const { ignoredFiles, trackAllFiles } = workspace.consumer.config;
   const ignoreList = await getIgnoreListHarmony(workspace.path, ignoredFiles, trackAllFiles);
   const gitIgnore = ignore().add(ignoreList);
-  const batchRootDirs = trackData.map((data) => data.rootDir);
+  // normalized once, the way the map stores it, so "./" is the workspace root here as well as there
+  const normalizeRootDir = (rootDir: string): PathLinuxRelative => pathNormalizeToLinux(path.normalize(rootDir));
+  const batchRootDirs = trackData.map((data) => normalizeRootDir(data.rootDir));
   const componentMaps = trackData.map((data) => {
-    const { rootDir, files, componentName, defaultScope, mainFile, config } = data;
-    if (path.isAbsolute(rootDir)) throw new BitError(`path is absolute, got ${rootDir}`);
+    const { files, componentName, defaultScope, mainFile, config } = data;
+    if (path.isAbsolute(data.rootDir)) throw new BitError(`path is absolute, got ${data.rootDir}`);
+    const rootDir = normalizeRootDir(data.rootDir);
     const componentId = ComponentID.fromObject({ name: componentName }, defaultScope);
     // re-tracking the workspace root with the same id is a no-op, not a second owner
     throwForExistingParentDir(bitMap, rootDir, componentId);

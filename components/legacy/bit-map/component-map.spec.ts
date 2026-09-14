@@ -86,11 +86,13 @@ describe('getFilesByDir', function () {
         'nested/.bitmap': '',
         // an ignore file below the root applies to its directory, like git: unanchored patterns at any
         // depth below it, anchored ones to it
-        'docs/.gitignore': 'build/\n/local.env\n',
+        'docs/.gitignore': 'build/\n/local.env\ntmp/\n',
         'docs/index.md': '',
         'docs/build/out.html': '',
         'docs/local.env': '',
         'docs/nested/local.env': '',
+        // "tmp/" ignores directories only. this is a file
+        'docs/tmp': '',
       });
     });
     after(() => fs.remove(workspacePath));
@@ -118,6 +120,7 @@ describe('getFilesByDir', function () {
         'docs/.gitignore',
         'docs/index.md',
         'docs/nested/local.env',
+        'docs/tmp',
         'vendor/lib/index.js',
         'workspace.jsonc',
       ]);

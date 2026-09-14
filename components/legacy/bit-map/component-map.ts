@@ -135,7 +135,9 @@ function rebaseIgnorePattern(pattern: string, dir: PathLinux): string {
   const negated = pattern.startsWith('!');
   const body = negated ? pattern.slice(1) : pattern;
   const anchored = body.slice(0, -1).includes('/');
-  const rebased = anchored ? pathJoinLinux(dir, body.replace(/^\//, '')) : pathJoinLinux(dir, '**', body);
+  // a trailing slash means "directories only". the join drops it, so it is put back.
+  const dirOnly = body.endsWith('/') ? '/' : '';
+  const rebased = (anchored ? pathJoinLinux(dir, body.replace(/^\//, '')) : pathJoinLinux(dir, '**', body)) + dirOnly;
   return negated ? `!${rebased}` : rebased;
 }
 

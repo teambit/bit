@@ -222,4 +222,12 @@ describe('BitMap', function () {
       expect(fileContentsForVersioning(nestedMap, '.bitmap', rawBitmap)).to.equal(rawBitmap);
     });
   });
+  describe('loading a workspace that has no .bitmap yet', () => {
+    it('should keep the ignore options, they apply to the scans of the components added next', async () => {
+      const bitMap = await BitMap.load(__dirname, '', ['*.bak'], true);
+      expect(bitMap.components).to.have.lengthOf(0);
+      expect(bitMap.ignoredFiles).to.deep.equal(['*.bak']);
+      expect(bitMap.trackAllFiles).to.be.true;
+    });
+  });
 });
