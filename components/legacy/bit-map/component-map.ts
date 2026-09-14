@@ -122,7 +122,7 @@ export async function filterByIgnoreFiles(
 ): Promise<PathLinux[]> {
   const filteredByRoot: PathLinux[] = gitIgnore.filter(relativePaths);
   if (dir !== WORKSPACE_ROOT_DIR) return filteredByRoot;
-  const nestedPatterns = await getNestedIgnorePatterns(consumerPath, filteredByRoot);
+  const nestedPatterns = await getNestedIgnorePatterns(consumerPath, gitIgnore, relativePaths);
   if (!nestedPatterns.length) return filteredByRoot;
   const filteredByUserRules: PathLinux[] = ignore().add(gitIgnore).add(nestedPatterns).filter(relativePaths);
   return ignore()
@@ -130,13 +130,20 @@ export async function filterByIgnoreFiles(
     .filter(filteredByUserRules);
 }
 
-async function getNestedIgnorePatterns(consumerPath: string, relativePaths: PathLinux[]): Promise<string[]> {
+async function getNestedIgnorePatterns(
+  consumerPath: string,
+  gitIgnore: any,
+  relativePaths: PathLinux[]
+): Promise<string[]> {
   const ignoreFileByDir = new Map<PathLinux, string>();
   relativePaths.forEach((relativePath) => {
     const name = path.basename(relativePath);
     if (name !== GIT_IGNORE && name !== BIT_IGNORE) return;
     const fileDir = path.dirname(relativePath);
     if (fileDir === '.') return; // the root's own ignore file is in the workspace ignore list already
+    // an ignore file applies even when it is ignored itself, as long as its directory is scanned:
+    // git does not descend into an ignored directory
+    if (gitIgnore.ignores(`${fileDir}/`)) return;
     if (name === BIT_IGNORE || !ignoreFileByDir.has(fileDir)) ignoreFileByDir.set(fileDir, name);
   });
   if (!ignoreFileByDir.size) return [];

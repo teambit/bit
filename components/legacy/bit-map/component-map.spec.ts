@@ -66,7 +66,8 @@ describe('getFilesByDir', function () {
       workspacePath = await createWorkspace('bit-workspace-root-scan-', {
         'README.md': '',
         '.bitmap': '',
-        '.gitignore': 'docs/*.txt\n',
+        // the root's rules ignore every nested .bitignore file - a nested one still applies, as in git
+        '.gitignore': 'docs/*.txt\n**/.bitignore\n',
         'workspace.jsonc': '',
         '.github/ci.yml': '',
         // a git worktree or submodule: .git is a pointer file, not a directory
@@ -84,6 +85,8 @@ describe('getFilesByDir', function () {
         // a vendored repository and a nested bit workspace that no component claims
         'vendor/lib/.git/HEAD': '',
         'vendor/lib/index.js': '',
+        'vendor/lib/.bitignore': 'generated/\n',
+        'vendor/lib/generated/x.js': '',
         'nested/.bit/objects/bb': '',
         'nested/.bit.map.json': '',
         'nested/.bitmap': '',

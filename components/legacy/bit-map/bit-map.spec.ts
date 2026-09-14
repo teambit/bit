@@ -137,6 +137,7 @@ describe('BitMap', function () {
   describe('normalizeBitmapContentForVersioning', () => {
     const rawBitmap = JSON.stringify(
       {
+        _bit_lane: { id: { name: 'dev', scope: 'my-scope' }, exported: false },
         comp1: {
           name: 'comp1',
           scope: 'my-scope',
@@ -162,6 +163,9 @@ describe('BitMap', function () {
     });
     it('should drop the config, which a snap moves into the version and removes from the map', () => {
       expect(parsed.comp1).to.not.have.property('config');
+    });
+    it('should drop the lane, workspace state that export and lane switch change', () => {
+      expect(normalized).to.not.have.string('_bit_lane');
     });
     it('should keep the scope, so cross-scope components survive a restore', () => {
       expect(parsed.comp1.scope).to.equal('my-scope');

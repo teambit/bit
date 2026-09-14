@@ -261,6 +261,16 @@ describe('add command on Harmony', function () {
         // the exported .bitmap lists comp1. the restored workspace must not inherit that entry.
         expect(helper.bitMap.read()).to.not.have.property('comp1');
       });
+      it('should not overwrite a workspace.jsonc the user changed since, on a second import without --override', () => {
+        // the workspace is not fresh anymore: its root is tracked, and its config is the user's
+        helper.workspaceJsonc.addKeyValToWorkspace('name', 'renamed');
+        try {
+          helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        } catch {
+          // refused, which is fine too
+        }
+        expect(helper.workspaceJsonc.read()['teambit.workspace/workspace'].name).to.equal('renamed');
+      });
     });
     describe('importing it onto the root of a fresh workspace that has its own files', () => {
       before(() => {

@@ -1099,9 +1099,12 @@ type OutputFileParams = {
 export function normalizeBitmapContentForVersioning(rawContent: string): string {
   const parsed = json.parse(rawContent, undefined, true) as Record<string, any> | undefined;
   if (!parsed) return rawContent;
+  // the lane the workspace is on, and whether it was exported: workspace state that export and
+  // lane switch change, not part of the map of components
+  delete parsed[LANE_KEY];
   Object.keys(parsed).forEach((key) => {
     const entry = parsed[key];
-    if (key === SCHEMA_FIELD || key === LANE_KEY || !entry || typeof entry !== 'object') return;
+    if (key === SCHEMA_FIELD || !entry || typeof entry !== 'object') return;
     if (entry.version !== undefined) entry.version = '';
     delete entry.config;
   });
