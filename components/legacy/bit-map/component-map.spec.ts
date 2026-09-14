@@ -66,6 +66,7 @@ describe('getFilesByDir', function () {
       workspacePath = await createWorkspace('bit-workspace-root-scan-', {
         'README.md': '',
         '.bitmap': '',
+        '.gitignore': 'docs/*.txt\n',
         'workspace.jsonc': '',
         '.github/ci.yml': '',
         // a git worktree or submodule: .git is a pointer file, not a directory
@@ -86,8 +87,11 @@ describe('getFilesByDir', function () {
         'nested/.bitmap': '',
         // an ignore file below the root applies to its directory, like git: unanchored patterns at any
         // depth below it, anchored ones to it
-        'docs/.gitignore': 'build/\n/local.env\ntmp/\n',
+        // and a nested negation re-includes a file the root's rule excluded, evaluated in git's order
+        'docs/.gitignore': 'build/\n/local.env\ntmp/\n!keep.txt\n',
         'docs/index.md': '',
+        'docs/notes.txt': '',
+        'docs/keep.txt': '',
         'docs/build/out.html': '',
         'docs/local.env': '',
         'docs/nested/local.env': '',
@@ -115,10 +119,12 @@ describe('getFilesByDir', function () {
       expect(await scanFromInsideTheWorkspace(WORKSPACE_ROOT_DIR, ['packages/comp1', 'app/[slug]'])).to.deep.equal([
         '.bitmap',
         '.github/ci.yml',
+        '.gitignore',
         'README.md',
         'app/l/index.ts',
         'docs/.gitignore',
         'docs/index.md',
+        'docs/keep.txt',
         'docs/nested/local.env',
         'docs/tmp',
         'vendor/lib/index.js',

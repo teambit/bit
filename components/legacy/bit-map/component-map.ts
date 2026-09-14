@@ -98,19 +98,31 @@ export function getScanIgnorePatterns(dir: PathLinux, excludeDirs: PathLinux[] =
 }
 
 /**
- * git applies each .gitignore to the directory it sits in, so the scan of the workspace root - the one
- * scan that spans directories no component claims - honors the ignore files below the root as well.
- * their patterns are rebased to their directory: a pattern with no slash before its end matches at any
- * depth below it (`build/` becomes `docs/**\/build/`), any other is anchored to it (`/local.env` becomes
- * `docs/local.env`). a .bitignore beside a .gitignore wins, as at the root. nested components are
- * subtracted before this runs, so their ignore files are theirs to apply.
+ * applies the workspace ignore rules (`gitIgnore`) to the scanned paths. git applies each .gitignore to
+ * the directory it sits in, so the scan of the workspace root - the one scan that spans directories no
+ * component claims - honors the ignore files below the root as well, evaluated together with the
+ * root's in git's precedence order: a nested pattern comes after the root's, so its negation
+ * re-includes a file the root excluded. only ignore files that are not themselves ignored are
+ * consulted, since git does not descend into an ignored directory. nested patterns are rebased to
+ * their directory: a pattern with no slash before its end matches at any depth below it (`build/`
+ * becomes `docs/**\/build/`), any other is anchored to it (`/local.env` becomes `docs/local.env`).
+ * a .bitignore beside a .gitignore wins, as at the root. nested components are subtracted before
+ * this runs, so their ignore files are theirs to apply.
  */
-export async function filterByNestedIgnoreFiles(
+export async function filterByIgnoreFiles(
   dir: PathLinux,
   consumerPath: string,
+  gitIgnore: any,
   relativePaths: PathLinux[]
 ): Promise<PathLinux[]> {
-  if (dir !== WORKSPACE_ROOT_DIR) return relativePaths;
+  const filteredByRoot: PathLinux[] = gitIgnore.filter(relativePaths);
+  if (dir !== WORKSPACE_ROOT_DIR) return filteredByRoot;
+  const nestedPatterns = await getNestedIgnorePatterns(consumerPath, filteredByRoot);
+  if (!nestedPatterns.length) return filteredByRoot;
+  return ignore().add(gitIgnore).add(nestedPatterns).filter(relativePaths);
+}
+
+async function getNestedIgnorePatterns(consumerPath: string, relativePaths: PathLinux[]): Promise<string[]> {
   const ignoreFileByDir = new Map<PathLinux, string>();
   relativePaths.forEach((relativePath) => {
     const name = path.basename(relativePath);
@@ -119,7 +131,7 @@ export async function filterByNestedIgnoreFiles(
     if (fileDir === '.') return; // the root's own ignore file is in the workspace ignore list already
     if (name === BIT_IGNORE || !ignoreFileByDir.has(fileDir)) ignoreFileByDir.set(fileDir, name);
   });
-  if (!ignoreFileByDir.size) return relativePaths;
+  if (!ignoreFileByDir.size) return [];
   const patternsPerDir = await Promise.all(
     Array.from(ignoreFileByDir, async ([fileDir, name]) => {
       const absoluteDir = path.join(consumerPath, fileDir);
@@ -127,8 +139,7 @@ export async function filterByNestedIgnoreFiles(
       return patterns.map((pattern) => rebaseIgnorePattern(pattern, fileDir));
     })
   );
-  const patterns = ([] as string[]).concat(...patternsPerDir);
-  return ignore().add(patterns).filter(relativePaths);
+  return ([] as string[]).concat(...patternsPerDir);
 }
 
 function rebaseIgnorePattern(pattern: string, dir: PathLinux): string {
@@ -512,7 +523,7 @@ export async function getFilesByDir(
     expandDirectories: false,
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
-  const filteredMatches: string[] = await filterByNestedIgnoreFiles(dir, consumerPath, gitIgnore.filter(matches));
+  const filteredMatches: string[] = await filterByIgnoreFiles(dir, consumerPath, gitIgnore, matches);
   // the paths are relative to the workspace. make them relative to the component's root-dir.
   const relativePathsLinux = filteredMatches.map((match) => pathRelativeLinux(dir, match));
   // the config files "bit ws-config write" generates are not source - unless the workspace declares that
@@ -524,11 +535,17 @@ export async function getFilesByDir(
   // from a sub-directory would otherwise look for the ignore file in the wrong place - and
   // getBitIgnoreFile() does not swallow ENOENT, so it throws rather than falling back.
   const ignoreFileDir = path.join(consumerPath, dir);
-  const bitOrGitIgnore = filteredByIgnoredFromRoot.includes(BIT_IGNORE)
-    ? await getBitIgnoreFile(ignoreFileDir)
-    : await getGitIgnoreFile(ignoreFileDir);
-  const filteredByBitIgnore = bitOrGitIgnore
-    ? ignore().add(bitOrGitIgnore).filter(filteredByIgnoredFromRoot)
+  // the component's own ignore file, applied to its files. for the workspace root that file is the
+  // workspace's, already part of `gitIgnore` and evaluated above together with the nested ones -
+  // applied again on its own it would undo their negations.
+  const ownIgnoreFile =
+    dir === WORKSPACE_ROOT_DIR
+      ? []
+      : filteredByIgnoredFromRoot.includes(BIT_IGNORE)
+        ? await getBitIgnoreFile(ignoreFileDir)
+        : await getGitIgnoreFile(ignoreFileDir);
+  const filteredByBitIgnore = ownIgnoreFile.length
+    ? ignore().add(ownIgnoreFile).filter(filteredByIgnoredFromRoot)
     : filteredByIgnoredFromRoot;
   if (!filteredByBitIgnore.length) throw new IgnoredDirectory(dir);
   return filteredByBitIgnore.map((relativePath) => ({

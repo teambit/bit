@@ -19,7 +19,7 @@ import {
 import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
 import {
   ComponentMap,
-  filterByNestedIgnoreFiles,
+  filterByIgnoreFiles,
   getIgnoreListHarmony,
   getScanIgnorePatterns,
   isWorkspaceMapFile,
@@ -578,10 +578,11 @@ you can add the directory these files are located at and it'll change the root d
     const generatedAtRoot = new Set(
       IGNORE_ROOT_ONLY_LIST.map((file) => pathNormalizeToLinux(path.join(relativeComponentPath, file)))
     );
-    const matchesNotIgnored = await filterByNestedIgnoreFiles(
+    const matchesNotIgnored = await filterByIgnoreFiles(
       relativeComponentPath,
       this.consumer.getPath(),
-      this.gitIgnore.filter(matches).map(pathNormalizeToLinux)
+      this.gitIgnore,
+      matches.map(pathNormalizeToLinux)
     );
     const filteredMatches = matchesNotIgnored.filter(
       (match) => this.consumer.config.trackAllFiles || !generatedAtRoot.has(match)
@@ -883,7 +884,12 @@ export async function addMultipleFromResolvedTrackData(
       return trackAllFiles || !IGNORE_ROOT_ONLY_LIST.includes(relativePath);
     });
 
-    const filtered = gitIgnore.filter(ownedFiles);
+    // the ignore rules are written against the workspace root, so a file is matched by its
+    // workspace-relative path, then mapped back to the component-relative one the map stores.
+    const workspaceRelative = ownedFiles.map((file) => path.posix.join(rootDir, pathNormalizeToLinux(file)));
+    const filtered: string[] = gitIgnore
+      .filter(workspaceRelative)
+      .map((file) => (isWorkspaceRoot ? file : path.posix.relative(rootDir, file)));
     if (!filtered.length) {
       throw new NoFiles(files);
     }
