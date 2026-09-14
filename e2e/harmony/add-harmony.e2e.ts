@@ -45,13 +45,16 @@ describe('add command on Harmony', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('README.md', '# workspace root\n');
-      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      helper.command.addComponent('.', { i: 'ws-root' });
       // written after tracking. the root file-set is re-scanned, not frozen at add-time.
       helper.fs.outputFile('LICENSE', 'MIT\n');
       rootFiles = helper.command.getComponentFiles('ws-root');
     });
     it('should save "." as the rootDir', () => {
       expect(helper.bitMap.read()['ws-root'].rootDir).to.equal('.');
+    });
+    it('should default the main file to workspace.jsonc, the root has no entry point of its own', () => {
+      expect(helper.bitMap.read()['ws-root'].mainFile).to.equal('workspace.jsonc');
     });
     it('should own the root files, including files added after it was tracked', () => {
       expect(rootFiles).to.include('README.md');
@@ -107,7 +110,7 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
       helper.command.addComponent('comp1', { i: 'comp1' });
       helper.fs.outputFile('README.md', '# workspace root\n');
-      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      helper.command.addComponent('.', { i: 'ws-root' });
       helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
     });
     it('should not be modified right after snapping, despite tracking .bitmap', () => {
@@ -144,7 +147,7 @@ describe('add command on Harmony', function () {
       helper.command.addComponent('comp1', { i: 'comp1' });
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.fs.outputFile('untracked-by-bit.txt', 'not a component file\n');
-      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      helper.command.addComponent('.', { i: 'ws-root' });
       // a dependency that happens to share the package name the root's id derives
       helper.fs.outputFile(
         path.join('node_modules', helper.general.getPackageNameByCompName('ws-root', false), 'index.js'),
@@ -175,21 +178,25 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
     });
+    it('should take the main file given explicitly over the default', () => {
+      expect(helper.bitMap.read()['ws-root'].mainFile).to.equal('README.md');
+    });
     it('should allow re-adding the same component', () => {
       helper.fs.outputFile('extra.md', 'extra\n');
-      expect(() => helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' })).to.not.throw();
+      expect(() => helper.command.addComponent('.', { i: 'ws-root' })).to.not.throw();
     });
-    it('should allow re-adding it without repeating its name', () => {
-      expect(() => helper.command.addComponent('.', { m: 'README.md' })).to.not.throw();
+    it('should allow re-adding it without repeating its name, and keep its main file', () => {
+      expect(() => helper.command.addComponent('.')).to.not.throw();
       expect(Object.keys(helper.bitMap.readComponentsMapOnly())).to.deep.equal(['ws-root']);
+      expect(helper.bitMap.read()['ws-root'].mainFile).to.equal('README.md');
     });
     it('should reject a second component claiming the workspace root', () => {
-      const cmd = () => helper.command.addComponent('.', { i: 'another-root', m: 'README.md' });
+      const cmd = () => helper.command.addComponent('.', { i: 'another-root' });
       expect(cmd).to.throw('already tracked by');
     });
     it('should pick up dotfiles at add time, not only on the next rescan', () => {
       helper.fs.outputFile('.npmrc', 'registry=https://example.com\n');
-      const output = helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      const output = helper.command.addComponent('.', { i: 'ws-root' });
       expect(output).to.have.string('.npmrc');
       // its auto-generated banner must not get it dropped, the rescan tracks it
       expect(output).to.have.string('.bitmap');
@@ -220,7 +227,7 @@ describe('add command on Harmony', function () {
       helper.command.addComponent('comp1', { i: 'comp1' });
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.fs.outputFile('docs/guide.md', '# guide\n');
-      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      helper.command.addComponent('.', { i: 'ws-root' });
       helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
       firstSnap = helper.command.getHead('ws-root');
       helper.fs.outputFile('README.md', '# workspace root v2\n');
@@ -369,7 +376,7 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
       helper.command.addComponent('comp1', { i: 'comp1' });
       helper.fs.outputFile('README.md', '# workspace root\n');
-      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      helper.command.addComponent('.', { i: 'ws-root' });
     });
     it('should be tracked with the empty env, not the regular default env', () => {
       // it is a bag of the workspace's own config files - nothing compiles it, tests it, or
@@ -425,7 +432,7 @@ describe('add command on Harmony', function () {
       helper.command.addComponent('comp1', { i: 'comp1' });
       helper.fs.outputFile('package.json', '{ "name": "monorepo", "private": true }\n');
       helper.fs.outputFile('README.md', '# workspace root\n');
-      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
+      helper.command.addComponent('.', { i: 'ws-root' });
     });
     it('should track the package.json and tsconfig.json of a component', () => {
       expect(helper.command.getComponentFiles('comp1')).to.include.members(['package.json', 'tsconfig.json']);

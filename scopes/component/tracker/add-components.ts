@@ -15,6 +15,7 @@ import {
   AUTO_GENERATED_STAMP,
   IGNORE_ROOT_ONLY_LIST,
   Extensions,
+  WORKSPACE_JSONC,
 } from '@teambit/legacy.constants';
 import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
 import {
@@ -867,7 +868,7 @@ export async function addMultipleFromResolvedTrackData(
   const batchRootDirs = trackData.map((data) => normalizeRootDir(data.rootDir));
   const componentMaps: ComponentMap[] = [];
   for (const data of trackData) {
-    const { files, componentName, defaultScope, mainFile, config } = data;
+    const { files, componentName, defaultScope, config } = data;
     if (path.isAbsolute(data.rootDir)) throw new BitError(`path is absolute, got ${data.rootDir}`);
     const rootDir = normalizeRootDir(data.rootDir);
     const componentId = ComponentID.fromObject({ name: componentName }, defaultScope);
@@ -878,6 +879,10 @@ export async function addMultipleFromResolvedTrackData(
     // the name alone would replace it and make a snapped component look newly tracked.
     const existingEntry = bitMap.getComponentIfExist(componentId, { ignoreVersion: true });
     const idToTrack = existingEntry?.id ?? componentId;
+    // the workspace root has no entry point of its own, workspace.jsonc stands in for it, the way
+    // "bit add ." resolves it (see determine-main-file). re-tracking keeps the entry's main file.
+    const mainFile = data.mainFile ?? existingEntry?.mainFile ?? (isWorkspaceRoot ? WORKSPACE_JSONC : undefined);
+    if (!mainFile) throw new BitError(`unable to track "${rootDir}" as "${componentName}", no main file was given`);
     const existingConfig = isWorkspaceRoot ? existingEntry?.config : undefined;
     const componentFiles = isWorkspaceRoot
       ? await scanWorkspaceRootFiles(workspace, gitIgnore, batchRootDirs)
@@ -917,7 +922,7 @@ function throwForTakingWorkspaceRootMainFile(
   // ownership lookups are case-insensitive, so this comparison is too.
   if (!workspaceRootMap.mainFile.toLowerCase().startsWith(`${rootDir.toLowerCase()}/`)) return;
   throw new BitError(
-    `unable to add "${rootDir}" as "${componentId.toString()}", it contains "${workspaceRootMap.mainFile}", the main file of the workspace-root component "${workspaceRootMap.id.toStringWithoutVersion()}". set a different main file for it first: bit add . --main <file>`
+    `unable to add "${rootDir}" as "${componentId.toString()}", it contains "${workspaceRootMap.mainFile}", the main file of the workspace-root component "${workspaceRootMap.id.toStringWithoutVersion()}". set a different main file for it first: bit add . --main ${WORKSPACE_JSONC}`
   );
 }
 

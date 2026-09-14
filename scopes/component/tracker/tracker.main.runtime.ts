@@ -42,7 +42,7 @@ export type TrackData = {
 export type ResolvedTrackData = {
   rootDir: PathLinuxRelative; // path relative to the workspace
   componentName: string;
-  mainFile: string;
+  mainFile?: string; // may be left out for the workspace root ("."), workspace.jsonc stands in for it
   files: string[]; // component files relative to the component rootDir
   defaultScope: string;
   config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
