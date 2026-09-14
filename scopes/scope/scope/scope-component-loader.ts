@@ -17,12 +17,18 @@ import type { ScopeMain } from './scope.main.runtime';
 export class ScopeComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   private importedComponentsCache: InMemoryCache<boolean>;
+  // fetches of a missing Version object in flight, so concurrent loads of the same version share one
+  private missingVersionFetches = new Map<string, Promise<void>>();
+  // a missing Version object the remote could not provide. remembered briefly, so a long-running
+  // process (watch, server) does not hit the remote on every load while it lacks the version
+  private failedVersionFetches: InMemoryCache<boolean>;
   constructor(
     private scope: ScopeMain,
     private logger: Logger
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
+    this.failedVersionFetches = createInMemoryCache({ maxAge: 1000 * 60 }); // 1 min
   }
 
   async get(id: ComponentID, importIfMissing = true, useCache = true): Promise<Component | undefined> {
@@ -117,28 +123,39 @@ export class ScopeComponentLoader {
     } catch (err: any) {
       const isMissingFromFs = err instanceof VersionNotFoundOnFS || err?.name === 'VersionNotFoundOnFS';
       const idStr = id.toString();
-      if (!isMissingFromFs || !this.scope.isExported(id) || this.importedComponentsCache.get(idStr)) throw err;
-      this.importedComponentsCache.set(idStr, true);
+      if (!isMissingFromFs || !this.scope.isExported(id) || this.failedVersionFetches.get(idStr)) throw err;
+      try {
+        await this.fetchMissingVersion(id, span);
+        return await modelComponent.loadVersion(versionStr, repo);
+      } catch (fetchErr: any) {
+        this.failedVersionFetches.set(idStr, true);
+        this.logger.error(`ScopeComponentLoader, failed fetching the missing Version object of ${idStr}`, fetchErr);
+        throw err;
+      }
+    }
+  }
+
+  private fetchMissingVersion(id: ComponentID, span: LoadSpan): Promise<void> {
+    const idStr = id.toString();
+    const inFlight = this.missingVersionFetches.get(idStr);
+    if (inFlight) return inFlight;
+    const fetching = (async () => {
       this.logger.warn(
         `ScopeComponentLoader, the Version object of ${idStr} is missing locally, fetching it from the remote`
       );
       span.setAttribute('missingVersionFetched', 'true');
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
-      try {
-        // useCache false: the component object is present locally, so the importer would otherwise skip the fetch.
-        await loadSpan('scope-import-missing-version', { id: idStr }, () =>
-          this.scope.import([id], {
-            useCache: false,
-            lane,
-            reason: `${idStr} because its Version object is missing from the local scope`,
-          })
-        );
-      } catch (importErr: any) {
-        this.logger.error(`ScopeComponentLoader, failed fetching the missing Version object of ${idStr}`, importErr);
-        throw err;
-      }
-      return modelComponent.loadVersion(versionStr, repo);
-    }
+      // useCache false: the component object is present locally, so the importer would otherwise skip the fetch.
+      await loadSpan('scope-import-missing-version', { id: idStr }, () =>
+        this.scope.import([id], {
+          useCache: false,
+          lane,
+          reason: `${idStr} because its Version object is missing from the local scope`,
+        })
+      );
+    })().finally(() => this.missingVersionFetches.delete(idStr));
+    this.missingVersionFetches.set(idStr, fetching);
+    return fetching;
   }
 
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {
