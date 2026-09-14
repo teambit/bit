@@ -767,11 +767,6 @@ export class Watcher {
       );
       return [];
     }
-    this.consumer.bitMap.updateComponentPaths(
-      componentId,
-      compFiles.map((f) => this.consumer.getPathRelativeToConsumer(f)),
-      removedFiles.map((f) => this.consumer.getPathRelativeToConsumer(f))
-    );
     const buildResults = await this.executeWatchOperationsOnComponent(
       updatedComponentId,
       compFiles,
