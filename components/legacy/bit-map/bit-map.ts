@@ -1124,7 +1124,9 @@ export function isWorkspaceMapOwnedBy(rawContent: Buffer | string, id: Component
   } catch {
     return false;
   }
-  const entry = parsed?.[id.fullName] ?? parsed?.[id.toStringWithoutVersion()];
+  // the map keys an entry by name, and by "scope/name" when another scope has the same name. the
+  // qualified key is checked first: with both present, the bare one is the other scope's component.
+  const entry = parsed?.[id.toStringWithoutVersion()] ?? parsed?.[id.fullName];
   if (!entry || typeof entry !== 'object' || entry.rootDir !== WORKSPACE_ROOT_DIR) return false;
   // an entry snapped before its export carries its scope as defaultScope. either way it has to be the
   // scope the component comes from - an empty one is not a wildcard.

@@ -258,6 +258,15 @@ describe('BitMap', function () {
     it('should reject the same name from another scope', () => {
       expect(isWorkspaceMapOwnedBy(rawMap, id('ws-root', 'other-scope'))).to.be.false;
     });
+    it('should find the owner under its scope-qualified key when another scope took the bare name', () => {
+      // the map keys duplicate names by "scope/name". the bare key is then the other scope's component
+      const rawMapWithDuplicateName = JSON.stringify({
+        'ws-root': { scope: 'other-scope', version: '', mainFile: 'index.ts', rootDir: 'packages/other-root' },
+        'my-scope/ws-root': { scope: 'my-scope', version: '', mainFile: 'README.md', rootDir: '.' },
+      });
+      expect(isWorkspaceMapOwnedBy(rawMapWithDuplicateName, id('ws-root'))).to.be.true;
+      expect(isWorkspaceMapOwnedBy(rawMapWithDuplicateName, id('ws-root', 'other-scope'))).to.be.false;
+    });
     it('should reject a component the map lists elsewhere, or not at all, and a map it cannot parse', () => {
       expect(isWorkspaceMapOwnedBy(rawMap, id('comp1'))).to.be.false;
       expect(isWorkspaceMapOwnedBy(rawMap, id('other'))).to.be.false;
