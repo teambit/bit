@@ -205,6 +205,12 @@ describe('add command on Harmony', function () {
       const cmd = () => helper.command.addComponent('packages/comp1', { i: 'comp1' });
       expect(cmd).to.throw('main file of the workspace-root component');
     });
+    it('should refuse even when the nested component ignores that file, its directory is what the root loses', () => {
+      helper.fs.outputFile('packages/comp1/.bitignore', 'index.js\n');
+      helper.fs.outputFile('packages/comp1/other.js', '');
+      const cmd = () => helper.command.addComponent('packages/comp1', { i: 'comp1' });
+      expect(cmd).to.throw('main file of the workspace-root component');
+    });
   });
   describe('writing the workspace-root component to the filesystem', () => {
     let firstSnap: string;

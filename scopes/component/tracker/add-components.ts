@@ -254,6 +254,9 @@ export default class AddComponents {
     // give away is its main file - without it, it fails to load from the next scan on.
     const workspaceRootMap = this.bitMap.components.find((componentMap) => componentMap.rootDir === WORKSPACE_ROOT_DIR);
     const isWorkspaceRoot = component.trackDir === WORKSPACE_ROOT_DIR;
+    if (workspaceRootMap && !isWorkspaceRoot && !parsedBitId.isEqualWithoutVersion(workspaceRootMap.id)) {
+      throwForTakingWorkspaceRootMainFile(workspaceRootMap, parsedBitId, pathNormalizeToLinux(component.trackDir));
+    }
     const componentFilesP = files.map(async (file: ComponentMapFile) => {
       // $FlowFixMe null is removed later on
       const filePath = path.join(consumerPath, file.relativePath);
@@ -269,9 +272,6 @@ export default class AddComponents {
       const ownedByWorkspaceRoot = Boolean(
         workspaceRootMap && existingIdOfFile?.isEqualWithoutVersion(workspaceRootMap.id)
       );
-      if (workspaceRootMap && idOfFileIsDifferent && ownedByWorkspaceRoot) {
-        throwForTakingWorkspaceRootMainFile(workspaceRootMap, parsedBitId, file.relativePath);
-      }
       if (idOfFileIsDifferent && !ownedByWorkspaceRoot) {
         // not imported component file but exists in bitmap
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -885,11 +885,7 @@ export async function addMultipleFromResolvedTrackData(
     // a nested component may take any file from a tracked workspace root but its main file, the
     // rule "bit add" applies. a root tracked later in the same call scans around this component.
     const workspaceRootMap = bitMap.components.find((componentMap) => componentMap.rootDir === WORKSPACE_ROOT_DIR);
-    if (!isWorkspaceRoot && workspaceRootMap) {
-      componentFiles.forEach((file) =>
-        throwForTakingWorkspaceRootMainFile(workspaceRootMap, idToTrack, path.posix.join(rootDir, file.relativePath))
-      );
-    }
+    if (!isWorkspaceRoot && workspaceRootMap) throwForTakingWorkspaceRootMainFile(workspaceRootMap, idToTrack, rootDir);
     const componentMap = bitMap.addComponent({
       componentId: idToTrack,
       files: componentFiles,
@@ -914,12 +910,14 @@ export async function addMultipleFromResolvedTrackData(
 function throwForTakingWorkspaceRootMainFile(
   workspaceRootMap: ComponentMap,
   componentId: ComponentID,
-  relativePath: PathLinux
+  rootDir: PathLinux
 ) {
-  // the ownership lookups are case-insensitive, so this comparison is too
-  if (relativePath.toLowerCase() !== workspaceRootMap.mainFile.toLowerCase()) return;
+  // checked on the directory rather than on the files the component keeps: the root's next scan
+  // subtracts the whole directory, whether or not the component itself tracks that file. the
+  // ownership lookups are case-insensitive, so this comparison is too.
+  if (!workspaceRootMap.mainFile.toLowerCase().startsWith(`${rootDir.toLowerCase()}/`)) return;
   throw new BitError(
-    `unable to add "${relativePath}" to "${componentId.toString()}", it is the main file of the workspace-root component "${workspaceRootMap.id.toStringWithoutVersion()}". set a different main file for it first: bit add . --main <file>`
+    `unable to add "${rootDir}" as "${componentId.toString()}", it contains "${workspaceRootMap.mainFile}", the main file of the workspace-root component "${workspaceRootMap.id.toStringWithoutVersion()}". set a different main file for it first: bit add . --main <file>`
   );
 }
 
