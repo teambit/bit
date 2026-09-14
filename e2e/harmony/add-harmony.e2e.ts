@@ -272,14 +272,12 @@ describe('add command on Harmony', function () {
         // the exported .bitmap lists comp1. the restored workspace must not inherit that entry.
         expect(helper.bitMap.read()).to.not.have.property('comp1');
       });
-      it('should not overwrite a workspace.jsonc the user changed since, on a second import without --override', () => {
-        // the workspace is not fresh anymore: its root is tracked, and its config is the user's
+      it('should refuse a second import without --override once the user changed a root file, not overwrite it', () => {
+        // a changed root file makes the root a modified component, and the importer refuses modified
+        // components before anything is written. the writer's same-directory shortcut never sees it.
         helper.workspaceJsonc.addKeyValToWorkspace('name', 'renamed');
-        try {
-          helper.command.importComponentWithoutInstall('ws-root', '--path .');
-        } catch {
-          // refused, which is fine too
-        }
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        expect(cmd).to.throw('due to local changes');
         expect(helper.workspaceJsonc.read()['teambit.workspace/workspace'].name).to.equal('renamed');
       });
     });
