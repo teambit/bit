@@ -299,12 +299,12 @@ describe('add command on Harmony', function () {
         const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
         expect(cmd).to.throw('use --override');
       });
-      it('should report a dangling symlink as a conflict rather than write through it', () => {
+      it('should refuse a dangling symlink rather than write through it', () => {
         fs.rmdirSync(path.join(helper.scopes.localPath, 'README.md'));
         const target = path.join(helper.scopes.localPath, 'missing-target');
         fs.symlinkSync(target, path.join(helper.scopes.localPath, 'README.md'));
         const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
-        expect(cmd).to.throw('use --override');
+        expect(cmd).to.throw('symbolic link');
         expect(target).to.not.be.a.path();
       });
       it('should refuse a symlinked ancestor directory even with --override, rather than write through it', () => {
@@ -316,6 +316,20 @@ describe('add command on Harmony', function () {
         expect(cmd).to.throw('symbolic link');
         expect(path.join(outside, 'guide.md')).to.not.be.a.path();
         fs.removeSync(outside);
+      });
+      it('should refuse a symlinked destination even with --override, rather than write through it', () => {
+        fs.unlinkSync(path.join(helper.scopes.localPath, 'docs'));
+        const outsideFile = path.join(
+          helper.scopes.localPath,
+          '..',
+          `outside-${path.basename(helper.scopes.localPath)}.md`
+        );
+        fs.writeFileSync(outsideFile, 'theirs\n');
+        fs.symlinkSync(outsideFile, path.join(helper.scopes.localPath, 'README.md'));
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path . --override');
+        expect(cmd).to.throw('symbolic link');
+        expect(outsideFile).to.be.a.file().with.content('theirs\n');
+        fs.removeSync(outsideFile);
       });
     });
     describe('importing an ordinary component onto the root', () => {

@@ -281,7 +281,7 @@ export class ComponentWriterMain {
       : this.consumer.composeRelativeComponentPath(component.id);
     if (componentRootDir === WORKSPACE_ROOT_DIR) {
       this.throwForNonWorkspaceRootComponent(component);
-      this.throwForSymlinkedAncestors(component);
+      this.throwForSymlinksInTheWay(component);
     }
     // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
     const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
@@ -340,22 +340,23 @@ to move all component files to a different directory, run bit remove and then bi
   }
 
   /**
-   * a workspace-root component's files land in the workspace tree itself, where a directory may be a
-   * symbolic link the user made. a write through it would land the file wherever the link points, so
-   * every existing ancestor of an incoming file has to be a real directory. this is about where the
-   * write goes, not what it replaces, so --override does not waive it.
+   * a workspace-root component's files land in the workspace tree itself, where a path may be a
+   * symbolic link the user made - a directory on the way, or the destination itself. a write through
+   * it would land the file wherever the link points, so every existing path on the way to an incoming
+   * file has to be real. this is about where the write goes, not what it replaces, so --override does
+   * not waive it (it waives the conflict check, which is the other place the destination is looked at).
    */
-  private throwForSymlinkedAncestors(component: ConsumerComponent) {
-    const ancestors = new Set<string>();
+  private throwForSymlinksInTheWay(component: ConsumerComponent) {
+    const pathsInTheWay = new Set<string>();
     component.files.forEach((file) => {
-      const segments = pathNormalizeToLinux(file.relative).split('/').slice(0, -1);
-      segments.forEach((_, index) => ancestors.add(segments.slice(0, index + 1).join('/')));
+      const segments = pathNormalizeToLinux(file.relative).split('/');
+      segments.forEach((_, index) => pathsInTheWay.add(segments.slice(0, index + 1).join('/')));
     });
-    ancestors.forEach((ancestor) => {
-      const stat = lstatIfExists(this.consumer.toAbsolutePath(ancestor));
+    pathsInTheWay.forEach((pathInTheWay) => {
+      const stat = lstatIfExists(this.consumer.toAbsolutePath(pathInTheWay));
       if (!stat?.isSymbolicLink()) return;
       throw new BitError(
-        `unable to import "${component.id.toString()}" to the workspace root, "${ancestor}" is a symbolic link and the import would write through it`
+        `unable to import "${component.id.toString()}" to the workspace root, "${pathInTheWay}" is a symbolic link and the import would write through it`
       );
     });
   }
