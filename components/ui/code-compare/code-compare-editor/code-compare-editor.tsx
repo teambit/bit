@@ -3,7 +3,7 @@ import { DiffViewer } from '@teambit/code.ui.diff-viewer';
 import type { EditorSettingsState } from '../code-compare-editor-settings';
 
 export type CodeCompareEditorProps = {
-  language: string;
+  language?: string;
   handleEditorDidMount?: (...args: any[]) => void;
   Loader: React.ReactNode;
   modifiedFileContent?: string;

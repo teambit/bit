@@ -114,7 +114,7 @@ export function CodeCompareView({
           <CodeCompareViewLoader className={classNames(isFullScreen && styles.isFullScreen, styles.fullHeight)} />
         ) : (
           <CodeCompareEditor
-            language={langFromFileName(fileName) || 'typescript'}
+            language={langFromFileName(fileName)}
             modifiedPath={modifiedPath}
             originalPath={originalPath}
             originalFileContent={originalFileContent}

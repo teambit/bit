@@ -31,20 +31,15 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   const controlledHref = useUpdatedUrlFromQuery({});
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
+  const getUpdatedUrlFromQuery = hook?.useUpdatedUrlFromQuery ?? useUpdatedUrlFromQuery;
 
   const useHref = (node) => {
-    const hrefFromHook =
-      hook?.useUpdatedUrlFromQuery?.(
-        { aspect: node.id },
-        () => query,
-        () => location
-      ) ?? null;
-    const defaultHref = useUpdatedUrlFromQuery(
+    const href = getUpdatedUrlFromQuery(
       { aspect: node.id },
       () => query,
       () => location
     );
-    return hrefFromHook || (state?.controlled ? controlledHref : defaultHref);
+    return state?.controlled && !hook?.useUpdatedUrlFromQuery ? controlledHref : href;
   };
 
   return (
