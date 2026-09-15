@@ -10,7 +10,9 @@ export function extractCodeBlock(text: string): { lang: string; code: string } |
   if (text.endsWith(';') && !text.endsWith('```')) {
     processedText = text.slice(0, -1) + '```';
   }
-  const regex = /```([\w+-]*)\s*([\s\S]*?)```/;
+  // Consume horizontal fence padding and at most one line break. A broad `\s*` here would also
+  // consume indentation belonging to the first code line.
+  const regex = /```([\w+-]*)[^\S\r\n]*(?:\r?\n)?([\s\S]*?)```/;
 
   const match = processedText.match(regex);
 

@@ -13,6 +13,12 @@ describe('extractCodeBlock', () => {
     expect(result).toEqual({ lang: '', code: 'const foo = "bar";\n' });
   });
 
+  it('preserves indentation on the first code line', () => {
+    const text = '```typescript\n  const foo = "bar";\n```';
+    const result = extractCodeBlock(text);
+    expect(result).toEqual({ lang: 'typescript', code: '  const foo = "bar";\n' });
+  });
+
   it('should return null if no code block is found', () => {
     const text = 'const foo = "bar";';
     const result = extractCodeBlock(text);
