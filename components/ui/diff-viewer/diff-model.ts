@@ -37,9 +37,11 @@ export function computeDiffLines(
   newContent: string,
   options: ComputeDiffOptions = {}
 ): DiffLineItem[] {
-  const oldSourceLines = splitSourceLines(oldContent ?? '');
-  const newSourceLines = splitSourceLines(newContent ?? '');
-  const parts = diffLines(oldContent ?? '', newContent ?? '', {
+  const oldSource = normalizeLineEndings(oldContent ?? '');
+  const newSource = normalizeLineEndings(newContent ?? '');
+  const oldSourceLines = splitSourceLines(oldSource);
+  const newSourceLines = splitSourceLines(newSource);
+  const parts = diffLines(oldSource, newSource, {
     ignoreWhitespace: options.ignoreTrimWhitespace,
   });
   const items: DiffLineItem[] = [];
@@ -69,8 +71,12 @@ export function computeDiffLines(
   return items;
 }
 
+function normalizeLineEndings(content: string): string {
+  return content.replace(/\r\n/g, '\n');
+}
+
 function splitSourceLines(content: string): string[] {
-  const lines = content.split('\n');
+  const lines = content.split(/\r?\n/);
   if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
   return lines;
 }

@@ -36,4 +36,26 @@ describe('computeDiffLines', () => {
     });
     expect(items.map(({ type }) => type)).toEqual(['del', 'add']);
   });
+
+  it('normalizes CRLF lines without trimming other whitespace', () => {
+    const items = computeDiffLines('const answer = 41;\r\n  next();\r\n', 'const answer = 42;\r\n  next();\r\n');
+
+    expect(items.map(({ type, text }) => ({ type, text }))).toEqual([
+      { type: 'del', text: 'const answer = 41;' },
+      { type: 'add', text: 'const answer = 42;' },
+      { type: 'context', text: '  next();' },
+    ]);
+    expect(
+      items.every(({ text, oldText, newText }) => ![text, oldText, newText].some((line) => line?.includes('\r')))
+    ).toBe(true);
+  });
+
+  it('normalizes unchanged CRLF lines', () => {
+    const items = computeDiffLines('one\r\ntwo\r\n', 'one\r\ntwo\r\n');
+
+    expect(items.map(({ text, oldText, newText }) => ({ text, oldText, newText }))).toEqual([
+      { text: 'one', oldText: 'one', newText: 'one' },
+      { text: 'two', oldText: 'two', newText: 'two' },
+    ]);
+  });
 });

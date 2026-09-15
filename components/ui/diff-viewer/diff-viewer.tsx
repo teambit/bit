@@ -335,7 +335,7 @@ function DiffBody({
   };
 
   return (
-    <div ref={scrollRef} className={styles.body} style={bodyStyle} onScroll={windowing ? onScroll : undefined}>
+    <div ref={scrollRef} className={styles.body} style={bodyStyle} onScroll={constrainHeight ? onScroll : undefined}>
       <div
         className={classNames(styles.track, view === 'split' && styles.trackSplit)}
         style={windowing ? { height: totalHeight, position: 'relative' } : undefined}

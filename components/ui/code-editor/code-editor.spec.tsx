@@ -21,4 +21,14 @@ describe('CodeEditor', () => {
     expect(markup).toContain('data-code-renderer="shiki"');
     expect(markup).toContain('export const answer = 42;');
   });
+
+  it('fills its parent when given a full height', () => {
+    const markup = renderToStaticMarkup(
+      <CodeEditorProvider>
+        <CodeEditor filePath="example.ts" fileContent="const value = true;" height="100%" />
+      </CodeEditorProvider>
+    );
+
+    expect(markup).toContain('style="height:100%"');
+  });
 });

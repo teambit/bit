@@ -76,7 +76,7 @@ export function CodeEditor({ fileContent = '', filePath, language, className, he
   return (
     <section
       className={classnames(styles.codeEditor, className)}
-      style={height && height !== '100%' ? { height } : undefined}
+      style={height ? { height } : undefined}
       data-code-renderer="shiki"
     >
       <pre className={styles.pre}>
