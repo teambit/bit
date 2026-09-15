@@ -50,7 +50,6 @@
         "@mdx-js/mdx": "^3.1.1",
         "@mdx-js/react": "^3.1.1",
         "@modelcontextprotocol/sdk": "^1.22.0",
-        "@monaco-editor/react": "4.7.0",
         "@parcel/watcher": "^2.5.1",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
         "@pnpm/colorize-semver-diff": "1.0.1",
@@ -82,7 +81,6 @@
         "@teambit/api-reference.models.api-reference-model": "~0.0.55",
         "@teambit/api-reference.overview.api-reference-table-of-contents": "~0.0.43",
         "@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary": "~0.0.78",
-        "@teambit/api-reference.renderers.api-node-details": "~0.0.88",
         "@teambit/api-reference.renderers.class": "~0.0.91",
         "@teambit/api-reference.renderers.decorator": "~0.0.45",
         "@teambit/api-reference.renderers.enum": "~0.0.89",
@@ -106,7 +104,6 @@
         "@teambit/api-reference.renderers.variable": "~0.0.85",
         "@teambit/api-reference.sections.api-reference-page": "~0.0.120",
         "@teambit/api-reference.sections.api-reference-section": "~0.0.16",
-        "@teambit/api-reference.utils.code-editor-options": "~0.0.16",
         "@teambit/api-reference.utils.copy-schema-node": "~0.0.48",
         "@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme": "~0.0.16",
         "@teambit/api-reference.utils.group-schema-node-by-signature": "~0.0.45",
@@ -164,7 +161,6 @@
         "@teambit/component.ui.artifacts.artifacts-tree": "~0.0.28",
         "@teambit/component.ui.artifacts.models.component-artifacts-model": "~0.0.12",
         "@teambit/component.ui.artifacts.queries.use-component-artifacts": "~0.0.14",
-        "@teambit/component.ui.component-compare.compare-aspects.compare-aspects": "~0.0.155",
         "@teambit/component.ui.component-compare.hooks.use-component-compare": "~0.0.113",
         "@teambit/component.ui.component-compare.hooks.use-component-compare-url": "~0.0.13",
         "@teambit/component.ui.component-compare.layouts.compare-split-layout-preset": "~0.0.10",
@@ -686,6 +682,9 @@
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
+      // Published API renderer packages pin api-node-details@0.0.88. Resolve those nested copies
+      // to the imported Shiki implementation until the renderer packages are released against it.
+      "@teambit/api-reference.renderers.api-node-details": "file:components/renderers/api-node-details",
       // unify all React-19 contexts on a single exact version; react-dom throws on any
       // react/react-dom mismatch, which breaks env-aspect loading. v17 (react 17) contexts are unaffected.
       "react@19": "19.2.7",
@@ -846,7 +845,6 @@
             "graphql": "15.8.0",
             "browserslist": "4.23.3",
             "reflect-metadata": "0.1.13",
-            "monaco-editor": "0.52.2",
             "mz": "2.7.0",
             "react": "19.2.7",
             "react-dom": "19.2.7",
