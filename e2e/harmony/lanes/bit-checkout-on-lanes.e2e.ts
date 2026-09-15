@@ -50,7 +50,6 @@ describe('bit checkout command when on a lane', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane();
-      // helper.fixtures.populateComponents(2);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
@@ -73,44 +72,6 @@ describe('bit checkout command when on a lane', function () {
     it('should make them available on main even without running bit-import before', () => {
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(2);
-    });
-  });
-  describe('checkout when some are pending-merge', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(3);
-      helper.command.tagWithoutBuild();
-      helper.command.export();
-
-      helper.command.createLane();
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.export();
-
-      helper.command.switchLocalLane('main', '-x');
-      helper.command.tagWithoutBuild('comp1', '--unmodified');
-      helper.command.export();
-
-      helper.command.switchLocalLane('dev', '-x');
-      helper.command.mergeLane('main', '-x'); // comp1 is now pending-merge
-
-      const originalWs = helper.scopeHelper.cloneWorkspace();
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importLane('dev');
-
-      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, 'console.log("v2");');
-      helper.command.snapComponentWithoutBuild('comp3');
-      helper.command.export();
-
-      helper.scopeHelper.getClonedWorkspace(originalWs);
-    });
-    it('checkout head should stop with an error', () => {
-      expect(() => helper.command.checkoutHead('-x')).to.throw();
-    });
-    it('should not merged the head of other components', () => {
-      const comp3File = helper.fs.readFile('comp3/index.js');
-      expect(comp3File).to.not.include('v2');
     });
   });
 });

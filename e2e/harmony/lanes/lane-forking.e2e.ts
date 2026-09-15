@@ -78,12 +78,6 @@ describe('bit lane forking', function () {
     it('should not throw NoCommonSnap on bit status', () => {
       expect(() => helper.command.status()).not.to.throw();
     });
-    // see the update in the `describe` section.
-    it.skip('should show the component in the invalid component section', () => {
-      const status = helper.command.statusJson();
-      expect(status.invalidComponents).lengthOf(2);
-      expect(status.invalidComponents[0].error.name).to.equal('NoCommonSnap');
-    });
     it('should be able to export with no error', () => {
       expect(() => helper.command.export('--fork-lane-new-scope --all')).to.not.throw();
     });

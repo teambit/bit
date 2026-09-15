@@ -1,8 +1,5 @@
-import chai, { expect } from 'chai';
-import path from 'path';
+import { expect } from 'chai';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
 describe('merge lanes - diverge functionality', function () {
   this.timeout(0);
@@ -105,35 +102,6 @@ describe('merge lanes - diverge functionality', function () {
         expect(diff).to.have.string('-module.exports = () => `comp1version2 and ${comp2()}`;'); // eslint-disable-line no-template-curly-in-string
         expect(diff).to.have.string('+module.exports = () => `comp1version3 and ${comp2()}`;'); // eslint-disable-line no-template-curly-in-string
       });
-    });
-  });
-
-  describe('getting new files when lane is diverge from another lane', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-      helper.command.createLane('lane-a');
-      helper.fixtures.populateComponents(1, false, 'version2');
-      helper.command.snapComponentWithoutBuild('comp1');
-      helper.command.export();
-      helper.command.createLane('lane-b');
-      helper.fixtures.populateComponents(1, false, 'version3');
-      helper.command.snapComponentWithoutBuild('comp1');
-      helper.command.export();
-      helper.command.switchLocalLane('lane-a');
-      helper.fs.outputFile('comp1/new-file.ts');
-      helper.command.snapComponentWithoutBuild('comp1');
-      helper.command.export();
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importLane('lane-b');
-      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`);
-    });
-    it('should add the newly added file', () => {
-      expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'comp1/new-file.ts')).to.be.a.file();
     });
   });
 

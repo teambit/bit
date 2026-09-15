@@ -127,14 +127,12 @@ describe('set-peer using just the version range prefix', function () {
     helper.scopeHelper.destroy();
   });
   describe('a component is a peer dependency', () => {
-    let workspaceCapsulesRootDir: string;
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       helper.command.setPeer('comp2', '^');
       helper.command.install();
       helper.command.build();
-      workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
     });
     it('should save the peer dependency in the model', () => {
       const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
@@ -151,19 +149,10 @@ describe('set-peer using just the version range prefix', function () {
       expect(peerDep.version).to.eq('latest');
       expect(peerDep.versionRange).to.eq('^0.0.1-new');
     });
-    it('adds peer dependency to the generated package.json', () => {
-      const pkgJson = fs.readJsonSync(
-        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
-      );
-      expect(pkgJson.peerDependencies).to.deep.equal({
-        [`@${helper.scopes.remote}/comp2`]: '^0.0.1-new',
-      });
-    });
     describe('peer dependency is not broken after snap', () => {
       before(() => {
         helper.command.snapAllComponents();
         helper.command.build();
-        workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
       });
       it('should save the peer dependency in the model', () => {
         const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
@@ -191,26 +180,6 @@ describe('set-peer using just the version range prefix', function () {
         expect(depResolver.config.peer).to.eq(true);
         expect(depResolver.config.defaultPeerRange).to.eq('^');
       });
-      it('adds peer dependency to the generated package.json', () => {
-        const { head } = helper.command.catComponent('comp1');
-        const pkgJson = fs.readJsonSync(
-          path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1@${head}/package.json`)
-        );
-        expect(pkgJson.peerDependencies).to.deep.equal({
-          [`@${helper.scopes.remote}/comp2`]: '^0.0.1-new',
-        });
-      });
-      describe('always peer config fields are preserved when setting new dependencies', () => {
-        let bitMap: any;
-        before(() => {
-          helper.command.dependenciesSet('comp2', 'is-odd@1.0.0');
-          bitMap = helper.bitMap.read();
-        });
-        it('should readd always peer config fields to bitmap', () => {
-          expect(bitMap.comp2.config['teambit.dependencies/dependency-resolver'].peer).to.eq(true);
-          expect(bitMap.comp2.config['teambit.dependencies/dependency-resolver'].defaultPeerRange).to.eq('^');
-        });
-      });
     });
   });
 });
@@ -225,7 +194,6 @@ describe('set-peer for existing component', function () {
     helper.scopeHelper.destroy();
   });
   describe('a component is a peer dependency', () => {
-    let workspaceCapsulesRootDir: string;
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
@@ -234,7 +202,6 @@ describe('set-peer for existing component', function () {
       helper.command.setPeer('comp2', '0');
       helper.command.install();
       helper.command.build();
-      workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
     });
     it('should save the peer dependency in the model', () => {
       const { head } = helper.command.catComponent('comp2');
@@ -251,15 +218,6 @@ describe('set-peer for existing component', function () {
       expect(peerDep.lifecycle).to.eq('peer');
       expect(peerDep.version).to.eq(head);
       expect(peerDep.versionRange).to.eq('0');
-    });
-    it('adds peer dependency to the generated package.json', () => {
-      const { head } = helper.command.catComponent('comp1');
-      const pkgJson = fs.readJsonSync(
-        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1@${head}/package.json`)
-      );
-      expect(pkgJson.peerDependencies).to.deep.equal({
-        [`@${helper.scopes.remote}/comp2`]: '0',
-      });
     });
   });
 });

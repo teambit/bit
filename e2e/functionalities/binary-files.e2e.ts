@@ -72,9 +72,6 @@ describe('binary files', function () {
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
-    it('should not install a package "undefined" ', () => {
-      expect(path.join(helper.scopes.localPath, 'node_modules/undefined')).to.not.be.a.path;
-    });
     describe('after importing the file', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();

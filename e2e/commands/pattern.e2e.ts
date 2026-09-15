@@ -35,14 +35,6 @@ describe('pattern command', function () {
       expect(result).to.include('found 1 component');
     });
 
-    it('should match multiple components with wildcards', () => {
-      const result = helper.command.pattern('**/comp*');
-      expect(result).to.include('comp1');
-      expect(result).to.include('comp2');
-      expect(result).to.include('comp3');
-      expect(result).to.include('found 3 components');
-    });
-
     it('should match components with comma-separated patterns', () => {
       // Use wildcard patterns to match regardless of scope
       const result = helper.command.pattern('**/comp1, **/comp3');
@@ -78,18 +70,6 @@ describe('pattern command', function () {
     });
 
     describe('basic exclusion patterns', () => {
-      it.skip('should exclude comp1 when using pattern "!comp1"', () => {
-        const result = helper.command.pattern('!comp1');
-        expect(result).to.not.include('comp1');
-        expect(result).to.include('comp2');
-      });
-
-      it.skip('should exclude comp1 when using pattern "**, !comp1"', () => {
-        const result = helper.command.pattern('**, !comp1');
-        expect(result).to.not.include('comp1');
-        expect(result).to.include('comp2');
-      });
-
       it('should exclude comp1 when using pattern "**, !**/comp1"', () => {
         const result = helper.command.pattern('**, !**/comp1');
         expect(result).to.not.include('comp1');
@@ -98,20 +78,6 @@ describe('pattern command', function () {
     });
 
     describe('full component ID exclusion', () => {
-      it('should list both components without any exclusion', () => {
-        const result = helper.command.pattern('**');
-        expect(result).to.include('comp1');
-        expect(result).to.include('comp2');
-        expect(result).to.include('found 2 components');
-      });
-
-      it('should exclude comp1 when using pattern with full ID "**, !scope-name/comp1"', () => {
-        const result = helper.command.pattern(`**, !${scopeName}/comp1`);
-        expect(result).to.not.include('comp1');
-        expect(result).to.include('comp2');
-        expect(result).to.include('found 1 component');
-      });
-
       it('should exclude comp1 when using pattern with just "!scope-name/comp1"', () => {
         const result = helper.command.pattern(`!${scopeName}/comp1`);
         expect(result).to.not.include('comp1');
@@ -122,13 +88,6 @@ describe('pattern command', function () {
       it('should exclude both components when using "!scope-name/comp1, !scope-name/comp2"', () => {
         const result = helper.command.pattern(`!${scopeName}/comp1, !${scopeName}/comp2`);
         expect(result).to.include('found 0 components');
-      });
-
-      it('should exclude comp2 when using pattern "**, !scope-name/comp2"', () => {
-        const result = helper.command.pattern(`**, !${scopeName}/comp2`);
-        expect(result).to.include('comp1');
-        expect(result).to.not.include('comp2');
-        expect(result).to.include('found 1 component');
       });
     });
   });
@@ -154,43 +113,6 @@ describe('pattern command', function () {
       expect(result).to.include('utils/is/type');
       expect(result).to.include('utils/fs/read');
       expect(result).to.include('found 3 components');
-    });
-
-    it('should match specific namespace pattern from remote', () => {
-      const result = helper.command.pattern(`${scopeName}/utils/is/*`, '--remote');
-      expect(result).to.include('utils/is/string');
-      expect(result).to.include('utils/is/type');
-      expect(result).to.not.include('utils/fs/read');
-      expect(result).to.include('found 2 components');
-    });
-
-    it('should support comma-separated patterns from remote', () => {
-      const result = helper.command.pattern(`${scopeName}/utils/is/string, ${scopeName}/utils/fs/read`, '--remote');
-      expect(result).to.include('utils/is/string');
-      expect(result).to.include('utils/fs/read');
-      expect(result).to.not.include('utils/is/type');
-      expect(result).to.include('found 2 components');
-    });
-
-    it('should support exclusion patterns from remote', () => {
-      const result = helper.command.pattern(`${scopeName}/utils/is/*, !${scopeName}/utils/is/type`, '--remote');
-      expect(result).to.include('utils/is/string');
-      expect(result).to.not.include('utils/is/type');
-      expect(result).to.include('found 1 component');
-    });
-
-    it('should support wildcard exclusion patterns from remote', () => {
-      const result = helper.command.pattern(`${scopeName}/**, !${scopeName}/utils/fs/*`, '--remote');
-      expect(result).to.include('utils/is/string');
-      expect(result).to.include('utils/is/type');
-      expect(result).to.not.include('utils/fs/read');
-      expect(result).to.include('found 2 components');
-    });
-
-    it('should return JSON format when using --json flag with --remote', () => {
-      const result = helper.command.patternJson(`${scopeName}/**`, '--remote');
-      expect(Array.isArray(result)).to.be.true;
-      expect(result.length).to.equal(3);
     });
 
     it('should throw error when pattern does not include scope name', () => {

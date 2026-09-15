@@ -106,16 +106,12 @@ describe('custom aspects', function () {
       it('should run main aspect provider', () => {
         expect(output).to.have.string(MAIN_ASPECT_PROVIDER_TEXT);
       });
-      it('should not load at all aspect which is static dep but not configured in workspace.jsonc', () => {
+      it('should not load nor run aspect which is static dep but not configured in workspace.jsonc', () => {
         expect(output).to.not.have.string(LOADING_MSG_1);
-      });
-      it('should not run aspect which is static dep but not configured in workspace.j', () => {
         expect(output).to.not.have.string('ext 1');
       });
-      it('should not load at all aspect which is regular dep provider', () => {
+      it('should not load nor run aspect which is regular dep provider', () => {
         expect(output).to.not.have.string(LOADING_MSG_2);
-      });
-      it('should not run aspect which is regular dep provider', () => {
         expect(output).to.not.have.string('ext 2');
       });
     });
@@ -128,16 +124,12 @@ describe('custom aspects', function () {
       it('should run main aspect provider', () => {
         expect(output).to.have.string(MAIN_ASPECT_PROVIDER_TEXT);
       });
-      it('should load aspect dep provider', () => {
+      it('should load and run aspect dep provider', () => {
         expect(output).to.have.string(LOADING_MSG_1);
-      });
-      it('should run aspect dep provider', () => {
         expect(output).to.have.string('ext 1');
       });
-      it('should not load at all aspect which is regular dep provider', () => {
+      it('should not load nor run aspect which is regular dep provider', () => {
         expect(output).to.not.have.string(LOADING_MSG_2);
-      });
-      it('should not run aspect which is regular dep provider', () => {
         expect(output).to.not.have.string('ext 2');
       });
     });

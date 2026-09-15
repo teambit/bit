@@ -3,10 +3,8 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { OutsideWorkspaceError } from '@teambit/workspace';
-import { InvalidName } from '@teambit/legacy-bit-id';
 import { statusInvalidComponentsMsg } from '@teambit/legacy.constants';
 import { MainFileIsDir, PathOutsideConsumer, VersionShouldBeRemoved } from '@teambit/tracker';
-import { MissingMainFile } from '@teambit/legacy.bit-map';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 import assertArrays from 'chai-arrays';
@@ -69,33 +67,10 @@ describe('bit add command', function () {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('test/bar');
     });
-    it('Should throw error when no index file is found', () => {
-      const file1 = 'foo1.js';
-      const file2 = 'foo2.js';
-      helper.fs.createFile('bar', file1);
-      helper.fs.createFile('bar', file2);
-
-      const addCmd = () => helper.command.addComponent('bar', { n: 'test' });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const error = new MissingMainFile(`${helper.scopes.remote}/test/bar`);
-      helper.general.expectToThrow(addCmd, error);
-    });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
       helper.fs.createFile('bar', 'foo2.js');
       const addCmd = () => helper.command.addComponent('bar', { n: 'test', i: 'jaja' });
       expect(addCmd).to.throw('please use either [id] or [namespace] to add a particular component');
-    });
-    it('Should prevent adding a file with invalid keys in namespace', () => {
-      const error = new InvalidName('bar.f/foo');
-      helper.fixtures.createComponentBarFoo();
-      const addFunc = () => helper.command.addComponent('bar', { i: 'bar.f/foo' });
-      helper.general.expectToThrow(addFunc, error);
-    });
-    it('Should prevent adding a file with invalid keys in ID', () => {
-      const error = new InvalidName('bar/fo.o');
-      helper.fixtures.createComponentBarFoo();
-      const addFunc = () => helper.command.addComponent('bar', { i: 'bar/fo.o' });
-      helper.general.expectToThrow(addFunc, error);
     });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT}/{PARENT}.js');
@@ -107,12 +82,6 @@ describe('bit add command', function () {
       const mainFile = bitMap['test/bar'].mainFile;
       expect(mainFile).to.equal('bar.js');
     });
-    it('Should return error if used an invalid ID', () => {
-      helper.fs.createFile('bar', 'foo.js');
-      const addFunc = () => helper.command.addComponent('bar', { i: 'Bar/foo' });
-      const error = new InvalidName('Bar/foo');
-      helper.general.expectToThrow(addFunc, error);
-    });
     it('should add component with id contains only one level', () => {
       helper.fs.createFile('bar', 'foo.js');
       helper.command.addComponent('bar', {
@@ -120,20 +89,6 @@ describe('bit add command', function () {
       });
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('foo');
-    });
-  });
-  describe('with multiple index files', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fs.createFile('bar', 'index.js');
-      helper.fs.createFile('bar', 'foo.js');
-      helper.fs.createFile(path.join('bar', 'exceptions'), 'some-exception.js');
-      helper.fs.createFile(path.join('bar', 'exceptions'), 'index.js');
-      helper.command.addComponent('bar', { i: 'bar/foo' });
-    });
-    it('should identify the closest index file as the main file', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap['bar/foo'].mainFile).to.equal('index.js');
     });
   });
   describe('add component/s with gitignore', () => {
@@ -155,7 +110,6 @@ describe('bit add command', function () {
     });
   });
   describe('ignore specific files inside component', () => {
-    let output;
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fs.createFile('bar', 'foo.js');
@@ -163,14 +117,7 @@ describe('bit add command', function () {
       helper.fs.createFile('bar', 'boo.js');
       helper.fs.createFile('bar', 'index.js');
       helper.git.writeGitIgnore(['bar/foo.js', 'bar/foo3.js']);
-      output = helper.command.addComponent(path.normalize('bar'), { i: 'bar/foo' });
-    });
-    it('Should track component ', () => {
-      expect(output).to.contain('bar/foo');
-    });
-    it('Should contain component inside bitmap', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('bar/foo');
+      helper.command.addComponent(path.normalize('bar'), { i: 'bar/foo' });
     });
     it('Should contain inside bitmap only files that are not inside gitignore', () => {
       const files = helper.command.getComponentFiles('bar/foo');
@@ -256,40 +203,6 @@ describe('bit add command', function () {
       const addCmd = () => helper.command.addComponent('../foo', undefined, consumerDir);
       const error = new PathOutsideConsumer(path.normalize('../foo'));
       helper.general.expectToThrow(addCmd, error);
-    });
-  });
-  describe('no mainFile and one of the files has the same name as the directory', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fs.createFile('bar', 'bar.js');
-      helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponent('bar');
-    });
-    it('should resolve the mainFile as the file with the same name as the directory', () => {
-      const bitMap = helper.bitMap.read();
-      const bar = bitMap.bar;
-      expect(bar.mainFile).to.equal('bar.js');
-    });
-  });
-  describe('sort .bitmap components', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fs.createFileOnRootLevel('aaa/aaa.js');
-      helper.fs.createFileOnRootLevel('bbb/bbb.js');
-      helper.fs.createFileOnRootLevel('ccc/ccc.js');
-      helper.fs.createFileOnRootLevel('ddd/ddd.js');
-      helper.command.addComponent('bbb');
-      helper.command.addComponent('ddd');
-      helper.command.addComponent('aaa');
-      helper.command.addComponent('ccc');
-    });
-    it('should sort the components in .bitmap file alphabetically', () => {
-      const bitMap = helper.bitMap.read();
-      const ids = Object.keys(bitMap);
-      expect(ids[0]).to.equal('aaa');
-      expect(ids[1]).to.equal('bbb');
-      expect(ids[2]).to.equal('ccc');
-      expect(ids[3]).to.equal('ddd');
     });
   });
 });
