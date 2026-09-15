@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import classnames from 'classnames';
 import { useSearchParams } from 'react-router-dom';
 import { ComponentContext, ComponentDescriptorContext, useComponent } from '@teambit/component';
@@ -16,6 +16,7 @@ import { groupByVersion } from '@teambit/component.ui.component-compare.utils.gr
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import {
   CompareDataProvider,
+  CompareSidebar,
   CompareToolbar,
   CompareToolbarActions,
   DiffModeProvider,
@@ -24,8 +25,14 @@ import {
   InlineComponentCompare,
   RegistryFeeder,
   useCompareData,
+  useFileRegistry,
 } from '@teambit/component.ui.component-compare.component-compare';
-import type { CompareViewMode, ComponentComparePair } from '@teambit/component.ui.component-compare.component-compare';
+import type {
+  CompareSidebarGroup,
+  CompareViewMode,
+  ComponentComparePair,
+  FileInfo,
+} from '@teambit/component.ui.component-compare.component-compare';
 import { computeDepsDiff } from '@teambit/dependencies.ui.deps-diff-table';
 import { useApiDiff } from '@teambit/semantics.ui.api-diff-view';
 
@@ -46,6 +53,12 @@ export type ComponentComparePageProps = {
 
 type ViewMode = 'code' | 'preview' | 'docs' | 'dependencies' | 'tests' | 'config' | 'api';
 type DiffMode = 'split' | 'unified';
+
+function apiChangeStatusToFileStatus(status: string): string {
+  if (status === 'ADDED') return 'NEW';
+  if (status === 'REMOVED') return 'DELETED';
+  return 'MODIFIED';
+}
 
 // The single-component compare offers the same view modes as lane-compare. Which ones actually
 // appear is driven by real per-view content counts (see `CompareView`) — mirroring how the cloud
@@ -293,6 +306,9 @@ function CompareView({
   const [viewMode, setViewModeState] = useState<ViewMode>((searchParams.get('view') as ViewMode) || 'code');
   const [diffMode, setDiffModeState] = useState<DiffMode>((searchParams.get('diffMode') as DiffMode) || 'split');
   const [showAllDeps, setShowAllDeps] = useState(false);
+  const [selectedId, setSelectedId] = useState<string>();
+  const [selectedFile, setSelectedFile] = useState<string>();
+  const diffPaneRef = useRef<HTMLDivElement>(null);
 
   const syncUrl = React.useCallback((key: string, value: string | undefined) => {
     const url = new URL(window.location.href);
@@ -318,6 +334,7 @@ function CompareView({
 
   const componentCompare = useComponentCompare();
   const compareData = useCompareData();
+  const fileRegistry = useFileRegistry();
   const data = compareData?.compareDataFor(compareId);
   const dataLoading = compareData?.loading ?? false;
 
@@ -404,6 +421,43 @@ function CompareView({
     return acc;
   }, [loading, registeredModeIds, isNew, data, componentCompare, apiTabHasContent]);
 
+  const componentId = compareId.split('@')[0];
+  const fileRegistryVersion = fileRegistry?.getVersion();
+  const sidebarFiles = useMemo<FileInfo[] | undefined>(() => {
+    // The registry object is stable; its monotonic version invalidates this view-derived projection.
+    void fileRegistryVersion;
+    if (viewMode === 'code') return fileRegistry?.getFiles(componentId);
+    if (viewMode === 'config') return fileRegistry?.getAspectFiles(componentId);
+    if (viewMode === 'tests') {
+      return (data?.tests || [])
+        .filter((file) => file.status && file.status !== 'UNCHANGED')
+        .map((file) => ({ name: file.fileName, status: file.status }));
+    }
+    if (viewMode === 'api') {
+      return (apiDiffResult?.publicChanges || []).map((change) => ({
+        name: change.exportName,
+        status: apiChangeStatusToFileStatus(change.status),
+      }));
+    }
+    return undefined;
+  }, [viewMode, fileRegistry, fileRegistryVersion, componentId, data?.tests, apiDiffResult]);
+
+  const sidebarGroups = useMemo<CompareSidebarGroup[]>(
+    () => [
+      {
+        key: 'component',
+        label: 'Component',
+        items: [{ id: componentId, name, files: sidebarFiles }],
+      },
+    ],
+    [componentId, name, sidebarFiles]
+  );
+
+  useEffect(() => {
+    setSelectedId(undefined);
+    setSelectedFile(undefined);
+  }, [viewMode]);
+
   // If the active view has no content, fall back to the first view that does.
   useEffect(() => {
     if (loading) return;
@@ -442,31 +496,63 @@ function CompareView({
           loading={loading}
         />
 
-        <div className={styles.diffPane} data-view-mode={viewMode}>
-          <InlineComponentCompare
-            name={name}
-            baseId={baseId}
-            compareId={compareId}
-            baseVersion={baseVersionShort}
-            compareVersion={compareVersionShort}
-            allTabs={resolvedTabs}
-            host={host}
-            // Hand the inner context our already-resolved pair: base = the scope's published snap,
-            // compare = the live workspace component (with local changes). Without this the inner
-            // context re-fetches by id and, in local-changes mode (compareId === baseId), would load
-            // the same snap for both sides — making the deps/config/preview tabs show base vs base.
-            baseOverride={componentCompare?.base as { model?: any; descriptor?: any } | undefined}
-            compareOverride={componentCompare?.compare as { model?: any; descriptor?: any } | undefined}
-          >
-            {/* The API view isn't an inline tab — render it inside the inline context (so it sees the
-              resolved base/compare pair) only while it's the active view, so its diff query fires
-              on-demand. CSS hides the inline `[data-tab-id]` panels when `data-view-mode='api'`. */}
-            {viewMode === 'api' ? apiTab : null}
-          </InlineComponentCompare>
+        <div className={styles.layout}>
+          <CompareSidebar
+            groups={sidebarGroups}
+            selectedId={selectedId}
+            selectedFile={selectedFile}
+            defaultExpandFiles={
+              viewMode === 'code' || viewMode === 'config' || viewMode === 'tests' || viewMode === 'api'
+            }
+            onSelect={(id, fileName) => {
+              const nextId = id || undefined;
+              setSelectedId(nextId);
+              setSelectedFile(fileName);
+              if (nextId) scrollToCompareSelection(diffPaneRef.current, nextId, fileName);
+            }}
+          />
+
+          <div ref={diffPaneRef} className={styles.diffPane} data-view-mode={viewMode}>
+            <InlineComponentCompare
+              name={name}
+              baseId={baseId}
+              compareId={compareId}
+              baseVersion={baseVersionShort}
+              compareVersion={compareVersionShort}
+              allTabs={resolvedTabs}
+              host={host}
+              // Hand the inner context our already-resolved pair: base = the scope's published snap,
+              // compare = the live workspace component (with local changes). Without this the inner
+              // context re-fetches by id and, in local-changes mode (compareId === baseId), would load
+              // the same snap for both sides — making the deps/config/preview tabs show base vs base.
+              baseOverride={componentCompare?.base as { model?: any; descriptor?: any } | undefined}
+              compareOverride={componentCompare?.compare as { model?: any; descriptor?: any } | undefined}
+            >
+              {/* The API view isn't an inline tab — render it inside the inline context (so it sees the
+                resolved base/compare pair) only while it's the active view, so its diff query fires
+                on-demand. CSS hides the inline `[data-tab-id]` panels when `data-view-mode='api'`. */}
+              {viewMode === 'api' ? apiTab : null}
+            </InlineComponentCompare>
+          </div>
         </div>
       </DepsFilterProvider>
     </DiffModeProvider>
   );
+}
+
+function scrollToCompareSelection(pane: HTMLDivElement | null, componentId: string, fileName?: string) {
+  if (!pane) return;
+  const selector = fileName
+    ? `[data-file-id="${CSS.escape(componentId)}:${CSS.escape(fileName)}"]`
+    : `[data-component-id="${CSS.escape(componentId)}"]`;
+
+  requestAnimationFrame(() => {
+    const element = pane.querySelector(selector);
+    if (!element) return;
+    const elementRect = element.getBoundingClientRect();
+    const paneRect = pane.getBoundingClientRect();
+    pane.scrollTo({ top: elementRect.top - paneRect.top + pane.scrollTop, behavior: 'smooth' });
+  });
 }
 
 function CompareViewSkeleton() {

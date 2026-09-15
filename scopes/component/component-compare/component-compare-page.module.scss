@@ -21,6 +21,14 @@
   justify-content: center;
 }
 
+.layout {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
 @keyframes compareSkeletonShimmer {
   0% {
     background-position: 200% 0;
