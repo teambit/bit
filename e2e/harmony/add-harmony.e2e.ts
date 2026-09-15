@@ -416,14 +416,20 @@ describe('add command on Harmony', function () {
       helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { [wouldBePackageName]: '1.0.0' } });
       expect(issuesOf('ws-root')).to.not.include('DuplicateComponentAndPackage');
     });
-    describe('when a root file has a relative import into a component', () => {
+    describe('when a root file has a relative import into a component and requires a missing package', () => {
       before(() => {
-        helper.fs.outputFile('app.js', "const comp1 = require('./comp1');\n");
+        helper.fs.outputFile('app.js', "require('./comp1');\nrequire('some-package-that-is-not-installed');\n");
       });
-      it('should report the relative-import issue like any other component', () => {
-        // the root component is not exempt from this one. without it, the user gets an
-        // "this error should have never happened" failure when the Version object is saved.
-        expect(helper.command.getAllIssuesFromStatus()).to.include('RelativeComponentsAuthored');
+      it('should report no issue, the root files are not parsed for dependencies', () => {
+        // the root is the workspace itself: config files and repo scripts that may require anything.
+        // nothing installs, links or builds it, so nothing would consume its dependency list either.
+        expect(issuesOf('ws-root')).to.deep.equal([]);
+      });
+      it('should snap with no dependencies', () => {
+        helper.command.snapComponentWithoutBuild('ws-root');
+        const versionObject = helper.command.catComponent('ws-root@latest');
+        expect(versionObject.dependencies).to.deep.equal([]);
+        expect(versionObject.packageDependencies).to.deep.equal({});
       });
     });
   });
