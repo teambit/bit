@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { gql } from '@apollo/client';
 import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
+import { useAspectRegistryRegister, useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
 import { DiffLoadingSkeleton } from '@teambit/code.ui.inline-diff-viewer';
 import { DiffViewer, computeDiffLines, statsFromItems, type DiffViewMode } from '@teambit/code.ui.diff-viewer';
 
@@ -124,6 +124,19 @@ export function InlineConfigCompare() {
     return diffs;
     // key on the stable Apollo data refs — baseAspects/compareAspects are re-derived (`|| []`) every render
   }, [loading, baseData, compareData]);
+
+  const sidebarAspects = useMemo(() => {
+    if (loading) return undefined;
+    return aspectDiffs.map(({ aspectId }) => ({
+      name: aspectId.split('/').pop() || aspectId,
+      status: 'MODIFIED',
+    }));
+  }, [loading, aspectDiffs]);
+
+  // Register the same short aspect names used by the rendered data-file-id anchors. The bulk
+  // compare response exposes changed field names instead, which are useful as an early placeholder
+  // but cannot scroll to these aspect-level sections.
+  useAspectRegistryRegister(componentIdStr || undefined, sidebarAspects);
 
   if (loading) {
     return <DiffLoadingSkeleton sections={2} />;

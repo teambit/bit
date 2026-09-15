@@ -497,20 +497,22 @@ function CompareView({
         />
 
         <div className={styles.layout}>
-          <CompareSidebar
-            groups={sidebarGroups}
-            selectedId={selectedId}
-            selectedFile={selectedFile}
-            defaultExpandFiles={
-              viewMode === 'code' || viewMode === 'config' || viewMode === 'tests' || viewMode === 'api'
-            }
-            onSelect={(id, fileName) => {
-              const nextId = id || undefined;
-              setSelectedId(nextId);
-              setSelectedFile(fileName);
-              if (nextId) scrollToCompareSelection(diffPaneRef.current, nextId, fileName);
-            }}
-          />
+          {viewMode !== 'dependencies' && (
+            <CompareSidebar
+              groups={sidebarGroups}
+              selectedId={selectedId}
+              selectedFile={selectedFile}
+              defaultExpandFiles={
+                viewMode === 'code' || viewMode === 'config' || viewMode === 'tests' || viewMode === 'api'
+              }
+              onSelect={(id, fileName) => {
+                const nextId = id || undefined;
+                setSelectedId(nextId);
+                setSelectedFile(fileName);
+                if (nextId) scrollToCompareSelection(diffPaneRef.current, nextId, fileName);
+              }}
+            />
+          )}
 
           <div ref={diffPaneRef} className={styles.diffPane} data-view-mode={viewMode}>
             <InlineComponentCompare
