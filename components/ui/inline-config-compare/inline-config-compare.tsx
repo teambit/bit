@@ -43,6 +43,7 @@ type AspectData = {
 
 type AspectDiff = {
   aspectId: string;
+  status: 'NEW' | 'DELETED' | 'MODIFIED';
   configChanged: boolean;
   baseConfig: string;
   compareConfig: string;
@@ -112,6 +113,7 @@ export function InlineConfigCompare() {
 
       diffs.push({
         aspectId,
+        status: !baseAspect ? 'NEW' : !compareAspect ? 'DELETED' : 'MODIFIED',
         configChanged,
         baseConfig,
         compareConfig,
@@ -127,9 +129,9 @@ export function InlineConfigCompare() {
 
   const sidebarAspects = useMemo(() => {
     if (loading) return undefined;
-    return aspectDiffs.map(({ aspectId }) => ({
+    return aspectDiffs.map(({ aspectId, status }) => ({
       name: aspectId,
-      status: 'MODIFIED',
+      status,
     }));
   }, [loading, aspectDiffs]);
 

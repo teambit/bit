@@ -27,6 +27,8 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  container-type: inline-size;
+  container-name: component-compare-layout;
 }
 
 @keyframes compareSkeletonShimmer {
