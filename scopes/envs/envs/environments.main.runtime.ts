@@ -244,6 +244,10 @@ export class EnvsMain {
       // treat it as an external env: `bit install` then adds its npm package to the env root and
       // pulls the entire bit core into the workspace, and env-policy/dev-files lookups fetch the
       // env component from the remote instead of using the loaded aspect.
+      // listing it was once reverted because, in the bit repo itself, loading the empty-env
+      // component alone (e.g. `bit show teambit.harmony/empty-env`) reports its own env
+      // (core-aspect-env) as not loaded. that is how the load-groups treat every core env here
+      // (react/node/aspect report the same) and the component still compiles and builds.
       'teambit.harmony/empty-env',
     ];
   }

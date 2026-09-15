@@ -22,16 +22,17 @@ describe('InstallMain', function () {
     await destroyWorkspace(workspaceData);
   });
 
-  describe('env root manifest of envs shipped with bit', () => {
+  describe('env root manifest of an env shipped with bit', () => {
     // envs shipped with bit are loaded from the bit installation itself. adding their npm package
     // to the env root makes the package manager fetch the whole bit core into the workspace.
-    ['teambit.harmony/node', 'teambit.harmony/empty-env'].forEach((envId) => {
-      it(`should not add the ${envId} package to its env root`, async () => {
-        // reaching the private method directly to avoid running a real package installation
-        const installWithEnvPackage = install as unknown as InstallWithEnvPackage;
-        const envPackage = await installWithEnvPackage._getEnvPackage(ComponentID.fromString(envId));
-        expect(envPackage).to.be.undefined;
-      });
+    // only empty-env is asserted here: it stays a core env after the other core envs become
+    // regular envs, so this spec must not assume anything about them.
+    it('should not add the empty-env package to its env root', async () => {
+      // reaching the private method directly to avoid running a real package installation
+      const installWithEnvPackage = install as unknown as InstallWithEnvPackage;
+      const envId = ComponentID.fromString('teambit.harmony/empty-env');
+      const envPackage = await installWithEnvPackage._getEnvPackage(envId);
+      expect(envPackage).to.be.undefined;
     });
   });
 });
