@@ -1486,13 +1486,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/renaming"
     },
-    "renderers/default-node-renderers": {
-        "name": "renderers/default-node-renderers",
-        "scope": "teambit.api-reference",
-        "version": "0.0.40",
-        "mainFile": "index.ts",
-        "rootDir": "components/renderers/default-node-renderers"
-    },
     "ripple": {
         "name": "ripple",
         "scope": "teambit.cloud",
@@ -1793,6 +1786,20 @@
         "version": "0.0.258",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/changelog"
+    },
+    "ui/component-compare/compare-aspects/compare-aspect-view": {
+        "name": "ui/component-compare/compare-aspects/compare-aspect-view",
+        "scope": "teambit.component",
+        "version": "0.0.16",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspect-view"
+    },
+    "ui/component-compare/compare-aspects/compare-aspects": {
+        "name": "ui/component-compare/compare-aspects/compare-aspects",
+        "scope": "teambit.component",
+        "version": "0.0.155",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspects"
     },
     "ui/component-compare/component-compare": {
         "name": "ui/component-compare/component-compare",

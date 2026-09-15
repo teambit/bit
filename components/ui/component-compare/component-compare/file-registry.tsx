@@ -132,7 +132,18 @@ class ComponentRegistry {
   }
 }
 
-const FileRegistryContext = createContext<ComponentRegistry | undefined>(undefined);
+// Compare views are contributed by separately packaged UI components. A bundler can therefore load
+// more than one copy of this module even though they all render under the same provider. Keep the
+// context identity on `globalThis` so a registrar from one package instance and a consumer from
+// another still share the provider's registry (React context matching is identity-based).
+const FILE_REGISTRY_CONTEXT_KEY = '__teambitComponentCompareFileRegistryContext__';
+type FileRegistryGlobal = typeof globalThis & {
+  [FILE_REGISTRY_CONTEXT_KEY]?: React.Context<ComponentRegistry | undefined>;
+};
+const fileRegistryGlobal = globalThis as FileRegistryGlobal;
+const FileRegistryContext =
+  fileRegistryGlobal[FILE_REGISTRY_CONTEXT_KEY] ||
+  (fileRegistryGlobal[FILE_REGISTRY_CONTEXT_KEY] = createContext<ComponentRegistry | undefined>(undefined));
 
 export function FileRegistryProvider({ children }: { children: ReactNode }) {
   const storeRef = useRef<ComponentRegistry | undefined>(undefined);
