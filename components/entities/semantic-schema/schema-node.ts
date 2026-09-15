@@ -1,8 +1,23 @@
 import { pickBy } from 'lodash';
 import pluralize from 'pluralize';
-import type { DocSchema } from './schemas';
+import type { DocSchema, TypeRefSchema } from './schemas';
 import type { SchemaChangeFact } from './schema-diff';
 import { deepEqualNoLocation, diffDoc } from './schema-diff';
+
+/**
+ * context for `SchemaNode.getMembers()`.
+ */
+export type GetMembersContext = {
+  /**
+   * resolves a type reference to the declaration it points at, e.g. by name within an `APISchema`.
+   * without it, references contribute no members.
+   */
+  resolveRef?: (ref: TypeRefSchema) => SchemaNode | undefined;
+  /**
+   * the nodes being expanded on the current path. guards against self-referencing types.
+   */
+  visited?: Set<SchemaNode>;
+};
 
 export interface ISchemaNode {
   __schema: string;
@@ -17,6 +32,7 @@ export interface ISchemaNode {
   getNodes(): SchemaNode[];
   findNode(predicate: (node: SchemaNode) => boolean, visitedNodes?: Set<SchemaNode>): SchemaNode | undefined;
   getAllNodesRecursively(visitedNodes?: Set<SchemaNode>): SchemaNode[];
+  getMembers(context?: GetMembersContext): SchemaNode[];
   diff(other: SchemaNode): SchemaChangeFact[];
 }
 
@@ -86,6 +102,29 @@ export abstract class SchemaNode implements ISchemaNode {
     }
 
     return undefined;
+  }
+
+  /**
+   * the members this node contributes when it describes an object-like type: the members of an interface or
+   * a type literal, the combined members of an intersection, or the members of whatever an alias, parentheses
+   * or a type reference resolve to. nodes that don't describe an object type contribute none.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getMembers(context: GetMembersContext = {}): SchemaNode[] {
+    return [];
+  }
+
+  /**
+   * the members of a child node. a node already being expanded on the current path contributes nothing,
+   * so self-referencing types terminate — while a type shared by two branches (say, a base of both
+   * alternatives of a union) still contributes to each.
+   */
+  protected static membersOf(node: SchemaNode | undefined, context: GetMembersContext): SchemaNode[] {
+    if (!node) return [];
+    const visited = new Set(context.visited);
+    if (visited.has(node)) return [];
+    visited.add(node);
+    return node.getMembers({ ...context, visited });
   }
 
   /**

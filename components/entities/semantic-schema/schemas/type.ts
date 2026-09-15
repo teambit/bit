@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { SchemaLocation } from '../schema-node';
+import type { GetMembersContext, SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import type { SchemaChangeFact } from '../schema-diff';
 import { typesAreSemanticallyEqual, diffDoc } from '../schema-diff';
@@ -42,6 +42,10 @@ export class TypeSchema extends SchemaNode {
 
   getNodes() {
     return [this.type];
+  }
+
+  getMembers(context: GetMembersContext = {}) {
+    return SchemaNode.membersOf(this.type, context);
   }
 
   toObject() {
