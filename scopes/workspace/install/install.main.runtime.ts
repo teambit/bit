@@ -1365,6 +1365,9 @@ export class InstallMain {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
     components.forEach((component) => {
       if (component.state._consumer.removed) return;
+      // the workspace-root component is not a package (see getComponentsDirectory): a workspace dependency
+      // by the name it would have had is no duplicate of it
+      if (this.workspace.componentDir(component.id) === this.workspace.path) return;
       const pkgName = componentIdToPackageName(component.state._consumer);
       const found = workspacePolicy.find(pkgName);
       if (found) {
@@ -1537,7 +1540,13 @@ export class InstallMain {
     const components = ids.length
       ? await this.workspace.getMany(ids, loadOpts)
       : await this.workspace.list(undefined, loadOpts);
-    return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
+    // the workspace-root component's dir is the workspace root itself. it is not an installable
+    // package - it holds the workspace's own config files, nothing depends on it, and handing its
+    // dir to the package manager makes it collide with the root project (pnpm resolves it to an
+    // empty "file:" spec and fails to build the lockfile).
+    return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id)).filter(
+      (componentDir) => componentDir !== this.workspace.path
+    );
   }
 
   private async onRootAspectAddedSubscriber(_aspectId: ComponentID, inWs: boolean): Promise<void> {

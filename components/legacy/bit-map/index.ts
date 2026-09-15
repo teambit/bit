@@ -5,6 +5,9 @@ export {
   CURRENT_BITMAP_SCHEMA,
   SCHEMA_FIELD,
   LANE_KEY,
+  normalizeBitmapContentForVersioning,
+  fileContentsForVersioning,
+  isWorkspaceMapOwnedBy,
 } from './bit-map';
 export { MissingBitMapComponent, MissingMainFile, InvalidBitMap } from './exceptions';
 export {
@@ -12,6 +15,13 @@ export {
   ComponentMapFile,
   ComponentMap,
   Config,
+  filterByIgnoreFiles,
+  filterByOwnIgnoreFile,
+  filterByScanIgnorePatterns,
+  getFilesByDir,
   getIgnoreListHarmony,
+  getScanIgnorePatterns,
+  isWorkspaceMapFile,
   NextVersion,
+  WORKSPACE_ROOT_DIR,
 } from './component-map';

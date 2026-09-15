@@ -168,9 +168,14 @@ export class Watcher {
     return this.workspace.consumer;
   }
 
-  private getParcelIgnorePatterns(): string[] {
+  /**
+   * the paths the watcher never reports, for either backend. package.json is bit's own output, unless
+   * the workspace tracks every file (trackAllFiles): then it is component source and its edits count.
+   */
+  private getIgnorePatterns(): string[] {
     const relScopePath = pathNormalizeToLinux(relative(this.workspace.path, this.workspace.scope.path));
-    return ['**/node_modules/**', '**/package.json', `**/${relScopePath}/**`];
+    const manifests = this.consumer.config.trackAllFiles ? [] : ['**/package.json'];
+    return ['**/node_modules/**', ...manifests, `**/${relScopePath}/**`];
   }
 
   /**
@@ -180,7 +185,7 @@ export class Watcher {
    */
   private getParcelWatcherOptions(): ParcelWatcherOptions {
     const options: ParcelWatcherOptions = {
-      ignore: this.getParcelIgnorePatterns(),
+      ignore: this.getIgnorePatterns(),
     };
 
     // On macOS, prefer Watchman if available to avoid FSEvents stream limit
@@ -920,8 +925,7 @@ export class Watcher {
     const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
     // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
     // (windows-style backslashes are converted to forward slashes)
-    const relScopePath = pathNormalizeToLinux(relative(this.workspace.path, this.workspace.scope.path));
-    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', `**/${relScopePath}/**`];
+    chokidarOpts.ignored = this.getIgnorePatterns();
     this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
       logger.console(

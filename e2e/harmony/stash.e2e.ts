@@ -132,6 +132,9 @@ describe('bit stash command', function () {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('comp1');
       });
+      it('should re-create it with its rootDir, which is what its files are loaded from', () => {
+        expect(helper.bitMap.read().comp1.rootDir).to.equal('comp1');
+      });
     });
   });
 });

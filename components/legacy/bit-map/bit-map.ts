@@ -28,7 +28,13 @@ import type {
 } from '@teambit/toolbox.path.path';
 import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { ComponentMapFile, Config, PathChange } from './component-map';
-import { ComponentMap, getFilesByDir, getGitIgnoreHarmony } from './component-map';
+import {
+  ComponentMap,
+  getFilesByDir,
+  getGitIgnoreHarmony,
+  isWorkspaceMapFile,
+  WORKSPACE_ROOT_DIR,
+} from './component-map';
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
@@ -66,6 +72,7 @@ export class BitMap {
   _cacheIdsAllStrWithoutScopeAndVersion: { [idStr: string]: ComponentID } | undefined;
   allTrackDirs: { [trackDir: string]: ComponentID } | null | undefined;
   ignoredFiles?: string[];
+  trackAllFiles?: boolean;
   protected updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
     public projectRoot: string,
@@ -99,15 +106,26 @@ export class BitMap {
 
   /**
    * in case the added component's root-dir is a parent-dir of other components
-   * or other component's root-dir is a parent root-dir of this component, throw an error
+   * or other component's root-dir is a parent root-dir of this component, throw an error.
+   *
+   * the workspace-root component (rootDir ".") is the one exception - it is allowed to contain
+   * other components. its file-set subtracts their root-dirs, so the two never claim the same file.
    */
-  private throwForExistingParentDir({ id, rootDir }: ComponentMap) {
+  private throwForExistingParentDir(id: ComponentID, rootDir: PathLinuxRelative) {
     const isParentDir = (parent: string, child: string) => {
       const relative = path.relative(parent, child);
       return relative && !relative.startsWith('..');
     };
     this.components.forEach((existingComponentMap) => {
-      if (!existingComponentMap.rootDir) return;
+      if (!existingComponentMap.rootDir || existingComponentMap.id.isEqualWithoutVersion(id)) return;
+      // a root-dir has one owner. .bitmap validates this on load (throwForDuplicateRootDirs), it is
+      // rejected here so the operation writing the entry fails, not the next command.
+      if (existingComponentMap.rootDir === rootDir) {
+        throw new BitError(
+          `unable to add "${id.toString()}", its rootDir "${rootDir}" is already used by another component "${existingComponentMap.id.toString()}"`
+        );
+      }
+      if (rootDir === WORKSPACE_ROOT_DIR || existingComponentMap.rootDir === WORKSPACE_ROOT_DIR) return;
       if (isParentDir(existingComponentMap.rootDir, rootDir)) {
         throw new BitError(
           `unable to add "${id.toString()}", its rootDir ${rootDir} is inside ${
@@ -157,19 +175,27 @@ export class BitMap {
     // Delete and re-add it to make sure it will be at the end
     delete sorted[SCHEMA_FIELD];
     sorted[SCHEMA_FIELD] = parsed[SCHEMA_FIELD];
-    const result = `${AUTO_GENERATED_MSG}${BITMAP_PREFIX_MESSAGE}${JSON.stringify(sorted, null, 4)}`;
+    const result = formatBitMapFile(sorted);
     return result;
   }
 
-  static async load(dirPath: PathOsBasedAbsolute, defaultScope: string, ignoredFiles?: string[]): Promise<BitMap> {
+  static async load(
+    dirPath: PathOsBasedAbsolute,
+    defaultScope: string,
+    ignoredFiles?: string[],
+    trackAllFiles?: boolean
+  ): Promise<BitMap> {
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
-    if (!mapFileContent || !currentLocation) {
-      return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
-    }
-    const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
+    // the ignore rules apply to every scan, including the ones of a map that starts empty: the first
+    // component tracked in a fresh workspace is rescanned by the same process.
+    const bitMap =
+      !mapFileContent || !currentLocation
+        ? new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA)
+        : BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
     bitMap.ignoredFiles = ignoredFiles;
-    await bitMap.loadFiles();
+    bitMap.trackAllFiles = trackAllFiles;
+    if (mapFileContent && currentLocation) await bitMap.loadFiles();
 
     return bitMap;
   }
@@ -212,14 +238,48 @@ export class BitMap {
     delete componentsJson[LANE_KEY];
   }
 
+  /**
+   * root-dirs of the components nested inside the given root-dir. their files belong to them, so
+   * the containing component must subtract them from its own file-set.
+   */
+  getNestedRootDirs(rootDir: PathLinuxRelative): PathLinuxRelative[] {
+    // only the workspace root may contain other components (see throwForExistingParentDir), so any
+    // other root-dir has nothing nested in it. this runs once per component on every load.
+    if (rootDir !== WORKSPACE_ROOT_DIR) return [];
+    return this.components
+      .map((componentMap) => componentMap.rootDir)
+      .filter((nested): nested is PathLinuxRelative => Boolean(nested) && nested !== WORKSPACE_ROOT_DIR);
+  }
+
+  /**
+   * the files of a component are derived from its root-dir, never frozen at add-time. this rescans
+   * the dir and updates the component-map. it is the one place that knows which files a component
+   * owns: the workspace ignore rules, the nested components to subtract, and whether the files bit
+   * normally generates count as source (trackAllFiles).
+   */
+  async loadFilesOf(componentMap: ComponentMap, gitIgnore?: any): Promise<void> {
+    const rootDir = componentMap.rootDir;
+    if (!rootDir) return;
+    componentMap.files = await getFilesByDir(
+      rootDir,
+      this.projectRoot,
+      gitIgnore || (await this.getGitIgnore()),
+      this.getNestedRootDirs(rootDir),
+      this.trackAllFiles
+    );
+  }
+
+  private getGitIgnore() {
+    return getGitIgnoreHarmony(this.projectRoot, this.ignoredFiles, this.trackAllFiles);
+  }
+
   async loadFiles() {
-    const gitIgnore = await getGitIgnoreHarmony(this.projectRoot, this.ignoredFiles);
+    const gitIgnore = await this.getGitIgnore();
     await Promise.all(
       this.components.map(async (componentMap) => {
-        const rootDir = componentMap.rootDir;
-        if (!rootDir) return;
+        if (!componentMap.rootDir) return;
         try {
-          componentMap.files = await getFilesByDir(rootDir, this.projectRoot, gitIgnore);
+          await this.loadFilesOf(componentMap, gitIgnore);
           componentMap.recentlyTracked = true;
         } catch (err: any) {
           componentMap.files = [];
@@ -698,11 +758,13 @@ export class BitMap {
       this.setComponent(componentId, newComponentMap);
       return newComponentMap;
     };
+    // validated before an existing entry is touched, so a rejected add leaves the map as it was
+    const rootDirLinux = rootDir ? pathNormalizeToLinux(rootDir) : undefined;
+    if (rootDirLinux) this.throwForExistingParentDir(componentId, rootDirLinux);
     const componentMap = getOrCreateComponentMap();
     componentMap.mainFile = mainFile;
-    if (rootDir) {
-      componentMap.rootDir = pathNormalizeToLinux(rootDir);
-      this.throwForExistingParentDir(componentMap);
+    if (rootDirLinux) {
+      componentMap.rootDir = rootDirLinux;
     }
     if (onLanesOnly) {
       componentMap.onLanesOnly = onLanesOnly;
@@ -901,7 +963,7 @@ export class BitMap {
    */
   async trackDirectoryChanges(componentMap: ComponentMap): Promise<void> {
     const filesBefore = componentMap.getFilesRelativeToConsumer();
-    await componentMap.trackDirectoryChangesHarmony(this.projectRoot, this.ignoredFiles);
+    await this.loadFilesOf(componentMap);
     const filesAfter = componentMap.getFilesRelativeToConsumer();
     const added = difference(filesAfter, filesBefore);
     const removed = difference(filesBefore, filesAfter);
@@ -1034,6 +1096,80 @@ type OutputFileParams = {
   override?: boolean;
   prefixMessage?: string;
 };
+
+/**
+ * the workspace-root component tracks `.bitmap` so a git-free workspace can be restored from the
+ * scope. two fields of every entry change on a snap - including the root component's own entry -
+ * so versioning them verbatim would leave that component modified immediately after every snap,
+ * forever, and never converge: `version`, and `config`, which is the pending config - a snap stores
+ * it in the version and removes it from the map. only the durable part of the map is versioned:
+ * which components exist and where they live. the versions and the config are restored from the
+ * component heads on import, which is the correct source for them anyway.
+ *
+ * `scope` is deliberately kept: it changes once (on the first export) and is then stable, so it
+ * costs one extra snap rather than perpetual drift. clearing it would lose the identity of
+ * components belonging to a scope other than the workspace default - on restore they would all
+ * collapse onto the default scope, and same-named components from different scopes would overwrite
+ * each other.
+ */
+/**
+ * whether a versioned map is the workspace map of the given component: it lists the component itself
+ * as the owner of the workspace root. this is what tells a workspace-root component from an ordinary
+ * one that happens to carry a file of that name, when it is written to ".".
+ */
+export function isWorkspaceMapOwnedBy(rawContent: Buffer | string, id: ComponentID): boolean {
+  let parsed: Record<string, any> | undefined;
+  try {
+    parsed = json.parse(rawContent.toString(), undefined, true) as Record<string, any> | undefined;
+  } catch {
+    return false;
+  }
+  // the map keys an entry by name, and by "scope/name" when another scope has the same name. the
+  // qualified key is checked first: with both present, the bare one is the other scope's component.
+  const entry = parsed?.[id.toStringWithoutVersion()] ?? parsed?.[id.fullName];
+  if (!entry || typeof entry !== 'object' || entry.rootDir !== WORKSPACE_ROOT_DIR) return false;
+  // an entry snapped before its export carries its scope as defaultScope. either way it has to be the
+  // scope the component comes from - an empty one is not a wildcard.
+  const entryScope = entry.scope || entry.defaultScope;
+  return Boolean(entryScope) && entryScope === id.scope;
+}
+
+export function normalizeBitmapContentForVersioning(rawContent: string): string {
+  const parsed = json.parse(rawContent, undefined, true) as Record<string, any> | undefined;
+  if (!parsed) return rawContent;
+  // the lane the workspace is on, and whether it was exported: workspace state that export and
+  // lane switch change, not part of the map of components
+  delete parsed[LANE_KEY];
+  Object.keys(parsed).forEach((key) => {
+    const entry = parsed[key];
+    if (key === SCHEMA_FIELD || !entry || typeof entry !== 'object') return;
+    if (entry.version !== undefined) entry.version = '';
+    delete entry.config;
+  });
+  return formatBitMapFile(parsed);
+}
+
+/**
+ * the contents of a component file as bit versions and compares them. only the workspace-root
+ * component's `.bitmap` is transformed (see normalizeBitmapContentForVersioning); every other file is
+ * returned as is. every path that loads a file for versioning or for a modified-check has to go
+ * through here, otherwise the file on disk and the model disagree and the root never converges.
+ */
+export function fileContentsForVersioning(
+  componentMap: ComponentMap,
+  relativePath: PathLinux,
+  contents: Buffer
+): Buffer {
+  if (componentMap.rootDir !== WORKSPACE_ROOT_DIR || !isWorkspaceMapFile(relativePath)) return contents;
+  return Buffer.from(normalizeBitmapContentForVersioning(contents.toString()));
+}
+
+/**
+ * the `.bitmap` file as written to disk: the auto-generated banner, the prefix message and the map.
+ */
+function formatBitMapFile(components: Record<string, any>): string {
+  return `${AUTO_GENERATED_MSG}${BITMAP_PREFIX_MESSAGE}${JSON.stringify(components, null, 4)}`;
+}
 
 async function outputFile({
   filePath,
