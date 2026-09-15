@@ -43,6 +43,9 @@ export function CodeCompareView({
 
   const componentCompareContext = useComponentCompare();
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
+  const fileStatus = fileCompareDataByName?.get(fileName)?.status;
+  const baseIdString = baseId?.toString();
+  const compareIdString = compareId?.toString();
 
   let defaultView: EditorViewMode = 'split';
   if (
@@ -50,7 +53,7 @@ export function CodeCompareView({
     (compareId && baseId.isEqual(compareId)) ||
     !originalFileContent ||
     !modifiedFileContent ||
-    fileCompareDataByName?.get(fileName)?.status === 'UNCHANGED'
+    fileStatus === 'UNCHANGED'
   ) {
     defaultView = 'inline';
   }
@@ -63,7 +66,7 @@ export function CodeCompareView({
 
   React.useEffect(() => {
     setView(defaultView);
-  }, [defaultView]);
+  }, [defaultView, fileName, baseIdString, compareIdString, originalFileContent, modifiedFileContent, fileStatus]);
 
   const codeNavFiles = useMemo(() => {
     return files.filter((file) => {
