@@ -118,7 +118,7 @@ export function DiffViewer({
   const codeWidthCh = useMemo(() => {
     let max = 0;
     for (const it of items) if (it.text.length > max) max = it.text.length;
-    return Math.min(Math.max(max, 40), 400);
+    return Math.max(max, 40);
   }, [items]);
 
   const expandGap = useCallback(
