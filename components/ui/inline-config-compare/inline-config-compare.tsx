@@ -128,12 +128,12 @@ export function InlineConfigCompare() {
   const sidebarAspects = useMemo(() => {
     if (loading) return undefined;
     return aspectDiffs.map(({ aspectId }) => ({
-      name: aspectId.split('/').pop() || aspectId,
+      name: aspectId,
       status: 'MODIFIED',
     }));
   }, [loading, aspectDiffs]);
 
-  // Register the same short aspect names used by the rendered data-file-id anchors. The bulk
+  // Register the same canonical aspect IDs used by the rendered data-file-id anchors. The bulk
   // compare response exposes changed field names instead, which are useful as an early placeholder
   // but cannot scroll to these aspect-level sections.
   useAspectRegistryRegister(componentIdStr || undefined, sidebarAspects);
@@ -156,7 +156,7 @@ export function InlineConfigCompare() {
         return (
           <div
             key={aspect.aspectId}
-            data-file-id={componentIdStr ? `${componentIdStr}:${shortName}` : undefined}
+            data-file-id={componentIdStr ? `${componentIdStr}:${aspect.aspectId}` : undefined}
             style={CELL_WRAP}
           >
             {aspect.configChanged && (

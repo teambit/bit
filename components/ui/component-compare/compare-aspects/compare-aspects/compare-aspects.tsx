@@ -39,7 +39,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
       () => query,
       () => location
     );
-    return state?.controlled && !hook?.useUpdatedUrlFromQuery ? controlledHref : href;
+    return state?.controlled ? controlledHref : href;
   };
 
   return (

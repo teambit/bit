@@ -309,6 +309,7 @@ function CompareView({
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedFile, setSelectedFile] = useState<string>();
   const diffPaneRef = useRef<HTMLDivElement>(null);
+  const pendingScrollCleanupRef = useRef<(() => void) | undefined>(undefined);
 
   const syncUrl = React.useCallback((key: string, value: string | undefined) => {
     const url = new URL(window.location.href);
@@ -454,9 +455,18 @@ function CompareView({
   );
 
   useEffect(() => {
+    pendingScrollCleanupRef.current?.();
+    pendingScrollCleanupRef.current = undefined;
     setSelectedId(undefined);
     setSelectedFile(undefined);
   }, [viewMode]);
+
+  useEffect(
+    () => () => {
+      pendingScrollCleanupRef.current?.();
+    },
+    []
+  );
 
   // If the active view has no content, fall back to the first view that does.
   useEffect(() => {
@@ -509,7 +519,10 @@ function CompareView({
                 const nextId = id || undefined;
                 setSelectedId(nextId);
                 setSelectedFile(fileName);
-                if (nextId) scrollToCompareSelection(diffPaneRef.current, nextId, fileName);
+                pendingScrollCleanupRef.current?.();
+                pendingScrollCleanupRef.current = nextId
+                  ? scrollToCompareSelection(diffPaneRef.current, nextId, fileName)
+                  : undefined;
               }}
             />
           )}
@@ -542,19 +555,66 @@ function CompareView({
   );
 }
 
-function scrollToCompareSelection(pane: HTMLDivElement | null, componentId: string, fileName?: string) {
-  if (!pane) return;
+function scrollToCompareSelection(
+  pane: HTMLDivElement | null,
+  componentId: string,
+  fileName?: string
+): (() => void) | undefined {
+  if (!pane) return undefined;
   const selector = fileName
     ? `[data-file-id="${CSS.escape(componentId)}:${CSS.escape(fileName)}"]`
     : `[data-component-id="${CSS.escape(componentId)}"]`;
 
-  requestAnimationFrame(() => {
+  let cancelled = false;
+  let observer: MutationObserver | undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let frameId: number | undefined;
+  let settleCleanup: (() => void) | undefined;
+
+  const findAndScroll = () => {
+    if (cancelled) return false;
     const element = pane.querySelector(selector);
-    if (!element) return;
-    const elementRect = element.getBoundingClientRect();
-    const paneRect = pane.getBoundingClientRect();
-    pane.scrollTo({ top: elementRect.top - paneRect.top + pane.scrollTop, behavior: 'smooth' });
+    if (!element) return false;
+    observer?.disconnect();
+    if (timeoutId) clearTimeout(timeoutId);
+    settleCleanup = scrollElementToPaneTop(pane, element);
+    return true;
+  };
+
+  frameId = requestAnimationFrame(() => {
+    if (findAndScroll()) return;
+    observer = new MutationObserver(findAndScroll);
+    observer.observe(pane, { childList: true, subtree: true });
+    timeoutId = setTimeout(() => observer?.disconnect(), 5000);
   });
+
+  return () => {
+    cancelled = true;
+    if (frameId !== undefined) cancelAnimationFrame(frameId);
+    if (timeoutId) clearTimeout(timeoutId);
+    observer?.disconnect();
+    settleCleanup?.();
+  };
+}
+
+function scrollElementToPaneTop(pane: HTMLDivElement, element: Element) {
+  let frameId: number | undefined;
+  let cancelled = false;
+  let passes = 0;
+
+  const settle = () => {
+    if (cancelled || !pane.isConnected || !element.isConnected) return;
+    const drift = element.getBoundingClientRect().top - pane.getBoundingClientRect().top;
+    pane.scrollTo({ top: drift + pane.scrollTop, behavior: 'instant' });
+    passes += 1;
+    if (Math.abs(drift) > 2 && passes < 4) frameId = requestAnimationFrame(settle);
+  };
+
+  settle();
+  return () => {
+    cancelled = true;
+    if (frameId !== undefined) cancelAnimationFrame(frameId);
+  };
 }
 
 function CompareViewSkeleton() {
