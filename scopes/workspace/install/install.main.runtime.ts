@@ -1434,7 +1434,7 @@ export class InstallMain {
     );
     const workspaceRes = res as WorkspaceLinkResults;
 
-    const legacyResults = await this.linkCodemods(compDirMap, options);
+    const legacyResults = await this.linkCodemods(compDirMap, options, ids);
     workspaceRes.legacyLinkResults = legacyResults.linksResults;
     workspaceRes.legacyLinkCodemodResults = legacyResults.codemodResults;
 
@@ -1461,9 +1461,16 @@ export class InstallMain {
     );
   }
 
-  async linkCodemods(compDirMap: ComponentMap<string>, options?: { rewire?: boolean }) {
+  /**
+   * `compDirMap` holds the components that are packages (see getComponentsDirectory), which is what
+   * the node_modules links are for. the rewire codemod is about source files instead: the
+   * workspace-root component's own files can have relative imports into the components nested in
+   * it just like any other component, so the codemod runs on the ids that were asked for, an empty
+   * list meaning the whole workspace.
+   */
+  async linkCodemods(compDirMap: ComponentMap<string>, options?: { rewire?: boolean }, requestedIds?: ComponentID[]) {
     const bitIds = compDirMap.toArray().map(([component]) => component.id);
-    return linkToNodeModulesWithCodemod(this.workspace, bitIds, options?.rewire ?? false);
+    return linkToNodeModulesWithCodemod(this.workspace, bitIds, options?.rewire ?? false, requestedIds);
   }
 
   async link(ids: string[], options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {

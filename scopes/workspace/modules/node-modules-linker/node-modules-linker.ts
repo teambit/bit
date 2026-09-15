@@ -333,14 +333,19 @@ export default class NodeModuleLinker {
   }
 }
 
+/**
+ * @param idsToRewire the components the codemod rewrites. defaults to the linked ones. an empty
+ * list means every component in the workspace.
+ */
 export async function linkToNodeModulesWithCodemod(
   workspace: Workspace,
   bitIds: ComponentID[],
-  changeRelativeToModulePaths: boolean
+  changeRelativeToModulePaths: boolean,
+  idsToRewire: ComponentID[] = bitIds
 ) {
   let codemodResults;
   if (changeRelativeToModulePaths) {
-    codemodResults = await changeCodeFromRelativeToModulePaths(workspace, bitIds);
+    codemodResults = await changeCodeFromRelativeToModulePaths(workspace, idsToRewire);
   }
   const linksResults = await linkToNodeModulesByIds(workspace, bitIds);
   return { linksResults, codemodResults };
