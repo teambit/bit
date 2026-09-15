@@ -5,6 +5,7 @@ import {
   moduleFileExtensions,
   shouldUseSourceMap,
   resolveAlias,
+  resolveModules,
   resolveFallback,
   cssParser,
   mjsRule,
@@ -66,6 +67,7 @@ export default function createRspackSsrConfig(
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
       alias: resolveAlias({ profile: isEnvProductionProfile }),
       fallback: resolveFallback,
+      modules: resolveModules,
     },
 
     module: {

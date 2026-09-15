@@ -620,7 +620,7 @@ export class DependenciesMain {
     const currentLockfilePath = path.join(virtualStoreDir, 'lock.yaml');
     if (!(await fs.pathExists(currentLockfilePath))) return entries;
     const lockfile = parseYaml(await fs.readFile(currentLockfilePath, 'utf8'));
-    return Object.keys(lockfile?.packages ?? {}).map((depPath: string) => depPathToDirName(depPath));
+    return virtualStoreDirNamesFromLockfile(lockfile);
   }
 
   /** Inspect all .pnpm entries for a specific package, showing each installed copy and its peer combo. */
@@ -750,3 +750,21 @@ function isComponentId(depName: string) {
 DependenciesAspect.addRuntime(DependenciesMain);
 
 export default DependenciesMain;
+
+/**
+ * The virtual-store directory names a lockfile accounts for.
+ *
+ * `snapshots` is the section keyed by the peer-suffixed dep paths those directory names are derived
+ * from; `packages` drops the suffix, so reading it collapses every peer variant of a package into a
+ * single entry and undercounts the copies the diagnostics exist to report. The global virtual store
+ * makes this the only path - no package directories are materialized under the project's own
+ * `.pnpm` - so the difference is no longer academic. `packages` stays as the fallback for a
+ * lockfile written before `snapshots` existed.
+ */
+export function virtualStoreDirNamesFromLockfile(lockfile: {
+  snapshots?: Record<string, unknown>;
+  packages?: Record<string, unknown>;
+} | null | undefined): string[] {
+  const entries = lockfile?.snapshots ?? lockfile?.packages ?? {};
+  return Object.keys(entries).map((depPath) => depPathToDirName(depPath));
+}
