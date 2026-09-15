@@ -1,5 +1,5 @@
 import doctrine from 'doctrine';
-import * as reactDocs from 'react-docgen';
+// import * as reactDocs from 'react-docgen';
 
 import { logger } from '@teambit/legacy.logger';
 import type { PathOsBased } from '@teambit/legacy.utils';
@@ -97,6 +97,7 @@ function stringifyType(prop: { name: string; value?: any; raw?: string }): strin
 }
 
 export default async function parse(data: string, filePath: PathOsBased): Promise<Doclet[] | undefined> {
+  const reactDocs = await import('react-docgen');
   const doclets: Array<Doclet> = [];
   try {
     const componentsInfo = reactDocs.parse(data, reactDocs.resolver.findAllExportedComponentDefinitions, undefined, {
