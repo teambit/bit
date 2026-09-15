@@ -82,10 +82,16 @@ export function APINodeDetails({
         {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
         {linkComment && (
           <div className={styles.apiNodeDetailsLink}>
-            {linkPlaceholder && <span>{linkPlaceholder}: </span>}
-            <a href={linkURL} target="_blank" rel="noopener noreferrer">
-              {linkURL}
-            </a>
+            {linkURL ? (
+              <>
+                {linkPlaceholder && <span>{linkPlaceholder}: </span>}
+                <a href={linkURL} target="_blank" rel="noopener noreferrer">
+                  {linkURL}
+                </a>
+              </>
+            ) : (
+              <span>{linkComment}</span>
+            )}
           </div>
         )}
         {signature && (
