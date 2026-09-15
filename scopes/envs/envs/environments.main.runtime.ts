@@ -240,9 +240,11 @@ export class EnvsMain {
       'teambit.envs/env',
       'teambit.mdx/readme',
       'teambit.harmony/bit-custom-aspect',
-      // note: empty-env is deliberately not listed here although it is a core aspect. components
-      // listed here are excluded from the env load-groups (their own env is assumed to be core as
-      // well), while empty-env's own env is an external env that must be loaded like any other.
+      // empty-env ships with bit like the envs above. leaving it out makes every isCoreEnv() guard
+      // treat it as an external env: `bit install` then adds its npm package to the env root and
+      // pulls the entire bit core into the workspace, and env-policy/dev-files lookups fetch the
+      // env component from the remote instead of using the loaded aspect.
+      'teambit.harmony/empty-env',
     ];
   }
 
