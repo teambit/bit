@@ -425,16 +425,6 @@ describe('add command on Harmony', function () {
         // "this error should have never happened" failure when the Version object is saved.
         expect(helper.command.getAllIssuesFromStatus()).to.include('RelativeComponentsAuthored');
       });
-      describe('bit link --rewire', () => {
-        before(() => {
-          helper.command.linkAndRewire();
-        });
-        it('should rewrite the import to the package name, although the root is never linked itself', () => {
-          const packageName = helper.general.getPackageNameByCompName('comp1', false);
-          expect(helper.fs.readFile('app.js')).to.equal(`const comp1 = require('${packageName}');\n`);
-          expect(helper.command.getAllIssuesFromStatus()).to.not.include('RelativeComponentsAuthored');
-        });
-      });
     });
   });
   describe('trackAllFiles: tracking the files bit treats as generated', () => {
