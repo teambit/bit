@@ -4,10 +4,9 @@ import pMapSeries from 'p-map-series';
 import type { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import type { Lane, ModelComponent, Version } from '@teambit/objects';
+import type { ModelComponent, Version } from '@teambit/objects';
 import { VERSION_ZERO, Ref } from '@teambit/objects';
 import { BitError } from '@teambit/bit-error';
-import { isTag } from '@teambit/component-version';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { LoadSpan } from '@teambit/harmony.modules.load-trace';
@@ -17,16 +16,12 @@ import type { ScopeMain } from './scope.main.runtime';
 export class ScopeComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   private importedComponentsCache: InMemoryCache<boolean>;
-  // one fetch per missing Version object, shared by concurrent loads. a miss is remembered for a minute, so a
-  // long-running process (watch, server) does not hit the remote on every load while it lacks the version
-  private missingVersionFetches: InMemoryCache<Promise<boolean>>;
   constructor(
     private scope: ScopeMain,
     private logger: Logger
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
-    this.missingVersionFetches = createInMemoryCache({ maxAge: 1000 * 60 }); // 1 min
   }
 
   async get(id: ComponentID, importIfMissing = true, useCache = true): Promise<Component | undefined> {
@@ -87,7 +82,7 @@ export class ScopeComponentLoader {
 
     if (versionStr === VERSION_ZERO) return undefined;
     const newId = id.changeVersion(versionStr);
-    const version = await this.loadVersionOrFetch(modelComponent, newId, span, importIfMissing);
+    const version = await this.loadVersionOrFetch(modelComponent, newId, importIfMissing);
     const versionOriginId = version.originId;
     if (versionOriginId && !versionOriginId.isEqualWithoutVersion(id)) {
       throw new BitError(
@@ -112,53 +107,31 @@ export class ScopeComponentLoader {
   private async loadVersionOrFetch(
     modelComponent: ModelComponent,
     id: ComponentID,
-    span: LoadSpan,
     importIfMissing: boolean
   ): Promise<Version> {
     const repo = this.scope.legacyScope.objects;
     const versionStr = id.version as string;
     const version = await modelComponent.loadVersion(versionStr, repo, false);
     if (version) return version;
-    if (importIfMissing && this.scope.isExported(id)) {
-      span.setAttribute('missingVersionFetched', 'true');
-      // the lane decides where the version is looked for, so the outcome is remembered per lane
+    const idStr = id.toString();
+    if (importIfMissing && this.scope.isExported(id) && !this.importedComponentsCache.get(idStr)) {
+      this.importedComponentsCache.set(idStr, true);
+      this.logger.warn(`ScopeComponentLoader, the Version object of ${idStr} is missing locally, fetching it`);
+      // on a lane, the importer fetches a component of the lane from the lane's scope and the rest from their own scope
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
-      const key = lane ? `${id.toString()} (lane ${lane.id()})` : id.toString();
-      let fetched = this.missingVersionFetches.get(key);
-      if (!fetched) {
-        fetched = this.fetchMissingVersion(modelComponent, id, lane);
-        this.missingVersionFetches.set(key, fetched);
-      }
-      if (await fetched) this.missingVersionFetches.delete(key);
-    }
-    // still missing: throws VersionNotFoundOnFS
-    return modelComponent.loadVersion(versionStr, repo);
-  }
-
-  /**
-   * @returns whether the Version object is on the filesystem after fetching it from the sources it may live on
-   */
-  private async fetchMissingVersion(modelComponent: ModelComponent, id: ComponentID, lane?: Lane): Promise<boolean> {
-    const repo = this.scope.legacyScope.objects;
-    for (const source of sourcesOfMissingVersion(id, lane)) {
-      const from = source ? `lane ${source.id()}` : 'its scope';
-      this.logger.warn(
-        `ScopeComponentLoader, the Version object of ${id.toString()} is missing locally, fetching it from ${from}`
-      );
       try {
-        await loadSpan('scope-import-missing-version', { id: id.toString() }, () =>
+        await loadSpan('scope-import', { id: idStr }, () =>
           this.scope.import([id], {
-            lane: source,
-            reason: `${id.toString()} because its Version object is missing from the local scope`,
+            lane,
+            reason: `${idStr} because its Version object is missing from the local scope`,
           })
         );
       } catch (err: any) {
-        this.logger.error(`ScopeComponentLoader, failed fetching ${id.toString()} from ${from}`, err);
-        continue;
+        this.logger.error(`ScopeComponentLoader, failed fetching the missing Version object of ${idStr}`, err);
       }
-      if (await modelComponent.loadVersion(id.version as string, repo, false)) return true;
     }
-    return false;
+    // throws VersionNotFoundOnFS if still missing
+    return modelComponent.loadVersion(versionStr, repo);
   }
 
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {
@@ -307,16 +280,4 @@ export class ScopeComponentLoader {
     );
     return state;
   }
-}
-
-/**
- * a component off the current lane lives on its own scope only (the importer fetches such an id from there even when
- * given the lane). on the lane, a snap lives on the lane's scope and a tag on the component's scope, but a lean lane
- * scope may lack main history and a merged snap may already be on the component's scope, so the other is tried as
- * well. the importer's own lane-to-main fallback does not kick in here: it throws when the component object exists
- * locally without its Version.
- */
-function sourcesOfMissingVersion(id: ComponentID, lane?: Lane): Array<Lane | undefined> {
-  if (!lane?.getComponent(id)) return [undefined];
-  return isTag(id.version) ? [undefined, lane] : [lane, undefined];
 }
