@@ -9,6 +9,8 @@ $editor-padding: 56px;
   display: flex;
   flex-direction: column;
   height: calc(100% - $editor-padding);
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .name {
@@ -20,9 +22,9 @@ $editor-padding: 56px;
 .componentCompareAspectConfigDiff,
 .componentCompareAspectCalculatedDiff {
   display: flex;
-  flex: 1;
+  flex: 1 0 auto;
   padding: 0px 8px;
-  height: 100%;
+  min-height: 0;
   flex-direction: column;
 }
 

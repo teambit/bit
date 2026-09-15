@@ -293,11 +293,26 @@ function DiffBody({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const rafRef = useRef<number | null>(null);
+  const previousViewRef = useRef(view);
 
   const total = rows.length;
   const totalHeight = total * ROW_H;
   // only window when virtualization is enabled AND the file is large enough to warrant it.
   const windowing = virtualize && total > VIRTUALIZE_THRESHOLD;
+  const maxScrollTop = windowing ? Math.max(0, totalHeight - maxHeight) : 0;
+  // Clamp during render as well as synchronizing state below. This prevents even one paint from
+  // slicing beyond the new row model when a split/unified switch reduces the number of rows.
+  const effectiveScrollTop = Math.min(scrollTop, maxScrollTop);
+
+  useEffect(() => {
+    const viewChanged = previousViewRef.current !== view;
+    previousViewRef.current = view;
+    setScrollTop((current) => {
+      const next = viewChanged ? 0 : Math.min(current, maxScrollTop);
+      if (scrollRef.current && scrollRef.current.scrollTop !== next) scrollRef.current.scrollTop = next;
+      return current === next ? current : next;
+    });
+  }, [view, maxScrollTop]);
 
   // cancel a pending scroll RAF on unmount — DiffBody is conditionally mounted (collapse hides it),
   // so a queued frame could otherwise fire setScrollTop() after unmount.
@@ -320,8 +335,8 @@ function DiffBody({
   let end = total;
   if (windowing) {
     const viewport = maxHeight;
-    start = Math.max(0, Math.floor(scrollTop / ROW_H) - OVERSCAN);
-    end = Math.min(total, Math.ceil((scrollTop + viewport) / ROW_H) + OVERSCAN);
+    start = Math.max(0, Math.floor(effectiveScrollTop / ROW_H) - OVERSCAN);
+    end = Math.min(total, Math.ceil((effectiveScrollTop + viewport) / ROW_H) + OVERSCAN);
   }
   const visible = windowing ? rows.slice(start, end) : rows;
   const offsetY = start * ROW_H;
