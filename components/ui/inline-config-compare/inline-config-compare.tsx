@@ -128,7 +128,9 @@ export function InlineConfigCompare() {
   }, [loading, baseData, compareData]);
 
   const sidebarAspects = useMemo(() => {
-    if (loading) return undefined;
+    // Clear entries from the previous base/compare pair while the canonical aspect IDs load. The
+    // bulk compare result only has field names, which are not valid targets for this view's anchors.
+    if (loading) return [];
     return aspectDiffs.map(({ aspectId, status }) => ({
       name: aspectId,
       status,
