@@ -11,3 +11,29 @@ describe('buildSections', () => {
     expect(buildSections(items, 1)).toEqual([{ kind: 'gap', id: 'gap-all', hidden: items }]);
   });
 });
+
+describe('computeDiffLines', () => {
+  it('ignores edge whitespace for matching while preserving both rendered sources', () => {
+    const items = computeDiffLines('  const answer = 42;  \n', 'const answer = 42;\n', {
+      ignoreTrimWhitespace: true,
+    });
+
+    expect(items).toEqual([
+      {
+        type: 'context',
+        oldLn: 1,
+        newLn: 1,
+        text: 'const answer = 42;',
+        oldText: '  const answer = 42;  ',
+        newText: 'const answer = 42;',
+      },
+    ]);
+  });
+
+  it('preserves substantive internal-space changes', () => {
+    const items = computeDiffLines('const answer = 42;\n', 'const  answer = 42;\n', {
+      ignoreTrimWhitespace: true,
+    });
+    expect(items.map(({ type }) => type)).toEqual(['del', 'add']);
+  });
+});

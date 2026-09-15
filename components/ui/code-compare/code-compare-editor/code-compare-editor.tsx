@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DiffViewer } from '@teambit/code.ui.diff-viewer';
 import type { EditorSettingsState } from '../code-compare-editor-settings';
-import { normalizeWhitespace } from './normalize-whitespace';
 
 export type CodeCompareEditorProps = {
   language: string;
@@ -55,8 +54,9 @@ export function CodeCompareEditor({
     <DiffViewer
       key={`${originalPath}-${modifiedPath}-${editorViewMode}`}
       fileName={modifiedPath || originalPath}
-      oldContent={normalizeWhitespace(originalFileContent, ignoreWhitespace)}
-      newContent={normalizeWhitespace(modifiedFileContent, ignoreWhitespace)}
+      oldContent={originalFileContent || ''}
+      newContent={modifiedFileContent || ''}
+      ignoreTrimWhitespace={ignoreWhitespace}
       language={language}
       view={editorViewMode === 'inline' ? 'unified' : 'split'}
       contextLines={diffOnly ? 3 : Number.MAX_SAFE_INTEGER}

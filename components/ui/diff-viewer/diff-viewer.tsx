@@ -20,6 +20,8 @@ export type DiffViewerProps = {
   newContent: string;
   /** language id override (otherwise inferred from the file extension). */
   language?: string;
+  /** ignore leading/trailing whitespace while matching lines without altering rendered source. */
+  ignoreTrimWhitespace?: boolean;
   /** controlled view mode. */
   view?: DiffViewMode;
   /** initial view mode when uncontrolled. */
@@ -66,6 +68,7 @@ export function DiffViewer({
   oldContent,
   newContent,
   language,
+  ignoreTrimWhitespace = false,
   view: controlledView,
   defaultView = 'split',
   onViewChange,
@@ -94,7 +97,10 @@ export function DiffViewer({
 
   const lang = normalizeLanguage(language) ?? langFromFileName(fileName);
 
-  const items = useMemo(() => computeDiffLines(oldContent, newContent), [oldContent, newContent]);
+  const items = useMemo(
+    () => computeDiffLines(oldContent, newContent, { ignoreTrimWhitespace }),
+    [oldContent, newContent, ignoreTrimWhitespace]
+  );
   const stats = useMemo(() => statsFromItems(items), [items]);
   const sections = useMemo(() => buildSections(items, contextLines), [items, contextLines]);
   const [gapStateStore, setGapStateStore] = useState<{
@@ -357,7 +363,9 @@ function UnifiedRow({ item, oldHl, newHl }: { item: DiffLineItem; oldHl: HlLines
       <span className={classNames(styles.gutter, styles.gutterNum)}>{item.oldLn ?? ''}</span>
       <span className={classNames(styles.gutter, styles.gutterNum)}>{item.newLn ?? ''}</span>
       <span className={classNames(styles.gutter, styles.sign)}>{sign}</span>
-      <code className={styles.code}>{renderLineContent(hlForLine(item, oldHl, newHl), item.text, item.intra)}</code>
+      <code className={styles.code}>
+        {renderLineContent(hlForLine(item, oldHl, newHl), item.newText ?? item.text, item.intra)}
+      </code>
     </div>
   );
 }
@@ -402,10 +410,19 @@ function SplitCell({
   }
   const tone = item.type === 'add' ? styles.addLine : item.type === 'del' ? styles.delLine : undefined;
   const num = side === 'left' ? item.oldLn : item.newLn;
+  const text = side === 'left' ? (item.oldText ?? item.text) : (item.newText ?? item.text);
+  const highlighted =
+    side === 'left'
+      ? item.oldLn
+        ? (oldHl?.[item.oldLn - 1] ?? null)
+        : null
+      : item.newLn
+        ? (newHl?.[item.newLn - 1] ?? null)
+        : null;
   return (
     <div className={classNames(styles.splitCell, tone)}>
       <span className={classNames(styles.gutter, styles.gutterNum)}>{num ?? ''}</span>
-      <code className={styles.code}>{renderLineContent(hlForLine(item, oldHl, newHl), item.text, item.intra)}</code>
+      <code className={styles.code}>{renderLineContent(highlighted, text, item.intra)}</code>
     </div>
   );
 }
