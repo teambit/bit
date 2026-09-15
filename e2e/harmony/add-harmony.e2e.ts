@@ -122,6 +122,19 @@ describe('add command on Harmony', function () {
       const quickStatus = JSON.parse(helper.command.runCmd('bit status --quick --json'));
       expect(quickStatus.modified).to.have.lengthOf(0);
     });
+    it('should record on the nested component the root it was snapped in, at the version the root got in that snap', () => {
+      // aspect data written by the snap, so it travels with the component to any scope. a ci or a
+      // clone uses it to fetch the root files (lockfile, tsconfig, scripts) this version was made with.
+      const rootHead = helper.command.getHead('ws-root');
+      const rootData = helper.command
+        .catComponent('comp1@latest')
+        .extensions.find((ext) => ext.name === 'teambit.workspace/workspace-root')?.data;
+      expect(rootData).to.deep.equal({ root: `${helper.scopes.remote}/ws-root@${rootHead}` });
+    });
+    it('should not record it on the root component itself', () => {
+      const extensionNames = helper.command.catComponent('ws-root@latest').extensions.map((ext) => ext.name);
+      expect(extensionNames).to.not.include('teambit.workspace/workspace-root');
+    });
     describe('adding a new component inside the workspace root', () => {
       before(() => {
         helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";\n');

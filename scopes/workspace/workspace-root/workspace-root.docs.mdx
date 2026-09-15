@@ -1,0 +1,28 @@
+---
+description: The component that owns the workspace root, and the record its members keep of it
+labels: ['core aspect', 'workspace', 'workspace-root']
+---
+
+## Overview
+
+A workspace-root component is tracked at the workspace root (`rootDir: "."`). It versions the
+workspace's own files, such as `workspace.jsonc`, `.bitmap`, the lockfile and repo-level scripts and
+configs, and a git-free workspace is restored from it.
+
+This aspect tells the root apart in a workspace and records, on every member the workspace snaps,
+which root it was snapped in and at which version:
+
+```json
+"teambit.workspace/workspace-root": {
+  "data": { "root": "my-org.my-scope/my-root@0.0.7" }
+}
+```
+
+The record is aspect data, not config, so it never makes a component modified and the root moving on
+does not touch its members. Its consumers are tools that need the root's files a version was made
+with, such as a CI building the component or a workspace clone.
+
+## Terminology
+
+"Workspace-root component", because "root component" is taken by the dependency-resolver's
+`rootComponents`, and "workspace component" means any component loaded from a workspace.

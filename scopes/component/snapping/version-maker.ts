@@ -33,6 +33,7 @@ import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependenc
 import type { Registries } from '@teambit/pkg.entities.registry';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
 import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import { findWorkspaceRootMap, writeWorkspaceRoot } from '@teambit/workspace-root';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import type { LaneId } from '@teambit/lane-id';
@@ -148,6 +149,7 @@ export class VersionMaker {
     this.params.isSnap ? this.setHashes() : await this.setFutureVersions(autoTagIds);
     // go through all dependencies and update their versions
     this.updateDependenciesVersions();
+    this.recordWorkspaceRoot();
     await this.addLogToComponents(componentsToTag, autoTagComponents, messagePerId);
     // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
     // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
@@ -749,6 +751,23 @@ export class VersionMaker {
       });
       changeExtensionsVersion(oneComponentToTag);
       oneComponentToTag = updateDepsResolverData(oneComponentToTag);
+    });
+  }
+
+  /**
+   * every member of a workspace-root component records the root it is snapped in, at the version the
+   * root has after this batch: its new version when it is snapped along, otherwise the one in .bitmap
+   * (none when the root was never snapped). the root itself records nothing. see WorkspaceRootMain.
+   */
+  private recordWorkspaceRoot() {
+    if (!this.consumer) return;
+    const rootMap = findWorkspaceRootMap(this.consumer.bitMap);
+    if (!rootMap) return;
+    const rootInBatch = this.allComponentsToTag.find((component) => component.id.isEqualWithoutVersion(rootMap.id));
+    const rootId = rootInBatch ? rootInBatch.id.changeVersion(rootInBatch.version) : rootMap.id;
+    this.allComponentsToTag.forEach((component) => {
+      if (component.id.isEqualWithoutVersion(rootMap.id)) return;
+      writeWorkspaceRoot(component.extensions, rootId);
     });
   }
 

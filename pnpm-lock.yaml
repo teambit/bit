@@ -7636,6 +7636,9 @@ importers:
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-root':
+        specifier: workspace:*
+        version: file:scopes/workspace/workspace-root(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -8701,6 +8704,9 @@ importers:
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-root':
+        specifier: workspace:*
+        version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -9754,6 +9760,9 @@ importers:
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-root':
+        specifier: workspace:*
+        version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
@@ -10807,6 +10816,9 @@ importers:
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-root':
+        specifier: workspace:*
+        version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -11842,6 +11854,9 @@ importers:
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-root':
+        specifier: workspace:*
+        version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -12877,6 +12892,9 @@ importers:
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-root':
+        specifier: workspace:*
+        version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -25620,6 +25638,43 @@ importers:
         specifier: ^3.0.0
         version: 3.0.2
 
+  scopes/workspace/workspace-root:
+    dependencies:
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
+      '@teambit/harmony':
+        specifier: 0.4.12
+        version: 0.4.12
+      '@testing-library/react':
+        specifier: ^14.3.1
+        version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    devDependencies:
+      '@teambit/harmony.envs.core-aspect-env':
+        specifier: 2.1.1
+        version: 2.1.1(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
+
 packages:
 
   '@adobe/css-tools@4.5.0':
@@ -34290,6 +34345,11 @@ packages:
 
   '@teambit/workspace-config-files@file:scopes/workspace/workspace-config-files':
     resolution: {directory: scopes/workspace/workspace-config-files, type: directory}
+    peerDependencies:
+      chai: 5.2.1
+
+  '@teambit/workspace-root@file:scopes/workspace/workspace-root':
+    resolution: {directory: scopes/workspace/workspace-root, type: directory}
     peerDependencies:
       chai: 5.2.1
 
@@ -83334,6 +83394,48 @@ snapshots:
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
       string-format: 0.5.0
       yesno: 0.4.0
+    transitivePeerDependencies:
+      - domexception
+      - encoding
+      - graphql
+      - supports-color
+
+  '@teambit/workspace-root@file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/component-id': 1.2.4
+      '@teambit/harmony': 0.4.12
+      '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.extension-data': file:components/legacy/extension-data
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - domexception
+      - encoding
+      - graphql
+      - supports-color
+
+  '@teambit/workspace-root@file:scopes/workspace/workspace-root(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/component-id': 1.2.4
+      '@teambit/harmony': 0.4.12
+      '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.extension-data': file:components/legacy/extension-data
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     transitivePeerDependencies:
       - domexception
       - encoding
