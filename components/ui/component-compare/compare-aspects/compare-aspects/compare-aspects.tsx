@@ -32,11 +32,19 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
 
-  const getHref = (node) => {
-    if (hook?.useUpdatedUrlFromQuery || state?.controlled) return controlledHref;
-    const queryObj = Object.fromEntries(query.entries());
-    const queryString = new URLSearchParams({ ...queryObj, aspect: node.id }).toString();
-    return `${location.pathname}?${queryString}`;
+  const useHref = (node) => {
+    const hrefFromHook =
+      hook?.useUpdatedUrlFromQuery?.(
+        { aspect: node.id },
+        () => query,
+        () => location
+      ) ?? null;
+    const defaultHref = useUpdatedUrlFromQuery(
+      { aspect: node.id },
+      () => query,
+      () => location
+    );
+    return hrefFromHook || (state?.controlled ? controlledHref : defaultHref);
   };
 
   return (
@@ -71,7 +79,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
               currentFile={selected}
               drawerName={'ASPECTS'}
               widgets={[Widget]}
-              getHref={getHref}
+              getHref={useHref}
               onTreeNodeSelected={hook?.onClick}
               open={isSidebarOpen}
             />

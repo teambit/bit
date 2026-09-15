@@ -14,53 +14,6 @@ export type HlToken = { content: string; color?: string };
 /** A file's tokens, indexed by line (line `n` is `lines[n - 1]`). */
 export type HlLines = HlToken[][];
 
-/** map a file extension to a shiki language id (and the aliases shiki itself understands). */
-const EXTENSION_TO_LANG: Record<string, string> = {
-  ts: 'typescript',
-  mts: 'typescript',
-  cts: 'typescript',
-  tsx: 'tsx',
-  js: 'javascript',
-  mjs: 'javascript',
-  cjs: 'javascript',
-  jsx: 'jsx',
-  json: 'json',
-  jsonc: 'jsonc',
-  json5: 'jsonc',
-  css: 'css',
-  scss: 'scss',
-  sass: 'scss',
-  less: 'less',
-  html: 'html',
-  htm: 'html',
-  vue: 'vue',
-  md: 'markdown',
-  markdown: 'markdown',
-  mdx: 'mdx',
-  yml: 'yaml',
-  yaml: 'yaml',
-  py: 'python',
-  go: 'go',
-  rs: 'rust',
-  java: 'java',
-  sh: 'shellscript',
-  bash: 'shellscript',
-  zsh: 'shellscript',
-  graphql: 'graphql',
-  gql: 'graphql',
-  sql: 'sql',
-  // jest snapshots (`x.spec.ts.snap` / `.snap`) are JS modules (exports[`...`] = `...`), and
-  // `split('.').pop()` reduces every variant to the same `snap` extension.
-  snap: 'javascript',
-};
-
-export function langFromFileName(fileName?: string): string | undefined {
-  if (!fileName) return undefined;
-  const ext = fileName.split('.').pop()?.toLowerCase();
-  if (!ext) return undefined;
-  return EXTENSION_TO_LANG[ext];
-}
-
 let highlighterPromise: Promise<HighlighterCore> | undefined;
 const loadedLangs = new Set<string>();
 const langPromises = new Map<string, Promise<boolean>>();
@@ -154,7 +107,7 @@ export function useHighlightedLines(content: string | undefined, lang: string | 
     let cancelled = false;
     if (!lang || content === undefined) return undefined;
     if (loadedLangs.has(lang) && highlighterInstance) return undefined;
-    ensureLanguage(lang).then((ok) => {
+    void ensureLanguage(lang).then((ok) => {
       if (!ok || cancelled) return undefined;
       // ensure the sync instance is captured before we ask the tree to re-tokenize
       return getHighlighter().then((hl) => {
@@ -171,6 +124,8 @@ export function useHighlightedLines(content: string | undefined, lang: string | 
 
   // small files: memoized so re-renders from view/expand state don't re-tokenize the whole file.
   const syncLines = useMemo(() => {
+    // Reading version makes the grammar-load state an explicit input to this memoized tokenization.
+    void version;
     if (!lang || content === undefined || isLarge) return null;
     return tokenize(content, lang);
   }, [content, lang, isLarge, version]);

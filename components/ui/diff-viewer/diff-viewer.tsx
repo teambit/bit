@@ -3,7 +3,8 @@ import classNames from 'classnames';
 import type { DiffLineItem, DiffSection } from './diff-model';
 import { computeDiffLines, buildSections, statsFromItems, pairForSplit } from './diff-model';
 import type { HlLines, HlToken } from './highlighter';
-import { useHighlightedLines, langFromFileName } from './highlighter';
+import { useHighlightedLines } from './highlighter';
+import { langFromFileName, normalizeLanguage } from './language';
 import { resolveTokenColor } from './shiki-bit-theme';
 import styles from './diff-viewer.module.scss';
 
@@ -52,6 +53,7 @@ const OVERSCAN = 14;
 const EXPAND_CHUNK = 20;
 
 type GapState = { top: number; bottom: number };
+const EMPTY_GAP_STATES: Record<string, GapState> = {};
 
 /** a single rendered row: a code line (or a left/right pair) or a collapsed-gap expander. */
 type RenderRow =
@@ -89,13 +91,18 @@ export function DiffViewer({
   );
 
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
-  const [gapStates, setGapStates] = useState<Record<string, GapState>>({});
 
-  const lang = language ?? langFromFileName(fileName);
+  const lang = normalizeLanguage(language) ?? langFromFileName(fileName);
 
   const items = useMemo(() => computeDiffLines(oldContent, newContent), [oldContent, newContent]);
   const stats = useMemo(() => statsFromItems(items), [items]);
   const sections = useMemo(() => buildSections(items, contextLines), [items, contextLines]);
+  const [gapStateStore, setGapStateStore] = useState<{
+    sections?: DiffSection[];
+    states: Record<string, GapState>;
+  }>({ states: {} });
+  // A rebuilt section model gets an empty expansion state immediately, before effects run.
+  const gapStates = gapStateStore.sections === sections ? gapStateStore.states : EMPTY_GAP_STATES;
 
   // tokenize each whole file once; multi-line constructs stay correct and lines are looked up by number.
   const oldHl = useHighlightedLines(oldContent, lang);
@@ -108,17 +115,23 @@ export function DiffViewer({
     return Math.min(Math.max(max, 40), 400);
   }, [items]);
 
-  const expandGap = useCallback((id: string, hiddenLen: number, dir: 'top' | 'bottom' | 'all') => {
-    setGapStates((prev) => {
-      const cur = prev[id] ?? { top: 0, bottom: 0 };
-      const remaining = hiddenLen - cur.top - cur.bottom;
-      if (remaining <= 0) return prev;
-      if (dir === 'all') return { ...prev, [id]: { top: cur.top + remaining, bottom: cur.bottom } };
-      const add = Math.min(EXPAND_CHUNK, remaining);
-      if (dir === 'top') return { ...prev, [id]: { ...cur, top: cur.top + add } };
-      return { ...prev, [id]: { ...cur, bottom: cur.bottom + add } };
-    });
-  }, []);
+  const expandGap = useCallback(
+    (id: string, hiddenLen: number, dir: 'top' | 'bottom' | 'all') => {
+      setGapStateStore((prev) => {
+        const states = prev.sections === sections ? prev.states : {};
+        const cur = states[id] ?? { top: 0, bottom: 0 };
+        const remaining = hiddenLen - cur.top - cur.bottom;
+        if (remaining <= 0) return prev;
+        if (dir === 'all') {
+          return { sections, states: { ...states, [id]: { top: cur.top + remaining, bottom: cur.bottom } } };
+        }
+        const add = Math.min(EXPAND_CHUNK, remaining);
+        if (dir === 'top') return { sections, states: { ...states, [id]: { ...cur, top: cur.top + add } } };
+        return { sections, states: { ...states, [id]: { ...cur, bottom: cur.bottom + add } } };
+      });
+    },
+    [sections]
+  );
 
   const rows = useMemo(() => buildRenderRows(sections, gapStates, view), [sections, gapStates, view]);
 
@@ -146,9 +159,10 @@ export function DiffViewer({
           newHl={newHl}
           codeWidthCh={codeWidthCh}
           maxHeight={maxHeight}
-          // wrap makes rows variable-height (height: auto), which invalidates the fixed-ROW_H
-          // windowing math; force full, non-windowed rendering (page scrolls) whenever wrap is on.
+          // Wrap makes rows variable-height, which invalidates fixed-row windowing. Render all rows
+          // but retain the requested scroll cap through constrainHeight.
           virtualize={virtualize && !wrap}
+          constrainHeight={virtualize}
           onExpand={expandGap}
         />
       )}
@@ -255,6 +269,7 @@ function DiffBody({
   codeWidthCh,
   maxHeight,
   virtualize,
+  constrainHeight,
   onExpand,
 }: {
   rows: RenderRow[];
@@ -265,6 +280,8 @@ function DiffBody({
   maxHeight: number;
   /** when false, the file renders fully expanded with no inner scroll/windowing (page scrolls). */
   virtualize: boolean;
+  /** keep the body bounded even when wrapping disables fixed-row virtualization. */
+  constrainHeight: boolean;
   onExpand: (id: string, hiddenLen: number, dir: 'top' | 'bottom' | 'all') => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -304,8 +321,8 @@ function DiffBody({
   const offsetY = start * ROW_H;
 
   const bodyStyle: React.CSSProperties = {
-    // no cap when virtualization is off — the file expands and the host page scrolls.
-    maxHeight: virtualize ? maxHeight : undefined,
+    // Wrapped rows cannot use fixed-height virtualization, but still need the caller's scroll cap.
+    maxHeight: constrainHeight ? maxHeight : undefined,
     // a stable horizontal track so every (virtualized) row aligns; gutters stay sticky over it.
     ['--diff-code-width' as any]: `${codeWidthCh}ch`,
     ['--diff-row-h' as any]: `${ROW_H}px`,

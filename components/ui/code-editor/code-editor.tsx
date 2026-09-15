@@ -1,6 +1,11 @@
 import React from 'react';
 import classnames from 'classnames';
-import { langFromFileName, resolveTokenColor, useHighlightedLines } from '@teambit/code.ui.diff-viewer';
+import {
+  langFromFileName,
+  normalizeLanguage,
+  resolveTokenColor,
+  useHighlightedLines,
+} from '@teambit/code.ui.diff-viewer';
 import styles from './code-editor.module.scss';
 
 /**
@@ -66,7 +71,7 @@ function HighlightedCode({ content, language }: { content: string; language?: st
  * the shared Shiki highlighter and does not load executable editor code from a CDN.
  */
 export function CodeEditor({ fileContent = '', filePath, language, className, height }: CodeEditorProps) {
-  const resolvedLanguage = language || langFromFileName(filePath) || 'typescript';
+  const resolvedLanguage = normalizeLanguage(language) || langFromFileName(filePath) || 'typescript';
 
   return (
     <section

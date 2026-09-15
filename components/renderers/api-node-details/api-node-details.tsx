@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { H6 } from '@teambit/documenter.ui.heading';
 import { CodeEditor } from '@teambit/code.ui.code-editor';
 import classnames from 'classnames';
@@ -38,9 +38,22 @@ export function APINodeDetails({
 }: APINodeDetailsProps) {
   const query = useQuery();
   const rootRef = useRef<HTMLDivElement | null>(null) as React.MutableRefObject<HTMLDivElement>;
-  const [containerSize] = useState<{ width?: number }>({});
+  const [containerSize, setContainerSize] = useState<{ width?: number }>({});
   const currentQueryParams = query.toString();
   const indexHidden = (containerSize.width ?? 0) < INDEX_THRESHOLD_WIDTH;
+
+  useEffect(() => {
+    const container = rootRef.current;
+    if (!container) return undefined;
+
+    const updateSize = () => setContainerSize({ width: container.getBoundingClientRect().width });
+    updateSize();
+
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [currentQueryParams]);
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
   const comment =

@@ -5,6 +5,7 @@ import { CodeEditorProvider } from './code-editor.provider';
 
 jest.mock('@teambit/code.ui.diff-viewer', () => ({
   langFromFileName: () => 'typescript',
+  normalizeLanguage: (language?: string) => language,
   resolveTokenColor: () => undefined,
   useHighlightedLines: () => null,
 }));

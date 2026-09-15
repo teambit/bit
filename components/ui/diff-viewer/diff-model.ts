@@ -183,6 +183,7 @@ export function buildSections(items: DiffLineItem[], context: number = DEFAULT_C
     if (items[i].type !== 'context') changedIdx.push(i);
   }
   if (changedIdx.length === 0) {
+    if (context >= items.length) return items.length ? [{ kind: 'lines', items }] : [];
     // an unchanged file: collapse everything into one expandable gap.
     return items.length ? [{ kind: 'gap', id: 'gap-all', hidden: items }] : [];
   }

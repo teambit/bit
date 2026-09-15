@@ -29,25 +29,15 @@ export function Widget({ node }: WidgetProps<any>) {
 }
 
 export function getAspectStatus(aspectA?: ComponentAspectData, aspectB?: ComponentAspectData): CompareStatus | null {
-  const isUndefined = (data) => data === undefined;
-  const isDeleted = (base, compare) => {
-    return isUndefined(compare) && !isUndefined(base);
-  };
-  const isNew = (base, compare) => {
-    return !isUndefined(compare) && isUndefined(base);
-  };
+  if (aspectA && !aspectB) return 'deleted';
+  if (!aspectA && aspectB) return 'new';
+  if (!aspectA || !aspectB) return null;
 
-  const baseConfig = aspectA?.config;
-  const baseData = aspectA?.data;
-  const compareConfig = aspectB?.config;
-  const compareData = aspectB?.data;
+  const baseConfig = aspectA.config;
+  const baseData = aspectA.data;
+  const compareConfig = aspectB.config;
+  const compareData = aspectB.data;
 
-  if (isDeleted(baseConfig, compareConfig) || isDeleted(baseData, compareData)) {
-    return 'deleted';
-  }
-  if (isNew(baseConfig, compareConfig) || isNew(baseData, compareData)) {
-    return 'new';
-  }
   if (!isEqual(baseConfig, compareConfig) || !isEqual(baseData, compareData)) {
     return 'modified';
   }
