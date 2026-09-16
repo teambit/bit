@@ -37,14 +37,17 @@ describe('RippleMain.simulateLane()', () => {
   let realFetch: typeof fetch;
   let requests: Array<{ url: string; headers: Record<string, string>; body: any }>;
   let responseBody: Record<string, any>;
+  /** responses consumed in order before falling back to `responseBody` */
+  let queuedResponses: Record<string, any>[];
 
   beforeEach(() => {
     realFetch = globalThis.fetch;
     requests = [];
+    queuedResponses = [];
     responseBody = { data: { simulateLane: JOB } };
     globalThis.fetch = (async (url: any, init: any) => {
       requests.push({ url: String(url), headers: init.headers, body: JSON.parse(init.body) });
-      return new Response(JSON.stringify(responseBody), {
+      return new Response(JSON.stringify(queuedResponses.shift() ?? responseBody), {
         status: 200,
         headers: { 'content-type': 'application/json' },
       });
@@ -68,13 +71,14 @@ describe('RippleMain.simulateLane()', () => {
     expect(request.body.variables.laneId).to.equal(LANE_ID);
   });
 
-  it('should omit options when no network filter is given, so the server default applies', async () => {
+  it('should always send options.network, empty when no filter is given', async () => {
+    // the resolver reads options.network unconditionally, so omitting options fails server-side
     const ripple = createRippleMain();
     await ripple.simulateLane(LANE_ID);
-    expect(requests[0].body.variables).to.not.have.property('options');
+    expect(requests[0].body.variables.options).to.deep.equal({ network: {} });
 
     await ripple.simulateLane(LANE_ID, { scopeIds: undefined, ownerIds: [], excludeScopeIds: undefined });
-    expect(requests[1].body.variables).to.not.have.property('options');
+    expect(requests[1].body.variables.options).to.deep.equal({ network: {} });
   });
 
   it('should pass the network filter as options.network', async () => {
@@ -83,6 +87,24 @@ describe('RippleMain.simulateLane()', () => {
     expect(requests[0].body.variables.options).to.deep.equal({
       network: { scopeIds: ['org.a'], excludeScopeIds: ['org.b'] },
     });
+  });
+
+  it('should fetch the persisted job by slug when the mutation returns a job without an id', async () => {
+    // the mutation responds before the job is persisted: only the slug is set, id and status are null
+    queuedResponses.push({ data: { simulateLane: { id: null, slug: JOB.slug, status: null } } });
+    queuedResponses.push({ data: { getJob: JOB } });
+    const ripple = createRippleMain();
+    const job = await ripple.simulateLane(LANE_ID);
+    expect(job).to.deep.equal(JOB);
+    expect(requests).to.have.lengthOf(2);
+    expect(requests[1].body.query).to.include('getJob(slug: $slug)');
+    expect(requests[1].body.variables).to.deep.equal({ slug: JOB.slug });
+  });
+
+  it('should return the job as-is when it has an id', async () => {
+    const ripple = createRippleMain();
+    await ripple.simulateLane(LANE_ID);
+    expect(requests).to.have.lengthOf(1);
   });
 
   it('should throw when not logged in, without calling the API', async () => {
@@ -131,11 +153,25 @@ describe('RippleSimulateCmd', () => {
     expect(calls).to.have.lengthOf(0);
   });
 
-  it('should simulate the current lane by default', async () => {
+  it('should simulate the current lane by default, searching dependents in the lane scope', async () => {
     const { cmd, calls } = createCmd({ currentLaneId: LANE_ID });
     const result = await cmd.json([], {});
     expect(calls.map((call) => call.laneId)).to.deep.equal([LANE_ID]);
-    expect(result).to.deep.equal({ laneId: LANE_ID, job: JOB, url: 'https://bit.test/ripple-ci/job/job-1-slug' });
+    // the server can't resolve the dependents graph without a network filter
+    const network = { scopeIds: ['org.scope'], ownerIds: undefined, excludeScopeIds: undefined };
+    expect(calls[0].network).to.deep.equal(network);
+    expect(result).to.deep.equal({
+      laneId: LANE_ID,
+      job: JOB,
+      network,
+      url: 'https://bit.test/ripple-ci/job/job-1-slug',
+    });
+  });
+
+  it('should not default the scope when an owners filter is given', async () => {
+    const { cmd, calls } = createCmd({ currentLaneId: LANE_ID });
+    await cmd.json([], { owners: 'org' });
+    expect(calls[0].network).to.deep.equal({ scopeIds: undefined, ownerIds: ['org'], excludeScopeIds: undefined });
   });
 
   it('should prefer --lane over the current lane and not apply the exported check to it', async () => {
@@ -154,11 +190,13 @@ describe('RippleSimulateCmd', () => {
     });
   });
 
-  it('should report the job id, the url and the follow-up command', async () => {
+  it('should report the job id, the network, the url and the follow-up command', async () => {
     const { cmd } = createCmd({ currentLaneId: LANE_ID });
     const output = await cmd.report([], {});
     expect(output).to.include(LANE_ID);
     expect(output).to.include('job-1');
+    expect(output).to.include('scopes org.scope');
+    expect(output).to.include('default: the lane scope');
     expect(output).to.include('https://bit.test/ripple-ci/job/job-1-slug');
     expect(output).to.include('bit ripple log job-1');
   });

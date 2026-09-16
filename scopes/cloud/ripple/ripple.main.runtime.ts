@@ -392,15 +392,25 @@ export class RippleMain {
    * the given network of scopes/owners) against the lane heads, without merging or publishing anything.
    * the schema also accepts an `incrementStrategy`, but a simulation publishes nothing so it's not exposed
    * and the server default is used.
+   * `options.network` is always sent (empty when no filter is given): the schema marks `options` as
+   * optional, but the resolver reads `options.network` unconditionally and fails when it's omitted.
    */
   async simulateLane(laneId: string, network?: SimulateNetwork): Promise<RippleJob | null> {
-    const hasNetwork = network && Object.values(network).some((values) => values?.length);
-    const options = hasNetwork ? { network } : undefined;
+    const filters = Object.entries(network || {}).filter(([, values]) => values?.length);
+    const options = { network: Object.fromEntries(filters) };
     const data = await this.fetchRippleGQL<{ simulateLane: RippleJob }>(RippleMain.SIMULATE_LANE, {
       laneId,
       options,
     });
-    return data?.simulateLane ?? null;
+    const job = data?.simulateLane;
+    if (!job) return null;
+    // the mutation returns the job before it's persisted: only the slug is set, id and status are null.
+    // fetch the persisted job so callers get the real id, which "ripple log/errors" need.
+    if (!job.id && job.slug) {
+      const persisted = await this.getJobBySlug(job.slug).catch(() => null);
+      if (persisted) return persisted;
+    }
+    return job;
   }
 
   /**
