@@ -29,11 +29,15 @@ describe('status command on Harmony', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(1);
+      // the default env (empty env) has no compiler hence no dists. set a compiling env and
+      // compile so the components have dists
+      helper.env.setTsEnv();
+      helper.command.compile();
       helper.command.status(); // to populate the cache
       // as an intermediate step, make sure the missing-dist is not an issue.
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingDists.name);
       const distDir = 'node_modules/@my-scope/comp1/dist';
-      const distDirInBitRoots = 'node_modules/.bit_roots/teambit.harmony_node/node_modules/@my-scope/comp1/dist';
+      const distDirInBitRoots = 'node_modules/.bit_roots/my-scope_ts-env/node_modules/@my-scope/comp1/dist';
       helper.fs.deletePath(distDir);
       helper.fs.deletePath(distDirInBitRoots);
     });

@@ -188,7 +188,6 @@ export class ApplyOverrides {
     this.applyPeersFromComponentModel();
     this.applyPackageJson();
     this.applyWorkspacePolicy();
-    this.makeLegacyAsPeer();
     await this.applyAutoDetectOverridesOnComponent();
     // This was moved here (it used to be after this.manuallyAddDependencies) to fix an issue with a case where
     // an env define the same dependency defined by its own env, in both places:
@@ -541,25 +540,6 @@ export class ApplyOverrides {
       this.allDependencies[field] = this.allDependencies[field].filter(({ packageName }) => !wsPeer[packageName]);
     });
     this.allDependencies.peerDependencies = peerDeps;
-  }
-
-  /**
-   * It removes the @teambit/legacy dependency from the dependencies/devDeps and adds it as a peer dependency with ^.
-   */
-  private makeLegacyAsPeer(): void {
-    let version;
-    if (this.allPackagesDependencies.packageDependencies['@teambit/legacy']) {
-      version = this.allPackagesDependencies.packageDependencies['@teambit/legacy'];
-      delete this.allPackagesDependencies.packageDependencies['@teambit/legacy'];
-    }
-    if (this.allPackagesDependencies.devPackageDependencies['@teambit/legacy']) {
-      if (!version) version = this.allPackagesDependencies.devPackageDependencies['@teambit/legacy'];
-      delete this.allPackagesDependencies.devPackageDependencies['@teambit/legacy'];
-    }
-    if (version) {
-      if (!Number.isNaN(version[0])) version = `^${version}`;
-      this.allPackagesDependencies.peerPackageDependencies['@teambit/legacy'] = version;
-    }
   }
 
   private async applyAutoDetectOverridesOnComponent(): Promise<void> {
