@@ -829,16 +829,16 @@ jobs:
       - bvm_upgrade
       - run:
           name: 'bit install (dev binary)'
-          # --skip-compile / --skip-write-config-files, with a separate `bbit compile` after: this
-          # install re-resolves with a manifest bbit never used, and when the two disagree pnpm
-          # relinks the whole tree rather than a delta (measured: 6152 packages added instead of
-          # 1023). Relinking replaces the node_modules directories of the workspace's own component
-          # packages, dists included - the very files this running `node bin/bit.js` process is
-          # loaded from. Its own post-install compile then dies on a deferred require
-          # (@teambit/legacy.loader/dist/index.js, reached through the compiler aspect). bbit has
-          # its own installation and does not depend on this node_modules, so it can still compile.
-          # setup_harmony splits `bbit install` from `bbit compile` for a related reason.
-          command: 'cd bit && bit install --skip-compile --skip-write-config-files'
+          # the --skip-* flags, the grep instead of the exit code, and the `bbit compile` step
+          # below: see the bit_pr step of the same name. In short, this install replaces the
+          # node_modules the running process is loaded from, so the process dies on a deferred
+          # require once the packages have already landed.
+          command: |
+            cd bit
+            set -o pipefail
+            bit install --skip-compile --skip-write-config-files 2>&1 | tee "$HOME/dev-install.log" || true
+            grep -q 'done running package installation using pnpm' "$HOME/dev-install.log" ||
+              { echo 'the package installation itself failed - see the output above'; exit 1; }
           no_output_timeout: 30m
           environment:
             # the pnpm engine extracts over rayon, and rust sizes its pools from the HOST's cpu
@@ -979,15 +979,17 @@ jobs:
       - bvm_upgrade
       - run:
           name: bit install (dev binary)
-          # --skip-compile / --skip-write-config-files, with a separate `bbit compile` after: this
-          # install re-resolves with a manifest bbit never used, and when the two disagree pnpm
-          # relinks the whole tree rather than a delta (measured: 6152 packages added instead of
-          # 1023). Relinking replaces the node_modules directories of the workspace's own component
-          # packages, dists included - the very files this running `node bin/bit.js` process is
-          # loaded from. Its own post-install compile then dies on a deferred require
-          # (@teambit/legacy.loader/dist/index.js, reached through the compiler aspect). bbit has
-          # its own installation and does not depend on this node_modules, so it can still compile.
-          # setup_harmony splits `bbit install` from `bbit compile` for a related reason.
+          # This install re-resolves with a manifest bbit never used, and when the two disagree
+          # pnpm relinks the whole tree rather than a delta (measured: 6152 packages added instead
+          # of 1023). Relinking replaces the node_modules directories of the workspace's own
+          # component packages, dists included - the very files this running `node bin/bit.js`
+          # process is loaded from. So every require this process defers past that point throws
+          # MODULE_NOT_FOUND: first the compiler aspect (@teambit/legacy.loader/dist/index.js) from
+          # the post-install compile, and with that skipped, the pager on the way out. The packages
+          # themselves are already installed by then, which makes the exit code useless here - hence
+          # the grep for the installation's own completion line instead, and the separate
+          # `bbit compile` below to rebuild the dists (bbit has an installation of its own and does
+          # not depend on this node_modules). setup_harmony splits its install and compile likewise.
           #
           # the released bbit (used by setup_harmony) still treats the legacy core envs
           # (node/react/aspect/env/mdx/readme) as core aspects and filters their packages out of
@@ -1015,10 +1017,11 @@ jobs:
               sleep 15
             done) &
             SAMPLER=$!
-            node bin/bit.js install --skip-compile --skip-write-config-files
-            STATUS=$?
+            set -o pipefail
+            node bin/bit.js install --skip-compile --skip-write-config-files 2>&1 | tee "$HOME/dev-install.log" || true
             kill $SAMPLER 2>/dev/null || true
-            exit $STATUS
+            grep -q 'done running package installation using pnpm' "$HOME/dev-install.log" ||
+              { echo 'the package installation itself failed - see the output above'; exit 1; }
           no_output_timeout: '30m'
           environment:
             RAYON_NUM_THREADS: '6'
@@ -1129,7 +1132,10 @@ jobs:
           command: |
             cd bit
             node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
-            node bin/bit.js install --skip-compile --skip-write-config-files
+            set -o pipefail
+            node bin/bit.js install --skip-compile --skip-write-config-files 2>&1 | tee "$HOME/dev-install.log" || true
+            grep -q 'done running package installation using pnpm' "$HOME/dev-install.log" ||
+              { echo 'the package installation itself failed - see the output above'; exit 1; }
           no_output_timeout: '30m'
           environment:
             RAYON_NUM_THREADS: '6'
