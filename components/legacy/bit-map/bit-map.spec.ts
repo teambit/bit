@@ -1,4 +1,7 @@
 import { expect } from 'chai';
+import fs from 'fs-extra';
+import os from 'os';
+import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { logger } from '@teambit/legacy.logger';
@@ -88,6 +91,42 @@ describe('BitMap', function () {
       expect(() => bitMap.loadComponents(invalidBitMap, 'my-scope')).to.throw(
         '.bitmap entry of "scope/comp1" is invalid, it has a scope-name "scope", however, it does not have any version'
       );
+    });
+  });
+  describe('trackDirectoryChanges', () => {
+    const compId = ComponentID.fromObject({ name: 'comp1' }, 'my-scope');
+    let workspaceDir: string;
+    let bitMap: BitMap;
+    const resolve = (filePath: string) => bitMap.getComponentIdByPath(filePath)?.toString();
+    beforeEach(async () => {
+      workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-map-spec-'));
+      await fs.outputFile(path.join(workspaceDir, 'comp1/index.js'), '');
+      bitMap = await BitMap.load(workspaceDir, 'my-scope');
+      bitMap.loadComponents({ comp1: { scope: '', mainFile: 'index.js', rootDir: 'comp1' } }, 'my-scope');
+      await bitMap.loadFiles();
+    });
+    afterEach(async () => {
+      await fs.remove(workspaceDir);
+    });
+    it('should resolve a file added to the rootDir when the paths index was already built', async () => {
+      expect(resolve('comp1/index.js')).to.equal(compId.toString());
+      await fs.outputFile(path.join(workspaceDir, 'comp1/new-file.js'), '');
+      await bitMap.trackDirectoryChanges(bitMap.getComponent(compId));
+      expect(resolve('comp1/new-file.js')).to.equal(compId.toString());
+    });
+    it('should stop resolving a file removed from the rootDir', async () => {
+      await fs.outputFile(path.join(workspaceDir, 'comp1/new-file.js'), '');
+      await bitMap.trackDirectoryChanges(bitMap.getComponent(compId));
+      expect(resolve('comp1/new-file.js')).to.equal(compId.toString());
+      await fs.remove(path.join(workspaceDir, 'comp1/new-file.js'));
+      await bitMap.trackDirectoryChanges(bitMap.getComponent(compId));
+      expect(resolve('comp1/new-file.js')).to.be.undefined;
+    });
+    it('should keep the existing files resolvable when the paths index was not built yet', async () => {
+      await fs.outputFile(path.join(workspaceDir, 'comp1/new-file.js'), '');
+      await bitMap.trackDirectoryChanges(bitMap.getComponent(compId));
+      expect(resolve('comp1/index.js')).to.equal(compId.toString());
+      expect(resolve('comp1/new-file.js')).to.equal(compId.toString());
     });
   });
 });
