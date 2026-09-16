@@ -23,6 +23,7 @@ import type { LanesMain } from './lanes.main.runtime';
 import type { MergeLanesMain } from '@teambit/merge-lanes';
 import { MergeLanesAspect } from '@teambit/merge-lanes';
 import { GraphqlAspect, type GraphqlMain } from '@teambit/graphql';
+import { loadScope } from '@teambit/legacy.scope';
 
 describe('LanesAspect', function () {
   this.timeout(0);
@@ -543,5 +544,61 @@ describe('partitionSwitchIds', () => {
   it('a main-only component that the lane never carried is still taken at its main version', () => {
     const { ids } = partitionSwitchIds([ours], [ours, oursOnMainOnly], ['acme.shop']);
     expect(ids.map((i) => i.toString())).to.have.members([oursOnMainOnly.toString(), ours.toString()]);
+  });
+});
+
+describe('lane updates (Ripple CI cascade entries)', function () {
+  this.timeout(0);
+  let lanes: LanesMain;
+  let workspaceData: WorkspaceData;
+  let laneId: LaneId;
+  let cascadedId: ComponentID;
+  before(async () => {
+    workspaceData = mockWorkspace();
+    const { workspacePath, remoteScopePath } = workspaceData;
+    await mockComponents(workspacePath);
+    const harmony = await loadManyAspects([SnappingAspect, ExportAspect, LanesAspect, WorkspaceAspect], workspacePath);
+    const snapping: SnappingMain = harmony.get(SnappingAspect.id);
+    lanes = harmony.get(LanesAspect.id);
+    await lanes.createLane('stage');
+    await snapping.snap({ pattern: 'comp1', build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
+    const exporter: ExportMain = harmony.get(ExportAspect.id);
+    await exporter.export();
+    laneId = lanes.getCurrentLaneId() as LaneId;
+
+    // mimic the Ripple CI cascade producer: add a hidden update-dependents entry (a dependent of comp1, which
+    // doesn't need to exist for the lane object) to the lane on the remote. the remote scope is loaded through
+    // the cache on purpose, so the Fs network the workspace uses to reach this remote sees the same objects.
+    const remoteScope = await loadScope(remoteScopePath);
+    const remoteLane = await remoteScope.lanes.loadLane(laneId);
+    if (!remoteLane) throw new Error('expected the lane to exist on the remote after export');
+    const [laneComponent] = remoteLane.components;
+    cascadedId = ComponentID.fromString(`${laneComponent.id.scope}/dependent-of-comp1`).changeVersion(
+      laneComponent.head.toString()
+    );
+    remoteLane.addComponentToUpdateDependents(cascadedId);
+    await remoteScope.lanes.saveLane(remoteLane, { laneHistoryMsg: 'test: cascade update-dependents' });
+  });
+  after(async () => {
+    await destroyWorkspace(workspaceData);
+  });
+  it('getLaneUpdateDependents() should read the cascaded entries from the remote lane', async () => {
+    const result = await lanes.getLaneUpdateDependents(laneId);
+    expect(result.source).to.equal('remote');
+    expect(result.ids.map((id) => id.toString())).to.deep.equal([cascadedId.toString()]);
+  });
+  it('undoLaneUpdateDependents() should remove the entries from the remote lane', async () => {
+    const result = await lanes.undoLaneUpdateDependents(laneId);
+    expect(result.remoteChanged).to.be.true;
+    expect(result.remoteSkipped).to.be.false;
+    expect(result.removed.map((id) => id.toString())).to.deep.equal([cascadedId.toString()]);
+
+    const remoteScope = await loadScope(workspaceData.remoteScopePath);
+    const remoteLane = await remoteScope.lanes.loadLane(laneId);
+    expect(remoteLane?.updateDependents).to.be.undefined;
+
+    const after = await lanes.getLaneUpdateDependents(laneId);
+    expect(after.source).to.equal('remote');
+    expect(after.ids).to.have.lengthOf(0);
   });
 });

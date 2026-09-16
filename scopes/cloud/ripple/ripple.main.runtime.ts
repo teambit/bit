@@ -9,7 +9,15 @@ import { readLastExport, type LastExportData } from '@teambit/export';
 import { stripComponentVersion } from './ripple-utils';
 import stripAnsi from 'strip-ansi';
 import { RippleAspect } from './ripple.aspect';
-import { RippleCmd, RippleListCmd, RippleLogCmd, RippleErrorsCmd, RippleRetryCmd, RippleStopCmd } from './ripple.cmd';
+import {
+  RippleCmd,
+  RippleListCmd,
+  RippleLogCmd,
+  RippleErrorsCmd,
+  RippleRetryCmd,
+  RippleStopCmd,
+  RippleSimulateCmd,
+} from './ripple.cmd';
 
 export type JobStatus = {
   startedAt?: string;
@@ -29,6 +37,16 @@ export type RippleJob = {
 };
 
 export type RippleJobFull = RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string };
+
+/**
+ * where Ripple CI looks for dependents of the lane components when simulating. all fields are
+ * optional; when none is given the server default (the lane owner's network) is used.
+ */
+export type SimulateNetwork = {
+  scopeIds?: string[];
+  ownerIds?: string[];
+  excludeScopeIds?: string[];
+};
 
 export type BuildTaskStatus = {
   status?: string;
@@ -145,6 +163,19 @@ export class RippleMain {
         slug
         name
         laneId
+        status { startedAt finishedAt phase }
+      }
+    }
+  `;
+
+  private static SIMULATE_LANE = `
+    mutation simulateLane($laneId: String, $options: SimulateLaneOptions) {
+      simulateLane(laneId: $laneId, options: $options) {
+        id
+        slug
+        name
+        laneId
+        simulation
         status { startedAt finishedAt phase }
       }
     }
@@ -357,6 +388,30 @@ export class RippleMain {
   }
 
   /**
+   * start a simulation job for a lane. Ripple CI builds the dependents of the lane components (searched in
+   * the given network of scopes/owners) against the lane heads, without merging or publishing anything.
+   * the schema also accepts an `incrementStrategy`, but a simulation publishes nothing so it's not exposed
+   * and the server default is used.
+   */
+  async simulateLane(laneId: string, network?: SimulateNetwork): Promise<RippleJob | null> {
+    const hasNetwork = network && Object.values(network).some((values) => values?.length);
+    const options = hasNetwork ? { network } : undefined;
+    const data = await this.fetchRippleGQL<{ simulateLane: RippleJob }>(RippleMain.SIMULATE_LANE, {
+      laneId,
+      options,
+    });
+    return data?.simulateLane ?? null;
+  }
+
+  /**
+   * whether the current lane was exported at least once. undefined when not on a lane / no workspace.
+   */
+  isCurrentLaneExported(): boolean | undefined {
+    if (!this.workspace || !this.getCurrentLaneId()) return undefined;
+    return this.workspace.consumer.bitMap.isLaneExported;
+  }
+
+  /**
    * detect the current lane from the workspace.
    * returns the laneId in "scope/lane-name" format, or undefined if not on a lane.
    */
@@ -434,6 +489,7 @@ export class RippleMain {
       new RippleErrorsCmd(ripple),
       new RippleRetryCmd(ripple),
       new RippleStopCmd(ripple),
+      new RippleSimulateCmd(ripple),
     ];
     cli.register(rippleCmd);
 

@@ -80,6 +80,7 @@ import {
   LaneHistoryCmd,
   LaneCheckoutCmd,
   LaneRevertCmd,
+  LaneUpdatesCmd,
   LaneFetchCmd,
   LaneEjectCmd,
 } from './lane.cmd';
@@ -126,6 +127,24 @@ export type SwitchLaneOptions = {
   verbose?: boolean;
   override?: boolean;
   branch?: boolean;
+};
+
+export type LaneUpdateDependentsResult = {
+  laneId: LaneId;
+  /** the cascaded entries. each id carries the cascade snap hash as its version */
+  ids: ComponentID[];
+  /** where the entries were read from. `local` only when the remote lane could not be fetched */
+  source: 'remote' | 'local';
+  remoteError?: string;
+};
+
+export type UndoLaneUpdateDependentsResult = {
+  laneId: LaneId;
+  removed: ComponentID[];
+  remoteChanged: boolean;
+  localChanged: boolean;
+  /** the lane was never exported, so only the local lane object was changed */
+  remoteSkipped: boolean;
 };
 
 /** where the base was resolved from: `workspace` (already local) or `scope` (fetched from remote). */
@@ -1503,6 +1522,66 @@ please create a new lane instead, which will include all components of this lane
   }
 
   /**
+   * the dependents Ripple CI cascaded onto a lane (hidden `lane.updateDependents` entries).
+   * the cascade producer runs on the remote, so the remote lane is the source of truth. the local lane
+   * object is used only when the remote lane can't be fetched (e.g. the lane was never exported).
+   */
+  async getLaneUpdateDependents(laneId: LaneId): Promise<LaneUpdateDependentsResult> {
+    let remoteError: string | undefined;
+    const remoteLane = this.isLaneLocalOnly(laneId)
+      ? undefined
+      : await this.importLaneObject(laneId, false).catch((err: Error) => {
+          remoteError = err.message;
+          return undefined;
+        });
+    if (remoteLane) {
+      return { laneId, ids: remoteLane.updateDependents || [], source: 'remote' };
+    }
+    const localLane = await this.loadLane(laneId);
+    if (!localLane) {
+      const reason = remoteError ? `, and fetching it from the remote failed: ${remoteError}` : '';
+      throw new BitError(`lane "${laneId.toString()}" was not found locally${reason}`);
+    }
+    return { laneId, ids: localLane.updateDependents || [], source: 'local', remoteError };
+  }
+
+  /**
+   * remove the dependents Ripple CI cascaded onto a lane.
+   * exporting a lane never removes hidden entries from the remote (the remote-side merge walks the
+   * incoming entries only), so the removal is done directly on the remote, the same way the cloud UI
+   * does. the local lane object is updated as well so it doesn't keep stale entries until the next
+   * import. a lane that was never exported is changed locally only.
+   */
+  async undoLaneUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<UndoLaneUpdateDependentsResult> {
+    const current = await this.getLaneUpdateDependents(laneId);
+    const removed = ids?.length
+      ? current.ids.filter((id) => ids.some((toRemove) => toRemove.isEqualWithoutVersion(id)))
+      : current.ids;
+    const remoteSkipped = this.isLaneLocalOnly(laneId);
+    let remoteChanged = false;
+    if (!remoteSkipped) {
+      const remote = await getRemoteByName(laneId.scope, this.workspace?.consumer);
+      remoteChanged = await remote.removeLaneUpdateDependents(
+        laneId.toString(),
+        ids?.map((id) => id.toString())
+      );
+    }
+    const localLane = await this.loadLane(laneId);
+    const localChanged = localLane ? await this.removeUpdateDependents(laneId, ids) : false;
+    return { laneId, removed, remoteChanged, localChanged, remoteSkipped };
+  }
+
+  /**
+   * true when `laneId` is the current lane and it was never exported, i.e. it doesn't exist on the remote yet.
+   */
+  private isLaneLocalOnly(laneId: LaneId): boolean {
+    if (!this.workspace) return false;
+    const currentLaneId = this.getCurrentLaneId();
+    if (!currentLaneId?.isEqual(laneId)) return false;
+    return !this.workspace.consumer.bitMap.isLaneExported;
+  }
+
+  /**
    * default to remove all of them.
    * returns true if the lane has changed
    */
@@ -1644,6 +1723,7 @@ please create a new lane instead, which will include all components of this lane
     laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     laneCmd.commands.push(new LaneRevertCmd(lanesMain));
+    laneCmd.commands.push(new LaneUpdatesCmd(lanesMain));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();

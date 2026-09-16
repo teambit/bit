@@ -1,4 +1,6 @@
-import type { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
+import { LaneId } from '@teambit/lane-id';
+import { BitError } from '@teambit/bit-error';
 import type { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { fetch, put, remove, action } from '@teambit/legacy.scope-api';
 import type { ListScopeResult } from '@teambit/legacy.component-list';
@@ -78,6 +80,20 @@ export default class Fs implements Network {
 
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
     return this.getScope().lanes.getLanesData(this.getScope(), name, mergeData);
+  }
+
+  async removeLaneUpdateDependents(laneId: string, ids?: string[]): Promise<boolean> {
+    const scope = this.getScope();
+    const lane = await scope.lanes.loadLane(LaneId.parse(laneId));
+    if (!lane) throw new BitError(`unable to find lane "${laneId}" on the remote`);
+    if (ids?.length) {
+      ids.forEach((id) => lane.removeComponentFromUpdateDependentsIfExist(ComponentID.fromString(id)));
+    } else {
+      lane.removeAllUpdateDependents();
+    }
+    if (!lane.hasChanged) return false;
+    await scope.lanes.saveLane(lane, { laneHistoryMsg: 'remove update-dependents' });
+    return true;
   }
 
   async graph(bitId?: ComponentID): Promise<DependencyGraph> {

@@ -2,7 +2,9 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import Table from 'cli-table';
 import type { LastExportData } from '@teambit/export';
-import type { RippleMain, RippleJob, CiGraphNode } from './ripple.main.runtime';
+import { formatSuccessSummary, formatItem, formatHint, joinSections } from '@teambit/cli';
+import { BitError } from '@teambit/bit-error';
+import type { RippleMain, RippleJob, CiGraphNode, SimulateNetwork } from './ripple.main.runtime';
 import { colorPhase, isFailedPhase, stripAnsi, resolveJobId, formatAge } from './ripple-utils';
 
 /**
@@ -120,7 +122,7 @@ export class RippleListCmd implements Command {
     for (const job of jobs) {
       table.push([
         job.id,
-        truncate(job.name || '-', 40),
+        truncate(job.name || '-', 40) + (job.simulation ? chalk.dim(' (simulation)') : ''),
         getScopeFromLaneId(job.laneId),
         colorPhase(job.status?.phase),
         job.user?.username || '-',
@@ -665,4 +667,84 @@ function getScopeFromLaneId(laneId?: string): string {
 function truncate(str: string, max: number): string {
   if (str.length <= max) return str;
   return `${str.substring(0, max - 1)}…`;
+}
+
+type SimulateFlags = {
+  lane?: string;
+  scopes?: string;
+  owners?: string;
+  excludeScopes?: string;
+};
+
+function splitList(value?: string): string[] | undefined {
+  if (!value) return undefined;
+  const items = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return items.length ? items : undefined;
+}
+
+export class RippleSimulateCmd implements Command {
+  name = 'simulate';
+  description = 'start a Ripple CI simulation for a lane to reveal which dependents break (auto-detects current lane)';
+  extendedDescription = `a simulation builds the dependents of the lane components against the lane heads on bit.cloud,
+without merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged.
+the simulation runs against the lane as it exists on bit.cloud, so export the lane first.
+simulations are heavy jobs and are billed as such. run them at review time, not on every change.
+dependents are searched in the lane owner's network by default. narrow it with --scopes, --owners and --exclude-scopes.
+follow the job with "bit ripple log <job-id>". once it finishes, "bit ripple errors <job-id>" shows what broke.`;
+  skipWorkspace = true;
+  remoteOp = true;
+  alias = '';
+
+  options: CommandOptions = [
+    ['', 'lane <lane>', 'lane ID to simulate, e.g. "scope/lane-name" (default: detected from .bitmap)'],
+    ['', 'scopes <scopes>', 'comma-separated scopes to search for dependents in'],
+    ['', 'owners <owners>', 'comma-separated owners (organizations) to search for dependents in'],
+    ['', 'exclude-scopes <scopes>', 'comma-separated scopes to exclude from the dependents search'],
+    ['j', 'json', 'return the output as JSON'],
+  ];
+
+  constructor(private ripple: RippleMain) {}
+
+  async report(_args: [], flags: SimulateFlags) {
+    const { laneId, job } = await this.simulate(flags);
+    const lines = [
+      formatSuccessSummary(`started a Ripple CI simulation for lane "${laneId}".`),
+      formatItem(`job id: ${job.id}`),
+      job.status?.phase ? formatItem(`status: ${colorPhase(job.status.phase)}`) : '',
+      formatItem(`url:    ${this.ripple.getJobUrl(job)}`),
+    ].filter(Boolean);
+    const hint = formatHint(
+      `follow the job with "bit ripple log ${job.id}". once it finishes, run "bit ripple errors ${job.id}" to see what broke.`
+    );
+    return joinSections([lines.join('\n'), hint]);
+  }
+
+  async json(_args: [], flags: SimulateFlags) {
+    const { laneId, job } = await this.simulate(flags);
+    return { laneId, job, url: this.ripple.getJobUrl(job) };
+  }
+
+  private async simulate(flags: SimulateFlags): Promise<{ laneId: string; job: RippleJob }> {
+    const currentLaneId = this.ripple.getCurrentLaneId();
+    const laneId = flags.lane || currentLaneId;
+    if (!laneId) {
+      throw new BitError('a simulation requires a lane. switch to a lane or pass --lane <scope/lane-name>');
+    }
+    if (laneId === currentLaneId && this.ripple.isCurrentLaneExported() === false) {
+      throw new BitError(
+        `lane "${laneId}" was never exported. a simulation runs against the lane on bit.cloud, run "bit export" first`
+      );
+    }
+    const network: SimulateNetwork = {
+      scopeIds: splitList(flags.scopes),
+      ownerIds: splitList(flags.owners),
+      excludeScopeIds: splitList(flags.excludeScopes),
+    };
+    const job = await this.ripple.simulateLane(laneId, network);
+    if (!job) throw new BitError(`failed to start a simulation for lane "${laneId}"`);
+    return { laneId, job };
+  }
 }
