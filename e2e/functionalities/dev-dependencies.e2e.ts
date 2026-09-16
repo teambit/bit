@@ -191,7 +191,14 @@ describe('dev-dependencies functionality', function () {
       // aspect env packages from the workspace root (they used to be core aspects). install them
       // so the env loads, then run another install so its dependency policies (is-positive as a
       // dev dep) are applied to the components.
-      helper.command.install('@teambit/react@1.0.1107 @teambit/aspect@1.0.1107');
+      // --disallow-scripts: these old env packages drag in ws's optional native accelerators,
+      // which nothing here uses. Building them inside the env root fails with `node-gyp-build`
+      // exited with status 127 since pnpm 12.4.1 - the same install passes where no env root is
+      // involved (see policies-order.e2e.ts, same packages). Skip the build rather than let an
+      // unrelated native addon decide whether this test runs.
+      helper.command.install('@teambit/react@1.0.1107 @teambit/aspect@1.0.1107', {
+        'disallow-scripts': 'utf-8-validate,bufferutil',
+      });
       helper.command.install();
       helper.command.tagWithoutBuild();
     });
