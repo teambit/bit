@@ -34,6 +34,12 @@ import { ComponentWriterAspect } from './component-writer.aspect';
 export interface ManyComponentsWriterParams {
   components: ConsumerComponent[];
   writeToPath?: string;
+  /**
+   * a directory per component, keyed by the id without its version, for writing a set of components
+   * that each go to its own place - as "--path" does for a whole batch. a component the map does not
+   * name falls back to writeToPath, and then to the default directory.
+   */
+  writeToPathPerId?: Record<string, string>;
   throwForExistingDir?: boolean;
   // when the target dir is occupied, import into an available empty dir (e.g. "foo" => "foo_1") instead of failing.
   writeToEmptyDir?: boolean;
@@ -276,9 +282,9 @@ export class ComponentWriterMain {
   ): ComponentWriterProps {
     // "--path ." resolves to an empty relative path. normalize it to "." so it is a real rootDir
     // rather than a falsy one that later turns into an undefined path segment.
-    const componentRootDir: PathLinuxRelative = opts.writeToPath
-      ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath))) ||
-        WORKSPACE_ROOT_DIR
+    const writeToPath = this.getWriteToPath(component, opts);
+    const componentRootDir: PathLinuxRelative = writeToPath
+      ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(writeToPath))) || WORKSPACE_ROOT_DIR
       : this.consumer.composeRelativeComponentPath(component.id);
     // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
     const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
@@ -292,7 +298,7 @@ export class ComponentWriterMain {
     // fixDirs* passes (which may still adjust writeToPath); otherwise fail here when the target dir is occupied.
     // the workspace root is never relocated (see relocateOccupiedDirs), so its own check runs either way.
     if (this.consumer && (!opts.writeToEmptyDir || componentRootDir === WORKSPACE_ROOT_DIR)) {
-      this.throwErrorWhenDirectoryNotEmpty(component, componentRootDir, existingComponentMap, opts);
+      this.throwErrorWhenDirectoryNotEmpty(component, componentRootDir, existingComponentMap, opts, writeToPath);
     }
     return {
       workspace: this.workspace,
@@ -304,9 +310,19 @@ export class ComponentWriterMain {
       existingComponentMap: existingComponentMap ?? undefined,
     };
   }
+  /**
+   * where this component was asked to go, if anywhere: its own entry in writeToPathPerId, else the
+   * writeToPath of the whole batch.
+   */
+  private getWriteToPath(component: ConsumerComponent, opts: ManyComponentsWriterParams): string | undefined {
+    return opts.writeToPathPerId?.[component.id.toStringWithoutVersion()] || opts.writeToPath;
+  }
+
   private moveComponentsIfNeeded(opts: ManyComponentsWriterParams) {
-    if (opts.writeToPath && this.consumer) {
+    if (this.consumer) {
       opts.components.forEach((component) => {
+        const writeToPath = this.getWriteToPath(component, opts);
+        if (!writeToPath) return;
         const componentMap = component.componentMap as ComponentMap;
         if (!componentMap.rootDir) {
           throw new BitError(`unable to use "--path" flag.
@@ -317,7 +333,7 @@ to move all component files to a different directory, run bit remove and then bi
         // @ts-ignore relativeWrittenPath is set at this point
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // @ts-ignore this.writeToPath is set at this point
-        const absoluteWriteToPath = path.resolve(opts.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
+        const absoluteWriteToPath = path.resolve(writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
           this.mover.moveExistingComponent(component, absoluteWrittenPath, absoluteWriteToPath);
         }
@@ -331,12 +347,13 @@ to move all component files to a different directory, run bit remove and then bi
   private shouldSkipDirConflictCheck(
     componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined,
-    opts: ManyComponentsWriterParams
+    opts: ManyComponentsWriterParams,
+    writeToPath?: string
   ): boolean {
     if (opts.skipWritingToFs) return true;
     if (!componentMap) return false;
     // no writeToPath: it goes to the default directory. an existing componentMap means the component is not new.
-    if (!opts.writeToPath) return true;
+    if (!writeToPath) return true;
     // writeToPath specified and that directory is already used for that component. compare against the
     // normalized componentDirRelative (not the raw opts.writeToPath, which may be absolute/OS-specific).
     return componentMap.rootDir === componentDirRelative;
@@ -424,9 +441,10 @@ use --override to overwrite them`
     component: ConsumerComponent,
     componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined,
-    opts: ManyComponentsWriterParams
+    opts: ManyComponentsWriterParams,
+    writeToPath?: string
   ) {
-    if (this.shouldSkipDirConflictCheck(componentDirRelative, componentMap, opts)) return;
+    if (this.shouldSkipDirConflictCheck(componentDirRelative, componentMap, opts, writeToPath)) return;
 
     const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
     if (!fs.pathExistsSync(componentDir)) return;

@@ -11,7 +11,6 @@ import { InstallAspect } from '@teambit/install';
 import { LaneId } from '@teambit/lane-id';
 import type { VersionedBitmapEntry } from '@teambit/legacy.bit-map';
 import { isWorkspaceMapFile, readVersionedBitmapEntries, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
-import { ComponentNotFound } from '@teambit/legacy.scope';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
@@ -76,15 +75,8 @@ class WorkspaceCloner {
     if (options.remote) await this.addRemote(options.remote);
     const laneId = options.lane ? await this.switchToLane(options.lane) : undefined;
     const { versionedRootId, entries } = await this.fetchRoot(rootId);
-    await this.write(versionedRootId.toString(), this.workspacePath);
-    const components: ComponentID[] = [];
-    const missing: string[] = [];
-    for (const entry of entries) {
-      if (entry.rootDir === WORKSPACE_ROOT_DIR) continue;
-      const written = await this.write(entry.id, resolveComponentDir(this.workspacePath, entry));
-      if (written) components.push(written);
-      else missing.push(entry.id);
-    }
+    await this.writeRoot(versionedRootId);
+    const { components, missing } = await this.writeMembers(entries);
     const installationError = options.skipDependencyInstallation ? undefined : await this.installGracefully();
     return {
       rootId: versionedRootId,
@@ -162,29 +154,44 @@ class WorkspaceCloner {
   }
 
   /**
-   * as `bit import <id> --path <dir>` does. one import per component, the path is the batch's.
-   *
-   * @returns undefined when the remote does not have the component. a root versioned before the first
-   * export lists its members by their default scope, and a member may have stayed behind.
+   * the root's own files, onto the workspace directory, as `bit import <id> --path <dir>` does. it
+   * goes before the members: the guards of the root let the files `bit init` generated be replaced
+   * only while the workspace is still empty of components.
    */
-  private async write(id: string, dir: string): Promise<ComponentID | undefined> {
-    let importedIds: ComponentID[];
-    let missingIds: string[] | undefined;
-    try {
-      ({ importedIds, missingIds } = await this.importer.import({
-        ids: [id],
-        writeToPath: dir,
-        installNpmPackages: false,
-        writeConfigFiles: false,
-      }));
-    } catch (err: any) {
-      if (err instanceof ComponentNotFound) return undefined;
-      throw err;
-    }
-    const imported = importedIds[0];
-    if (imported) return imported;
-    if (missingIds?.length) return undefined;
-    throw new BitError(`unable to clone, "${id}" was not imported`);
+  private async writeRoot(versionedRootId: ComponentID) {
+    const { importedIds } = await this.importer.import({
+      ids: [versionedRootId.toString()],
+      writeToPath: this.workspacePath,
+      installNpmPackages: false,
+      writeConfigFiles: false,
+    });
+    if (!importedIds.length) throw new BitError(`unable to clone, "${versionedRootId.toString()}" was not imported`);
+  }
+
+  /**
+   * every component the root lists, in one import - each to the directory the root recorded for it.
+   *
+   * a component the remote does not have is reported rather than fetched: a root versioned before the
+   * first export lists its members by their default scope, and a member may have stayed behind.
+   */
+  private async writeMembers(
+    entries: VersionedBitmapEntry[]
+  ): Promise<{ components: ComponentID[]; missing: string[] }> {
+    const writeToPathPerId: Record<string, string> = {};
+    entries.forEach((entry) => {
+      if (entry.rootDir === WORKSPACE_ROOT_DIR) return;
+      writeToPathPerId[entry.id] = resolveComponentDir(this.workspacePath, entry);
+    });
+    const ids = Object.keys(writeToPathPerId);
+    if (!ids.length) return { components: [], missing: [] };
+    const { importedIds, missingIds } = await this.importer.import({
+      ids,
+      writeToPathPerId,
+      installNpmPackages: false,
+      writeConfigFiles: false,
+    });
+    const components = importedIds.filter((id) => writeToPathPerId[id.toStringWithoutVersion()]);
+    return { components, missing: missingIds || [] };
   }
 
   /**
