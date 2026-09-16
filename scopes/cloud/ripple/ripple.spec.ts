@@ -40,7 +40,11 @@ function createRippleMain(
         consumer: { bitMap: { isLaneExported: opts.isLaneExported ?? true } },
       } as unknown as Workspace)
     : undefined;
-  return new RippleMain(cloud, logger, workspace);
+  const ripple = new RippleMain(cloud, logger, workspace);
+  // the runtime fetches through the agent-aware fetcher, which doesn't go through globalThis.fetch.
+  // point it back at the global so the stub installed in beforeEach intercepts the requests.
+  (ripple as any).fetcher = (url: any, init: any) => globalThis.fetch(url, init);
+  return ripple;
 }
 
 describe('RippleMain.simulateLane()', () => {

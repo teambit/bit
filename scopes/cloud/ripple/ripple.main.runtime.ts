@@ -5,6 +5,7 @@ import { CloudAspect, type CloudMain } from '@teambit/cloud';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { getCloudDomain } from '@teambit/legacy.constants';
+import { fetchWithAgent } from '@teambit/scope.network';
 import { readLastExport, type LastExportData } from '@teambit/export';
 import { stripComponentVersion } from './ripple-utils';
 import stripAnsi from 'strip-ansi';
@@ -187,6 +188,13 @@ export class RippleMain {
     }
   }
 
+  /**
+   * every Ripple CI request goes through this, so it honors the configured proxy, CA and network
+   * settings, the same way the cloud aspect reaches bit.cloud. kept as a field so tests can replace it:
+   * the agent-wrapped fetcher doesn't go through the global fetch.
+   */
+  private fetcher: typeof fetchWithAgent = fetchWithAgent;
+
   private async fetchRippleGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
     this.ensureAuthenticated();
     const graphqlUrl = `${this.cloud.getCloudApi()}/graphql`;
@@ -195,7 +203,7 @@ export class RippleMain {
       'Content-Type': 'application/json',
       ...this.cloud.getAuthHeader(),
     };
-    const response = await fetch(graphqlUrl, { method: 'POST', headers, body });
+    const response = await this.fetcher(graphqlUrl, { method: 'POST', headers, body });
     if (!response.ok) {
       const text = await response.text().catch(() => '');
       throw new Error(`Ripple CI API returned HTTP ${response.status}: ${text}`);
