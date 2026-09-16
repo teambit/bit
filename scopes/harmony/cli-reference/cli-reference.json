@@ -4667,7 +4667,8 @@
         "extendedDescription": "after a lane is exported, Ripple CI may snap the dependents of the lane components against the new\nheads and add them to the lane as hidden \"update\" entries. they are part of the lane graph (Ripple CI builds them, merge\nrefreshes them) but stay hidden from the workspace (\"bit status\", .bitmap).\nthe entries are read from the remote lane. the local lane object is used only when the remote is unavailable.\nuse --undo to remove them from the lane, on the remote and locally, e.g. when the cascade is not wanted.",
         "group": "collaborate",
         "private": false,
-        "remoteOp": true
+        "remoteOp": true,
+        "skipWorkspace": true
       },
       {
         "name": "merge <lane> [pattern]",
