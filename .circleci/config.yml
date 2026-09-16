@@ -796,9 +796,10 @@ jobs:
   check_circular_dependencies:
     <<: *defaults
     # the dev-binary install below re-materializes the workspace component packages without
-    # their dists (pnpm v12 napi relinking), so its post-install step recompiles all ~320
-    # components in-process - that peaks well above the default medium (4GB) container and the
-    # compile gets OOM-killed ("Received killed signal").
+    # their dists (pnpm v12 napi relinking), so all ~320 components have to be recompiled
+    # afterwards - that peaks well above the default medium (4GB) container and the compile gets
+    # OOM-killed ("Received killed signal"). The recompile now runs as its own `bbit compile`
+    # step rather than in-process, but it needs the same headroom either way.
     resource_class: large
     steps:
       - attach_workspace:
@@ -821,10 +822,33 @@ jobs:
       # env's full closure from the remote and rewriting all dists) - the root cause of this
       # job's 5-minute hangs, see scripts/circular-deps-check/CI-HANG-INVESTIGATION.md. the dev
       # binary's install pins those envs into the policy, so the check runs with its envs loaded.
+      # bbit is needed to rebuild the dists the install below replaces - see the step's comment.
+      # the bvm folder itself comes from the cache setup_harmony saved.
+      - restore_common_caches
+      - install_bvm
+      - bvm_upgrade
       - run:
           name: 'bit install (dev binary)'
-          command: 'cd bit && bit install'
+          # --skip-compile / --skip-write-config-files, with a separate `bbit compile` after: this
+          # install re-resolves with a manifest bbit never used, and when the two disagree pnpm
+          # relinks the whole tree rather than a delta (measured: 6152 packages added instead of
+          # 1023). Relinking replaces the node_modules directories of the workspace's own component
+          # packages, dists included - the very files this running `node bin/bit.js` process is
+          # loaded from. Its own post-install compile then dies on a deferred require
+          # (@teambit/legacy.loader/dist/index.js, reached through the compiler aspect). bbit has
+          # its own installation and does not depend on this node_modules, so it can still compile.
+          # setup_harmony splits `bbit install` from `bbit compile` for a related reason.
+          command: 'cd bit && bit install --skip-compile --skip-write-config-files'
           no_output_timeout: 30m
+          environment:
+            # the pnpm engine extracts over rayon, and rust sizes its pools from the HOST's cpu
+            # count inside docker (~36), not this class's 4. Uncapped, a whole-tree relink's fetch
+            # peaked at ~6.1GB on a 32GB container - more than this one has. See bit_pr's step.
+            RAYON_NUM_THREADS: '4'
+      - run:
+          name: 'bbit compile (rebuild the dists the install replaced)'
+          command: 'cd bit && bbit compile'
+          no_output_timeout: 20m
       - run:
           name: 'check circular dependencies (repo bit)'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
@@ -949,8 +973,22 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      # bbit rebuilds the dists that the dev install below replaces - see that step's comment.
+      # setup_bit_environment already restored the bvm folder from the cache setup_harmony saved.
+      - install_bvm
+      - bvm_upgrade
       - run:
           name: bit install (dev binary)
+          # --skip-compile / --skip-write-config-files, with a separate `bbit compile` after: this
+          # install re-resolves with a manifest bbit never used, and when the two disagree pnpm
+          # relinks the whole tree rather than a delta (measured: 6152 packages added instead of
+          # 1023). Relinking replaces the node_modules directories of the workspace's own component
+          # packages, dists included - the very files this running `node bin/bit.js` process is
+          # loaded from. Its own post-install compile then dies on a deferred require
+          # (@teambit/legacy.loader/dist/index.js, reached through the compiler aspect). bbit has
+          # its own installation and does not depend on this node_modules, so it can still compile.
+          # setup_harmony splits `bbit install` from `bbit compile` for a related reason.
+          #
           # the released bbit (used by setup_harmony) still treats the legacy core envs
           # (node/react/aspect/env/mdx/readme) as core aspects and filters their packages out of
           # the install manifest. the dev binary treats them as regular envs and needs their
@@ -977,13 +1015,17 @@ jobs:
               sleep 15
             done) &
             SAMPLER=$!
-            node bin/bit.js install
+            node bin/bit.js install --skip-compile --skip-write-config-files
             STATUS=$?
             kill $SAMPLER 2>/dev/null || true
             exit $STATUS
           no_output_timeout: '30m'
           environment:
             RAYON_NUM_THREADS: '6'
+      - run:
+          name: 'bbit compile (rebuild the dists the install replaced)'
+          command: 'cd bit && bbit compile'
+          no_output_timeout: '20m'
       - run:
           name: 'bit ci pr'
           # --skip-cleanup: this container is discarded right after, so don't waste time restoring
@@ -1074,18 +1116,27 @@ jobs:
                 circleci-agent step halt
               fi
             fi
+      # bbit rebuilds the dists the dev install replaces - see the bit_pr step of the same name.
+      - install_bvm
+      - bvm_upgrade
       - run:
           name: bit install (dev binary)
           # same reconcile as in bit_pr: the released bbit filters the legacy-core-env packages
           # out of the manifest; the dev binary needs them installed to load those envs.
-          # RAYON_NUM_THREADS and package-manager.cache: see the bit_pr step of the same name.
+          # RAYON_NUM_THREADS, package-manager.cache and the --skip-* flags (this install can
+          # replace the dists the running process is loaded from, so bbit does the compiling):
+          # see the bit_pr step of the same name.
           command: |
             cd bit
             node bin/bit.js config set package-manager.cache /home/circleci/bit/.bit-cache
-            node bin/bit.js install
+            node bin/bit.js install --skip-compile --skip-write-config-files
           no_output_timeout: '30m'
           environment:
             RAYON_NUM_THREADS: '6'
+      - run:
+          name: 'bbit compile (rebuild the dists the install replaced)'
+          command: 'cd bit && bbit compile'
+          no_output_timeout: '20m'
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
