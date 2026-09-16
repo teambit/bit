@@ -13921,7 +13921,7 @@ importers:
         version: file:scopes/toolbox/url/query-string
       '@teambit/tracker':
         specifier: workspace:*
-        version: file:scopes/component/tracker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/tracker(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/ts-server':
         specifier: workspace:*
         version: file:scopes/typescript/ts-server
@@ -14009,6 +14009,9 @@ importers:
       '@teambit/workspace-config-files':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-config-files(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-root':
+        specifier: workspace:*
+        version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -85119,7 +85122,6 @@ snapshots:
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.extension-data': file:components/legacy/extension-data
-      '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/scope.remotes': file:components/scope/remotes(graphql@15.8.0)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -85146,7 +85148,6 @@ snapshots:
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.extension-data': file:components/legacy/extension-data
-      '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.utils': file:components/legacy/utils
       '@teambit/scope.remotes': file:components/scope/remotes(graphql@15.8.0)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
