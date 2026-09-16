@@ -32,7 +32,7 @@ import type {
 } from '@teambit/legacy.utils';
 import { parseScope } from '@teambit/legacy.utils';
 import type { NextVersion } from '@teambit/legacy.bit-map';
-import { BitMap } from '@teambit/legacy.bit-map';
+import { BitMap, isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { Dependencies, ComponentLoadOptions, LoadManyResult } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent as Component, ComponentLoader } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
@@ -351,15 +351,26 @@ export default class Consumer {
         fileFromFs.test = fileFromModel.test;
       });
 
-      // prefix your command with "BIT_LOG=*" to see the actual id changes
-      if (process.env.BIT_LOG && componentFromModel.calculateHash().hash !== version.calculateHash().hash) {
-        console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
-        console.log(componentFromModel.id()); // eslint-disable-line no-console
-        console.log('------------------------componentFromFileSystem (version)----'); // eslint-disable-line no-console
-        console.log(version.id()); // eslint-disable-line no-console
-        console.log('-------------------------END---------------------------------'); // eslint-disable-line no-console
+      // a workspace-root component written below the workspace root has its versioned .bitmap left
+      // out (see isWorkspaceMapFile): the live map is the workspace's own. there the map stays behind,
+      // and its absence is not a modification.
+      const modelFiles = componentFromModel.files;
+      if (componentFromFileSystem.componentMap?.rootDir !== WORKSPACE_ROOT_DIR) {
+        componentFromModel.files = modelFiles.filter((file) => !isWorkspaceMapFile(file.relativePath));
       }
-      componentFromFileSystem._isModified = componentFromModel.calculateHash().hash !== version.calculateHash().hash;
+      try {
+        // prefix your command with "BIT_LOG=*" to see the actual id changes
+        if (process.env.BIT_LOG && componentFromModel.calculateHash().hash !== version.calculateHash().hash) {
+          console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
+          console.log(componentFromModel.id()); // eslint-disable-line no-console
+          console.log('------------------------componentFromFileSystem (version)----'); // eslint-disable-line no-console
+          console.log(version.id()); // eslint-disable-line no-console
+          console.log('-------------------------END---------------------------------'); // eslint-disable-line no-console
+        }
+        componentFromFileSystem._isModified = componentFromModel.calculateHash().hash !== version.calculateHash().hash;
+      } finally {
+        componentFromModel.files = modelFiles;
+      }
     }
     return componentFromFileSystem._isModified;
 

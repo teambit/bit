@@ -1135,7 +1135,8 @@ export type VersionedBitmapEntry = {
    * exported when the root was versioned, its default scope: the export that follows carries both.
    */
   id: string;
-  rootDir: PathLinuxRelative;
+  /** every entry of the current schema has one; a consumer refuses an entry without it */
+  rootDir?: PathLinuxRelative;
 };
 
 /**

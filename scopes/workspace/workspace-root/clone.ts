@@ -8,9 +8,7 @@ import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
 import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
-import type { LaneId } from '@teambit/lane-id';
-import type { LanesMain } from '@teambit/lanes';
-import { LanesAspect } from '@teambit/lanes';
+import { LaneId } from '@teambit/lane-id';
 import type { VersionedBitmapEntry } from '@teambit/legacy.bit-map';
 import { isWorkspaceMapFile, readVersionedBitmapEntries, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { ComponentNotFound } from '@teambit/legacy.scope';
@@ -61,7 +59,6 @@ export type CloneResult = {
 class WorkspaceCloner {
   private workspace: Workspace;
   private importer: ImporterMain;
-  private lanes: LanesMain;
   private scope: ScopeMain;
   private install: InstallMain;
 
@@ -71,7 +68,6 @@ class WorkspaceCloner {
   ) {
     this.workspace = harmony.get<Workspace>(WorkspaceAspect.id);
     this.importer = harmony.get<ImporterMain>(ImporterAspect.id);
-    this.lanes = harmony.get<LanesMain>(LanesAspect.id);
     this.scope = harmony.get<ScopeMain>(ScopeAspect.id);
     this.install = harmony.get<InstallMain>(InstallAspect.id);
   }
@@ -80,12 +76,12 @@ class WorkspaceCloner {
     if (options.remote) await this.addRemote(options.remote);
     const laneId = options.lane ? await this.switchToLane(options.lane) : undefined;
     const { versionedRootId, entries } = await this.fetchRoot(rootId);
-    await this.write(versionedRootId.toString(), WORKSPACE_ROOT_DIR);
+    await this.write(versionedRootId.toString(), this.workspacePath);
     const components: ComponentID[] = [];
     const missing: string[] = [];
     for (const entry of entries) {
       if (entry.rootDir === WORKSPACE_ROOT_DIR) continue;
-      const written = await this.write(entry.id, entry.rootDir);
+      const written = await this.write(entry.id, resolveComponentDir(this.workspacePath, entry));
       if (written) components.push(written);
       else missing.push(entry.id);
     }
@@ -109,10 +105,10 @@ class WorkspaceCloner {
   }
 
   /**
-   * the workspace comes out on the lane with nothing written: restricted to the workspace's own
-   * components, a switch in an empty workspace has none to check out. it fetches the lane and the
-   * objects of its components on the way, and the imports that follow take the lane heads because
-   * the workspace is on it.
+   * the workspace comes out on the lane with nothing written, the way a lane switch leaves it when it
+   * has nothing to check out (see LaneSwitcher.saveLanesData): the lane and the objects of its
+   * components are fetched, the lane is tracked and made current. the imports that follow take the
+   * lane heads because the workspace is on it.
    */
   private async switchToLane(lane: string): Promise<LaneId> {
     if (!lane.includes('/')) {
@@ -120,9 +116,14 @@ class WorkspaceCloner {
         `unable to clone from lane "${lane}", the lane must be given with its scope, e.g. "my-org.my-scope/${lane}"`
       );
     }
-    await this.lanes.switchLanes(lane, { workspaceOnly: true, skipDependencyInstallation: true });
-    const laneId = this.lanes.getCurrentLaneId();
-    if (!laneId) throw new Error(`clone: the workspace is not on lane "${lane}" after switching to it`);
+    const laneId = LaneId.parse(lane);
+    const remoteLane = await this.importer.importLaneObject(laneId);
+    await this.importer.fetchLaneComponents(remoteLane);
+    const consumer = this.workspace.consumer;
+    consumer.scope.lanes.trackLane({ localLane: laneId.name, remoteLane: laneId.name, remoteScope: laneId.scope });
+    consumer.setCurrentLane(laneId, true);
+    consumer.scope.objects.clearObjectsFromCache();
+    await consumer.writeBitMap('clone');
     return laneId;
   }
 
@@ -158,12 +159,12 @@ class WorkspaceCloner {
    * @returns undefined when the remote does not have the component. a root versioned before the first
    * export lists its members by their default scope, and a member may have stayed behind.
    */
-  private async write(id: string, rootDir: string): Promise<ComponentID | undefined> {
+  private async write(id: string, dir: string): Promise<ComponentID | undefined> {
     let importedIds: ComponentID[];
     try {
       ({ importedIds } = await this.importer.import({
         ids: [id],
-        writeToPath: path.join(this.workspacePath, rootDir),
+        writeToPath: dir,
         installNpmPackages: false,
         writeConfigFiles: false,
       }));
@@ -214,6 +215,7 @@ export async function cloneWorkspace(
   const workspacePath = path.resolve(dir || rootId.name);
   const createdDir = await ensureEmptyDir(workspacePath);
   // the code paths below, from the workspace init to the install, take the workspace from the cwd
+  const originalCwd = process.cwd();
   process.chdir(workspacePath);
   try {
     // only workspace.jsonc, .bitmap and the scope dir. the root files come from the component, and
@@ -239,11 +241,30 @@ export async function cloneWorkspace(
     const harmony = await loadBit(workspacePath);
     return await new WorkspaceCloner(harmony, workspacePath).clone(rootId, options);
   } catch (err) {
-    // nothing half-made is left behind. the directory was empty or absent to begin with
+    // the caller is left where it was, and nothing half-made is left behind: the directory was empty
+    // or absent to begin with
+    process.chdir(originalCwd);
     if (createdDir) await fs.remove(workspacePath);
     else await fs.emptyDir(workspacePath);
     throw err;
   }
+}
+
+/**
+ * the directory of a component the root lists, inside the workspace. the list comes from a remote,
+ * so a root-dir that escapes the workspace - "../x", an absolute path - is refused, and so are the
+ * workspace root itself, which only the root component owns, and a missing root-dir, which no
+ * `.bitmap` of the current schema has.
+ */
+export function resolveComponentDir(workspacePath: string, entry: VersionedBitmapEntry): string {
+  const target = entry.rootDir ? path.resolve(workspacePath, entry.rootDir) : undefined;
+  const relative = target ? path.relative(workspacePath, target) : undefined;
+  if (!target || !relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new BitError(
+      `unable to clone, the root component lists "${entry.id}" at "${entry.rootDir}", which is not a directory inside the workspace`
+    );
+  }
+  return target;
 }
 
 /**

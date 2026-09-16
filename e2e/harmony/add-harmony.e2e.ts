@@ -302,6 +302,9 @@ describe('add command on Harmony', function () {
         const bitmaps = helper.fs.getConsumerFiles('.bitmap', true, false);
         expect(bitmaps).to.deep.equal([path.normalize('.bitmap')]);
       });
+      it('should not be modified by the map it left behind', () => {
+        expect(helper.command.statusJson().modifiedComponents).to.deep.equal([]);
+      });
     });
     describe('importing it onto the root of an empty workspace', () => {
       // this is how a git-free workspace is restored from its scope: the root component's files
@@ -433,8 +436,10 @@ describe('add command on Harmony', function () {
     });
   });
   describe('env of the workspace-root component', () => {
+    // one status per workspace state, the assertions read from it
+    let status: Record<string, any>;
     const issuesOf = (name: string): string[] => {
-      const comp = helper.command.statusJson().componentsWithIssues.find((c) => c.id.includes(name));
+      const comp = status.componentsWithIssues.find((c) => c.id.includes(name));
       return comp ? comp.issues.map((issue) => issue.type) : [];
     };
     before(() => {
@@ -443,6 +448,7 @@ describe('add command on Harmony', function () {
       helper.command.addComponent('comp1', { i: 'comp1' });
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', { i: 'ws-root' });
+      status = helper.command.statusJson();
     });
     it('should be tracked with the empty env, not the regular default env', () => {
       // it is a bag of the workspace's own config files - nothing compiles it, tests it, or
@@ -478,11 +484,13 @@ describe('add command on Harmony', function () {
       // the default remote scope of the e2e has no owner prefix, so the package name has none either
       const wouldBePackageName = helper.general.getPackageNameByCompName('ws-root', false);
       helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { [wouldBePackageName]: '1.0.0' } });
+      status = helper.command.statusJson();
       expect(issuesOf('ws-root')).to.not.include('DuplicateComponentAndPackage');
     });
     describe('when a root file has a relative import into a component and requires a missing package', () => {
       before(() => {
         helper.fs.outputFile('app.js', "require('./comp1');\nrequire('some-package-that-is-not-installed');\n");
+        status = helper.command.statusJson();
       });
       it('should report no issue, the root files are not parsed for dependencies', () => {
         // the root is the workspace itself: config files and repo scripts that may require anything.

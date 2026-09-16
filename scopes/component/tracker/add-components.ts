@@ -310,7 +310,9 @@ export default class AddComponents {
         return foundComponentFromBitMap;
       }
     }
-    if (!this.override && foundComponentFromBitMap) {
+    // the root's files are whatever the scan says. a component nested since the previous add owns the
+    // files the previous entry listed for the root, so they are not merged back.
+    if (!this.override && foundComponentFromBitMap && !isWorkspaceRoot) {
       this._updateFilesWithCurrentLetterCases(foundComponentFromBitMap, componentFiles);
       component.files = this._mergeFilesWithExistingComponentMapFiles(componentFiles, foundComponentFromBitMap.files);
     } else {
