@@ -1598,6 +1598,22 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 | `--restore-deleted-components`   |                  | restore components that were deleted after this history point |
 | `--json`                         |       `-j`       | return the revert result in json format                       |
 
+### lane updates
+
+**Usage**: `lane updates [lane-name]`
+
+**Description**: show the dependents Ripple CI cascaded onto a lane, default to the current lane  
+after a lane is exported, Ripple CI may snap the dependents of the lane components against the new  
+heads and add them to the lane as hidden "update" entries. they are part of the lane graph (Ripple CI builds them, merge  
+refreshes them) but stay hidden from the workspace ("bit status", .bitmap).  
+the entries are read from the remote lane. the local lane object is used only when the remote is unavailable.  
+use --undo to remove them from the lane, on the remote and locally, e.g. when the cascade is not wanted.
+
+| **Option** | **Option alias** | **Description**                                                         |
+| ---------- | :--------------: | ----------------------------------------------------------------------- |
+| `--undo`   |                  | remove the cascaded dependents from the lane, on the remote and locally |
+| `--json`   |       `-j`       | return the results in json format                                       |
+
 ### lane merge
 
 **Usage**: `lane merge <lane> [pattern]`
@@ -2332,6 +2348,27 @@ view, retry, and manage Ripple CI jobs that build your components in the cloud a
 | --------------- | :--------------: | ------------------------------------------------------------------- |
 | `--lane <lane>` |                  | lane ID to find the latest job for (default: detected from .bitmap) |
 | `--json`        |       `-j`       | return the output as JSON                                           |
+
+### ripple simulate
+
+**Usage**: `ripple simulate`
+
+**Description**: start a Ripple CI simulation for a lane to reveal which dependents break (auto-detects current lane)  
+a simulation builds the dependents of the lane components against the lane heads on bit.cloud,  
+without merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged.  
+the simulation runs against the lane as it exists on bit.cloud, so export the lane first.  
+simulations are heavy jobs and are billed as such. run them at review time, not on every change.  
+dependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and  
+--exclude-scopes.  
+follow the job with "bit ripple log <job-id>". once it finishes, "bit ripple errors <job-id>" shows what broke.
+
+| **Option**                  | **Option alias** | **Description**                                                              |
+| --------------------------- | :--------------: | ---------------------------------------------------------------------------- |
+| `--lane <lane>`             |                  | lane ID to simulate, e.g. "scope/lane-name" (default: detected from .bitmap) |
+| `--scopes <scopes>`         |                  | comma-separated scopes to search for dependents in (default: the lane scope) |
+| `--owners <owners>`         |                  | comma-separated owners (organizations) to search for dependents in           |
+| `--exclude-scopes <scopes>` |                  | comma-separated scopes to exclude from the dependents search                 |
+| `--json`                    |       `-j`       | return the output as JSON                                                    |
 
 ---
 
