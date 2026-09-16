@@ -621,6 +621,24 @@ describe('lane updates (Ripple CI cascade entries)', function () {
     const afterLocal = await localScope.lanes.loadLane(laneId);
     expect(afterLocal?.updateDependents).to.be.undefined;
   });
+  it('removeUpdateDependents() should remove nothing when given an empty list, not everything', async () => {
+    // an empty list means the caller resolved zero entries. reading it as "remove all" would let a
+    // remote call that asks to remove nothing wipe the whole cascade.
+    const localScope = await loadScope(path.join(workspaceData.workspacePath, '.bit'));
+    const localLane = await localScope.lanes.loadLane(laneId);
+    if (!localLane) throw new Error('expected the lane to exist locally');
+    localLane.addComponentToUpdateDependents(cascadedId);
+    await localScope.lanes.saveLane(localLane, { laneHistoryMsg: 'test: entry that must survive' });
+
+    expect(await lanes.removeUpdateDependents(laneId, [])).to.be.false;
+    const afterEmpty = await localScope.lanes.loadLane(laneId);
+    expect(afterEmpty?.updateDependents?.map((id) => id.toString())).to.deep.equal([cascadedId.toString()]);
+
+    // omitting the ids is what removes all of them
+    expect(await lanes.removeUpdateDependents(laneId)).to.be.true;
+    const afterAll = await localScope.lanes.loadLane(laneId);
+    expect(afterAll?.updateDependents).to.be.undefined;
+  });
 });
 
 describe('LaneUpdatesCmd', () => {

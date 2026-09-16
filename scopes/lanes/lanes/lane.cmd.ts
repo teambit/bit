@@ -564,7 +564,7 @@ use --undo to remove them from the lane, on the remote and locally, e.g. when th
         ? ''
         : formatHint(
             source === 'no-remote-lane'
-              ? 'showing the local lane object, the lane was not found on the remote (not exported yet?)'
+              ? 'showing the local lane object, the lane was not found on the remote'
               : `showing the local lane object, the remote lane could not be fetched: ${remoteError}`
           );
     if (!ids.length) {
@@ -589,7 +589,7 @@ use --undo to remove them from the lane, on the remote and locally, e.g. when th
     const summary = formatSuccessSummary(`removed ${removed.length} cascaded ${noun} from lane "${laneId.toString()}"`);
     const items = removed.map((id) => formatItem(id.toString()));
     const hint = remoteSkipped
-      ? formatHint('the lane was never exported, so only the local lane object was changed')
+      ? formatHint('the lane was not found on the remote, so only the local lane object was changed')
       : '';
     return joinSections([[summary, ...items].join('\n'), hint]);
   }
