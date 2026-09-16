@@ -82,7 +82,7 @@ export class ScopeComponentLoader {
 
     if (versionStr === VERSION_ZERO) return undefined;
     const newId = id.changeVersion(versionStr);
-    const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
+    const version = await this.loadVersionOrFetch(modelComponent, newId, importIfMissing);
     const versionOriginId = version.originId;
     if (versionOriginId && !versionOriginId.isEqualWithoutVersion(id)) {
       throw new BitError(
@@ -96,6 +96,42 @@ export class ScopeComponentLoader {
     const component = new Component(newId, snap, state, tagMap, this.scope);
     this.componentsCache.set(idStr, component);
     return component;
+  }
+
+  /**
+   * a component object may point at a Version object the local scope does not have. a fetch that ran
+   * while the remote was mid-export gets the component with its new head but no Version for it, and
+   * every load from then on fails on the missing object, although the remote has it by now. fetch
+   * it once and retry, rather than fail until the user runs "bit import --objects" by hand.
+   */
+  private async loadVersionOrFetch(
+    modelComponent: ModelComponent,
+    id: ComponentID,
+    importIfMissing: boolean
+  ): Promise<Version> {
+    const repo = this.scope.legacyScope.objects;
+    const versionStr = id.version as string;
+    const version = await modelComponent.loadVersion(versionStr, repo, false);
+    if (version) return version;
+    const idStr = id.toString();
+    if (importIfMissing && this.scope.isExported(id) && !this.importedComponentsCache.get(idStr)) {
+      this.importedComponentsCache.set(idStr, true);
+      this.logger.warn(`ScopeComponentLoader, the Version object of ${idStr} is missing locally, fetching it`);
+      // on a lane, the importer fetches a component of the lane from the lane's scope and the rest from their own scope
+      const lane = await this.scope.legacyScope.getCurrentLaneObject();
+      try {
+        await loadSpan('scope-import', { id: idStr }, () =>
+          this.scope.import([id], {
+            lane,
+            reason: `${idStr} because its Version object is missing from the local scope`,
+          })
+        );
+      } catch (err: any) {
+        this.logger.error(`ScopeComponentLoader, failed fetching the missing Version object of ${idStr}`, err);
+      }
+    }
+    // throws VersionNotFoundOnFS if still missing
+    return modelComponent.loadVersion(versionStr, repo);
   }
 
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {

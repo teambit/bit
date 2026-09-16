@@ -14,53 +14,6 @@ export type HlToken = { content: string; color?: string };
 /** A file's tokens, indexed by line (line `n` is `lines[n - 1]`). */
 export type HlLines = HlToken[][];
 
-/** map a file extension to a shiki language id (and the aliases shiki itself understands). */
-const EXTENSION_TO_LANG: Record<string, string> = {
-  ts: 'typescript',
-  mts: 'typescript',
-  cts: 'typescript',
-  tsx: 'tsx',
-  js: 'javascript',
-  mjs: 'javascript',
-  cjs: 'javascript',
-  jsx: 'jsx',
-  json: 'json',
-  jsonc: 'jsonc',
-  json5: 'jsonc',
-  css: 'css',
-  scss: 'scss',
-  sass: 'scss',
-  less: 'less',
-  html: 'html',
-  htm: 'html',
-  vue: 'vue',
-  md: 'markdown',
-  markdown: 'markdown',
-  mdx: 'mdx',
-  yml: 'yaml',
-  yaml: 'yaml',
-  py: 'python',
-  go: 'go',
-  rs: 'rust',
-  java: 'java',
-  sh: 'shellscript',
-  bash: 'shellscript',
-  zsh: 'shellscript',
-  graphql: 'graphql',
-  gql: 'graphql',
-  sql: 'sql',
-  // jest snapshots (`x.spec.ts.snap` / `.snap`) are JS modules (exports[`...`] = `...`), and
-  // `split('.').pop()` reduces every variant to the same `snap` extension.
-  snap: 'javascript',
-};
-
-export function langFromFileName(fileName?: string): string | undefined {
-  if (!fileName) return undefined;
-  const ext = fileName.split('.').pop()?.toLowerCase();
-  if (!ext) return undefined;
-  return EXTENSION_TO_LANG[ext];
-}
-
 let highlighterPromise: Promise<HighlighterCore> | undefined;
 const loadedLangs = new Set<string>();
 const langPromises = new Map<string, Promise<boolean>>();
@@ -135,6 +88,7 @@ function tokenize(content: string, lang: string): HlLines | null {
  * blocked the main thread while diffs streamed in, which froze view-mode clicks.
  */
 const SYNC_TOKENIZE_LIMIT = 20_000;
+const LANGUAGE_RETRY_DELAYS_MS = [250, 1000, 3000];
 
 type DeferredTokens = { content: string; lang: string; lines: HlLines | null };
 
@@ -152,18 +106,35 @@ export function useHighlightedLines(content: string | undefined, lang: string | 
 
   useEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
     if (!lang || content === undefined) return undefined;
     if (loadedLangs.has(lang) && highlighterInstance) return undefined;
-    ensureLanguage(lang).then((ok) => {
-      if (!ok || cancelled) return undefined;
+
+    let retryIndex = 0;
+    const loadLanguage = async () => {
+      const ok = await ensureLanguage(lang);
+      if (cancelled) return;
+      if (!ok) {
+        // Unsupported languages intentionally stay plain text. Supported grammars retry a few times
+        // because highlighter initialization and lazy chunks can fail transiently (for example while
+        // a dev-server rebuild replaces a chunk). The hook remains mounted during those failures.
+        const delay = LANG_IMPORTERS[lang] ? LANGUAGE_RETRY_DELAYS_MS[retryIndex] : undefined;
+        retryIndex += 1;
+        if (delay !== undefined) retryTimer = setTimeout(() => void loadLanguage(), delay);
+        return;
+      }
+
       // ensure the sync instance is captured before we ask the tree to re-tokenize
-      return getHighlighter().then((hl) => {
-        highlighterInstance = hl;
-        if (!cancelled) setVersion((n) => n + 1);
-      });
-    });
+      const hl = await getHighlighter();
+      if (cancelled) return;
+      highlighterInstance = hl;
+      setVersion((n) => n + 1);
+    };
+
+    void loadLanguage();
     return () => {
       cancelled = true;
+      if (retryTimer !== undefined) clearTimeout(retryTimer);
     };
   }, [content, lang]);
 
@@ -171,6 +142,8 @@ export function useHighlightedLines(content: string | undefined, lang: string | 
 
   // small files: memoized so re-renders from view/expand state don't re-tokenize the whole file.
   const syncLines = useMemo(() => {
+    // Reading version makes the grammar-load state an explicit input to this memoized tokenization.
+    void version;
     if (!lang || content === undefined || isLarge) return null;
     return tokenize(content, lang);
   }, [content, lang, isLarge, version]);
