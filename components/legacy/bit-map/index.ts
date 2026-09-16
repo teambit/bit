@@ -7,7 +7,6 @@ export {
   LANE_KEY,
   normalizeBitmapContentForVersioning,
   fileContentsForVersioning,
-  isWorkspaceMapOwnedBy,
 } from './bit-map';
 export { MissingBitMapComponent, MissingMainFile, InvalidBitMap } from './exceptions';
 export {

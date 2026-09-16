@@ -16,6 +16,7 @@ import type { ReleaseType } from 'semver';
 import semver from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { findWorkspaceRootMap } from '@teambit/workspace-root';
 import type { BuildStatus } from '@teambit/legacy.constants';
 import { Extensions, LATEST } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -136,6 +137,11 @@ export type BasicTagResults = {
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
   totalComponentsCount?: number; // total count of all components tagged/snapped (including auto-tagged)
+  /**
+   * the workspace-root component that joined the batch because it was new or modified, at its new
+   * version. see getWorkspaceRootToTagAlong.
+   */
+  autoAddedWorkspaceRoot?: ComponentID;
 };
 
 export type FileData = { path: string; content: string; delete?: boolean };
@@ -261,9 +267,12 @@ export class SnappingMain {
     if (!bitIds.length) return null;
 
     const compIds = ComponentIdList.fromArray(bitIds);
+    // --persist tags what the soft-tag recorded, and the soft-tag has already brought the root along
+    const autoAddedWorkspaceRoot = persist ? undefined : await this.getWorkspaceRootToTagAlong(compIds);
+    const idsToTag = autoAddedWorkspaceRoot ? ComponentIdList.fromArray([...compIds, autoAddedWorkspaceRoot]) : compIds;
 
-    this.logger.debug(`tagging the following components: ${compIds.toString()}`);
-    const components = await this.loadComponentsForTagOrSnap(compIds, !soft);
+    this.logger.debug(`tagging the following components: ${idsToTag.toString()}`);
+    const components = await this.loadComponentsForTagOrSnap(idsToTag, !soft);
     await this.throwForVariousIssues(components, ignoreIssues);
 
     const params = {
@@ -293,6 +302,7 @@ export class SnappingMain {
       overrideHead,
       loose,
       ignoreIssues,
+      autoAddedWorkspaceRoot,
     };
     const {
       taggedComponents,
@@ -301,7 +311,7 @@ export class SnappingMain {
       stagedConfig,
       removedComponents,
       totalComponentsCount,
-    } = await this.makeVersion(compIds, components, params);
+    } = await this.makeVersion(idsToTag, components, params);
 
     const tagResults = {
       taggedComponents,
@@ -312,6 +322,7 @@ export class SnappingMain {
       newComponents,
       removedComponents,
       totalComponentsCount,
+      autoAddedWorkspaceRoot: findVersioned(taggedComponents, autoAddedWorkspaceRoot),
     };
 
     await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
@@ -617,8 +628,10 @@ export class SnappingMain {
     const self = this;
     const ids = legacyBitIds || (await getIdsToSnap());
     if (!ids) return null;
-    this.logger.debug(`snapping the following components: ${ids.toString()}`);
-    const components = await this.loadComponentsForTagOrSnap(ids);
+    const autoAddedWorkspaceRoot = await this.getWorkspaceRootToTagAlong(ids);
+    const idsToSnap = autoAddedWorkspaceRoot ? ComponentIdList.fromArray([...ids, autoAddedWorkspaceRoot]) : ids;
+    this.logger.debug(`snapping the following components: ${idsToSnap.toString()}`);
+    const components = await this.loadComponentsForTagOrSnap(idsToSnap);
     await this.throwForVariousIssues(components, ignoreIssues);
     const makeVersionParams = {
       editor,
@@ -640,9 +653,10 @@ export class SnappingMain {
       detachHead,
       loose,
       ignoreIssues,
+      autoAddedWorkspaceRoot,
     };
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount } =
-      await this.makeVersion(ids, components, makeVersionParams);
+      await this.makeVersion(idsToSnap, components, makeVersionParams);
 
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,
@@ -650,6 +664,7 @@ export class SnappingMain {
       newComponents,
       removedComponents,
       totalComponentsCount,
+      autoAddedWorkspaceRoot: findVersioned(taggedComponents, autoAddedWorkspaceRoot),
     };
 
     const currentLane = consumer.getCurrentLaneId();
@@ -1398,6 +1413,19 @@ another option, in case this dependency is not in main yet is to remove all refe
     component.config.extensions.push(extension);
   }
 
+  /**
+   * a new or modified workspace-root component joins every tag and snap of its members. they record
+   * the root at the version that has their files (see VersionMaker.recordWorkspaceRoot), and a build
+   * of a member elsewhere needs the workspace.jsonc, lockfile and configs it was made with. a root
+   * that is up to date is recorded at its current version and stays out of the batch.
+   */
+  private async getWorkspaceRootToTagAlong(ids: ComponentIdList): Promise<ComponentID | undefined> {
+    const rootId = findWorkspaceRootMap(this.workspace.consumer.bitMap)?.id;
+    if (!rootId || ids.hasWithoutVersion(rootId)) return undefined;
+    const status = await this.workspace.getComponentStatusById(rootId);
+    return status.newlyCreated || status.modified ? rootId.changeVersion(undefined) : undefined;
+  }
+
   private async getTagPendingComponentsIds(includeUnmodified = false) {
     const ids = includeUnmodified
       ? await this.workspace.listPotentialTagIds()
@@ -1559,6 +1587,13 @@ another option, in case this dependency is not in main yet is to remove all refe
     cli.register(tagCmd, snapCmd, resetCmd, snapDistanceCmd);
     return snapping;
   }
+}
+
+/**
+ * the id of the given component as it was just versioned, for the results.
+ */
+function findVersioned(components: ConsumerComponent[], id?: ComponentID): ComponentID | undefined {
+  return id && components.find((component) => component.id.isEqualWithoutVersion(id))?.id;
 }
 
 SnappingAspect.addRuntime(SnappingMain);

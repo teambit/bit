@@ -1,8 +1,14 @@
 import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
 import type { BitMap } from '@teambit/legacy.bit-map';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { findWorkspaceRootMap, readWorkspaceRoot, writeWorkspaceRoot } from './workspace-root-data';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
+import {
+  findWorkspaceRootMap,
+  isWorkspaceRootComponent,
+  readWorkspaceRoot,
+  writeWorkspaceRoot,
+} from './workspace-root-data';
+import { WorkspaceRootAspect } from './workspace-root.aspect';
 
 const rootId = ComponentID.fromString('my-scope/my-root@0.0.7');
 
@@ -22,6 +28,21 @@ describe('workspace-root data', () => {
         components: [{ id: ComponentID.fromString('my-scope/comp1'), rootDir: 'comp1' }],
       } as unknown as BitMap;
       expect(findWorkspaceRootMap(bitMap)).to.be.undefined;
+    });
+  });
+  describe('isWorkspaceRootComponent', () => {
+    const withData = (data: Record<string, any>) =>
+      ExtensionDataList.fromArray([
+        new ExtensionDataEntry(undefined, undefined, WorkspaceRootAspect.id, undefined, data),
+      ]);
+    it('should recognize the marker the root carries', () => {
+      expect(isWorkspaceRootComponent(withData({ isRoot: true }))).to.be.true;
+    });
+    it('should not take a member, which carries the pointer to its root, for a root', () => {
+      expect(isWorkspaceRootComponent(withData({ root: rootId.toString() }))).to.be.false;
+    });
+    it('should be false for a component with no data of this aspect', () => {
+      expect(isWorkspaceRootComponent(ExtensionDataList.fromArray([]))).to.be.false;
     });
   });
   describe('writeWorkspaceRoot and readWorkspaceRoot', () => {

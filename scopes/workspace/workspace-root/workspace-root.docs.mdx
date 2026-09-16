@@ -9,8 +9,16 @@ A workspace-root component is tracked at the workspace root (`rootDir: "."`). It
 workspace's own files, such as `workspace.jsonc`, `.bitmap`, the lockfile and repo-level scripts and
 configs, and a git-free workspace is restored from it.
 
-This aspect tells the root apart in a workspace and records, on every member the workspace snaps,
-which root it was snapped in and at which version:
+This aspect owns two pieces of data, both saved with every version. The root marks itself, so it is
+told from the model alone rather than by the files it happens to carry:
+
+```json
+"teambit.workspace/workspace-root": {
+  "data": { "isRoot": true }
+}
+```
+
+Every member the workspace snaps records which root it was snapped in and at which version:
 
 ```json
 "teambit.workspace/workspace-root": {
@@ -18,8 +26,12 @@ which root it was snapped in and at which version:
 }
 ```
 
-The record is aspect data, not config, so it never makes a component modified and the root moving on
-does not touch its members. Its consumers are tools that need the root's files a version was made
+A new or modified root joins every `bit tag` and `bit snap` of its members, so the recorded version
+is always the one that has the files the member was made with. A root tagged along is bumped as a
+patch, whatever version the members were given.
+
+Both are aspect data, not config, so they never make a component modified and the root moving on
+does not touch its members. Their consumers are tools that need the root's files a version was made
 with, such as a CI building the component or a workspace clone.
 
 ## Terminology

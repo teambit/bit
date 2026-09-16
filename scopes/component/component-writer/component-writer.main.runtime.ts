@@ -19,7 +19,8 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
-import { isWorkspaceMapFile, isWorkspaceMapOwnedBy, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
+import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
+import { isWorkspaceRootComponent } from '@teambit/workspace-root';
 import { COMPONENT_CONFIG_FILE_NAME, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
@@ -364,13 +365,12 @@ to move all component files to a different directory, run bit remove and then bi
   /**
    * only a workspace-root component may be written to ".". any other component written there would own
    * every unclaimed file in the workspace from the next scan on, and drop out of install and link. a
-   * workspace-root component is told by the workspace map it versions, which lists the component
-   * itself as the owner of the root (see isWorkspaceMapOwnedBy) - a file of that name alone is not
-   * enough, a component snapped before maps were excluded from component scans may carry one.
+   * workspace-root component is told by the marker its versions carry (see WorkspaceRootData) - a
+   * .bitmap among its files is not enough, a component snapped before maps were excluded from
+   * component scans may carry one.
    */
   private throwForNonWorkspaceRootComponent(component: ConsumerComponent) {
-    const mapFile = component.files.find((file) => isWorkspaceMapFile(pathNormalizeToLinux(file.relative)));
-    if (mapFile && isWorkspaceMapOwnedBy(mapFile.contents, component.id)) return;
+    if (isWorkspaceRootComponent(component.extensions)) return;
     throw new BitError(
       `unable to import "${component.id.toString()}" to the workspace root, it is not a workspace-root component. use --path to write it to a directory`
     );

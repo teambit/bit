@@ -6,16 +6,23 @@ import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { WorkspaceRootAspect } from './workspace-root.aspect';
 
 /**
- * the aspect data every member of a workspace-root component carries once snapped: the root of the
- * workspace it was snapped in, at the version the root had at that moment. the version is left out
- * only when the root was never snapped.
- *
- * it is data, not config, on purpose: a Version's hash covers the extensions' config only, so the
- * pointer never makes a component modified, and the root moving on does not touch its members.
+ * the aspect data of a workspace-root component and of its members. it is data, not config, on
+ * purpose: a Version's hash covers the extensions' config only, so neither entry ever makes a
+ * component modified, and the root moving on does not touch its members.
  */
 export type WorkspaceRootData = {
-  /** e.g. "my-org.my-scope/my-root@0.0.7" */
-  root: string;
+  /**
+   * on the workspace-root component itself. set when it is loaded in a workspace and saved with
+   * every version, so the root is told from the model alone - by an import onto ".", a CI, a clone -
+   * and not by the files it happens to carry.
+   */
+  isRoot?: boolean;
+  /**
+   * on a member: the root of the workspace it was snapped in, at the version the root had at that
+   * moment, e.g. "my-org.my-scope/my-root@0.0.7". tag and snap bring a new or modified root into
+   * their batch, so a member they made always has the version.
+   */
+  root?: string;
 };
 
 /**
@@ -25,8 +32,19 @@ export function findWorkspaceRootMap(bitMap: BitMap): ComponentMap | undefined {
   return bitMap.components.find((componentMap) => componentMap.rootDir === WORKSPACE_ROOT_DIR);
 }
 
+function findData(extensions: ExtensionDataList): WorkspaceRootData | undefined {
+  return extensions.findCoreExtension(WorkspaceRootAspect.id)?.data;
+}
+
+/**
+ * whether the component is a workspace-root component, by the marker its versions carry.
+ */
+export function isWorkspaceRootComponent(extensions: ExtensionDataList): boolean {
+  return Boolean(findData(extensions)?.isRoot);
+}
+
 export function readWorkspaceRoot(extensions: ExtensionDataList): ComponentID | undefined {
-  const root = extensions.findCoreExtension(WorkspaceRootAspect.id)?.data?.root;
+  const root = findData(extensions)?.root;
   return root ? ComponentID.fromString(root) : undefined;
 }
 

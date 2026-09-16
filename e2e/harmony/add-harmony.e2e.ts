@@ -131,12 +131,17 @@ describe('add command on Harmony', function () {
         .extensions.find((ext) => ext.name === 'teambit.workspace/workspace-root')?.data;
       expect(rootData).to.deep.equal({ root: `${helper.scopes.remote}/ws-root@${rootHead}` });
     });
-    it('should not record it on the root component itself', () => {
-      const extensionNames = helper.command.catComponent('ws-root@latest').extensions.map((ext) => ext.name);
-      expect(extensionNames).to.not.include('teambit.workspace/workspace-root');
+    it('should mark the root component itself as such in its aspect data', () => {
+      // the marker is what tells a root from the model alone. an import onto "." relies on it.
+      const rootData = helper.command
+        .catComponent('ws-root@latest')
+        .extensions.find((ext) => ext.name === 'teambit.workspace/workspace-root')?.data;
+      expect(rootData).to.deep.equal({ isRoot: true });
     });
     describe('adding a new component inside the workspace root', () => {
+      let rootHeadBefore: string;
       before(() => {
+        rootHeadBefore = helper.command.getHead('ws-root');
         helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";\n');
         helper.command.addComponent('comp2', { i: 'comp2' });
       });
@@ -147,9 +152,38 @@ describe('add command on Harmony', function () {
       it('should mark the root component as modified, because the map changed', () => {
         expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(1);
       });
-      it('should converge again after snapping the map change', () => {
-        helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
-        expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
+      describe('snapping only the new component', () => {
+        let output: string;
+        before(() => {
+          output = helper.command.snapComponentWithoutBuild('comp2', '--ignore-issues "*"');
+        });
+        it('should snap the modified root along, and say so', () => {
+          // otherwise the new component would point at a root version whose map does not list it
+          expect(helper.command.getHead('ws-root')).to.not.equal(rootHeadBefore);
+          expect(output).to.have.string('is the workspace-root component');
+        });
+        it('should record the root on the new component at the version it got in that snap', () => {
+          const rootData = helper.command
+            .catComponent('comp2@latest')
+            .extensions.find((ext) => ext.name === 'teambit.workspace/workspace-root')?.data;
+          const rootHead = helper.command.getHead('ws-root');
+          expect(rootData).to.deep.equal({ root: `${helper.scopes.remote}/ws-root@${rootHead}` });
+        });
+        it('should converge again', () => {
+          expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
+        });
+      });
+    });
+    describe('tagging a member with an explicit version while the root is modified', () => {
+      before(() => {
+        helper.fs.outputFile('README.md', '# workspace root, edited\n');
+        helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1 v2";\n');
+        helper.command.tagWithoutBuild('comp1', '--ver 1.0.0 --ignore-issues "*"');
+      });
+      it('should give the root a patch bump of its own rather than the version meant for the member', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.version).to.equal('1.0.0');
+        expect(bitMap['ws-root'].version).to.equal('0.0.1');
       });
     });
   });

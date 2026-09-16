@@ -9,14 +9,18 @@ export class WorkspaceRootFragment implements ShowFragment {
   async renderRow(component: Component) {
     return {
       title: this.title,
-      content: this.workspaceRoot.getRootOf(component)?.toString() ?? '',
+      content: this.workspaceRoot.isWorkspaceRootComponent(component)
+        ? 'this component'
+        : (this.workspaceRoot.getRootOf(component)?.toString() ?? ''),
     };
   }
 
   async json(component: Component) {
+    const isRoot = this.workspaceRoot.isWorkspaceRootComponent(component);
+    const root = this.workspaceRoot.getRootOf(component)?.toString();
     return {
       title: this.title,
-      json: this.workspaceRoot.getRootOf(component)?.toString(),
+      json: isRoot ? { isRoot } : root ? { root } : undefined,
     };
   }
 }

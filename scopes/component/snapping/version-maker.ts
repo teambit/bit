@@ -82,6 +82,11 @@ export type VersionMakerParams = {
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
   setHeadAsParent?: boolean;
+  /**
+   * the workspace-root component that joined the batch on its own, being new or modified. see
+   * SnappingMain.getWorkspaceRootToTagAlong.
+   */
+  autoAddedWorkspaceRoot?: ComponentID;
 } & BasicTagParams;
 
 type ComputedVersion = { componentToTag: ConsumerComponent; version: string };
@@ -555,6 +560,11 @@ export class VersionMaker {
             }
             return soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
           }
+          if (this.params.autoAddedWorkspaceRoot?.isEqualWithoutVersion(componentToTag.id)) {
+            // the root joined the batch on its own. a version given for the members - `--ver`, or on the
+            // id - is not meant for it, so it is bumped the way an auto-tagged dependent is.
+            return soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
+          }
           const versionByEnteredId = this.getVersionByEnteredId(this.ids, componentToTag, modelComponent);
           return soft
             ? versionByEnteredId || exactVersion || (releaseType as string)
@@ -756,8 +766,11 @@ export class VersionMaker {
 
   /**
    * every member of a workspace-root component records the root it is snapped in, at the version the
-   * root has after this batch: its new version when it is snapped along, otherwise the one in .bitmap
-   * (none when the root was never snapped). the root itself records nothing. see WorkspaceRootMain.
+   * root has after this batch: its new version when it is snapped along, otherwise the one in .bitmap.
+   * tag and snap bring a new or modified root into the batch (see SnappingMain.getWorkspaceRootToTagAlong),
+   * so the version is only missing on the paths that don't, such as a merge snap made while the root
+   * was never snapped. the root itself records nothing here, it carries the isRoot marker instead.
+   * see WorkspaceRootMain.
    */
   private recordWorkspaceRoot() {
     if (!this.consumer) return;
