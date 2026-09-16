@@ -25,6 +25,7 @@ import {
 import type { Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
 import { NoCommonSnap } from '@teambit/legacy.scope';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -136,6 +137,11 @@ export type LaneUpdateDependentsResult = {
   /** where the entries were read from. `local` only when the remote lane could not be fetched */
   source: 'remote' | 'local';
   remoteError?: string;
+  /**
+   * with `source: 'local'`: true when the lane doesn't exist on the remote (never exported), false when
+   * the remote was unreachable or failed for another reason.
+   */
+  remoteLaneMissing?: boolean;
 };
 
 export type UndoLaneUpdateDependentsResult = {
@@ -1527,11 +1533,11 @@ please create a new lane instead, which will include all components of this lane
    * object is used only when the remote lane can't be fetched (e.g. the lane was never exported).
    */
   async getLaneUpdateDependents(laneId: LaneId): Promise<LaneUpdateDependentsResult> {
-    let remoteError: string | undefined;
+    let remoteError: Error | undefined;
     const remoteLane = this.isLaneLocalOnly(laneId)
       ? undefined
       : await this.importLaneObject(laneId, false).catch((err: Error) => {
-          remoteError = err.message;
+          remoteError = err;
           return undefined;
         });
     if (remoteLane) {
@@ -1539,10 +1545,17 @@ please create a new lane instead, which will include all components of this lane
     }
     const localLane = await this.loadLane(laneId);
     if (!localLane) {
-      const reason = remoteError ? `, and fetching it from the remote failed: ${remoteError}` : '';
+      const reason = remoteError ? `, and fetching it from the remote failed: ${remoteError.message}` : '';
       throw new BitError(`lane "${laneId.toString()}" was not found locally${reason}`);
     }
-    return { laneId, ids: localLane.updateDependents || [], source: 'local', remoteError };
+    const remoteLaneMissing = !remoteError || remoteError instanceof LaneNotFound;
+    return {
+      laneId,
+      ids: localLane.updateDependents || [],
+      source: 'local',
+      remoteError: remoteError?.message,
+      remoteLaneMissing,
+    };
   }
 
   /**
@@ -1554,20 +1567,29 @@ please create a new lane instead, which will include all components of this lane
    */
   async undoLaneUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<UndoLaneUpdateDependentsResult> {
     const current = await this.getLaneUpdateDependents(laneId);
+    if (current.source === 'local' && !current.remoteLaneMissing) {
+      // the remote is the source of truth for these entries. removing them locally while the remote keeps
+      // them would only be reverted by the next import, so fail instead of pretending it worked.
+      throw new BitError(
+        `unable to undo the cascaded updates of lane "${laneId.toString()}": the remote lane could not be fetched (${current.remoteError}). the remote is the source of truth for these entries, retry when it's reachable`
+      );
+    }
+    // source 'local' here means the lane doesn't exist on the remote (never exported): change the local lane only
+    const remoteSkipped = current.source === 'local';
     const removed = ids?.length
       ? current.ids.filter((id) => ids.some((toRemove) => toRemove.isEqualWithoutVersion(id)))
       : current.ids;
-    const remoteSkipped = this.isLaneLocalOnly(laneId);
+    if (!removed.length) return { laneId, removed, remoteChanged: false, localChanged: false, remoteSkipped };
+    // remove exactly the resolved entries, on the remote and locally. this keeps local-only entries (e.g. a
+    // workspace cascade that wasn't exported yet) intact instead of wiping them with a remove-all.
+    const removedIdsStr = removed.map((id) => id.toString());
     let remoteChanged = false;
     if (!remoteSkipped) {
       const remote = await getRemoteByName(laneId.scope, this.workspace?.consumer);
-      remoteChanged = await remote.removeLaneUpdateDependents(
-        laneId.toString(),
-        ids?.map((id) => id.toString())
-      );
+      remoteChanged = await remote.removeLaneUpdateDependents(laneId.toString(), removedIdsStr);
     }
     const localLane = await this.loadLane(laneId);
-    const localChanged = localLane ? await this.removeUpdateDependents(laneId, ids) : false;
+    const localChanged = localLane ? await this.removeUpdateDependents(laneId, removed) : false;
     return { laneId, removed, remoteChanged, localChanged, remoteSkipped };
   }
 

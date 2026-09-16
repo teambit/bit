@@ -6,6 +6,16 @@ import { RippleMain, type RippleJob, type SimulateNetwork } from './ripple.main.
 import { RippleSimulateCmd } from './ripple.cmd';
 
 const LANE_ID = 'org.scope/my-lane';
+
+/** resolves with the rejection reason, and fails the test when the promise unexpectedly resolves */
+async function rejectionOf(promise: Promise<unknown>): Promise<Error> {
+  try {
+    await promise;
+  } catch (err) {
+    return err as Error;
+  }
+  throw new Error('expected the promise to reject, but it resolved');
+}
 const JOB: RippleJob = {
   id: 'job-1',
   slug: 'job-1-slug',
@@ -109,7 +119,7 @@ describe('RippleMain.simulateLane()', () => {
 
   it('should throw when not logged in, without calling the API', async () => {
     const ripple = createRippleMain({ token: null });
-    const error: Error = await ripple.simulateLane(LANE_ID).catch((err) => err);
+    const error = await rejectionOf(ripple.simulateLane(LANE_ID));
     expect(error.message).to.include('not logged in');
     expect(requests).to.have.lengthOf(0);
   });
@@ -117,7 +127,7 @@ describe('RippleMain.simulateLane()', () => {
   it('should surface GraphQL errors', async () => {
     responseBody = { errors: [{ message: 'lane not found' }] };
     const ripple = createRippleMain();
-    const error: Error = await ripple.simulateLane(LANE_ID).catch((err) => err);
+    const error = await rejectionOf(ripple.simulateLane(LANE_ID));
     expect(error.message).to.include('lane not found');
   });
 });
@@ -141,14 +151,14 @@ describe('RippleSimulateCmd', () => {
 
   it('should fail when not on a lane and no --lane is given', async () => {
     const { cmd, calls } = createCmd();
-    const error: Error = await cmd.json([], {}).catch((err) => err);
+    const error = await rejectionOf(cmd.json([], {}));
     expect(error.message).to.include('requires a lane');
     expect(calls).to.have.lengthOf(0);
   });
 
   it('should refuse to simulate the current lane when it was never exported', async () => {
     const { cmd, calls } = createCmd({ currentLaneId: LANE_ID, isLaneExported: false });
-    const error: Error = await cmd.json([], {}).catch((err) => err);
+    const error = await rejectionOf(cmd.json([], {}));
     expect(error.message).to.include('never exported');
     expect(calls).to.have.lengthOf(0);
   });
@@ -180,11 +190,39 @@ describe('RippleSimulateCmd', () => {
     expect(calls.map((call) => call.laneId)).to.deep.equal(['org.scope/other-lane']);
   });
 
+  it('should apply the exported check when --lane names the current lane', async () => {
+    const { cmd, calls } = createCmd({ currentLaneId: LANE_ID, isLaneExported: false });
+    const error = await rejectionOf(cmd.json([], { lane: LANE_ID }));
+    expect(error.message).to.include('never exported');
+    expect(calls).to.have.lengthOf(0);
+  });
+
+  it('should reject the default lane and malformed lane ids without calling the cloud', async () => {
+    const { cmd, calls } = createCmd({ currentLaneId: LANE_ID });
+    const mainError = await rejectionOf(cmd.json([], { lane: 'main' }));
+    expect(mainError.message).to.include('default lane');
+    const scopedMainError = await rejectionOf(cmd.json([], { lane: 'org.scope/main' }));
+    expect(scopedMainError.message).to.include('default lane');
+    const malformedError = await rejectionOf(cmd.json([], { lane: 'no-delimiter' }));
+    expect(malformedError.message).to.include('invalid --lane');
+    expect(calls).to.have.lengthOf(0);
+  });
+
   it('should split the comma-separated network flags and drop empty entries', async () => {
     const { cmd, calls } = createCmd({ currentLaneId: LANE_ID });
     await cmd.json([], { scopes: 'org.a, org.b,', owners: '', excludeScopes: 'org.c' });
     expect(calls[0].network).to.deep.equal({
       scopeIds: ['org.a', 'org.b'],
+      ownerIds: undefined,
+      excludeScopeIds: ['org.c'],
+    });
+  });
+
+  it('should keep the lane scope as the search base when only --exclude-scopes is given', async () => {
+    const { cmd, calls } = createCmd({ currentLaneId: LANE_ID });
+    await cmd.json([], { excludeScopes: 'org.c' });
+    expect(calls[0].network).to.deep.equal({
+      scopeIds: ['org.scope'],
       ownerIds: undefined,
       excludeScopeIds: ['org.c'],
     });

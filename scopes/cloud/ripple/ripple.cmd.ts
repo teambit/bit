@@ -4,6 +4,7 @@ import Table from 'cli-table';
 import type { LastExportData } from '@teambit/export';
 import { formatSuccessSummary, formatItem, formatHint, joinSections } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { RippleMain, RippleJob, CiGraphNode, SimulateNetwork } from './ripple.main.runtime';
 import { colorPhase, isFailedPhase, stripAnsi, resolveJobId, formatAge } from './ripple-utils';
 
@@ -751,13 +752,32 @@ follow the job with "bit ripple log <job-id>". once it finishes, "bit ripple err
     return { laneId, job, network, url: this.ripple.getJobUrl(job) };
   }
 
-  private async simulate(flags: SimulateFlags): Promise<SimulateResult> {
+  /**
+   * the lane to simulate: `--lane` when given (validated and normalized), otherwise the current lane.
+   */
+  private resolveLaneId(flags: SimulateFlags): { laneId: string; isCurrentLane: boolean } {
     const currentLaneId = this.ripple.getCurrentLaneId();
-    const laneId = flags.lane || currentLaneId;
-    if (!laneId) {
-      throw new BitError('a simulation requires a lane. switch to a lane or pass --lane <scope/lane-name>');
+    if (!flags.lane) {
+      if (!currentLaneId) {
+        throw new BitError('a simulation requires a lane. switch to a lane or pass --lane <scope/lane-name>');
+      }
+      return { laneId: currentLaneId, isCurrentLane: true };
     }
-    if (laneId === currentLaneId && this.ripple.isCurrentLaneExported() === false) {
+    if (flags.lane === DEFAULT_LANE) throw new BitError(defaultLaneError(flags.lane));
+    let parsed: LaneId;
+    try {
+      parsed = LaneId.parse(flags.lane);
+    } catch (err: any) {
+      throw new BitError(`invalid --lane "${flags.lane}", expected "scope/lane-name". ${err.message}`);
+    }
+    if (parsed.isDefault()) throw new BitError(defaultLaneError(flags.lane));
+    const laneId = parsed.toString();
+    return { laneId, isCurrentLane: laneId === currentLaneId };
+  }
+
+  private async simulate(flags: SimulateFlags): Promise<SimulateResult> {
+    const { laneId, isCurrentLane } = this.resolveLaneId(flags);
+    if (isCurrentLane && this.ripple.isCurrentLaneExported() === false) {
       throw new BitError(
         `lane "${laneId}" was never exported. a simulation runs against the lane on bit.cloud, run "bit export" first`
       );
@@ -767,11 +787,16 @@ follow the job with "bit ripple log <job-id>". once it finishes, "bit ripple err
       ownerIds: splitList(flags.owners),
       excludeScopeIds: splitList(flags.excludeScopes),
     };
-    // Ripple CI can't resolve the dependents graph without a network filter, so search the lane's own scope by default
-    const defaultedToLaneScope = !Object.values(network).some((values) => values?.length);
-    if (defaultedToLaneScope) network.scopeIds = [laneId.split('/')[0]];
+    // Ripple CI can't resolve the dependents graph without a positive search base (scopes or owners),
+    // so search the lane's own scope by default. exclusions alone only narrow, they don't provide a base.
+    const defaultedToLaneScope = !network.scopeIds?.length && !network.ownerIds?.length;
+    if (defaultedToLaneScope) network.scopeIds = [LaneId.parse(laneId).scope];
     const job = await this.ripple.simulateLane(laneId, network);
     if (!job) throw new BitError(`failed to start a simulation for lane "${laneId}"`);
     return { laneId, job, network, defaultedToLaneScope };
   }
+}
+
+function defaultLaneError(lane: string): string {
+  return `"${lane}" is the default lane. a simulation needs a lane whose changes are tested against their dependents on main`;
 }
