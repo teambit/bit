@@ -1123,6 +1123,8 @@ export function normalizeBitmapContentForVersioning(rawContent: string): string 
     if (key === SCHEMA_FIELD || !entry || typeof entry !== 'object') return;
     if (entry.version !== undefined) entry.version = '';
     delete entry.config;
+    // the pending soft-tag, which --persist turns into a version and clears from the map
+    delete entry.nextVersion;
   });
   return formatBitMapFile(parsed);
 }

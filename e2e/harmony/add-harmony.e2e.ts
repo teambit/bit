@@ -196,11 +196,16 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('untracked-by-bit.txt', 'not a component file\n');
       helper.command.addComponent('.', { i: 'ws-root' });
       // a dependency that happens to share the package name the root's id derives
-      helper.fs.outputFile(
-        path.join('node_modules', helper.general.getPackageNameByCompName('ws-root', false), 'index.js'),
-        ''
-      );
+      const packageName = helper.general.getPackageNameByCompName('ws-root', false);
+      helper.fs.outputFile(path.join('node_modules', packageName, 'index.js'), '');
+      helper.fs.outputFile('package.json', JSON.stringify({ dependencies: { [packageName]: '1.0.0' } }));
       helper.command.removeComponent('ws-root --silent');
+    });
+    it('should not drop a package.json dependency that shares its derived package name', () => {
+      // the root was never a package, so its removal has nothing to clean from the manifest
+      const packageName = helper.general.getPackageNameByCompName('ws-root', false);
+      const packageJson = fs.readJsonSync(path.join(helper.scopes.localPath, 'package.json'));
+      expect(packageJson.dependencies).to.have.property(packageName);
     });
     it('should not delete the workspace', () => {
       // its rootDir is the workspace itself, so deleting it takes .bitmap, .bit, every nested
@@ -326,6 +331,18 @@ describe('add command on Harmony', function () {
         const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
         expect(cmd).to.throw('due to local changes');
         expect(helper.workspaceJsonc.read()['teambit.workspace/workspace'].name).to.equal('renamed');
+      });
+      it('should refuse to write through a symlink in the way of a root file even with --override, as it does for --path .', () => {
+        // the destination is "." by the existing .bitmap entry here, not by an explicit --path. a checkout
+        // takes the same route.
+        const outside = path.join(helper.scopes.localPath, '..', `outside-${path.basename(helper.scopes.localPath)}`);
+        fs.mkdirSync(outside);
+        fs.removeSync(path.join(helper.scopes.localPath, 'docs'));
+        fs.symlinkSync(outside, path.join(helper.scopes.localPath, 'docs'));
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--override');
+        expect(cmd).to.throw('symbolic link');
+        expect(path.join(outside, 'guide.md')).to.not.be.a.path();
+        fs.removeSync(outside);
       });
     });
     describe('importing it onto the root of a fresh workspace that has its own files', () => {

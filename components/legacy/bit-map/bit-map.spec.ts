@@ -149,6 +149,7 @@ describe('BitMap', function () {
           mainFile: 'index.ts',
           rootDir: 'comp1',
           config: { 'teambit.envs/envs': { env: 'teambit.harmony/node' } },
+          nextVersion: { version: 'patch', message: 'soft-tagged' },
         },
         '$schema-version': '17.0.0',
       },
@@ -166,6 +167,10 @@ describe('BitMap', function () {
     });
     it('should drop the config, which a snap moves into the version and removes from the map', () => {
       expect(parsed.comp1).to.not.have.property('config');
+    });
+    it('should drop the pending soft-tag, which persisting it clears from the map', () => {
+      // otherwise the root would capture it when tagged along and never converge after --persist
+      expect(parsed.comp1).to.not.have.property('nextVersion');
     });
     it('should drop the lane, workspace state that export and lane switch change', () => {
       expect(normalized).to.not.have.string('_bit_lane');

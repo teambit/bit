@@ -280,12 +280,14 @@ export class ComponentWriterMain {
       ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath))) ||
         WORKSPACE_ROOT_DIR
       : this.consumer.composeRelativeComponentPath(component.id);
-    if (componentRootDir === WORKSPACE_ROOT_DIR) {
+    // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
+    const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
+    // a component already tracked at the root is written there whatever path was derived above, e.g. by
+    // a checkout or a re-import, so the guards of the root run for it as well
+    if (componentRootDir === WORKSPACE_ROOT_DIR || existingComponentMap?.rootDir === WORKSPACE_ROOT_DIR) {
       this.throwForNonWorkspaceRootComponent(component);
       this.throwForSymlinksInTheWay(component);
     }
-    // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
-    const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
     // with --write-to-empty-dir, dir-conflict resolution is deferred to relocateOccupiedDirs() so it runs after the
     // fixDirs* passes (which may still adjust writeToPath); otherwise fail here when the target dir is occupied.
     // the workspace root is never relocated (see relocateOccupiedDirs), so its own check runs either way.
@@ -357,7 +359,7 @@ to move all component files to a different directory, run bit remove and then bi
       const stat = lstatIfExists(this.consumer.toAbsolutePath(pathInTheWay));
       if (!stat?.isSymbolicLink()) return;
       throw new BitError(
-        `unable to import "${component.id.toString()}" to the workspace root, "${pathInTheWay}" is a symbolic link and the import would write through it`
+        `unable to write "${component.id.toString()}" to the workspace root, "${pathInTheWay}" is a symbolic link and the files would be written through it`
       );
     });
   }

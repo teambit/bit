@@ -169,8 +169,10 @@ If you understand the risks and wish to proceed with the removal, please use the
     if (deleteFiles) await deleteComponentsFiles(consumer, idsToCleanFromWorkspace);
     if (!track) {
       const removedComponents = componentsToRemove.filter((c) => idsToCleanFromWorkspace.hasWithoutVersion(c.id));
-      await consumer.packageJson.removeComponentsFromDependencies(removedComponents);
-      await removeComponentsFromNodeModules(consumer, removedComponents);
+      // the root is untracked only. it was never a package, see withoutWorkspaceRoot.
+      const packageComponents = withoutWorkspaceRoot(consumer, removedComponents);
+      await consumer.packageJson.removeComponentsFromDependencies(packageComponents);
+      await removeComponentsFromNodeModules(consumer, packageComponents);
       await consumer.cleanFromBitMap(idsToCleanFromWorkspace);
       await workspace.cleanFromConfig(idsToCleanFromWorkspace);
       await workspace.removeFromStagedConfig(idsToCleanFromWorkspace);
@@ -185,13 +187,20 @@ If you understand the risks and wish to proceed with the removal, please use the
   );
 }
 
-export async function removeComponentsFromNodeModules(consumer: Consumer, components: ConsumerComponent[]) {
-  logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
-  // the workspace-root component is never linked (it is the workspace, not a package), so there is
-  // nothing of it to remove, and the path its id derives may belong to a dependency of the same name.
-  const linkedComponents = components.filter(
+/**
+ * the workspace-root component is never installed nor linked - it is the workspace, not a package - so
+ * there is nothing of it to remove from the manifests or from node_modules, and the package name its
+ * id derives may belong to a dependency of the same name.
+ */
+function withoutWorkspaceRoot(consumer: Consumer, components: ConsumerComponent[]): ConsumerComponent[] {
+  return components.filter(
     (c) => consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })?.rootDir !== WORKSPACE_ROOT_DIR
   );
+}
+
+export async function removeComponentsFromNodeModules(consumer: Consumer, components: ConsumerComponent[]) {
+  logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
+  const linkedComponents = withoutWorkspaceRoot(consumer, components);
   const pathsToRemoveWithNulls = linkedComponents.map((c) => {
     return getNodeModulesPathOfComponent({ ...c, id: c.id });
   });
