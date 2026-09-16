@@ -24,6 +24,12 @@
     "policy": {
       "dependencies": {
         "@teambit/node": "1.0.1107",
+        // pinned like the other legacy core envs, and to the same version legacy-core-envs.ts
+        // pins. Without it the released bbit installs the current @teambit/react while the dev
+        // binary wants this one, and swapping a package this widely depended on re-keys peer
+        // hashes across the tree - so the dev install relinks all of node_modules instead of a
+        // delta, replacing the component dists the running bit is loaded from.
+        "@teambit/react": "1.0.1107",
         "@teambit/aspect": "1.0.1107",
         "@teambit/env": "1.0.1107",
         "@teambit/mdx": "1.0.1108",
