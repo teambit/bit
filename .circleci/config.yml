@@ -847,7 +847,14 @@ jobs:
             RAYON_NUM_THREADS: '4'
       - run:
           name: 'bbit compile (rebuild the dists the install replaced)'
-          command: 'cd bit && bbit compile'
+          # Twice, for the reason setup_harmony compiles after its own install: the first pass
+          # runs with the envs unloaded - they are packages whose own dependencies are this
+          # repo's components, whose dists the install just replaced - so it falls back to the
+          # default TypeScript compiler. tsc emits eager top-level requires where those envs'
+          # babel config emits lazy thunks, which drags UI-only packages into the node runtime
+          # and breaks the next `bit` on an ESM-only import. The second pass, with node_modules
+          # and the dists settled, rebuilds them with their real envs.
+          command: 'cd bit && bbit compile && bbit compile'
           no_output_timeout: 20m
       - run:
           name: 'check circular dependencies (repo bit)'
@@ -1027,7 +1034,14 @@ jobs:
             RAYON_NUM_THREADS: '6'
       - run:
           name: 'bbit compile (rebuild the dists the install replaced)'
-          command: 'cd bit && bbit compile'
+          # Twice, for the reason setup_harmony compiles after its own install: the first pass
+          # runs with the envs unloaded - they are packages whose own dependencies are this
+          # repo's components, whose dists the install just replaced - so it falls back to the
+          # default TypeScript compiler. tsc emits eager top-level requires where those envs'
+          # babel config emits lazy thunks, which drags UI-only packages into the node runtime
+          # and breaks the next `bit` on an ESM-only import. The second pass, with node_modules
+          # and the dists settled, rebuilds them with their real envs.
+          command: 'cd bit && bbit compile && bbit compile'
           no_output_timeout: '20m'
       - run:
           name: 'bit ci pr'
@@ -1141,7 +1155,14 @@ jobs:
             RAYON_NUM_THREADS: '6'
       - run:
           name: 'bbit compile (rebuild the dists the install replaced)'
-          command: 'cd bit && bbit compile'
+          # Twice, for the reason setup_harmony compiles after its own install: the first pass
+          # runs with the envs unloaded - they are packages whose own dependencies are this
+          # repo's components, whose dists the install just replaced - so it falls back to the
+          # default TypeScript compiler. tsc emits eager top-level requires where those envs'
+          # babel config emits lazy thunks, which drags UI-only packages into the node runtime
+          # and breaks the next `bit` on an ESM-only import. The second pass, with node_modules
+          # and the dists settled, rebuilds them with their real envs.
+          command: 'cd bit && bbit compile && bbit compile'
           no_output_timeout: '20m'
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
