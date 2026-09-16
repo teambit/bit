@@ -11,7 +11,7 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { ExportMain } from '@teambit/export';
 import { ExportAspect } from '@teambit/export';
-import type { LaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
@@ -20,6 +20,7 @@ import { ComponentID } from '@teambit/component-id';
 import { partitionSwitchIds } from './switch-lanes';
 import { LanesAspect } from './lanes.aspect';
 import type { LanesMain } from './lanes.main.runtime';
+import { LaneUpdatesCmd } from './lane.cmd';
 import type { MergeLanesMain } from '@teambit/merge-lanes';
 import { MergeLanesAspect } from '@teambit/merge-lanes';
 import { GraphqlAspect, type GraphqlMain } from '@teambit/graphql';
@@ -619,5 +620,29 @@ describe('lane updates (Ripple CI cascade entries)', function () {
 
     const afterLocal = await localScope.lanes.loadLane(laneId);
     expect(afterLocal?.updateDependents).to.be.undefined;
+  });
+});
+
+describe('LaneUpdatesCmd', () => {
+  const stubbedLaneId = LaneId.from('my-lane', 'org.scope');
+  function createCmd(result: { source: 'remote' | 'local'; remoteError?: string }) {
+    const lanes = {
+      getCurrentLaneId: () => stubbedLaneId,
+      getLaneUpdateDependents: async () => ({ laneId: stubbedLaneId, ids: [], ...result }),
+    } as unknown as LanesMain;
+    return new LaneUpdatesCmd(lanes);
+  }
+  it('should say the lane was not exported, rather than report a remote failure, when no fetch was attempted', async () => {
+    const output = await createCmd({ source: 'local' }).report([''], {});
+    expect(output).to.include('was not exported yet');
+    expect(output).to.not.include('undefined');
+  });
+  it('should report the remote error when the fetch actually failed', async () => {
+    const output = await createCmd({ source: 'local', remoteError: 'connection refused' }).report([''], {});
+    expect(output).to.include('could not be fetched: connection refused');
+  });
+  it('should not add a source hint when the entries came from the remote', async () => {
+    const output = await createCmd({ source: 'remote' }).report([''], {});
+    expect(output).to.not.include('showing the local lane object');
   });
 });

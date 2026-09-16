@@ -538,12 +538,17 @@ use --undo to remove them from the lane, on the remote and locally, e.g. when th
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
+  // the entries live on the remote lane, so a named lane can be inspected from a bare scope as well
+  skipWorkspace = true;
 
   constructor(private lanes: LanesMain) {}
 
   private async getLaneId(laneName?: string): Promise<LaneId> {
     const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.lanes.getCurrentLaneId();
-    if (!laneId || laneId.isDefault()) {
+    if (!laneId) {
+      throw new BitError('unable to detect the current lane, specify a lane name, e.g. "bit lane updates scope/name"');
+    }
+    if (laneId.isDefault()) {
       throw new BitError('the default lane (main) has no cascaded updates. switch to a lane or specify a lane name');
     }
     return laneId;
@@ -554,9 +559,14 @@ use --undo to remove them from the lane, on the remote and locally, e.g. when th
     if (undo) return this.reportUndo(laneId);
 
     const { ids, source, remoteError } = await this.lanes.getLaneUpdateDependents(laneId);
+    // `source: 'local'` without an error means no fetch was attempted: the lane was never exported
     const sourceHint =
       source === 'local'
-        ? formatHint(`showing the local lane object, the remote lane could not be fetched: ${remoteError}`)
+        ? formatHint(
+            remoteError
+              ? `showing the local lane object, the remote lane could not be fetched: ${remoteError}`
+              : 'showing the local lane object, the lane was not exported yet'
+          )
         : '';
     if (!ids.length) {
       return joinSections([`no dependents were cascaded onto lane "${laneId.toString()}" by Ripple CI.`, sourceHint]);
