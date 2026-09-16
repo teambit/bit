@@ -130,18 +130,25 @@ export type SwitchLaneOptions = {
   branch?: boolean;
 };
 
+/**
+ * where the entries were read from. the remote lane is the source of truth, so anything else means the
+ * local lane object was used instead, and why.
+ */
+export type LaneUpdateDependentsSource =
+  /** the lane on the remote */
+  | 'remote'
+  /** the remote has no such lane - it was never exported, or it was removed there */
+  | 'no-remote-lane'
+  /** the remote could not be reached or failed, so the local entries may be stale */
+  | 'remote-unavailable';
+
 export type LaneUpdateDependentsResult = {
   laneId: LaneId;
   /** the cascaded entries. each id carries the cascade snap hash as its version */
   ids: ComponentID[];
-  /** where the entries were read from. `local` only when the remote lane could not be fetched */
-  source: 'remote' | 'local';
+  source: LaneUpdateDependentsSource;
+  /** the remote failure message, when the remote was tried and failed */
   remoteError?: string;
-  /**
-   * with `source: 'local'`: true when the lane doesn't exist on the remote (never exported), false when
-   * the remote was unreachable or failed for another reason.
-   */
-  remoteLaneMissing?: boolean;
 };
 
 export type UndoLaneUpdateDependentsResult = {
@@ -1548,14 +1555,10 @@ please create a new lane instead, which will include all components of this lane
       const reason = remoteError ? `, and fetching it from the remote failed: ${remoteError.message}` : '';
       throw new BitError(`lane "${laneId.toString()}" was not found locally${reason}`);
     }
-    const remoteLaneMissing = !remoteError || remoteError instanceof LaneNotFound;
-    return {
-      laneId,
-      ids: localLane.updateDependents || [],
-      source: 'local',
-      remoteError: remoteError?.message,
-      remoteLaneMissing,
-    };
+    // no error means no fetch was attempted, i.e. the lane is local-only. LaneNotFound means the same
+    // thing from the remote's side: either way the remote has no lane to be the source of truth.
+    const source = !remoteError || remoteError instanceof LaneNotFound ? 'no-remote-lane' : 'remote-unavailable';
+    return { laneId, ids: localLane.updateDependents || [], source, remoteError: remoteError?.message };
   }
 
   /**
@@ -1567,15 +1570,15 @@ please create a new lane instead, which will include all components of this lane
    */
   async undoLaneUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<UndoLaneUpdateDependentsResult> {
     const current = await this.getLaneUpdateDependents(laneId);
-    if (current.source === 'local' && !current.remoteLaneMissing) {
+    if (current.source === 'remote-unavailable') {
       // the remote is the source of truth for these entries. removing them locally while the remote keeps
       // them would only be reverted by the next import, so fail instead of pretending it worked.
       throw new BitError(
         `unable to undo the cascaded updates of lane "${laneId.toString()}": the remote lane could not be fetched (${current.remoteError}). the remote is the source of truth for these entries, retry when it's reachable`
       );
     }
-    // source 'local' here means the lane doesn't exist on the remote (never exported): change the local lane only
-    const remoteSkipped = current.source === 'local';
+    // the remote has no such lane, so there's nothing to remove there: change the local lane only
+    const remoteSkipped = current.source === 'no-remote-lane';
     const removed = ids?.length
       ? current.ids.filter((id) => ids.some((toRemove) => toRemove.isEqualWithoutVersion(id)))
       : current.ids;
@@ -1632,19 +1635,8 @@ please create a new lane instead, which will include all components of this lane
    * default to remove all of them.
    * returns true if the lane has changed
    */
-  async removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<boolean> {
-    const lane = await this.loadLane(laneId);
-    if (!lane) throw new BitError(`unable to find a lane ${laneId.toString()}`);
-    if (ids?.length) {
-      ids.forEach((id) => lane.removeComponentFromUpdateDependentsIfExist(id));
-    } else {
-      lane.removeAllUpdateDependents();
-    }
-    if (lane.hasChanged) {
-      await this.scope.legacyScope.lanes.saveLane(lane, { laneHistoryMsg: 'remove update-dependents' });
-      return true;
-    }
-    return false;
+  removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<boolean> {
+    return this.scope.legacyScope.lanes.removeUpdateDependents(laneId, ids);
   }
 
   private async getLaneDataOfDefaultLane(): Promise<LaneData | null> {

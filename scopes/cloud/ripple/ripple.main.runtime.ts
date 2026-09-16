@@ -40,8 +40,8 @@ export type RippleJob = {
 export type RippleJobFull = RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string };
 
 /**
- * where Ripple CI looks for dependents of the lane components when simulating. all fields are
- * optional; when none is given the server default (the lane owner's network) is used.
+ * where Ripple CI looks for dependents of the lane components when simulating. the server can't resolve
+ * the dependents graph without a positive search base, so the caller always sets `scopeIds` or `ownerIds`.
  */
 export type SimulateNetwork = {
   scopeIds?: string[];
@@ -182,6 +182,27 @@ export class RippleMain {
     }
   `;
 
+  /**
+   * the same lookup as GET_JOB_BY_SLUG without the two CI graph blobs, which the simulate flow never reads.
+   * a simulation is a wide dependents fan-out, so those blobs are unbounded and the poll can run 3 times.
+   */
+  private static GET_JOB_BY_SLUG_MINIMAL = `
+    query getJobBySlug($slug: ID!) {
+      getJob(slug: $slug) {
+        id
+        slug
+        name
+        laneId
+        simulation
+        status { startedAt finishedAt phase }
+      }
+    }
+  `;
+
+  /** how many times to look the persisted job up, and the backoff between the attempts */
+  private static JOB_LOOKUP_ATTEMPTS = 3;
+  private static JOB_LOOKUP_DELAY_MS = 200;
+
   private ensureAuthenticated(): void {
     if (!this.cloud.getAuthToken()) {
       throw new Error('You are not logged in. Please run "bit login" first.');
@@ -189,9 +210,11 @@ export class RippleMain {
   }
 
   /**
-   * every Ripple CI request goes through this, so it honors the configured proxy, CA and network
+   * every Ripple CI GraphQL request goes through this, so it honors the configured proxy, CA and network
    * settings, the same way the cloud aspect reaches bit.cloud. kept as a field so tests can replace it:
    * the agent-wrapped fetcher doesn't go through the global fetch.
+   * the log-streaming endpoint (`getContainerLog`) deliberately stays on the global fetch - it reads the
+   * response as a web stream (`body.getReader()`), which the agent-wrapped node-fetch response doesn't have.
    */
   private fetcher: typeof fetchWithAgent = fetchWithAgent;
 
@@ -395,10 +418,6 @@ export class RippleMain {
     return data?.stopJob ?? null;
   }
 
-  /** how many times to look the persisted job up, and how long to wait between the attempts */
-  private static JOB_LOOKUP_ATTEMPTS = 3;
-  private static JOB_LOOKUP_DELAY_MS = 300;
-
   /**
    * start a simulation job for a lane. Ripple CI builds the dependents of the lane components (searched in
    * the given network of scopes/owners) against the lane heads, without merging or publishing anything.
@@ -418,27 +437,27 @@ export class RippleMain {
     if (!job) return null;
     // the mutation returns the job before it's persisted: only the slug is set, id and status are null.
     // fetch the persisted job so callers get the real id, which "ripple log/errors" need.
-    if (!job.id && job.slug) {
-      const persisted = await this.getPersistedJobBySlug(job.slug);
-      if (persisted) return persisted;
-    }
+    if (!job.id && job.slug) return (await this.getPersistedJobBySlug(job.slug)) ?? job;
     return job;
   }
 
   /**
    * poll for the persisted job: the simulate mutation responds before the job is written, so a single
-   * immediate lookup can still come back empty. returns null once the budget is spent - the simulation is
+   * immediate lookup can still come back empty. the delay doubles between the attempts, to cover more
+   * server lag with the same number of requests. returns null once the budget is spent - the simulation is
    * already running by then, so the caller reports it without an id rather than failing the command.
    */
   private async getPersistedJobBySlug(slug: string): Promise<RippleJob | null> {
     for (let attempt = 1; attempt <= RippleMain.JOB_LOOKUP_ATTEMPTS; attempt += 1) {
-      const job = await this.getJobBySlug(slug).catch((err: Error) => {
+      const data = await this.fetchRippleGQL<{ getJob: RippleJob }>(RippleMain.GET_JOB_BY_SLUG_MINIMAL, {
+        slug,
+      }).catch((err: Error) => {
         this.logger.debug(`simulateLane: lookup of job "${slug}" failed on attempt ${attempt}: ${err.message}`);
         return null;
       });
-      if (job?.id) return job;
+      if (data?.getJob?.id) return data.getJob;
       if (attempt < RippleMain.JOB_LOOKUP_ATTEMPTS) {
-        await new Promise((resolve) => setTimeout(resolve, RippleMain.JOB_LOOKUP_DELAY_MS));
+        await new Promise((resolve) => setTimeout(resolve, RippleMain.JOB_LOOKUP_DELAY_MS * 2 ** (attempt - 1)));
       }
     }
     this.logger.debug(`simulateLane: job "${slug}" was not persisted after ${RippleMain.JOB_LOOKUP_ATTEMPTS} lookups`);

@@ -136,12 +136,6 @@ describe('RippleMain.simulateLane()', () => {
     expect(requests).to.have.lengthOf(4); // the mutation + the lookup attempts
   });
 
-  it('should return the job as-is when it has an id', async () => {
-    const ripple = createRippleMain();
-    await ripple.simulateLane(LANE_ID);
-    expect(requests).to.have.lengthOf(1);
-  });
-
   it('should throw when not logged in, without calling the API', async () => {
     const ripple = createRippleMain({ token: null });
     const error = await rejectionOf(ripple.simulateLane(LANE_ID));

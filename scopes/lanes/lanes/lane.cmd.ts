@@ -559,15 +559,14 @@ use --undo to remove them from the lane, on the remote and locally, e.g. when th
     if (undo) return this.reportUndo(laneId);
 
     const { ids, source, remoteError } = await this.lanes.getLaneUpdateDependents(laneId);
-    // `source: 'local'` without an error means no fetch was attempted: the lane was never exported
     const sourceHint =
-      source === 'local'
-        ? formatHint(
-            remoteError
-              ? `showing the local lane object, the remote lane could not be fetched: ${remoteError}`
-              : 'showing the local lane object, the lane was not exported yet'
-          )
-        : '';
+      source === 'remote'
+        ? ''
+        : formatHint(
+            source === 'no-remote-lane'
+              ? 'showing the local lane object, the lane was not found on the remote (not exported yet?)'
+              : `showing the local lane object, the remote lane could not be fetched: ${remoteError}`
+          );
     if (!ids.length) {
       return joinSections([`no dependents were cascaded onto lane "${laneId.toString()}" by Ripple CI.`, sourceHint]);
     }
