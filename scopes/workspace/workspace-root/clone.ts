@@ -20,7 +20,7 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { isWorkspaceRootComponent } from './workspace-root-data';
 
-export type LoadBit = (path?: string) => Promise<Harmony>;
+export type LoadBit = (workspacePath?: string) => Promise<Harmony>;
 
 export type CloneOptions = {
   /**

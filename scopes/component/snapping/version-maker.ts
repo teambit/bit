@@ -773,13 +773,18 @@ export class VersionMaker {
    * see WorkspaceRootMain.
    */
   private recordWorkspaceRoot() {
-    if (!this.consumer) return;
-    const rootMap = findWorkspaceRootMap(this.consumer.bitMap);
+    const consumer = this.consumer;
+    if (!consumer) return;
+    const rootMap = findWorkspaceRootMap(consumer.bitMap);
     if (!rootMap) return;
     const rootInBatch = this.allComponentsToTag.find((component) => component.id.isEqualWithoutVersion(rootMap.id));
     const rootId = rootInBatch ? rootInBatch.id.changeVersion(rootInBatch.version) : rootMap.id;
     this.allComponentsToTag.forEach((component) => {
       if (component.id.isEqualWithoutVersion(rootMap.id)) return;
+      // hidden lane entries (lane.updateDependents) cascade into the batch from the scope rather than
+      // from the workspace, so they were not snapped in this root. absence from .bitmap is how they
+      // are told apart elsewhere in this file as well
+      if (!consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) return;
       writeWorkspaceRoot(component.extensions, rootId);
     });
   }
