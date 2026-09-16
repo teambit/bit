@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { ensureEmptyDir, resolveComponentDir } from './clone';
+import { WorkspaceRootMain } from './workspace-root.main.runtime';
 
 describe('resolveComponentDir', () => {
   const workspacePath = path.resolve(os.tmpdir(), 'ws');
@@ -76,5 +77,19 @@ describe('ensureEmptyDir', () => {
     await fs.ensureDir(target);
     await fs.symlink(target, link);
     await expectToReject(link, 'it is a symbolic link');
+  });
+});
+
+describe('clone from a workspace', () => {
+  it('should refuse, a clone is a new workspace and this one is already loaded', async () => {
+    // the check comes before anything is fetched or written, so no workspace is needed to reach it
+    const workspaceRoot = new WorkspaceRootMain({ path: '/ws' } as any);
+    try {
+      await workspaceRoot.clone('my-scope/ws-root', undefined, {});
+    } catch (err: any) {
+      expect(err.message).to.have.string('unable to clone inside the workspace at "/ws"');
+      return;
+    }
+    throw new Error('expected clone to throw');
   });
 });

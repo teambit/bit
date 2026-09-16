@@ -327,6 +327,14 @@ describe('add command on Harmony', function () {
         // the exported .bitmap lists comp1. the restored workspace must not inherit that entry.
         expect(helper.bitMap.read()).to.not.have.property('comp1');
       });
+      it('should refuse to move it out of the workspace root, which would take the workspace with it', () => {
+        // the mover schedules the removal of the directory the component is leaving, and here that
+        // directory is the workspace tree. --override, which waives the other guards, gets this far
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path some-dir --override');
+        expect(cmd).to.throw('tracked at the workspace root');
+        expect(path.join(helper.scopes.localPath, 'workspace.jsonc')).to.be.a.file();
+        expect(path.join(helper.scopes.localPath, '.bitmap')).to.be.a.file();
+      });
       it('should refuse a second import without --override once the user changed a root file, not overwrite it', () => {
         // a changed root file makes the root a modified component, and the importer refuses modified
         // components before anything is written. the writer's same-directory shortcut never sees it.
@@ -565,19 +573,6 @@ describe('add command on Harmony', function () {
         const status = helper.command.statusJson();
         expect(status.modifiedComponents).to.have.lengthOf(0);
         expect(status.newComponents).to.have.lengthOf(0);
-      });
-      it('should refuse to run inside a workspace', () => {
-        const cmd = () => helper.command.runCmd(`bit clone ${helper.scopes.remote}/ws-root other -x`);
-        expect(cmd).to.throw('inside the workspace');
-      });
-      it('should refuse a directory that is not empty', () => {
-        // run from the parent of the workspaces, which is not a workspace
-        const cmd = () =>
-          helper.command.runCmd(
-            `bit clone ${helper.scopes.remote}/ws-root ${helper.scopes.localPath} -x`,
-            helper.scopes.e2eDir
-          );
-        expect(cmd).to.throw('not empty');
       });
       it('should default the directory to the component name', () => {
         const clonePath = path.join(helper.scopes.e2eDir, 'ws-root');

@@ -335,6 +335,14 @@ to move all component files to a different directory, run bit remove and then bi
         // @ts-ignore this.writeToPath is set at this point
         const absoluteWriteToPath = path.resolve(writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
+          // a component tracked at the workspace root is the workspace. moving it schedules the removal
+          // of the directory it leaves, which there is the workspace tree (see moveExistingComponent)
+          if (componentMap.rootDir === WORKSPACE_ROOT_DIR) {
+            throw new BitError(
+              `unable to write "${component.id.toString()}" to "${writeToPath}", it is tracked at the workspace root, which is the workspace itself.
+run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace should stop tracking its root`
+            );
+          }
           this.mover.moveExistingComponent(component, absoluteWrittenPath, absoluteWriteToPath);
         }
       });
