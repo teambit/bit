@@ -518,22 +518,120 @@ describe('add command on Harmony', function () {
     it('should track the package.json of the workspace root', () => {
       expect(helper.command.getComponentFiles('ws-root')).to.include('package.json');
     });
-    describe('restoring the workspace from the scope', () => {
+    describe('cloning the workspace from its root component', () => {
+      // bit clone runs outside a workspace and needs no bit init. the remote is registered globally, as
+      // there is no workspace to register it in yet, and the clone lands in the emptied dir.
+      let output: string;
       before(() => {
         helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
         helper.command.export();
-        helper.scopeHelper.reInitWorkspace();
-        helper.scopeHelper.addRemoteScope();
-        helper.command.importComponentWithoutInstall('ws-root', '--path .');
-        helper.command.importComponentWithoutInstall('comp1', '--path comp1');
+        helper.scopeHelper.cleanWorkspace();
+        helper.scopeHelper.addRemoteScope(undefined, undefined, true);
+        output = helper.command.runCmd(`bit clone ${helper.scopes.remote}/ws-root . -x`);
       });
-      it('should write the manifests back, so the workspace can be installed and built', () => {
+      after(() => {
+        helper.scopeHelper.removeRemoteScope(undefined, true);
+      });
+      it('should report the root version and the number of components', () => {
+        expect(output).to.have.string(`cloned ${helper.scopes.remote}/ws-root@`);
+        expect(output).to.have.string('with 1 component');
+      });
+      it('should write the root files, the manifests included, so the workspace can be installed and built', () => {
         expect(path.join(helper.scopes.localPath, 'package.json'))
           .to.be.a.file()
           .with.content('{ "name": "monorepo", "private": true }\n');
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# workspace root\n');
+      });
+      it('should take the workspace.jsonc of the root over the one the init generates', () => {
+        expect(helper.workspaceJsonc.read()['teambit.workspace/workspace'].trackAllFiles).to.be.true;
+      });
+      it('should write every component the root lists into the directory it records', () => {
+        expect(helper.bitMap.read().comp1.rootDir).to.equal('comp1');
         expect(path.join(helper.scopes.localPath, 'comp1/package.json')).to.be.a.file();
         expect(path.join(helper.scopes.localPath, 'comp1/tsconfig.json')).to.be.a.file();
       });
+      it('should reproduce the state of the source workspace, whose root the export left modified', () => {
+        // the export set the scopes in .bitmap after the root was snapped, so the versioned map lists
+        // the members by their default scope. the clone resolves them by it, and the root is modified
+        // in the clone as it is at the source, until the next snap takes it along.
+        const status = helper.command.statusJson();
+        expect(status.modifiedComponents).to.deep.equal([`${helper.scopes.remote}/ws-root`]);
+        expect(status.newComponents).to.have.lengthOf(0);
+      });
+      it('should refuse to run inside a workspace', () => {
+        const cmd = () => helper.command.runCmd(`bit clone ${helper.scopes.remote}/ws-root other -x`);
+        expect(cmd).to.throw('inside the workspace');
+      });
+      it('should refuse a directory that is not empty', () => {
+        // run from the parent of the workspaces, which is not a workspace
+        const cmd = () =>
+          helper.command.runCmd(
+            `bit clone ${helper.scopes.remote}/ws-root ${helper.scopes.localPath} -x`,
+            helper.scopes.e2eDir
+          );
+        expect(cmd).to.throw('not empty');
+      });
+      it('should default the directory to the component name', () => {
+        const clonePath = path.join(helper.scopes.e2eDir, 'ws-root');
+        fs.removeSync(clonePath);
+        helper.command.runCmd(`bit clone ${helper.scopes.remote}/ws-root -x`, helper.scopes.e2eDir);
+        expect(path.join(clonePath, 'workspace.jsonc')).to.be.a.file();
+        expect(path.join(clonePath, 'comp1/index.js')).to.be.a.file();
+        fs.removeSync(clonePath);
+      });
+      it('should refuse a component that is not a workspace-root component, leaving no directory behind', () => {
+        const clonePath = path.join(helper.scopes.e2eDir, 'not-a-root');
+        const cmd = () =>
+          helper.command.runCmd(`bit clone ${helper.scopes.remote}/comp1 ${clonePath} -x`, helper.scopes.e2eDir);
+        expect(cmd).to.throw('not a workspace-root component');
+        expect(clonePath).to.not.be.a.path();
+      });
+    });
+  });
+  describe('cloning a workspace as it is on a lane', () => {
+    let comp1MainHead: string;
+    let comp2MainHead: string;
+    let comp1LaneHead: string;
+    let rootLaneHead: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.command.addComponent('comp2', { i: 'comp2' });
+      helper.command.addComponent('.', { i: 'ws-root' });
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+      helper.command.export();
+      comp1MainHead = helper.command.getHead('comp1');
+      comp2MainHead = helper.command.getHead('comp2');
+      helper.command.createLane('dev');
+      // comp1 changes on the lane. the export set the scopes in .bitmap, so the root is modified and
+      // joins the snap on the lane as well. comp2 stays as it is on main.
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1 v2";\n');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+      helper.command.export();
+      comp1LaneHead = helper.command.getHeadOfLane('dev', 'comp1');
+      rootLaneHead = helper.command.getHeadOfLane('dev', 'ws-root');
+      helper.scopeHelper.cleanWorkspace();
+      helper.scopeHelper.addRemoteScope(undefined, undefined, true);
+      helper.command.runCmd(`bit clone ${helper.scopes.remote}/ws-root . --lane ${helper.scopes.remote}/dev -x`);
+    });
+    after(() => {
+      helper.scopeHelper.removeRemoteScope(undefined, true);
+    });
+    it('should come out on the lane', () => {
+      expect(helper.bitMap.read()._bit_lane.id).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+    });
+    it('should write the components the lane has at their heads on the lane, the root included', () => {
+      expect(comp1LaneHead).to.not.equal(comp1MainHead);
+      expect(helper.bitMap.read().comp1.version).to.equal(comp1LaneHead);
+      expect(helper.bitMap.read()['ws-root'].version).to.equal(rootLaneHead);
+    });
+    it('should write a component the lane does not have at its head on main', () => {
+      expect(helper.bitMap.read().comp2.version).to.equal(comp2MainHead);
+    });
+    it('should come out clean, the root converging on the .bitmap the clone built', () => {
+      helper.command.expectStatusToBeClean();
     });
   });
 });

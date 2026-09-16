@@ -1129,6 +1129,34 @@ export function normalizeBitmapContentForVersioning(rawContent: string): string 
   return formatBitMapFile(parsed);
 }
 
+export type VersionedBitmapEntry = {
+  /**
+   * "scope/name". the scope is the one the component was exported to or, for a component not
+   * exported when the root was versioned, its default scope: the export that follows carries both.
+   */
+  id: string;
+  rootDir: PathLinuxRelative;
+};
+
+/**
+ * the components a versioned `.bitmap` lists (see normalizeBitmapContentForVersioning): who they are
+ * and where they live, the root component included. versions are not in there by design, so a
+ * workspace made from this list takes the heads.
+ */
+export function readVersionedBitmapEntries(rawContent: string): VersionedBitmapEntry[] {
+  const parsed = json.parse(rawContent, undefined, true) as Record<string, any> | undefined;
+  if (!parsed) return [];
+  BitMap.removeNonComponentFields(parsed);
+  return Object.keys(parsed)
+    .filter((key) => parsed[key] && typeof parsed[key] === 'object')
+    .map((key) => {
+      const entry = parsed[key];
+      const name = entry.name || key;
+      const scope = entry.scope || entry.defaultScope;
+      return { id: scope ? `${scope}/${name}` : name, rootDir: entry.rootDir };
+    });
+}
+
 /**
  * the contents of a component file as bit versions and compares them. only the workspace-root
  * component's `.bitmap` is transformed (see normalizeBitmapContentForVersioning); every other file is

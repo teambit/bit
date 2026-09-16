@@ -5,7 +5,12 @@ import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { logger } from '@teambit/legacy.logger';
-import { BitMap, fileContentsForVersioning, normalizeBitmapContentForVersioning } from './bit-map';
+import {
+  BitMap,
+  fileContentsForVersioning,
+  normalizeBitmapContentForVersioning,
+  readVersionedBitmapEntries,
+} from './bit-map';
 import { WORKSPACE_ROOT_DIR } from './component-map';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
@@ -186,6 +191,45 @@ describe('BitMap', function () {
     });
     it('should be idempotent, otherwise the root component would never converge', () => {
       expect(normalizeBitmapContentForVersioning(normalized)).to.equal(normalized);
+    });
+  });
+  describe('readVersionedBitmapEntries', () => {
+    const versionedBitmap = `/* THIS IS A BIT-AUTO-GENERATED FILE */
+${JSON.stringify(
+  {
+    'my-scope/comp1': { name: 'comp1', scope: 'my-scope', version: '', mainFile: 'index.ts', rootDir: 'comp1' },
+    comp2: {
+      name: 'comp2',
+      scope: '',
+      version: '',
+      defaultScope: 'my-org.demo',
+      mainFile: 'index.ts',
+      rootDir: 'comp2',
+    },
+    'ws-root': { name: 'ws-root', scope: 'my-scope', version: '', mainFile: 'workspace.jsonc', rootDir: '.' },
+    '$schema-version': '17.0.0',
+  },
+  null,
+  4
+)}`;
+    let entries: ReturnType<typeof readVersionedBitmapEntries>;
+    before(() => {
+      entries = readVersionedBitmapEntries(versionedBitmap);
+    });
+    it('should list every component with its root-dir, the root component included', () => {
+      expect(entries.map((entry) => entry.rootDir)).to.have.members(['comp1', 'comp2', WORKSPACE_ROOT_DIR]);
+    });
+    it('should give an exported component its full id, which is what its remote knows it by', () => {
+      const comp1 = entries.find((entry) => entry.rootDir === 'comp1');
+      expect(comp1).to.deep.equal({ id: 'my-scope/comp1', rootDir: 'comp1' });
+    });
+    it('should give a component not exported yet the scope it is exported to', () => {
+      // a root versioned before the first export lists its members this way, and that export carries them all
+      const comp2 = entries.find((entry) => entry.rootDir === 'comp2');
+      expect(comp2).to.deep.equal({ id: 'my-org.demo/comp2', rootDir: 'comp2' });
+    });
+    it('should return nothing for an empty map', () => {
+      expect(readVersionedBitmapEntries(JSON.stringify({ '$schema-version': '17.0.0' }))).to.deep.equal([]);
     });
   });
   describe('a rootDir with one owner', () => {

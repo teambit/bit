@@ -1,11 +1,16 @@
-import { MainRuntime } from '@teambit/cli';
+import { BitError } from '@teambit/bit-error';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import type { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
+import type { CloneOptions, CloneResult, LoadBit } from './clone';
+import { cloneWorkspace } from './clone';
+import { CloneCmd } from './clone.cmd';
 import { WorkspaceRootAspect } from './workspace-root.aspect';
 import { WorkspaceRootFragment } from './workspace-root.fragment';
 import type { WorkspaceRootData } from './workspace-root-data';
@@ -22,7 +27,32 @@ import { findWorkspaceRootMap, isWorkspaceRootComponent, readWorkspaceRoot } fro
  * rootComponents, or "workspace component", which is every component loaded from a workspace.
  */
 export class WorkspaceRootMain {
+  private loadBit?: LoadBit;
+
   constructor(private workspace?: Workspace) {}
+
+  /**
+   * a clone loads bit for the new workspace, in a process that started outside of one. the function
+   * belongs to the bit aspect, which depends on this one, so it is handed over rather than imported
+   * (see load-bit.ts).
+   */
+  setLoadBit(loadBit: LoadBit) {
+    this.loadBit = loadBit;
+  }
+
+  /**
+   * make a workspace out of a workspace-root component: its files at the root, every component it
+   * lists in the directory it records, then install. see cloneWorkspace.
+   */
+  async clone(idStr: string, dir: string | undefined, options: CloneOptions = {}): Promise<CloneResult> {
+    if (this.workspace) {
+      throw new BitError(
+        `unable to clone inside the workspace at "${this.workspace.path}", a clone is a new workspace. run it from a directory outside of any workspace`
+      );
+    }
+    if (!this.loadBit) throw new Error('WorkspaceRootMain.clone: loadBit was not set, see load-bit.ts');
+    return cloneWorkspace(ComponentID.fromString(idStr), dir, options, this.loadBit);
+  }
 
   /**
    * the id of the component that owns the workspace root, if the workspace has one.
@@ -56,11 +86,12 @@ export class WorkspaceRootMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [WorkspaceAspect, ComponentAspect];
+  static dependencies = [WorkspaceAspect, ComponentAspect, CLIAspect];
 
-  static async provider([workspace, component]: [Workspace | undefined, ComponentMain]) {
+  static async provider([workspace, component, cli]: [Workspace | undefined, ComponentMain, CLIMain]) {
     const workspaceRoot = new WorkspaceRootMain(workspace);
     component.registerShowFragments([new WorkspaceRootFragment(workspaceRoot)]);
+    cli.register(new CloneCmd(workspaceRoot));
     workspace?.registerOnComponentLoad(markWorkspaceRoot);
     return workspaceRoot;
   }

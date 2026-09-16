@@ -6381,5 +6381,42 @@
         "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
+  },
+  {
+    "name": "clone <component-id> [dir]",
+    "alias": "",
+    "options": [
+      [
+        "l",
+        "lane <lane-id>",
+        "clone the workspace as it is on this lane (\"scope/name\"): it comes out on the lane, with the components at their heads there"
+      ],
+      [
+        "",
+        "remote <url>",
+        "url of the scope hosting the components, when it is neither on bit.cloud nor in the global remotes"
+      ],
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not install the dependencies, and so do not compile, after the clone"
+      ]
+    ],
+    "description": "create a workspace from its workspace-root component, with every component it lists",
+    "extendedDescription": "the workspace-root component is the one tracked at a workspace root (\"bit add .\"). it versions the workspace's own files - workspace.jsonc, .bitmap, lockfile, configs - and this command makes a workspace out of it, the way \"git clone\" makes a working tree out of a repository: the root files land at the root, every component the root lists is imported into the directory it records, then the dependencies are installed.\nthe components come at their heads on main, or on the lane given with --lane. a version on the root id pins the root files only.\nruns outside a workspace. the directory must be empty or not exist, and defaults to the component name.",
+    "group": "workspace-setup",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-id",
+        "description": "the workspace-root component, with its scope. a version pins the root files"
+      },
+      {
+        "name": "dir",
+        "description": "where to create the workspace. defaults to the component name, must be empty or absent"
+      }
+    ]
   }
 ]

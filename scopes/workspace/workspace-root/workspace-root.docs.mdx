@@ -34,6 +34,25 @@ Both are aspect data, not config, so they never make a component modified and th
 does not touch its members. Their consumers are tools that need the root's files a version was made
 with, such as a CI building the component or a workspace clone.
 
+## Cloning a workspace
+
+`bit clone <root-id> [dir]` makes a workspace out of a workspace-root component, the way `git clone`
+makes a working tree out of a repository. It runs outside a workspace, in an empty or absent
+directory (default: the component name), and needs no `bit init`:
+
+- the root's files land at the workspace root, `workspace.jsonc` included;
+- every component the root's versioned `.bitmap` lists is imported into the directory it records;
+- the dependencies are installed and the components compiled (`--skip-dependency-installation` to skip).
+
+The versioned `.bitmap` holds no versions, only which components exist and where, so the components
+come at their heads on main. `--lane <scope>/<name>` clones the workspace as it is on a lane: the
+workspace comes out on the lane and the components at their heads there. A version on the root id
+pins the root files only. A component the root lists that its remote does not have, one never
+exported for instance, is reported and the clone goes on without it.
+
+Scopes on bit.cloud resolve by name. For a self-hosted scope that is not in the global remotes,
+`--remote <url>` registers it in the new workspace first.
+
 ## Terminology
 
 "Workspace-root component", because "root component" is taken by the dependency-resolver's
