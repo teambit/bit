@@ -1526,7 +1526,7 @@
           ]
         ],
         "description": "start a Ripple CI simulation for a lane to reveal which dependents break (auto-detects current lane)",
-        "extendedDescription": "a simulation builds the dependents of the lane components against the lane heads on bit.cloud,\nwithout merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged.\nthe simulation runs against the lane as it exists on bit.cloud, so export the lane first.\nsimulations are heavy jobs and are billed as such. run them at review time, not on every change.\ndependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and\n--exclude-scopes.\nfollow the job with \"bit ripple log <job-id>\". once it finishes, \"bit ripple errors <job-id>\" shows what broke.",
+        "extendedDescription": "a simulation builds the dependents of the lane components against the lane heads on bit.cloud,\nwithout merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged.\nthe simulation runs against the lane as it exists on bit.cloud, so export the lane first.\nsimulations are heavy jobs and are billed as such. run them at review time, not on every change.\ndependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and\n--exclude-scopes.\nfollow the job with \"bit ripple log\". once it finishes, \"bit ripple errors\" shows what broke. both take the job id\nprinted when the simulation starts.",
         "group": "ungrouped",
         "private": false,
         "remoteOp": true,

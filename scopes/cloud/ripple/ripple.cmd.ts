@@ -712,7 +712,8 @@ the simulation runs against the lane as it exists on bit.cloud, so export the la
 simulations are heavy jobs and are billed as such. run them at review time, not on every change.
 dependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and
 --exclude-scopes.
-follow the job with "bit ripple log <job-id>". once it finishes, "bit ripple errors <job-id>" shows what broke.`;
+follow the job with "bit ripple log". once it finishes, "bit ripple errors" shows what broke. both take the job id
+printed when the simulation starts.`;
   skipWorkspace = true;
   remoteOp = true;
   alias = '';

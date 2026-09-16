@@ -809,7 +809,7 @@ Flags: --lane <lane>, --json
 
 start a Ripple CI simulation for a lane to reveal which dependents break (auto-detects current lane)
 
-a simulation builds the dependents of the lane components against the lane heads on bit.cloud, without merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged. the simulation runs against the lane as it exists on bit.cloud, so export the lane first. simulations are heavy jobs and are billed as such. run them at review time, not on every change. dependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and --exclude-scopes. follow the job with "bit ripple log <job-id>". once it finishes, "bit ripple errors <job-id>" shows what broke.
+a simulation builds the dependents of the lane components against the lane heads on bit.cloud, without merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged. the simulation runs against the lane as it exists on bit.cloud, so export the lane first. simulations are heavy jobs and are billed as such. run them at review time, not on every change. dependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and --exclude-scopes. follow the job with "bit ripple log". once it finishes, "bit ripple errors" shows what broke. both take the job id printed when the simulation starts.
 Flags: --lane <lane>, --scopes <scopes>, --owners <owners>, --exclude-scopes <scopes>, --json
 
 ## bit run [app-name]
