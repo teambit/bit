@@ -259,12 +259,16 @@ export async function cloneWorkspace(
     const harmony = await loadBit(workspacePath);
     return await new WorkspaceCloner(harmony, workspacePath).clone(rootId, options);
   } catch (err) {
-    // the caller is left where it was, and nothing half-made is left behind: the directory was empty
-    // or absent to begin with
+    // leave the directory before removing it, and leave nothing half-made behind: it was empty or
+    // absent to begin with
     process.chdir(originalCwd);
     if (createdDir) await fs.remove(workspacePath);
     else await fs.emptyDir(workspacePath);
     throw err;
+  } finally {
+    // the clone itself runs with the new workspace as the cwd, its install included. the caller, which
+    // may be a program that goes on to do other things, keeps the directory it was in.
+    process.chdir(originalCwd);
   }
 }
 
