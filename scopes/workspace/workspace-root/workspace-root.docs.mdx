@@ -50,6 +50,9 @@ workspace comes out on the lane and the components at their heads there. A versi
 pins the root files only. A component the root lists that its remote does not have, one never
 exported for instance, is reported and the clone goes on without it.
 
+A clone comes out with nothing modified. What the root versions of its `.bitmap` is normalized to the
+part an export does not change, so the map the clone writes is the map the root carries.
+
 Scopes on bit.cloud resolve by name. For a self-hosted scope that is not in the global remotes,
 `--remote <url>` registers it in the new workspace first.
 

@@ -183,11 +183,23 @@ describe('BitMap', function () {
     it('should keep the scope, so cross-scope components survive a restore', () => {
       expect(parsed.comp1.scope).to.equal('my-scope');
     });
+    it('should resolve the scope into one field, the export moves it from defaultScope to scope', () => {
+      // otherwise the first export modifies the root, and a clone of it is born modified
+      expect(parsed.comp1).to.not.have.property('defaultScope');
+    });
+    it('should read the scope of a component not exported yet from its defaultScope', () => {
+      const notExported = JSON.stringify({ comp2: { name: 'comp2', scope: '', defaultScope: 'my-org.demo' } });
+      const normalizedNotExported = normalizeBitmapContentForVersioning(notExported);
+      expect(JSON.parse(normalizedNotExported.slice(normalizedNotExported.indexOf('{'))).comp2.scope).to.equal(
+        'my-org.demo'
+      );
+    });
+    it('should drop the schema of the file, which a bit upgrade rewrites', () => {
+      expect(parsed).to.not.have.property('$schema-version');
+    });
     it('should keep the durable map intact', () => {
       expect(parsed.comp1.rootDir).to.equal('comp1');
       expect(parsed.comp1.mainFile).to.equal('index.ts');
-      expect(parsed.comp1.defaultScope).to.equal('my-org.demo');
-      expect(parsed['$schema-version']).to.equal('17.0.0');
     });
     it('should be idempotent, otherwise the root component would never converge', () => {
       expect(normalizeBitmapContentForVersioning(normalized)).to.equal(normalized);

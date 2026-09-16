@@ -558,12 +558,12 @@ describe('add command on Harmony', function () {
         expect(path.join(helper.scopes.localPath, 'comp1/package.json')).to.be.a.file();
         expect(path.join(helper.scopes.localPath, 'comp1/tsconfig.json')).to.be.a.file();
       });
-      it('should reproduce the state of the source workspace, whose root the export left modified', () => {
-        // the export set the scopes in .bitmap after the root was snapped, so the versioned map lists
-        // the members by their default scope. the clone resolves them by it, and the root is modified
-        // in the clone as it is at the source, until the next snap takes it along.
+      it('should come out clean, the workspace it reproduces is the one the root was versioned from', () => {
+        // the versioned map lists the members by their default scope, the export having set the scopes
+        // in .bitmap only after the root was snapped, and the clone writes them by their scope. one is
+        // the other before the export and after it, which is what the versioned map is normalized on.
         const status = helper.command.statusJson();
-        expect(status.modifiedComponents).to.deep.equal([`${helper.scopes.remote}/ws-root`]);
+        expect(status.modifiedComponents).to.have.lengthOf(0);
         expect(status.newComponents).to.have.lengthOf(0);
       });
       it('should refuse to run inside a workspace', () => {
@@ -624,9 +624,10 @@ describe('add command on Harmony', function () {
       comp1MainHead = helper.command.getHead('comp1');
       comp2MainHead = helper.command.getHead('comp2');
       helper.command.createLane('dev');
-      // comp1 changes on the lane. the export set the scopes in .bitmap, so the root is modified and
-      // joins the snap on the lane as well. comp2 stays as it is on main.
+      // comp1 and a file of the root itself change on the lane, so both get a head there. comp2 stays
+      // as it is on main.
       helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1 v2";\n');
+      helper.fs.outputFile('README.md', '# on the lane\n');
       helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
       helper.command.export();
       comp1LaneHead = helper.command.getHeadOfLane('dev', 'comp1');

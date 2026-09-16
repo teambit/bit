@@ -1106,11 +1106,12 @@ type OutputFileParams = {
  * which components exist and where they live. the versions and the config are restored from the
  * component heads on import, which is the correct source for them anyway.
  *
- * `scope` is deliberately kept: it changes once (on the first export) and is then stable, so it
- * costs one extra snap rather than perpetual drift. clearing it would lose the identity of
- * components belonging to a scope other than the workspace default - on restore they would all
- * collapse onto the default scope, and same-named components from different scopes would overwrite
- * each other.
+ * which scope a component belongs to is part of that durable part and is kept, or components of a
+ * scope other than the workspace default would all collapse onto the default on restore, and
+ * same-named components from different scopes would overwrite each other. it is kept in one field:
+ * a component carries it in `defaultScope` until it is exported and in `scope` from then on, same
+ * scope either way, so resolving the two into `scope` is what keeps an export from modifying the
+ * root - and a clone of it, whose components are exported by definition, from being born modified.
  */
 export function normalizeBitmapContentForVersioning(rawContent: string): string {
   const parsed = json.parse(rawContent, undefined, true) as Record<string, any> | undefined;
@@ -1118,10 +1119,16 @@ export function normalizeBitmapContentForVersioning(rawContent: string): string 
   // the lane the workspace is on, and whether it was exported: workspace state that export and
   // lane switch change, not part of the map of components
   delete parsed[LANE_KEY];
+  // the schema of the file, which a bit upgrade rewrites. the map it describes is what is versioned
+  delete parsed[SCHEMA_FIELD];
   Object.keys(parsed).forEach((key) => {
     const entry = parsed[key];
-    if (key === SCHEMA_FIELD || !entry || typeof entry !== 'object') return;
+    if (!entry || typeof entry !== 'object') return;
     if (entry.version !== undefined) entry.version = '';
+    if (entry.scope !== undefined || entry.defaultScope !== undefined) {
+      entry.scope = entry.scope || entry.defaultScope || '';
+      delete entry.defaultScope;
+    }
     delete entry.config;
     // the pending soft-tag, which --persist turns into a version and clears from the map
     delete entry.nextVersion;
