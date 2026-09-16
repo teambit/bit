@@ -1,4 +1,5 @@
 import path from 'path';
+import type { Stats } from 'fs-extra';
 import fs from 'fs-extra';
 import { BitError } from '@teambit/bit-error';
 import type { ComponentID } from '@teambit/component-id';
@@ -276,7 +277,9 @@ export async function cloneWorkspace(
 export function resolveComponentDir(workspacePath: string, entry: VersionedBitmapEntry): string {
   const target = entry.rootDir ? path.resolve(workspacePath, entry.rootDir) : undefined;
   const relative = target ? path.relative(workspacePath, target) : undefined;
-  if (!target || !relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+  // a leading ".." is only a way out when it is the whole segment: a directory may be named "..cache"
+  const climbsOut = relative === '..' || relative?.startsWith(`..${path.sep}`);
+  if (!target || !relative || climbsOut || path.isAbsolute(relative)) {
     throw new BitError(
       `unable to clone, the root component lists "${entry.id}" at "${entry.rootDir}", which is not a directory inside the workspace`
     );
@@ -285,16 +288,35 @@ export function resolveComponentDir(workspacePath: string, entry: VersionedBitma
 }
 
 /**
+ * the workspace is written into this directory and a failed clone empties it again, so it has to be
+ * the directory it appears to be: a symbolic link would put the workspace, and then the cleanup,
+ * wherever it points. the same rule the writer applies to the files of a root (see
+ * throwForSymlinksInTheWay).
+ *
  * @returns whether the directory was created here, so a failed clone knows to remove it
  */
-async function ensureEmptyDir(dirPath: string): Promise<boolean> {
-  if (!(await fs.pathExists(dirPath))) {
+export async function ensureEmptyDir(dirPath: string): Promise<boolean> {
+  const stat = await lstatIfExists(dirPath);
+  if (!stat) {
     await fs.ensureDir(dirPath);
     return true;
   }
-  const stat = await fs.stat(dirPath);
+  if (stat.isSymbolicLink()) {
+    throw new BitError(
+      `unable to clone into "${dirPath}", it is a symbolic link and the workspace would be written through it`
+    );
+  }
   if (!stat.isDirectory()) throw new BitError(`unable to clone into "${dirPath}", it is not a directory`);
   const entries = await fs.readdir(dirPath);
   if (entries.length) throw new BitError(`unable to clone into "${dirPath}", the directory is not empty`);
   return false;
+}
+
+async function lstatIfExists(dirPath: string): Promise<Stats | undefined> {
+  try {
+    return await fs.lstat(dirPath);
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return undefined;
+    throw err;
+  }
 }

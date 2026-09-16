@@ -1,6 +1,6 @@
 import path from 'path';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatHint, formatSuccessSummary, formatWarningSummary } from '@teambit/cli';
+import { formatHint, formatSuccessSummary, formatWarningSummary, joinSections } from '@teambit/cli';
 import type { CloneResult } from './clone';
 import type { WorkspaceRootMain } from './workspace-root.main.runtime';
 
@@ -72,5 +72,5 @@ export function formatCloneResult(result: CloneResult, relativeDir: string): str
       )
     : '';
   const next = relativeDir === '.' ? '' : formatHint(`cd ${relativeDir}`);
-  return [summary, lane, missing, installation, next].filter(Boolean).join('\n');
+  return joinSections([summary, lane, missing, installation, next]);
 }

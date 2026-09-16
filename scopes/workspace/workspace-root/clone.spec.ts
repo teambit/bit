@@ -1,7 +1,8 @@
 import { expect } from 'chai';
+import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import { resolveComponentDir } from './clone';
+import { ensureEmptyDir, resolveComponentDir } from './clone';
 
 describe('resolveComponentDir', () => {
   const workspacePath = path.resolve(os.tmpdir(), 'ws');
@@ -26,5 +27,54 @@ describe('resolveComponentDir', () => {
   it('should refuse an entry without a root-dir rather than fail on it later', () => {
     const resolve = () => resolveComponentDir(workspacePath, { id: 'a' });
     expect(resolve).to.throw('not a directory inside the workspace');
+  });
+  it('should accept a directory whose name starts with dots, it is not a way out', () => {
+    expect(resolveComponentDir(workspacePath, { id: 'a', rootDir: '..cache' })).to.equal(
+      path.join(workspacePath, '..cache')
+    );
+  });
+});
+
+describe('ensureEmptyDir', () => {
+  const expectToReject = async (dir: string, message: string) => {
+    try {
+      await ensureEmptyDir(dir);
+    } catch (err: any) {
+      expect(err.message).to.have.string(message);
+      return;
+    }
+    throw new Error(`expected ensureEmptyDir("${dir}") to throw "${message}"`);
+  };
+  let tmpDir: string;
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-clone-'));
+  });
+  afterEach(async () => {
+    await fs.remove(tmpDir);
+  });
+  it('should create a directory that does not exist and say so, a failed clone removes it', async () => {
+    const dirPath = path.join(tmpDir, 'new-ws');
+    expect(await ensureEmptyDir(dirPath)).to.be.true;
+    expect(await fs.pathExists(dirPath)).to.be.true;
+  });
+  it('should accept an existing empty directory without claiming it created it', async () => {
+    expect(await ensureEmptyDir(tmpDir)).to.be.false;
+  });
+  it('should refuse a directory that is not empty', async () => {
+    await fs.outputFile(path.join(tmpDir, 'file.txt'), 'x');
+    await expectToReject(tmpDir, 'the directory is not empty');
+  });
+  it('should refuse a file', async () => {
+    const filePath = path.join(tmpDir, 'file.txt');
+    await fs.outputFile(filePath, 'x');
+    await expectToReject(filePath, 'it is not a directory');
+  });
+  it('should refuse a symbolic link to an empty directory, the workspace would be written through it', async () => {
+    // and the cleanup of a failed clone would then empty whatever it points at
+    const target = path.join(tmpDir, 'elsewhere');
+    const link = path.join(tmpDir, 'link');
+    await fs.ensureDir(target);
+    await fs.symlink(target, link);
+    await expectToReject(link, 'it is a symbolic link');
   });
 });
