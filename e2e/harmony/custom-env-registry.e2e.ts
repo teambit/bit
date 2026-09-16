@@ -43,7 +43,11 @@ describe('custom env (registry)', function () {
       });
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.showComponent(envId);
-      helper.command.tagAllComponents();
+      // --skip-tasks GeneratePreview: bundling the preview of a react-based env is the memory peak
+      // of this tag, and it got the process OOM-killed ("Killed") on the e2e container. Nothing
+      // below looks at the preview - the assertions are about resolving and loading the env from
+      // its root - while the package this publishes still needs the rest of the build.
+      helper.command.tagAllComponents('--skip-tasks GeneratePreview');
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();
