@@ -134,14 +134,22 @@ class WorkspaceCloner {
   private async fetchRoot(
     rootId: ComponentID
   ): Promise<{ versionedRootId: ComponentID; entries: VersionedBitmapEntry[] }> {
-    const { importedIds } = await this.importer.import({
+    const { importedIds, missingIds } = await this.importer.import({
       ids: [rootId.toString()],
       objectsOnly: true,
       installNpmPackages: false,
       writeConfigFiles: false,
     });
     const versionedRootId = importedIds.find((id) => id.isEqualWithoutVersion(rootId));
-    if (!versionedRootId) throw new BitError(`unable to clone, "${rootId.toString()}" was not imported`);
+    if (!versionedRootId) {
+      // the importer reports a component the remote does not have rather than throwing
+      if (missingIds?.length) {
+        throw new BitError(
+          `unable to clone, the remote scope "${rootId.scope}" does not have "${rootId.toString()}". a workspace is cloned from an exported workspace-root component, run "bit export" in its workspace first`
+        );
+      }
+      throw new BitError(`unable to clone, "${rootId.toString()}" was not imported`);
+    }
     const rootComponent = await this.scope.legacyScope.getConsumerComponent(versionedRootId);
     if (!isWorkspaceRootComponent(rootComponent.extensions)) {
       throw new BitError(
@@ -161,8 +169,9 @@ class WorkspaceCloner {
    */
   private async write(id: string, dir: string): Promise<ComponentID | undefined> {
     let importedIds: ComponentID[];
+    let missingIds: string[] | undefined;
     try {
-      ({ importedIds } = await this.importer.import({
+      ({ importedIds, missingIds } = await this.importer.import({
         ids: [id],
         writeToPath: dir,
         installNpmPackages: false,
@@ -173,8 +182,9 @@ class WorkspaceCloner {
       throw err;
     }
     const imported = importedIds[0];
-    if (!imported) throw new BitError(`unable to clone, "${id}" was not imported`);
-    return imported;
+    if (imported) return imported;
+    if (missingIds?.length) return undefined;
+    throw new BitError(`unable to clone, "${id}" was not imported`);
   }
 
   /**

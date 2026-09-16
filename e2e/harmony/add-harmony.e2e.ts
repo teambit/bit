@@ -594,6 +594,17 @@ describe('add command on Harmony', function () {
         expect(cmd).to.throw('not a workspace-root component');
         expect(clonePath).to.not.be.a.path();
       });
+      it('should refuse a component the remote does not have, pointing at the export', () => {
+        // the importer reports it as missing rather than throwing, e.g. a root tagged but never exported
+        const clonePath = path.join(helper.scopes.e2eDir, 'never-exported');
+        const cmd = () =>
+          helper.command.runCmd(
+            `bit clone ${helper.scopes.remote}/never-exported ${clonePath} -x`,
+            helper.scopes.e2eDir
+          );
+        expect(cmd).to.throw(`the remote scope "${helper.scopes.remote}" does not have`);
+        expect(clonePath).to.not.be.a.path();
+      });
     });
   });
   describe('cloning a workspace as it is on a lane', () => {
