@@ -387,6 +387,10 @@ export class RippleMain {
     return data?.stopJob ?? null;
   }
 
+  /** how many times to look the persisted job up, and how long to wait between the attempts */
+  private static JOB_LOOKUP_ATTEMPTS = 3;
+  private static JOB_LOOKUP_DELAY_MS = 300;
+
   /**
    * start a simulation job for a lane. Ripple CI builds the dependents of the lane components (searched in
    * the given network of scopes/owners) against the lane heads, without merging or publishing anything.
@@ -407,10 +411,30 @@ export class RippleMain {
     // the mutation returns the job before it's persisted: only the slug is set, id and status are null.
     // fetch the persisted job so callers get the real id, which "ripple log/errors" need.
     if (!job.id && job.slug) {
-      const persisted = await this.getJobBySlug(job.slug).catch(() => null);
+      const persisted = await this.getPersistedJobBySlug(job.slug);
       if (persisted) return persisted;
     }
     return job;
+  }
+
+  /**
+   * poll for the persisted job: the simulate mutation responds before the job is written, so a single
+   * immediate lookup can still come back empty. returns null once the budget is spent - the simulation is
+   * already running by then, so the caller reports it without an id rather than failing the command.
+   */
+  private async getPersistedJobBySlug(slug: string): Promise<RippleJob | null> {
+    for (let attempt = 1; attempt <= RippleMain.JOB_LOOKUP_ATTEMPTS; attempt += 1) {
+      const job = await this.getJobBySlug(slug).catch((err: Error) => {
+        this.logger.debug(`simulateLane: lookup of job "${slug}" failed on attempt ${attempt}: ${err.message}`);
+        return null;
+      });
+      if (job?.id) return job;
+      if (attempt < RippleMain.JOB_LOOKUP_ATTEMPTS) {
+        await new Promise((resolve) => setTimeout(resolve, RippleMain.JOB_LOOKUP_DELAY_MS));
+      }
+    }
+    this.logger.debug(`simulateLane: job "${slug}" was not persisted after ${RippleMain.JOB_LOOKUP_ATTEMPTS} lookups`);
+    return null;
   }
 
   /**

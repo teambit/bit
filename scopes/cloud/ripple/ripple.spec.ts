@@ -111,6 +111,27 @@ describe('RippleMain.simulateLane()', () => {
     expect(requests[1].body.variables).to.deep.equal({ slug: JOB.slug });
   });
 
+  it('should keep looking the job up while it is not persisted yet', async () => {
+    queuedResponses.push({ data: { simulateLane: { id: null, slug: JOB.slug, status: null } } });
+    queuedResponses.push({ data: { getJob: null } });
+    queuedResponses.push({ data: { getJob: JOB } });
+    const ripple = createRippleMain();
+    const job = await ripple.simulateLane(LANE_ID);
+    expect(job).to.deep.equal(JOB);
+    expect(requests).to.have.lengthOf(3);
+  });
+
+  it('should return the started job when it never gets persisted, rather than failing the simulation', async () => {
+    // the simulation is already running at this point, so the caller reports it without an id
+    const started = { id: null, slug: JOB.slug, status: null };
+    queuedResponses.push({ data: { simulateLane: started } });
+    responseBody = { data: { getJob: null } };
+    const ripple = createRippleMain();
+    const job = await ripple.simulateLane(LANE_ID);
+    expect(job).to.deep.equal(started);
+    expect(requests).to.have.lengthOf(4); // the mutation + the lookup attempts
+  });
+
   it('should return the job as-is when it has an id', async () => {
     const ripple = createRippleMain();
     await ripple.simulateLane(LANE_ID);

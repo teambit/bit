@@ -1579,7 +1579,13 @@ please create a new lane instead, which will include all components of this lane
     const removed = ids?.length
       ? current.ids.filter((id) => ids.some((toRemove) => toRemove.isEqualWithoutVersion(id)))
       : current.ids;
-    if (!removed.length) return { laneId, removed, remoteChanged: false, localChanged: false, remoteSkipped };
+    if (!removed.length) {
+      // nothing left to remove on the remote, but the local lane can still hold entries the remote already
+      // dropped - e.g. an earlier undo whose local save failed after the remote removal succeeded. reconcile
+      // them here so retrying the command fixes it, instead of the stale entries lingering until the next import.
+      const localChanged = remoteSkipped ? false : await this.pruneStaleUpdateDependents(laneId, current.ids);
+      return { laneId, removed, remoteChanged: false, localChanged, remoteSkipped };
+    }
     // remove exactly the resolved entries, on the remote and locally. this keeps local-only entries (e.g. a
     // workspace cascade that wasn't exported yet) intact instead of wiping them with a remove-all.
     const removedIdsStr = removed.map((id) => id.toString());
@@ -1591,6 +1597,21 @@ please create a new lane instead, which will include all components of this lane
     const localLane = await this.loadLane(laneId);
     const localChanged = localLane ? await this.removeUpdateDependents(laneId, removed) : false;
     return { laneId, removed, remoteChanged, localChanged, remoteSkipped };
+  }
+
+  /**
+   * remove local hidden entries whose component-id is absent from `remoteIds`, i.e. entries the remote has
+   * already dropped. matches by component-id and not by version, the same rule the import-side reconciliation
+   * in the lane merge uses, so a local cascade that only moved ahead of the remote survives.
+   * returns true if the local lane has changed.
+   */
+  private async pruneStaleUpdateDependents(laneId: LaneId, remoteIds: ComponentID[]): Promise<boolean> {
+    const localLane = await this.loadLane(laneId);
+    const localIds = localLane?.updateDependents;
+    if (!localIds?.length) return false;
+    const stale = localIds.filter((id) => !remoteIds.some((remoteId) => remoteId.isEqualWithoutVersion(id)));
+    if (!stale.length) return false;
+    return this.removeUpdateDependents(laneId, stale);
   }
 
   /**

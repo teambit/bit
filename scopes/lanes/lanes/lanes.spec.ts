@@ -601,4 +601,23 @@ describe('lane updates (Ripple CI cascade entries)', function () {
     expect(after.source).to.equal('remote');
     expect(after.ids).to.have.lengthOf(0);
   });
+  it('undoLaneUpdateDependents() should clean local entries the remote no longer has', async () => {
+    // mimic an undo whose remote removal succeeded but whose local save failed: the previous test left the
+    // remote lane clean, so re-adding the entry locally makes it stale by definition.
+    const remoteIds = await lanes.getLaneUpdateDependents(laneId);
+    expect(remoteIds.ids).to.have.lengthOf(0);
+    const localScope = await loadScope(path.join(workspaceData.workspacePath, '.bit'));
+    const localLane = await localScope.lanes.loadLane(laneId);
+    if (!localLane) throw new Error('expected the lane to exist locally');
+    localLane.addComponentToUpdateDependents(cascadedId);
+    await localScope.lanes.saveLane(localLane, { laneHistoryMsg: 'test: stale local entry' });
+
+    const result = await lanes.undoLaneUpdateDependents(laneId);
+    expect(result.removed).to.have.lengthOf(0);
+    expect(result.remoteChanged).to.be.false;
+    expect(result.localChanged).to.be.true;
+
+    const afterLocal = await localScope.lanes.loadLane(laneId);
+    expect(afterLocal?.updateDependents).to.be.undefined;
+  });
 });

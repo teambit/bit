@@ -571,8 +571,11 @@ use --undo to remove them from the lane, on the remote and locally, e.g. when th
   }
 
   private async reportUndo(laneId: LaneId): Promise<string> {
-    const { removed, remoteSkipped } = await this.lanes.undoLaneUpdateDependents(laneId);
-    if (!removed.length) return `no cascaded updates to remove from lane "${laneId.toString()}".`;
+    const { removed, remoteSkipped, localChanged } = await this.lanes.undoLaneUpdateDependents(laneId);
+    if (!removed.length) {
+      const nothingToRemove = `no cascaded updates to remove from lane "${laneId.toString()}".`;
+      return localChanged ? `${nothingToRemove} stale entries were cleaned from the local lane.` : nothingToRemove;
+    }
     const noun = removed.length === 1 ? 'update' : 'updates';
     const summary = formatSuccessSummary(`removed ${removed.length} cascaded ${noun} from lane "${laneId.toString()}"`);
     const items = removed.map((id) => formatItem(id.toString()));
