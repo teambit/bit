@@ -1595,6 +1595,10 @@ please create a new lane instead, which will include all components of this lane
       remoteChanged = await remote.removeLaneUpdateDependents(laneId.toString(), removedIdsStr);
     }
     const localLane = await this.loadLane(laneId);
+    // the local removal matches by component-id and not by the full versioned id on purpose. when a local
+    // cascade moved ahead of the remote, that entry is still for a component the user just undid: it can't
+    // be exported (the remote refuses new hidden entries without the override flag) and the next import
+    // prunes it anyway. keeping it would leave a hidden entry that "bit lane updates" no longer reports.
     const localChanged = localLane ? await this.removeUpdateDependents(laneId, removed) : false;
     return { laneId, removed, remoteChanged, localChanged, remoteSkipped };
   }

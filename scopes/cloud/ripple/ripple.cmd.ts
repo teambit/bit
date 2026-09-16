@@ -123,7 +123,7 @@ export class RippleListCmd implements Command {
     for (const job of jobs) {
       table.push([
         job.id,
-        truncate(job.name || '-', 40) + (job.simulation ? chalk.dim(' (simulation)') : ''),
+        truncate(job.name || '-', 40) + (job.simulation ? formatHint(' (simulation)') : ''),
         getScopeFromLaneId(job.laneId),
         colorPhase(job.status?.phase),
         job.user?.username || '-',
