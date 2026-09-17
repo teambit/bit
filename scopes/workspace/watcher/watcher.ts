@@ -1146,7 +1146,11 @@ export class Watcher {
  * component never lists them - so reporting an edit of one only produces "inside the component but
  * configured to be ignored". a workspace-root component owns the whole tree, which makes the
  * manifests and configs at the workspace root the common case. the root-only names stay unprefixed on
- * purpose: they are ignored where a component's rootDir is, and here that is the workspace root.
+ * purpose: a rescan drops them at a component's rootDir, and prefixing them with `**\/` would hide a
+ * config file deeper inside a component, which is source. so only the workspace root is covered here
+ * - editing e.g. `packages/comp/tsconfig.json` still reaches the watcher and is then found to be
+ * outside the component's file-set. covering every component root needs these patterns rebuilt
+ * whenever a component is added or moved, which the watcher does not do today.
  */
 export function watchIgnorePatterns(relScopePath: string, trackAllFiles?: boolean): string[] {
   const generated = trackAllFiles
