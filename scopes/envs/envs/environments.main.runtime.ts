@@ -232,7 +232,15 @@ export class EnvsMain {
    * execution started by `fn` and nothing else, so concurrent loads keep reporting normally.
    */
   async skipNotLoadedWarnings<T>(fn: () => Promise<T>): Promise<T> {
-    return this.notLoadedWarningsMuted.run(true, fn);
+    // the result of `run` is deliberately not returned. older @types/node versions type it as
+    // `void`, which breaks the stricter type-check that runs when a component is built in a
+    // capsule ("error TS2322: Type 'void' is not assignable to type 'T'"). `run` calls the callback
+    // synchronously, so starting `fn` inside it is enough to put its whole async execution in scope.
+    return new Promise<T>((resolve, reject) => {
+      this.notLoadedWarningsMuted.run(true, () => {
+        fn().then(resolve, reject);
+      });
+    });
   }
 
   getFailedToLoadEnvs() {
