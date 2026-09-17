@@ -60,10 +60,24 @@ export function readWorkspaceRoot(extensions: ExtensionDataList): ComponentID | 
  * import onto "." or a clone would take ordinary source for a workspace root.
  */
 export function clearWorkspaceRoot(extensions: ExtensionDataList): void {
+  clearWorkspaceRootPointer(extensions);
+  const existing = extensions.findCoreExtension(WorkspaceRootAspect.id);
+  if (existing?.data) delete existing.data.isRoot;
+}
+
+/**
+ * drop the pointer to the root this component was snapped in, and keep the marker saying it is a root
+ * itself.
+ *
+ * for a component that was a member before it was tracked at ".": the loader merges the marker into
+ * the data the component already carried rather than replacing it, so without this the version would
+ * say the component is a workspace root and a member of a different one at the same time, and reading
+ * its root back would name that other component.
+ */
+export function clearWorkspaceRootPointer(extensions: ExtensionDataList): void {
   const existing = extensions.findCoreExtension(WorkspaceRootAspect.id);
   if (!existing?.data) return;
   delete existing.data.root;
-  delete existing.data.isRoot;
 }
 
 export function writeWorkspaceRoot(extensions: ExtensionDataList, rootId: ComponentID): void {

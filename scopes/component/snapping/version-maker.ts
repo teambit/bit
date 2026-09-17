@@ -33,7 +33,12 @@ import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependenc
 import type { Registries } from '@teambit/pkg.entities.registry';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
 import type { Workspace, AutoTagResult } from '@teambit/workspace';
-import { clearWorkspaceRoot, findWorkspaceRootMap, writeWorkspaceRoot } from '@teambit/workspace-root';
+import {
+  clearWorkspaceRoot,
+  clearWorkspaceRootPointer,
+  findWorkspaceRootMap,
+  writeWorkspaceRoot,
+} from '@teambit/workspace-root';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import type { LaneId } from '@teambit/lane-id';
@@ -789,7 +794,13 @@ export class VersionMaker {
       rootMap && this.allComponentsToTag.find((component) => component.id.isEqualWithoutVersion(rootMap.id));
     const rootId = rootInBatch ? rootInBatch.id.changeVersion(rootInBatch.version) : rootMap?.id;
     this.allComponentsToTag.forEach((component) => {
-      if (rootMap && component.id.isEqualWithoutVersion(rootMap.id)) return;
+      if (rootMap && component.id.isEqualWithoutVersion(rootMap.id)) {
+        // the root records no root of its own - but it may have been a member before it was tracked at
+        // ".", and the loader merges the isRoot marker into what it already carried instead of replacing
+        // it. left alone, this version would claim to be a workspace root and a member of another one.
+        clearWorkspaceRootPointer(component.extensions);
+        return;
+      }
       // hidden lane entries (lane.updateDependents) cascade into the batch from the scope rather than
       // from the workspace, so they were not snapped in this root. absence from .bitmap is how they
       // are told apart elsewhere in this file as well
