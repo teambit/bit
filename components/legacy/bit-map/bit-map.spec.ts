@@ -308,6 +308,29 @@ ${JSON.stringify(
       bitMap.addComponent(componentParams);
       expect(() => bitMap.addComponent(componentParams)).to.not.throw();
     });
+    it('should reject it however the existing entry spells the directory, a .bitmap can be edited by hand', async () => {
+      // `bit add` normalizes the root-dir before it gets here, a hand-written entry is loaded as it is
+      const bitMap = await getBitmapInstance();
+      bitMap.loadComponents(
+        {
+          'my-scope/comp1': {
+            name: 'comp1',
+            scope: 'my-scope',
+            version: '0.0.1',
+            mainFile: 'index.ts',
+            rootDir: 'packages/comp1/',
+            exported: true,
+          },
+        },
+        'my-scope'
+      );
+      const addAnother = () =>
+        bitMap.addComponent({
+          ...componentParams,
+          componentId: ComponentID.fromObject({ name: 'comp2' }, 'my-scope'),
+        });
+      expect(addAnother).to.throw('already used by another component');
+    });
   });
   describe('fileContentsForVersioning', () => {
     const rawBitmap = Buffer.from(

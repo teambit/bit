@@ -116,11 +116,14 @@ export class BitMap {
       const relative = path.relative(parent, child);
       return relative && !relative.startsWith('..');
     };
+    // as directories, not as strings: "comp1/" and "comp1" are the same one, and a .bitmap edited by
+    // hand can spell it either way
+    const isSameDir = (dirA: string, dirB: string) => path.relative(dirA, dirB) === '';
     this.components.forEach((existingComponentMap) => {
       if (!existingComponentMap.rootDir || existingComponentMap.id.isEqualWithoutVersion(id)) return;
       // a root-dir has one owner. .bitmap validates this on load (throwForDuplicateRootDirs), it is
       // rejected here so the operation writing the entry fails, not the next command.
-      if (existingComponentMap.rootDir === rootDir) {
+      if (isSameDir(existingComponentMap.rootDir, rootDir)) {
         throw new BitError(
           `unable to add "${id.toString()}", its rootDir "${rootDir}" is already used by another component "${existingComponentMap.id.toString()}"`
         );
