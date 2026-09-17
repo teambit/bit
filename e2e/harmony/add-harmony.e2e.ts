@@ -527,14 +527,6 @@ describe('add command on Harmony', function () {
         expect(status.modifiedComponents).to.have.lengthOf(0);
         expect(status.newComponents).to.have.lengthOf(0);
       });
-      it('should default the directory to the component name', () => {
-        const clonePath = path.join(helper.scopes.e2eDir, 'ws-root');
-        fs.removeSync(clonePath);
-        helper.command.runCmd(`bit clone ${helper.scopes.remote}/ws-root -x`, helper.scopes.e2eDir);
-        expect(path.join(clonePath, 'workspace.jsonc')).to.be.a.file();
-        expect(path.join(clonePath, 'comp1/index.js')).to.be.a.file();
-        fs.removeSync(clonePath);
-      });
       it('should refuse a component that is not a workspace-root component, leaving no directory behind', () => {
         const clonePath = path.join(helper.scopes.e2eDir, 'not-a-root');
         const cmd = () =>

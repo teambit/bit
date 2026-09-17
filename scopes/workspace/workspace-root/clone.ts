@@ -18,6 +18,7 @@ import { ScopeAspect } from '@teambit/scope';
 import { Remote } from '@teambit/scope.remotes';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { isWorkspaceRootComponent } from './workspace-root-data';
 
 export type LoadBit = (workspacePath?: string) => Promise<Harmony>;
@@ -221,8 +222,8 @@ class WorkspaceCloner {
  * no versions on purpose (see normalizeBitmapContentForVersioning), so the components come at their
  * heads - on main, or on the lane when one is given - and a root version pins the root files only.
  *
- * the directory must be empty or absent. there is no override: this is a new workspace, not an
- * import into one, so nothing at the target is the user's.
+ * the directory must be empty or absent, and outside any workspace. there is no override: this is a
+ * new workspace, not an import into one, so nothing at the target is the user's.
  */
 export async function cloneWorkspace(
   rootId: ComponentID,
@@ -230,7 +231,8 @@ export async function cloneWorkspace(
   options: CloneOptions,
   loadBit: LoadBit
 ): Promise<CloneResult> {
-  const workspacePath = path.resolve(dir || rootId.name);
+  const workspacePath = resolveClonePath(dir, rootId);
+  await throwForWorkspaceAbove(workspacePath);
   const createdDir = await ensureEmptyDir(workspacePath);
   const originalCwd = process.cwd();
   try {
@@ -290,6 +292,29 @@ export function resolveComponentDir(workspacePath: string, entry: VersionedBitma
     );
   }
   return target;
+}
+
+/**
+ * where the clone lands: the directory given, or one named after the component, as `git clone` names
+ * the working tree after the repository. relative to the cwd, the clone runs outside a workspace.
+ */
+export function resolveClonePath(dir: string | undefined, rootId: ComponentID): string {
+  return path.resolve(dir || rootId.name);
+}
+
+/**
+ * a clone makes its own workspace. the init below takes the nearest workspace at or above the target
+ * instead of making one when there is a workspace above it, and the clone then writes its components
+ * into that workspace's `.bitmap` - reporting success while leaving someone else's workspace holding
+ * entries for a tree it does not own.
+ */
+async function throwForWorkspaceAbove(workspacePath: string): Promise<void> {
+  const workspaceInfo = await getWorkspaceInfo(workspacePath);
+  if (!workspaceInfo) return;
+  throw new BitError(
+    `unable to clone into "${workspacePath}", it is inside the workspace at "${workspaceInfo.path}".
+a clone creates a workspace of its own, run it outside any workspace`
+  );
 }
 
 /**

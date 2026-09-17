@@ -14,19 +14,29 @@ const rootId = ComponentID.fromString('my-scope/my-root@0.0.7');
 
 describe('workspace-root data', () => {
   describe('findWorkspaceRootMap', () => {
+    const entry = (id: ComponentID, rootDir: string, overrides: Record<string, any> = {}) => ({
+      id,
+      rootDir,
+      isAvailableOnCurrentLane: true,
+      isRemoved: () => false,
+      ...overrides,
+    });
+    const bitMapOf = (entries: Record<string, any>[]) => ({ components: entries }) as unknown as BitMap;
     it('should return the entry tracked at the workspace root', () => {
-      const bitMap = {
-        components: [
-          { id: ComponentID.fromString('my-scope/comp1'), rootDir: 'comp1' },
-          { id: rootId, rootDir: '.' },
-        ],
-      } as unknown as BitMap;
+      const bitMap = bitMapOf([entry(ComponentID.fromString('my-scope/comp1'), 'comp1'), entry(rootId, '.')]);
       expect(findWorkspaceRootMap(bitMap)?.id.toString()).to.equal(rootId.toString());
     });
     it('should return undefined when no component owns the workspace root', () => {
-      const bitMap = {
-        components: [{ id: ComponentID.fromString('my-scope/comp1'), rootDir: 'comp1' }],
-      } as unknown as BitMap;
+      const bitMap = bitMapOf([entry(ComponentID.fromString('my-scope/comp1'), 'comp1')]);
+      expect(findWorkspaceRootMap(bitMap)).to.be.undefined;
+    });
+    it('should ignore a root of another lane, this lane is rootless', () => {
+      // it stays in .bitmap so a switch back can restore it. snapping here would otherwise tag it along
+      const bitMap = bitMapOf([entry(rootId, '.', { isAvailableOnCurrentLane: false })]);
+      expect(findWorkspaceRootMap(bitMap)).to.be.undefined;
+    });
+    it('should ignore a removed root', () => {
+      const bitMap = bitMapOf([entry(rootId, '.', { isRemoved: () => true })]);
       expect(findWorkspaceRootMap(bitMap)).to.be.undefined;
     });
   });

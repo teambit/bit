@@ -2,8 +2,23 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import { ensureEmptyDir, resolveComponentDir } from './clone';
+import { ComponentID } from '@teambit/component-id';
+import { ensureEmptyDir, resolveClonePath, resolveComponentDir } from './clone';
 import { WorkspaceRootMain } from './workspace-root.main.runtime';
+
+describe('resolveClonePath', () => {
+  const rootId = ComponentID.fromString('my-org.my-scope/my-root');
+  it('should default the directory to the component name, as git names a working tree', () => {
+    expect(resolveClonePath(undefined, rootId)).to.equal(path.resolve('my-root'));
+  });
+  it('should take the directory given, relative to the cwd', () => {
+    expect(resolveClonePath('some-dir', rootId)).to.equal(path.resolve('some-dir'));
+  });
+  it('should keep an absolute directory as given', () => {
+    const absolute = path.resolve(os.tmpdir(), 'elsewhere');
+    expect(resolveClonePath(absolute, rootId)).to.equal(absolute);
+  });
+});
 
 describe('resolveComponentDir', () => {
   const workspacePath = path.resolve(os.tmpdir(), 'ws');

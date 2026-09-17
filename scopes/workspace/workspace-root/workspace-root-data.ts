@@ -27,9 +27,15 @@ export type WorkspaceRootData = {
 
 /**
  * the entry of the component that owns the workspace root (rootDir "."), if the workspace has one.
+ *
+ * a root created on another lane, or removed, stays in `.bitmap` so a switch back can restore it.
+ * it is not this workspace's root though, and tagging or snapping would otherwise bring it along.
  */
 export function findWorkspaceRootMap(bitMap: BitMap): ComponentMap | undefined {
-  return bitMap.components.find((componentMap) => componentMap.rootDir === WORKSPACE_ROOT_DIR);
+  return bitMap.components.find(
+    (componentMap) =>
+      componentMap.rootDir === WORKSPACE_ROOT_DIR && componentMap.isAvailableOnCurrentLane && !componentMap.isRemoved()
+  );
 }
 
 function findData(extensions: ExtensionDataList): WorkspaceRootData | undefined {

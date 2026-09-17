@@ -205,6 +205,36 @@ describe('BitMap', function () {
     it('should be idempotent, otherwise the root component would never converge', () => {
       expect(normalizeBitmapContentForVersioning(normalized)).to.equal(normalized);
     });
+    describe('a component of another lane, left in the map so a switch back can restore it', () => {
+      const withLaneComp = JSON.stringify({
+        comp1: { name: 'comp1', scope: 'my-scope', rootDir: 'comp1' },
+        comp2: { name: 'comp2', scope: 'my-scope', rootDir: 'comp2', isAvailableOnCurrentLane: false },
+        comp3: {
+          name: 'comp3',
+          scope: 'my-scope',
+          rootDir: 'comp3',
+          isAvailableOnCurrentLane: true,
+          onLanesOnly: true,
+        },
+      });
+      let laneParsed: Record<string, any>;
+      before(() => {
+        const result = normalizeBitmapContentForVersioning(withLaneComp);
+        laneParsed = JSON.parse(result.slice(result.indexOf('{')));
+      });
+      it('should drop it, a clone of this root would import it from a lane it never asked for', () => {
+        expect(laneParsed).to.not.have.property('comp2');
+      });
+      it('should keep the components of this lane', () => {
+        expect(laneParsed).to.have.property('comp1');
+        expect(laneParsed).to.have.property('comp3');
+      });
+      it('should drop the lane bookkeeping, which a switch and a merge flip', () => {
+        // otherwise the root is modified by a lane switch the same way the lane key used to do
+        expect(laneParsed.comp3).to.not.have.property('isAvailableOnCurrentLane');
+        expect(laneParsed.comp3).to.not.have.property('onLanesOnly');
+      });
+    });
   });
   describe('readVersionedBitmapEntries', () => {
     const versionedBitmap = `/* THIS IS A BIT-AUTO-GENERATED FILE */
@@ -243,6 +273,13 @@ ${JSON.stringify(
     });
     it('should return nothing for an empty map', () => {
       expect(readVersionedBitmapEntries(JSON.stringify({ '$schema-version': '17.0.0' }))).to.deep.equal([]);
+    });
+    it('should skip a component of another lane, which a map versioned before they were dropped still carries', () => {
+      const withLaneComp = JSON.stringify({
+        comp1: { name: 'comp1', scope: 'my-scope', rootDir: 'comp1' },
+        comp2: { name: 'comp2', scope: 'my-scope', rootDir: 'comp2', isAvailableOnCurrentLane: false },
+      });
+      expect(readVersionedBitmapEntries(withLaneComp).map((entry) => entry.rootDir)).to.deep.equal(['comp1']);
     });
   });
   describe('a rootDir with one owner', () => {

@@ -1124,6 +1124,17 @@ export function normalizeBitmapContentForVersioning(rawContent: string): string 
   Object.keys(parsed).forEach((key) => {
     const entry = parsed[key];
     if (!entry || typeof entry !== 'object') return;
+    // a component of another lane. it is in the map so a switch back can restore it, but it is not
+    // part of this workspace as versioned here: a clone of this root would import it from a lane it
+    // was never asked for. the root snapped on that lane lists it, which is where it belongs.
+    if (entry.isAvailableOnCurrentLane === false) {
+      delete parsed[key];
+      return;
+    }
+    // which lane a component is on, and whether it ever reached main: workspace state that a lane
+    // switch and a lane merge flip, the same as LANE_KEY above
+    delete entry.isAvailableOnCurrentLane;
+    delete entry.onLanesOnly;
     if (entry.version !== undefined) entry.version = '';
     if (entry.scope !== undefined || entry.defaultScope !== undefined) {
       entry.scope = entry.scope || entry.defaultScope || '';
@@ -1155,14 +1166,19 @@ export function readVersionedBitmapEntries(rawContent: string): VersionedBitmapE
   const parsed = json.parse(rawContent, undefined, true) as Record<string, any> | undefined;
   if (!parsed) return [];
   BitMap.removeNonComponentFields(parsed);
-  return Object.keys(parsed)
-    .filter((key) => parsed[key] && typeof parsed[key] === 'object')
-    .map((key) => {
-      const entry = parsed[key];
-      const name = entry.name || key;
-      const scope = entry.scope || entry.defaultScope;
-      return { id: scope ? `${scope}/${name}` : name, rootDir: entry.rootDir };
-    });
+  return (
+    Object.keys(parsed)
+      .filter((key) => parsed[key] && typeof parsed[key] === 'object')
+      // normalizeBitmapContentForVersioning drops these, so only a map versioned before it did can
+      // still carry one. importing it would bring in a component of a lane this clone never asked for.
+      .filter((key) => parsed[key].isAvailableOnCurrentLane !== false)
+      .map((key) => {
+        const entry = parsed[key];
+        const name = entry.name || key;
+        const scope = entry.scope || entry.defaultScope;
+        return { id: scope ? `${scope}/${name}` : name, rootDir: entry.rootDir };
+      })
+  );
 }
 
 /**
