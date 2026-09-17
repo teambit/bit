@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs-extra';
 import { expect } from 'chai';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
@@ -8,6 +10,10 @@ import { InstallAspect } from './install.aspect';
 
 type InstallWithEnvPackage = {
   _getEnvPackage(envId: ComponentID): Promise<Record<string, string> | undefined>;
+};
+
+type InstallWithRootLookup = {
+  isLegacyCoreEnvInstalledAtRoot(packageName: string): boolean;
 };
 
 describe('InstallMain', function () {
@@ -33,6 +39,29 @@ describe('InstallMain', function () {
       const envId = ComponentID.fromString('teambit.harmony/empty-env');
       const envPackage = await installWithEnvPackage._getEnvPackage(envId);
       expect(envPackage).to.be.undefined;
+    });
+  });
+
+  describe('legacy core env already installed at the workspace root', () => {
+    // a phantom require of a legacy core env resolves from the requiring package up to the root.
+    // when the root already provides the package, pinning the legacy version on top of it would
+    // move the version the rest of the tree is resolved against and re-link the whole tree.
+    const installedPackageName = '@teambit/react';
+    const missingPackageName = '@teambit/mdx';
+    let installWithRootLookup: InstallWithRootLookup;
+    before(async () => {
+      // reaching the private method directly to avoid running a real package installation
+      installWithRootLookup = install as unknown as InstallWithRootLookup;
+      await fs.outputJson(
+        path.join(workspaceData.workspacePath, 'node_modules', installedPackageName, 'package.json'),
+        { name: installedPackageName, version: '1.0.1169' }
+      );
+    });
+    it('should report a package that is installed at the root', () => {
+      expect(installWithRootLookup.isLegacyCoreEnvInstalledAtRoot(installedPackageName)).to.be.true;
+    });
+    it('should not report a package that is not installed at the root', () => {
+      expect(installWithRootLookup.isLegacyCoreEnvInstalledAtRoot(missingPackageName)).to.be.false;
     });
   });
 });

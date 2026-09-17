@@ -1125,7 +1125,23 @@ export class InstallMain {
         requiredPackages.add(required)
       );
     });
-    return [...requiredPackages].map((packageName) => envIdByPackageName.get(packageName) as string);
+    return [...requiredPackages]
+      .filter((packageName) => !this.isLegacyCoreEnvInstalledAtRoot(packageName))
+      .map((packageName) => envIdByPackageName.get(packageName) as string);
+  }
+
+  /**
+   * whether the legacy core env package is already present in the workspace's root node_modules.
+   *
+   * a phantom require resolves from the requiring package up to the root, so a package already
+   * there satisfies it and nothing needs to be added to the policy. pinning the legacy version on
+   * top would instead replace a package the rest of the tree is already resolved against, and the
+   * package manager re-links every package whose peer resolution moves with it - in this workspace,
+   * which installs the react env at the root, that is the entire tree. the re-link re-materializes
+   * the workspace components' packages without the dists the running process is loaded from.
+   */
+  private isLegacyCoreEnvInstalledAtRoot(packageName: string): boolean {
+    return fs.existsSync(path.join(this.workspace.path, 'node_modules', packageName, 'package.json'));
   }
 
   /**
