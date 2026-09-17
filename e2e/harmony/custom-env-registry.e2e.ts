@@ -48,6 +48,9 @@ describe('custom env (registry)', function () {
         },
         envName
       );
+      // the env's own env (teambit.envs/env) is a regular env whose package must be installed
+      // for the env to load - setPolicyOnlyEnv itself installs nothing
+      helper.command.install();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.showComponent(envId);
       helper.command.tagAllComponents();
