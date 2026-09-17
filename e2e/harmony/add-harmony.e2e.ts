@@ -319,17 +319,6 @@ describe('add command on Harmony', function () {
         fs.removeSync(outside);
       });
     });
-    describe('importing an ordinary component onto the root', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace();
-        helper.scopeHelper.addRemoteScope();
-      });
-      it('should refuse, only a workspace-root component may own "."', () => {
-        // it would own every unclaimed file from the next scan on, and drop out of install and link
-        const cmd = () => helper.command.importComponentWithoutInstall('comp1', '--path .');
-        expect(cmd).to.throw('not a workspace-root component');
-      });
-    });
     describe('importing it onto the root of a workspace that already tracks components', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();

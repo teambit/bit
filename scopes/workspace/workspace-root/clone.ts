@@ -290,7 +290,11 @@ export function resolveComponentDir(workspacePath: string, entry: VersionedBitma
   // the absolute check goes before the resolve: an absolute path that happens to sit under this
   // workspace resolves to an ordinary relative one and would pass every check below, though it is
   // still a directory of the machine the root was snapped on rather than one of this workspace.
-  const target = rootDir && !path.isAbsolute(rootDir) ? path.resolve(workspacePath, rootDir) : undefined;
+  // the type is checked, not assumed: the entry is parsed from a `.bitmap` that came from a remote, and
+  // the parser asserts its shape without looking at the values. handing a number or an object to
+  // path.isAbsolute would abort the clone with a node type error instead of the message below.
+  const isUsable = typeof rootDir === 'string' && rootDir.length > 0 && !path.isAbsolute(rootDir);
+  const target = isUsable ? path.resolve(workspacePath, rootDir) : undefined;
   const relative = target ? path.relative(workspacePath, target) : undefined;
   // a leading ".." is only a way out when it is the whole segment: a directory may be named "..cache"
   const climbsOut = relative === '..' || relative?.startsWith(`..${path.sep}`);

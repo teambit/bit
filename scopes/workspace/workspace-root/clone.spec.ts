@@ -53,6 +53,11 @@ describe('resolveComponentDir', () => {
     const resolve = () => resolveComponentDir(workspacePath, { id: 'a', rootDir: '.' });
     expect(resolve).to.throw('not a directory inside the workspace');
   });
+  it('should refuse a root-dir that is not a string, the map came from a remote', () => {
+    // the parser asserts the entry's shape, not its values, so this reaches here as it was written
+    const resolve = () => resolveComponentDir(workspacePath, { id: 'a', rootDir: 42 as unknown as string });
+    expect(resolve).to.throw('not a directory inside the workspace');
+  });
   it('should refuse an entry without a root-dir rather than fail on it later', () => {
     const resolve = () => resolveComponentDir(workspacePath, { id: 'a' });
     expect(resolve).to.throw('not a directory inside the workspace');
