@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
+import { AUTO_GENERATED_MSG } from '@teambit/legacy.constants';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
@@ -24,10 +25,20 @@ describe('the files bit add tracks', function () {
     'comp1/hello.json': '{ "hello": "world" }\n',
   };
 
-  async function setup(files: Record<string, string>) {
+  /** the workspace aspect holds the flag, and workspace.jsonc carries comments that JSON.parse rejects */
+  function enableTrackAllFiles(workspacePath: string) {
+    const configPath = path.join(workspacePath, 'workspace.jsonc');
+    const content = fs.readFileSync(configPath, 'utf8');
+    const workspaceKey = '"teambit.workspace/workspace": {';
+    if (!content.includes(workspaceKey)) throw new Error(`"${workspaceKey}" is no longer in the mock workspace.jsonc`);
+    fs.writeFileSync(configPath, content.replace(workspaceKey, `${workspaceKey}\n    "trackAllFiles": true,`));
+  }
+
+  async function setup(files: Record<string, string>, opts: { trackAllFiles?: boolean } = {}) {
     const workspaceData = mockWorkspace();
     workspaces.push(workspaceData);
     const { workspacePath } = workspaceData;
+    if (opts.trackAllFiles) enableTrackAllFiles(workspacePath);
     Object.entries(files).forEach(([filePath, content]) =>
       fs.outputFileSync(path.join(workspacePath, filePath), content)
     );
@@ -81,6 +92,30 @@ describe('the files bit add tracks', function () {
           }),
         'was excluded from file list'
       );
+    });
+  });
+
+  describe('a file bit generated, which carries its banner', () => {
+    const compWithGeneratedFile = {
+      'comp1/index.js': 'module.exports = () => "comp1";\n',
+      'comp1/package.json': `${AUTO_GENERATED_MSG}{ "name": "comp1" }\n`,
+    };
+    const filesOf = async (trackAllFiles: boolean) => {
+      const { workspacePath, tracker } = await setup(compWithGeneratedFile, { trackAllFiles });
+      const results = await tracker.addForCLI({
+        componentPaths: [path.join(workspacePath, 'comp1')],
+        id: 'comp1',
+        override: false,
+      });
+      return results.addedComponents[0].files.map((file) => file.relativePath);
+    };
+    it('should drop it by default, it is not source', async () => {
+      expect(await filesOf(false)).to.not.include('package.json');
+    });
+    it('should keep it with trackAllFiles on, which is what the rescan does', async () => {
+      // the rescan never looks at the banner, so dropping it here would leave the two disagreeing:
+      // the file is missing from the add, then turns up as a new file on the next status
+      expect(await filesOf(true)).to.include('package.json');
     });
   });
 });
