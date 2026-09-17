@@ -128,6 +128,24 @@ describe('the workspace-root import preflight checks', () => {
     expect(() => main.throwForSymlinksInTheWay(componentFor(['.bitmap', 'README.md']))).to.not.throw();
   });
 
+  it('should refuse a symlinked component.json when the config file is written', async () => {
+    // it is generated rather than versioned, so it is not among the component's files - it still
+    // lands at the root, and the writer forces override on it
+    const target = path.join(workspacePath, 'elsewhere');
+    await fs.ensureDir(target);
+    await fs.symlink(target, path.join(workspacePath, 'component.json'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']), true)).to.throw('is a symbolic link');
+  });
+
+  it('should leave it alone when no config file is written', async () => {
+    const target = path.join(workspacePath, 'elsewhere');
+    await fs.ensureDir(target);
+    await fs.symlink(target, path.join(workspacePath, 'component.json'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']), false)).to.not.throw();
+  });
+
   it('should still refuse a symlink on the way to a file the root does own', async () => {
     await fs.symlink(os.tmpdir(), path.join(workspacePath, 'docs'));
     const main = runtimeFor(['packages/comp1'], workspacePath);

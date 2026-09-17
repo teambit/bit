@@ -293,7 +293,7 @@ export class ComponentWriterMain {
     if (componentRootDir === WORKSPACE_ROOT_DIR || existingComponentMap?.rootDir === WORKSPACE_ROOT_DIR) {
       this.throwForNonWorkspaceRootComponent(component);
       // the symlink rule is about where a write lands, and --track-only writes nothing (skipWritingToFs)
-      if (!opts.skipWritingToFs) this.throwForSymlinksInTheWay(component);
+      if (!opts.skipWritingToFs) this.throwForSymlinksInTheWay(component, opts.writeConfig);
     }
     // with --write-to-empty-dir, dir-conflict resolution is deferred to relocateOccupiedDirs() so it runs after the
     // fixDirs* passes (which may still adjust writeToPath); otherwise fail here when the target dir is occupied.
@@ -392,10 +392,14 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
     });
   }
 
-  private throwForSymlinksInTheWay(component: ConsumerComponent) {
+  private throwForSymlinksInTheWay(component: ConsumerComponent, writeConfig?: boolean) {
     const pathsInTheWay = new Set<string>();
-    this.filesThatWouldLand(component).forEach((file) => {
-      const segments = pathNormalizeToLinux(file.relative).split('/');
+    const landing = this.filesThatWouldLand(component).map((file) => pathNormalizeToLinux(file.relative));
+    // the config file is generated rather than versioned, so it is not among the component's files -
+    // it still lands at the root, and this rule is about where a write goes
+    if (writeConfig) landing.push(COMPONENT_CONFIG_FILE_NAME);
+    landing.forEach((relativePath) => {
+      const segments = relativePath.split('/');
       segments.forEach((_, index) => pathsInTheWay.add(segments.slice(0, index + 1).join('/')));
     });
     pathsInTheWay.forEach((pathInTheWay) => {
