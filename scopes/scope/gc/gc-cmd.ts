@@ -33,7 +33,9 @@ export class GcCmd implements Command {
     [
       '',
       'keep-versions <number>',
-      'keep the last <number> versions of each workspace component, so their recent history stays available offline',
+      // no angle brackets in the description - it lands unescaped in the generated mdx, where it
+      // would be parsed as an unclosed jsx tag
+      'keep the last N versions of each workspace component, so their recent history stays available offline',
     ],
     ['', 'backup', 'move the objects into a "deleted-objects" directory instead of deleting them. frees no disk space'],
     ['', 'restore', 'restore the objects of a previous run that used --backup'],
