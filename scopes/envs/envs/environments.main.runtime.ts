@@ -120,6 +120,11 @@ export class EnvsMain {
    * Ids of envs (not neccesrraly loaded successfully)
    */
   public envIds = new Set<string>();
+  /**
+   * depth of nested `skipNotLoadedWarnings` scopes. while above zero, "env was not loaded"
+   * warnings are muted. see `skipNotLoadedWarnings` for why.
+   */
+  private notLoadedWarningsMutedDepth = 0;
 
   static runtime = MainRuntime;
 
@@ -206,6 +211,29 @@ export class EnvsMain {
   resetFailedToLoadEnvs() {
     this.failedToLoadEnvs.clear();
     this.failedToLoadExt.clear();
+  }
+
+  /**
+   * run `fn` with the "env was not loaded" warnings muted.
+   *
+   * the workspace loads components in groups, and one of those groups holds components that are
+   * loaded only so they can be registered as the env of another component. the env of *those*
+   * components (the env-of-env) is scheduled only when the env component itself is one of the
+   * requested ids, so during that pass an unregistered env says nothing about whether it's
+   * installed - warning about it is a false positive. e.g. "bit show <comp>" used to report that
+   * the env of <comp>'s env "was not loaded (run bit install)" on a perfectly healthy workspace.
+   *
+   * this is a scope rather than a param because the warning is reached from many aspects that
+   * calculate the env during the load slot (tester, docs, pkg, compositions, dev-files), so muting
+   * a single call site only moves the warning to the next one.
+   */
+  async skipNotLoadedWarnings<T>(fn: () => Promise<T>): Promise<T> {
+    this.notLoadedWarningsMutedDepth += 1;
+    try {
+      return await fn();
+    } finally {
+      this.notLoadedWarningsMutedDepth -= 1;
+    }
   }
 
   getFailedToLoadEnvs() {
@@ -704,7 +732,7 @@ export class EnvsMain {
           this.envIds.add(envDef.id);
           return envDef;
         }
-        if (!opts.skipWarnings) {
+        if (!opts.skipWarnings && !this.notLoadedWarningsMutedDepth) {
           // Do not allow a non existing env
           this.printWarningIfFirstTime(
             matchedEntry.id.toString(),

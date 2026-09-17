@@ -1358,7 +1358,7 @@ export class InstallMain {
       this._updateComponentsConfig(updatedComponents),
     ]);
     await this.workspace._reloadConsumer();
-    return this._installModules({ dedupe: true });
+    return this.runInstallModulesInInstallContext({ dedupe: true });
   }
 
   async addDuplicateComponentAndPackageIssue(components: Component[]) {
@@ -1407,7 +1407,23 @@ export class InstallMain {
   async uninstallDependencies(packages: string[]) {
     this.dependencyResolver.removeFromRootPolicy(packages);
     await this.dependencyResolver.persistConfig('uninstall dependencies');
-    return this._installModules({ dedupe: true });
+    return this.runInstallModulesInInstallContext({ dedupe: true });
+  }
+
+  /**
+   * `_installModules` loads the components before the envs are loaded as aspects, so envs legitimately
+   * appear "not loaded" during it. `install()` marks the workspace as being in install context for
+   * exactly that reason, which mutes those premature warnings. entry points that run an installation
+   * without going through `install()` must do the same, otherwise they emit "env was not loaded
+   * (run bit install)" on a healthy workspace - while themselves running the very install suggested.
+   */
+  private async runInstallModulesInInstallContext(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    this.workspace.inInstallContext = true;
+    try {
+      return await this._installModules(options);
+    } finally {
+      this.workspace.inInstallContext = false;
+    }
   }
 
   /**

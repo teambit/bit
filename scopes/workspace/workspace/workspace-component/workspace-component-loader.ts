@@ -231,11 +231,15 @@ export class WorkspaceComponentLoader {
         if (!workspaceIds.length && !scopeIds.length) {
           throw new Error('getAndLoadSlotOrdered - group has no ids to load');
         }
-        const res = await loadSpan(
-          'load-group',
-          { group: `${index + 1}/${groupsToHandle.length}`, desc: groupStr },
-          () => this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs })
-        );
+        const loadGroup = () =>
+          loadSpan('load-group', { group: `${index + 1}/${groupsToHandle.length}`, desc: groupStr }, () =>
+            this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs })
+          );
+        // a non-seeders group holds components that weren't requested - they're loaded only because
+        // another component uses them as an aspect/env. the env of *those* components (the
+        // env-of-env) is never scheduled for this load, so finding it unregistered here says nothing
+        // about whether it's installed. see EnvsMain.skipNotLoadedWarnings.
+        const res = seeders ? await loadGroup() : await this.envs.skipNotLoadedWarnings(loadGroup);
         this.logger.profileTrace(groupDesc);
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
