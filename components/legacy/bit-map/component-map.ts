@@ -123,11 +123,24 @@ export async function filterByIgnoreFiles(
   const filteredByRoot: PathLinux[] = gitIgnore.filter(relativePaths);
   if (dir !== WORKSPACE_ROOT_DIR) return filteredByRoot;
   const nestedPatterns = await getNestedIgnorePatterns(consumerPath, gitIgnore, relativePaths);
-  if (!nestedPatterns.length) return filteredByRoot;
+  if (!nestedPatterns.length) return keepWorkspaceMapFile(filteredByRoot, relativePaths);
   const filteredByUserRules: PathLinux[] = ignore().add(gitIgnore).add(nestedPatterns).filter(relativePaths);
-  return ignore()
+  const filtered = ignore()
     .add(trackAllFiles ? ALWAYS_IGNORE_LIST : IGNORE_LIST)
     .filter(filteredByUserRules);
+  return keepWorkspaceMapFile(filtered, relativePaths);
+}
+
+/**
+ * `.bitmap` is the workspace-root component's reason to exist: the map it versions is what a workspace
+ * is restored from, and what `bit clone` reads to know which components to import. so the workspace's
+ * own ignore rules do not get to drop it - a team that keeps `.bitmap` out of git is exactly the one
+ * that needs it versioned here, and without it a clone comes out empty with nothing to say why.
+ */
+function keepWorkspaceMapFile(filtered: PathLinux[], relativePaths: PathLinux[]): PathLinux[] {
+  if (filtered.some((relativePath) => isWorkspaceMapFile(relativePath))) return filtered;
+  const mapFile = relativePaths.find((relativePath) => isWorkspaceMapFile(relativePath));
+  return mapFile ? [...filtered, mapFile] : filtered;
 }
 
 /**

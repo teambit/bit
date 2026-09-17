@@ -67,6 +67,34 @@ describe('getFilesByDir', function () {
     });
   });
 
+  describe('a workspace whose own ignore rules hide .bitmap', () => {
+    // some teams keep .bitmap out of git. the root component versions it all the same - it is the map
+    // a workspace is restored from, and what "bit clone" reads to know which components to import, so
+    // dropping it would make a clone come out empty with nothing to say why.
+    let workspacePath: string;
+    before(async () => {
+      workspacePath = await createWorkspace('bit-workspace-ignored-map-', {
+        '.bitmap': '',
+        'README.md': '',
+        'workspace.jsonc': '',
+        '.gitignore': '.bitmap\nbuild/\n',
+        'build/out.js': '',
+      });
+    });
+    after(() => fs.remove(workspacePath));
+
+    it('should keep .bitmap in the root file-set anyway', async () => {
+      const gitIgnore = await getGitIgnoreHarmony(workspacePath);
+      const files = await getFilesByDir(WORKSPACE_ROOT_DIR, workspacePath, gitIgnore, []);
+      expect(files.map((file) => file.relativePath)).to.include('.bitmap');
+    });
+    it('should still honor the rest of the rules, only that one file is spared', async () => {
+      const gitIgnore = await getGitIgnoreHarmony(workspacePath);
+      const files = await getFilesByDir(WORKSPACE_ROOT_DIR, workspacePath, gitIgnore, []);
+      expect(files.map((file) => file.relativePath)).to.not.include('build/out.js');
+    });
+  });
+
   describe('scanning the workspace root', () => {
     let workspacePath: string;
     let outsidePath: string;
