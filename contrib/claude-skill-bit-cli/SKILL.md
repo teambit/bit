@@ -52,7 +52,7 @@ Collaboration & Remote
 remote - manage remote scopes for self-hosted environments
 Subcommands: add, del, list
 ripple <sub-command> - manage Ripple CI jobs on bit.cloud
-Subcommands: list, log, errors, retry, stop
+Subcommands: list, log, errors, retry, stop, simulate
 deprecate <component-pattern> - mark components as deprecated to discourage their use
 undeprecate <component-pattern> - remove the deprecation status from components
 import [component-patterns...] - bring components from remote scopes into your workspace
@@ -60,7 +60,7 @@ delete <component-pattern> - soft-delete components from remote scopes
 recover <component-pattern> - restore soft-deleted components
 export [component-patterns...] - upload components to remote scopes
 lane [sub-command] - manage lanes for parallel development
-Subcommands: list, show, create, remove, change-scope, alias, rename, remove-readme, import, remove-comp, fetch, eject, current, history, history-diff, checkout, revert, merge-move
+Subcommands: list, show, create, remove, change-scope, alias, rename, remove-readme, import, remove-comp, fetch, eject, current, history, history-diff, checkout, revert, updates, merge-move
 ci <sub-command> - continuous integration commands for automated workflows
 Subcommands: verify, pr, merge, sync
 fork <pattern> [target-component-name] - create a new component by copying from an existing one

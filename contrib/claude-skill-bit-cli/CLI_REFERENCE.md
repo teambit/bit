@@ -564,6 +564,13 @@ revert to a previous history of the current lane. see also "bit lane checkout"
 revert is similar to "lane checkout", but it keeps the versions and only changes the files. choose one or the other based on your needs. if you want to continue working on this lane and need the changes from the history to be the head, then use "lane revert". if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.
 Flags: --skip-dependency-installation, --restore-deleted-components, --json
 
+## bit lane updates [lane-name]
+
+show the dependents Ripple CI cascaded onto a lane, default to the current lane
+
+after a lane is exported, Ripple CI may snap the dependents of the lane components against the new heads and add them to the lane as hidden "update" entries. they are part of the lane graph (Ripple CI builds them, merge refreshes them) but stay hidden from the workspace ("bit status", .bitmap). the entries are read from the remote lane. the local lane object is used only when the remote is unavailable. use --undo to remove them from the lane, on the remote and locally, e.g. when the cascade is not wanted.
+Flags: --undo, --json
+
 ## bit lane merge-move <new-lane-name>
 
 EXPERIMENT. move the current merge state into a new lane. the current lane will be reset
@@ -804,6 +811,13 @@ Flags: --lane <lane>, --json
 
 stop a running Ripple CI job (auto-detects current lane when no job-id given)
 Flags: --lane <lane>, --json
+
+## bit ripple simulate
+
+start a Ripple CI simulation for a lane to reveal which dependents break (auto-detects current lane)
+
+a simulation builds the dependents of the lane components against the lane heads on bit.cloud, without merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged. the simulation runs against the lane as it exists on bit.cloud, so export the lane first. simulations are heavy jobs and are billed as such. run them at review time, not on every change. dependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and --exclude-scopes. follow the job with "bit ripple log". once it finishes, "bit ripple errors" shows what broke. both take the job id printed when the simulation starts.
+Flags: --lane <lane>, --scopes <scopes>, --owners <owners>, --exclude-scopes <scopes>, --json
 
 ## bit run [app-name]
 
