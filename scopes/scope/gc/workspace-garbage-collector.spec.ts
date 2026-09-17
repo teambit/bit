@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { ModelComponent, Ref, Source, Version } from '@teambit/objects';
+import { Lane, ModelComponent, Ref, Source, Version } from '@teambit/objects';
 import { Scope } from '@teambit/legacy.scope';
 import { collectGarbageInWorkspace, restoreDeletedObjects } from './workspace-garbage-collector';
 
@@ -152,6 +152,49 @@ describe('collectGarbageInWorkspace', () => {
       await runGc({ keepVersions: 2 });
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.false;
     });
+
+    describe('when the component is on an exported lane', () => {
+      /** the lane's own history: 0.0.3 -> laneSnap1 -> laneSnap2, none of it on main */
+      const LANE_HASHES = { snap1: 'a'.repeat(40), snap2: 'b'.repeat(40) };
+      let laneSources: { [snap: string]: Source };
+
+      beforeEach(async () => {
+        laneSources = {
+          snap1: Source.from(Buffer.from('the contents of lane snap 1')),
+          snap2: Source.from(Buffer.from('the contents of lane snap 2')),
+        };
+        const laneVersions = [
+          buildVersion(LANE_HASHES.snap1, laneSources.snap1, [VERSION_HASHES['0.0.3']]),
+          buildVersion(LANE_HASHES.snap2, laneSources.snap2, [LANE_HASHES.snap1]),
+        ];
+        const lane = Lane.create('my-lane', COMP_SCOPE);
+        lane.addComponent({
+          id: ComponentID.fromObject({ scope: COMP_SCOPE, name: COMP_NAME }),
+          head: Ref.from(LANE_HASHES.snap2),
+        });
+        const objects = [lane, ...laneVersions, ...Object.values(laneSources)];
+        objects.forEach((object) => {
+          object.validateBeforePersist = false;
+        });
+        await scope.objects.writeObjectsToTheFS(objects);
+        // exporting the lane is what makes its history prunable. while it is unexported the whole
+        // chain is kept regardless, which would hide whether the recent-history walk found it.
+        await scope.objects.remoteLanes.addEntry(
+          LaneId.from('my-lane', COMP_SCOPE),
+          ComponentID.fromObject({ scope: COMP_SCOPE, name: COMP_NAME }),
+          Ref.from(LANE_HASHES.snap2)
+        );
+        await scope.objects.remoteLanes.write();
+      });
+
+      it('should keep the recent history of the lane, not of main', async () => {
+        await runGc({ keepVersions: 2 });
+        // the lane tip is a root on its own, so the predecessor is what proves the walk started
+        // from the lane rather than from the main head
+        expect(await objectExists(Ref.from(LANE_HASHES.snap1))).to.be.true;
+        expect(await objectExists(laneSources.snap1.hash())).to.be.true;
+      });
+    });
   });
 
   describe('--dry-run', () => {
@@ -211,6 +254,20 @@ describe('collectGarbageInWorkspace', () => {
     it('should keep the stashed version and its files, as nothing can bring them back', async () => {
       const result = await runGc();
       expect(result.deletedObjects).to.equal(0);
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
+    });
+
+    it('should refuse to run when a stash file cannot be read, rather than assume it holds nothing', async () => {
+      await fs.outputFile(path.join(scope.path, 'stash', 'stash-1.json'), '{ this is not json');
+      let error: Error | undefined;
+      try {
+        await runGc();
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error).to.be.an('error');
+      expect(error?.message).to.have.string('not safe to run gc');
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
       expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });

@@ -155,6 +155,9 @@ ${list}`);
       { concurrency }
     )
   );
+  const workspaceComponentIds = new Set(
+    workspaceComponents.map((component) => component.toComponentId().toStringWithoutVersion())
+  );
 
   // heads of every component on every local lane, `updateDependents` included.
   const laneHeads: { component: ModelComponent; head: Ref }[] = [];
@@ -281,12 +284,22 @@ ${list}`);
 
   /**
    * `--keep-versions N`. the traversal returns the head first, so the first N are the most recent.
+   *
+   * every head a workspace component has is walked, not only its main one. on a lane, the recent
+   * history the user asked for is the lane's, and `getHeadRegardlessOfLane` can't find it here:
+   * `laneHeadLocal` is populated at runtime by whoever checked the lane out, while these components
+   * came straight from the objects.
    */
   async function keepRecentVersions() {
+    const startingPoints = [
+      ...workspaceComponents.map((component) => ({ component, head: component.getHead() })),
+      ...laneHeads.filter(({ component }) =>
+        workspaceComponentIds.has(component.toComponentId().toStringWithoutVersion())
+      ),
+    ];
     await pMapPool(
-      workspaceComponents,
-      async (component) => {
-        const head = component.getHeadRegardlessOfLane();
+      startingPoints,
+      async ({ component, head }) => {
         if (!head) return;
         const versionsInfo = await getAllVersionsInfo({
           modelComponent: component,
@@ -338,14 +351,18 @@ async function getStashedHashes(scopePath: string): Promise<string[]> {
   const files = (await fs.readdir(stashDir)).filter((file) => file.endsWith('.json'));
   const hashesPerFile = await Promise.all(
     files.map(async (file) => {
+      const filePath = path.join(stashDir, file);
       try {
-        const content = await fs.readJson(path.join(stashDir, file));
+        const content = await fs.readJson(filePath);
         return (content.stashCompsData || []).map((compData) => compData.hash).filter(Boolean);
       } catch (err: any) {
-        // a stash file we can't parse is not a reason to fail, but it is a reason not to delete
-        // what it may be pointing at. there's nothing to keep from it, so only warn.
-        logger.warn(`gc, unable to read the stash file ${file}. Error: ${err.message}`);
-        return [];
+        // the same reasoning as an object we can't classify: a stash file is the only record of the
+        // snaps it holds, so failing to read one means we don't know what must survive. an empty
+        // list here is reserved for a stash that parsed and holds nothing.
+        throw new BitError(`unable to read the stash file "${filePath}", so it is not safe to run gc.
+a stash is the only record of the snaps it holds - they exist nowhere else, and deleting them
+cannot be undone. fix or remove the file and run gc again.
+Error: ${err.message}`);
       }
     })
   );
