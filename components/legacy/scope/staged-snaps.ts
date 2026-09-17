@@ -34,6 +34,10 @@ export class StagedSnaps {
     return this.snaps.includes(snap);
   }
 
+  getAll(): string[] {
+    return this.snaps.filter((snap) => snap.length);
+  }
+
   isEmpty() {
     return this.snaps.length === 0;
   }

@@ -52,6 +52,8 @@ import ClientIdInUse from './exceptions/client-id-in-use';
 import { getDivergeData } from '@teambit/component.snap-distance';
 import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
+import type { GcResult, WorkspaceGcOptions } from './workspace-garbage-collector';
+import { collectGarbageInWorkspace, restoreDeletedObjects } from './workspace-garbage-collector';
 import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
 const removeNils = (array) => reject(array, isNil);
@@ -700,6 +702,18 @@ once done, to continue working, please run "bit cc"`
 
   async garbageCollect(opts: GarbageCollectorOpts) {
     return collectGarbage(this, opts);
+  }
+
+  /**
+   * @see `collectGarbageInWorkspace` - unlike `garbageCollect`, this one is for a scope that backs a
+   * workspace, where history is a cache rather than the source of truth.
+   */
+  async garbageCollectWorkspace(workspaceIds: ComponentID[], opts: WorkspaceGcOptions): Promise<GcResult> {
+    return collectGarbageInWorkspace(this, workspaceIds, opts);
+  }
+
+  async restoreGarbageCollected(overwrite = false) {
+    return restoreDeletedObjects(this, overwrite);
   }
 
   static async ensure(path: PathOsBasedAbsolute, name?: string, groupName?: string): Promise<Scope> {

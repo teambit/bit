@@ -29,6 +29,13 @@ import { ScopeMeta, Lane, ModelComponent } from '../models';
 type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
+/**
+ * how much of an object file to read when all that's needed is its header. the header holds the
+ * type and is a few dozen bytes, so a single 4KB chunk always inflates to far more than enough.
+ */
+const OBJECT_HEADER_CHUNK_SIZE = 4096;
+
+export type ObjectWithType = { ref: Ref; type: string; size: number };
 
 export default class Repository {
   objects: { [key: string]: BitObject } = {};
@@ -94,14 +101,14 @@ export default class Repository {
    * Note: This function cannot be async because it's used by the synchronous `loadSync` method
    * which needs to maintain sync behavior for compatibility with existing code.
    */
-  static onPreObjectPersist: (content: Buffer) => Buffer;
+  static onPreObjectPersist?: (content: Buffer) => Buffer;
 
   /**
    * Hook for transforming content after objects are read from the filesystem.
    * Note: This function cannot be async because it's used by the synchronous `loadSync` method
    * which needs to maintain sync behavior for compatibility with existing code.
    */
-  static onPostObjectRead: (content: Buffer) => Buffer;
+  static onPostObjectRead?: (content: Buffer) => Buffer;
 
   async reLoadScopeIndex() {
     this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
@@ -257,6 +264,49 @@ export default class Repository {
       }
     );
     return objects;
+  }
+
+  /**
+   * classify every object in the scope by its type, along with its size on the filesystem.
+   *
+   * needed by the garbage collector, which must know the type of each object but has no use for
+   * its content. inflating every object would mean inflating gigabytes of file-content (`Source`)
+   * objects, so only the first chunk of each file is read - enough to hold the header, which is
+   * where the type is. when a content transformer is registered (`onPostObjectRead`), it applies
+   * to the whole buffer, so in that case the file is read in full.
+   */
+  async listObjectsWithType(): Promise<ObjectWithType[]> {
+    const refs = await this.listRefs();
+    const concurrency = concurrentIOLimit();
+    logger.debug(`Repository.listObjectsWithType, classifying ${refs.length} objects`);
+    const results = await pMapPool(refs, (ref) => this.getObjectTypeGracefully(ref), { concurrency });
+    return compact(results);
+  }
+
+  private async getObjectTypeGracefully(ref: Ref): Promise<ObjectWithType | null> {
+    const objectPath = this.objectPath(ref);
+    try {
+      const stat = await fs.stat(objectPath);
+      const type = (await this.readObjectType(objectPath, stat.size)) as string;
+      return { ref, type, size: stat.size };
+    } catch (err: any) {
+      logger.warn(`Repository.listObjectsWithType, failed reading ${objectPath}. Error: ${err.message}`);
+      return null;
+    }
+  }
+
+  private async readObjectType(objectPath: string, size: number): Promise<string> {
+    const readInFull = async () => BitObject.parseObjectType(this.onRead(await fs.readFile(objectPath)), objectPath);
+    if (Repository.onPostObjectRead) return readInFull();
+    const chunkSize = Math.min(OBJECT_HEADER_CHUNK_SIZE, size);
+    const chunk = Buffer.alloc(chunkSize);
+    const fileDescriptor = await fs.open(objectPath, 'r');
+    try {
+      await fs.read(fileDescriptor, chunk, 0, chunkSize, 0);
+    } finally {
+      await fs.close(fileDescriptor);
+    }
+    return BitObject.parseObjectTypeFromChunk(chunk) || readInFull();
   }
 
   async loadRefDeleteIfInvalid(ref: Ref) {

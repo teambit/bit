@@ -17,6 +17,7 @@ import { EnvAspect } from '@teambit/env';
 import { EmptyEnvAspect } from '@teambit/empty-env';
 import { ExpressAspect } from '@teambit/express';
 import { YarnAspect } from '@teambit/yarn';
+import { GcAspect } from '@teambit/gc';
 import { GeneratorAspect } from '@teambit/generator';
 import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app';
 import { GraphAspect } from '@teambit/graph';
@@ -144,6 +145,7 @@ export const manifestsMap = {
   [PnpmAspect.id]: PnpmAspect,
   [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
+  [GcAspect.id]: GcAspect,
   [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
   [EnvAspect.id]: EnvAspect,
