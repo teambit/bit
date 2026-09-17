@@ -152,6 +152,19 @@ describe('BitMap', function () {
       nested.isAvailableOnCurrentLane = false;
       expect(bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR)).to.deep.equal([]);
     });
+    it('getNestedRootDirs should drop a trailing slash, which a hand-edited .bitmap may carry', async () => {
+      // callers append to these ("dir/**", "dir/"), and a doubled separator matches nothing - the root
+      // would then claim the nested component's files and a write would overwrite them
+      const bitMap = await getBitmapInstance();
+      bitMap.loadComponents(
+        {
+          'my-scope/ws-root': { scope: 'my-scope', version: '0.0.1', mainFile: 'README.md', rootDir: '.' },
+          'my-scope/comp1': { scope: 'my-scope', version: '0.0.1', mainFile: 'index.js', rootDir: 'packages/comp1/' },
+        },
+        'my-scope'
+      );
+      expect(bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR)).to.deep.equal(['packages/comp1']);
+    });
     it('getNestedRootDirs should not subtract the dir of a removed component', async () => {
       const bitMap = await getBitmapInstance();
       bitMap.addComponent(rootComponentParams);

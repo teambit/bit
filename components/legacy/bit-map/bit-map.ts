@@ -257,6 +257,10 @@ export class BitMap {
         .filter((componentMap) => componentMap.isAvailableOnCurrentLane && !componentMap.isRemoved())
         .map((componentMap) => componentMap.rootDir)
         .filter((nested): nested is PathLinuxRelative => Boolean(nested) && nested !== WORKSPACE_ROOT_DIR)
+        // without the trailing slash a .bitmap edited by hand may carry (see isSameDir). callers append
+        // to these - "dir/**" to exclude it from a scan, "dir/" to tell a file below it - and a doubled
+        // separator matches nothing, so the root would claim the nested component's files.
+        .map((nested) => nested.replace(/\/+$/, ''))
     );
   }
 
