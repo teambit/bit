@@ -3,7 +3,13 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
-import { ensureEmptyDir, resolveClonePath, resolveComponentDir, resolveThroughExistingAncestors } from './clone';
+import {
+  ensureEmptyDir,
+  resolveClonePath,
+  resolveComponentDir,
+  resolveThroughExistingAncestors,
+  topmostAbsentDir,
+} from './clone';
 import { WorkspaceRootMain } from './workspace-root.main.runtime';
 
 describe('resolveClonePath', () => {
@@ -96,6 +102,33 @@ describe('resolveThroughExistingAncestors', () => {
     const link = path.join(base, 'link');
     await fs.symlink(real, link);
     expect(await resolveThroughExistingAncestors(link)).to.equal(link);
+  });
+});
+
+describe('topmostAbsentDir', () => {
+  let base: string;
+  beforeEach(async () => {
+    base = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'bit-clone-top-')));
+  });
+  afterEach(async () => {
+    await fs.remove(base);
+  });
+
+  it('should be undefined for a destination that is already there, nothing was made for it', async () => {
+    expect(await topmostAbsentDir(base)).to.equal(undefined);
+  });
+
+  it('should be the destination itself when only it is missing', async () => {
+    expect(await topmostAbsentDir(path.join(base, 'ws'))).to.equal(path.join(base, 'ws'));
+  });
+
+  it('should be the highest level made on the way to it, so removing that one takes the rest', async () => {
+    // "clone into new-parent/ws": removing only "ws" would leave "new-parent" standing empty
+    expect(await topmostAbsentDir(path.join(base, 'new-parent', 'ws'))).to.equal(path.join(base, 'new-parent'));
+  });
+
+  it('should reach up through several missing levels', async () => {
+    expect(await topmostAbsentDir(path.join(base, 'a', 'b', 'c'))).to.equal(path.join(base, 'a'));
   });
 });
 

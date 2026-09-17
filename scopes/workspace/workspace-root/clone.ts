@@ -233,6 +233,9 @@ export async function cloneWorkspace(
 ): Promise<CloneResult> {
   const workspacePath = await resolveThroughExistingAncestors(resolveClonePath(dir, rootId));
   await throwForWorkspaceAbove(workspacePath);
+  // before anything is made: ensureDir below creates every missing level, not only the destination,
+  // so this is the point a failure has to undo from
+  const topmostCreated = await topmostAbsentDir(workspacePath);
   const createdDir = await ensureEmptyDir(workspacePath);
   const originalCwd = process.cwd();
   try {
@@ -263,9 +266,10 @@ export async function cloneWorkspace(
     return await new WorkspaceCloner(harmony, workspacePath).clone(rootId, options);
   } catch (err) {
     // leave the directory before removing it, and leave nothing half-made behind: it was empty or
-    // absent to begin with
+    // absent to begin with. removing the topmost level that was made here takes the ones below it
+    // along, so "clone into new-parent/ws" does not leave an empty "new-parent" standing.
     process.chdir(originalCwd);
-    if (createdDir) await fs.remove(workspacePath);
+    if (createdDir) await fs.remove(topmostCreated || workspacePath);
     else await fs.emptyDir(workspacePath);
     throw err;
   } finally {
@@ -320,6 +324,18 @@ export async function resolveThroughExistingAncestors(dirPath: string): Promise<
   const parent = path.dirname(dirPath);
   if (parent === dirPath) return dirPath;
   return path.join(await realpathOfNearestExisting(parent), path.basename(dirPath));
+}
+
+/**
+ * the highest directory on the way to the destination that does not exist yet, or undefined when the
+ * destination is already there. what a failed clone removes, so that the levels made on the way to it
+ * go too rather than being left standing empty.
+ */
+export async function topmostAbsentDir(dirPath: string): Promise<string | undefined> {
+  if (await fs.pathExists(dirPath)) return undefined;
+  const parent = path.dirname(dirPath);
+  if (parent === dirPath) return dirPath;
+  return (await topmostAbsentDir(parent)) || dirPath;
 }
 
 /**
