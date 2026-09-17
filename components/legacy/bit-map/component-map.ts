@@ -174,8 +174,12 @@ async function getNestedIgnorePatterns(
     if (name === BIT_IGNORE || !ignoreFileByDir.has(fileDir)) ignoreFileByDir.set(fileDir, name);
   });
   if (!ignoreFileByDir.size) return [];
+  // git reads the ignore files of a path from the shallowest down, so a deeper rule decides over the
+  // one above it. the scan hands them over in whatever order it walked, so they are ordered here
+  // rather than by that: the patterns are applied in the order they are returned.
+  const byDepth = Array.from(ignoreFileByDir).sort(([dirA], [dirB]) => dirA.split('/').length - dirB.split('/').length);
   const patternsPerDir = await Promise.all(
-    Array.from(ignoreFileByDir, async ([fileDir, name]) => {
+    byDepth.map(async ([fileDir, name]) => {
       const absoluteDir = path.join(consumerPath, fileDir);
       const patterns = name === BIT_IGNORE ? await getBitIgnoreFile(absoluteDir) : await getGitIgnoreFile(absoluteDir);
       return patterns.map((pattern) => rebaseIgnorePattern(pattern, fileDir));

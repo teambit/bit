@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
+import ignore from 'ignore';
 import os from 'os';
 import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
@@ -11,7 +12,7 @@ import {
   normalizeBitmapContentForVersioning,
   readVersionedBitmapEntries,
 } from './bit-map';
-import { WORKSPACE_ROOT_DIR } from './component-map';
+import { filterByIgnoreFiles, WORKSPACE_ROOT_DIR } from './component-map';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
 const getBitmapInstance = async () => {
@@ -335,6 +336,26 @@ ${JSON.stringify(
       await bitMap.trackDirectoryChanges(bitMap.getComponent(compId));
       expect(resolve('comp1/index.js')).to.equal(compId.toString());
       expect(resolve('comp1/new-file.js')).to.equal(compId.toString());
+    });
+  });
+
+  describe('filterByIgnoreFiles with ignore files below the workspace root', () => {
+    let tmpDir: string;
+    const paths = ['docs/sub/.gitignore', 'docs/.gitignore', 'docs/a.log', 'docs/sub/keep.log'];
+    before(async () => {
+      tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-ignore-'));
+      await fs.outputFile(path.join(tmpDir, 'docs/.gitignore'), '*.log\n');
+      await fs.outputFile(path.join(tmpDir, 'docs/sub/.gitignore'), '!keep.log\n');
+    });
+    after(async () => {
+      await fs.remove(tmpDir);
+    });
+    it('should let a deeper rule decide, whatever order the scan walked them in', async () => {
+      // the paths list the deeper ignore file first, which is what the scan may hand over. read in
+      // that order, the rule above would win and take the file the one below re-included
+      const filtered = await filterByIgnoreFiles(WORKSPACE_ROOT_DIR, tmpDir, ignore(), paths);
+      expect(filtered).to.include('docs/sub/keep.log');
+      expect(filtered).to.not.include('docs/a.log');
     });
   });
 });

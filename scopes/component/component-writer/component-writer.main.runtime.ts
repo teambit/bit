@@ -292,7 +292,8 @@ export class ComponentWriterMain {
     // a checkout or a re-import, so the guards of the root run for it as well
     if (componentRootDir === WORKSPACE_ROOT_DIR || existingComponentMap?.rootDir === WORKSPACE_ROOT_DIR) {
       this.throwForNonWorkspaceRootComponent(component);
-      this.throwForSymlinksInTheWay(component);
+      // the symlink rule is about where a write lands, and --track-only writes nothing (skipWritingToFs)
+      if (!opts.skipWritingToFs) this.throwForSymlinksInTheWay(component);
     }
     // with --write-to-empty-dir, dir-conflict resolution is deferred to relocateOccupiedDirs() so it runs after the
     // fixDirs* passes (which may still adjust writeToPath); otherwise fail here when the target dir is occupied.
