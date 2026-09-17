@@ -151,6 +151,21 @@ describe('the workspace-root import preflight checks', () => {
     const main = runtimeFor(['packages/comp1'], workspacePath);
     expect(() => main.throwForSymlinksInTheWay(componentFor(['docs/readme.md']))).to.throw('is a symbolic link');
   });
+
+  it('should refuse a symlink at the file itself, not only above it', async () => {
+    const outsideFile = path.join(workspacePath, 'theirs.md');
+    await fs.writeFile(outsideFile, 'theirs\n');
+    await fs.symlink(outsideFile, path.join(workspacePath, 'README.md'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']))).to.throw('is a symbolic link');
+  });
+
+  it('should refuse a dangling symlink, whose target does not exist, rather than write through it', async () => {
+    // a stat would say there is nothing there and let the write create the target; the check lstats
+    await fs.symlink(path.join(workspacePath, 'missing-target'), path.join(workspacePath, 'README.md'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']))).to.throw('is a symbolic link');
+  });
 });
 
 describe('the destination of an already tracked workspace-root component', () => {

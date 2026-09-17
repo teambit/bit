@@ -295,7 +295,7 @@ describe('add command on Harmony', function () {
         expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# my own readme\n');
       });
     });
-    describe('importing it onto the root with a directory or a dangling symlink in the way', () => {
+    describe('importing it onto the root with a directory or a symlink in the way', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
@@ -305,16 +305,11 @@ describe('add command on Harmony', function () {
         const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
         expect(cmd).to.throw('use --override');
       });
-      it('should refuse a dangling symlink rather than write through it', () => {
-        fs.rmdirSync(path.join(helper.scopes.localPath, 'README.md'));
-        const target = path.join(helper.scopes.localPath, 'missing-target');
-        fs.symlinkSync(target, path.join(helper.scopes.localPath, 'README.md'));
-        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
-        expect(cmd).to.throw('symbolic link');
-        expect(target).to.not.be.a.path();
-      });
+      // the variants of the rule itself - a dangling link, a link at the destination rather than above
+      // it - are in component-writer.spec.ts, against the preflight directly. what needs the command
+      // is that it runs at all and that --override does not waive it, which the case below proves.
       it('should refuse a symlinked ancestor directory even with --override, rather than write through it', () => {
-        fs.unlinkSync(path.join(helper.scopes.localPath, 'README.md'));
+        fs.rmdirSync(path.join(helper.scopes.localPath, 'README.md'));
         const outside = path.join(helper.scopes.localPath, '..', `outside-${path.basename(helper.scopes.localPath)}`);
         fs.mkdirSync(outside);
         fs.symlinkSync(outside, path.join(helper.scopes.localPath, 'docs'));
@@ -322,20 +317,6 @@ describe('add command on Harmony', function () {
         expect(cmd).to.throw('symbolic link');
         expect(path.join(outside, 'guide.md')).to.not.be.a.path();
         fs.removeSync(outside);
-      });
-      it('should refuse a symlinked destination even with --override, rather than write through it', () => {
-        fs.unlinkSync(path.join(helper.scopes.localPath, 'docs'));
-        const outsideFile = path.join(
-          helper.scopes.localPath,
-          '..',
-          `outside-${path.basename(helper.scopes.localPath)}.md`
-        );
-        fs.writeFileSync(outsideFile, 'theirs\n');
-        fs.symlinkSync(outsideFile, path.join(helper.scopes.localPath, 'README.md'));
-        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path . --override');
-        expect(cmd).to.throw('symbolic link');
-        expect(outsideFile).to.be.a.file().with.content('theirs\n');
-        fs.removeSync(outsideFile);
       });
     });
     describe('importing an ordinary component onto the root', () => {
