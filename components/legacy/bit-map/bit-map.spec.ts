@@ -205,6 +205,37 @@ describe('BitMap', function () {
     it('should be idempotent, otherwise the root component would never converge', () => {
       expect(normalizeBitmapContentForVersioning(normalized)).to.equal(normalized);
     });
+    describe('a component the workspace deleted, still pending in the map', () => {
+      const withDeleted = JSON.stringify({
+        comp1: { name: 'comp1', scope: 'my-scope', rootDir: 'comp1' },
+        comp2: {
+          name: 'comp2',
+          scope: 'my-scope',
+          rootDir: 'comp2',
+          config: { 'teambit.component/remove': { removed: true } },
+        },
+        comp3: {
+          name: 'comp3',
+          scope: 'my-scope',
+          rootDir: 'comp3',
+          config: { 'teambit.component/remove': { removed: false } },
+        },
+      });
+      let deletedParsed: Record<string, any>;
+      before(() => {
+        const result = normalizeBitmapContentForVersioning(withDeleted);
+        deletedParsed = JSON.parse(result.slice(result.indexOf('{')));
+      });
+      it('should drop it, or a clone of this root would bring the component back', () => {
+        // the marker lives in the config this function drops, so keeping the entry would leave it
+        // indistinguishable from an ordinary member
+        expect(deletedParsed).to.not.have.property('comp2');
+      });
+      it('should keep a component that was recovered', () => {
+        expect(deletedParsed).to.have.property('comp3');
+        expect(deletedParsed).to.have.property('comp1');
+      });
+    });
     describe('a component of another lane, left in the map so a switch back can restore it', () => {
       const withLaneComp = JSON.stringify({
         comp1: { name: 'comp1', scope: 'my-scope', rootDir: 'comp1' },

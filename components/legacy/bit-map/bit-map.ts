@@ -13,6 +13,7 @@ import {
   AUTO_GENERATED_MSG,
   AUTO_GENERATED_STAMP,
   BIT_MAP,
+  Extensions,
   OLD_BIT_MAP,
   VERSION_DELIMITER,
   BITMAP_PREFIX_MESSAGE,
@@ -1131,6 +1132,14 @@ export function normalizeBitmapContentForVersioning(rawContent: string): string 
     // part of this workspace as versioned here: a clone of this root would import it from a lane it
     // was never asked for. the root snapped on that lane lists it, which is where it belongs.
     if (entry.isAvailableOnCurrentLane === false) {
+      delete parsed[key];
+      return;
+    }
+    // a component the workspace deleted. the deletion stays in the map until the export that
+    // finalizes it, and its marker lives in `config`, which is dropped below - so a root versioned
+    // in that window would list it as an ordinary member and a clone would bring it back.
+    const removeConfig = entry.config?.[Extensions.remove];
+    if (removeConfig && removeConfig !== '-' && removeConfig.removed) {
       delete parsed[key];
       return;
     }
