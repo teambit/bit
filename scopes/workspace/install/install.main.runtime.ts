@@ -204,38 +204,45 @@ export class InstallMain {
     // set workspace in install context
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
-    if (packages && packages.length) {
-      await this._addPackages(packages, options);
-    }
-    if (options?.addMissingPeers) {
-      const compDirMap = await this.getComponentsDirectory([]);
-      const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
-      const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
-      const pmInstallOptions: PackageManagerInstallOptions = {
-        dedupe: options?.dedupe,
-        copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
-        copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
-        dependencyFilterFn: depsFilterFn,
-        overrides: this.dependencyResolver.config.overrides,
-        hoistPatterns: this.dependencyResolver.config.hoistPatterns,
-        packageImportMethod: this.dependencyResolver.config.packageImportMethod,
-      };
-      const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
-        this.workspace.path,
-        mergedRootPolicy,
-        compDirMap,
-        pmInstallOptions
-      );
-      if (missingPeers) {
-        const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
-        await this._addPackages(missingPeerPackages, options);
-      } else {
-        this.logger.console('No missing peer dependencies found.');
+    let res: ComponentMap<string>;
+    try {
+      if (packages && packages.length) {
+        await this._addPackages(packages, options);
       }
+      if (options?.addMissingPeers) {
+        const compDirMap = await this.getComponentsDirectory([]);
+        const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
+        const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
+        const pmInstallOptions: PackageManagerInstallOptions = {
+          dedupe: options?.dedupe,
+          copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+          copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
+          dependencyFilterFn: depsFilterFn,
+          overrides: this.dependencyResolver.config.overrides,
+          hoistPatterns: this.dependencyResolver.config.hoistPatterns,
+          packageImportMethod: this.dependencyResolver.config.packageImportMethod,
+        };
+        const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
+          this.workspace.path,
+          mergedRootPolicy,
+          compDirMap,
+          pmInstallOptions
+        );
+        if (missingPeers) {
+          const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
+          await this._addPackages(missingPeerPackages, options);
+        } else {
+          this.logger.console('No missing peer dependencies found.');
+        }
+      }
+      await pMapSeries(this.preInstallSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
+      res = await this._installModules(options);
+    } finally {
+      // in a finally: a caller that catches the failure and carries on - "bit clone" keeps the
+      // workspace it made when the install fails - would otherwise leave the flag set, and the
+      // component loader suppresses missing modules and aspect-loading errors while it is
+      this.workspace.inInstallContext = false;
     }
-    await pMapSeries(this.preInstallSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
-    const res = await this._installModules(options);
-    this.workspace.inInstallContext = false;
 
     await this.ipcEvents.publishIpcEvent('onPostInstall');
 
