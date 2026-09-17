@@ -29,11 +29,11 @@ describe('populateFilesToWriteToComponentDir', () => {
    * the method only reads these fields off the writer. building it through the constructor would
    * need a consumer and a scope, which say nothing about the file-set it produces.
    */
-  function writerFor(files: string[], nestedRootDirs: string[]) {
+  function writerFor(files: string[], nestedRootDirs: string[], writeToPath = '.') {
     const written: string[] = [];
     const writer = Object.create(ComponentWriter.prototype);
     Object.assign(writer, {
-      writeToPath: '.',
+      writeToPath,
       override: true,
       writeConfig: false,
       deleteBitDirContent: false,
@@ -67,5 +67,11 @@ describe('populateFilesToWriteToComponentDir', () => {
     const { writer, written } = writerFor(['.bitmap', 'workspace.jsonc'], []);
     await writer.populateFilesToWriteToComponentDir();
     expect(written).to.deep.equal(['workspace.jsonc']);
+  });
+
+  it("should write an ordinary component's own .bitmap, only the root tracks the workspace one", async () => {
+    const { writer, written } = writerFor(['.bitmap', 'index.js'], [], 'comp1');
+    await writer.populateFilesToWriteToComponentDir();
+    expect(written).to.deep.equal(['.bitmap', 'index.js']);
   });
 });
