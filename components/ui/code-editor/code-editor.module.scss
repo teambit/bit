@@ -1,0 +1,24 @@
+$code-font: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+.codeEditor {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid var(--border-medium-color, #ededed);
+  border-radius: 8px;
+  background: var(--surface-neutral-color, #f8f9fb);
+  color: var(--on-surface-color, #2b2b2b);
+}
+
+.pre {
+  box-sizing: border-box;
+  min-width: max-content;
+  margin: 0;
+  padding: 8px 12px;
+  font-family: $code-font;
+  font-size: 12.5px;
+  line-height: 20px;
+  tab-size: 2;
+  white-space: pre;
+}

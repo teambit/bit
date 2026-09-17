@@ -2,7 +2,7 @@ import objectHash from 'object-hash';
 import json from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { compact, uniq, differenceWith, isEmpty, isString, unionWith, get } from 'lodash';
+import { compact, uniq, difference, differenceWith, isEmpty, isString, unionWith, get } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -895,7 +895,23 @@ export class BitMap {
     }
   }
 
-  updateComponentPaths(id: ComponentID, files: PathLinuxRelative[], removedFiles: PathLinuxRelative[]) {
+  /**
+   * re-scan the component dir and reflect the changes in the paths index, so a file added to (or removed from)
+   * an existing rootDir resolves to the component although .bitmap has not changed.
+   */
+  async trackDirectoryChanges(componentMap: ComponentMap): Promise<void> {
+    const filesBefore = componentMap.getFilesRelativeToConsumer();
+    await componentMap.trackDirectoryChangesHarmony(this.projectRoot, this.ignoredFiles);
+    const filesAfter = componentMap.getFilesRelativeToConsumer();
+    const added = difference(filesAfter, filesBefore);
+    const removed = difference(filesBefore, filesAfter);
+    this.updateComponentPaths(componentMap.id, added, removed);
+  }
+
+  private updateComponentPaths(id: ComponentID, files: PathLinuxRelative[], removedFiles: PathLinuxRelative[]) {
+    // the index is built lazily from the (already updated) componentMap.files on the next lookup. patching it
+    // while empty would make it non-empty with only these files and skip that full build.
+    if (isEmpty(this.paths)) return;
     removedFiles.forEach((removedFile) => {
       delete this.paths[removedFile];
       delete this.pathsLowerCase[removedFile.toLowerCase()];

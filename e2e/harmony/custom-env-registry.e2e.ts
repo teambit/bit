@@ -30,17 +30,27 @@ describe('custom env (registry)', function () {
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.workspaceJsonc.setupDefault();
-      envName = helper.env.setCustomNewEnv(undefined, undefined, {
-        policy: {
-          peers: [
-            {
-              name: 'react',
-              version: '^16.8.0',
-              supportedRange: '^16.8.0',
-            },
-          ],
+      // a policy-only env: nothing here gets compiled, and the default react-based fixture's
+      // `tag --build` installs the whole react-env closure into the env's capsule - enough to
+      // OOM-kill a CI node. what matters is the env being installed into and loaded from its root.
+      envName = 'custom-env/env';
+      helper.env.setPolicyOnlyEnv(
+        {
+          policy: {
+            peers: [
+              {
+                name: 'react',
+                version: '^16.8.0',
+                supportedRange: '^16.8.0',
+              },
+            ],
+          },
         },
-      });
+        envName
+      );
+      // the env's own env (teambit.envs/env) is a regular env whose package must be installed
+      // for the env to load - setPolicyOnlyEnv itself installs nothing
+      helper.command.install();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.showComponent(envId);
       helper.command.tagAllComponents();
@@ -72,9 +82,7 @@ describe('custom env (registry)', function () {
     });
     it('should have the env installed in its root', () => {
       const envRootDir = helper.env.rootCompDir(`${envId}@0.0.1`);
-      const resolvedInstalledEnv = resolveFrom(envRootDir, [
-        `@ci/${helper.scopes.remote.replace(/^ci\./, '')}.react-based-env`,
-      ]);
+      const resolvedInstalledEnv = resolveFrom(envRootDir, [helper.general.getPackageNameByCompName(envName)]);
       expect(envRootDir).to.be.a.path();
       expect(resolvedInstalledEnv).to.be.a.path();
     });

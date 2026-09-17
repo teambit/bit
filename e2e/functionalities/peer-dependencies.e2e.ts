@@ -111,7 +111,9 @@ describe('peer-dependencies functionality', function () {
         'custom-env/env1'
       );
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env1`, {});
-      // The peer needs a compiler too because comp1 references its TypeScript project during the build.
+      // comp2 gets the same env, and not the default one: the default env provides no compiler, so
+      // its capsule has no tsconfig.json, and the project references this env compiles with require
+      // one in every dependency capsule (comp1 depends on comp2).
       helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-env/env1`, {});
       helper.extensions.addExtensionToVariant('custom-env', 'teambit.envs/env', {});
       helper.workspaceJsonc.addPolicyToDependencyResolver({

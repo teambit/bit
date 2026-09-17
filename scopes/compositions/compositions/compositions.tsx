@@ -86,7 +86,6 @@ export function Compositions({
   const currentComposition =
     component.compositions.find((composition) => composition.identifier.toLowerCase() === currentCompositionName) ||
     head(component.compositions);
-  const [sandboxValue, setSandboxValue] = useState('');
   const selectedRef = useRef(currentComposition);
   selectedRef.current = currentComposition;
   useDefaultControlsSchemaResponder(componentIdStr, enableLiveControls);
@@ -217,26 +216,29 @@ export function Compositions({
               </Link>
             </Tooltip>
           </CompositionsMenuBar>
-          <SandboxPermissionsAggregator
-            hooks={previewSandboxHooks}
-            onSandboxChange={setSandboxValue}
-            component={component}
-          />
           <div className={styles.previewArea}>
             {isDraggingTray && <div className={styles.dragOverlay} />}
-            <PreviewPropsAggregator hooks={previewPropsHooks} component={component}>
-              {(previewAttrs) => (
-                <CompositionContent
-                  {...previewAttrs}
-                  className={styles.compositionPanel}
-                  emptyState={emptyState}
-                  component={component}
-                  selected={currentComposition}
-                  queryParams={queryParams}
-                  sandbox={sandboxValue}
-                />
+            {/* the sandbox value is computed synchronously within this render pass, so the
+                composition iframe mounts with the `sandbox` attribute already in place.
+                delivering it via state (effect -> setState) would commit the iframe first
+                and apply the sandbox only after its navigation had already started. */}
+            <SandboxPermissionsAggregator hooks={previewSandboxHooks} component={component}>
+              {(sandboxValue) => (
+                <PreviewPropsAggregator hooks={previewPropsHooks} component={component}>
+                  {(previewAttrs) => (
+                    <CompositionContent
+                      {...previewAttrs}
+                      className={styles.compositionPanel}
+                      emptyState={emptyState}
+                      component={component}
+                      selected={currentComposition}
+                      queryParams={queryParams}
+                      sandbox={sandboxValue}
+                    />
+                  )}
+                </PreviewPropsAggregator>
               )}
-            </PreviewPropsAggregator>
+            </SandboxPermissionsAggregator>
             {showControlsTray && (
               <LiveControlsTray
                 trayRef={trayRef}

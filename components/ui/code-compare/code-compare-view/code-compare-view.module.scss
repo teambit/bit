@@ -2,6 +2,7 @@
 
 .componentCompareCodeViewContainer {
   width: 100%;
+  min-height: 250px;
   display: flex;
   flex-direction: column;
   background: var(--on-surface-neutral-low-color, #282828) !important;
@@ -11,11 +12,14 @@
 .componentCompareCodeDiffEditorContainer {
   display: flex;
   flex: 1;
+  min-width: 0;
+  min-height: 220px;
+  padding: 8px;
   transition: height 0.4s ease-in-out;
   position: relative;
 
-  > section {
-    overflow: hidden;
+  > * {
+    width: 100%;
   }
 }
 

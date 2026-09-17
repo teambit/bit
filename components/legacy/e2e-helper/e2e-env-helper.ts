@@ -358,9 +358,11 @@ export default new EmptyEnv();
       // compile anyway (right below) that compile is done twice. The workspace compile is the
       // memory peak of an env-scaffolding test, so let the install skip it and keep the explicit
       // one. When the caller asked for no compile, the install's compile is the only one there is.
+      // the native accelerators these env packages drag in are never built - see
+      // `neverBuildNativeAccelerators`, applied to every workspace the suite scaffolds.
       this.command.install(
         [ENVS_ENV_PACKAGE, ...this.getFixtureEnvBasePackages(extensionsBaseFolder)].join(' '),
-        options.skipCompile ? undefined : { 'skip-compile': '' }
+        options.skipCompile ? {} : { 'skip-compile': '' }
       );
     }
     if (!options.skipCompile) this.command.compile();
