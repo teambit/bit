@@ -519,10 +519,12 @@ describe('add command on Harmony', function () {
     let comp2MainHead: string;
     let comp1LaneHead: string;
     let rootLaneHead: string;
+    let rootMainHead: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
       helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";\n');
+      helper.fs.outputFile('README.md', '# on main\n');
       helper.command.addComponent('comp1', { i: 'comp1' });
       helper.command.addComponent('comp2', { i: 'comp2' });
       helper.command.addComponent('.', { i: 'ws-root' });
@@ -539,6 +541,13 @@ describe('add command on Harmony', function () {
       helper.command.export();
       comp1LaneHead = helper.command.getHeadOfLane('dev', 'comp1');
       rootLaneHead = helper.command.getHeadOfLane('dev', 'ws-root');
+      // main moves on after the lane branched off it, so the root version pinned further down is not
+      // an ancestor of the lane head - it is on main and nowhere in the lane's history.
+      helper.command.switchLocalLane('main');
+      helper.fs.outputFile('README.md', '# on main again\n');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+      helper.command.export();
+      rootMainHead = helper.command.getHead('ws-root');
       helper.scopeHelper.cleanWorkspace();
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
       helper.command.runCmd(`bit clone ${helper.scopes.remote}/ws-root . --lane ${helper.scopes.remote}/dev -x`);
@@ -559,6 +568,40 @@ describe('add command on Harmony', function () {
     });
     it('should come out clean, the root converging on the .bitmap the clone built', () => {
       helper.command.expectStatusToBeClean();
+    });
+    describe('with a version on the root id, which pins the root files only', () => {
+      // the two options mean different things: the version says which root files to write, the lane
+      // says where the members come from. the version pinned here is main's head, which the lane
+      // branched away from before it was made - so it is reachable from main and from nowhere on the
+      // lane, and a clone that let the lane decide the root too would not find it.
+      let clonePath: string;
+      before(() => {
+        clonePath = path.join(helper.scopes.e2eDir, 'pinned-root');
+        // the clone makes a workspace here, and it refuses to run inside one - so a rerun of this
+        // file against the same e2e directory starts from nothing
+        fs.removeSync(clonePath);
+        helper.command.runCmd(
+          `bit clone ${helper.scopes.remote}/ws-root@${rootMainHead} ${clonePath} --lane ${helper.scopes.remote}/dev -x`,
+          helper.scopes.e2eDir
+        );
+      });
+      it('should write the root files of the version asked for, not of its head on the lane', () => {
+        expect(rootMainHead).to.not.equal(rootLaneHead);
+        expect(helper.bitMap.read(path.join(clonePath, '.bitmap'))['ws-root'].version).to.equal(rootMainHead);
+        // the three snaps gave this file three different contents, so it says which one was written
+        expect(path.join(clonePath, 'README.md')).to.be.a.file().with.content('# on main again\n');
+      });
+      it('should still take the members at their heads on the lane', () => {
+        const bitMap = helper.bitMap.read(path.join(clonePath, '.bitmap'));
+        expect(bitMap.comp1.version).to.equal(comp1LaneHead);
+        expect(bitMap.comp2.version).to.equal(comp2MainHead);
+      });
+      it('should still come out on the lane', () => {
+        expect(helper.bitMap.read(path.join(clonePath, '.bitmap'))._bit_lane.id).to.deep.equal({
+          name: 'dev',
+          scope: helper.scopes.remote,
+        });
+      });
     });
   });
 });
