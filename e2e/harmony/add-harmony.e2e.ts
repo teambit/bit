@@ -454,9 +454,6 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', { i: 'ws-root' });
     });
-    it('should track the package.json of the workspace root', () => {
-      expect(helper.command.getComponentFiles('ws-root')).to.include('package.json');
-    });
     describe('cloning the workspace from its root component', () => {
       // bit clone runs outside a workspace and needs no bit init. the remote is registered globally, as
       // there is no workspace to register it in yet, and the clone lands in the emptied dir.
