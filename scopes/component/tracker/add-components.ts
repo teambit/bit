@@ -607,6 +607,15 @@ you can add the directory these files are located at and it'll change the root d
       return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
     });
     const resolvedMainFile = this._addMainFileToFiles(filteredMatchedFiles);
+    // that puts the main file back into the list after the filtering above, and checks it against the
+    // workspace ignore rules only - so the component's own ignore file is applied to it here. without
+    // it the add fails further down on a main file the rescan already dropped, saying it was removed.
+    if (resolvedMainFile) {
+      const mainNormalized = pathNormalizeToLinux(resolvedMainFile);
+      const excludedByOwnIgnoreFile =
+        matchesNotIgnored.includes(mainNormalized) && !keptByOwnIgnoreFile.has(relativeToComponent(mainNormalized));
+      if (excludedByOwnIgnoreFile) throw new ExcludedMainFile(relativeToComponent(mainNormalized));
+    }
 
     const absoluteComponentPath = pathNormalizeToLinux(path.resolve(componentPath));
     const splitPath = absoluteComponentPath.split('/');
