@@ -250,9 +250,14 @@ export class BitMap {
     // only the workspace root may contain other components (see throwForExistingParentDir), so any
     // other root-dir has nothing nested in it. this runs once per component on every load.
     if (rootDir !== WORKSPACE_ROOT_DIR) return [];
-    return this.components
-      .map((componentMap) => componentMap.rootDir)
-      .filter((nested): nested is PathLinuxRelative => Boolean(nested) && nested !== WORKSPACE_ROOT_DIR);
+    return (
+      this.components
+        // a component removed, or left here by a lane it is unavailable on, does not own its dir in the
+        // meantime - the root scans it, or the files it kept would belong to no component at all.
+        .filter((componentMap) => componentMap.isAvailableOnCurrentLane && !componentMap.isRemoved())
+        .map((componentMap) => componentMap.rootDir)
+        .filter((nested): nested is PathLinuxRelative => Boolean(nested) && nested !== WORKSPACE_ROOT_DIR)
+    );
   }
 
   /**

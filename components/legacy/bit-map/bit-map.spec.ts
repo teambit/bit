@@ -5,6 +5,7 @@ import os from 'os';
 import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
+import { Extensions } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import {
   BitMap,
@@ -141,6 +142,22 @@ describe('BitMap', function () {
       bitMap.addComponent(nestedComponentParams);
       expect(bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR)).to.deep.equal(['packages/comp1']);
       expect(bitMap.getNestedRootDirs('packages/comp1')).to.deep.equal([]);
+    });
+    it('getNestedRootDirs should not subtract the dir of a component of another lane', async () => {
+      // it is left in the map so a switch back can restore it. it owns nothing here in the meantime,
+      // so the root scans its dir - otherwise the files it left would belong to no component at all
+      const bitMap = await getBitmapInstance();
+      bitMap.addComponent(rootComponentParams);
+      const nested = bitMap.addComponent(nestedComponentParams);
+      nested.isAvailableOnCurrentLane = false;
+      expect(bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR)).to.deep.equal([]);
+    });
+    it('getNestedRootDirs should not subtract the dir of a removed component', async () => {
+      const bitMap = await getBitmapInstance();
+      bitMap.addComponent(rootComponentParams);
+      const nested = bitMap.addComponent(nestedComponentParams);
+      nested.config = { [Extensions.remove]: { removed: true } };
+      expect(bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR)).to.deep.equal([]);
     });
   });
   describe('normalizeBitmapContentForVersioning', () => {
