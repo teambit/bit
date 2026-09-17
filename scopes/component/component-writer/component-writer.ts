@@ -28,6 +28,19 @@ export type ComponentWriterProps = {
   skipUpdatingBitMap?: boolean;
 };
 
+/**
+ * a version of the workspace-root component can carry files that a component nested inside it owns
+ * today - it was snapped before that component was extracted out of the root. they belong to the
+ * nested component now (see getNestedRootDirs), so writing them back would replace its source with
+ * an older copy of it.
+ */
+export function isOwnedByNestedComponent(
+  relativePath: PathLinuxRelative,
+  nestedRootDirs: PathLinuxRelative[]
+): boolean {
+  return nestedRootDirs.some((nestedRootDir) => relativePath.startsWith(`${nestedRootDir}/`));
+}
+
 export default class ComponentWriter {
   component: Component;
   writeToPath: PathLinuxRelative;
@@ -105,9 +118,12 @@ export default class ComponentWriter {
     if (this.deleteBitDirContent) {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
+    const nestedRootDirs = this.bitMap.getNestedRootDirs(this.writeToPath);
     this.component.files.forEach((file) => {
+      const relativePath = pathNormalizeToLinux(file.relative);
       // the live map is never written from a versioned copy, see isWorkspaceMapFile
-      if (isWorkspaceMapFile(pathNormalizeToLinux(file.relative))) return;
+      if (isWorkspaceMapFile(relativePath)) return;
+      if (isOwnedByNestedComponent(relativePath, nestedRootDirs)) return;
       file.override = this.override;
       this.component.dataToPersist.addFile(file);
     });
