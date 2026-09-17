@@ -232,10 +232,11 @@ export async function cloneWorkspace(
 ): Promise<CloneResult> {
   const workspacePath = path.resolve(dir || rootId.name);
   const createdDir = await ensureEmptyDir(workspacePath);
-  // the code paths below, from the workspace init to the install, take the workspace from the cwd
   const originalCwd = process.cwd();
-  process.chdir(workspacePath);
   try {
+    // the code paths below, from the workspace init to the install, take the workspace from the cwd.
+    // inside the try, so that a directory made here is removed even when entering it is what failed
+    process.chdir(workspacePath);
     // only workspace.jsonc, .bitmap and the scope dir. the root files come from the component, and
     // only what the component versions belongs at the root: no package.json, agent file or mcp config
     await HostInitializerMain.init(

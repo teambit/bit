@@ -425,7 +425,7 @@ export class VersionMaker {
     if (!versionsFile) return;
 
     const allComponentsToTag = ComponentIdList.fromArray([...idsToTag, ...autoTagIds]);
-    const versionFileParser = new VersionFileParser(allComponentsToTag);
+    const versionFileParser = new VersionFileParser(allComponentsToTag, this.params.autoAddedWorkspaceRoot);
     const tagDataFromFile = await versionFileParser.parseVersionsFile(versionsFile);
     this.params.tagDataPerComp = tagDataFromFile;
   }
@@ -522,9 +522,18 @@ export class VersionMaker {
         const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
         const modelComponent = await this.legacyScope.sources.findOrAddComponent(componentToTag);
         const nextVersion = componentToTag.componentMap?.nextVersion?.version;
+        const isAutoAddedRoot = Boolean(this.params.autoAddedWorkspaceRoot?.isEqualWithoutVersion(componentToTag.id));
+        // the root joined the batch on its own. a version given for the members - `--ver`, the id, or
+        // a versions-file DEFAULT - is not meant for it, so it is bumped the way an auto-tagged
+        // dependent is.
+        const bumpRootAsPatch = () =>
+          soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
         const getNewVersion = (): string => {
           if (tagDataPerComp) {
             const tagData = tagDataPerComp.find((t) => t.componentId.isEqualWithoutVersion(componentToTag.id));
+            // a versions file names the components being tagged. it covers the root only when it names
+            // it, see VersionFileParser - otherwise the root is still bumped on its own.
+            if (!tagData && isAutoAddedRoot) return bumpRootAsPatch();
             if (!tagData) throw new Error(`tag-data is missing for ${componentToTag.id.toStringWithoutVersion()}`);
             if (!tagData.versionToTag)
               throw new Error(`tag-data.TagResults is missing for ${componentToTag.id.toStringWithoutVersion()}`);
@@ -560,11 +569,7 @@ export class VersionMaker {
             }
             return soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
           }
-          if (this.params.autoAddedWorkspaceRoot?.isEqualWithoutVersion(componentToTag.id)) {
-            // the root joined the batch on its own. a version given for the members - `--ver`, or on the
-            // id - is not meant for it, so it is bumped the way an auto-tagged dependent is.
-            return soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
-          }
+          if (isAutoAddedRoot) return bumpRootAsPatch();
           const versionByEnteredId = this.getVersionByEnteredId(this.ids, componentToTag, modelComponent);
           return soft
             ? versionByEnteredId || exactVersion || (releaseType as string)
