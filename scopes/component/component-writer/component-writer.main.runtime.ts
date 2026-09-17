@@ -383,9 +383,13 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
    */
   private filesThatWouldLand(component: ConsumerComponent) {
     const nestedRootDirs = this.consumer.bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR);
-    return component.files.filter(
-      (file) => !isOwnedByNestedComponent(pathNormalizeToLinux(file.relative), nestedRootDirs)
-    );
+    return component.files.filter((file) => {
+      const relativePath = pathNormalizeToLinux(file.relative);
+      // the live map is never written from a versioned copy either, so a workspace whose own .bitmap
+      // is a symbolic link must not fail an import over a file that would not be touched
+      if (isWorkspaceMapFile(relativePath)) return false;
+      return !isOwnedByNestedComponent(relativePath, nestedRootDirs);
+    });
   }
 
   private throwForSymlinksInTheWay(component: ConsumerComponent) {
@@ -437,7 +441,7 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
     const filesToOverwrite = this.filesThatWouldLand(component)
       .filter((file) => {
         const relativePath = pathNormalizeToLinux(file.relative);
-        if (isWorkspaceMapFile(relativePath) || generatedByInit.includes(relativePath)) return false;
+        if (generatedByInit.includes(relativePath)) return false;
         const absolutePath = this.consumer.toAbsolutePath(relativePath);
         // lstat rather than exists: a symlink in the way, dangling or not, is a conflict and not a path
         // to write through, and so is a directory. only a regular file is compared with the incoming copy.

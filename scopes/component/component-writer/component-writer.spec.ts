@@ -118,6 +118,16 @@ describe('the workspace-root import preflight checks', () => {
     expect(() => main.throwForSymlinksInTheWay(componentFor(['packages/comp1/index.js']))).to.not.throw();
   });
 
+  it('should ignore the live .bitmap, which the write does not land either', async () => {
+    // a workspace whose own .bitmap is a symbolic link must not fail an import over a file the writer
+    // skips anyway (see isWorkspaceMapFile)
+    const target = path.join(workspacePath, 'elsewhere');
+    await fs.ensureDir(target);
+    await fs.symlink(target, path.join(workspacePath, '.bitmap'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['.bitmap', 'README.md']))).to.not.throw();
+  });
+
   it('should still refuse a symlink on the way to a file the root does own', async () => {
     await fs.symlink(os.tmpdir(), path.join(workspacePath, 'docs'));
     const main = runtimeFor(['packages/comp1'], workspacePath);
