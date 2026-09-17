@@ -28,7 +28,7 @@ import { ConfigMergerAspect } from '@teambit/config-merger';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { ComponentWriterProps } from './component-writer';
-import ComponentWriter from './component-writer';
+import ComponentWriter, { isOwnedByNestedComponent } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
 export interface ManyComponentsWriterParams {
@@ -375,9 +375,22 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
    * file has to be real. this is about where the write goes, not what it replaces, so --override does
    * not waive it (it waives the conflict check, which is the other place the destination is looked at).
    */
+  /**
+   * the incoming files a write would actually land at the workspace root. a component nested in the
+   * root owns its own directory, and populateFilesToWriteToComponentDir leaves those files alone - so
+   * the checks below must not reject an import over a path it would never touch. an older version of
+   * the root, snapped before that component was extracted out of it, still carries them.
+   */
+  private filesThatWouldLand(component: ConsumerComponent) {
+    const nestedRootDirs = this.consumer.bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR);
+    return component.files.filter(
+      (file) => !isOwnedByNestedComponent(pathNormalizeToLinux(file.relative), nestedRootDirs)
+    );
+  }
+
   private throwForSymlinksInTheWay(component: ConsumerComponent) {
     const pathsInTheWay = new Set<string>();
-    component.files.forEach((file) => {
+    this.filesThatWouldLand(component).forEach((file) => {
       const segments = pathNormalizeToLinux(file.relative).split('/');
       segments.forEach((_, index) => pathsInTheWay.add(segments.slice(0, index + 1).join('/')));
     });
@@ -421,7 +434,7 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
       componentMap.id.isEqualWithoutVersion(component.id)
     );
     const generatedByInit = isFreshWorkspace ? [WORKSPACE_JSONC] : [];
-    const filesToOverwrite = component.files
+    const filesToOverwrite = this.filesThatWouldLand(component)
       .filter((file) => {
         const relativePath = pathNormalizeToLinux(file.relative);
         if (isWorkspaceMapFile(relativePath) || generatedByInit.includes(relativePath)) return false;
