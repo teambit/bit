@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
-import type { BitMap } from '@teambit/legacy.bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
+import { Extensions } from '@teambit/legacy.constants';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import {
   findWorkspaceRootMap,
@@ -14,29 +15,32 @@ const rootId = ComponentID.fromString('my-scope/my-root@0.0.7');
 
 describe('workspace-root data', () => {
   describe('findWorkspaceRootMap', () => {
-    const entry = (id: ComponentID, rootDir: string, overrides: Record<string, any> = {}) => ({
-      id,
-      rootDir,
-      isAvailableOnCurrentLane: true,
-      isRemoved: () => false,
-      ...overrides,
-    });
-    const bitMapOf = (entries: Record<string, any>[]) => ({ components: entries }) as unknown as BitMap;
-    it('should return the entry tracked at the workspace root', () => {
-      const bitMap = bitMapOf([entry(ComponentID.fromString('my-scope/comp1'), 'comp1'), entry(rootId, '.')]);
+    // a real BitMap rather than a stand-in: the rule lives on it (getWorkspaceRootMap), and a mock
+    // that answers isRemoved() itself would only be testing the mock
+    const bitMapWith = async (entries: Record<string, any>) => {
+      const bitMap = await BitMap.load(__dirname, '');
+      bitMap.loadComponents(entries, 'my-scope');
+      return bitMap;
+    };
+    const rootEntry = { name: 'my-root', scope: 'my-scope', version: '0.0.7', mainFile: 'README.md', rootDir: '.' };
+    const nestedEntry = { name: 'comp1', scope: 'my-scope', version: '0.0.1', mainFile: 'index.js', rootDir: 'comp1' };
+    it('should return the entry tracked at the workspace root', async () => {
+      const bitMap = await bitMapWith({ 'my-scope/comp1': nestedEntry, 'my-scope/my-root': rootEntry });
       expect(findWorkspaceRootMap(bitMap)?.id.toString()).to.equal(rootId.toString());
     });
-    it('should return undefined when no component owns the workspace root', () => {
-      const bitMap = bitMapOf([entry(ComponentID.fromString('my-scope/comp1'), 'comp1')]);
+    it('should return undefined when no component owns the workspace root', async () => {
+      const bitMap = await bitMapWith({ 'my-scope/comp1': nestedEntry });
       expect(findWorkspaceRootMap(bitMap)).to.be.undefined;
     });
-    it('should ignore a root of another lane, this lane is rootless', () => {
+    it('should ignore a root of another lane, this lane is rootless', async () => {
       // it stays in .bitmap so a switch back can restore it. snapping here would otherwise tag it along
-      const bitMap = bitMapOf([entry(rootId, '.', { isAvailableOnCurrentLane: false })]);
+      const bitMap = await bitMapWith({ 'my-scope/my-root': rootEntry });
+      bitMap.components[0].isAvailableOnCurrentLane = false;
       expect(findWorkspaceRootMap(bitMap)).to.be.undefined;
     });
-    it('should ignore a removed root', () => {
-      const bitMap = bitMapOf([entry(rootId, '.', { isRemoved: () => true })]);
+    it('should ignore a removed root', async () => {
+      const bitMap = await bitMapWith({ 'my-scope/my-root': rootEntry });
+      bitMap.components[0].config = { [Extensions.remove]: { removed: true } };
       expect(findWorkspaceRootMap(bitMap)).to.be.undefined;
     });
   });

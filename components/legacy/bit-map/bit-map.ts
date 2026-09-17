@@ -243,6 +243,20 @@ export class BitMap {
   }
 
   /**
+   * the entry of the component that owns the workspace root (rootDir "."), if this workspace has one
+   * right now. a root created on another lane, or removed, stays in `.bitmap` so a switch back can
+   * restore it - it owns nothing in the meantime, so the guards that protect the root skip it.
+   */
+  getWorkspaceRootMap(): ComponentMap | undefined {
+    return this.components.find(
+      (componentMap) =>
+        componentMap.rootDir === WORKSPACE_ROOT_DIR &&
+        componentMap.isAvailableOnCurrentLane &&
+        !componentMap.isRemoved()
+    );
+  }
+
+  /**
    * root-dirs of the components nested inside the given root-dir. their files belong to them, so
    * the containing component must subtract them from its own file-set.
    */

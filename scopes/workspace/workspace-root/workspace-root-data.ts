@@ -1,6 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
 import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { WorkspaceRootAspect } from './workspace-root.aspect';
@@ -32,10 +31,7 @@ export type WorkspaceRootData = {
  * it is not this workspace's root though, and tagging or snapping would otherwise bring it along.
  */
 export function findWorkspaceRootMap(bitMap: BitMap): ComponentMap | undefined {
-  return bitMap.components.find(
-    (componentMap) =>
-      componentMap.rootDir === WORKSPACE_ROOT_DIR && componentMap.isAvailableOnCurrentLane && !componentMap.isRemoved()
-  );
+  return bitMap.getWorkspaceRootMap();
 }
 
 function findData(extensions: ExtensionDataList): WorkspaceRootData | undefined {
