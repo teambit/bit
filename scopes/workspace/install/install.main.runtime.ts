@@ -1418,11 +1418,19 @@ export class InstallMain {
    * (run bit install)" on a healthy workspace - while themselves running the very install suggested.
    */
   private async runInstallModulesInInstallContext(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    const prevInInstallContext = this.workspace.inInstallContext;
+    const prevInInstallAfterPmContext = this.workspace.inInstallAfterPmContext;
     this.workspace.inInstallContext = true;
+    // `_installModules` turns this on once the package manager is done and never turns it back off,
+    // while `install()` clears it up-front. without the same reset, an uninstall/update running after
+    // an install in the same process would start with both flags on, which tells the compiler the
+    // package manager already finished and lets it compile against the pre-install dependency state.
+    this.workspace.inInstallAfterPmContext = false;
     try {
       return await this._installModules(options);
     } finally {
-      this.workspace.inInstallContext = false;
+      this.workspace.inInstallContext = prevInInstallContext;
+      this.workspace.inInstallAfterPmContext = prevInInstallAfterPmContext;
     }
   }
 

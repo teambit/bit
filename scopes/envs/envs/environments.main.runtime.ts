@@ -26,6 +26,7 @@ import { head, uniq } from 'lodash';
 import type { WorkerMain } from '@teambit/worker';
 import { WorkerAspect } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
+import { AsyncLocalStorage } from 'async_hooks';
 import type { EnvService } from './services';
 import type { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -121,10 +122,12 @@ export class EnvsMain {
    */
   public envIds = new Set<string>();
   /**
-   * depth of nested `skipNotLoadedWarnings` scopes. while above zero, "env was not loaded"
-   * warnings are muted. see `skipNotLoadedWarnings` for why.
+   * set inside a `skipNotLoadedWarnings` scope, where "env was not loaded" warnings are muted.
+   * execution-local rather than a plain field on purpose - component loads run concurrently (e.g.
+   * the graphql resolver fans ids out with Promise.all), so a shared flag would let one load mute
+   * an unrelated one and hide a genuinely missing env. see `skipNotLoadedWarnings` for why.
    */
-  private notLoadedWarningsMutedDepth = 0;
+  private notLoadedWarningsMuted = new AsyncLocalStorage<true>();
 
   static runtime = MainRuntime;
 
@@ -225,15 +228,11 @@ export class EnvsMain {
    *
    * this is a scope rather than a param because the warning is reached from many aspects that
    * calculate the env during the load slot (tester, docs, pkg, compositions, dev-files), so muting
-   * a single call site only moves the warning to the next one.
+   * a single call site only moves the warning to the next one. the muting follows the async
+   * execution started by `fn` and nothing else, so concurrent loads keep reporting normally.
    */
   async skipNotLoadedWarnings<T>(fn: () => Promise<T>): Promise<T> {
-    this.notLoadedWarningsMutedDepth += 1;
-    try {
-      return await fn();
-    } finally {
-      this.notLoadedWarningsMutedDepth -= 1;
-    }
+    return this.notLoadedWarningsMuted.run(true, fn);
   }
 
   getFailedToLoadEnvs() {
@@ -732,7 +731,7 @@ export class EnvsMain {
           this.envIds.add(envDef.id);
           return envDef;
         }
-        if (!opts.skipWarnings && !this.notLoadedWarningsMutedDepth) {
+        if (!opts.skipWarnings && !this.notLoadedWarningsMuted.getStore()) {
           // Do not allow a non existing env
           this.printWarningIfFirstTime(
             matchedEntry.id.toString(),

@@ -57,6 +57,25 @@ describe('EnvsMain', function () {
       expect(envs.getFailedToLoadEnvs()).to.include(envId);
     });
 
+    // component loads run concurrently (the graphql resolver fans ids out with Promise.all), so the
+    // muting must follow the async execution of the wrapped callback and nothing else. a shared flag
+    // would let a muted load hide a genuinely missing env of a component loaded next to it.
+    it('should not mute a calculation running outside the scope while a scope is open', async () => {
+      const envId = 'some-scope/envs/concurrent-env@1.0.0';
+      const component = mockComponentWithUnregisteredEnv('some-scope/comps/concurrent-comp@1.0.0', envId);
+      let closeScope = () => {};
+      const openScope = envs.skipNotLoadedWarnings(
+        () =>
+          new Promise<void>((resolve) => {
+            closeScope = resolve;
+          })
+      );
+      envs.calculateEnv(component);
+      closeScope();
+      await openScope;
+      expect(envs.getFailedToLoadEnvs()).to.include(envId);
+    });
+
     it('should stop muting once the scope ends, including when it throws', async () => {
       const envId = 'some-scope/envs/after-throw-env@1.0.0';
       const component = mockComponentWithUnregisteredEnv('some-scope/comps/after-throw-comp@1.0.0', envId);
