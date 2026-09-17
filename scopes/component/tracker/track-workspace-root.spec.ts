@@ -6,6 +6,7 @@ import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { TrackerAspect } from './tracker.aspect';
 import type { TrackerMain } from './tracker.main.runtime';
 
@@ -101,6 +102,49 @@ describe('tracking the workspace root', function () {
       expect(files).to.include('.npmrc');
       // its auto-generated banner must not get it dropped, the rescan tracks it
       expect(files).to.include('.bitmap');
+    });
+  });
+
+  describe('adding the workspace root and a nested component in one command', () => {
+    let addedComponents: { id: string; files: string[] }[];
+    let tracked: Tracked;
+    before(async () => {
+      tracked = await setupWorkspace({
+        'index.js': 'module.exports = {};\n',
+        'packages/comp1/index.js': 'module.exports = () => "comp1";\n',
+        'packages/comp1/.npmrc': 'registry=https://example.com\n',
+      });
+      // relative paths, as the command gets them: "." is resolved by the same glob the CLI feeds, and
+      // a direct child would be dropped from the batch as a wildcard expansion of it
+      const originalCwd = process.cwd();
+      process.chdir(tracked.workspacePath);
+      try {
+        const results = await tracked.tracker.addForCLI({
+          componentPaths: [WORKSPACE_ROOT_DIR, 'packages/comp1'],
+          override: false,
+        });
+        addedComponents = results.addedComponents.map((added) => ({
+          id: added.id.toString(),
+          files: added.files.map((file) => file.relativePath),
+        }));
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
+    after(async () => {
+      await destroyWorkspace(tracked.workspaceData);
+    });
+    it('should list the dotfiles of a nested component at add time, as the rescan tracks them', () => {
+      const nested = addedComponents.find((added) => added.id.endsWith('comp1'));
+      expect(nested?.files.some((file) => file.endsWith('.npmrc'))).to.be.true;
+    });
+    it('should leave the nested component files out of the root, already at add time', () => {
+      // the nested component is not in .bitmap yet when the root is scanned, so the batch itself has
+      // to provide the exclusion. otherwise the two own the same files until the next rescan.
+      expect(addedComponents).to.have.lengthOf(2);
+      const root = addedComponents.find((added) => !added.id.endsWith('comp1'));
+      expect(root?.files).to.include('index.js');
+      expect(root?.files.some((file) => file.startsWith('packages/'))).to.be.false;
     });
   });
 

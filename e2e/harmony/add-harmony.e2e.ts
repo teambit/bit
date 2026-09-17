@@ -74,30 +74,6 @@ describe('add command on Harmony', function () {
       expect(path.join(nodeModules, helper.general.getPackageNameByCompName('ws-root', false))).to.not.be.a.path();
     });
   });
-  describe('adding the workspace root and a nested component in one command', () => {
-    let addedComponents: Array<{ id: string; files: string[] }>;
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fs.outputFile('index.js', 'module.exports = {};\n');
-      // a direct child ("bit add . comp1") is dropped from the batch as a wildcard expansion of ".",
-      // a pre-existing rule. a deeper one is added alongside the root.
-      helper.fs.outputFile('packages/comp1/index.js', 'module.exports = () => "comp1";\n');
-      helper.fs.outputFile('packages/comp1/.npmrc', 'registry=https://example.com\n');
-      addedComponents = JSON.parse(helper.command.runCmd('bit add . packages/comp1 --json')).addedComponents;
-    });
-    it('should list the dotfiles of a nested component at add time, as the rescan tracks them', () => {
-      const nested = addedComponents.find((added) => added.id.endsWith('comp1'));
-      expect(nested?.files.some((file) => file.endsWith('.npmrc'))).to.be.true;
-    });
-    it('should leave the nested component files out of the root, already at add time', () => {
-      // the nested component is not in .bitmap yet when the root is scanned, so the batch itself has
-      // to provide the exclusion. otherwise the two own the same files until the next rescan.
-      expect(addedComponents).to.have.lengthOf(2);
-      const root = addedComponents.find((added) => !added.id.endsWith('comp1'));
-      expect(root?.files).to.include('index.js');
-      expect(root?.files.some((file) => file.startsWith('packages/'))).to.be.false;
-    });
-  });
   describe('workspace-root component and .bitmap', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
