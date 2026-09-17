@@ -13,7 +13,7 @@ type InstallWithEnvPackage = {
 };
 
 type InstallWithRootLookup = {
-  isLegacyCoreEnvInstalledAtRoot(packageName: string): boolean;
+  isLegacyCoreEnvSatisfiedAtRoot(packageName: string, pinnedVersion: string): boolean;
 };
 
 describe('InstallMain', function () {
@@ -43,25 +43,32 @@ describe('InstallMain', function () {
   });
 
   describe('legacy core env already installed at the workspace root', () => {
-    // a phantom require of a legacy core env resolves from the requiring package up to the root.
-    // when the root already provides the package, pinning the legacy version on top of it would
-    // move the version the rest of the tree is resolved against and re-link the whole tree.
+    // the pinned version is a floor, not an exact requirement. pinning an older version over the
+    // one the root already provides moves what the rest of the tree resolved its peers against,
+    // which re-links the whole tree and rewrites the dists a running bit is loaded from.
     const installedPackageName = '@teambit/react';
     const missingPackageName = '@teambit/mdx';
+    const installedVersion = '1.0.1169';
     let installWithRootLookup: InstallWithRootLookup;
     before(async () => {
       // reaching the private method directly to avoid running a real package installation
       installWithRootLookup = install as unknown as InstallWithRootLookup;
       await fs.outputJson(
         path.join(workspaceData.workspacePath, 'node_modules', installedPackageName, 'package.json'),
-        { name: installedPackageName, version: '1.0.1169' }
+        { name: installedPackageName, version: installedVersion }
       );
     });
-    it('should report a package that is installed at the root', () => {
-      expect(installWithRootLookup.isLegacyCoreEnvInstalledAtRoot(installedPackageName)).to.be.true;
+    it('should be satisfied by a root version newer than the pinned one', () => {
+      expect(installWithRootLookup.isLegacyCoreEnvSatisfiedAtRoot(installedPackageName, '1.0.1107')).to.be.true;
     });
-    it('should not report a package that is not installed at the root', () => {
-      expect(installWithRootLookup.isLegacyCoreEnvInstalledAtRoot(missingPackageName)).to.be.false;
+    it('should be satisfied by a root version equal to the pinned one', () => {
+      expect(installWithRootLookup.isLegacyCoreEnvSatisfiedAtRoot(installedPackageName, installedVersion)).to.be.true;
+    });
+    it('should not be satisfied by a root version older than the pinned one', () => {
+      expect(installWithRootLookup.isLegacyCoreEnvSatisfiedAtRoot(installedPackageName, '1.0.1200')).to.be.false;
+    });
+    it('should not be satisfied when the package is not installed at the root', () => {
+      expect(installWithRootLookup.isLegacyCoreEnvSatisfiedAtRoot(missingPackageName, '1.0.1108')).to.be.false;
     });
   });
 });

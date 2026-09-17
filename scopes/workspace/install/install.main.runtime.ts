@@ -1057,6 +1057,7 @@ export class InstallMain {
       if (!version) return;
       const dependencyId = getLegacyCoreEnvPackageName(envIdStr);
       if (rootPolicy.find(dependencyId)) return;
+      if (this.isLegacyCoreEnvSatisfiedAtRoot(dependencyId, version)) return;
       added = true;
       rootPolicy.add(
         {
@@ -1071,6 +1072,34 @@ export class InstallMain {
       );
     });
     return added;
+  }
+
+  /**
+   * whether the workspace root already has the legacy core env installed at the pinned version or a
+   * later one.
+   *
+   * the pinned version is a floor - the version a versionless env id is guaranteed to resolve to -
+   * not an exact requirement, so a root that already provides a newer one needs nothing added. this
+   * matters because the root package is what the rest of the tree resolved its peers against:
+   * pinning an older version over it moves every package whose peer resolution follows it, and the
+   * package manager re-links them all. under `packageImportMethod: copy` the re-link rewrites the
+   * workspace components' package directories, dists included - the very files a running bit is
+   * loaded from, leaving it to die on its next deferred require.
+   *
+   * a bit that still ships these envs as core aspects installs its own matching version here (they
+   * are dependencies of the bit package), so a workspace set up by one and then installed by a bit
+   * that treats them as regular envs hits exactly that.
+   */
+  private isLegacyCoreEnvSatisfiedAtRoot(packageName: string, pinnedVersion: string): boolean {
+    const packageJsonPath = path.join(this.workspace.path, 'node_modules', packageName, 'package.json');
+    let installedVersion: string | undefined;
+    try {
+      installedVersion = fs.readJsonSync(packageJsonPath).version;
+    } catch {
+      return false; // not installed at the root
+    }
+    if (!installedVersion || !semver.valid(installedVersion) || !semver.valid(pinnedVersion)) return false;
+    return semver.gte(installedVersion, pinnedVersion);
   }
 
   /**
@@ -1125,23 +1154,7 @@ export class InstallMain {
         requiredPackages.add(required)
       );
     });
-    return [...requiredPackages]
-      .filter((packageName) => !this.isLegacyCoreEnvInstalledAtRoot(packageName))
-      .map((packageName) => envIdByPackageName.get(packageName) as string);
-  }
-
-  /**
-   * whether the legacy core env package is already present in the workspace's root node_modules.
-   *
-   * a phantom require resolves from the requiring package up to the root, so a package already
-   * there satisfies it and nothing needs to be added to the policy. pinning the legacy version on
-   * top would instead replace a package the rest of the tree is already resolved against, and the
-   * package manager re-links every package whose peer resolution moves with it - in this workspace,
-   * which installs the react env at the root, that is the entire tree. the re-link re-materializes
-   * the workspace components' packages without the dists the running process is loaded from.
-   */
-  private isLegacyCoreEnvInstalledAtRoot(packageName: string): boolean {
-    return fs.existsSync(path.join(this.workspace.path, 'node_modules', packageName, 'package.json'));
+    return [...requiredPackages].map((packageName) => envIdByPackageName.get(packageName) as string);
   }
 
   /**
