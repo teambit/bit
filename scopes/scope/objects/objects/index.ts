@@ -4,4 +4,4 @@ import Ref from './ref';
 import Repository from './repository';
 
 export { BitObject, BitRawObject, Ref, Repository };
-export type { ObjectWithType } from './repository';
+export type { ObjectWithType, ObjectsWithType } from './repository';

@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatHint, formatItem, formatSuccessSummary, formatTitle, joinSections } from '@teambit/cli';
+import { arrowSymbol, formatHint, formatItem, formatSuccessSummary, formatTitle, joinSections } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
-import type { GcResult } from '@teambit/legacy.scope';
 import type { GcMain } from './gc.main.runtime';
+import type { GcResult } from './workspace-garbage-collector';
 
 export type GcCmdOpts = {
   dryRun?: boolean;
@@ -94,13 +94,25 @@ keeps all history, since there the scope is the source of truth rather than a ca
 
   private formatResult(result: GcResult): string {
     const sizeAfter = result.totalSize - result.deletedSize;
-    const header = result.dryRun
-      ? formatTitle(`[dry-run] ${result.deletedObjects} of ${result.totalObjects} objects can be removed`)
-      : formatSuccessSummary(`removed ${result.deletedObjects} objects, freed ${formatBytes(result.deletedSize)}`);
+    // with --backup the objects are only moved aside, so nothing is freed until the backup
+    // directory is removed. saying otherwise would contradict the hint printed right below.
+    const backedUp = Boolean(result.backupDir);
+    const header = (() => {
+      if (result.dryRun)
+        return formatTitle(`[dry-run] ${result.deletedObjects} of ${result.totalObjects} objects can be removed`);
+      if (backedUp)
+        return formatSuccessSummary(
+          `moved ${result.deletedObjects} objects (${formatBytes(result.deletedSize)}) to the backup directory`
+        );
+      return formatSuccessSummary(`removed ${result.deletedObjects} objects, freed ${formatBytes(result.deletedSize)}`);
+    })();
 
     const sizeLine = formatItem(
-      `scope: ${formatBytes(result.totalSize)} ${chalk.dim('→')} ${chalk.bold(formatBytes(sizeAfter))}` +
-        (result.dryRun ? ` ${chalk.dim(`(would free ${formatBytes(result.deletedSize)})`)}` : '')
+      backedUp
+        ? `scope: ${chalk.bold(formatBytes(result.totalSize))} ` +
+            chalk.dim(`(${formatBytes(result.deletedSize)} of it is now in the backup directory)`)
+        : `scope: ${formatBytes(result.totalSize)} ${arrowSymbol} ${chalk.bold(formatBytes(sizeAfter))}` +
+            (result.dryRun ? ` ${chalk.dim(`(would free ${formatBytes(result.deletedSize)})`)}` : '')
     );
     const byType = Object.entries(result.deletedByType).map(([type, stats]) =>
       formatItem(`${type}: ${stats.count} objects ${chalk.dim(`(${formatBytes(stats.size)})`)}`)

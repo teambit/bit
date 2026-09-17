@@ -145,8 +145,11 @@ path: ${err.path}`);
    * whatever it managed to inflate instead of throwing on the truncated input.
    * returns null when the header is not fully contained in the given chunk, in which case the
    * caller should fall back to inflating the whole file.
+   *
+   * the chunk is a `Uint8Array` rather than a `Buffer` because newer `@types/node` make `Buffer`
+   * generic, which no longer matches zlib's `InputType` under the typescript version our envs ship.
    */
-  static parseObjectTypeFromChunk(chunk: Buffer): string | null {
+  static parseObjectTypeFromChunk(chunk: Uint8Array): string | null {
     let buffer: Buffer;
     try {
       buffer = inflateSync(chunk, { finishFlush: constants.Z_SYNC_FLUSH });

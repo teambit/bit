@@ -156,7 +156,9 @@ export class RemoteLanes {
    * all of them, since a head we track for a remote must never be deleted.
    */
   async getAllRefsPerComponent(): Promise<Map<string, Ref[]>> {
-    const matches = await glob(path.join('*', '*'), { cwd: this.basePath });
+    // `dot: true` because a scope or lane name may start with a dot, and glob skips those by
+    // default. missing one here would let the collector delete a head it must keep.
+    const matches = await glob(path.join('*', '*'), { cwd: this.basePath, dot: true });
     const laneIds = matches
       .map((match) => match.split(path.sep))
       .map(([head, ...tail]) => LaneId.from(tail.join('/'), head));

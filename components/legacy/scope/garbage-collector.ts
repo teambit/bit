@@ -9,7 +9,8 @@ import { compact, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import chalk from 'chalk';
 import { VersionNotFound } from './exceptions';
-import { DELETED_OBJECTS_DIR } from './workspace-garbage-collector';
+
+export const DELETED_OBJECTS_DIR = 'deleted-objects';
 
 export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpts = {}) {
   const repo = thisScope.objects;

@@ -5,8 +5,8 @@ import path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ModelComponent, Ref, Source, Version } from '@teambit/objects';
-import Scope from './scope';
-import { collectGarbageInWorkspace } from './workspace-garbage-collector';
+import { Scope } from '@teambit/legacy.scope';
+import { collectGarbageInWorkspace, restoreDeletedObjects } from './workspace-garbage-collector';
 
 const SCOPE_NAME = 'my-scope';
 const COMP_NAME = 'bar/foo';
@@ -175,7 +175,7 @@ describe('collectGarbageInWorkspace', () => {
     it('should move the objects aside so they can be restored', async () => {
       await runGc({ backup: true });
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.false;
-      await scope.restoreGarbageCollected();
+      await restoreDeletedObjects(scope);
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
       expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });
@@ -185,6 +185,54 @@ describe('collectGarbageInWorkspace', () => {
     it('should keep its entire history, as nothing can bring these snaps back', async () => {
       const result = await runGc();
       expect(result.deletedObjects).to.equal(0);
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
+    });
+  });
+
+  describe('with a version held by a stash', () => {
+    beforeEach(async () => {
+      await markAsExported();
+      // `bit stash` records the hash in a file of its own and nowhere else, so this is the only
+      // thing standing between the stashed snap and deletion.
+      await fs.outputJson(path.join(scope.path, 'stash', 'stash-1.json'), {
+        metadata: { message: 'a stash' },
+        stashCompsData: [
+          {
+            id: { scope: COMP_SCOPE, name: COMP_NAME },
+            hash: VERSION_HASHES['0.0.1'],
+            isNew: false,
+            bitmapEntry: {},
+          },
+        ],
+      });
+    });
+
+    it('should keep the stashed version and its files, as nothing can bring them back', async () => {
+      const result = await runGc();
+      expect(result.deletedObjects).to.equal(0);
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
+    });
+  });
+
+  describe('when an object cannot be classified', () => {
+    beforeEach(async () => {
+      await markAsExported();
+    });
+
+    it('should refuse to delete anything rather than act on a partial inventory', async () => {
+      // truncating makes the object unreadable while keeping it a valid object path
+      await fs.writeFile(scope.objects.objectPath(Ref.from(VERSION_HASHES['0.0.2'])), 'not a real object');
+      let error: Error | undefined;
+      try {
+        await runGc();
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error).to.be.an('error');
+      expect(error?.message).to.have.string('not safe to run gc');
+      // the version that would otherwise have been collected is still here
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
       expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });

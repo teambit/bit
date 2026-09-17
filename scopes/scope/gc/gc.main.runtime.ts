@@ -4,9 +4,10 @@ import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
-import type { GcResult, WorkspaceGcOptions } from '@teambit/legacy.scope';
 import { GcCmd } from './gc-cmd';
 import { GcAspect } from './gc.aspect';
+import type { GcResult, WorkspaceGcOptions } from './workspace-garbage-collector';
+import { collectGarbageInWorkspace, restoreDeletedObjects } from './workspace-garbage-collector';
 
 export class GcMain {
   constructor(
@@ -29,11 +30,11 @@ export class GcMain {
     }
     // deleted components are included on purpose: their objects are still needed until the deletion
     // has been exported.
-    return legacyScope.garbageCollectWorkspace(this.workspace.listIdsIncludeRemoved(), opts);
+    return collectGarbageInWorkspace(legacyScope, this.workspace.listIdsIncludeRemoved(), opts);
   }
 
   async restore(overwrite = false) {
-    return this.scope.legacyScope.restoreGarbageCollected(overwrite);
+    return restoreDeletedObjects(this.scope.legacyScope, overwrite);
   }
 
   static slots = [];

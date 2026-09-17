@@ -10,7 +10,7 @@ export {
   LaneHistory,
 } from './models';
 export { BitObject, BitRawObject, Ref, Repository } from './objects';
-export type { ObjectWithType } from './objects';
+export type { ObjectWithType, ObjectsWithType } from './objects';
 export { ComponentLog, ScopeListItem, AddVersionOpts, ComponentProps, VERSION_ZERO } from './models/model-component';
 export { ComponentItem, IndexType, LaneItem } from './objects/scope-index';
 export { ObjectItem, ObjectList, ObjectItemsStream } from './objects/object-list';

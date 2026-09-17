@@ -36,6 +36,8 @@ const TRASH_DIR = 'trash';
 const OBJECT_HEADER_CHUNK_SIZE = 4096;
 
 export type ObjectWithType = { ref: Ref; type: string; size: number };
+/** `unreadable` holds the objects that couldn't be classified, so a caller can refuse to act on a partial inventory */
+export type ObjectsWithType = { objects: ObjectWithType[]; unreadable: Ref[] };
 
 export default class Repository {
   objects: { [key: string]: BitObject } = {};
@@ -275,23 +277,33 @@ export default class Repository {
    * where the type is. when a content transformer is registered (`onPostObjectRead`), it applies
    * to the whole buffer, so in that case the file is read in full.
    */
-  async listObjectsWithType(): Promise<ObjectWithType[]> {
+  async listObjectsWithType(): Promise<ObjectsWithType> {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
     logger.debug(`Repository.listObjectsWithType, classifying ${refs.length} objects`);
     const results = await pMapPool(refs, (ref) => this.getObjectTypeGracefully(ref), { concurrency });
-    return compact(results);
+    const objects = compact(results.map((result) => result.object));
+    const unreadable = compact(results.map((result) => result.unreadable));
+    if (unreadable.length) {
+      logger.warn(`Repository.listObjectsWithType, unable to classify ${unreadable.length} objects`);
+    }
+    return { objects, unreadable };
   }
 
-  private async getObjectTypeGracefully(ref: Ref): Promise<ObjectWithType | null> {
+  /**
+   * the objects that couldn't be classified are reported rather than skipped. a caller that acts on
+   * this inventory (the garbage collector) has to know that it's incomplete, because an object it
+   * can't see is one it can't reason about.
+   */
+  private async getObjectTypeGracefully(ref: Ref): Promise<{ object?: ObjectWithType; unreadable?: Ref }> {
     const objectPath = this.objectPath(ref);
     try {
       const stat = await fs.stat(objectPath);
       const type = (await this.readObjectType(objectPath, stat.size)) as string;
-      return { ref, type, size: stat.size };
+      return { object: { ref, type, size: stat.size } };
     } catch (err: any) {
       logger.warn(`Repository.listObjectsWithType, failed reading ${objectPath}. Error: ${err.message}`);
-      return null;
+      return { unreadable: ref };
     }
   }
 
@@ -299,7 +311,8 @@ export default class Repository {
     const readInFull = async () => BitObject.parseObjectType(this.onRead(await fs.readFile(objectPath)), objectPath);
     if (Repository.onPostObjectRead) return readInFull();
     const chunkSize = Math.min(OBJECT_HEADER_CHUNK_SIZE, size);
-    const chunk = Buffer.alloc(chunkSize);
+    // `Uint8Array` rather than `Buffer` - see `parseObjectTypeFromChunk`
+    const chunk = new Uint8Array(chunkSize);
     const fileDescriptor = await fs.open(objectPath, 'r');
     try {
       await fs.read(fileDescriptor, chunk, 0, chunkSize, 0);

@@ -9,9 +9,8 @@ import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { Lane, ModelComponent, Ref, Source, Version } from '@teambit/objects';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
-import type Scope from './scope';
-
-export const DELETED_OBJECTS_DIR = 'deleted-objects';
+import type { Scope } from '@teambit/legacy.scope';
+import { DELETED_OBJECTS_DIR } from '@teambit/legacy.scope';
 
 /**
  * a leftover of an interrupted atomic write - `<38-hex>.<pid-ish digits>` next to the object it was
@@ -19,6 +18,12 @@ export const DELETED_OBJECTS_DIR = 'deleted-objects';
  * ever cleans them up.
  */
 const STRAY_TEMP_FILE = /^[0-9a-f]{38}\.\d+$/;
+
+/**
+ * `bit stash` writes a `Version` object into the local scope and records only its hash in a file
+ * here. deliberately nothing else refers to it - not the component, not a lane, not `.bitmap`.
+ */
+const STASH_DIR = 'stash';
 
 export type WorkspaceGcOptions = {
   dryRun?: boolean;
@@ -64,6 +69,9 @@ export type GcResult = {
  * `Source` objects it points to. keeping a `Version` whose file contents were deleted would look
  * to the importer exactly like a version that's fully present, so it would skip the fetch and only
  * fail later, when something tries to read the files.
+ *
+ * the scope itself knows nothing about workspaces. it's given the ids that are in use and the
+ * hashes that must survive; deciding what those are is this aspect's job.
  */
 export async function collectGarbageInWorkspace(
   scope: Scope,
@@ -75,7 +83,19 @@ export async function collectGarbageInWorkspace(
   const concurrency = concurrentIOLimit();
 
   logger.debug(`gc, classifying the objects of ${scope.name}`);
-  const allObjects = await repo.listObjectsWithType();
+  const { objects: allObjects, unreadable } = await repo.listObjectsWithType();
+
+  // an object we couldn't classify is an object we can't reason about. if it happens to be a live
+  // `Version`, we'd never learn which `Source` objects it points at, and would delete them while
+  // leaving the version in place - the one state this collector exists to avoid. so rather than
+  // deleting from a partial inventory, refuse to delete at all.
+  if (unreadable.length) {
+    const list = unreadable.map((ref) => `  ${repo.objectPath(ref)}`).join('\n');
+    throw new BitError(`unable to read ${unreadable.length} object(s) in the scope, so it is not safe to run gc.
+these objects are most likely corrupted. bit can fetch them again from the remote, so it is safe to
+delete them and run gc again:
+${list}`);
+  }
 
   const versionSizes = new Map<string, number>();
   const refsByType = new Map<string, Ref[]>();
@@ -110,6 +130,9 @@ export async function collectGarbageInWorkspace(
 
   const components = await loadObjectsOfType<ModelComponent>(ModelComponent.name);
   const lanes = await loadObjectsOfType<Lane>(Lane.name);
+  const componentsById = new Map(
+    components.map((component) => [component.toComponentId().toStringWithoutVersion(), component])
+  );
 
   // the head of every component. `bit log`, `bit status` and the diverge calculation all start
   // there, and it's what `VersionHistory` is repaired from when it turns out to be incomplete.
@@ -134,8 +157,13 @@ export async function collectGarbageInWorkspace(
   );
 
   // heads of every component on every local lane, `updateDependents` included.
+  const laneHeads: { component: ModelComponent; head: Ref }[] = [];
   lanes.forEach((lane) => {
-    lane.toComponentIdsIncludeUpdateDependents().forEach((id) => addRoot(id.version));
+    lane.toComponentIdsIncludeUpdateDependents().forEach((id) => {
+      addRoot(id.version);
+      const component = componentsById.get(id.toStringWithoutVersion());
+      if (component && id.version) laneHeads.push({ component, head: Ref.from(id.version) });
+    });
   });
 
   // heads we track for remotes. deleting one would break the diverge calculation, which can no
@@ -153,6 +181,7 @@ export async function collectGarbageInWorkspace(
       addRoot(unmerged.unrelated.unrelatedHead);
     }
   });
+  (await getStashedHashes(scope.path)).forEach(addRoot);
   await keepUnexportedHistory();
 
   if (keepVersions > 0) await keepRecentVersions();
@@ -217,21 +246,30 @@ export async function collectGarbageInWorkspace(
   };
 
   /**
-   * a component with snaps that were never exported must keep all of them, not only its head -
+   * snaps that were created here and not exported yet must be kept in full, not only their tip -
    * export sends the entire chain up to what the remote already has.
+   *
+   * this covers both the main head and every local-lane head. `staged-snaps` normally records
+   * them, but it's written per-snap and older workspaces predate it, so the chains are walked
+   * rather than trusted.
    */
   async function keepUnexportedHistory() {
+    const startingPoints = [
+      // `getHeadRegardlessOfLane` is not used here: `laneHeadLocal` is populated at runtime by
+      // whoever checked the lane out, and these components were loaded straight from the objects.
+      ...components.map((component) => ({ component, head: component.getHead() })),
+      ...laneHeads,
+    ];
     await pMapPool(
-      components,
-      async (component) => {
-        const localHead = component.getHeadRegardlessOfLane();
-        if (!localHead) return;
+      startingPoints,
+      async ({ component, head }) => {
+        if (!head) return;
         const remoteHeads = remoteRefsPerComponent.get(component.toComponentId().toStringWithoutVersion()) || [];
-        if (remoteHeads.some((remoteHead) => remoteHead.isEqual(localHead))) return; // nothing local
+        if (remoteHeads.some((remoteHead) => remoteHead.isEqual(head))) return; // nothing local
         const versionsInfo = await getAllVersionsInfo({
           modelComponent: component,
           repo,
-          startFrom: localHead,
+          startFrom: head,
           stopAt: remoteHeads,
           throws: false,
         });
@@ -288,6 +326,30 @@ export async function collectGarbageInWorkspace(
       { concurrency }
     );
   }
+}
+
+/**
+ * the hashes `bit stash` is holding. these are snaps that only ever existed here, so losing them
+ * loses the stashed work for good - `bit stash load` would ask for a hash no remote has.
+ */
+async function getStashedHashes(scopePath: string): Promise<string[]> {
+  const stashDir = path.join(scopePath, STASH_DIR);
+  if (!(await fs.pathExists(stashDir))) return [];
+  const files = (await fs.readdir(stashDir)).filter((file) => file.endsWith('.json'));
+  const hashesPerFile = await Promise.all(
+    files.map(async (file) => {
+      try {
+        const content = await fs.readJson(path.join(stashDir, file));
+        return (content.stashCompsData || []).map((compData) => compData.hash).filter(Boolean);
+      } catch (err: any) {
+        // a stash file we can't parse is not a reason to fail, but it is a reason not to delete
+        // what it may be pointing at. there's nothing to keep from it, so only warn.
+        logger.warn(`gc, unable to read the stash file ${file}. Error: ${err.message}`);
+        return [];
+      }
+    })
+  );
+  return hashesPerFile.flat();
 }
 
 export async function restoreDeletedObjects(scope: Scope, overwrite = false) {
