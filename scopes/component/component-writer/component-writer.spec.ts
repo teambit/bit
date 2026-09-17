@@ -168,6 +168,41 @@ describe('the workspace-root import preflight checks', () => {
   });
 });
 
+describe('writing the workspace-root component in the same batch as a component nested in it', () => {
+  /**
+   * the batch goes through fixDirsIfNested, which moves a component aside when another one is to be
+   * written inside it. the root must come out of it untouched: it owns "." by definition, and the
+   * components below it are the normal case rather than a collision.
+   */
+  function runFixDirs(writeToPaths: string[], existingRootDirs: string[] = []) {
+    const main = Object.create(ComponentWriterMain.prototype);
+    Object.defineProperty(main, 'workspace', { value: { bitMap: { getAllRootDirs: () => existingRootDirs } } });
+    const writers = writeToPaths.map((writeToPath) => ({
+      writeToPath,
+      component: { id: { scope: 'my-org.my-scope' } },
+    }));
+    main.fixDirsIfNested(writers);
+    return writers.map((writer) => writer.writeToPath);
+  }
+
+  it('should leave both where they were asked to go', () => {
+    expect(runFixDirs([WORKSPACE_ROOT_DIR, 'packages/comp1'])).to.deep.equal([WORKSPACE_ROOT_DIR, 'packages/comp1']);
+  });
+
+  it('should leave the root alone when the workspace already tracks a component inside it', () => {
+    expect(runFixDirs([WORKSPACE_ROOT_DIR], ['packages/comp1'])).to.deep.equal([WORKSPACE_ROOT_DIR]);
+  });
+
+  it('should leave a component alone when the workspace already tracks the root', () => {
+    expect(runFixDirs(['packages/comp1'], [WORKSPACE_ROOT_DIR])).to.deep.equal(['packages/comp1']);
+  });
+
+  it('should still move an ordinary component that another one is written inside of', () => {
+    // the rule the root is untouched by, so the cases above are not passing on an inert branch
+    expect(runFixDirs(['bar', 'bar/foo'])).to.deep.equal(['bar_1', 'bar/foo']);
+  });
+});
+
 describe('the destination of an already tracked workspace-root component', () => {
   it('should be the workspace root, whatever path the caller derived without --path', async () => {
     const writer = Object.create(ComponentWriter.prototype);
