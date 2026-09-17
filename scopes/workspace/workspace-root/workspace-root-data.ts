@@ -50,6 +50,22 @@ export function readWorkspaceRoot(extensions: ExtensionDataList): ComponentID | 
   return root ? ComponentID.fromString(root) : undefined;
 }
 
+/**
+ * drop what another workspace recorded on this component.
+ *
+ * the data travels with the component, so one imported into a workspace that has no root of its own
+ * still carries the root it was snapped in, and snapping it here would carry it into the new version -
+ * claiming it was made in a workspace it has never been in. the same call clears a stale `isRoot` from
+ * a component that was the root once and is tracked in a directory of its own now; left there, an
+ * import onto "." or a clone would take ordinary source for a workspace root.
+ */
+export function clearWorkspaceRoot(extensions: ExtensionDataList): void {
+  const existing = extensions.findCoreExtension(WorkspaceRootAspect.id);
+  if (!existing?.data) return;
+  delete existing.data.root;
+  delete existing.data.isRoot;
+}
+
 export function writeWorkspaceRoot(extensions: ExtensionDataList, rootId: ComponentID): void {
   const data: WorkspaceRootData = { root: rootId.toString() };
   const existing = extensions.findCoreExtension(WorkspaceRootAspect.id);

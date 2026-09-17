@@ -3,6 +3,7 @@ export type { WorkspaceRootMain } from './workspace-root.main.runtime';
 export type { WorkspaceRootData } from './workspace-root-data';
 export type { CloneOptions, CloneResult } from './clone';
 export {
+  clearWorkspaceRoot,
   findWorkspaceRootMap,
   isWorkspaceRootComponent,
   readWorkspaceRoot,

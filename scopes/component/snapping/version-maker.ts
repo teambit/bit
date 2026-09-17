@@ -33,7 +33,7 @@ import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependenc
 import type { Registries } from '@teambit/pkg.entities.registry';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
 import type { Workspace, AutoTagResult } from '@teambit/workspace';
-import { findWorkspaceRootMap, writeWorkspaceRoot } from '@teambit/workspace-root';
+import { clearWorkspaceRoot, findWorkspaceRootMap, writeWorkspaceRoot } from '@teambit/workspace-root';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import type { LaneId } from '@teambit/lane-id';
@@ -776,21 +776,29 @@ export class VersionMaker {
    * so the version is only missing on the paths that don't, such as a merge snap made while the root
    * was never snapped. the root itself records nothing here, it carries the isRoot marker instead.
    * see WorkspaceRootMain.
+   *
+   * a workspace with no root of its own clears the field instead of leaving it: the data travels with
+   * the component, so a component imported from a workspace that had one would otherwise keep naming
+   * it in every version snapped here.
    */
   private recordWorkspaceRoot() {
     const consumer = this.consumer;
     if (!consumer) return;
     const rootMap = findWorkspaceRootMap(consumer.bitMap);
-    if (!rootMap) return;
-    const rootInBatch = this.allComponentsToTag.find((component) => component.id.isEqualWithoutVersion(rootMap.id));
-    const rootId = rootInBatch ? rootInBatch.id.changeVersion(rootInBatch.version) : rootMap.id;
+    const rootInBatch =
+      rootMap && this.allComponentsToTag.find((component) => component.id.isEqualWithoutVersion(rootMap.id));
+    const rootId = rootInBatch ? rootInBatch.id.changeVersion(rootInBatch.version) : rootMap?.id;
     this.allComponentsToTag.forEach((component) => {
-      if (component.id.isEqualWithoutVersion(rootMap.id)) return;
+      if (rootMap && component.id.isEqualWithoutVersion(rootMap.id)) return;
       // hidden lane entries (lane.updateDependents) cascade into the batch from the scope rather than
       // from the workspace, so they were not snapped in this root. absence from .bitmap is how they
       // are told apart elsewhere in this file as well
       if (!consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) return;
-      writeWorkspaceRoot(component.extensions, rootId);
+      // with no root in this workspace there is nothing to record, and what a previous one recorded has
+      // to go: the data travels with the component, so keeping it would have the new version claim a
+      // workspace root it was not made in
+      if (rootId) writeWorkspaceRoot(component.extensions, rootId);
+      else clearWorkspaceRoot(component.extensions);
     });
   }
 

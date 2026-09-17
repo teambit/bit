@@ -4,6 +4,7 @@ import { BitMap } from '@teambit/legacy.bit-map';
 import { Extensions } from '@teambit/legacy.constants';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import {
+  clearWorkspaceRoot,
   findWorkspaceRootMap,
   isWorkspaceRootComponent,
   readWorkspaceRoot,
@@ -79,6 +80,29 @@ describe('workspace-root data', () => {
     });
     it('should return undefined for a component with no pointer', () => {
       expect(readWorkspaceRoot(ExtensionDataList.fromArray([]))).to.be.undefined;
+    });
+  });
+
+  describe('clearWorkspaceRoot', () => {
+    it('should drop the root a previous workspace recorded', () => {
+      // the data travels with the component, so a snap in a workspace that has no root of its own
+      // would otherwise keep naming the one it came from
+      const extensions = ExtensionDataList.fromArray([]);
+      writeWorkspaceRoot(extensions, rootId);
+      clearWorkspaceRoot(extensions);
+      expect(readWorkspaceRoot(extensions)).to.be.undefined;
+    });
+    it('should drop a stale isRoot from a component that is no longer the root', () => {
+      const extensions = ExtensionDataList.fromArray([
+        new ExtensionDataEntry(undefined, undefined, WorkspaceRootAspect.id, undefined, { isRoot: true }),
+      ]);
+      clearWorkspaceRoot(extensions);
+      expect(isWorkspaceRootComponent(extensions)).to.be.false;
+    });
+    it('should do nothing to a component that carries no data of this aspect', () => {
+      const extensions = ExtensionDataList.fromArray([]);
+      clearWorkspaceRoot(extensions);
+      expect(extensions).to.have.lengthOf(0);
     });
   });
 });
