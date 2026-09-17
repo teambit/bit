@@ -68,10 +68,10 @@ export function formatCloneResult(result: CloneResult, relativeDir: string): str
     `cloned ${result.rootId.toString()} into "${relativeDir}" with ${count} component${count === 1 ? '' : 's'}`
   );
   const lane = result.laneId ? formatHint(`(the workspace is on lane ${result.laneId.toString()})`) : '';
-  // missing state takes the error symbol, see cli-output-style-guide.md. the clone itself succeeded,
-  // which the summary above says, so the section is about the components rather than the command.
+  // missing state takes the error symbol, on the title as well as on the items - see the error
+  // sections of cli-output-style-guide.md. the clone itself succeeded, which the summary above says.
   const missing = formatSection(
-    'components the root lists that are not on their remote',
+    `${errorSymbol} components the root lists that are not on their remote`,
     'never exported, or exported elsewhere - the clone is without them',
     result.missing.map((missingId) => formatItem(missingId, errorSymbol))
   );
