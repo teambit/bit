@@ -95,6 +95,31 @@ describe('the files bit add tracks', function () {
     });
   });
 
+  describe('a config file bit treats as generated, at the component root', () => {
+    const compWithTsconfig = {
+      'comp1/index.js': 'module.exports = () => "comp1";\n',
+      'comp1/tsconfig.json': '{}\n',
+    };
+    const addWithTsconfigAsMain = async (trackAllFiles: boolean) => {
+      const { workspacePath, tracker } = await setup(compWithTsconfig, { trackAllFiles });
+      return tracker.addForCLI({
+        componentPaths: [path.join(workspacePath, 'comp1')],
+        id: 'comp1',
+        main: path.join(workspacePath, 'comp1/tsconfig.json'),
+        override: false,
+      });
+    };
+    it('should refuse it as a main file, rather than track what the next rescan drops', async () => {
+      // it used to fail further down with "main file tsconfig.json was removed from <id>", which
+      // sends the user to "bit remove" for a component they are adding
+      await expectToReject(() => addWithTsconfigAsMain(false), 'was excluded from file list');
+    });
+    it('should accept it with trackAllFiles on, where the rescan keeps it', async () => {
+      const results = await addWithTsconfigAsMain(true);
+      expect(results.addedComponents[0].files.map((file) => file.relativePath)).to.include('tsconfig.json');
+    });
+  });
+
   describe('a file bit generated, which carries its banner', () => {
     const compWithGeneratedFile = {
       'comp1/index.js': 'module.exports = () => "comp1";\n',

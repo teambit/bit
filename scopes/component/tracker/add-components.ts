@@ -254,7 +254,7 @@ export default class AddComponents {
     // only until a more specific component is added for it: the component being added wins, and the
     // root subtracts the new root-dir from its own file-set on the next scan. the one file it cannot
     // give away is its main file - without it, it fails to load from the next scan on.
-    const workspaceRootMap = this.bitMap.components.find((componentMap) => componentMap.rootDir === WORKSPACE_ROOT_DIR);
+    const workspaceRootMap = this.bitMap.getWorkspaceRootMap();
     const isWorkspaceRoot = component.trackDir === WORKSPACE_ROOT_DIR;
     if (workspaceRootMap && !isWorkspaceRoot && !parsedBitId.isEqualWithoutVersion(workspaceRootMap.id)) {
       throwForTakingWorkspaceRootMainFile(workspaceRootMap, parsedBitId, pathNormalizeToLinux(component.trackDir));
@@ -597,11 +597,12 @@ you can add the directory these files are located at and it'll change the root d
         matchesNotIgnored.map(relativeToComponent)
       )
     );
-    const filteredMatches = matchesNotIgnored.filter(
-      (match) =>
-        keptByOwnIgnoreFile.has(relativeToComponent(match)) &&
-        (this.consumer.config.trackAllFiles || !generatedAtRoot.has(match))
-    );
+    // the rules the rescan applies too (see getFilesByDir), so the add-time file-set matches it. the
+    // main file is checked against the same predicate below - it is put back after this filtering.
+    const isTrackable = (match: PathLinux) =>
+      keptByOwnIgnoreFile.has(relativeToComponent(match)) &&
+      (this.consumer.config.trackAllFiles || !generatedAtRoot.has(match));
+    const filteredMatches = matchesNotIgnored.filter(isTrackable);
 
     if (!filteredMatches.length) {
       throw new NoFiles(matches);
@@ -612,13 +613,14 @@ you can add the directory these files are located at and it'll change the root d
     });
     const resolvedMainFile = this._addMainFileToFiles(filteredMatchedFiles);
     // that puts the main file back into the list after the filtering above, and checks it against the
-    // workspace ignore rules only - so the component's own ignore file is applied to it here. without
-    // it the add fails further down on a main file the rescan already dropped, saying it was removed.
+    // workspace ignore rules only. without applying the rest of them here, the add fails further down
+    // on a main file the rescan already dropped, saying it was removed - the config files bit treats
+    // as generated (tsconfig.json and friends) reach it that way, as does a component ignore file.
     if (resolvedMainFile) {
       const mainNormalized = pathNormalizeToLinux(resolvedMainFile);
-      const excludedByOwnIgnoreFile =
-        matchesNotIgnored.includes(mainNormalized) && !keptByOwnIgnoreFile.has(relativeToComponent(mainNormalized));
-      if (excludedByOwnIgnoreFile) throw new ExcludedMainFile(relativeToComponent(mainNormalized));
+      if (matchesNotIgnored.includes(mainNormalized) && !isTrackable(mainNormalized)) {
+        throw new ExcludedMainFile(relativeToComponent(mainNormalized));
+      }
     }
 
     const absoluteComponentPath = pathNormalizeToLinux(path.resolve(componentPath));
@@ -905,7 +907,7 @@ export async function addMultipleFromResolvedTrackData(
       : await filterResolvedFiles(rootDir, workspace.path, files, gitIgnore, trackAllFiles);
     // a nested component may take any file from a tracked workspace root but its main file, the
     // rule "bit add" applies. a root tracked later in the same call scans around this component.
-    const workspaceRootMap = bitMap.components.find((componentMap) => componentMap.rootDir === WORKSPACE_ROOT_DIR);
+    const workspaceRootMap = bitMap.getWorkspaceRootMap();
     if (!isWorkspaceRoot && workspaceRootMap) throwForTakingWorkspaceRootMainFile(workspaceRootMap, idToTrack, rootDir);
     const componentMap = bitMap.addComponent({
       componentId: idToTrack,

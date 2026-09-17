@@ -173,6 +173,23 @@ describe('tracking the workspace root', function () {
         'main file of the workspace-root component'
       );
     });
+    it('should allow it when the root belongs to another lane, it owns nothing here', async () => {
+      // the root stays in .bitmap so a switch back can restore it. guarding its main file meanwhile
+      // would reject an add that is fine on this lane
+      const rootMap = tracked.workspace.consumer.bitMap.getWorkspaceRootMap();
+      expect(rootMap).to.not.be.undefined;
+      rootMap!.isAvailableOnCurrentLane = false;
+      try {
+        const results = await tracked.tracker.addForCLI({
+          componentPaths: [inWs(tracked, 'packages/comp1')],
+          id: 'comp1-on-lane',
+          override: false,
+        });
+        expect(results.addedComponents).to.have.lengthOf(1);
+      } finally {
+        rootMap!.isAvailableOnCurrentLane = true;
+      }
+    });
     it('should refuse even when the nested component ignores that file, its directory is what the root loses', async () => {
       fs.outputFileSync(path.join(tracked.workspacePath, 'packages/comp1/.bitignore'), 'index.js\n');
       fs.outputFileSync(path.join(tracked.workspacePath, 'packages/comp1/other.js'), '');
