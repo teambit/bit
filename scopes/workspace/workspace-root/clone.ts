@@ -231,7 +231,7 @@ export async function cloneWorkspace(
   options: CloneOptions,
   loadBit: LoadBit
 ): Promise<CloneResult> {
-  const workspacePath = resolveClonePath(dir, rootId);
+  const workspacePath = await resolveThroughExistingAncestors(resolveClonePath(dir, rootId));
   await throwForWorkspaceAbove(workspacePath);
   const createdDir = await ensureEmptyDir(workspacePath);
   const originalCwd = process.cwd();
@@ -304,6 +304,37 @@ export function resolveComponentDir(workspacePath: string, entry: VersionedBitma
  */
 export function resolveClonePath(dir: string | undefined, rootId: ComponentID): string {
   return path.resolve(dir || rootId.name);
+}
+
+/**
+ * the destination with the directories above it resolved through any symbolic link, and its own last
+ * segment left as it is.
+ *
+ * a link above the target redirects everything that follows - the directory creation, the init, the
+ * files, and the cleanup of a failed clone - while the lexical path says nothing about it, so the
+ * workspace check would look in one place and the writes land in another, inside someone else's
+ * workspace. the last segment is deliberately not resolved: a link *at* the destination is refused
+ * rather than followed, which is ensureEmptyDir's rule.
+ */
+export async function resolveThroughExistingAncestors(dirPath: string): Promise<string> {
+  const parent = path.dirname(dirPath);
+  if (parent === dirPath) return dirPath;
+  return path.join(await realpathOfNearestExisting(parent), path.basename(dirPath));
+}
+
+/**
+ * the deepest part of the path that exists, resolved, with the part that does not exist yet appended
+ * as it is. the destination of a clone is normally absent, so there is nothing to resolve on it.
+ */
+async function realpathOfNearestExisting(dirPath: string): Promise<string> {
+  const parent = path.dirname(dirPath);
+  if (parent === dirPath) return dirPath;
+  try {
+    return await fs.realpath(dirPath);
+  } catch (err: any) {
+    if (err.code !== 'ENOENT') throw err;
+    return path.join(await realpathOfNearestExisting(parent), path.basename(dirPath));
+  }
 }
 
 /**

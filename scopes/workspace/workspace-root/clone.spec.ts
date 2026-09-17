@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
-import { ensureEmptyDir, resolveClonePath, resolveComponentDir } from './clone';
+import { ensureEmptyDir, resolveClonePath, resolveComponentDir, resolveThroughExistingAncestors } from './clone';
 import { WorkspaceRootMain } from './workspace-root.main.runtime';
 
 describe('resolveClonePath', () => {
@@ -55,6 +55,47 @@ describe('resolveComponentDir', () => {
     expect(resolveComponentDir(workspacePath, { id: 'a', rootDir: '..cache' })).to.equal(
       path.join(workspacePath, '..cache')
     );
+  });
+});
+
+describe('resolveThroughExistingAncestors', () => {
+  let base: string;
+  beforeEach(async () => {
+    // realpath'd, so that the assertions below compare against what the resolve returns - on macOS
+    // the temp directory is itself reached through a link
+    base = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'bit-clone-anc-')));
+  });
+  afterEach(async () => {
+    await fs.remove(base);
+  });
+
+  it('should resolve a symbolic link above an absent destination, the writes go through it', async () => {
+    const real = path.join(base, 'real');
+    await fs.ensureDir(real);
+    await fs.symlink(real, path.join(base, 'link'));
+    expect(await resolveThroughExistingAncestors(path.join(base, 'link', 'ws'))).to.equal(path.join(real, 'ws'));
+  });
+
+  it('should resolve it through several levels that do not exist yet', async () => {
+    const real = path.join(base, 'real');
+    await fs.ensureDir(real);
+    await fs.symlink(real, path.join(base, 'link'));
+    expect(await resolveThroughExistingAncestors(path.join(base, 'link', 'a', 'b'))).to.equal(
+      path.join(real, 'a', 'b')
+    );
+  });
+
+  it('should leave a destination with no link above it as it is, the ordinary case', async () => {
+    expect(await resolveThroughExistingAncestors(path.join(base, 'ws'))).to.equal(path.join(base, 'ws'));
+  });
+
+  it('should not resolve a link at the destination itself, which is refused rather than followed', async () => {
+    // ensureEmptyDir is what refuses it, and it only can while the last segment is left alone
+    const real = path.join(base, 'real');
+    await fs.ensureDir(real);
+    const link = path.join(base, 'link');
+    await fs.symlink(real, link);
+    expect(await resolveThroughExistingAncestors(link)).to.equal(link);
   });
 });
 
