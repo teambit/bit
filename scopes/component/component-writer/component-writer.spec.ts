@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import ComponentWriter, { isOwnedByNestedComponent } from './component-writer';
 import { ComponentWriterMain } from './component-writer.main.runtime';
 
@@ -121,5 +122,28 @@ describe('the workspace-root import preflight checks', () => {
     await fs.symlink(os.tmpdir(), path.join(workspacePath, 'docs'));
     const main = runtimeFor(['packages/comp1'], workspacePath);
     expect(() => main.throwForSymlinksInTheWay(componentFor(['docs/readme.md']))).to.throw('is a symbolic link');
+  });
+});
+
+describe('the destination of an already tracked workspace-root component', () => {
+  it('should be the workspace root, whatever path the caller derived without --path', async () => {
+    const writer = Object.create(ComponentWriter.prototype);
+    Object.assign(writer, {
+      // what composeRelativeComponentPath returns when no --path is given
+      writeToPath: 'my-scope/ws-root',
+      override: true,
+      writeConfig: false,
+      skipUpdatingBitMap: true,
+      existingComponentMap: { rootDir: WORKSPACE_ROOT_DIR, getRootDir: () => WORKSPACE_ROOT_DIR },
+      bitMap: { getNestedRootDirs: () => [] },
+      consumer: undefined,
+      component: {
+        id: { toString: () => 'my-scope/ws-root' },
+        isLegacy: false,
+        files: [{ relative: 'README.md', basename: 'README.md', path: 'README.md', updatePaths: () => {} }],
+      },
+    });
+    await writer.populateComponentsFilesToWrite();
+    expect(writer.writeToPath).to.equal(WORKSPACE_ROOT_DIR);
   });
 });
