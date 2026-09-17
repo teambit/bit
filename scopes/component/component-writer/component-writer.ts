@@ -3,7 +3,7 @@ import type { Scope } from '@teambit/legacy.scope';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
+import { isWorkspaceMapFile } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -119,13 +119,10 @@ export default class ComponentWriter {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
     const nestedRootDirs = this.bitMap.getNestedRootDirs(this.writeToPath);
-    const isWorkspaceRoot = this.writeToPath === WORKSPACE_ROOT_DIR;
     this.component.files.forEach((file) => {
       const relativePath = pathNormalizeToLinux(file.relative);
-      // the live map is never written from a versioned copy, see isWorkspaceMapFile. only the root
-      // tracks it - an ordinary component's own .bitmap is a file like any other, the rule the
-      // checkout applies when it removes files.
-      if (isWorkspaceRoot && isWorkspaceMapFile(relativePath)) return;
+      // the live map is never written from a versioned copy, see isWorkspaceMapFile
+      if (isWorkspaceMapFile(relativePath)) return;
       if (isOwnedByNestedComponent(relativePath, nestedRootDirs)) return;
       file.override = this.override;
       this.component.dataToPersist.addFile(file);

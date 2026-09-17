@@ -1,5 +1,9 @@
 import { expect } from 'chai';
+import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
 import ComponentWriter, { isOwnedByNestedComponent } from './component-writer';
+import { ComponentWriterMain } from './component-writer.main.runtime';
 
 describe('isOwnedByNestedComponent', () => {
   const nested = ['packages/comp1', 'packages/comp2'];
@@ -69,9 +73,53 @@ describe('populateFilesToWriteToComponentDir', () => {
     expect(written).to.deep.equal(['workspace.jsonc']);
   });
 
-  it("should write an ordinary component's own .bitmap, only the root tracks the workspace one", async () => {
+  it('should skip it for an ordinary component too, no component but the root ever tracks one', async () => {
+    // the scan drops a `.bitmap` at any other component's root (see getScanIgnorePatterns), so what a
+    // component versions is what a write lands
     const { writer, written } = writerFor(['.bitmap', 'index.js'], [], 'comp1');
     await writer.populateFilesToWriteToComponentDir();
-    expect(written).to.deep.equal(['.bitmap', 'index.js']);
+    expect(written).to.deep.equal(['index.js']);
+  });
+});
+
+describe('the workspace-root import preflight checks', () => {
+  /**
+   * the checks read the incoming files, the nested root-dirs and the paths on disk. going through
+   * writeMany would need a workspace and a scope, which say nothing about which paths they look at.
+   */
+  function runtimeFor(nestedRootDirs: string[], workspacePath: string) {
+    const main = Object.create(ComponentWriterMain.prototype);
+    // `consumer` is a getter on the class, so it is defined rather than assigned
+    Object.defineProperty(main, 'consumer', {
+      value: {
+        bitMap: { getNestedRootDirs: () => nestedRootDirs, components: [] },
+        toAbsolutePath: (relativePath: string) => path.join(workspacePath, relativePath),
+      },
+    });
+    return main;
+  }
+  const componentFor = (files: string[]) =>
+    ({ id: { toString: () => 'my-scope/ws-root' }, files: files.map((relative) => ({ relative })) }) as any;
+
+  let workspacePath: string;
+  beforeEach(async () => {
+    workspacePath = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-preflight-'));
+  });
+  afterEach(async () => {
+    await fs.remove(workspacePath);
+  });
+
+  it('should ignore a symlink inside a nested component, the write never goes through it', async () => {
+    // an older root version still carries comp1's files, but the writer leaves that directory alone
+    await fs.ensureDir(path.join(workspacePath, 'packages'));
+    await fs.symlink(os.tmpdir(), path.join(workspacePath, 'packages/comp1'));
+    const main = runtimeFor(['packages/comp1'], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['packages/comp1/index.js']))).to.not.throw();
+  });
+
+  it('should still refuse a symlink on the way to a file the root does own', async () => {
+    await fs.symlink(os.tmpdir(), path.join(workspacePath, 'docs'));
+    const main = runtimeFor(['packages/comp1'], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['docs/readme.md']))).to.throw('is a symbolic link');
   });
 });
