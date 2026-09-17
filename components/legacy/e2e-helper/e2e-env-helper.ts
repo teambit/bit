@@ -358,15 +358,12 @@ export default new EmptyEnv();
       // compile anyway (right below) that compile is done twice. The workspace compile is the
       // memory peak of an env-scaffolding test, so let the install skip it and keep the explicit
       // one. When the caller asked for no compile, the install's compile is the only one there is.
-      this.command.install([ENVS_ENV_PACKAGE, ...this.getFixtureEnvBasePackages(extensionsBaseFolder)].join(' '), {
-        ...(options.skipCompile ? {} : { 'skip-compile': '' }),
-        // ws's optional native accelerators arrive with the legacy react env package, and nothing
-        // in the e2e suite uses them. Building them inside an env root fails with `node-gyp-build`
-        // exited with status 127 since pnpm 12.4.1 - the same packages install fine where no env
-        // root is involved. Skip the build rather than let an unrelated native addon decide
-        // whether an env fixture can be scaffolded.
-        'disallow-scripts': 'utf-8-validate,bufferutil',
-      });
+      // the native accelerators these env packages drag in are never built - see
+      // `neverBuildNativeAccelerators`, applied to every workspace the suite scaffolds.
+      this.command.install(
+        [ENVS_ENV_PACKAGE, ...this.getFixtureEnvBasePackages(extensionsBaseFolder)].join(' '),
+        options.skipCompile ? {} : { 'skip-compile': '' }
+      );
     }
     if (!options.skipCompile) this.command.compile();
     return extensionsBaseFolder;
