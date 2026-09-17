@@ -1,6 +1,14 @@
 import path from 'path';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatHint, formatSuccessSummary, formatWarningSummary, joinSections } from '@teambit/cli';
+import {
+  errorSymbol,
+  formatHint,
+  formatItem,
+  formatSection,
+  formatSuccessSummary,
+  formatWarningSummary,
+  joinSections,
+} from '@teambit/cli';
 import type { CloneResult } from './clone';
 import type { WorkspaceRootMain } from './workspace-root.main.runtime';
 
@@ -60,12 +68,13 @@ export function formatCloneResult(result: CloneResult, relativeDir: string): str
     `cloned ${result.rootId.toString()} into "${relativeDir}" with ${count} component${count === 1 ? '' : 's'}`
   );
   const lane = result.laneId ? formatHint(`(the workspace is on lane ${result.laneId.toString()})`) : '';
-  const missingCount = result.missing.length;
-  const missing = missingCount
-    ? formatWarningSummary(
-        `${missingCount} component${missingCount === 1 ? '' : 's'} the root lists ${missingCount === 1 ? 'is' : 'are'} not on ${missingCount === 1 ? 'its' : 'their'} remote (never exported, or exported elsewhere), so the clone is without: ${result.missing.join(', ')}`
-      )
-    : '';
+  // missing state takes the error symbol, see cli-output-style-guide.md. the clone itself succeeded,
+  // which the summary above says, so the section is about the components rather than the command.
+  const missing = formatSection(
+    'components the root lists that are not on their remote',
+    'never exported, or exported elsewhere - the clone is without them',
+    result.missing.map((missingId) => formatItem(missingId, errorSymbol))
+  );
   const installation = result.installationError
     ? formatWarningSummary(
         `the dependencies were not installed: ${result.installationError.message}\nrun "bit install" in the workspace to retry`

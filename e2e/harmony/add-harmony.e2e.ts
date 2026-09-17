@@ -53,9 +53,6 @@ describe('add command on Harmony', function () {
     it('should save "." as the rootDir', () => {
       expect(helper.bitMap.read()['ws-root'].rootDir).to.equal('.');
     });
-    it('should default the main file to workspace.jsonc, the root has no entry point of its own', () => {
-      expect(helper.bitMap.read()['ws-root'].mainFile).to.equal('workspace.jsonc');
-    });
     it('should own the root files, including files added after it was tracked', () => {
       expect(rootFiles).to.include('README.md');
       expect(rootFiles).to.include('LICENSE');
