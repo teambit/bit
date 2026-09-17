@@ -165,6 +165,35 @@ describe('BitMap', function () {
       );
       expect(bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR)).to.deep.equal(['packages/comp1']);
     });
+    it('getComponentIdByPath should give a contested file to the entry that owns the dir now, in both map orders', async () => {
+      // the root scans the dir of a component that is not on this lane (see getNestedRootDirs), so the
+      // two entries really do carry the same file. which one answers for it must not come down to the
+      // order .bitmap happens to list them in.
+      const rootClaimingTheNestedDir = {
+        ...rootComponentParams,
+        files: [
+          { name: 'README.md', relativePath: 'README.md', test: false },
+          { name: 'index.js', relativePath: 'packages/comp1/index.js', test: false },
+        ],
+      };
+      const contested = 'packages/comp1/index.js';
+
+      const rootFirst = await getBitmapInstance();
+      rootFirst.addComponent(rootClaimingTheNestedDir);
+      rootFirst.addComponent(nestedComponentParams).isAvailableOnCurrentLane = false;
+      expect(rootFirst.getComponentIdByPath(contested)?.name).to.equal('ws-root');
+
+      const nestedFirst = await getBitmapInstance();
+      nestedFirst.addComponent(nestedComponentParams).isAvailableOnCurrentLane = false;
+      nestedFirst.addComponent(rootClaimingTheNestedDir);
+      expect(nestedFirst.getComponentIdByPath(contested)?.name).to.equal('ws-root');
+    });
+    it('getComponentIdByPath should still answer for a component that owns its dir, the ordinary case', async () => {
+      const bitMap = await getBitmapInstance();
+      bitMap.addComponent(rootComponentParams);
+      bitMap.addComponent(nestedComponentParams);
+      expect(bitMap.getComponentIdByPath('packages/comp1/index.js')?.name).to.equal('comp1');
+    });
     it('getNestedRootDirs should not subtract the dir of a removed component', async () => {
       const bitMap = await getBitmapInstance();
       bitMap.addComponent(rootComponentParams);

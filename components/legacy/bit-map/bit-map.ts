@@ -2,7 +2,7 @@ import objectHash from 'object-hash';
 import json from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { compact, uniq, difference, differenceWith, isEmpty, isString, unionWith, get } from 'lodash';
+import { compact, uniq, difference, differenceWith, isEmpty, isString, partition, unionWith, get } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -243,16 +243,22 @@ export class BitMap {
   }
 
   /**
+   * whether this entry owns its directory at the moment. a component that was removed, or that a lane
+   * it is unavailable on left behind, stays in `.bitmap` so a switch back can restore it - until then
+   * it owns nothing, and the workspace root scans its directory in its place.
+   */
+  private ownsItsDirNow(componentMap: ComponentMap): boolean {
+    return Boolean(componentMap.isAvailableOnCurrentLane) && !componentMap.isRemoved();
+  }
+
+  /**
    * the entry of the component that owns the workspace root (rootDir "."), if this workspace has one
    * right now. a root created on another lane, or removed, stays in `.bitmap` so a switch back can
    * restore it - it owns nothing in the meantime, so the guards that protect the root skip it.
    */
   getWorkspaceRootMap(): ComponentMap | undefined {
     return this.components.find(
-      (componentMap) =>
-        componentMap.rootDir === WORKSPACE_ROOT_DIR &&
-        componentMap.isAvailableOnCurrentLane &&
-        !componentMap.isRemoved()
+      (componentMap) => componentMap.rootDir === WORKSPACE_ROOT_DIR && this.ownsItsDirNow(componentMap)
     );
   }
 
@@ -268,7 +274,7 @@ export class BitMap {
       this.components
         // a component removed, or left here by a lane it is unavailable on, does not own its dir in the
         // meantime - the root scans it, or the files it kept would belong to no component at all.
-        .filter((componentMap) => componentMap.isAvailableOnCurrentLane && !componentMap.isRemoved())
+        .filter((componentMap) => this.ownsItsDirNow(componentMap))
         .map((componentMap) => componentMap.rootDir)
         .filter((nested): nested is PathLinuxRelative => Boolean(nested) && nested !== WORKSPACE_ROOT_DIR)
         // without the trailing slash a .bitmap edited by hand may carry (see isSameDir). callers append
@@ -964,7 +970,13 @@ export class BitMap {
 
   _populateAllPaths() {
     if (isEmpty(this.paths)) {
-      this.components.forEach((component) => {
+      // the entries that do not own their directory right now are indexed first, so that an active
+      // component writing the same path overwrites them rather than the other way round. the workspace
+      // root scans the directory of an inactive component (see getNestedRootDirs), so the two really do
+      // claim the same files, and without this the winner would be whichever `.bitmap` happened to list
+      // last. they are still indexed, so a workspace with no root does not lose their paths entirely.
+      const [active, inactive] = partition(this.components, (component) => this.ownsItsDirNow(component));
+      [...inactive, ...active].forEach((component) => {
         component.files.forEach((file) => {
           const relativeToConsumer = component.rootDir
             ? pathJoinLinux(component.rootDir, file.relativePath)
