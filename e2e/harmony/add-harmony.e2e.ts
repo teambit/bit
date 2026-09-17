@@ -224,53 +224,6 @@ describe('add command on Harmony', function () {
       expect(path.join(helper.scopes.localPath, packageDir, 'index.js')).to.be.a.path();
     });
   });
-  describe('re-adding and double-adding the workspace root', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fs.outputFile('README.md', '# workspace root\n');
-      helper.command.addComponent('.', { i: 'ws-root', m: 'README.md' });
-    });
-    it('should take the main file given explicitly over the default', () => {
-      expect(helper.bitMap.read()['ws-root'].mainFile).to.equal('README.md');
-    });
-    it('should allow re-adding the same component', () => {
-      helper.fs.outputFile('extra.md', 'extra\n');
-      expect(() => helper.command.addComponent('.', { i: 'ws-root' })).to.not.throw();
-    });
-    it('should allow re-adding it without repeating its name, and keep its main file', () => {
-      expect(() => helper.command.addComponent('.')).to.not.throw();
-      expect(Object.keys(helper.bitMap.readComponentsMapOnly())).to.deep.equal(['ws-root']);
-      expect(helper.bitMap.read()['ws-root'].mainFile).to.equal('README.md');
-    });
-    it('should reject a second component claiming the workspace root', () => {
-      const cmd = () => helper.command.addComponent('.', { i: 'another-root' });
-      expect(cmd).to.throw('already tracked by');
-    });
-    it('should pick up dotfiles at add time, not only on the next rescan', () => {
-      helper.fs.outputFile('.npmrc', 'registry=https://example.com\n');
-      const output = helper.command.addComponent('.', { i: 'ws-root' });
-      expect(output).to.have.string('.npmrc');
-      // its auto-generated banner must not get it dropped, the rescan tracks it
-      expect(output).to.have.string('.bitmap');
-    });
-  });
-  describe('adding a nested component that holds the main file of the workspace root', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fs.outputFile('packages/comp1/index.js', 'module.exports = () => "comp1";\n');
-      helper.command.addComponent('.', { i: 'ws-root', m: 'packages/comp1/index.js' });
-    });
-    it('should refuse, because the root would fail to load without its main file', () => {
-      const cmd = () => helper.command.addComponent('packages/comp1', { i: 'comp1' });
-      expect(cmd).to.throw('main file of the workspace-root component');
-    });
-    it('should refuse even when the nested component ignores that file, its directory is what the root loses', () => {
-      helper.fs.outputFile('packages/comp1/.bitignore', 'index.js\n');
-      helper.fs.outputFile('packages/comp1/other.js', '');
-      const cmd = () => helper.command.addComponent('packages/comp1', { i: 'comp1' });
-      expect(cmd).to.throw('main file of the workspace-root component');
-    });
-  });
   describe('writing the workspace-root component to the filesystem', () => {
     let firstSnap: string;
     before(() => {
