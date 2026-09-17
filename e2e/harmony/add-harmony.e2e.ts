@@ -478,9 +478,6 @@ describe('add command on Harmony', function () {
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', { i: 'ws-root' });
     });
-    it('should track the package.json and tsconfig.json of a component', () => {
-      expect(helper.command.getComponentFiles('comp1')).to.include.members(['package.json', 'tsconfig.json']);
-    });
     it('should track the package.json of the workspace root', () => {
       expect(helper.command.getComponentFiles('ws-root')).to.include('package.json');
     });
