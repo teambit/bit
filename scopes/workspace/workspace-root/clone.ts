@@ -282,7 +282,11 @@ export async function cloneWorkspace(
  * `.bitmap` of the current schema has.
  */
 export function resolveComponentDir(workspacePath: string, entry: VersionedBitmapEntry): string {
-  const target = entry.rootDir ? path.resolve(workspacePath, entry.rootDir) : undefined;
+  const { rootDir } = entry;
+  // the absolute check goes before the resolve: an absolute path that happens to sit under this
+  // workspace resolves to an ordinary relative one and would pass every check below, though it is
+  // still a directory of the machine the root was snapped on rather than one of this workspace.
+  const target = rootDir && !path.isAbsolute(rootDir) ? path.resolve(workspacePath, rootDir) : undefined;
   const relative = target ? path.relative(workspacePath, target) : undefined;
   // a leading ".." is only a way out when it is the whole segment: a directory may be named "..cache"
   const climbsOut = relative === '..' || relative?.startsWith(`..${path.sep}`);

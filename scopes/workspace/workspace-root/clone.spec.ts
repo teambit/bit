@@ -36,6 +36,13 @@ describe('resolveComponentDir', () => {
       resolveComponentDir(workspacePath, { id: 'a', rootDir: path.resolve(os.tmpdir(), 'elsewhere') });
     expect(resolve).to.throw('not a directory inside the workspace');
   });
+  it('should refuse an absolute root-dir that points inside the workspace too', () => {
+    // it resolves to a directory of this workspace, so every check but the absolute one lets it
+    // through - and it is still the path of the machine the root was snapped on
+    const resolve = () =>
+      resolveComponentDir(workspacePath, { id: 'a', rootDir: path.join(workspacePath, 'comps', 'a') });
+    expect(resolve).to.throw('not a directory inside the workspace');
+  });
   it('should refuse the workspace root itself, only the root component owns it', () => {
     const resolve = () => resolveComponentDir(workspacePath, { id: 'a', rootDir: '.' });
     expect(resolve).to.throw('not a directory inside the workspace');
