@@ -345,7 +345,8 @@ function LaneCompareInline({
       componentId: searchParams.get('componentId') || undefined,
       file: searchParams.get('file') || undefined,
     },
-    loading: loadingLaneDiff,
+    // the context types this as optionally undefined; absent means "not loading"
+    loading: !!loadingLaneDiff,
     apply: useCallback((next) => {
       setSelectedIdState(next.componentId);
       setSelectedFileState(next.file);
