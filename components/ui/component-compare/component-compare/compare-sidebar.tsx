@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@teambit/design.elements.icon';
 import type { FileInfo } from './file-registry';
+import { usePersistedToggle } from './use-persisted-toggle';
 import styles from './compare-sidebar.module.scss';
 
 export type CompareSidebarItem = {
@@ -29,7 +30,17 @@ export type CompareSidebarProps = {
   loading?: boolean;
   className?: string;
   defaultExpandFiles?: boolean;
+  /**
+   * collapse the sidebar to a rail. Leave undefined to let the sidebar own the state and remember
+   * the reader's choice across visits; pass it to drive the collapse from outside.
+   */
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+  /** scopes the remembered collapse state, so distinct surfaces can keep separate preferences */
+  collapseStorageKey?: string;
 };
+
+const DEFAULT_COLLAPSE_STORAGE_KEY = 'bit.compare.sidebar.collapsed';
 
 export function CompareSidebar({
   groups,
@@ -39,10 +50,48 @@ export function CompareSidebar({
   loading,
   className,
   defaultExpandFiles,
+  collapsed,
+  onCollapsedChange,
+  collapseStorageKey = DEFAULT_COLLAPSE_STORAGE_KEY,
 }: CompareSidebarProps) {
+  const [remembered, remember, hydrated] = usePersistedToggle(collapseStorageKey, false);
+  // uncontrolled by default so every surface that renders the sidebar gets the memory for free
+  const isControlled = collapsed !== undefined;
+  const isCollapsed = isControlled ? collapsed : remembered;
+
+  const toggleCollapsed = () => {
+    const next = !isCollapsed;
+    if (!isControlled) remember(next);
+    onCollapsedChange?.(next);
+  };
+
+  const totalItems = groups.reduce((count, group) => count + group.items.length, 0);
+
   return (
-    <div className={`${styles.sidebar}${className ? ` ${className}` : ''}`}>
+    <div
+      className={compose(
+        styles.sidebar,
+        isCollapsed && styles.sidebarCollapsed,
+        // only animate once the remembered value has been applied, so a sidebar that was left
+        // collapsed does not visibly slide shut on every page load
+        hydrated && styles.animated,
+        className
+      )}
+      data-collapsed={isCollapsed || undefined}
+    >
       <div className={styles.sidebarHeader}>
+        <button
+          className={styles.collapseToggle}
+          onClick={toggleCollapsed}
+          aria-expanded={!isCollapsed}
+          aria-label={isCollapsed ? 'Expand components sidebar' : 'Collapse components sidebar'}
+          title={isCollapsed ? 'Expand components' : 'Collapse components'}
+        >
+          <Icon
+            of="fat-arrow-down"
+            className={compose(styles.chevron, isCollapsed ? styles.chevronRight : styles.chevronLeft)}
+          />
+        </button>
         <span className={styles.sidebarTitle}>Components</span>
         {selectedId && (
           <button className={styles.clearSelectionLink} onClick={() => onSelect('')}>
@@ -50,6 +99,18 @@ export function CompareSidebar({
           </button>
         )}
       </div>
+      {isCollapsed && (
+        <button
+          className={styles.collapsedRail}
+          onClick={toggleCollapsed}
+          tabIndex={-1}
+          aria-hidden
+          title={`Components${totalItems ? ` (${totalItems})` : ''}`}
+        >
+          <span className={styles.collapsedRailLabel}>Components{totalItems ? ` \u00b7 ${totalItems}` : ''}</span>
+        </button>
+      )}
+      {/* kept mounted while collapsed so per-component file trees keep their expanded state */}
       <div className={styles.sidebarContent}>
         {loading && (
           <div className={styles.sidebarLoading}>
@@ -204,6 +265,10 @@ function SidebarComponentItem({ item, isSelected, selectedFile, onSelect, defaul
       )}
     </div>
   );
+}
+
+function compose(...classes: Array<string | false | undefined>): string {
+  return classes.filter(Boolean).join(' ');
 }
 
 const STATUS_LABELS: Record<string, string> = {
