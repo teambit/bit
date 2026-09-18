@@ -224,6 +224,43 @@ describe('collectGarbageInWorkspace', () => {
     });
   });
 
+  describe('with an orphaned tag', () => {
+    /** a tag that reached this scope through another remote's cache, so it is not on main history */
+    const ORPHANED_HASH = 'c'.repeat(40);
+    let orphanedSource: Source;
+
+    beforeEach(async () => {
+      await markAsExported();
+      orphanedSource = Source.from(Buffer.from('the contents of an orphaned tag'));
+      const orphanedVersion = buildVersion(ORPHANED_HASH, orphanedSource, []);
+      const modelComponent = ModelComponent.from({
+        name: COMP_NAME,
+        scope: COMP_SCOPE,
+        lang: 'javascript',
+        deprecated: false,
+        bindingPrefix: '@bit',
+        versions: {
+          '0.0.1': Ref.from(VERSION_HASHES['0.0.1']),
+          '0.0.2': Ref.from(VERSION_HASHES['0.0.2']),
+          '0.0.3': Ref.from(VERSION_HASHES['0.0.3']),
+        },
+        orphanedVersions: { '0.0.9': Ref.from(ORPHANED_HASH) },
+        head: Ref.from(VERSION_HASHES['0.0.3']),
+      });
+      const objects = [modelComponent, orphanedVersion, orphanedSource];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+    });
+
+    it('should keep it, as the component still resolves the tag and the origin may not have it', async () => {
+      await runGc();
+      expect(await objectExists(Ref.from(ORPHANED_HASH))).to.be.true;
+      expect(await objectExists(orphanedSource.hash())).to.be.true;
+    });
+  });
+
   describe('with a component that was never exported', () => {
     it('should keep its entire history, as nothing can bring these snaps back', async () => {
       const result = await runGc();

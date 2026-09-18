@@ -139,6 +139,10 @@ ${list}`);
   components.forEach((component) => {
     addRoot(component.getHead());
     component.detachedHeads.getAllHeads().forEach(addRoot);
+    // an orphaned tag reached this scope through some other remote's cache rather than through the
+    // component's origin, which is the whole reason bit holds on to it locally. re-fetching it is
+    // not something we can count on, so it is treated like anything else that exists only here.
+    Object.values(component.orphanedVersions).forEach(addRoot);
   });
 
   // the version each workspace component is checked out at - `bit status` diffs the working
