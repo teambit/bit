@@ -73,6 +73,22 @@
           },
           "required": []
         },
+        "enableGlobalVirtualStore": {
+          "type": "boolean",
+          "description": "Place the virtual store in the global pnpm store and symlink node_modules into it, instead of keeping a project-local node_modules/.pnpm."
+        },
+        "packageExtensions": {
+          "type": "object",
+          "description": "Dependency groups to graft onto packages that under-declare them (pnpm's packageExtensions).",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "dependencies": { "type": "object", "additionalProperties": { "type": "string" } },
+              "optionalDependencies": { "type": "object", "additionalProperties": { "type": "string" } },
+              "peerDependencies": { "type": "object", "additionalProperties": { "type": "string" } }
+            }
+          }
+        },
         "packageManager": {
           "type": "string",
           "description": "The package manager to use (e.g., yarn, pnpm).",
