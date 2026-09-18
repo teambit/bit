@@ -30,39 +30,41 @@
 }
 
 .compareNavItem {
-  color: #fff !important;
-  border-right: 0.5px solid var(--surface-neutral-color, #121212);
+  // inherits the page theme; was pinned white for the always-dark diff.
+  color: var(--on-surface-color, #2b2b2b) !important;
+  border-right: 0.5px solid var(--border-medium-color, #ededed);
   // override the default menu item padding
   padding: 0px !important;
 
   &.first {
-    border-left: 0.5px solid var(--surface-neutral-color, #121212);
+    border-left: 0.5px solid var(--border-medium-color, #ededed);
   }
 
   &:hover:not(.activeNav) {
-    background-color: var(--surface-neutral-color, #121212) !important;
+    background-color: var(--surface-neutral-color, #fff) !important;
     > div {
-      background-color: var(--surface-neutral-color, #121212) !important;
+      background-color: var(--surface-neutral-color, #fff) !important;
     }
   }
 }
 
 .activeNav {
-  background-color: var(--surface-neutral-color, #121212);
+  background-color: var(--surface-neutral-color, #fff);
   border-bottom: 2px solid var(--primary-color, #6a57fd);
 
   &::after {
-    background-color: var(--surface-neutral-color, #121212) !important;
+    background-color: var(--surface-neutral-color, #fff) !important;
   }
 }
 
 .compareNav {
-  background-color: var(--on-surface-neutral-low-color, #282828);
+  // surface token, not the `on-surface` foreground (grey on a light page).
+  background-color: var(--surface-color, #fff);
   gap: 0px !important;
 }
 
 .compareSecondaryNav {
-  background: var(--on-surface-neutral-low-color, #282828) !important;
+  background: var(--surface-color, #fff) !important;
   overflow-y: auto;
   max-height: 300px;
 }
@@ -83,8 +85,8 @@
   z-index: $modal-z-index;
   top: 100%;
   right: 50%;
-  background: var(--on-surface-neutral-low-color, #282828) !important;
-  color: #fff;
+  background: var(--surface-color, #fff) !important;
+  color: var(--on-surface-color, #2b2b2b);
   min-width: 200px;
 }
 

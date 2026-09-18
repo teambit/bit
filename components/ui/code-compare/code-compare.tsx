@@ -11,8 +11,6 @@ import {
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
-import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
-import { DarkTheme } from '@teambit/design.themes.dark-theme';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { CodeCompareTree } from './code-compare-tree';
@@ -103,7 +101,14 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
 
   return (
-    <ThemeSwitcher themes={[DarkTheme]} className={classNames(styles.themeContainer, className)}>
+    // No theme override here: the diff must inherit the page's theme.
+    //
+    // This used to be `<ThemeSwitcher themes={[DarkTheme]}>`, from when Monaco rendered the diff and
+    // its editor was always dark. The shiki viewer paints every token with a sentinel that resolves
+    // to a Bit design-system CSS variable (`--syntax-*-color`), and both the base and dark themes
+    // define those — so forcing DarkTheme here pinned the diff dark on a light page and made it the
+    // only surface that ignored the user's theme.
+    <div className={classNames(styles.themeContainer, className)}>
       <SplitPane
         layout={sidebarOpenness}
         size={200}
@@ -124,8 +129,11 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
             }}
             role="button"
             tabIndex={0}
+            aria-label={isSidebarOpen ? 'Collapse file tree' : 'Expand file tree'}
+            // the icon is a remote SVG; passing it as a mask lets CSS paint it with a theme color
+            style={{ ['--code-compare-sidebar-icon' as string]: `url(${sidebarIconUrl})` } as React.CSSProperties}
           >
-            <img src={sidebarIconUrl} alt="sidebar-icon" />
+            <span className={styles.sidebarIcon} aria-hidden="true" />
           </div>
           <CodeCompareTree
             className={styles.codeCompareTree}
@@ -151,6 +159,6 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
           />
         </Pane>
       </SplitPane>
-    </ThemeSwitcher>
+    </div>
   );
 }
