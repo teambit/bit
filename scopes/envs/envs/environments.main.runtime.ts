@@ -121,12 +121,7 @@ export class EnvsMain {
    * Ids of envs (not neccesrraly loaded successfully)
    */
   public envIds = new Set<string>();
-  /**
-   * set inside a `skipNotLoadedWarnings` scope, where "env was not loaded" warnings are muted.
-   * execution-local rather than a plain field on purpose - component loads run concurrently (e.g.
-   * the graphql resolver fans ids out with Promise.all), so a shared flag would let one load mute
-   * an unrelated one and hide a genuinely missing env. see `skipNotLoadedWarnings` for why.
-   */
+  /** set inside a `skipNotLoadedWarnings` scope. see that method. */
   private notLoadedWarningsMuted = new AsyncLocalStorage<true>();
 
   static runtime = MainRuntime;
@@ -228,19 +223,18 @@ export class EnvsMain {
    *
    * this is a scope rather than a param because the warning is reached from many aspects that
    * calculate the env during the load slot (tester, docs, pkg, compositions, dev-files), so muting
-   * a single call site only moves the warning to the next one. the muting follows the async
-   * execution started by `fn` and nothing else, so concurrent loads keep reporting normally.
+   * a single call site only moves the warning to the next one. it is execution-local rather than a
+   * field because loads run concurrently (the graphql resolver fans ids out with Promise.all), and
+   * a shared flag would let one load mute an unrelated one and hide a genuinely missing env.
    */
   async skipNotLoadedWarnings<T>(fn: () => Promise<T>): Promise<T> {
-    // the result of `run` is deliberately not returned. older @types/node versions type it as
-    // `void`, which breaks the stricter type-check that runs when a component is built in a
-    // capsule ("error TS2322: Type 'void' is not assignable to type 'T'"). `run` calls the callback
-    // synchronously, so starting `fn` inside it is enough to put its whole async execution in scope.
-    return new Promise<T>((resolve, reject) => {
-      this.notLoadedWarningsMuted.run(true, () => {
-        fn().then(resolve, reject);
-      });
+    // the promise is created inside run() so the whole execution of `fn` is within the scope.
+    // (assigned via `let` because some @types/node versions type `run` as returning void)
+    let promise!: Promise<T>;
+    this.notLoadedWarningsMuted.run(true, () => {
+      promise = fn();
     });
+    return promise;
   }
 
   getFailedToLoadEnvs() {

@@ -36,11 +36,7 @@ describe('EnvsMain', function () {
   });
 
   describe('skipNotLoadedWarnings', () => {
-    // an env that is merely absent from the slot is not necessarily broken - it may simply not have
-    // been scheduled for loading, which is the case whenever only a subset of the workspace is
-    // loaded (e.g. "bit show <comp>" loads <comp>'s env, but not that env's own env). warning there
-    // is a false positive, so the loader mutes it for components it pulled in rather than was asked
-    // for. the env landing in "failed to load envs" is the observable side effect of the warning.
+    // the env landing in "failed to load envs" is the observable side effect of the warning.
     it('should not report the env as failed-to-load when muted', async () => {
       const envId = 'some-scope/envs/muted-env@1.0.0';
       const component = mockComponentWithUnregisteredEnv('some-scope/comps/muted-comp@1.0.0', envId);
@@ -57,21 +53,12 @@ describe('EnvsMain', function () {
       expect(envs.getFailedToLoadEnvs()).to.include(envId);
     });
 
-    // component loads run concurrently (the graphql resolver fans ids out with Promise.all), so the
-    // muting must follow the async execution of the wrapped callback and nothing else. a shared flag
-    // would let a muted load hide a genuinely missing env of a component loaded next to it.
     it('should not mute a calculation running outside the scope while a scope is open', async () => {
       const envId = 'some-scope/envs/concurrent-env@1.0.0';
       const component = mockComponentWithUnregisteredEnv('some-scope/comps/concurrent-comp@1.0.0', envId);
-      let closeScope = () => {};
-      const openScope = envs.skipNotLoadedWarnings(
-        () =>
-          new Promise<void>((resolve) => {
-            closeScope = resolve;
-          })
-      );
+      // the scope stays open until the next macrotask, so calculateEnv below runs while it's open
+      const openScope = envs.skipNotLoadedWarnings(() => new Promise<void>((resolve) => setImmediate(resolve)));
       envs.calculateEnv(component);
-      closeScope();
       await openScope;
       expect(envs.getFailedToLoadEnvs()).to.include(envId);
     });
@@ -79,15 +66,14 @@ describe('EnvsMain', function () {
     it('should stop muting once the scope ends, including when it throws', async () => {
       const envId = 'some-scope/envs/after-throw-env@1.0.0';
       const component = mockComponentWithUnregisteredEnv('some-scope/comps/after-throw-comp@1.0.0', envId);
-      let thrown: Error | undefined;
       try {
         await envs.skipNotLoadedWarnings(async () => {
           throw new Error('some error');
         });
+        expect.fail('should have thrown');
       } catch (err: any) {
-        thrown = err;
+        expect(err.message).to.equal('some error');
       }
-      expect(thrown?.message).to.equal('some error');
       envs.calculateEnv(component);
       expect(envs.getFailedToLoadEnvs()).to.include(envId);
     });
