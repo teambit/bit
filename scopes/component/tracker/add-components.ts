@@ -84,6 +84,11 @@ export type AddProps = {
   config?: Config;
   shouldHandleOutOfSync?: boolean;
   env?: string;
+  /**
+   * spells out the intent to track the workspace root itself. required for it and only for it, see
+   * AddComponents.throwForWorkspaceRootFlagMismatch.
+   */
+  root?: boolean;
 };
 
 export type AddContext = {
@@ -107,6 +112,7 @@ export default class AddComponents {
   defaultScope?: string; // helpful for out-of-sync
   config?: Config;
   shouldHandleOutOfSync?: boolean; // only bit-add (not bit-create/new) should handle out-of-sync scenario
+  root?: boolean;
   constructor(context: AddContext, addProps: AddProps) {
     this.workspace = context.workspace;
     this.consumer = context.workspace.consumer;
@@ -126,6 +132,37 @@ export default class AddComponents {
     this.defaultScope = addProps.defaultScope;
     this.config = addProps.config;
     this.shouldHandleOutOfSync = addProps.shouldHandleOutOfSync;
+    this.root = addProps.root;
+  }
+
+  /**
+   * tracking the workspace root turns the workspace itself into a component: it owns every file no
+   * other component claims, `.bitmap` included, and every other component becomes a member of it.
+   * "bit add ." is one keystroke away from "git add .", which means something else entirely, so the
+   * intent is spelled out rather than inferred from the path.
+   *
+   * only the workspace root needs the flag, and it is the only thing the flag does: "bit add ." from
+   * a sub-directory names that directory, not the root, and is tracked like any other path.
+   *
+   * a workspace that already has a root does not ask again. what the flag guards against is creating
+   * one by accident, and there is none to create here - the add either refreshes the root that exists
+   * or names a second owner for ".", which has its own message saying who holds it.
+   */
+  private throwForWorkspaceRootFlagMismatch(resolvedPaths: PathOsBased[]) {
+    const tracksRoot = resolvedPaths.some(
+      (onePath) =>
+        (pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(onePath)) || WORKSPACE_ROOT_DIR) ===
+        WORKSPACE_ROOT_DIR
+    );
+    if (tracksRoot && !this.root && !this.bitMap.getWorkspaceRootMap()) {
+      throw new BitError(`unable to track the workspace root without the --root flag.
+it makes the workspace itself a component - it owns every file no other component claims, .bitmap included, and every other component becomes a member of it.
+if that is what you want, run "bit add . --root". to track a component, pass its directory, e.g. "bit add my-component"`);
+    }
+    if (!tracksRoot && this.root) {
+      throw new BitError(`the --root flag tracks the workspace root, but none of the given paths is the workspace root.
+run "bit add . --root" from the workspace root, or drop the flag to track the given paths as ordinary components`);
+    }
   }
 
   async add(): Promise<AddActionResults> {
@@ -156,6 +193,7 @@ export default class AddComponents {
         throw new AddingIndividualFiles(compPath);
       }
     });
+    this.throwForWorkspaceRootFlagMismatch(Object.keys(componentPathsStats));
     if (Object.keys(componentPathsStats).length > 1 && this.id) {
       throw new BitError(
         `the --id flag (${this.id}) is used for a single component only, however, got ${this.componentPaths.length} paths`

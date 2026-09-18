@@ -15,6 +15,7 @@ type AddFlags = {
   scope?: string;
   env?: string;
   override: boolean;
+  root?: boolean;
 };
 
 type AddResults = {
@@ -41,6 +42,7 @@ export class AddCmd implements Command {
       `sets the component's scope. if not entered, the default-scope from workspace.jsonc will be used`,
     ],
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants if exists)"],
+    ['', 'root', 'track the workspace root itself as a component, which owns every file no other component claims'],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
@@ -90,7 +92,7 @@ export class AddCmd implements Command {
 
   async json(
     [paths = []]: [string[]],
-    { id, main, namespace, scope, env, override = false }: AddFlags
+    { id, main, namespace, scope, env, override = false, root = false }: AddFlags
   ): Promise<AddResults> {
     if (namespace && id) {
       throw new BitError(
@@ -109,6 +111,7 @@ export class AddCmd implements Command {
       defaultScope: scope,
       override,
       env,
+      root,
     });
     return {
       addedComponents: addedComponents.map((added) => ({
