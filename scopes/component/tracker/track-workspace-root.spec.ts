@@ -208,6 +208,39 @@ describe('tracking the workspace root', function () {
     });
   });
 
+  describe('giving the workspace root a main file inside a component nested in it', () => {
+    let tracked: Tracked;
+    before(async () => {
+      tracked = await setupWorkspace({
+        'index.js': 'module.exports = {};\n',
+        'packages/comp1/index.js': 'module.exports = () => "comp1";\n',
+      });
+      await tracked.tracker.addForCLI({
+        componentPaths: [inWs(tracked, 'packages/comp1')],
+        id: 'comp1',
+        override: false,
+      });
+    });
+    after(async () => {
+      await destroyWorkspace(tracked.workspaceData);
+    });
+    it('should refuse it, the scan of the root never yields a file of a component nested in it', async () => {
+      // the dir belongs to comp1, so the root's file-set excludes it. tracked anyway, the entry would
+      // survive until the next rescan dropped the file and the component failed to load without it
+      await expectToReject(
+        () =>
+          tracked.tracker.addForCLI({
+            componentPaths: [tracked.workspacePath],
+            id: 'ws-root',
+            main: inWs(tracked, 'packages/comp1/index.js'),
+            override: false,
+            root: true,
+          }),
+        'was excluded from file list'
+      );
+    });
+  });
+
   describe('the --root flag, which spells out the intent to track the workspace root', () => {
     let tracked: Tracked;
     // relative paths, as the command gets them: "." only means the workspace root when the cwd is it

@@ -742,13 +742,22 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     if (!visibleIds.length && !hiddenLegacyComponents.length) return null;
 
     this.logger.debug(`snapForMerge, visible: ${visibleIds.length}, hidden: ${hiddenLegacyComponents.length}`);
-    const visibleHarmony = visibleIds.length ? await this.loadComponentsForTagOrSnap(visibleIds) : [];
+    // a merge snap is a snap: a new or modified root joins it the way it joins tag and snap, so the
+    // members snapped here record the root version their files were merged with, rather than the one
+    // the root was last snapped at (see getWorkspaceRootToTagAlong). only the visible ids can take
+    // it - a hidden entry is scope-only, with no workspace state to snap the root against. the root
+    // was snapped as a result of the merge, so it is reported in that section like the rest.
+    const autoAddedWorkspaceRoot = await this.getWorkspaceRootToTagAlong(visibleIds);
+    const visibleIdsToSnap = autoAddedWorkspaceRoot
+      ? ComponentIdList.fromArray([...visibleIds, autoAddedWorkspaceRoot])
+      : visibleIds;
+    const visibleHarmony = visibleIdsToSnap.length ? await this.loadComponentsForTagOrSnap(visibleIdsToSnap) : [];
     const hiddenHarmony = hiddenLegacyComponents.length ? await this.scope.getManyByLegacy(hiddenLegacyComponents) : [];
     // issue checks are workspace-source-tree concerns — hidden entries are scope-only
     if (visibleHarmony.length) await this.throwForVariousIssues(visibleHarmony);
 
     const hiddenIds = ComponentIdList.fromArray(hiddenLegacyComponents.map((c) => c.componentId));
-    const allIds = ComponentIdList.uniqFromArray([...visibleIds, ...hiddenIds]);
+    const allIds = ComponentIdList.uniqFromArray([...visibleIdsToSnap, ...hiddenIds]);
     const allComponents = [...visibleHarmony, ...hiddenHarmony];
 
     const makeVersionParams = {
@@ -762,6 +771,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       isSnap: true,
       packageManagerConfigRootDir: this.workspace.path,
       loose,
+      autoAddedWorkspaceRoot,
     };
 
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await this.makeVersion(

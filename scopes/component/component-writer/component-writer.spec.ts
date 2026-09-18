@@ -140,10 +140,21 @@ describe('the workspace-root import preflight checks', () => {
     expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']), true)).to.throw('is a symbolic link');
   });
 
-  it('should leave it alone when no config file is written', async () => {
+  it('should refuse it even when the caller asked for no config file, the writer turns it on itself', async () => {
+    // a config file already at the rootDir makes the writer write one whatever the caller passed
+    // (see populateComponentsFilesToWrite), and a symlink pointing at an existing file is read as
+    // one. so the flag does not settle whether a write lands here.
     const target = path.join(workspacePath, 'elsewhere');
     await fs.ensureDir(target);
     await fs.symlink(target, path.join(workspacePath, 'component.json'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']), false)).to.throw('is a symbolic link');
+  });
+
+  it('should leave a broken symlink alone, the writer does not write through it either', async () => {
+    // it resolves to nothing, so the writer does not read it as an existing config file and no
+    // config is written. failing the whole import over it would be for nothing.
+    await fs.symlink(path.join(workspacePath, 'missing'), path.join(workspacePath, 'component.json'));
     const main = runtimeFor([], workspacePath);
     expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']), false)).to.not.throw();
   });

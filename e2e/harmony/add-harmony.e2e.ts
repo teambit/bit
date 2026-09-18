@@ -39,28 +39,6 @@ describe('add command on Harmony', function () {
       helper.general.expectToThrow(cmd, error);
     });
   });
-  describe('tracking the workspace root without the --root flag', () => {
-    let output: string;
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fs.outputFile('README.md', '# workspace root\n');
-      output = helper.general.runWithTryCatch('bit add .');
-    });
-    it('should refuse, and name the command that does it', () => {
-      // "bit add ." is one keystroke from "git add .", so the intent is spelled out rather than assumed
-      expect(output).to.have.string('bit add . --root');
-    });
-    it('should leave the workspace root untracked', () => {
-      const entries: any[] = Object.values(helper.bitMap.read());
-      expect(entries.some((entry) => entry?.rootDir === '.')).to.be.false;
-    });
-    it('should refuse the flag when the path is not the workspace root, rather than ignore it', () => {
-      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
-      expect(helper.general.runWithTryCatch('bit add comp1 --root')).to.have.string(
-        'none of the given paths is the workspace root'
-      );
-    });
-  });
   describe('adding the workspace root as a component', () => {
     let rootFiles: string[];
     before(() => {

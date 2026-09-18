@@ -163,11 +163,16 @@ export async function filterByOwnIgnoreFile(
 }
 
 /**
- * the paths a scan never yields - bit's own dirs, git's, a nested workspace map - applied to
- * workspace-relative paths a caller resolved itself, so what it tracks is what the next rescan keeps.
+ * the paths a scan never yields - bit's own dirs, git's, a nested workspace map, and the root-dirs
+ * given in `excludeDirs` - applied to workspace-relative paths a caller resolved itself, so what it
+ * tracks is what the next rescan keeps.
  */
-export function filterByScanIgnorePatterns(dir: PathLinux, workspaceRelativePaths: PathLinux[]): PathLinux[] {
-  return ignore().add(getScanIgnorePatterns(dir)).filter(workspaceRelativePaths);
+export function filterByScanIgnorePatterns(
+  dir: PathLinux,
+  workspaceRelativePaths: PathLinux[],
+  excludeDirs: PathLinux[] = []
+): PathLinux[] {
+  return ignore().add(getScanIgnorePatterns(dir, excludeDirs)).filter(workspaceRelativePaths);
 }
 
 async function getNestedIgnorePatterns(

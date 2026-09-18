@@ -507,5 +507,14 @@ ${JSON.stringify(
       expect(filtered).to.include('docs/sub/keep.log');
       expect(filtered).to.not.include('docs/a.log');
     });
+    it('should keep applying the workspace rules once a nested ignore file joins them', async () => {
+      // the two are evaluated as one list, so the workspace's own rules have to survive being
+      // combined - passing an empty matcher here would let this pass without them
+      const workspaceRules = ignore().add(['*.secret']);
+      const withSecret = [...paths, 'docs/token.secret', 'docs/sub/keep.log'];
+      const filtered = await filterByIgnoreFiles(WORKSPACE_ROOT_DIR, tmpDir, workspaceRules, withSecret);
+      expect(filtered).to.not.include('docs/token.secret');
+      expect(filtered).to.include('docs/sub/keep.log');
+    });
   });
 });

@@ -396,8 +396,14 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
     const pathsInTheWay = new Set<string>();
     const landing = this.filesThatWouldLand(component).map((file) => pathNormalizeToLinux(file.relative));
     // the config file is generated rather than versioned, so it is not among the component's files -
-    // it still lands at the root, and this rule is about where a write goes
-    if (writeConfig) landing.push(COMPONENT_CONFIG_FILE_NAME);
+    // it still lands at the root, and this rule is about where a write goes. the flag the caller
+    // passed does not settle whether it lands: the writer turns config writing on by itself when a
+    // config file is already at the rootDir (see populateComponentsFilesToWrite), which a symlink
+    // pointing at an existing file reads as. it is looked up the same way, so a broken one - which
+    // the writer would not write through either - does not fail the write for nothing.
+    if (writeConfig || fs.existsSync(this.consumer.toAbsolutePath(COMPONENT_CONFIG_FILE_NAME))) {
+      landing.push(COMPONENT_CONFIG_FILE_NAME);
+    }
     landing.forEach((relativePath) => {
       const segments = relativePath.split('/');
       segments.forEach((_, index) => pathsInTheWay.add(segments.slice(0, index + 1).join('/')));

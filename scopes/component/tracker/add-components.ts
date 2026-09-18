@@ -656,7 +656,18 @@ you can add the directory these files are located at and it'll change the root d
     // as generated (tsconfig.json and friends) reach it that way, as does a component ignore file.
     if (resolvedMainFile) {
       const mainNormalized = pathNormalizeToLinux(resolvedMainFile);
-      if (matchesNotIgnored.includes(mainNormalized) && !isTrackable(mainNormalized)) {
+      // it is in the file-set only if it was found on disk. a missing one is reported further down,
+      // where the error says so rather than blaming an ignore rule.
+      const inFileSet = filteredMatchedFiles.some((file) => file.relativePath === mainNormalized);
+      // some paths the scan never yields at all - bit's own dirs, a nested workspace map, the
+      // root-dir of a component nested in this one - so they never reach `matches` and the ignore
+      // rules below have nothing to compare them against. either way an explicit main file is put
+      // into the file-set without going through the scan, and the next rescan drops it again: the
+      // component then fails to load, saying the main file was removed.
+      const excludedFromScan = !filterByScanIgnorePatterns(relativeComponentPath, [mainNormalized], nestedRootDirs)
+        .length;
+      const excludedByIgnoreRules = matchesNotIgnored.includes(mainNormalized) && !isTrackable(mainNormalized);
+      if ((inFileSet && excludedFromScan) || excludedByIgnoreRules) {
         throw new ExcludedMainFile(relativeToComponent(mainNormalized));
       }
     }
