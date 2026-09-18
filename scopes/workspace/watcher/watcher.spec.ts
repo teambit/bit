@@ -17,10 +17,4 @@ describe('watchIgnorePatterns', () => {
   it('should always ignore node_modules and the local scope', () => {
     expect(watchIgnorePatterns('.bit', true)).to.include.members(['**/node_modules/**', '**/.bit/**']);
   });
-  it('should keep ignoring the never-tracked files when every file is tracked', () => {
-    // trackAllFiles takes back the files bit generates, not the ones no scan ever yields. a
-    // workspace-root component owns the whole tree, so a .env save would otherwise be reported as a
-    // change to a component that cannot list it
-    expect(watchIgnorePatterns('.bit', true)).to.include.members(['**/.env', '**/.DS_Store']);
-  });
 });

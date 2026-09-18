@@ -3,13 +3,7 @@ import fs from 'fs-extra';
 import { dirname, basename, join, relative } from 'path';
 import { compact, difference, partition } from 'lodash';
 import type { ComponentID, ComponentIdList } from '@teambit/component-id';
-import {
-  ALWAYS_IGNORE_LIST,
-  BIT_GENERATED_IGNORE_LIST,
-  BIT_MAP,
-  IGNORE_ROOT_ONLY_LIST,
-  WORKSPACE_JSONC,
-} from '@teambit/legacy.constants';
+import { BIT_GENERATED_IGNORE_LIST, BIT_MAP, IGNORE_ROOT_ONLY_LIST, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
@@ -1157,10 +1151,6 @@ export class Watcher {
  * - editing e.g. `packages/comp/tsconfig.json` still reaches the watcher and is then found to be
  * outside the component's file-set. covering every component root needs these patterns rebuilt
  * whenever a component is added or moved, which the watcher does not do today.
- *
- * the never-tracked paths (secrets, os artifacts, installed packages) are ignored whatever the flag
- * says. trackAllFiles moves the generated files back into the file-set, and those are never in it -
- * no scan yields them, so an edit of one has no component to belong to either way.
  */
 export function watchIgnorePatterns(relScopePath: string, trackAllFiles?: boolean): string[] {
   const generated = trackAllFiles
@@ -1169,5 +1159,5 @@ export function watchIgnorePatterns(relScopePath: string, trackAllFiles?: boolea
         ...BIT_GENERATED_IGNORE_LIST.map((pattern) => (pattern.includes('/') ? pattern : `**/${pattern}`)),
         ...IGNORE_ROOT_ONLY_LIST,
       ];
-  return [...ALWAYS_IGNORE_LIST, ...generated, `**/${relScopePath}/**`];
+  return ['**/node_modules/**', ...generated, `**/${relScopePath}/**`];
 }
