@@ -597,6 +597,10 @@ describe('add command on Harmony', function () {
           helper.scopes.e2eDir
         );
       });
+      after(() => {
+        // it is a workspace of its own, made outside the helper, so it is not in what the helper clears
+        fs.removeSync(clonePath);
+      });
       it('should write the root files of the version asked for, not of its head on the lane', () => {
         expect(rootMainHead).to.not.equal(rootLaneHead);
         expect(helper.bitMap.read(path.join(clonePath, '.bitmap'))['ws-root'].version).to.equal(rootMainHead);

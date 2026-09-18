@@ -8,6 +8,7 @@ import {
   resolveClonePath,
   resolveComponentDir,
   resolveThroughExistingAncestors,
+  throwForOverlappingDirs,
   topmostAbsentDir,
 } from './clone';
 import type { CloneResult } from './clone';
@@ -62,6 +63,17 @@ describe('resolveComponentDir', () => {
   });
   it('should refuse an entry without a root-dir rather than fail on it later', () => {
     const resolve = () => resolveComponentDir(workspacePath, { id: 'a' });
+    expect(resolve).to.throw('not a directory inside the workspace');
+  });
+  it('should refuse a directory bit or git keeps for itself, the map came from a remote', () => {
+    // .bit holds the objects this very clone is being read from
+    ['.bit/evil', '.git/hooks', 'node_modules/evil', '.bitTmp/x'].forEach((rootDir) => {
+      const resolve = () => resolveComponentDir(workspacePath, { id: 'a', rootDir });
+      expect(resolve, rootDir).to.throw('not a directory inside the workspace');
+    });
+  });
+  it('should refuse one of them at any depth, not only at the workspace root', () => {
+    const resolve = () => resolveComponentDir(workspacePath, { id: 'a', rootDir: 'packages/node_modules/a' });
     expect(resolve).to.throw('not a directory inside the workspace');
   });
   it('should accept a directory whose name starts with dots, it is not a way out', () => {
@@ -217,5 +229,25 @@ describe('formatCloneResult', () => {
   it('should leave the section out when the root got everything it lists', () => {
     const output = formatCloneResult(resultWith([]), 'my-root');
     expect(output).to.not.have.string('not on their remote');
+  });
+});
+
+describe('throwForOverlappingDirs', () => {
+  const ws = path.resolve(os.tmpdir(), 'ws');
+  it('should accept members in directories of their own, the ordinary case', () => {
+    const dirs = { a: path.join(ws, 'comps/a'), b: path.join(ws, 'comps/b') };
+    expect(() => throwForOverlappingDirs(dirs)).to.not.throw();
+  });
+  it('should refuse two members sharing a directory, the later one would land on the earlier', () => {
+    const dirs = { a: path.join(ws, 'comps/a'), b: path.join(ws, 'comps/a') };
+    expect(() => throwForOverlappingDirs(dirs)).to.throw('overlaps the directory');
+  });
+  it('should refuse a member inside another member, whatever the depth', () => {
+    const dirs = { a: path.join(ws, 'comps/a'), b: path.join(ws, 'comps/a/src/b') };
+    expect(() => throwForOverlappingDirs(dirs)).to.throw('overlaps the directory');
+  });
+  it('should not read a shared prefix as containment', () => {
+    const dirs = { a: path.join(ws, 'comps/a'), b: path.join(ws, 'comps/a-b') };
+    expect(() => throwForOverlappingDirs(dirs)).to.not.throw();
   });
 });

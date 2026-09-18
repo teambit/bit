@@ -12,6 +12,7 @@ import { InstallAspect } from '@teambit/install';
 import { LaneId } from '@teambit/lane-id';
 import type { VersionedBitmapEntry } from '@teambit/legacy.bit-map';
 import { isWorkspaceMapFile, readVersionedBitmapEntries, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
+import { BIT_HIDDEN_DIR, BIT_WORKSPACE_TMP_DIRNAME, DOT_GIT_DIR } from '@teambit/legacy.constants';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
@@ -184,6 +185,7 @@ class WorkspaceCloner {
       if (entry.rootDir === WORKSPACE_ROOT_DIR) return;
       writeToPathPerId[entry.id] = resolveComponentDir(this.workspacePath, entry);
     });
+    throwForOverlappingDirs(writeToPathPerId);
     const ids = Object.keys(writeToPathPerId);
     if (!ids.length) return { components: [], missing: [] };
     const { importedIds, missingIds } = await this.importer.import({
@@ -280,10 +282,19 @@ export async function cloneWorkspace(
 }
 
 /**
+ * the directories a component is never written into, at any depth: bit's own object store and temp
+ * dir, git's, and the installed packages. they are the machinery of the workspace being made rather
+ * than part of it, and the scan that builds a component's file-set skips them for the same reason
+ * (see SCAN_IGNORE_LIST). a map that lists a member in one of them writes into the workings of the
+ * clone - `.bit` holds the objects the clone is being read from.
+ */
+const RESERVED_DIRS = [BIT_HIDDEN_DIR, DOT_GIT_DIR, BIT_WORKSPACE_TMP_DIRNAME, 'node_modules'];
+
+/**
  * the directory of a component the root lists, inside the workspace. the list comes from a remote,
  * so a root-dir that escapes the workspace - "../x", an absolute path - is refused, and so are the
- * workspace root itself, which only the root component owns, and a missing root-dir, which no
- * `.bitmap` of the current schema has.
+ * workspace root itself, which only the root component owns, a directory bit or git keeps for
+ * itself, and a missing root-dir, which no `.bitmap` of the current schema has.
  */
 export function resolveComponentDir(workspacePath: string, entry: VersionedBitmapEntry): string {
   const { rootDir } = entry;
@@ -298,12 +309,41 @@ export function resolveComponentDir(workspacePath: string, entry: VersionedBitma
   const relative = target ? path.relative(workspacePath, target) : undefined;
   // a leading ".." is only a way out when it is the whole segment: a directory may be named "..cache"
   const climbsOut = relative === '..' || relative?.startsWith(`..${path.sep}`);
-  if (!target || !relative || climbsOut || path.isAbsolute(relative)) {
+  const isReserved = relative?.split(path.sep).some((segment) => RESERVED_DIRS.includes(segment));
+  if (!target || !relative || climbsOut || isReserved || path.isAbsolute(relative)) {
     throw new BitError(
       `unable to clone, the root component lists "${entry.id}" at "${entry.rootDir}", which is not a directory inside the workspace`
     );
   }
   return target;
+}
+
+/**
+ * two members the root lists may not share a directory, nor sit one inside another. a `.bitmap` bit
+ * wrote holds neither - it refuses a duplicate root-dir, and a component under another component's
+ * directory - but this one came from a remote. left to the writer, a collision is relocated and then
+ * moved back to the path each component was asked for, so the later one lands on the earlier one's
+ * files and the clone comes out missing a component it reported as written.
+ */
+export function throwForOverlappingDirs(dirPerId: Record<string, string>): void {
+  const idByDir = new Map<string, string>();
+  const refuse = (id: string, otherId: string, dir: string) => {
+    throw new BitError(
+      `unable to clone, the root component lists "${id}" at "${dir}", which overlaps the directory it lists "${otherId}" at`
+    );
+  };
+  Object.entries(dirPerId).forEach(([id, dir]) => {
+    const taken = idByDir.get(dir);
+    if (taken) refuse(id, taken, dir);
+    idByDir.set(dir, id);
+  });
+  Object.entries(dirPerId).forEach(([id, dir]) => {
+    // every level above it, so a component nested any number of levels inside another is caught
+    for (let parent = path.dirname(dir); parent !== path.dirname(parent); parent = path.dirname(parent)) {
+      const owner = idByDir.get(parent);
+      if (owner) refuse(id, owner, dir);
+    }
+  });
 }
 
 /**
