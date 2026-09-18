@@ -32,6 +32,7 @@ import { ApiDiffLaneView } from '@teambit/semantics.ui.api-diff-view';
 import type { ComponentDiffEntry, ApiDiffInsight, ApiEntry } from '@teambit/semantics.ui.api-diff-view';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import type { LaneCompareContextModel } from './lane-compare.context';
+import { useUrlSelection } from './use-url-selection';
 import { useLaneCompareContext } from './lane-compare.context';
 import { LaneCompareProvider } from './lane-compare.provider';
 import { BaseSourceIndicator } from './base-source-indicator';
@@ -90,51 +91,71 @@ function scrollInPane(pane: HTMLDivElement, el: Element) {
   requestAnimationFrame(settle);
 }
 
-function waitForElementInPane(pane: HTMLDivElement, selector: string, timeoutMs = 5000): Promise<Element | null> {
+function waitForElementInPane(
+  pane: HTMLDivElement,
+  selector: string,
+  signal?: AbortSignal,
+  timeoutMs = 5000
+): Promise<Element | null> {
   const existing = pane.querySelector(selector);
   if (existing) return Promise.resolve(existing);
+  if (signal?.aborted) return Promise.resolve(null);
 
   return new Promise((resolve) => {
-    const observer = new MutationObserver(() => {
+    let observer: MutationObserver | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const finish = (el: Element | null) => {
+      observer?.disconnect();
+      if (timer) clearTimeout(timer);
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      signal?.removeEventListener('abort', onAbort);
+      resolve(el);
+    };
+    const onAbort = () => finish(null);
+
+    observer = new MutationObserver(() => {
       const el = pane.querySelector(selector);
-      if (el) {
-        observer.disconnect();
-        resolve(el);
-      }
+      if (el) finish(el);
     });
+    timer = setTimeout(() => finish(null), timeoutMs);
     observer.observe(pane, { childList: true, subtree: true });
-    setTimeout(() => {
-      observer.disconnect();
-      resolve(null);
-    }, timeoutMs);
+    // aborting tears the observer down rather than leaving it live for the full timeout — a
+    // superseded wait that keeps watching would scroll the pane back when its anchor mounts.
+    signal?.addEventListener('abort', onAbort, { once: true });
   });
 }
 
-function scrollToElement(pane: HTMLDivElement | null, id: string, fileName?: string) {
-  if (!pane) return;
+/** returns false when there is no pane to scroll, so the caller can retry once there is. */
+function scrollToElement(pane: HTMLDivElement | null, id: string, fileName?: string, signal?: AbortSignal): boolean {
+  if (!pane) return false;
+  const live = (el: Element | null): el is Element => !!el && !signal?.aborted;
 
   if (!fileName) {
-    waitForElementInPane(pane, `[data-component-id="${CSS.escape(id)}"]`).then((el) => {
-      if (el) scrollInPane(pane, el);
+    waitForElementInPane(pane, `[data-component-id="${CSS.escape(id)}"]`, signal).then((el) => {
+      if (live(el)) scrollInPane(pane, el);
     });
-    return;
+    return true;
   }
 
   const fileSelector = `[data-file-id="${CSS.escape(id)}:${CSS.escape(fileName)}"]`;
   const existingFile = pane.querySelector(fileSelector);
   if (existingFile) {
-    requestAnimationFrame(() => scrollInPane(pane, existingFile));
-    return;
+    requestAnimationFrame(() => {
+      if (live(existingFile)) scrollInPane(pane, existingFile);
+    });
+    return true;
   }
 
   // File not rendered yet — scroll to component first to trigger lazy loading, then wait for the file
   const compEl = pane.querySelector(`[data-component-id="${CSS.escape(id)}"]`);
-  if (compEl) {
+  if (live(compEl)) {
     scrollInPane(pane, compEl);
   }
-  waitForElementInPane(pane, fileSelector).then((el) => {
-    if (el) scrollInPane(pane, el);
+  waitForElementInPane(pane, fileSelector, signal).then((el) => {
+    if (live(el)) scrollInPane(pane, el);
   });
+  return true;
 }
 
 const ACCENT_COLORS: Record<string, string> = {
@@ -316,42 +337,24 @@ function LaneCompareInline({
     [syncUrl]
   );
 
-  // Adopt a selection driven from outside. lane-compare writes its own selection with
-  // `history.replaceState`, which react-router does not observe — so a *change* in these params can
-  // only have come from a real navigation: a host linking to one component, a deep link into a
-  // discussion attached to one. Before this, such a link did nothing once the view was mounted.
-  const urlComponentId = searchParams.get('componentId') || undefined;
-  const urlFile = searchParams.get('file') || undefined;
-  const lastUrlSelection = useRef(`${urlComponentId ?? ''}|${urlFile ?? ''}`);
-  const pendingScroll = useRef<{ id: string; file?: string } | undefined>(undefined);
-  useEffect(() => {
-    const key = `${urlComponentId ?? ''}|${urlFile ?? ''}`;
-    // seeded with the mount-time value, so this skips the first run and leaves the initial scroll
-    // below to handle page load.
-    if (key === lastUrlSelection.current) return;
-    lastUrlSelection.current = key;
-    setSelectedIdState(urlComponentId);
-    setSelectedFileState(urlFile);
-    // recorded rather than scrolled to directly: a navigation can land mid-reload, when the pane is
-    // replaced by the skeleton and there is nothing to scroll. the effect below picks it up once the
-    // pane is back.
-    if (urlComponentId) pendingScroll.current = { id: urlComponentId, file: urlFile };
-  }, [urlComponentId, urlFile]);
-
-  useEffect(() => {
-    const pending = pendingScroll.current;
-    if (!pending || loadingLaneDiff || !diffPaneRef.current) return;
-    pendingScroll.current = undefined;
-    scrollToElement(diffPaneRef.current, pending.id, pending.file);
-  }, [loadingLaneDiff, urlComponentId, urlFile]);
-
-  // Scroll to selected component on initial page load from URL
-  const initialScrollDone = useRef(false);
-  useEffect(() => {
-    if (initialScrollDone.current || !selectedId || loadingLaneDiff) return;
-    initialScrollDone.current = true;
-    scrollToElement(diffPaneRef.current, selectedId, selectedFile);
-  }, [selectedId, selectedFile, loadingLaneDiff]);
+  // Both the mount-time selection (a deep link, a reload) and one that arrives later (a host linking
+  // to a component, a link into a discussion attached to one) are handled by this one hook — see
+  // `use-url-selection` for why they cannot be two separate effects.
+  useUrlSelection({
+    selection: {
+      componentId: searchParams.get('componentId') || undefined,
+      file: searchParams.get('file') || undefined,
+    },
+    loading: loadingLaneDiff,
+    apply: useCallback((next) => {
+      setSelectedIdState(next.componentId);
+      setSelectedFileState(next.file);
+    }, []),
+    scrollTo: useCallback(
+      (target, signal) => scrollToElement(diffPaneRef.current, target.componentId, target.file, signal),
+      []
+    ),
+  });
 
   // Build component list
   const allComponents = useMemo(
