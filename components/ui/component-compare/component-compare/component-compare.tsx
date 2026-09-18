@@ -560,6 +560,25 @@ export type InlineComponentCompareProps = {
    * defeats React.memo and reintroduces the re-render storm this whole design avoids.
    */
   dataAttributes?: Record<string, string>;
+  /**
+   * Lets the host put its own controls in this component's header — a review checkbox, a link to a
+   * discussion, anything that belongs to one component rather than to the compare view as a whole.
+   *
+   * It is a function, not a node, and it MUST be referentially stable (module scope, or `useCallback`
+   * with stable deps). A fresh node per parent render would defeat the `React.memo` below and bring
+   * back the re-render storm that the mounted-panels design exists to avoid — the function is called
+   * during this panel's own render, so a stable reference still produces up-to-date controls.
+   */
+  renderActions?: (context: ComponentActionsContext) => ReactNode;
+};
+
+/** identifies the component whose header is asking the host for controls. */
+export type ComponentActionsContext = {
+  name: string;
+  /** compare-side id without version — the stable identity of the row */
+  componentId: string;
+  baseId?: string;
+  compareId: string;
 };
 
 /**
@@ -620,6 +639,7 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
       baseOverride,
       compareOverride,
       dataAttributes,
+      renderActions,
     },
     ref
   ) {
@@ -677,6 +697,7 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
           baseUrl={baseUrl}
           compareUrl={compareUrl}
           changeTags={changeTags}
+          actions={renderActions?.({ name, componentId: compareId.split('@')[0], baseId, compareId }) || undefined}
         />
 
         {!baseId && !!compareId && <NewComponentFileRegistrar compareId={compareId} />}
@@ -915,6 +936,8 @@ export type ComponentCompareHeaderProps = {
   baseUrl?: string;
   compareUrl?: string;
   changeTags?: Array<{ label: string; color: string }>;
+  /** host-contributed controls for this component, rendered at the trailing edge of the header */
+  actions?: ReactNode;
 };
 
 /**
@@ -946,6 +969,7 @@ export function ComponentCompareHeader({
   baseUrl,
   compareUrl,
   changeTags,
+  actions,
 }: ComponentCompareHeaderProps) {
   return (
     <div className={styles.header}>
@@ -987,6 +1011,7 @@ export function ComponentCompareHeader({
               <span className={styles.versionHash}>{compareVersion}</span>
             ))}
         </div>
+        {actions && <div className={styles.headerActions}>{actions}</div>}
       </div>
     </div>
   );

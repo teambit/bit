@@ -24,6 +24,7 @@ import type {
   CompareGroupByOption,
   CompareSidebarGroup,
   ComponentComparePair,
+  ComponentActionsContext,
 } from '@teambit/component.ui.component-compare.component-compare';
 import { InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
@@ -56,6 +57,15 @@ export type LaneCompareProps = {
   envIcons?: Map<string, string>;
   /** slot-contributed API diff insight renderers (from componentCompareUI.registerApiDiffInsight) */
   apiDiffInsights?: ApiDiffInsight[];
+  /**
+   * Lets the host add its own per-component controls to each component's header — this is how a host
+   * with review affordances (bit.cloud's change-request view) attaches them to a component without
+   * lane-compare knowing anything about reviews.
+   *
+   * Must be referentially stable across renders; see `InlineComponentCompareProps['renderActions']`
+   * for why.
+   */
+  renderComponentActions?: (context: ComponentActionsContext) => React.ReactNode;
 } & HTMLAttributes<HTMLDivElement>;
 
 type ViewMode = 'code' | 'preview' | 'docs' | 'dependencies' | 'tests' | 'config' | 'api';
@@ -203,6 +213,7 @@ function LaneCompareInline({
   groupBy: _groupByProp,
   envIcons,
   apiDiffInsights,
+  renderComponentActions,
   ...rest
 }: LaneCompareProps) {
   const { loadingLaneDiff, componentsToDiff, laneComponentDiffByCompId } =
@@ -307,6 +318,24 @@ function LaneCompareInline({
     },
     [syncUrl]
   );
+
+  // Adopt a selection driven from outside. lane-compare writes its own selection with
+  // `history.replaceState`, which react-router does not observe — so a *change* in these params can
+  // only have come from a real navigation: a host linking to one component, a deep link into a
+  // discussion attached to one. Before this, such a link did nothing once the view was mounted.
+  const urlComponentId = searchParams.get('componentId') || undefined;
+  const urlFile = searchParams.get('file') || undefined;
+  const lastUrlSelection = useRef(`${urlComponentId ?? ''}|${urlFile ?? ''}`);
+  useEffect(() => {
+    const key = `${urlComponentId ?? ''}|${urlFile ?? ''}`;
+    // seeded with the mount-time value, so this skips the first run and leaves the initial scroll
+    // below to handle page load (it waits for the diff to finish loading; this does not).
+    if (key === lastUrlSelection.current) return;
+    lastUrlSelection.current = key;
+    setSelectedIdState(urlComponentId);
+    setSelectedFileState(urlFile);
+    if (urlComponentId) scrollToElement(diffPaneRef.current, urlComponentId, urlFile);
+  }, [urlComponentId, urlFile]);
 
   // Scroll to selected component on initial page load from URL
   const initialScrollDone = useRef(false);
@@ -766,6 +795,7 @@ function LaneCompareInline({
                           accentColor={(c.changeType && ACCENT_COLORS[c.changeType]) || undefined}
                           host={host}
                           dataAttributes={componentDataAttrs.get(c.idStr)}
+                          renderActions={renderComponentActions}
                         />
                       ))}
                     </div>
