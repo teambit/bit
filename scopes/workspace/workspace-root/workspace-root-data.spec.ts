@@ -4,8 +4,6 @@ import { BitMap } from '@teambit/legacy.bit-map';
 import { Extensions } from '@teambit/legacy.constants';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import {
-  clearWorkspaceRoot,
-  clearWorkspaceRootPointer,
   findWorkspaceRootMap,
   isWorkspaceRootComponent,
   readWorkspaceRoot,
@@ -82,49 +80,15 @@ describe('workspace-root data', () => {
     it('should return undefined for a component with no pointer', () => {
       expect(readWorkspaceRoot(ExtensionDataList.fromArray([]))).to.be.undefined;
     });
-  });
-
-  describe('clearWorkspaceRoot', () => {
-    it('should drop the root a previous workspace recorded', () => {
-      // the data travels with the component, so a snap in a workspace that has no root of its own
-      // would otherwise keep naming the one it came from
-      const extensions = ExtensionDataList.fromArray([]);
-      writeWorkspaceRoot(extensions, rootId);
-      clearWorkspaceRoot(extensions);
-      expect(readWorkspaceRoot(extensions)).to.be.undefined;
-    });
-    it('should drop a stale isRoot from a component that is no longer the root', () => {
+    it('should replace the data rather than merge into it, so a former root is not both', () => {
+      // a root moved out of "." into a directory of its own becomes an ordinary member. merging would
+      // leave the isRoot marker behind and the version would claim both roles at once
       const extensions = ExtensionDataList.fromArray([
         new ExtensionDataEntry(undefined, undefined, WorkspaceRootAspect.id, undefined, { isRoot: true }),
       ]);
-      clearWorkspaceRoot(extensions);
+      writeWorkspaceRoot(extensions, rootId);
       expect(isWorkspaceRootComponent(extensions)).to.be.false;
-    });
-    it('should do nothing to a component that carries no data of this aspect', () => {
-      const extensions = ExtensionDataList.fromArray([]);
-      clearWorkspaceRoot(extensions);
-      expect(extensions).to.have.lengthOf(0);
-    });
-  });
-
-  describe('clearWorkspaceRootPointer', () => {
-    it('should drop the root a component was a member of, and keep it marked as a root itself', () => {
-      // a member promoted to the workspace root: the loader merges the marker into what it carried, so
-      // without this the version says it is a root and a member of another one at once
-      const extensions = ExtensionDataList.fromArray([
-        new ExtensionDataEntry(undefined, undefined, WorkspaceRootAspect.id, undefined, {
-          root: 'my-scope/former-root@0.0.1',
-          isRoot: true,
-        }),
-      ]);
-      clearWorkspaceRootPointer(extensions);
-      expect(readWorkspaceRoot(extensions)).to.be.undefined;
-      expect(isWorkspaceRootComponent(extensions)).to.be.true;
-    });
-    it('should do nothing to a component that carries no data of this aspect', () => {
-      const extensions = ExtensionDataList.fromArray([]);
-      clearWorkspaceRootPointer(extensions);
-      expect(extensions).to.have.lengthOf(0);
+      expect(readWorkspaceRoot(extensions)?.toString()).to.equal(rootId.toString());
     });
   });
 });

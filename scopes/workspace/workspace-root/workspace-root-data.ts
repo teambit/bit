@@ -51,35 +51,12 @@ export function readWorkspaceRoot(extensions: ExtensionDataList): ComponentID | 
 }
 
 /**
- * drop what another workspace recorded on this component.
- *
- * the data travels with the component, so one imported into a workspace that has no root of its own
- * still carries the root it was snapped in, and snapping it here would carry it into the new version -
- * claiming it was made in a workspace it has never been in. the same call clears a stale `isRoot` from
- * a component that was the root once and is tracked in a directory of its own now; left there, an
- * import onto "." or a clone would take ordinary source for a workspace root.
+ * nothing clears this data: it is not inherited from the version before it. the loader supplies the
+ * aspect's data on every load, so a component arrives with the root of the workspace it is in now, or
+ * with none - what an earlier workspace recorded never reaches the next version. the data is replaced
+ * wholesale rather than merged, so a component that changes role (a member tracked at "." later, or a
+ * root moved into a directory of its own) does not keep the marker of the role it left.
  */
-export function clearWorkspaceRoot(extensions: ExtensionDataList): void {
-  clearWorkspaceRootPointer(extensions);
-  const existing = extensions.findCoreExtension(WorkspaceRootAspect.id);
-  if (existing?.data) delete existing.data.isRoot;
-}
-
-/**
- * drop the pointer to the root this component was snapped in, and keep the marker saying it is a root
- * itself.
- *
- * for a component that was a member before it was tracked at ".": the loader merges the marker into
- * the data the component already carried rather than replacing it, so without this the version would
- * say the component is a workspace root and a member of a different one at the same time, and reading
- * its root back would name that other component.
- */
-export function clearWorkspaceRootPointer(extensions: ExtensionDataList): void {
-  const existing = extensions.findCoreExtension(WorkspaceRootAspect.id);
-  if (!existing?.data) return;
-  delete existing.data.root;
-}
-
 export function writeWorkspaceRoot(extensions: ExtensionDataList, rootId: ComponentID): void {
   const data: WorkspaceRootData = { root: rootId.toString() };
   const existing = extensions.findCoreExtension(WorkspaceRootAspect.id);
