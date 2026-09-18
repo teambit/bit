@@ -55,7 +55,14 @@ type LoadGroupMetadata = {
   envs?: boolean;
 };
 
-type GetAndLoadSlotOpts = ComponentLoadOptions & LoadGroupMetadata;
+type GetAndLoadSlotOpts = ComponentLoadOptions &
+  LoadGroupMetadata & {
+    /**
+     * ids the caller asked for, in both their versioned and unversioned form. anything else in the
+     * group is loaded only because a requested component uses it as an aspect/env.
+     */
+    requestedIds?: Set<string>;
+  };
 
 type ComponentGetOneOptions = {
   resolveIdVersion?: boolean;
@@ -218,6 +225,9 @@ export class WorkspaceComponentLoader {
     this.logger.profileTrace('buildLoadGroups');
     const groupsToHandle = await loadSpan('build-load-groups', {}, () => this.buildLoadGroups(workspaceScopeIdsMap));
     this.logger.profileTrace('buildLoadGroups');
+    // both forms, so that a component is treated as requested whenever there is any doubt - erring
+    // towards warning rather than towards muting. see the `executeLoadSlot` call in getAndLoadSlot.
+    const requestedIds = new Set(ids.flatMap((id) => [id.toString(), id.toStringWithoutVersion()]));
     // prefix your command with "BIT_LOG=*" to see the detailed groups
     if (process.env.BIT_LOG) {
       printGroupsToHandle(groupsToHandle, this.logger);
@@ -234,7 +244,7 @@ export class WorkspaceComponentLoader {
         const res = await loadSpan(
           'load-group',
           { group: `${index + 1}/${groupsToHandle.length}`, desc: groupStr },
-          () => this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs })
+          () => this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs, requestedIds })
         );
         this.logger.profileTrace(groupDesc);
         // We don't want to return components that were not asked originally (we do want to load them)
@@ -460,9 +470,19 @@ export class WorkspaceComponentLoader {
     let wsComponentsWithAspects = workspaceComponents;
     // if (loadOpts.seeders) {
     this.logger.profileTrace('executeLoadSlot');
-    wsComponentsWithAspects = await pMapPool(workspaceComponents, (component) => this.executeLoadSlot(component), {
-      concurrency: concurrentComponentsLimit(),
-    });
+    wsComponentsWithAspects = await pMapPool(
+      workspaceComponents,
+      (component) => {
+        // a component nobody asked for is here only because a requested component uses it as an
+        // aspect/env. its own env (the env-of-env) is never scheduled for this load, so finding it
+        // unregistered says nothing about whether it's installed. see EnvsMain.skipNotLoadedWarnings.
+        if (isRequestedId(component.id, loadOpts.requestedIds)) return this.executeLoadSlot(component);
+        return this.envs.skipNotLoadedWarnings(() => this.executeLoadSlot(component));
+      },
+      {
+        concurrency: concurrentComponentsLimit(),
+      }
+    );
     this.logger.profileTrace('executeLoadSlot');
     await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);
     // }
@@ -1225,6 +1245,16 @@ export class WorkspaceComponentLoader {
     // TODO: @gilad we need to refactor the extension data entry api.
     return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
   }
+}
+
+/**
+ * whether the caller asked for this id, as opposed to it being pulled in as another component's
+ * aspect/env. matches both the versioned and unversioned form, and treats an unknown requested-set
+ * as "everything was requested", so an unexpected call path warns rather than silently mutes.
+ */
+export function isRequestedId(id: ComponentID, requestedIds?: Set<string>): boolean {
+  if (!requestedIds) return true;
+  return requestedIds.has(id.toString()) || requestedIds.has(id.toStringWithoutVersion());
 }
 
 function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOptions): string {
