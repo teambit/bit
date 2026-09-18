@@ -10,6 +10,8 @@ import {
   resolveThroughExistingAncestors,
   topmostAbsentDir,
 } from './clone';
+import type { CloneResult } from './clone';
+import { formatCloneResult } from './clone.cmd';
 import { WorkspaceRootMain } from './workspace-root.main.runtime';
 
 describe('resolveClonePath', () => {
@@ -192,5 +194,28 @@ describe('clone from a workspace', () => {
       return;
     }
     throw new Error('expected clone to throw');
+  });
+});
+
+describe('formatCloneResult', () => {
+  const resultWith = (missing: string[]): CloneResult => ({
+    rootId: ComponentID.fromString('my-org.my-scope/my-root'),
+    workspacePath: '/tmp/my-root',
+    components: [ComponentID.fromString('my-org.my-scope/comp1')],
+    missing,
+  });
+
+  it('should name the components the root lists that their remote does not have', () => {
+    // the clone succeeded without them, so the summary still reports it - the missing ones are their
+    // own section, and a user who reads only the summary would not know the workspace is short
+    const output = formatCloneResult(resultWith(['my-org.my-scope/comp2']), 'my-root');
+    expect(output).to.have.string('my-org.my-scope/comp2');
+    expect(output).to.have.string('not on their remote');
+    expect(output).to.have.string('cloned my-org.my-scope/my-root');
+  });
+
+  it('should leave the section out when the root got everything it lists', () => {
+    const output = formatCloneResult(resultWith([]), 'my-root');
+    expect(output).to.not.have.string('not on their remote');
   });
 });

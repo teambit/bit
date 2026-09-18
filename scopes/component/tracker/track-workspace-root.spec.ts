@@ -241,6 +241,23 @@ describe('tracking the workspace root', function () {
     });
   });
 
+  describe('tracking the workspace root through the programmatic api', () => {
+    let tracked: Tracked;
+    before(async () => {
+      tracked = await setupWorkspace({ 'README.md': '# workspace root\n' });
+    });
+    after(async () => {
+      await destroyWorkspace(tracked.workspaceData);
+    });
+    it('should take the given rootDir as the intent, the flag is for the command line', async () => {
+      // a caller naming the workspace root has already said so, as a resolved track-data entry
+      // declaring "." does. asking it for the flag would answer "run bit add . --root", which is
+      // not the command it is running
+      await tracked.tracker.track({ rootDir: tracked.workspacePath, componentName: 'ws-root' });
+      expect(rootDirOf(tracked, 'ws-root')).to.equal(WORKSPACE_ROOT_DIR);
+    });
+  });
+
   describe('the --root flag, which spells out the intent to track the workspace root', () => {
     let tracked: Tracked;
     // relative paths, as the command gets them: "." only means the workspace root when the cwd is it

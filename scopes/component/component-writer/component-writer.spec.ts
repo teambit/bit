@@ -288,6 +288,15 @@ describe('deciding whether the directory-conflict check applies to a component',
   it('should skip everything when nothing is written to the filesystem at all', () => {
     expect(shouldSkip({ skipWritingToFs: true, writeToPath: 'some-dir' }, 'other-dir')).to.be.true;
   });
+
+  it('should treat a component already tracked at the workspace root as any other tracked directory', () => {
+    // re-importing a tracked component updates the files it owns, and the root is not an exception
+    // to that. what needs --override is a component arriving at a root someone else's files are at,
+    // which has no map entry yet - the !componentMap branch of throwErrorWhenDirectoryNotEmpty is
+    // where that is decided, and this skip never reaches past it.
+    expect(shouldSkip({}, WORKSPACE_ROOT_DIR, WORKSPACE_ROOT_DIR)).to.be.true;
+    expect(shouldSkip({ writeToPath: WORKSPACE_ROOT_DIR }, WORKSPACE_ROOT_DIR, WORKSPACE_ROOT_DIR)).to.be.true;
+  });
 });
 
 describe('the destination of an already tracked workspace-root component', () => {

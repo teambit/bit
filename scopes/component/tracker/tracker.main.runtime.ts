@@ -34,6 +34,13 @@ export type TrackData = {
   mainFile?: string; // if empty, attempts will be made to guess the best candidate
   defaultScope?: string; // can be entered as part of "bit create" command, helpful for out-of-sync logic
   config?: { [aspectName: string]: any }; // config specific to this component, which overrides variants of workspace.jsonc
+  /**
+   * tracking the workspace root itself. defaults to whether `rootDir` is it: naming it here is
+   * already the intent, the way a resolved track-data entry declaring "." is. the flag "bit add"
+   * asks for is for the command line, where "." can be typed out of git habit and means something
+   * else entirely (see AddComponents.throwForWorkspaceRootFlagMismatch).
+   */
+  root?: boolean;
 };
 
 /**
@@ -73,6 +80,7 @@ export class TrackerMain {
         override: false,
         defaultScope,
         config: trackData.config,
+        root: trackData.root ?? compPath === pathNormalizeToLinux(this.workspace.path),
       }
     );
     const result = await addComponent.add();
