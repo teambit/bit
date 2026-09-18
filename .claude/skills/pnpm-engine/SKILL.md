@@ -70,12 +70,21 @@ cp target/napi-release/libpnpm_napi.so /tmp/pnpm-napi.node   # .dylib on macOS
 PNPM_NAPI_BINARY=/tmp/pnpm-napi.node bit install --log
 ```
 
-This works with a bvm-installed `bit` as well as `bit-dev`. Check the addon
-loads before a long run:
+This works with a bvm-installed `bit` as well as `bit-dev`. The loader falls
+back silently to the installed platform package when the path does not
+exist, so a typo tests the old engine and looks like a failed fix. Check the
+file exists and that the addon reports the version you expect before a long
+run:
 
 ```bash
-PNPM_NAPI_BINARY=/tmp/pnpm-napi.node node -e "require('@pnpm/napi')"
+test -f /tmp/pnpm-napi.node && PNPM_NAPI_BINARY=/tmp/pnpm-napi.node \
+  node -e "console.log(require('@pnpm/napi').engineVersion())"
 ```
+
+The same trap applies to a released build: the platform package is not
+hoisted, so its binary lives at
+`node_modules/.pnpm/@pnpm+napi.<platform>@<version>/node_modules/@pnpm/napi.<platform>/pnpm-napi.node`,
+not under `node_modules/@pnpm/`.
 
 ## Read what the engine did
 
