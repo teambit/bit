@@ -3,6 +3,7 @@ import type { Scope } from '@teambit/legacy.scope';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
+import { isWorkspaceMapFile } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -26,6 +27,19 @@ export type ComponentWriterProps = {
   existingComponentMap?: ComponentMap;
   skipUpdatingBitMap?: boolean;
 };
+
+/**
+ * a version of the workspace-root component can carry files that a component nested inside it owns
+ * today - it was snapped before that component was extracted out of the root. they belong to the
+ * nested component now (see getNestedRootDirs), so writing them back would replace its source with
+ * an older copy of it.
+ */
+export function isOwnedByNestedComponent(
+  relativePath: PathLinuxRelative,
+  nestedRootDirs: PathLinuxRelative[]
+): boolean {
+  return nestedRootDirs.some((nestedRootDir) => relativePath.startsWith(`${nestedRootDir}/`));
+}
 
 export default class ComponentWriter {
   component: Component;
@@ -104,8 +118,15 @@ export default class ComponentWriter {
     if (this.deleteBitDirContent) {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
-    this.component.files.forEach((file) => (file.override = this.override));
-    this.component.files.map((file) => this.component.dataToPersist.addFile(file));
+    const nestedRootDirs = this.bitMap.getNestedRootDirs(this.writeToPath);
+    this.component.files.forEach((file) => {
+      const relativePath = pathNormalizeToLinux(file.relative);
+      // the live map is never written from a versioned copy, see isWorkspaceMapFile
+      if (isWorkspaceMapFile(relativePath)) return;
+      if (isOwnedByNestedComponent(relativePath, nestedRootDirs)) return;
+      file.override = this.override;
+      this.component.dataToPersist.addFile(file);
+    });
 
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
@@ -119,9 +140,6 @@ export default class ComponentWriter {
   }
 
   async addComponentToBitMap(rootDir: string): Promise<ComponentMap> {
-    if (rootDir === '.') {
-      throw new Error('addComponentToBitMap: rootDir cannot be "."');
-    }
     const filesForBitMap = this.component.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });

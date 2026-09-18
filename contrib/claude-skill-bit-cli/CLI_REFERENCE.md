@@ -5,7 +5,7 @@
 track existing directory contents as new components in the workspace
 
 Registers one or more directories as Bit components without changing your files. Each provided path becomes a component root tracked by Bit.
-Flags: --id <name>, --main <file>, --namespace <namespace>, --override <boolean>, --scope <string>, --env <string>, --json
+Flags: --id <name>, --main <file>, --namespace <namespace>, --override <boolean>, --scope <string>, --env <string>, --root, --json
 
 ## bit app [sub-command]
 
@@ -169,6 +169,13 @@ remove cached data to resolve stale data issues
 
 clears various caches that Bit uses to improve performance. useful when experiencing stale data issues or unexpected behavior. this command removes: 1) components cache on the filesystem (mainly the dependencies graph and docs) 2) scope's index file, which maps the component-id:object-hash note: this cache has minimal impact on disk space. to free significant disk space, use "bit capsule delete --all" to remove build capsules.
 Flags: --remote <remote-name>
+
+## bit clone <component-id> [dir]
+
+create a workspace from its workspace-root component, with every component it lists
+
+the workspace-root component is the one tracked at a workspace root ("bit add ."). it versions the workspace's own files - workspace.jsonc, .bitmap, lockfile, configs - and this command makes a workspace out of it, the way "git clone" makes a working tree out of a repository: the root files land at the root, every component the root lists is imported into the directory it records, then the dependencies are installed. the components come at their heads on main, or on the lane given with --lane. a version on the root id pins the root files only. runs outside a workspace. the directory must be empty or not exist, and defaults to the component name.
+Flags: --lane <lane-id>, --remote <url>, --skip-dependency-installation
 
 ## bit compile [component-names...]
 

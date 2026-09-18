@@ -258,19 +258,30 @@ export const DEFAULT_BIT_ENV = 'production';
 export const MergeConfigFilename = 'merge-conflict';
 
 /**
+ * never tracked, no matter what: secrets, os artifacts and installed packages.
  * use the .gitignore syntax. (not minimatch).
- * if you want to ignore only from component's root-dir, use `IGNORE_ROOT_ONLY_LIST` constant.
  */
-export const IGNORE_LIST = [
+export const ALWAYS_IGNORE_LIST = [
   '**/.DS_Store',
   '**/.env',
   '**/.env.local',
   '**/.env.**.local',
   '**/component.json',
   '**/node_modules/**',
-  '**/package-lock.json',
-  '**/yarn.lock',
 ];
+
+/**
+ * the files bit generates, so tracking them is deprecated since Harmony. a workspace with
+ * `trackAllFiles` (adopted from an existing monorepo, where the user wrote them) tracks them as source.
+ */
+export const BIT_GENERATED_IGNORE_LIST = ['package.json', '**/package-lock.json', '**/yarn.lock'];
+
+/**
+ * everything bit ignores by default, on top of the user's .gitignore/.bitignore.
+ * use the .gitignore syntax. (not minimatch).
+ * if you want to ignore only from component's root-dir, use `IGNORE_ROOT_ONLY_LIST` constant.
+ */
+export const IGNORE_LIST = [...ALWAYS_IGNORE_LIST, ...BIT_GENERATED_IGNORE_LIST];
 
 /**
  * these files are ignored only if they exist in the component's rootDir.

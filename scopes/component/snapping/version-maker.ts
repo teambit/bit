@@ -33,6 +33,7 @@ import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependenc
 import type { Registries } from '@teambit/pkg.entities.registry';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
 import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import { findWorkspaceRootMap, writeWorkspaceRoot } from '@teambit/workspace-root';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import type { LaneId } from '@teambit/lane-id';
@@ -81,6 +82,11 @@ export type VersionMakerParams = {
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
   setHeadAsParent?: boolean;
+  /**
+   * the workspace-root component that joined the batch on its own, being new or modified. see
+   * SnappingMain.getWorkspaceRootToTagAlong.
+   */
+  autoAddedWorkspaceRoot?: ComponentID;
 } & BasicTagParams;
 
 type ComputedVersion = { componentToTag: ConsumerComponent; version: string };
@@ -148,6 +154,7 @@ export class VersionMaker {
     this.params.isSnap ? this.setHashes() : await this.setFutureVersions(autoTagIds);
     // go through all dependencies and update their versions
     this.updateDependenciesVersions();
+    this.recordWorkspaceRoot();
     await this.addLogToComponents(componentsToTag, autoTagComponents, messagePerId);
     // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
     // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
@@ -418,7 +425,7 @@ export class VersionMaker {
     if (!versionsFile) return;
 
     const allComponentsToTag = ComponentIdList.fromArray([...idsToTag, ...autoTagIds]);
-    const versionFileParser = new VersionFileParser(allComponentsToTag);
+    const versionFileParser = new VersionFileParser(allComponentsToTag, this.params.autoAddedWorkspaceRoot);
     const tagDataFromFile = await versionFileParser.parseVersionsFile(versionsFile);
     this.params.tagDataPerComp = tagDataFromFile;
   }
@@ -515,9 +522,18 @@ export class VersionMaker {
         const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
         const modelComponent = await this.legacyScope.sources.findOrAddComponent(componentToTag);
         const nextVersion = componentToTag.componentMap?.nextVersion?.version;
+        const isAutoAddedRoot = Boolean(this.params.autoAddedWorkspaceRoot?.isEqualWithoutVersion(componentToTag.id));
+        // the root joined the batch on its own. a version given for the members - `--ver`, the id, or
+        // a versions-file DEFAULT - is not meant for it, so it is bumped the way an auto-tagged
+        // dependent is.
+        const bumpRootAsPatch = () =>
+          soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
         const getNewVersion = (): string => {
           if (tagDataPerComp) {
             const tagData = tagDataPerComp.find((t) => t.componentId.isEqualWithoutVersion(componentToTag.id));
+            // a versions file names the components being tagged. it covers the root only when it names
+            // it, see VersionFileParser - otherwise the root is still bumped on its own.
+            if (!tagData && isAutoAddedRoot) return bumpRootAsPatch();
             if (!tagData) throw new Error(`tag-data is missing for ${componentToTag.id.toStringWithoutVersion()}`);
             if (!tagData.versionToTag)
               throw new Error(`tag-data.TagResults is missing for ${componentToTag.id.toStringWithoutVersion()}`);
@@ -553,6 +569,7 @@ export class VersionMaker {
             }
             return soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
           }
+          if (isAutoAddedRoot) return bumpRootAsPatch();
           const versionByEnteredId = this.getVersionByEnteredId(this.ids, componentToTag, modelComponent);
           return soft
             ? versionByEnteredId || exactVersion || (releaseType as string)
@@ -749,6 +766,37 @@ export class VersionMaker {
       });
       changeExtensionsVersion(oneComponentToTag);
       oneComponentToTag = updateDepsResolverData(oneComponentToTag);
+    });
+  }
+
+  /**
+   * every member of a workspace-root component records the root it is snapped in, at the version the
+   * root has after this batch: its new version when it is snapped along, otherwise the one in .bitmap.
+   * tag and snap bring a new or modified root into the batch (see SnappingMain.getWorkspaceRootToTagAlong),
+   * so the version is only missing on the paths that don't, such as a merge snap made while the root
+   * was never snapped. the root itself records nothing here, it carries the isRoot marker instead.
+   * see WorkspaceRootMain.
+   *
+   * a workspace with no root of its own writes nothing, and has nothing to undo either: aspect data is
+   * supplied fresh by the loader on every load rather than inherited from the version before it, so a
+   * component imported from a workspace that had a root arrives here without one. what does carry over
+   * is the extension's (empty) config, which is why the entry itself outlives the data it held.
+   */
+  private recordWorkspaceRoot() {
+    const consumer = this.consumer;
+    if (!consumer) return;
+    const rootMap = findWorkspaceRootMap(consumer.bitMap);
+    if (!rootMap) return;
+    const rootInBatch = this.allComponentsToTag.find((component) => component.id.isEqualWithoutVersion(rootMap.id));
+    const rootId = rootInBatch ? rootInBatch.id.changeVersion(rootInBatch.version) : rootMap.id;
+    this.allComponentsToTag.forEach((component) => {
+      // the root records no root of its own, it carries the isRoot marker the loader gives it
+      if (component.id.isEqualWithoutVersion(rootMap.id)) return;
+      // hidden lane entries (lane.updateDependents) cascade into the batch from the scope rather than
+      // from the workspace, so they were not snapped in this root. absence from .bitmap is how they
+      // are told apart elsewhere in this file as well
+      if (!consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) return;
+      writeWorkspaceRoot(component.extensions, rootId);
     });
   }
 
