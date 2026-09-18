@@ -35,6 +35,7 @@ import type { APIDiffResult } from '@teambit/semantics.ui.api-diff-view';
 import type { ComponentComparePair, CompareComponentData } from './compare-data-context';
 import { useCompareData } from './compare-data-context';
 import { useFileRegistryRegister, useFileRegistry } from './file-registry';
+import { ComponentIdentityProvider } from './component-identity-context';
 
 import styles from './component-compare.module.scss';
 
@@ -560,6 +561,17 @@ export type InlineComponentCompareProps = {
    * defeats React.memo and reintroduces the re-render storm this whole design avoids.
    */
   dataAttributes?: Record<string, string>;
+  /**
+   * Lets the host put its own controls in this component's header — a review checkbox, a link to a
+   * discussion, anything that belongs to one component rather than to the compare view as a whole.
+   *
+   * A component type rather than a node or a render callback: it is rendered inside the panel, so it
+   * reads which component it belongs to from `useComponentCompareIdentity()` and nothing has to be
+   * threaded down to it. A module-scope component is also stable by construction, which matters —
+   * a prop that changed identity per render would defeat the `React.memo` below and bring back the
+   * re-render storm the mounted-panels design exists to avoid.
+   */
+  HeaderActions?: React.ComponentType;
 };
 
 /**
@@ -620,6 +632,7 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
       baseOverride,
       compareOverride,
       dataAttributes,
+      HeaderActions,
     },
     ref
   ) {
@@ -661,50 +674,58 @@ const InlineComponentCompareInner = forwardRef<HTMLDivElement, InlineComponentCo
     const headerStyle = accentColor ? ({ '--component-accent': accentColor } as React.CSSProperties) : undefined;
 
     return (
-      <div
-        ref={setRefs}
-        className={`${styles.componentCompare} ${className || ''}`}
-        data-component-id={compareId.split('@')[0]}
-        style={headerStyle}
-        {...dataAttributes}
+      <ComponentIdentityProvider
+        name={name}
+        componentId={compareId.split('@')[0]}
+        baseId={baseId}
+        compareId={compareId}
       >
-        <ComponentCompareHeader
-          name={name}
-          componentId={compareId.split('@')[0]}
-          envIcon={envIcon}
-          baseVersion={baseVersion}
-          compareVersion={compareVersion}
-          baseUrl={baseUrl}
-          compareUrl={compareUrl}
-          changeTags={changeTags}
-        />
+        <div
+          ref={setRefs}
+          className={`${styles.componentCompare} ${className || ''}`}
+          data-component-id={compareId.split('@')[0]}
+          style={headerStyle}
+          {...dataAttributes}
+        >
+          <ComponentCompareHeader
+            name={name}
+            componentId={compareId.split('@')[0]}
+            envIcon={envIcon}
+            baseVersion={baseVersion}
+            compareVersion={compareVersion}
+            baseUrl={baseUrl}
+            compareUrl={compareUrl}
+            changeTags={changeTags}
+            actions={HeaderActions ? <HeaderActions /> : undefined}
+          />
 
-        {!baseId && !!compareId && <NewComponentFileRegistrar compareId={compareId} />}
+          {!baseId && !!compareId && <NewComponentFileRegistrar compareId={compareId} />}
 
-        {/* sized to roughly match the section's contain-intrinsic-size estimate (220px incl. header)
+          {/* sized to roughly match the section's contain-intrinsic-size estimate (220px incl. header)
             so mounting real content produces minimal layout shift, and fewer sections crowd into the
             first viewport (each one queues a staggered mount). */}
-        {!hasBeenVisible && <InlineSkeleton lines={4} className={styles.sectionPlaceholder} />}
+          {!hasBeenVisible && <InlineSkeleton lines={4} className={styles.sectionPlaceholder} />}
 
-        {hasBeenVisible && (
-          <InlineContextProvider
-            baseId={baseId}
-            compareId={compareId}
-            host={host}
-            baseOverride={baseOverride}
-            compareOverride={compareOverride}
-          >
-            {allTabs
-              ? allTabs.map((tab) => (
-                  <DeferredTab key={tab.id} tabId={tab.id} lazy={tab.lazy}>
-                    {tab.element}
-                  </DeferredTab>
-                ))
-              : tabs && tabs.map((tab) => <div key={tab.id}>{tab.element}</div>)}
-            {children}
-          </InlineContextProvider>
-        )}
-      </div>
+          {hasBeenVisible && (
+            <InlineContextProvider
+              baseId={baseId}
+              compareId={compareId}
+              host={host}
+              baseOverride={baseOverride}
+              compareOverride={compareOverride}
+            >
+              {allTabs
+                ? allTabs.map((tab) => (
+                    <DeferredTab key={tab.id} tabId={tab.id} lazy={tab.lazy}>
+                      {tab.element}
+                    </DeferredTab>
+                  ))
+                : tabs && tabs.map((tab) => <div key={tab.id}>{tab.element}</div>)}
+              {children}
+            </InlineContextProvider>
+          )}
+        </div>
+      </ComponentIdentityProvider>
     );
   }
 );
@@ -915,6 +936,8 @@ export type ComponentCompareHeaderProps = {
   baseUrl?: string;
   compareUrl?: string;
   changeTags?: Array<{ label: string; color: string }>;
+  /** host-contributed controls for this component, rendered at the trailing edge of the header */
+  actions?: ReactNode;
 };
 
 /**
@@ -946,6 +969,7 @@ export function ComponentCompareHeader({
   baseUrl,
   compareUrl,
   changeTags,
+  actions,
 }: ComponentCompareHeaderProps) {
   return (
     <div className={styles.header}>
@@ -987,6 +1011,7 @@ export function ComponentCompareHeader({
               <span className={styles.versionHash}>{compareVersion}</span>
             ))}
         </div>
+        {actions && <div className={styles.headerActions}>{actions}</div>}
       </div>
     </div>
   );
