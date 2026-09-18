@@ -745,9 +745,10 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     // a merge snap is a snap: a new or modified root joins it the way it joins tag and snap, so the
     // members snapped here record the root version their files were merged with, rather than the one
     // the root was last snapped at (see getWorkspaceRootToTagAlong). only the visible ids can take
-    // it - a hidden entry is scope-only, with no workspace state to snap the root against. the root
+    // it - a hidden entry is scope-only, with no workspace state to snap the root against and no
+    // record of it to make right, so a merge of nothing else leaves the root where it is. the root
     // was snapped as a result of the merge, so it is reported in that section like the rest.
-    const autoAddedWorkspaceRoot = await this.getWorkspaceRootToTagAlong(visibleIds);
+    const autoAddedWorkspaceRoot = visibleIds.length ? await this.getWorkspaceRootToTagAlong(visibleIds) : undefined;
     const visibleIdsToSnap = autoAddedWorkspaceRoot
       ? ComponentIdList.fromArray([...visibleIds, autoAddedWorkspaceRoot])
       : visibleIds;
