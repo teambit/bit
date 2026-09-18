@@ -5,7 +5,7 @@
 track existing directory contents as new components in the workspace
 
 Registers one or more directories as Bit components without changing your files. Each provided path becomes a component root tracked by Bit.
-Flags: --id <name>, --main <file>, --namespace <namespace>, --override <boolean>, --scope <string>, --env <string>, --json
+Flags: --id <name>, --main <file>, --namespace <namespace>, --override <boolean>, --scope <string>, --env <string>, --root, --json
 
 ## bit app [sub-command]
 
