@@ -1,4 +1,4 @@
-import type { SchemaLocation } from '../schema-node';
+import type { GetMembersContext, SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
@@ -18,6 +18,10 @@ export class ParenthesizedTypeSchema extends SchemaNode {
 
   getNodes() {
     return [this.type];
+  }
+
+  getMembers(context: GetMembersContext = {}) {
+    return SchemaNode.membersOf(this.type, context);
   }
 
   toString(options?: { color?: boolean }): string {

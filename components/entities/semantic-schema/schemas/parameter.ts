@@ -1,6 +1,8 @@
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
+import { InferenceTypeSchema } from './inference-type';
+import { VariableLikeSchema } from './variable-like';
 
 export class ParameterSchema<T extends SchemaNode = SchemaNode> extends SchemaNode {
   readonly type: T;
@@ -8,6 +10,19 @@ export class ParameterSchema<T extends SchemaNode = SchemaNode> extends SchemaNo
 
   getNodes(): SchemaNode[] {
     return [this.type, ...(this.objectBindingNodes || [])];
+  }
+
+  /**
+   * default values declared on the parameter's destructured bindings, by binding name — e.g. `{ size = 32 }`.
+   */
+  getBindingDefaults(): Map<string, string> {
+    const defaults = new Map<string, string>();
+    this.objectBindingNodes?.forEach((node) => {
+      if (!(node instanceof InferenceTypeSchema || node instanceof VariableLikeSchema)) return;
+      if (!node.name || node.defaultValue === undefined || defaults.has(node.name)) return;
+      defaults.set(node.name, node.defaultValue);
+    });
+    return defaults;
   }
 
   constructor(
